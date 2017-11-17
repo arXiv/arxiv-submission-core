@@ -2,8 +2,8 @@
 
 import logging
 from flask.json import jsonify
-from flask import Blueprint, render_template, redirect, request, url_for
-from submit import authorization
+from flask import Blueprint, current_app, redirect, request, url_for
+from submit import authorization, sword
 
 logger = logging.getLogger(__name__)
 
@@ -13,7 +13,7 @@ blueprint = Blueprint('submit', __name__, url_prefix='')
 @blueprint.route('/', methods=['GET'])
 def service() -> tuple:
     """Provide the service document for arXiv SWORDv3 implementation."""
-    return jsonify({})
+    return jsonify(sword.render_service_document(current_app.config))
 
 
 @blueprint.route('/<string:archive>', methods=['POST'])
