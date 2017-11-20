@@ -15,6 +15,6 @@ DIGEST_ALGORITHM = os.environ.get('DIGEST_ALGORITHM', 'md5')
 
 COLLECTIONS = ['physics', 'math', 'cs', 'q-bio', 'q-fin', 'stat', 'eess',
                'econ']
-
+REPOSITORY_NAME = 'arXiv'
 
 JWT_SECRET = os.environ.get('JWT_SECRET', 'foo')

@@ -13,61 +13,53 @@ blueprint = Blueprint('submit', __name__, url_prefix='')
 @blueprint.route('/', methods=['GET'])
 def service() -> tuple:
     """Provide the service document for arXiv SWORDv3 implementation."""
-    return jsonify(sword.render_service_document(current_app.config))
+    body, st, head = sword.ServiceDocument.get(request.get_json(),
+                                               request.headers)
+    return jsonify(body), st, head
 
 
 @blueprint.route('/<string:archive>', methods=['POST'])
 @authorization.scoped('submission:write')
 def collection(archive: str) -> tuple:
     """Accept new submissions to a specific archive."""
-    return jsonify({
-        'archive': archive,
-        'action': 'create_submission'
-    })
+    body, st, head = sword.Collection.post(request.get_json(), request.headers,
+                                           files=request.files,
+                                           archive=archive)
+    return jsonify(body), st, head
 
 
 @blueprint.route('/<string:archive>/<int:sub_id>', methods=['GET'])
 @authorization.scoped('submission:read')
 def get_submission(archive: str, sub_id: int) -> tuple:
     """Get details about a submission resource."""
-    return jsonify({
-        'archive': archive,
-        'submission': sub_id,
-        'action': 'get_submission'
-    })
+    body, st, head = sword.Submission.get(request.get_json(), request.headers)
+    return jsonify(body), st, head
 
 
 @blueprint.route('/<string:archive>/<int:sub_id>', methods=['POST'])
 @authorization.scoped('submission:write')
 def add_content_to_submission(archive: str, sub_id: int) -> tuple:
     """Add a new content package to a submission."""
-    return jsonify({
-        'archive': archive,
-        'submission': sub_id,
-        'action': 'add_content_to_submission'
-    })
+    body, st, head = sword.Submission.post(request.get_json(), request.headers,
+                                           files=request.files)
+    return jsonify(body), st, head
 
 
 @blueprint.route('/<string:archive>/<int:sub_id>', methods=['DELETE'])
 @authorization.scoped('submission:write')
 def delete_submission(archive: str, sub_id: int) -> tuple:
     """Delete a submission."""
-    return jsonify({
-        'archive': archive,
-        'submission': sub_id,
-        'action': 'delete_submission'
-    })
+    body, st, head = sword.Submission.delete(request.get_json(),
+                                             request.headers)
+    return jsonify(body), st, head
 
 
 @blueprint.route('/<string:archive>/<int:sub_id>/metadata', methods=['GET'])
 @authorization.scoped('submission:read')
 def retrieve_metadata(archive: str, sub_id: int) -> tuple:
     """Get metadata for a submission."""
-    return jsonify({
-        'archive': archive,
-        'submission': sub_id,
-        'action': 'retrieve_metadata'
-    })
+    body, st, head = sword.Metadata.get(request.get_json(), request.headers)
+    return jsonify(body), st, head
 
 
 @blueprint.route('/<string:archive>/<int:sub_id>/metadata',
