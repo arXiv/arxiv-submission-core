@@ -1,7 +1,7 @@
 """Provides scope-based authorization with JWT."""
 
 from functools import wraps
-from flask import request, current_app, jsonify
+from flask import request, current_app, jsonify, g
 import jwt
 
 from submit import status
@@ -26,6 +26,8 @@ def scoped(scope: str):
                 return jsonify(INVALID_TOKEN), status.HTTP_403_FORBIDDEN, {}
             if scope not in decoded.get('scope'):
                 return jsonify(INVALID_SCOPE), status.HTTP_403_FORBIDDEN, {}
+            g.user = decoded.get('user')
+            g.client = decoded.get('client')
             return func(*args, **kwargs)
         return wrapper
     return protector

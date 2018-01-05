@@ -1,16 +1,27 @@
-"""Base implementation of the SWORDv3 protocol (draft)."""
+"""
+Base implementation of the SWORDv3 protocol (draft).
 
+This module is responsible for the baseline request semantics and validation,
+and speaks JSON-LD.
+"""
+
+import os
+import copy
 import warnings
 from collections import defaultdict
 from typing import Callable, Any, Tuple, List, Union
 import json
+import jsonschema
+from functools import wraps, partial, update_wrapper
+from itertools import chain
 from pyld import jsonld
-from functools import wraps
+from pyld.jsonld import JsonLdError
 
-SWORD = 'http://purl.org/net/sword/terms'
-DC = 'http://purl.org/dc/terms'
+SWORD = 'http://purl.org/net/sword/terms/'
+DC = 'http://purl.org/dc/terms/'
 
 OK = 200
+BAD_REQUEST = 400
 NOT_FOUND = 404
 FORBIDDEN = 403
 CREATED = 201
@@ -23,7 +34,8 @@ PERMANENT_REDIRECT = 308
 REDIRECT = [MOVED_PERMANENTLY, TEMPORARY_REDIRECT, PERMANENT_REDIRECT]
 
 
-Response = Tuple[Union[dict, str], int, dict]
+SWORDRequest = Tuple[dict, dict, dict, dict]
+SWORDResponse = Tuple[Union[dict, str], int, dict]
 
 
 class InvalidRequest(RuntimeError):
@@ -43,65 +55,11 @@ def _unpack_reqs(reqs: list) -> dict:
             for _stat in _req[:-1]:
                 _reqs[_stat].append(_req[-1])
         else:
-            _reqs['__all__'].append(_req)
+            _reqs['__all__'].append(req)
     return _reqs
 
 
-def request(must: list=[], should: list=[], may: list=[],
-            schema: str=None) -> Callable:
-    """Generate a decorator to enforce required request characteristics."""
-    def decorator(func: Callable) -> Callable:
-        """Enforce required request characteristics."""
-        @wraps(func)
-        def wrapper(body: dict, headers: dict, files: dict=None,
-                    **extra) -> Any:
-            for field in must:
-                if field not in headers:
-                    raise InvalidRequest('Missing header %s' % field)
-            for field in should:
-                if field not in headers:
-                    raise InvalidRequest('Missing header %s' % field)
-            for field in headers:
-                if field not in may:
-                    warnings.warn('Unexpected header: %s' % field)
-            return func(body, headers, files=files, **extra)
-        return wrapper
-    return decorator
-
-
-def response(must: list=[], should: list=[], may: list=[],
-             success: list=[], error: list=[], schema: str=None) -> Callable:
-    """Generate a decorator to enforce response characteristics."""
-    _must = _unpack_reqs(must)
-    _should = _unpack_reqs(should)
-    _may = _unpack_reqs(may)
-
-    def decorator(func: Callable) -> Callable:
-        """Enforce required response characteristics."""
-        @wraps(func)
-        def wrapper(body: dict, headers: dict, files: dict=None,
-                    **extra) -> Any:
-            r_body, r_stat, r_head = func(body, headers, files=files, **extra)
-
-            if r_stat not in success:
-                if r_stat not in error:
-                    raise InvalidResponse('Invalid status code %i' % r_stat)
-                return r_body, r_stat, r_head
-            for field in set(_must['__all__'] + _must[r_stat]):
-                if field not in r_head:
-                    raise InvalidResponse('Missing header %s' % field)
-            for field in _should['__all__'] + _should[r_stat]:
-                if field not in r_head:
-                    raise InvalidResponse('Missing header %s' % field)
-            for field in headers:
-                if field not in _may['__all__'] + _may[r_stat]:
-                    warnings.warn('Unexpected header: %s' % field)
-            return r_body, r_stat, r_head
-        return wrapper
-    return decorator
-
-
-class SWORDBase(object):
+class SWORDBaseEndpoint(object):
     """Base class for SWORD protocol."""
 
     version = '3'
@@ -113,11 +71,6 @@ class SWORDBase(object):
     fields: List[Tuple[str, str]] = []
     required: List[Tuple[str, str]] = []
 
-    def __init__(self, manifold):
-        """Set configurable parameters."""
-        self.enforce_should = True    # TODO: Do something different here...
-        self.manifold = manifold
-
     def _compact(self, doc: dict, **context) -> dict:
         """Produce a compact JSON-LD document."""
         context.update(self.context)
@@ -128,184 +81,346 @@ class SWORDBase(object):
         base_uri = self.context.get(namespace)
         if not base_uri:
             return field
-        return '%s/%s' % (base_uri, field)
+        return '%s/%s' % (base_uri.rstrip('/'), field.lstrip('/'))
 
-    def url_for(self, resource_type: str, **kwargs) -> str:
-        """Generate a URI for a resource."""
-        raise NotImplemented('url_for must be implemented by a subclass')
+    def _iterfmt(self, value: Any) -> Any:
+        if type(value) is list:
+            return [self._iterfmt(item) for item in value]
+        elif type(value) is dict:
+            return {
+                self._fmt(*k) if type(k) is tuple else k: self._iterfmt(v)
+                for k, v in value.items()
+            }
+        return value
 
-    def render(self, body, status, headers) -> Response:
+    def unpack(self, req: SWORDRequest) -> SWORDRequest:
+        """Expand a JSON-LD payload."""
+        body, headers, files, extra = req
+        try:
+            body = jsonld.expand(body)
+        except JsonLdError:
+            pass
+        return body, headers, files, extra
+
+    def pack(self, response: SWORDResponse) -> SWORDResponse:
         """Generate a JSON-LD representation of the response."""
+        body, status, headers = response
+        if body is None:
+            body = {}
         if status is NO_CONTENT:    # Nothing to do.
-            return '', status, headers
+            response[0] = ''
+            return response
         data = {}
-        for ns, field in self.fields:
+        for field in self.fields:
             value = body.get(field)
-            if value or (ns, field) in self.required:
-                data[self._fmt(ns, field)] = value
-        return self._compact(data), status, headers
+            if value is not None or field in self.required:
+                data[field] = value
+        return self._compact(self._iterfmt(data)), status, headers
 
 
-class SWORDSubmission(SWORDBase):
+class ProtocolDecorator(object):
+    """
+    Base class for protocol decorators.
+
+    In order to decorate instance methods, we need to obtain a reference to
+    the instance itself. This is achieved by implementing the __get__
+    descriptor method.
+    """
+
+    def __init__(self, func):
+        """Set reference to decorated function."""
+        self.func = func
+
+    def __get__(self, instance, owner):
+        """Obtain the instance for which the decorated function is a method."""
+        return partial(self.__call__, instance)
+
+    @property
+    def request(self):
+        """Proxy :prop:`.request` on the decorated function, if set."""
+        return getattr(self.func, 'request')
+
+    @property
+    def response(self):
+        """Proxy :prop:`.response` on the decorated function, if set."""
+        return getattr(self.func, 'response')
+
+
+class RequestDecorator(ProtocolDecorator):
+    request = {}
+
+    def unpack(self, req: SWORDRequest) -> SWORDRequest:
+        """Expand a JSON-LD payload."""
+        body, headers, files, extra = req
+        try:
+            body = jsonld.expand(body)
+        except JsonLdError:
+            pass
+        return body, headers, files, extra
+
+    def _validate(self, body: dict) -> None:
+        if self.request['schema']:
+            if os.path.exists(self.request['schema']):
+                schema = json.load(open(self.request['schema']))
+                try:
+                    jsonschema.validate(body, schema)
+                except jsonschema.exceptions.ValidationError as e:
+                    raise
+                    raise ValueError('Invalid request') from e
+
+    def __call__(self, inst: SWORDBaseEndpoint, request: SWORDRequest) -> Any:
+        """Perform request validation and call the wrapped instance method."""
+        body, headers, files, extra = self.unpack(request)
+        try:
+            self._validate(body)
+        except ValueError:
+            return {'reason': 'Schema validation failed'}, BAD_REQUEST, {}
+
+        for field in self.request['must']:
+            if field not in headers:
+                err = {'reason': 'Missing header %s' % field}
+                return err, BAD_REQUEST, {}
+
+        for field in self.request['should']:
+            if field not in headers:
+                warnings.warn('Missing header %s' % field, RuntimeWarning)
+        required = set(self.request['should'] + self.request['must'])
+        for field in set(headers) - required:
+            if field not in self.request['may']:
+                warnings.warn('Unexpected header: %s' % field,
+                              RuntimeWarning)
+        return self.func(inst, request)
+
+
+class ResponseDecorator(ProtocolDecorator):
+    response = {}
+
+    _seen = []
+
+    def _may_headers(self, r_status: int) -> List[str]:
+        _may = self.response['may']
+        return _may['__all__'] + _may[r_status] + self._seen
+
+    def _should_headers(self, r_status: int) -> List[str]:
+        _should = self.response['should']
+        return _should['__all__'] + _should[r_status]
+
+    def _must_headers(self, r_status: int) -> List[str]:
+        _must = self.response['must']
+        return _must['__all__'] + _must[r_status]
+
+    def __call__(self, inst: SWORDBaseEndpoint, request: SWORDRequest) -> Any:
+        """Call the wrapped instance method and perform response validation."""
+        r_body, r_stat, r_head = self.func(inst, request)
+        _seen = []
+        print(r_body, r_stat, r_head, self.response['success'])
+        if r_stat not in self.response['success']:
+            if r_stat not in self.response['error']:
+                raise InvalidResponse('Invalid status code %i' % r_stat)
+            return r_body, r_stat, r_head
+        for field in self._must_headers(r_stat):
+            _seen.append(field)
+            if field not in r_head:
+                raise InvalidResponse('Missing header %s' % field)
+        for field in self._should_headers(r_stat):
+            _seen.append(field)
+            if field not in r_head:
+                warnings.warn('Missing header %s' % field, RuntimeWarning)
+        for field in r_head.keys():
+            if field not in self._may_headers(r_stat):
+                warnings.warn('Unexpected header: %s' % field,
+                              RuntimeWarning)
+        return r_body, r_stat, r_head
+
+
+def response(must: list=[], should: list=[], may: list=[], success: list=[OK],
+             error: list=[NOT_FOUND, FORBIDDEN, BAD_REQUEST],
+             schema: str=None):
+    """Generate a decorator to enforce response characteristics."""
+    # decorator = copy.deepcopy(ResponseDecorator)
+    decorator = type('DynamicResponseDecorator', (ResponseDecorator,),
+                     {
+                        'response': {
+                            'must': _unpack_reqs(must),
+                            'should': _unpack_reqs(should),
+                            'may': _unpack_reqs(may),
+                            'success': success,
+                            'error': error,
+                            'schema': schema
+                        }
+                     })
+
+    return decorator
+
+
+def request(must: list=[], should: list=[], may: list=[], schema: str=None):
+    """Generate a decorator to enforce required request characteristics."""
+    decorator = type('DynamicRequestDecorator', (RequestDecorator,),
+                     {
+                         'request': {
+                             'must': must,
+                             'should': should,
+                             'may': may,
+                             'schema': schema
+                         }
+                     })
+    return decorator
+
+
+class SWORDSubmission(SWORDBaseEndpoint):
     """Submission package, which includes metadata and (optionally) content."""
 
-    @response(success=[OK, *REDIRECT, SEE_OTHER], error=[NOT_FOUND, FORBIDDEN],
-              must=[(*REDIRECT, 'Location')], schema='schema/status.json')
-    @request(may=['Authorization', 'On-Behalf-Of'])
-    def get(self, data: dict, headers: dict, files: dict=None,
-            **extra) -> Response:
-        """Retrieve submission information/status."""
-        return self.render(
-            *self.manifold.get_status(data, headers, **extra)
-        )
+    __endpoint__ = 'submission'
 
-    @response(success=[OK, ACCEPTED, *REDIRECT], error=[NOT_FOUND, FORBIDDEN],
-              must=['Location'], schema='schema/status.json')
+    @request(may=['Authorization', 'On-Behalf-Of'])
+    @response(success=[OK, *REDIRECT, SEE_OTHER],
+              must=[(*REDIRECT, 'Location')], schema='schema/status.json')
+    def get_status(self, req: SWORDRequest) -> SWORDResponse:
+        """Retrieve submission information/status."""
+        return self.pack(self._get_status(*req))
+
     @request(must=['Content-Type', 'Content-Disposition'],
              should=['Content-Length', 'Digest', 'Packaging'],
              may=['Authorization', 'On-Behalf-Of', 'In-Progress'])
-    def post(self, data: dict, headers: dict, files: dict=None,
-             **extra) -> Response:
+    @response(success=[OK, ACCEPTED, *REDIRECT],
+              must=['Location'], schema='schema/status.json')
+    def add_content(self, req: SWORDRequest) -> SWORDResponse:
         """Add content or other file to submission."""
-        return self.render(
-            *self.manifold.add_content(data, headers, files, **extra)
-        )
+        return self.pack(self._add_content(*req))
 
-    @response(success=[NO_CONTENT, *REDIRECT], error=[NOT_FOUND, FORBIDDEN],
-              must=[(*REDIRECT, 'Location')])
     @request(may=['Authorization', 'On-Behalf-Of'])
-    def delete(self, data: dict, headers: dict, files: dict=None,
-               **extra) -> Response:
+    @response(success=[NO_CONTENT, *REDIRECT], must=[(*REDIRECT, 'Location')])
+    def delete_submission(self, req: SWORDRequest) -> SWORDResponse:
         """Delete submission."""
-        return self.render(
-            *self.manifold.delete_submission(data, headers, **extra)
-        )
+        return self.pack(self._delete_submission(*req))
+
+    @property
+    def methods(self):
+        """HTTP methods supported by this endpoint."""
+        return {
+            'GET': self.get_status,
+            'DELETE': self.delete_submission,
+            'POST': self.add_content,
+        }
 
 
-class SWORDMetadata(SWORDBase):
+class SWORDMetadata(SWORDBaseEndpoint):
     """Submission metadata."""
 
-    @response(success=[OK, *REDIRECT, SEE_OTHER], error=[NOT_FOUND, FORBIDDEN],
+    __endpoint__ = 'metadata'
+
+    @response(success=[OK, *REDIRECT, SEE_OTHER],
               should=[(OK, 'MetadataFormat')],
               must=[(*REDIRECT, SEE_OTHER, 'Location')],
               schema='schema/metadata.json')
     @request(may=['Authorization', 'On-Behalf-Of', 'Accept-MetadataFormat'])
-    def get(self, data: dict, headers: dict, files: dict=None,
-            **extra) -> Response:
+    def get_metadata(self, req: SWORDRequest) -> SWORDResponse:
         """Retrieve submission metadata."""
-        return self.render(
-            *self.manifold.get_metadata(data, headers, files, **extra)
-        )
+        return self.pack(self._get_metadata(*req))
 
-    @response(success=[NO_CONTENT, *REDIRECT], error=[NOT_FOUND, FORBIDDEN],
+    @response(success=[NO_CONTENT, *REDIRECT],
               must=[(*REDIRECT, 'Location')])
     @request(must=['Content-Type', 'Content-Disposition'],
              should=['Content-Length', 'Digest', 'MetadataFormat'],
              may=['Authorization', 'On-Behalf-Of', 'In-Progress'],
              schema='schema/metadata.json')
-    def post(self, data: dict, headers: dict, files: dict=None,
-             **extra) -> Response:
+    def update_metadata(self, req: SWORDRequest) -> SWORDResponse:
         """Add or update submission metadata."""
-        return self.render(
-            *self.manifold.update_metadata(data, headers, **extra)
-        )
+        return self.pack(self._update_metadata(*req))
 
-    @response(success=[NO_CONTENT, *REDIRECT], error=[NOT_FOUND, FORBIDDEN],
-              must=[(*REDIRECT, 'Location')])
-    @request(must=['Content-Type', 'Content-Disposition'],
-             should=['Content-Length', 'Digest', 'MetadataFormat'],
-             may=['Authorization', 'On-Behalf-Of', 'In-Progress'],
-             schema='schema/metadata.json')
-    def put(self, data: dict, headers: dict, files: dict=None,
-            **extra) -> Response:
-        """Replace submission metadata."""
-        return self.render(
-            *self.manifold.update_metadata(data, headers, **extra)
-        )
+    @property
+    def methods(self):
+        """HTTP methods supported by this endpoint."""
+        return {
+            'GET': self.get_metadata,
+            'PUT': self.update_metadata,
+            'POST': self.update_metadata,
+        }
 
 
-class SWORDContent(SWORDBase):
+class SWORDContent(SWORDBaseEndpoint):
     """Submission content package, which may contain multiple files."""
 
-    @response(success=[OK, *REDIRECT, SEE_OTHER], error=[NOT_FOUND, FORBIDDEN],
-              should=['Packaging'], must=[(*REDIRECT, SEE_OTHER, 'Location')])
-    @request(may=['Authorization', 'On-Behalf-Of', 'Accept-Packaging'])
-    def get(self, data: dict, headers: dict, files: dict=None,
-            **extra) -> Response:
-        """Retrieve content as package."""
-        return self.render(*self.manifold.get_content(data, headers, **extra))
+    __endpoint__ = 'content'
 
-    @response(success=[NO_CONTENT, *REDIRECT], error=[NOT_FOUND, FORBIDDEN],
-              must=[(*REDIRECT, 'Location')])
+    @response(success=[OK, *REDIRECT, SEE_OTHER], should=['Packaging'],
+              must=[(*REDIRECT, SEE_OTHER, 'Location')])
+    @request(may=['Authorization', 'On-Behalf-Of', 'Accept-Packaging'])
+    def get_content(self, req: SWORDRequest) -> SWORDResponse:
+        """Retrieve content as package."""
+        return self.pack(self._get_content(*req))
+
+    @response(success=[NO_CONTENT, *REDIRECT], must=[(*REDIRECT, 'Location')])
     @request(must=['Content-Type'], should=['Content-Length', 'Digest'],
              may=['Authorization', 'On-Behalf-Of'])
-    def post(self, data: dict, headers: dict, files: dict=None,
-             **extra) -> Response:
+    def add_file(self, req: SWORDRequest) -> SWORDResponse:
         """Add file to submission content."""
-        return self.render(
-            *self.manifold.add_file(data, headers, files, **extra)
-        )
+        return self.pack(self._add_file(*req))
 
-    @response(success=[NO_CONTENT, *REDIRECT], error=[NOT_FOUND, FORBIDDEN],
-              must=[(*REDIRECT, 'Location')])
+    @response(success=[NO_CONTENT, *REDIRECT], must=[(*REDIRECT, 'Location')])
     @request(must=['Content-Type', 'Content-Disposition'],
              should=['Content-Length', 'Digest', 'Packaging'],
              may=['Authorization', 'On-Behalf-Of'])
-    def put(self, data: dict, headers: dict, files: dict=None,
-            **extra) -> Response:
-        """Replace object content."""
-        return self.render(
-            *self.manifold.update_content(data, headers, files, **extra)
-        )
+    def update_content(self, req: SWORDRequest) -> SWORDResponse:
+        """Replace submission content."""
+        return self.pack(self._update_content(*req))
 
-    @response(success=[NO_CONTENT, *REDIRECT], error=[NOT_FOUND, FORBIDDEN],
-              must=[(*REDIRECT, 'Location')])
+    @response(success=[NO_CONTENT, *REDIRECT], must=[(*REDIRECT, 'Location')])
     @request(may=['Authorization', 'On-Behalf-Of'])
-    def delete(self, data: dict, headers: dict, files: dict=None,
-               **extra) -> Response:
+    def delete_content(self, req: SWORDRequest) -> SWORDResponse:
         """Delete submission content package."""
-        return self.render(
-            *self.manifold.delete_content(data, headers, **extra)
-        )
+        return self.pack(self._delete_content(*req))
+
+    @property
+    def methods(self):
+        """HTTP methods supported by this endpoint."""
+        return {
+            'GET': self.get_content,
+            'PUT': self.update_content,
+            'DELETE': self.delete_content,
+            'POST': self.add_file,
+        }
 
 
-class SWORDFile(SWORDBase):
+class SWORDFile(SWORDBaseEndpoint):
     """Submission content file."""
 
-    @response(success=[OK, *REDIRECT, SEE_OTHER], error=[NOT_FOUND, FORBIDDEN],
+    __endpoint__ = 'file'
+
+    @response(success=[OK, *REDIRECT, SEE_OTHER],
               must=[(*REDIRECT, SEE_OTHER, 'Location')])
     @request(may=['Authorization', 'On-Behalf-Of'])
-    def get(self, data: dict, headers: dict, files: dict=None,
-            **extra) -> Response:
+    def get_file(self, req: SWORDRequest) -> SWORDResponse:
         """Retrieve individual file from submission."""
-        return self.render(
-            *self.manifold.get_file(data, headers, **extra)
-        )
+        return self.pack(self._get_file(*req))
 
-    @response(success=[NO_CONTENT, *REDIRECT], error=[NOT_FOUND, FORBIDDEN],
-              must=[(*REDIRECT, 'Location')])
+    @response(success=[NO_CONTENT, *REDIRECT], must=[(*REDIRECT, 'Location')])
     @request(must=['Content-Type'], should=['Content-Length', 'Digest'],
              may=['Authorization', 'On-Behalf-Of'])
-    def put(self, data: dict, headers: dict, files: dict=None,
-            **extra) -> Response:
+    def update_file(self, req: SWORDRequest) -> SWORDResponse:
         """Replace individual content file."""
-        return self.render(
-            *self.manifold.update_file(data, headers, files, **extra)
-        )
+        return self.pack(self._update_file(*req))
 
-    @response(success=[NO_CONTENT, *REDIRECT], error=[NOT_FOUND, FORBIDDEN],
-              must=[(*REDIRECT, 'Location')])
+    @response(success=[NO_CONTENT, *REDIRECT], must=[(*REDIRECT, 'Location')])
     @request(may=['Authorization', 'On-Behalf-Of'])
-    def delete(self, data: dict, headers: dict, files: dict=None,
-               **extra) -> Response:
+    def delete_file(self, req: SWORDRequest) -> SWORDResponse:
         """Delete individual content file."""
-        return self.render(
-            *self.manifold.delete_file(data, headers, **extra)
-        )
+        return self.pack(self._delete_file(*req))
+
+    @property
+    def methods(self):
+        """HTTP methods supported by this endpoint."""
+        return {
+            'GET': self.get_file,
+            'PUT': self.update_file,
+            'DELETE': self.delete_file
+        }
 
 
-class SWORDCollection(SWORDBase):
+class SWORDCollection(SWORDBaseEndpoint):
     """Repository collection."""
+
+    __endpoint__ = 'collection'
 
     fields = [
         ('sword', 'version'),
@@ -327,22 +442,26 @@ class SWORDCollection(SWORDBase):
         ('sword', 'collections'),
     ]
 
-    @response(success=[CREATED, ACCEPTED], error=[NOT_FOUND, FORBIDDEN],
-              must=['Location'])
+    @response(success=[CREATED, ACCEPTED], must=['Location'])
     @request(must=['Content-Type', 'Content-Disposition'],
              should=['Content-Length', 'Digest', 'MetadataFormat',
                      'Packaging'],
-             may=['Authorization', 'On-Behalf-Of', 'In-Progress', 'Slug'])
-    def post(self, data: dict, headers: dict, files: dict=None,
-             **extra) -> Response:
+             may=['Authorization', 'On-Behalf-Of', 'In-Progress', 'Slug'],
+             schema='schema/metadata.json')
+    def add_submission(self, req: SWORDRequest) -> SWORDResponse:
         """Deposit new object with metadata, and (optionally) content."""
-        return self.render(
-            *self.manifold.add_submission(data, headers, files, **extra)
-        )
+        return self.pack(self._add_submission(*req))
+
+    @property
+    def methods(self):
+        """HTTP methods supported by this endpoint."""
+        return {'POST': self.add_submission}
 
 
-class SWORDServiceDocument(SWORDBase):
+class SWORDServiceDocument(SWORDBaseEndpoint):
     """SWORD service document."""
+
+    __endpoint__ = 'service'
 
     fields = [
         ('sword', 'version'),
@@ -364,107 +483,36 @@ class SWORDServiceDocument(SWORDBase):
         ('sword', 'collections'),
     ]
 
-    @property
-    def collections(self) -> list:
-        """List of collections available for deposit."""
-        return [self.manifold.collection.render(**cdata)
-                for cdata in self.manifold.list_collections()]
-
-    @response(success=[OK], error=[NOT_FOUND, FORBIDDEN])
+    @response(success=[OK])
     @request(may=['Authorization', 'On-Behalf-Of'])
-    def get(self, data: dict, headers: dict, files: dict=None,
-            **extra) -> Response:
+    def get_service(self, req: SWORDRequest) -> SWORDResponse:
         """Generate the service document for this submission endpoint."""
-        body, status, r_head = self.manifold.get_service(data, headers,
-                                                         **extra)
-        body.update({'collections': self.collections})
-        return self.render(body, status, r_head)
+        response = self._get_service(*req)
+        response[0].update({
+            ('sword', 'collections'): self._list_collections(),
+            ('sword', 'version'): self.version
+        })
+        return self.pack(response)
+
+    @property
+    def methods(self) -> dict:
+        """HTTP methods supported by this endpoint."""
+        return {'GET': self.get_service}
 
 
-class SWORDService(object):
-    """
-    Interface for a service that implements SWORD.
+def request_wrapper(func):
+    """Generate a wrapper that packs request parameters into a SWORDRequest."""
+    def pack_request(body: dict, headers: dict, files: dict=None, **extra):
+        """Call ``func`` with a SWORDRequest."""
+        return func((body, headers, files, extra))
+    return pack_request
 
-    The methods on this interface (``add_*``, ``delete_*``, ``update_``,
-    ``get_*``, etc.) are provided as hooks for the implementing service.
-    """
-    ServiceDocument = SWORDServiceDocument
-    Collection = SWORDCollection
-    Submission = SWORDSubmission
-    Metadata = SWORDMetadata
-    Content = SWORDContent
-    File = SWORDFile
 
-    def __init__(self):
-        self.serviceDocument = self.ServiceDocument()
-        self.collection = self.Collection()
-        self.submission = self.Submission()
-        self.metadata = self.Metadata()
-        self.content = self.Content()
-        self.file = self.File()
-
-    def list_collections(self) -> list:
-        """Hook used to retrieve data about collections in this service."""
-        raise NotImplemented('Subclass must implement get_collections()')
-
-    def get_service(self, body: dict, headers: dict, **extra) -> Response:
-        """Hook for retriving service information."""
-        raise NotImplemented('Subclass must implement get_service()')
-
-    def add_submission(self, body: dict, headers: dict, files: dict,
-                       **extra) -> Response:
-        """Hook for creating a new submission."""
-        raise NotImplemented('Subclass must implement add_submission()')
-
-    def delete_submission(self, body: dict, headers: dict,
-                          **extra) -> Response:
-        """Hook for deleting a submission."""
-        raise NotImplemented('Subclass must implement delete_submission()')
-
-    def get_metadata(self, body: dict, headers: dict, **extra) -> Response:
-        """Hook for getting submission metadata."""
-        raise NotImplemented('Subclass must implement get_metadata()')
-
-    def update_metadata(self, body: dict, headers: dict, **extra) -> Response:
-        """Hook for updating submission metadata."""
-        raise NotImplemented('Subclass must implement update_metadata()')
-
-    def add_file(self, body: dict, headers: dict, files: dict,
-                 **extra) -> Response:
-        """Hook for adding a file to submission content."""
-        raise NotImplemented('Subclass must implement add_file()')
-
-    def get_file(self, body: dict, headers: dict, **extra) -> Response:
-        """Hook for getting an individual file from submission content."""
-        raise NotImplemented('Subclass must implement get_file()')
-
-    def update_file(self, body: dict, headers: dict, files: dict,
-                    **extra) -> Response:
-        """Hook for adding or updating a file in submission content."""
-        raise NotImplemented('Subclass must implement update_file()')
-
-    def delete_file(self, body: dict, headers: dict, **extra) -> Response:
-        """Hook for deleting a file from submission content."""
-        raise NotImplemented('Subclass must implement delete_file()')
-
-    def get_status(self, body: dict, headers: dict, **extra) -> Response:
-        """Hook for getting the status of a submission."""
-        raise NotImplemented('Subclass must implement add_submission()')
-
-    def add_content(self, body: dict, headers: dict, files: dict,
-                    **extra) -> Response:
-        """Hook for adding a file to submission content."""
-        raise NotImplemented('Subclass must implement add_content()')
-
-    def get_content(self, body: dict, headers: dict, **extra) -> Response:
-        """Hook for getting submission content."""
-        raise NotImplemented('Subclass must implement get_content()')
-
-    def update_content(self, body: dict, headers: dict,
-                       files: dict, **extra) -> Response:
-        """Hook for updating entire submission content package."""
-        raise NotImplemented('Subclass must implement update_content()')
-
-    def delete_content(self, body: dict, headers: dict, **extra) -> Response:
-        """Hook for deleting entire submission content package."""
-        raise NotImplemented('Subclass must implement delete_content()')
+def interface_factory(controllers: List[type]) -> Callable:
+    """Generate a controller factory from a set of controllers."""
+    def controller_factory(endpoint: str, method: str) -> Callable:
+        """Generate a controller for an API endpoint and method."""
+        klass = {kls.__endpoint__: kls for kls in controllers}.get(endpoint)
+        if klass is not None:
+            return request_wrapper(klass().methods.get(method))
+    return controller_factory

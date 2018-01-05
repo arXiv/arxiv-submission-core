@@ -2,7 +2,6 @@
     "$schema": "http://json-schema.org/schema#",
     "title": "Metadata",
     "description": "Metadata payload for a new submission. ",
-    "type": "object",
     "required": [
         "http://purl.org/net/sword/terms/metadata"
     ],

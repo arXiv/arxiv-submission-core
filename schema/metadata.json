@@ -3,7 +3,6 @@
     "id": "http://arxiv.org/schema/submit/metadata.json",
     "title": "Metadata",
     "description": "Metadata payload for a new submission. This is the arXiv.org implementation of the SWORDv3 specification for the metadata document.",
-    "type": "object",
     "required": [
         "http://purl.org/net/sword/terms/metadata"
     ],
@@ -40,7 +39,7 @@
                         "properties": {
                             "http://arxiv.org/schema/terms/name": {
                                 "description": "Freeform representation of author name. Generally: `<surname>, <forename> <initial(s)>`.",
-                                "type": "string",
+                                "type": "string"
                             },
                             "http://purl.org/dc/terms/identifier": {
                                 "description": "Author authority record URI. This may be an arXiv authority URI or an ORCID identifier.",
@@ -84,11 +83,6 @@
                 },
                 "http://purl.org/dc/terms/identifier": {
                     "description": "External identifier for the submission, such as a DOI. e.g. `doi:10.1234/56789`",
-                    "type": "string",
-                    "format": "uri"
-                },
-                "http://purl.org/dc/terms/identifier": {
-                    "description": "External identifier for the submission, such as a DOI.",
                     "type": "string",
                     "format": "uri"
                 },

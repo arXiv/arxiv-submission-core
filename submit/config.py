@@ -18,3 +18,8 @@ COLLECTIONS = ['physics', 'math', 'cs', 'q-bio', 'q-fin', 'stat', 'eess',
 REPOSITORY_NAME = 'arXiv'
 
 JWT_SECRET = os.environ.get('JWT_SECRET', 'foo')
+
+
+UPLOAD_S3_BUCKET = 'arxiv-submit-upload'
+SQLALCHEMY_DATABASE_URI = os.environ.get('SUBMIT_DATABASE_URI', 'sqlite:///')
+SQLALCHEMY_TRACK_MODIFICATIONS = False

@@ -45,6 +45,12 @@ user), and an authorization scope.
 Token ``as392lks0kk32`` has scope ``submission:write`` and ``submission:read``,
 which should grant access to the entire submission API.
 
+Here's the resulting JWT for secret "foo" (this is subject to change):
+
+```
+eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJjbGllbnQiOiJmb29jbGllbnQiLCJ1c2VyIjoiZm9vdXNlciIsInNjb3BlIjpbInN1Ym1pc3Npb246d3JpdGUiLCJzdWJtaXNzaW9uOnJlYWQiXX0.253M954JUBpokfyP1CEHyk1-sn3Kk42Vyn9W1u59u08
+```
+
 Token ``f0da9jso3l2m4`` has scope ``submission:read``, which should allow only
 ``GET`` requests to relevant endpoints.
 
