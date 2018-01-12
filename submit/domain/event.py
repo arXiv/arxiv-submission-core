@@ -13,7 +13,8 @@ from datetime import datetime
 from typing import Optional, TypeVar
 from submit.domain import Data, Property
 from submit.domain.agent import Agent
-from submit.domain.submission import Submission, SubmissionMetadata
+from submit.domain.submission import Submission, SubmissionMetadata, \
+    Classification, License
 from submit.domain.annotation import Comment, Flag, Proposal
 
 EventType = TypeVar('EventType', bound='Event')
@@ -23,6 +24,7 @@ class Event(Data):
     """Base class for submission-related events."""
 
     creator = Property('creator', Agent)
+    proxy = Property('proxy', Agent, null=True)
     submission_id = Property('submission_id', int, null=True)
     created = Property('created', datetime)
     committed = Property('committed', bool, False)
@@ -48,11 +50,20 @@ class Event(Data):
     @property
     def event_id(self) -> str:
         """The unique ID for this event."""
-        h = hashlib.new('md5')
+        h = hashlib.new('sha1')
         h.update(b'%s:%s:%s' % (self.created.isoformat().encode('utf-8'),
                                 self.event_type.encode('utf-8'),
                                 self.creator.agent_identifier.encode('utf-8')))
         return h.hexdigest()
+
+    @property
+    def valid(self) -> bool:
+        """Indicate whether the event instance is valid."""
+        try:
+            self.validate()
+        except ValueError:
+            return False
+        return True
 
     def validate(self, submission: Optional[Submission] = None) -> None:
         """Placeholder for validation, to be implemented by subclasses."""
@@ -81,6 +92,126 @@ class RemoveSubmissionEvent(Event):
         return submission
 
 
+class VerifyContactInformationEvent(Event):
+    """Submitter has verified their contact information."""
+
+    def apply(self, submission: Optional[Submission] = None) -> Submission:
+        """Update :prop:`.Submission.submitter_contact_verified`."""
+        submission.submitter_contact_verified = True
+        return submission
+
+
+class AssertAuthorshipEvent(Event):
+    """The submitting user asserts whether they are an author of the paper."""
+
+    submitter_is_author = Property('is_author', bool, True)
+
+    def apply(self, submission: Optional[Submission] = None) -> Submission:
+        """Update the authorship flag on the submission."""
+        submission.submitter_is_author = self.submitter_is_author
+        return submission
+
+
+class AcceptArXivPolicyEvent(Event):
+    """The submitting user accepts the arXiv submission policy."""
+
+    def apply(self, submission: Optional[Submission] = None) -> Submission:
+        """Set the policy flag on the submission."""
+        submission.submitter_accepts_policy = True
+        return submission
+
+
+class SetPrimaryClassificationEvent(Event):
+    """Update the primary classification of a :class:`.Submission`."""
+
+    group = Property('group', str)
+    archive = Property('archive', str)
+    subject = Property('subject', str)
+
+    def validate(self, submission: Optional[Submission] = None) -> None:
+        """All three fields must be set."""
+        try:
+            assert self.group and self.archive and self.subject
+        except AssertionError as e:
+            raise ValueError(e) from e
+
+    def apply(self, submission: Optional[Submission] = None) -> Submission:
+        """Set :prop:`.Submission.primary_classification`."""
+        submission.primary_classification = Classification(
+            group=self.group,
+            archive=self.archive,
+            subject=self.subject
+        )
+        return submission
+
+
+class AddSecondaryClassificationEvent(Event):
+    """Add a secondary :class:`.Classification` to a :class:`.Submission`."""
+
+    group = Property('group', str)
+    archive = Property('archive', str)
+    subject = Property('subject', str)
+
+    def validate(self, submission: Optional[Submission] = None) -> None:
+        """All three fields must be set."""
+        try:
+            assert self.group and self.archive and self.subject
+        except AssertionError as e:
+            raise ValueError(e) from e
+
+    def apply(self, submission: Optional[Submission] = None) -> Submission:
+        """Append to :prop:`.Submission.secondary_classification`."""
+        submission.secondary_classification.append(Classification(
+            group=self.group,
+            archive=self.archive,
+            subject=self.subject
+        ))
+        return submission
+
+
+class RemoveSecondaryClassificationEvent(Event):
+    """Remove secondary :class:`.Classification` from :class:`.Submission`."""
+
+    group = Property('group', str)
+    archive = Property('archive', str)
+    subject = Property('subject', str)
+
+    def validate(self, submission: Optional[Submission] = None) -> None:
+        """All three fields must be set."""
+        try:
+            assert self.group and self.archive and self.subject
+        except AssertionError as e:
+            raise ValueError(e) from e
+
+    def apply(self, submission: Optional[Submission] = None) -> Submission:
+        """Remove from :prop:`.Submission.secondary_classification`."""
+        submission.secondary_classification = [
+            classn for classn in submission.secondary_classification
+            if not all([
+                classn.group == self.group,
+                classn.archive == self.archive,
+                classn.subject == self.subject
+            ])
+        ]
+        return submission
+
+
+
+class SelectLicenseEvent(Event):
+    """The submitter has selected a license for their submission."""
+
+    license_name = Property('license_name', str)
+    license_uri = Property('license_uri', str)
+
+    def apply(self, submission: Optional[Submission] = None) -> Submission:
+        """Set :prop:`.Submission.license`."""
+        submission.license = License(
+            name=self.license_name,
+            uri=self.license_uri
+        )
+        return submission
+
+
 class UpdateMetadataEvent(Event):
     """Update of :class:`.Submission` metadata."""
 
@@ -89,8 +220,8 @@ class UpdateMetadataEvent(Event):
     def validate(self, submission: Optional[Submission] = None) -> None:
         """The :prop:`.metadata` should be a list of tuples."""
         try:
-            assert len(self.metadata) < 1
-            assert type(self.metadata[0]) is tuple
+            assert len(self.metadata) >= 1
+            assert type(self.metadata[0]) in [tuple, list]
             for metadatum in self.metadata:
                 assert len(metadatum) == 2
         except AssertionError as e:

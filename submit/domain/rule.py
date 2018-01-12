@@ -58,6 +58,7 @@ class EventRule(Data):
 
     rule_id = Property('rule_id', int, null=True)
     creator = Property('creator', Agent)
+    proxy = Property('proxy', Agent, null=True)
     created = Property('created', datetime)
 
     applied = Property('applied', bool, False)

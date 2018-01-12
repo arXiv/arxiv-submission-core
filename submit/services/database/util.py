@@ -30,17 +30,20 @@ def transaction():
 
 def _agent_data_to_domain(agent_data: models.Agent) -> Agent:
     """Instantiate an :class:`.Agent` using agent data from the db."""
+    if agent_data is None:
+        return
     return agent_factory(agent_data.agent_type, agent_data.agent_id)
 
 
 def _event_data_to_domain(event_data: models.Event) -> Event:
     """Instantiate an :class:`.Event` using event data from the db."""
     data = {key: value for key, value in event_data.data.items()
-            if key not in ['creator', 'submission_id', 'created']}
+            if key not in ['creator', 'proxy', 'submission_id', 'created']}
     data.update(dict(committed=True))  # So that we don't store an event twice.
     return event_factory(
         event_data.event_type,
         creator=_agent_data_to_domain(event_data.creator),
+        proxy=_agent_data_to_domain(event_data.proxy),
         submission_id=event_data.submission_id,
         created=event_data.created,
         **data
@@ -50,13 +53,13 @@ def _event_data_to_domain(event_data: models.Event) -> Event:
 def _submission_domain_to_data(submission: Submission,
                                db_submission: models.Submission) \
                                -> models.Submission:
-    db_agent = _get_or_create_dbagent(submission.creator)
     db_submission.title = submission.metadata.title
     db_submission.abstract = submission.metadata.abstract
     db_submission.finalized = submission.finalized
+    db_submission.published = submission.published
     db_submission.active = submission.active
-    db_submission.creator = db_agent
-    db_submission.archive = submission.archive
+    db_submission.creator = _get_or_create_dbagent(submission.creator)
+    db_submission.proxy = _get_or_create_dbagent(submission.proxy)
     return db_submission
 
 
@@ -70,10 +73,10 @@ def _update_submission_comments(submission: Submission,
     for comment_id, comment in submission.comments.items():
         db_comment = db_comments.get(comment_id)
         if not db_comment:
-            creator = _get_or_create_dbagent(comment.creator)
             db_comment = models.Comment(
                 comment_id=comment.comment_id,
-                creator=creator,
+                creator=_get_or_create_dbagent(comment.creator),
+                proxy=_get_or_create_dbagent(comment.proxy),
                 created=comment.created,
                 submission=db_submission,
                 body=comment.body
@@ -86,6 +89,9 @@ def _update_submission_comments(submission: Submission,
 
 def _get_or_create_dbagent(agent: Agent) -> models.Agent:
     """Get or create the database entry for an :class:`.Agent` instance."""
+    if agent is None:
+        return
+
     # We may make several calls for the same agent, so check the cache first
     #  to avoid unnecessary database calls.
     if agent.agent_identifier in _db_agent_cache:
@@ -136,6 +142,7 @@ def _store_event(event: Event) -> models.Event:
         data=event.to_dict(),
         created=event.created,
         creator=_get_or_create_dbagent(event.creator),
+        proxy=_get_or_create_dbagent(event.proxy),
         submission_id=event.submission_id
     )
     db.session.add(db_event)
@@ -161,6 +168,7 @@ def _rule_data_to_domain(db_rule: models.Rule) -> EventRule:
     return EventRule(
         rule_id=db_rule.rule_id,
         creator=_agent_data_to_domain(db_rule.creator),
+        proxy=_agent_data_to_domain(db_rule.proxy),
         condition=_rule_condition_data_to_domain(db_rule),
         consequence=_rule_consequence_data_to_domain(db_rule),
     )

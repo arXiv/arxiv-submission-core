@@ -12,6 +12,7 @@ class Annotation(Data):
 
     created = Property('created', datetime, datetime.now())
     creator = Property('creator', Agent)
+    proxy = Property('proxy', Agent, null=True)
     submission = Property('submission', Submission)
     scope = Property('scope', str)
 
@@ -23,7 +24,7 @@ class Annotation(Data):
     @property
     def annotation_id(self):
         """The unique identifier for an :class:`.Annotation` instance."""
-        h = hashlib.new('md5')
+        h = hashlib.new('sha1')
         h.update(b'%s:%s:%s' % (self.created.isoformat().encode('utf-8'),
                                 self.annotation_type.encode('utf-8'),
                                 self.creator.agent_identifier.encode('utf-8')))

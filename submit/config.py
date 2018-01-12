@@ -11,7 +11,7 @@ COLLECTION_POLICY_URI = os.environ.get(
 ALLOW_BY_REFERENCE = os.environ.get('ALLOW_BY_REFERENCE', False)
 ALLOW_IN_PROGRESS = os.environ.get('ALLOW_IN_PROGRESS', True)
 ALLOW_MEDIATION = os.environ.get('ALLOW_MEDIATION', True)
-DIGEST_ALGORITHM = os.environ.get('DIGEST_ALGORITHM', 'md5')
+DIGEST_ALGORITHM = os.environ.get('DIGEST_ALGORITHM', 'sha1')
 
 COLLECTIONS = ['physics', 'math', 'cs', 'q-bio', 'q-fin', 'stat', 'eess',
                'econ']

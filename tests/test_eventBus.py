@@ -33,7 +33,7 @@ class TestApplyEvents(TestCase):
         e = CreateSubmissionEvent(creator=System(), created=created)
         e2 = UpdateMetadataEvent(creator=System(), metadata=[('title', 'foo')],
                                  created=created + timedelta(seconds=1))
-        submission = eventBus.apply_events(e, e2)
+        submission, _ = eventBus.emit(e, e2)
 
         self.assertEqual(submission.metadata.title, 'foo')
         self.assertIsInstance(submission.submission_id, int)
@@ -43,7 +43,7 @@ class TestApplyEvents(TestCase):
         """An exception is raised when there is no creation event."""
         e2 = UpdateMetadataEvent(creator=System(), metadata=[('title', 'foo')])
         with self.assertRaises(RuntimeError):
-            eventBus.apply_events(e2)
+            eventBus.emit(e2)
 
     def test_apply_events_on_existing_submission(self):
         """Apply multiple sets of events in separate db transactions."""
@@ -51,12 +51,12 @@ class TestApplyEvents(TestCase):
         e = CreateSubmissionEvent(creator=System(), created=created)
         e2 = UpdateMetadataEvent(creator=System(), metadata=[('title', 'foo')],
                                  created=created + timedelta(seconds=1))
-        submission = eventBus.apply_events(e, e2)
+        submission, _ = eventBus.emit(e, e2)
         submission_id = submission.submission_id
         e3 = UpdateMetadataEvent(creator=System(),
                                  metadata=[('abstract', 'bar')],
                                  created=created + timedelta(seconds=0.5))
-        submission2 = eventBus.apply_events(e3, submission_id=submission_id)
+        submission2, _ = eventBus.emit(e3, submission_id=submission_id)
 
         # The submission state reflects all three events.
         self.assertEqual(submission2.metadata.abstract, 'bar')
@@ -70,7 +70,7 @@ class TestApplyEvents(TestCase):
         e4 = UpdateMetadataEvent(creator=System(),
                                  metadata=[('title', 'something else')],
                                  created=created + timedelta(seconds=1.5))
-        submission3 = eventBus.apply_events(e4, submission_id=submission_id)
+        submission3, _ = eventBus.emit(e4, submission_id=submission_id)
 
         self.assertEqual(submission3.submission_id, submission_id)
         self.assertEqual(submission3.metadata.title, 'something else')
@@ -101,7 +101,7 @@ class TestApplyEvents(TestCase):
         e = CreateSubmissionEvent(creator=System(), created=created)
         e2 = UpdateMetadataEvent(creator=System(), metadata=[('title', 'foo')],
                                  created=created + timedelta(seconds=1))
-        submission = eventBus.apply_events(e, e2)
+        submission, _ = eventBus.emit(e, e2)
 
         self.assertEqual(len(submission.comments), 1, "A comment is added")
 
@@ -134,7 +134,7 @@ class TestGetSubmissionAt(TestCase):
                                  metadata=[('title', 'something else')],
                                  created=created + timedelta(seconds=1.5))
 
-        submission = eventBus.apply_events(e, e2, e3, e4)
+        submission, _ = eventBus.emit(e, e2, e3, e4)
 
         state, _ = eventBus.get_submission_at_timestamp(
             submission.submission_id,
@@ -168,7 +168,7 @@ class TestGetSubmissionAt(TestCase):
                                  metadata=[('title', 'something else')],
                                  created=created + timedelta(seconds=1.5))
 
-        submission = eventBus.apply_events(e, e2, e3, e4)
+        submission, _ = eventBus.emit(e, e2, e3, e4)
 
         state, _ = eventBus.get_submission_at_event(
             submission.submission_id,

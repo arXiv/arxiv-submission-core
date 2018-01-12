@@ -21,18 +21,18 @@ def _emit(e: Event):
         callback(e)
 
 
-# def listen_for(event_type: str, submission_id: int = None,
-#                agent_id: str = None, callback: Callable = None):
-#     if event_type is type:
-#         event_type = event_type.get_event_type()
-#     CALLBACKS.register(callback,
-#                        event_type=event_type,
-#                        submission_id=submission_id,
-#                        agent_id=agent_id)
+def listen_for(event_type: str, submission_id: int = None,
+               agent_id: str = None, callback: Callable = None):
+    if event_type is type:
+        event_type = event_type.get_event_type()
+    CALLBACKS.register(callback,
+                       event_type=event_type,
+                       submission_id=submission_id,
+                       agent_id=agent_id)
+
 
 def get_submission(submission_id: int) -> Tuple[Submission, List[Event]]:
     return get_submission_at_timestamp(submission_id, datetime.now())
-
 
 
 def get_submission_at_timestamp(submission_id: int, timestamp: datetime) \
@@ -79,13 +79,13 @@ def get_submission_at_event(submission_id: int, event_id: str) \
     return _play_events(database.get_events_thru(submission_id, event_id), [])
 
 
-def apply_events(*events: Event, submission_id: Optional[int] = None) \
-        -> Submission:
+def emit(*events: Event, submission_id: Optional[int] = None) -> Submission:
     """
-    Apply a set of events for a submission.
+    Register a set of new :class:`.Event`s for a submission.
 
-    This will persist any new events to the database, along with the final
-    state of the submission.
+    This will persist the events to the database, along with the final
+    state of the submission, and generate external notification(s) on the
+    appropriate channels.
 
     Paramters
     ---------
@@ -93,14 +93,14 @@ def apply_events(*events: Event, submission_id: Optional[int] = None) \
         Events to apply and persist.
     submission_id : int
         The unique ID for the submission, if available. If not provided, it is
-        expected that ``events`` includes a :class:`CreateSubmissionEvent`.
+        expected that ``events`` includes a :class:`.CreateSubmissionEvent`.
 
     Returns
     -------
     :class:`.Submission`
         The state of the submission after all events (including rule-derived
-        events) have been applied. Updated with the submission ID, if newly
-        created.
+        events) have been applied. Updated with the submission ID, if a
+        :class:`.CreateSubmissionEvent` was included.
     """
     if len(events) == 0:
         raise ValueError('Must pass at least one event')
@@ -126,7 +126,7 @@ def apply_events(*events: Event, submission_id: Optional[int] = None) \
     # Calculate the state of the submission from old and new events.
     submission, combined = _play_events(combined, rules)
 
-    # Update the submission ID to ensure existing entry is updated.
+    # Update the submission ID to ensure the existing submission is updated.
     if submission.submission_id is None:
         submission.submission_id = submission_id    # May still be None.
 
@@ -135,4 +135,4 @@ def apply_events(*events: Event, submission_id: Optional[int] = None) \
 
     for event in combined:
         event.submission_id = submission.submission_id
-    return submission
+    return submission, combined

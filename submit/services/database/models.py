@@ -12,8 +12,8 @@ db = SQLAlchemy()
 class Agent(db.Model):  # type: ignore
     __tablename__ = 'agent'
 
-    agent_identifier = Column(String(32), primary_key=True)
-    """MD5 hexdigest of [agent_type]:[agent_id] bytestring."""
+    agent_identifier = Column(String(40), primary_key=True)
+    """SHA1 hash of [agent_type]:[agent_id] bytestring."""
 
     agent_type = Column(String(255))
     """One of ``User``, ``System``, ``Client``."""
@@ -25,23 +25,27 @@ class Agent(db.Model):  # type: ignore
 class Event(db.Model):  # type: ignore
     __tablename__ = 'event'
 
-    event_id = Column(String(32), primary_key=True)
+    event_id = Column(String(40), primary_key=True)
     event_type = Column(String(255))
     creator_id = Column(ForeignKey('agent.agent_identifier'), index=True)
+    proxy_id = Column(ForeignKey('agent.agent_identifier'), index=True)
     created = Column(DateTime)
     data = Column(JSON)
     submission_id = Column(ForeignKey('submission.submission_id'), index=True)
 
-    creator = relationship("Agent")
+    creator = relationship("Agent", foreign_keys=[creator_id])
+    proxy = relationship("Agent", foreign_keys=[proxy_id])
     submission = relationship("Submission", back_populates="events")
 
 
 class Comment(db.Model):  # type: ignore
     __tablename__ = 'comment'
 
-    comment_id = Column(String(32), primary_key=True)
+    comment_id = Column(String(40), primary_key=True)
     creator_id = Column(ForeignKey('agent.agent_identifier'), index=True)
-    creator = relationship("Agent")
+    proxy_id = Column(ForeignKey('agent.agent_identifier'), index=True)
+    creator = relationship("Agent", foreign_keys=[creator_id])
+    proxy = relationship("Agent", foreign_keys=[proxy_id])
     created = Column(DateTime)
     body = Column(Text)
     submission_id = Column(ForeignKey('submission.submission_id'), index=True)
@@ -57,14 +61,16 @@ class Submission(db.Model):  # type: ignore
     abstract = Column(String(255))
     active = Column(Boolean, default=True)
     finalized = Column(Boolean, default=False)
-    archive = Column(String(255), index=True)
+    published = Column(Boolean, default=False)
     creator_id = Column(ForeignKey('agent.agent_identifier'), index=True)
+    proxy_id = Column(ForeignKey('agent.agent_identifier'), index=True)
 
     events = relationship("Event", order_by=Event.created,
                           back_populates="submission")
     comments = relationship("Comment", order_by=Comment.created,
                             back_populates="submission")
-    creator = relationship("Agent")
+    creator = relationship("Agent", foreign_keys=[creator_id])
+    proxy = relationship("Agent", foreign_keys=[proxy_id])
 
 
 class Rule(db.Model):  # type: ignore
@@ -73,7 +79,9 @@ class Rule(db.Model):  # type: ignore
     rule_id = Column(Integer, primary_key=True)
     created = Column(DateTime)
     creator_id = Column(ForeignKey('agent.agent_identifier'), index=True)
-    creator = relationship("Agent")
+    proxy_id = Column(ForeignKey('agent.agent_identifier'), index=True)
+    creator = relationship("Agent", foreign_keys=[creator_id])
+    proxy = relationship("Agent", foreign_keys=[proxy_id])
     active = Column(Boolean, default=True)
 
     submission_id = Column(ForeignKey('submission.submission_id'), index=True)

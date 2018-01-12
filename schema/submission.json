@@ -1,0 +1,160 @@
+{
+    "$schema": "http://json-schema.org/schema#",
+    "id": "http://arxiv.org/schema/submit/submission.json",
+    "title": "Metadata",
+    "description": "Describes an arXiv submission. ",
+    "required": ["metadata"],
+    "additionalProperties": false,
+    "definitions": {
+        "classification": {
+            "type": "object",
+            "required": [
+                "group",
+                "archive",
+                "category"
+            ],
+            "additionalProperties": false,
+            "properties": {
+                "group": {
+                    "description": "The name of an arXiv group.",
+                    "type": "string"
+                },
+                "archive": {
+                    "description": "The abbreviated identifier for an arXiv archive.",
+                    "type": "string"
+                },
+                "category": {
+                    "description": "The abbreviated identifier for an arXiv subject class. E.g. KT, DC.",
+                    "type": "string"
+                }
+            }
+        },
+        "metadata": {
+            "description": "Metadata document for a deposit.",
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "title": {
+                    "description": "Title of the submission.",
+                    "type": "string"
+                },
+                "abstract": {
+                    "description": "Paper abstract provided by author.",
+                    "type": "string"
+                },
+
+                "author": {
+                    "description": "Authors",
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "description": "Details about the author agent",
+                        "type": "object",
+                        "required": [
+                            "name"
+                        ],
+                        "properties": {
+                            "name": {
+                                "description": "Freeform representation of author name. Generally: `<surname>, <forename> <initial(s)>`.",
+                                "type": "string"
+                            },
+                            "email": {
+                                "description": "E-mail address of the author.",
+                                "type": "string"
+                            },
+                            "identifier": {
+                                "description": "Author authority record URI. This may be an arXiv authority URI or an ORCID identifier.",
+                                "type": "string",
+                                "format": "uri"
+                            }
+                        }
+                    }
+                },
+                "doi": {
+                    "description": "External DOI for the submission. See https://arxiv.org/help/prep#doi",
+                    "type": "string"
+                },
+                "mscClass": {
+                    "description": "MSC subject class for this submission. See https://arxiv.org/help/prep#msc",
+                    "type": "string"
+                },
+                "acmClass": {
+                    "description": "ACM subject class for this submission. See https://arxiv.org/help/prep#acm",
+                    "type": "string"
+                },
+                "reportNum": {
+                    "description": "Report number for this submission. See https://arxiv.org/help/prep#report",
+                    "type": "string"
+                },
+                "journalRef": {
+                    "description": "Journal ref (citation) for this submission. See https://arxiv.org/help/prep#journal",
+                    "type": "string"
+                }
+            }
+        }
+    },
+    "properties": {
+        "submission_id": {
+            "description": "arXiv submission identifier",
+            "type": "integer"
+        },
+        "metadata": {
+            "$ref": "#/definitions/metadata"
+        },
+        "submitterIsAuthor": {
+            "description": "Indicates whether or not the submitter is also an author of the resource.",
+            "type": "boolean"
+        },
+        "submitterAcceptsPolicy": {
+            "descrption": "Indicates whether or not the submitter accepts the arXiv submission ",
+            "type": "boolean"
+        },
+        "license": {
+            "description": "License to be applied to the submission.",
+            "type": "string",
+            "format": "uri"
+        },
+        "primary_classification": {
+            "$ref": "#/definitions/classification"
+        },
+        "secondary_classification": {
+            "description": "The archive(s) and subject class(es) for this submission.",
+            "type": "array",
+            "items": {
+                "$ref": "#/definitions/classification"
+            }
+        },
+        "files": {
+            "description": "Remote files to be included in the submission package.",
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "href": {
+                        "description": "Dereferencable location of the package.",
+                        "type": "string",
+                        "format": "uri"
+                    },
+                    "ttl": {
+                        "description": "Time at which resource will become unavailable.",
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "dereference": {
+                        "description": "Whether or not the resource should be retrieved.",
+                        "type": "boolean"
+                    },
+                    "type": {
+                        "description": "MIME type of the remote resource.",
+                        "type": "string"
+                    },
+                    "packaging": {
+                        "description": "URI unambiguously identifying the packaging profile.",
+                        "type": "string",
+                        "format": "uri"
+                    }
+                }
+            }
+        }
+    }
+}

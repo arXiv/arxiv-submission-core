@@ -25,7 +25,7 @@ class Agent(Data):
 
     @property
     def agent_identifier(self):
-        h = hashlib.new('md5')
+        h = hashlib.new('sha1')
         h.update(b'%s:%s' % (self.agent_type.encode('utf-8'),
                              str(self.native_id).encode('utf-8')))
         return h.hexdigest()
