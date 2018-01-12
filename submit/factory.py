@@ -4,7 +4,7 @@ import logging
 
 from flask import Flask
 
-from submit import external
+from submit.routes import external_api
 from submit.services import database
 
 
@@ -13,5 +13,5 @@ def create_web_app() -> Flask:
     app = Flask('submit')
     app.config.from_pyfile('config.py')
     database.init_app(app)
-    app.register_blueprint(external.blueprint)
+    app.register_blueprint(external_api.blueprint)
     return app
