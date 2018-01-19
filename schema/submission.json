@@ -3,9 +3,23 @@
     "id": "http://arxiv.org/schema/submit/submission.json",
     "title": "Metadata",
     "description": "Describes an arXiv submission. ",
-    "required": ["metadata"],
+    "required": ["metadata", "primary_classification"],
     "additionalProperties": false,
     "definitions": {
+        "agent": {
+            "type": "object",
+            "required": ["agent_type", "identifier"],
+            "properties": {
+                "agentType": {
+                    "description": "Usually one of ``UserAgent``, ``Client``, or ``System``",
+                    "type": "string"
+                },
+                "identifier": {
+                    "description": "Unique identifier for the agent.",
+                    "type": "string"
+                }
+            }
+        },
         "classification": {
             "type": "object",
             "required": [
@@ -42,20 +56,38 @@
                     "description": "Paper abstract provided by author.",
                     "type": "string"
                 },
-
+                "author_canonical": {
+                    "description": "Canonical author string generated from the ``authors``. Read-only.",
+                    "readonly": true,
+                    "type": "string"
+                },
                 "author": {
                     "description": "Authors",
                     "type": "array",
                     "minItems": 1,
                     "items": {
-                        "description": "Details about the author agent",
+                        "description": "Author(s) of the submitted paper, in order.",
                         "type": "object",
                         "required": [
-                            "name"
+                            "forename",
+                            "surname"
                         ],
                         "properties": {
-                            "name": {
-                                "description": "Freeform representation of author name. Generally: `<surname>, <forename> <initial(s)>`.",
+                            "forename": {
+                                "type": "string"
+                            },
+                            "surname": {
+                                "type": "string"
+                            },
+                            "initials": {
+                                "type": "string"
+                            },
+                            "affiliation": {
+                                "type": "string"
+                            },
+                            "canonical": {
+                                "description": "`<forename> <initial(s)> <surname> (<affiliation>)`. Read-only.",
+                                "readonly": true,
                                 "type": "string"
                             },
                             "email": {
@@ -72,46 +104,66 @@
                 },
                 "doi": {
                     "description": "External DOI for the submission. See https://arxiv.org/help/prep#doi",
-                    "type": "string"
+                    "type": ["string", "null"]
                 },
-                "mscClass": {
+                "msc_class": {
                     "description": "MSC subject class for this submission. See https://arxiv.org/help/prep#msc",
-                    "type": "string"
+                    "type": ["string", "null"]
                 },
-                "acmClass": {
+                "acm_class": {
                     "description": "ACM subject class for this submission. See https://arxiv.org/help/prep#acm",
-                    "type": "string"
+                    "type": ["string", "null"]
                 },
-                "reportNum": {
+                "report_num": {
                     "description": "Report number for this submission. See https://arxiv.org/help/prep#report",
-                    "type": "string"
+                    "type": ["string", "null"]
                 },
-                "journalRef": {
+                "journal_ref": {
                     "description": "Journal ref (citation) for this submission. See https://arxiv.org/help/prep#journal",
-                    "type": "string"
+                    "type": ["string", "null"]
                 }
             }
         }
     },
     "properties": {
         "submission_id": {
-            "description": "arXiv submission identifier",
-            "type": "integer"
+            "description": "arXiv submission identifier. Read-only.",
+            "readonly": true,
+            "type": "string"
+        },
+        "arxiv_id": {
+            "description": "If the submission has been published, this is the associated arXiv ID",
+            "readonly": true,
+            "type": "string"
+        },
+        "owner": {
+            "description": "The agent responsible for the submission. May be transferred to another agent by the current owner.",
+            "$ref": "#/definitions/agent"
+        },
+        "creator": {
+            "description": "The agent responsible for creating the submission. Read-only.",
+            "readonly": true,
+            "$ref": "#/definitions/agent"
+        },
+        "proxy": {
+            "description": "The Client agent who registered the submission on behalf of the creator. Read-only.",
+            "readonly": true,
+            "$ref": "#/definitions/agent"
         },
         "metadata": {
             "$ref": "#/definitions/metadata"
         },
-        "submitterIsAuthor": {
+        "submitter_is_author": {
             "description": "Indicates whether or not the submitter is also an author of the resource.",
             "type": "boolean"
         },
-        "submitterAcceptsPolicy": {
-            "descrption": "Indicates whether or not the submitter accepts the arXiv submission ",
+        "submitter_accepts_policy": {
+            "description": "Indicates whether or not the submitter accepts the arXiv submission ",
             "type": "boolean"
         },
         "license": {
             "description": "License to be applied to the submission.",
-            "type": "string",
+            "type": ["string", "null"],
             "format": "uri"
         },
         "primary_classification": {
@@ -123,6 +175,21 @@
             "items": {
                 "$ref": "#/definitions/classification"
             }
+        },
+        "finalized": {
+            "description": "Indicates whether or not the submission is ready for publication (pending moderation).",
+            "type": "boolean",
+            "readonly": true
+        },
+        "active": {
+            "description": "Indicates whether or not the submission is under active processing. Submissions that are deleted, withdrawn, or published are considered inactive.",
+            "type": "boolean",
+            "readonly": true
+        },
+        "published": {
+            "description": "Indicates whether or not the submission is published.",
+            "type": "boolean",
+            "readonly": true
         },
         "files": {
             "description": "Remote files to be included in the submission package.",

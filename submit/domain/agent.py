@@ -30,6 +30,11 @@ class Agent(Data):
                              str(self.native_id).encode('utf-8')))
         return h.hexdigest()
 
+    def __eq__(self, other: Any) -> bool:
+        if not isinstance(other, Agent):
+            return False
+        return self.agent_identifier == other.agent_identifier
+
 
 class UserAgent(Agent):
     """An (human) end user, whom generally acts via form-based interfaces."""

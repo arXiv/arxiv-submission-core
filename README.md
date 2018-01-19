@@ -3,11 +3,7 @@
 The arXiv submission API supports programmatic submission mechanisms for
 third-party applications.
 
-The API is based on the draft specification for
-[SWORDv3](http://swordapp.org/swordv3/), implemented in
-[JSON-LD](https://json-ld.org).
-
-JSON Schema for the arXiv implementation of SWORDv3 can be found in
+[JSON Schema](json-schema.org) for the arXiv submission API can be found in
 ``schema/``.
 
 ## Toy submission service
@@ -61,7 +57,7 @@ TODO: document endpoints here.
 For example:
 
 ```
-$ curl -I -H "Authorization: Bearer f0da9jso3l2m4" http://localhost:8000/astro-ph/12345
+$ curl -I -H "Authorization: Bearer f0da9jso3l2m4" http://localhost:8000/submit/
 HTTP/1.1 200 OK
 Server: nginx/1.10.3 (Ubuntu)
 Date: Fri, 17 Nov 2017 20:21:49 GMT
@@ -73,7 +69,7 @@ Connection: keep-alive
 But:
 
 ```
-$ curl -I http://localhost:8000/astro-ph/12345
+$ curl -I http://localhost:8000/submit/
 HTTP/1.1 403 Forbidden
 Server: nginx/1.10.3 (Ubuntu)
 Date: Fri, 17 Nov 2017 20:21:20 GMT

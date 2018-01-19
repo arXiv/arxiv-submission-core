@@ -68,7 +68,13 @@ class Property(object):
         """
         if not self.nullable and self.klass is not None \
                 and not isinstance(value, self.klass):
-            raise TypeError('Must be an %s' % self.klass.__name__)
+            raise TypeError(
+                '%s must be an %s; got a %s instead: %s' %
+                (
+                    self._name, self.klass.__name__,
+                    type(value).__name__, str(value)
+                )
+            )
         instance.__dict__[self._name] = value
 
 
@@ -96,7 +102,8 @@ class Data(object):
         return {
             attr: _coerce(getattr(self, attr))
             for attr in dir(self.__class__)
-            if isinstance(getattr(self.__class__, attr), Property)
+            if (isinstance(getattr(self.__class__, attr), Property) or
+                isinstance(getattr(self.__class__, attr), property))
         }
 
     @classmethod

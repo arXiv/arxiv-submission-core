@@ -14,10 +14,14 @@ from typing import Optional, TypeVar
 from submit.domain import Data, Property
 from submit.domain.agent import Agent
 from submit.domain.submission import Submission, SubmissionMetadata, \
-    Classification, License
+    Classification, License, Delegation
 from submit.domain.annotation import Comment, Flag, Proposal
 
 EventType = TypeVar('EventType', bound='Event')
+
+
+class ValidationError(ValueError):
+    """Raised when an event fails to validate."""
 
 
 class Event(Data):
@@ -61,7 +65,7 @@ class Event(Data):
         """Indicate whether the event instance is valid."""
         try:
             self.validate()
-        except ValueError:
+        except ValidationError:
             return False
         return True
 
@@ -80,6 +84,7 @@ class CreateSubmissionEvent(Event):
     def apply(self, submission: Optional[Submission] = None) -> Submission:
         """Create a new :class:`.Submission`."""
         return Submission(creator=self.creator, created=self.created,
+                          owner=self.creator, proxy=self.proxy,
                           metadata=SubmissionMetadata())
 
 
@@ -126,21 +131,21 @@ class SetPrimaryClassificationEvent(Event):
 
     group = Property('group', str)
     archive = Property('archive', str)
-    subject = Property('subject', str)
+    category = Property('category', str)
 
     def validate(self, submission: Optional[Submission] = None) -> None:
         """All three fields must be set."""
         try:
-            assert self.group and self.archive and self.subject
+            assert self.group and self.archive and self.category
         except AssertionError as e:
-            raise ValueError(e) from e
+            raise ValidationError(e) from e
 
     def apply(self, submission: Optional[Submission] = None) -> Submission:
         """Set :prop:`.Submission.primary_classification`."""
         submission.primary_classification = Classification(
             group=self.group,
             archive=self.archive,
-            subject=self.subject
+            category=self.category
         )
         return submission
 
@@ -150,21 +155,21 @@ class AddSecondaryClassificationEvent(Event):
 
     group = Property('group', str)
     archive = Property('archive', str)
-    subject = Property('subject', str)
+    category = Property('category', str)
 
     def validate(self, submission: Optional[Submission] = None) -> None:
         """All three fields must be set."""
         try:
-            assert self.group and self.archive and self.subject
+            assert self.group and self.archive and self.category
         except AssertionError as e:
-            raise ValueError(e) from e
+            raise ValidationError(e) from e
 
     def apply(self, submission: Optional[Submission] = None) -> Submission:
         """Append to :prop:`.Submission.secondary_classification`."""
         submission.secondary_classification.append(Classification(
             group=self.group,
             archive=self.archive,
-            subject=self.subject
+            category=self.category
         ))
         return submission
 
@@ -174,14 +179,14 @@ class RemoveSecondaryClassificationEvent(Event):
 
     group = Property('group', str)
     archive = Property('archive', str)
-    subject = Property('subject', str)
+    category = Property('category', str)
 
     def validate(self, submission: Optional[Submission] = None) -> None:
         """All three fields must be set."""
         try:
-            assert self.group and self.archive and self.subject
+            assert self.group and self.archive and self.category
         except AssertionError as e:
-            raise ValueError(e) from e
+            raise ValidationError(e) from e
 
     def apply(self, submission: Optional[Submission] = None) -> Submission:
         """Remove from :prop:`.Submission.secondary_classification`."""
@@ -190,11 +195,10 @@ class RemoveSecondaryClassificationEvent(Event):
             if not all([
                 classn.group == self.group,
                 classn.archive == self.archive,
-                classn.subject == self.subject
+                classn.category == self.category
             ])
         ]
         return submission
-
 
 
 class SelectLicenseEvent(Event):
@@ -225,7 +229,7 @@ class UpdateMetadataEvent(Event):
             for metadatum in self.metadata:
                 assert len(metadatum) == 2
         except AssertionError as e:
-            raise ValueError(e) from e
+            raise ValidationError(e) from e
 
     def apply(self, submission: Optional[Submission] = None) -> Submission:
         """Update metadata on a :class:`.Submission`."""
@@ -247,7 +251,8 @@ class CreateCommentEvent(Event):
     def apply(self, submission: Optional[Submission] = None) -> Submission:
         """Create a new :class:`.Comment` and attach it to the submission."""
         comment = Comment(creator=self.creator, created=self.created,
-                          submission=submission, body=self.body)
+                          proxy=self.proxy, submission=submission,
+                          body=self.body)
         submission.comments[comment.comment_id] = comment
         return submission
 
@@ -260,15 +265,53 @@ class DeleteCommentEvent(Event):
     def validate(self, submission: Optional[Submission] = None) -> None:
         """The :prop:`.comment_id` must present on the submission."""
         if self.comment_id is None:
-            raise ValueError('comment_id is required')
+            raise ValidationError('comment_id is required')
         if not hasattr(submission, 'comments') or not submission.comments:
-            raise ValueError('Cannot delete comment that does not exist')
+            raise ValidationError('Cannot delete comment that does not exist')
         if self.comment_id not in submission.comments:
-            raise ValueError('Cannot delete comment that does not exist')
+            raise ValidationError('Cannot delete comment that does not exist')
 
     def apply(self, submission: Optional[Submission] = None) -> Submission:
         """Remove the comment from the submission."""
         del submission.comments[self.comment_id]
+        return submission
+
+
+class AddDelegateEvent(Event):
+    """Owner delegates authority to another agent."""
+
+    delegate = Property('delegate', Agent)
+
+    def validate(self, submission: Optional[Submission] = None) -> None:
+        """The event creator must be the owner of the submission."""
+        if not self.creator == submission.owner:
+            raise ValidationError('Event creator must be submission owner')
+
+    def apply(self, submission: Optional[Submission] = None) -> Submission:
+        """Add the delegate to the submission."""
+        delegation = Delegation(
+            creator=self.creator,
+            delegate=self.delegate,
+            created=self.created
+        )
+        submission.delegations[delegation.delegation_id] = delegation
+        return submission
+
+
+class RemoveDelegateEvent(Event):
+    """Owner revokes authority from another agent."""
+
+    delegation_id = Property('delegation_id', str)
+
+    def validate(self, submission: Optional[Submission] = None) -> None:
+        """The event creator must be the owner of the submission."""
+        if not self.creator == submission.owner:
+            raise ValidationError('Event creator must be submission owner')
+
+    def apply(self, submission: Optional[Submission] = None) -> Submission:
+        """Remove the delegate from the submission."""
+        if self.delegation_id in submission.delegations:
+            del submission.delegations[self.delegation_id]
         return submission
 
 
@@ -295,9 +338,6 @@ class DeleteCommentEvent(Event):
 #     pass
 #
 #
-
-#
-#
 # class DeleteCommentEvent(AnnotationEvent):
 #     pass
 #
@@ -316,7 +356,21 @@ EVENT_TYPES = {
 
 
 def event_factory(event_type: str, **data) -> Event:
-    """Instantiate an event."""
+    """
+    Convenience factory for generating :class:`.Event`s.
+
+    Parameters
+    ----------
+    event_type : str
+        Should be the name of a :class:`.Event` subclass.
+    data : kwargs
+        Keyword parameters passed to the event constructor.
+
+    Return
+    ------
+    :class:`.Event`
+        An instance of an :class:`.Event` subclass.
+    """
     if event_type in EVENT_TYPES:
         return EVENT_TYPES[event_type](**data)
     raise RuntimeError('Unknown event type: %s' % event_type)

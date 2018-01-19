@@ -81,6 +81,34 @@ def store_events(*events: Event, submission: Submission) -> Submission:
     return submission
 
 
+def get_submission(submission_id: int) -> Submission:
+    """
+    Retrieve a :class:`.Submission` from the database.
+
+    Parameters
+    ----------
+    submission_id : int
+
+    Returns
+    -------
+    :class:`.Submission` or ``None``
+    """
+    try:
+        db_submission = db.session.query(models.Submission).get(submission_id)
+    except Exception as e:    # TODO: Handle more specific exceptions here.
+        raise IOError('Failed to retrieve submission: %s' % e)
+    if db_submission is None:
+        return
+    return util._submission_data_to_domain(db_submission)
+
+
+def get_submission_owner(submission_id: int) -> Agent:
+    """Get the owner :class:`.Agent` of a submission."""
+    db_agent = db.session.query(models.Submission.owner) \
+        .get(submission_id).scalar()    # First element in first row.
+    return util._agent_data_to_domain(db_agent)
+
+
 def init_app(app):
     """Set configuration defaults and attach session to the application."""
     db.init_app(app)

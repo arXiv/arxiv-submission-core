@@ -1,6 +1,7 @@
 """."""
 
 from datetime import datetime
+from functools import wraps
 from typing import List, Optional, Callable, Tuple, Iterable
 from submit.domain.event import Event, CreateSubmissionEvent
 from submit.domain.rule import EventRule
@@ -136,3 +137,8 @@ def emit(*events: Event, submission_id: Optional[int] = None) -> Submission:
     for event in combined:
         event.submission_id = submission.submission_id
     return submission, combined
+
+
+@wraps(database.get_events_for_submission)
+def get_events(submission_id: int) -> List[Event]:
+    return database.get_events_for_submission(submission_id)

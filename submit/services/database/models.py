@@ -22,6 +22,20 @@ class Agent(db.Model):  # type: ignore
     """Unique identifier for an agent. Might be an URI."""
 
 
+class Delegation(db.Model):  # type: ignore
+    __tablename__ = 'delegation'
+
+    delegation_id = Column(String(40), primary_key=True)
+    created = Column(DateTime)
+    delegate_id = Column(ForeignKey('agent.agent_identifier'), index=True)
+    creator_id = Column(ForeignKey('agent.agent_identifier'), index=True)
+    submission_id = Column(ForeignKey('submission.submission_id'), index=True)
+
+    delegate = relationship("Agent", foreign_keys=[delegate_id])
+    creator = relationship("Agent", foreign_keys=[creator_id])
+    submission = relationship("Submission", back_populates="delegations")
+
+
 class Event(db.Model):  # type: ignore
     __tablename__ = 'event'
 
@@ -57,13 +71,29 @@ class Submission(db.Model):  # type: ignore
 
     submission_id = Column(Integer, primary_key=True)
     created = Column(DateTime)
+
     title = Column(String(255))
     abstract = Column(String(255))
+    authors = Column(JSON)
+
+    submitter_contact_verified = Column(Boolean, default=False)
+    submitter_is_author = Column(Boolean, default=True)
+    submitter_accepts_policy = Column(Boolean, default=False)
+
+    primary_classification_group = Column(String(20))
+    primary_classification_archive = Column(String(20))
+    primary_classification_category = Column(String(20))
+    secondary_classification = Column(JSON)
+
+    license_name = Column(String(255))
+    license_uri = Column(String(255))
+
     active = Column(Boolean, default=True)
     finalized = Column(Boolean, default=False)
     published = Column(Boolean, default=False)
     creator_id = Column(ForeignKey('agent.agent_identifier'), index=True)
     proxy_id = Column(ForeignKey('agent.agent_identifier'), index=True)
+    owner_id = Column(ForeignKey('agent.agent_identifier'), index=True)
 
     events = relationship("Event", order_by=Event.created,
                           back_populates="submission")
@@ -71,6 +101,9 @@ class Submission(db.Model):  # type: ignore
                             back_populates="submission")
     creator = relationship("Agent", foreign_keys=[creator_id])
     proxy = relationship("Agent", foreign_keys=[proxy_id])
+    owner = relationship("Agent", foreign_keys=[owner_id])
+    delegations = relationship("Delegation", order_by=Delegation.created,
+                               back_populates="submission")
 
 
 class Rule(db.Model):  # type: ignore

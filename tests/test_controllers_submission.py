@@ -18,13 +18,14 @@ class TestCreateSubmission(TestCase):
             'metadata': {
                 'author': [
                     {
-                        "name": 'Foo author',
+                        "forename": 'Foo',
+                        'surname': 'Author',
                         "email": 'Foo email',
                         "identifier": 'http://arxiv.org/author/foo'
                     }
                 ],
-                'submitterIsAuthor': True,
-                'submitterAcceptsPolicy': True,
+                'submitter_is_author': True,
+                'submitter_accepts_policy': True,
                 'license': "http://creativecommons.org/licenses/by-sa/4.0/",
                 "primary_classification": [
                     {
@@ -52,15 +53,16 @@ class TestCreateSubmission(TestCase):
                 'abstract': 'The abstract abstract',
                 'author': [
                     {
-                        "name": 'Foo author',
+                        "forename": 'Foo',
+                        'surname': 'Author',
                         "email": 'Foo email',
                         "identifier": 'http://arxiv.org/author/foo'
                     }
                 ],
                 "doi": "doi:10.00234/foo/bar"
             },
-            'submitterIsAuthor': True,
-            'submitterAcceptsPolicy': True,
+            'submitter_is_author': True,
+            'submitter_accepts_policy': True,
             'license': "http://creativecommons.org/licenses/by-sa/4.0/",
             "primary_classification": {
                 "group": 'physics',
@@ -90,15 +92,16 @@ class TestCreateSubmission(TestCase):
                 'abstract': 'The abstract abstract',
                 'author': [
                     {
-                        "name": 'Foo author',
+                        "forename": 'Foo',
+                        'surname': 'Author',
                         "email": 'Foo email',
                         "identifier": 'http://arxiv.org/author/foo'
                     }
                 ],
                 "doi": "doi:10.00234/foo/bar"
             },
-            'submitterIsAuthor': True,
-            'submitterAcceptsPolicy': True,
+            'submitter_is_author': True,
+            'submitter_accepts_policy': True,
             'license': "http://creativecommons.org/licenses/by-sa/4.0/",
             "primary_classification": {
                 "group": 'physics',

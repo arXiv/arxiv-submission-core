@@ -6,7 +6,7 @@ from submit.domain.event import CreateSubmissionEvent, UpdateMetadataEvent, \
     CreateCommentEvent
 from submit.domain.agent import System
 from submit.domain.rule import EventRule, RuleCondition, RuleConsequence
-from submit.domain.submission import SubmissionMetadata, Submission
+from submit.domain.submission import SubmissionMetadata, Submission, Author
 from submit import eventBus
 
 TEST = 'postgres://arxiv-submit:arxiv-submit@localhost:5432/arxiv-submit-test'
@@ -225,6 +225,10 @@ class TestApplyRules(TestCase):
                 event_data={'body': 'The metadata was updated'}
             )
         )
+        authors = [
+            Author(forename='Joe', surname='Bloggs', affiliation='FSU',
+                   email='jbloggs@fsu.wtf', order=1)
+        ]
         submission = Submission(
             submission_id=1,
             creator=System(),
@@ -232,7 +236,7 @@ class TestApplyRules(TestCase):
             metadata=SubmissionMetadata(
                 title='The Title',
                 abstract='Very abstract',
-                authors='Joe Bloggs & the Chipmunks'
+                authors=authors
             )
         )
         event = UpdateMetadataEvent(
@@ -276,6 +280,10 @@ class TestApplyRules(TestCase):
                 event_data={'body': 'The metadata was updated'}
             )
         )
+        authors = [
+            Author(forename='Joe', surname='Bloggs', affiliation='FSU',
+                   email='jbloggs@fsu.wtf', order=1)
+        ]
         submission = Submission(
             submission_id=1,
             creator=System(),
@@ -283,7 +291,7 @@ class TestApplyRules(TestCase):
             metadata=SubmissionMetadata(
                 title='The Title',
                 abstract='Very abstract',
-                authors='Joe Bloggs & the Chipmunks'
+                authors=authors
             )
         )
         event = UpdateMetadataEvent(
