@@ -1,11 +1,12 @@
 """Provides External REST API."""
 
 import logging
+from typing import Callable
 from functools import wraps
 from flask.json import jsonify
 from flask import Blueprint, current_app, redirect, request, url_for, g
 
-from submit import authorization, status
+from submit import authorization, status, schema
 from submit.controllers import submission
 
 
@@ -23,6 +24,28 @@ def json_response(func):
     return wrapper
 
 
+def validate_request(schema_path: str) -> Callable:
+    """Generate a decorator that validates the request body."""
+    validate = schema.load(schema_path)
+
+    def _decorator(func: Callable) -> Callable:
+        @wraps(func)
+        def _wrapper(*args, **kwargs):
+            try:
+                validate(request.get_json())
+            except schema.ValidationError as e:
+                # A summary of the exception is on the first line of the repr.
+                msg = str(e).split('\n')[0]
+                return (
+                    {'reason': 'Metadata validation failed: %s' % msg},
+                    status.HTTP_400_BAD_REQUEST,
+                    {}
+                )
+            return func(*args, **kwargs)
+        return _wrapper
+    return _decorator
+
+
 @blueprint.route('/', methods=['GET'])
 @json_response
 def service() -> tuple:
@@ -32,6 +55,7 @@ def service() -> tuple:
 
 @blueprint.route('/', methods=['POST'])
 @authorization.scoped(authorization.WRITE)
+@validate_request('api/submission.json')
 @json_response
 def create_submission() -> tuple:
     """Accept new submissions."""

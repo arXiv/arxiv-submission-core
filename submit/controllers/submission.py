@@ -14,7 +14,6 @@ from submit.domain.agent import Agent, agent_factory
 from submit.domain.submission import Submission, Classification, License, \
     SubmissionMetadata
 from submit.services import database
-from submit import schema
 from submit import eventBus
 
 Response = Tuple[dict, int, dict]
@@ -35,28 +34,6 @@ METADATA_FIELDS = [
     ('journal_ref', 'journal_ref'),
     ('authors', 'author')
 ]
-
-
-def validate_request(schema_path: str) -> Callable:
-    """Generate a decorator that validates the request body."""
-    validate = schema.load(schema_path)
-
-    def _decorator(func: Callable) -> Callable:
-        @wraps(func)
-        def _wrapper(body: dict, headers: dict, files: dict=None, **extra):
-            try:
-                validate(body)
-            except schema.ValidationError as e:
-                # A summary of the exception is on the first line of the repr.
-                msg = str(e).split('\n')[0]
-                return (
-                    {'reason': 'Metadata validation failed: %s' % msg},
-                    status.HTTP_400_BAD_REQUEST,
-                    {}
-                )
-            return func(body, headers, files=files, **extra)
-        return _wrapper
-    return _decorator
 
 
 def _get_agents(extra: dict) -> Tuple[Optional[Agent], Optional[Agent]]:
@@ -233,7 +210,6 @@ def _agent_is_owner(submission_id: int, agent: Agent) -> bool:
     return agent == database.get_submission_owner(submission_id)
 
 
-@validate_request('api/submission.json')
 def create_submission(body: dict, headers: dict, files: dict=None, **extra) \
         -> Response:
     """

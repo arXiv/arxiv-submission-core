@@ -30,7 +30,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: 'foo.json'
+              $ref: 'submission.json'
       responses:
         '202':
           description: The submission payload has been accepted for deposit.
@@ -62,7 +62,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: 'foo.json'
+                $ref: 'submission.json'
     post:
       description: |
         Update the submission with procedural and descriptive metadata. Include
@@ -72,14 +72,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: 'foo.json'
+              $ref: 'submission.json'
       responses:
         '200':
           description: The submission has been updated.
           content:
             application/json:
               schema:
-                $ref: 'foo.json'
+                $ref: 'submission.json'
   /submit/{id}/history/:
     parameters:
       - in: path

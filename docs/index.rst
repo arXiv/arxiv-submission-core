@@ -7,9 +7,11 @@ modeled in the submission system, how they progress through the submission
 and moderation process to eventual publication, and how that process is
 exposed via the API.
 
-arXiv Submissions & States
-==========================
+Data Architecture & Submission Process
+======================================
 
+arXiv Submissions & States
+--------------------------
 An arXiv submission is comprised of a source package and a collection of
 procedural and descriptive metadata. The source package is usually comprised of
 a scientific paper (generally in LaTeX) and auxiliary resources (e.g. images,
@@ -97,20 +99,21 @@ Published
 
 
 Submission Events
-=================
+-----------------
 
 The arXiv-NG submission system treats changes to or actions concerning a
 submission as the primary unit of data. Metadata updates, moderation actions,
 and procedures applied automatically by the submission system all generate
-submission events. Those events are stored in order, describe the
-transformation that they represent, and encode the provenance of the event
-(who generated the event, and when). We can play these events forward to
-calculate the current state of a submission, or a past state.
+submission events.
+
+Events are stored in order, describe the transformation that they represent,
+and encode the provenance of the event (who generated the event, and when). We
+can play these events forward to calculate the current state of a submission,
+or a past state.
 
 A complete list of submission event types can be found in :ref:`event-types`.
 
 When a submission event is created, several things occur:
-
 
 1. All of the recorded events for the submission are loaded from the database,
    and the new event is inserted into that event stack.
@@ -125,33 +128,3 @@ When a submission event is created, several things occur:
 6. The :ref:`webhook-service` listens for events from the notification broker,
    and propagates them to API clients who have registered a corresponding
    webhook.
-
-
-.. _webhook-service:
-
-Webhook Service
-===============
-
-.. _notification-broker:
-
-Notification Broker
-===================
-
-
-Implementation Path
-===================
-The Classic arXiv system is complex, and we have adopted an incremental
-approach to our redesign and reimplementation of the legacy platform.
-Consequently, not all features of the arXiv-NG submission system and API will
-be available right away.
-
-
-- Submission API shim
-- Submission UI shim
-- Moderation UI shim
-- Administrative interfaces
-
-.. _supported-source-formats:
-
-Supported source formats
-========================

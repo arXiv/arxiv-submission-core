@@ -1,5 +1,33 @@
 
 
+.. _webhook-service:
+
+Webhook Service
+===============
+
+.. _notification-broker:
+
+Notification Broker
+===================
+
+
+Implementation Path
+===================
+The Classic arXiv system is complex, and we have adopted an incremental
+approach to our redesign and reimplementation of the legacy platform.
+Consequently, not all features of the arXiv-NG submission system and API will
+be available right away.
+
+
+- Submission API shim
+- Submission UI shim
+- Moderation UI shim
+- Administrative interfaces
+
+.. _supported-source-formats:
+
+Supported source formats
+========================
 
 
 

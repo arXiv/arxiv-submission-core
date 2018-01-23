@@ -12,33 +12,6 @@ from submit.domain.event import *
 class TestCreateSubmission(TestCase):
     """Tests for :func:`.submission.create_submission`."""
 
-    def test_add_submission_invalid_body(self):
-        """:func:`.submission.create_submission` expects a valid body."""
-        body = {
-            'metadata': {
-                'author': [
-                    {
-                        "forename": 'Foo',
-                        'surname': 'Author',
-                        "email": 'Foo email',
-                        "identifier": 'http://arxiv.org/author/foo'
-                    }
-                ],
-                'submitter_is_author': True,
-                'submitter_accepts_policy': True,
-                'license': "http://creativecommons.org/licenses/by-sa/4.0/",
-                "primary_classification": [
-                    {
-                        "category": "astro-ph"
-                    }
-                ]
-            }
-        }
-        extra = {'user': 'foo_user123'}
-        response = submission.create_submission(body, {}, {}, **extra)
-        response_body, code, head = response
-        self.assertEqual(code, status.HTTP_400_BAD_REQUEST)
-
     @mock.patch('submit.controllers.submission.url_for')
     @mock.patch('submit.controllers.submission.eventBus')
     def test_add_submission_valid_body(self, mock_eventBus, mock_url_for):
