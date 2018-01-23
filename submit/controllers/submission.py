@@ -1,7 +1,6 @@
 """Controllers for the external API."""
 
 import json
-import jsonschema
 from functools import wraps
 from datetime import datetime
 import copy
@@ -15,6 +14,7 @@ from submit.domain.agent import Agent, agent_factory
 from submit.domain.submission import Submission, Classification, License, \
     SubmissionMetadata
 from submit.services import database
+from submit import schema
 from submit import eventBus
 
 Response = Tuple[dict, int, dict]
@@ -39,15 +39,14 @@ METADATA_FIELDS = [
 
 def validate_request(schema_path: str) -> Callable:
     """Generate a decorator that validates the request body."""
-    with open(schema_path) as f:
-        schema = json.load(f)
+    validate = schema.load(schema_path)
 
     def _decorator(func: Callable) -> Callable:
         @wraps(func)
         def _wrapper(body: dict, headers: dict, files: dict=None, **extra):
             try:
-                jsonschema.validate(body, schema)
-            except jsonschema.exceptions.ValidationError as e:
+                validate(body)
+            except schema.ValidationError as e:
                 # A summary of the exception is on the first line of the repr.
                 msg = str(e).split('\n')[0]
                 return (
@@ -81,8 +80,6 @@ def _update_classification(body: dict, creator: Agent,
                 'SetPrimaryClassificationEvent',
                 creator=creator,
                 submission_id=submission_id,
-                group=body['primary_classification']['group'],
-                archive=body['primary_classification']['archive'],
                 category=body['primary_classification']['category'],
             )
         )
@@ -91,8 +88,6 @@ def _update_classification(body: dict, creator: Agent,
             'AddSecondaryClassificationEvent',
             creator=creator,
             submission_id=submission_id,
-            group=classification_datum['group'],
-            archive=classification_datum['archive'],
             category=classification_datum['category'],
         ))
     return events
@@ -181,8 +176,6 @@ def _classification_state(classification: Optional[Classification]) \
     if not classification:
         return
     return {
-        'group': classification.group,
-        'archive': classification.archive,
         'category': classification.category
     }
 
@@ -231,6 +224,8 @@ def _event_state(event: Event) -> dict:
         del event_data['data']['proxy']
     event_data['creator'] = _agent_state(event.creator)
     del event_data['data']['creator']
+    event_data['submission_id'] = str(event.submission_id)
+    event_data['event_id'] = event.event_id
     return event_data
 
 
@@ -238,7 +233,7 @@ def _agent_is_owner(submission_id: int, agent: Agent) -> bool:
     return agent == database.get_submission_owner(submission_id)
 
 
-@validate_request('schema/submission.json')
+@validate_request('api/submission.json')
 def create_submission(body: dict, headers: dict, files: dict=None, **extra) \
         -> Response:
     """

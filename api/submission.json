@@ -1,0 +1,113 @@
+{
+    "title": "Submission",
+    "description": "Describes an arXiv submission. ",
+    "required": ["metadata", "primary_classification"],
+    "additionalProperties": false,
+    "type": "object",
+    "properties": {
+        "submission_id": {
+            "description": "arXiv submission identifier. Read-only.",
+            "readOnly": true,
+            "type": "string"
+        },
+        "arxiv_id": {
+            "description": "If the submission has been published, this is the associated arXiv ID",
+            "readOnly": true,
+            "type": "string"
+        },
+        "owner": {
+            "description": "The agent responsible for the submission. May be transferred to another agent by the current owner.",
+            "$ref": "file:./agent.json"
+        },
+        "creator": {
+            "description": "The agent responsible for creating the submission. Read-only.",
+            "readOnly": true,
+            "$ref": "file:./agent.json"
+        },
+        "proxy": {
+            "description": "The Client agent who registered the submission on behalf of the creator. Read-only.",
+            "readOnly": true,
+            "$ref": "file:./agent.json"
+        },
+        "metadata": {
+            "$ref": "file:./metadata.json"
+        },
+        "submitter_is_author": {
+            "description": "Indicates whether or not the submitter is also an author of the resource.",
+            "type": "boolean"
+        },
+        "submitter_accepts_policy": {
+            "description": "Indicates whether or not the submitter accepts the arXiv submission ",
+            "type": "boolean"
+        },
+        "license": {
+            "description": "License to be applied to the submission.",
+            "oneOf": [
+                {
+                    "type": "string"
+                },
+                {
+                    "type": "null"
+                }
+            ],
+            "format": "uri"
+        },
+        "primary_classification": {
+            "$ref": "file:./classification.json"
+        },
+        "secondary_classification": {
+            "description": "The archive(s) and subject class(es) for this submission.",
+            "type": "array",
+            "items": {
+                "$ref": "file:./classification.json"
+            }
+        },
+        "finalized": {
+            "description": "Indicates whether or not the submission is ready for publication (pending moderation).",
+            "type": "boolean",
+            "readOnly": true
+        },
+        "active": {
+            "description": "Indicates whether or not the submission is under active processing. Submissions that are deleted, withdrawn, or published are considered inactive.",
+            "type": "boolean",
+            "readOnly": true
+        },
+        "published": {
+            "description": "Indicates whether or not the submission is published.",
+            "type": "boolean",
+            "readOnly": true
+        },
+        "files": {
+            "description": "Remote files to be included in the submission package.",
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "href": {
+                        "description": "Dereferencable location of the package.",
+                        "type": "string",
+                        "format": "uri"
+                    },
+                    "ttl": {
+                        "description": "Time at which resource will become unavailable.",
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "dereference": {
+                        "description": "Whether or not the resource should be retrieved.",
+                        "type": "boolean"
+                    },
+                    "type": {
+                        "description": "MIME type of the remote resource.",
+                        "type": "string"
+                    },
+                    "packaging": {
+                        "description": "URI unambiguously identifying the packaging profile.",
+                        "type": "string",
+                        "format": "uri"
+                    }
+                }
+            }
+        }
+    }
+}

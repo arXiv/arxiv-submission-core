@@ -129,22 +129,18 @@ class AcceptArXivPolicyEvent(Event):
 class SetPrimaryClassificationEvent(Event):
     """Update the primary classification of a :class:`.Submission`."""
 
-    group = Property('group', str)
-    archive = Property('archive', str)
     category = Property('category', str)
 
     def validate(self, submission: Optional[Submission] = None) -> None:
         """All three fields must be set."""
         try:
-            assert self.group and self.archive and self.category
+            assert self.category
         except AssertionError as e:
             raise ValidationError(e) from e
 
     def apply(self, submission: Optional[Submission] = None) -> Submission:
         """Set :prop:`.Submission.primary_classification`."""
         submission.primary_classification = Classification(
-            group=self.group,
-            archive=self.archive,
             category=self.category
         )
         return submission
@@ -153,22 +149,18 @@ class SetPrimaryClassificationEvent(Event):
 class AddSecondaryClassificationEvent(Event):
     """Add a secondary :class:`.Classification` to a :class:`.Submission`."""
 
-    group = Property('group', str)
-    archive = Property('archive', str)
     category = Property('category', str)
 
     def validate(self, submission: Optional[Submission] = None) -> None:
         """All three fields must be set."""
         try:
-            assert self.group and self.archive and self.category
+            assert self.category
         except AssertionError as e:
             raise ValidationError(e) from e
 
     def apply(self, submission: Optional[Submission] = None) -> Submission:
         """Append to :prop:`.Submission.secondary_classification`."""
         submission.secondary_classification.append(Classification(
-            group=self.group,
-            archive=self.archive,
             category=self.category
         ))
         return submission
@@ -177,14 +169,12 @@ class AddSecondaryClassificationEvent(Event):
 class RemoveSecondaryClassificationEvent(Event):
     """Remove secondary :class:`.Classification` from :class:`.Submission`."""
 
-    group = Property('group', str)
-    archive = Property('archive', str)
     category = Property('category', str)
 
     def validate(self, submission: Optional[Submission] = None) -> None:
         """All three fields must be set."""
         try:
-            assert self.group and self.archive and self.category
+            assert self.category
         except AssertionError as e:
             raise ValidationError(e) from e
 
@@ -192,11 +182,7 @@ class RemoveSecondaryClassificationEvent(Event):
         """Remove from :prop:`.Submission.secondary_classification`."""
         submission.secondary_classification = [
             classn for classn in submission.secondary_classification
-            if not all([
-                classn.group == self.group,
-                classn.archive == self.archive,
-                classn.category == self.category
-            ])
+            if not classn.category == self.category
         ]
         return submission
 

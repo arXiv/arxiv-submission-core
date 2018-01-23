@@ -80,8 +80,6 @@ class Submission(db.Model):  # type: ignore
     submitter_is_author = Column(Boolean, default=True)
     submitter_accepts_policy = Column(Boolean, default=False)
 
-    primary_classification_group = Column(String(20))
-    primary_classification_archive = Column(String(20))
     primary_classification_category = Column(String(20))
     secondary_classification = Column(JSON)
 

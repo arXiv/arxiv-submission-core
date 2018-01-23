@@ -1,0 +1,20 @@
+{
+    "title": "SubmissionLog",
+    "type": "object",
+    "description": "Describes an arXiv submission log.",
+    "required": ["submission_id", "events"],
+    "additionalProperties": false,
+    "properties": {
+        "submission_id": {
+            "description": "arXiv submission identifier. Read-only.",
+            "readOnly": true,
+            "type": "string"
+        },
+        "events": {
+            "type": "array",
+            "items": {
+                "$ref": "file:./event.json"
+            }
+        }
+    }
+}

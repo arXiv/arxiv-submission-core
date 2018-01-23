@@ -29,8 +29,6 @@ class TestCreateSubmission(TestCase):
                 'license': "http://creativecommons.org/licenses/by-sa/4.0/",
                 "primary_classification": [
                     {
-                        "group": 'physics',
-                        "archive": 'physics',
                         "category": "astro-ph"
                     }
                 ]
@@ -65,8 +63,6 @@ class TestCreateSubmission(TestCase):
             'submitter_accepts_policy': True,
             'license': "http://creativecommons.org/licenses/by-sa/4.0/",
             "primary_classification": {
-                "group": 'physics',
-                "archive": 'physics',
                 "category": "astro-ph"
             }
         }
@@ -104,8 +100,6 @@ class TestCreateSubmission(TestCase):
             'submitter_accepts_policy': True,
             'license': "http://creativecommons.org/licenses/by-sa/4.0/",
             "primary_classification": {
-                "group": 'physics',
-                "archive": 'physics',
                 "category": "astro-ph"
             }
         }

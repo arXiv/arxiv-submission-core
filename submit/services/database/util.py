@@ -74,12 +74,6 @@ def _submission_domain_to_data(submission: Submission,
     db_submission.finalized = submission.finalized
     db_submission.published = submission.published
     db_submission.active = submission.active
-    db_submission.primary_classification_group = (
-        getattr(submission.primary_classification, 'group', '')
-    )
-    db_submission.primary_classification_archive = (
-        getattr(submission.primary_classification, 'archive', '')
-    )
     db_submission.primary_classification_category = (
         getattr(submission.primary_classification, 'category', '')
     )
@@ -120,8 +114,6 @@ def _submission_data_to_domain(db_submission: models.Submission) -> Submission:
             for db_comment in db_submission.comments
         },
         primary_classification=Classification(
-            group=db_submission.primary_classification_group,
-            archive=db_submission.primary_classification_archive,
             category=db_submission.primary_classification_category
         ),
         secondary_classification=[

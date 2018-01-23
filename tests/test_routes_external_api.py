@@ -2,10 +2,10 @@ from unittest import TestCase, mock
 import os
 import json
 import jwt
-import jsonschema
 from flask import Flask
 from submit.factory import create_web_app
 from submit.services import database
+from submit import schema
 
 
 TEST_DB_URI = os.environ.get(
@@ -41,9 +41,7 @@ class TestAPISubmission(TestCase):
         """Create a new submission via the API."""
         payload = {
             'primary_classification': {
-                'group': 'physics',
-                'archive': 'physics',
-                'category': 'data-an'
+                'category': 'physics.data-an'
             },
             'metadata': {
                 'title': 'Foo title',
@@ -81,20 +79,17 @@ class TestAPISubmission(TestCase):
         except json.decoder.JSONDecodeError:
             self.fail('Did not return valid JSON: %s' % response.data)
 
-        with open('schema/submission.json') as f:
-            schema = json.load(f)
+        validate = schema.load('api/submission.json')
         try:
-            jsonschema.validate(response_data, schema)
-        except jsonschema.exceptions.SchemaError as e:
+            validate(response_data)
+        except schema.ValidationError as e:
             self.fail('Response data is invalid: %s' % e)
 
     def test_get_submission(self):
         """Get the current state of the submission."""
         payload = {
             'primary_classification': {
-                'group': 'physics',
-                'archive': 'physics',
-                'category': 'data-an'
+                'category': 'physics.data-an'
             },
             'metadata': {
                 'title': 'Foo title',
@@ -140,20 +135,17 @@ class TestAPISubmission(TestCase):
         except json.decoder.JSONDecodeError:
             self.fail('Did not return valid JSON: %s' % get_response.data)
 
-        with open('schema/submission.json') as f:
-            schema = json.load(f)
+        validate = schema.load('api/submission.json')
         try:
-            jsonschema.validate(get_response_data, schema)
-        except jsonschema.exceptions.SchemaError as e:
+            validate(get_response_data)
+        except schema.ValidationError as e:
             self.fail('Response data is invalid: %s' % e)
 
     def test_get_submission_history(self):
         """Get the history for a submission."""
         payload = {
             'primary_classification': {
-                'group': 'physics',
-                'archive': 'physics',
-                'category': 'data-an'
+                'category': 'physics.data-an'
             },
             'metadata': {
                 'title': 'Foo title',
@@ -195,11 +187,10 @@ class TestAPISubmission(TestCase):
         except json.decoder.JSONDecodeError:
             self.fail('Did not return valid JSON: %s' % log_response.data)
 
-        with open('schema/log.json') as f:
-            schema = json.load(f)
+        validate = schema.load('api/log.json')
         try:
-            jsonschema.validate(log_response_data, schema)
-        except jsonschema.exceptions.SchemaError as e:
+            validate(log_response_data)
+        except schema.ValidationError as e:
             self.fail('Response data is invalid: %s' % e)
 
         # Should result in four events:
@@ -212,8 +203,6 @@ class TestAPISubmission(TestCase):
         update_payload = {
             'secondary_classification': [
                 {
-                    'group': 'physics',
-                    'archive': 'physics',
                     'category': 'hep-th'
                 }
             ]

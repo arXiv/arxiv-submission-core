@@ -9,8 +9,6 @@ from submit.domain.agent import Agent
 class Classification(Data):
     """An archive/category classification for a :class:`.Submission`."""
 
-    group = Property('group', str)
-    archive = Property('archive', str)
     category = Property('category', str)
 
 
