@@ -8,9 +8,9 @@ third-party applications.
 
 ## OpenAPI Schema
 
-The [](api/) directory provides a description of the arXiv submission API based
+The [api/](api/) directory provides a description of the arXiv submission API based
 on the OpenAPI 3.0.0 specification. The root API description is located at
-[](api/openapi.yaml).
+[api/openapi.yaml](api/openapi.yaml).
 
 The OpenAPI description refers to JSON Schema documents for the various
 resources accepted/exposed by the submission API. Those schemas are used to
