@@ -174,17 +174,31 @@ The submission process is essentially the same for proxy and bulk submissions,
 as ownership is inferred from the authorization token provided in each
 request.
 
+### Create a new submission
+
 Submission is initiated upon creation of a new submission resource, by
 POSTing to the ``/submission/`` endpoint. The submission resource need not be
 complete at this time. See ...
+
+### Upload source
 
 The submission source package may then be added by PUTing the package (see
 ... ) to the source endpoint:
 ``/submission/{id}/source/``. The response will include a redirect to a status
 endpoint; the source package will be sanitized and unpacked, which may take a
 little while, and the status endpoint can be monitored for progress.
+
 Alternatively, a webhook may be configured to receive notifications about
 source processing events. See ...
+
+#### Supported formats
+
+...
+
+#### Compilation
+
+**Note**: compilation applies to postscript and LaTeX submissions. PDF and
+other submissions will skip this step.
 
 When a source package is uploaded, by default the arXiv submission system will
 attempt to compile the source to PDF. Automatic compilation may be disabled,
@@ -203,15 +217,21 @@ the submission resource must be updated to confirm that the client/user is
 satisfied with the compiled paper. It is up to the client whether/how such
 confirmation should occur.
 
+### Update submission
+
 Updates to the submission may be made via subsequent POST requests to the
 submission endpoint (``/submission/{id}/``). This allows the client to
 spread the submission process over several steps, if desired.
+
+### External links
 
 External links may be attached to the submission by POSTing to the links
 endpoint, ``/submission/{id}/links/``. This may be used to supplement the
 core metadata with links to external resources, such as code, data, multimedia
 content, or an URI for an alternate version of the paper (e.g. in a
 peer-reviewed journal). See ...
+
+### Submit
 
 Once all required procedural and descriptive metadata have been added to the
 submission, it may be submitted by POSTing to the submit endpoint:
@@ -223,15 +243,19 @@ request may be made to ``/submission/{id}/webhooks/``. To register a webhook
 for all submissions for which the client is responsible, a POST request may be
 made to ``/webhooks/``. See ...
 
+### Publication
+
 Once the submission has been published, the submission will be updated with
 its arXiv identifier and version number. If a webhook is registered, a
 publication notification will also be issued.
 
+### Transfer ownership, delegate
+
 The client may transfer ownership of the submission to another agent (user or
 another client) via the ``/submission/{id}/transfer/`` endpoint. Note that this
-is non-reversible without intervention from the recipient. An alternative is
-to delegate editing privileges to another agent, via the
-``/submission/{id}/delegate/`` endpoint. See ...
+is non-reversible without intervention from the recipient. An alternative is to
+delegate editing privileges (without relinquishing ownership) to another agent,
+via the ``/submission/{id}/delegate/`` endpoint. See ...
 
 # arXiv Submission & Publication Process
 
