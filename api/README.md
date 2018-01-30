@@ -7,7 +7,7 @@ third-party applications.
 
 The [schema/](schema/) directory provides a description of the arXiv submission
 API based on the OpenAPI 3.0.0 specification. The root API description is
-located at [schema/openapi.yaml](api/openapi.yaml).
+located at ``schema/openapi.yaml``.
 
 The OpenAPI description refers to [JSON Schema](json-schema.org) documents for
 the various resources accepted/exposed by the submission API. Those schemas are
@@ -29,6 +29,7 @@ system for API consumers.
 ## Submission Workflows
 
 ### Proxy Submission
+
 Proxy submission is when an API client submits on behalf of an arXiv user who
 has explicitly delegated authorization to the client.
 
@@ -46,6 +47,7 @@ Note that in the classic arXiv system, "proxy submission" referred to bulk
 deposit via the SWORDv1 API.
 
 ### Bulk Submission
+
 Bulk submission is when an API client submits directly to arXiv without the
 involvement of an arXiv user. Bulk submission may be appropriate for
 conference proceedings or other large-volume deposits for which it is
@@ -174,7 +176,7 @@ request.
 
 Submission is initiated upon creation of a new submission resource, by
 POSTing to the ``/submission/`` endpoint. The submission resource need not be
-complete at this time. See :ref:`api-create`.
+complete at this time. See ...
 
 The submission source package may then be added by PUTing the package (see
 ... ) to the source endpoint:
@@ -213,13 +215,13 @@ peer-reviewed journal). See ...
 
 Once all required procedural and descriptive metadata have been added to the
 submission, it may be submitted by POSTing to the submit endpoint:
-``/submission/{id}/submit/``. See :ref:`api-submit`.
+``/submission/{id}/submit/``. See ...
 
 A client may register to receive updates about one or all submissions for which
 it is responsible. To register a webhook for a specific submission, a POST
 request may be made to ``/submission/{id}/webhooks/``. To register a webhook
 for all submissions for which the client is responsible, a POST request may be
-made to ``/webhooks/``. See :ref:`api-webhooks`.
+made to ``/webhooks/``. See ...
 
 Once the submission has been published, the submission will be updated with
 its arXiv identifier and version number. If a webhook is registered, a
