@@ -1,25 +1,43 @@
 """Data structures for submissions."""
 
+from typing import TypeVar
 import hashlib
 from datetime import datetime
 from api.domain import Data, Property
-from api.domain.agent import Agent
+from api.domain.agent import Agent, agent_factory
 
 
-class Classification(Data):
+SubmissionType = TypeVar('SubmissionType', bound='Submission')
+
+
+class SubmissionData(Data):
+    @classmethod
+    def _data_to_set(cls, data: dict, err_missing: bool = True):
+        """Override to instantiate :class:`.Agent`s as their child class."""
+        for key, value in data.items():
+            if isinstance(value, Data):    # Already cast; don't touch.
+                continue
+            field = getattr(cls, key, None)
+            if isinstance(field, Property) and field.klass is Agent:
+                data[key] = agent_factory(value['agent_type'],
+                                          value['native_id'])
+        return super(SubmissionData, cls)._data_to_set(data, err_missing)
+
+
+class Classification(SubmissionData):
     """An archive/category classification for a :class:`.Submission`."""
 
     category = Property('category', str)
 
 
-class License(Data):
+class License(SubmissionData):
     """An license for distribution of the submission."""
 
     name = Property('name', str, null=True)
     uri = Property('uri', str)
 
 
-class Author(Data):
+class Author(SubmissionData):
     """Represents an author of a submission."""
 
     def __init__(self, **data) -> None:
@@ -54,7 +72,7 @@ class Author(Data):
         return name
 
 
-class SubmissionMetadata(Data):
+class SubmissionMetadata(SubmissionData):
     """Metadata about a :class:`.Submission` instance."""
 
     title = Property('title', str, null=True)
@@ -74,7 +92,7 @@ class SubmissionMetadata(Data):
     journal_ref = Property('journal_ref', str, null=True)
 
 
-class Delegation(Data):
+class Delegation(SubmissionData):
     """Delegation of editing privileges to a non-owning :class:`.Agent`."""
 
     @property
@@ -91,7 +109,7 @@ class Delegation(Data):
     created = Property('created', datetime)
 
 
-class Submission(Data):
+class Submission(SubmissionData):
     """Represents an arXiv submission object."""
 
     creator = Property('creator', Agent)

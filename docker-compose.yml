@@ -37,7 +37,7 @@ services:
       AWS_ACCESS_KEY_ID: "foo"
       AWS_SECRET_ACCESS_KEY: "bar"
       LOGLEVEL: 10
-      SUBMIT_DATABASE_URI: "postgres://foouser:foopass@submission-postgres:5432/postgres"
+      SQLALCHEMY_DATABASE_URI: "postgres://foouser:foopass@submission-postgres:5432/postgres"
     networks:
       - arxiv-submission-local
     depends_on:

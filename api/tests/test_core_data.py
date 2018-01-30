@@ -146,7 +146,7 @@ class TestDataMethods(TestCase):
         self.assertEqual(data['foo'], value)
         self.assertEqual(len(data), 1)
 
-    def testto_dict_with_default_value(self):
+    def test_to_dict_with_default_value(self):
         """A dict is created from :class:`.Data` instance property values."""
         value = 'yes'
 
@@ -162,7 +162,7 @@ class TestDataMethods(TestCase):
         self.assertEqual(data['foo'], value)
         self.assertEqual(len(data), 1)
 
-    def testto_dict_with_no_value(self):
+    def test_to_dict_with_no_value(self):
         """A dict is created from :class:`.Data` instance property values."""
         #
         class FooData(Data):
@@ -176,6 +176,20 @@ class TestDataMethods(TestCase):
         self.assertIn('foo', data)
         self.assertIsNone(data['foo'])
         self.assertEqual(len(data), 1)
+
+    def test_to_dict_with_subclass(self):
+        """."""
+        class FooData(Data):
+            @property
+            def foo_type(self):
+                return type(self).__name__
+
+        class ChildFoo(FooData):
+            pass
+
+        child_instance = ChildFoo()
+        self.assertEqual(child_instance.foo_type, 'ChildFoo')
+        self.assertEqual(child_instance.to_dict()['foo_type'], 'ChildFoo')
 
     def test_copy(self):
         """A copy of the :class:`.Data` instance is created."""

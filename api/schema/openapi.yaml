@@ -64,10 +64,10 @@ paths:
               schema:
                 $ref: 'resources/submission.json'
     post:
+      operationId: updateSubmission
       description: |
         Update the submission with procedural and descriptive metadata. Include
         data only for fields which should be updated.
-      operationId: updateSubmission
       requestBody:
         content:
           application/json:
@@ -80,6 +80,42 @@ paths:
             application/json:
               schema:
                 $ref: 'resources/submission.json'
+  /submit/{id}/source/:
+    parameters:
+      - in: path
+        name: id
+        description: |
+          Unique submission ID returned upon createSubmission. This will
+          likely, but not necessesarily, look like an integer.
+        required: true
+        schema:
+          type: string
+    get:
+      operationId: getSourceInformation
+      description: |
+        Get the source package inventory for the submission. Includes the
+        current state of each of the files in the source package.
+      responses:
+        '200':
+          description: The source package inventory.
+          content:
+            application/json:
+              schema:
+                $ref: 'resources/sourceInformation.json'
+    post:
+      operationId: uploadSourcePackage
+      description: |
+        Add (or replace) the source package for the submission.
+      responses:
+        '202':
+          description: |
+            The source package has been accepted. At this point the source
+            package will be inspected for safety and suitability, and unpacked.
+          headers:
+            Location:
+              description: Status endpoint for source package.
+              schema:
+                type: "string"
   /submit/{id}/history/:
     parameters:
       - in: path
@@ -154,7 +190,12 @@ paths:
           content:
             application/json:
               schema:
-                $ref: 'resources/webhooks.json'
+                type: object
+                parameters:
+                  webhooks:
+                    type: array
+                    items:
+                      $ref: 'resources/webhook.json'
     post:
       description: |
         Register a new webhook for a submission.

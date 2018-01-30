@@ -4,6 +4,7 @@ import json
 from functools import wraps
 from datetime import datetime
 import copy
+import logging
 from typing import Tuple, List, Callable, Optional
 
 from flask import url_for, current_app
@@ -15,6 +16,13 @@ from api.domain.submission import Submission, Classification, License, \
 from api.services import database, events
 
 from . import util
+
+logging.basicConfig(
+    format='%(asctime)s - %(name)s - %(levelname)s: %(message)s'
+)
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+
 
 Response = Tuple[dict, int, dict]
 
@@ -126,15 +134,18 @@ def create_submission(body: dict, headers: dict, files: Optional[dict] = None,
     dict
         Headers to add to the response.
     """
+    logger.debug('Received request to create submission')
     if not user and not client:
+        logger.debug('Neither user nor client set')
         return NO_USER_OR_CLIENT
 
     if not _is_authorized(None, user, client):
+        logger.debug('Not authorized')
         return {}, status.HTTP_403_FORBIDDEN, {}
 
     try:
         submission = events.create_submission(token=token)
-        _update_submission(submission.submission_id, body, token)
+        submission = _update_submission(submission.submission_id, body, token)
     except events.ServiceDown as e:
         raise
         return (

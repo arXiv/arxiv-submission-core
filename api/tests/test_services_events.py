@@ -72,7 +72,7 @@ class TestCreateSubmission(TestCase):
         args, kwargs = mock_post.call_args
 
         # Should call the create_submission endpoint.
-        self.assertEqual(args[0], '/create_submission/')
+        self.assertEqual(args[0], '/events/create_submission/')
         self.assertIn('Authorization', kwargs['headers'])
 
         self.assertIsInstance(submission, Submission)
@@ -147,7 +147,7 @@ class TestUpdateMetadata(TestCase):
         args, kwargs = mock_post.call_args
 
         # Should call the update_metadata endpoint on the submission instance.
-        self.assertEqual(args[0], '/submission/1/update_metadata/')
+        self.assertEqual(args[0], '/events/submission/1/update_metadata/')
         self.assertIn('Authorization', kwargs['headers'])
 
         self.assertIsInstance(submission, Submission)

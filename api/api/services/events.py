@@ -10,6 +10,7 @@ from typing import Callable, Optional, Any
 import json
 from functools import wraps
 from urllib.parse import urljoin
+import logging
 
 from werkzeug.local import LocalProxy
 
@@ -18,7 +19,11 @@ from api.context import get_application_config, get_application_global
 
 from arxiv import status
 
-_local = locals()
+logging.basicConfig(
+    format='%(asctime)s - %(name)s - %(levelname)s: %(message)s'
+)
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
 
 
 class NotFound(ValueError):
@@ -48,33 +53,37 @@ class SubmissionEventsController(object):
         self._adapter = requests.adapters.HTTPAdapter(max_retries=self._retry)
         self._session.mount('http://', self._adapter)
         self._session.mount('https://', self._adapter)
-        _populate_local_namespace(self)
 
     def _deserialize_agent(agent_data: dict) -> Agent:
         return agent_factory(agent_data['agent_type'], agent_data['native_id'])
 
     @staticmethod
     def _handle(response: requests.models.Response) -> dict:
+        logger.debug('Handle response: %i', response.status_code)
         if response.status_code == status.HTTP_404_NOT_FOUND:
             raise NotFound('No such resource: %s' % response.content)
         if response.status_code == status.HTTP_400_BAD_REQUEST:
             raise BadRequest('Bad request: %s' % response.content)
         try:
-            return response.json()
+            data = response.json()
+            logger.debug('with data: %s', str(data))
+            return data
         except json.decoder.JSONDecodeError as e:
+            logger.debug('Failed to parse')
             raise IOError('Failed to parse service response: %s' % e) from e
 
+    # TODO: take a closer look at possibly GIL-related connection issues.
     def _post(self, target_path: str, data: dict = {},
               token: Optional[str] = None) -> requests.models.Response:
         """Execute a POST request."""
-        # time.sleep(0.1)
+        logger.debug('POST to %s with data %s', target_path, str(data))
         try:
             response = self._session.post(
                 urljoin(self.endpoint, target_path),
                 json=data, headers={'Authorization': token}
             )
         except requests.exceptions.ConnectionError as e:
-            time.sleep(0.1)    # Wait for a GIL tick.
+            time.sleep(0.1)    # Wait for a GIL tick. Temporary fix?
             try:
                 response = self._session.post(
                     urljoin(self.endpoint, target_path),
@@ -136,34 +145,6 @@ class SubmissionEventsController(object):
         return Submission(**self._handle(response))
 
 
-class ProxyMethod(object):
-    def __init__(self, name: str) -> None:
-        self.name = name
-
-    def __call__(self, *args, **kwargs) -> Any:
-        return getattr(current_session(), self.name)(*args, **kwargs)
-
-
-def _populate_local_namespace(session: SubmissionEventsController) -> None:
-    """
-    Attach SubmissionEventsController methods to the local namspace.
-
-    This is purely for convenience: instead of calling the current session
-    instance and its method explicitly, the service module (this module)
-    provides an API directly.
-
-    Parameters
-    ----------
-    :class:`.SubmissionEventsController`
-    """
-    for key in dir(session):
-        if key.startswith('_'):
-            continue
-        if type(getattr(session, key)).__name__ != 'method':
-            continue
-        _local[key] = ProxyMethod(key)
-
-
 def init_app(app: Optional[LocalProxy] = None) -> None:
     """
     Set required configuration defaults for the application.
@@ -214,3 +195,48 @@ def current_session(app: Optional[LocalProxy] = None) \
             g.events = get_session(app)  # type: ignore
         return g.events  # type: ignore
     return get_session(app)
+
+
+@wraps(SubmissionEventsController.create_submission)
+def create_submission(token: Optional[str] = None) -> Submission:
+    """Create a new submission."""
+    return current_session().create_submission(token)
+
+
+@wraps(SubmissionEventsController.update_metadata)
+def update_metadata(submission_id: str, metadata: list,
+                    token: Optional[str] = None) -> Submission:
+    """Update the metadata on a submission."""
+    return current_session().update_metadata(submission_id, metadata, token)
+
+
+@wraps(SubmissionEventsController.assert_authorship)
+def assert_authorship(submission_id: str, is_author: bool,
+                      token: Optional[str] = None) -> Submission:
+    """Indicate whether or not the submitter is an author."""
+    return current_session().assert_authorship(submission_id, is_author, token)
+
+
+@wraps(SubmissionEventsController.accept_policy)
+def accept_policy(submission_id: str, token: Optional[str] = None) \
+        -> Submission:
+    """Indicate that the submitter accepts arXiv policies."""
+    return current_session().accept_policy(submission_id, token)
+
+
+@wraps(SubmissionEventsController.set_primary_classification)
+def set_primary_classification(submission_id: str, category: str,
+                               token: Optional[str] = None) -> Submission:
+    """Set the primary classification on the submission."""
+    return current_session().set_primary_classification(
+        submission_id, category, token
+    )
+
+
+@wraps(SubmissionEventsController.add_secondary_classification)
+def add_secondary_classification(submission_id: str, category: str,
+                                 token: Optional[str] = None) -> Submission:
+    """Set the primary classification on the submission."""
+    return current_session().add_secondary_classification(
+        submission_id, category, token
+    )
