@@ -5,9 +5,9 @@ import os
 from datetime import datetime
 from flask import Flask
 from submit.services import database
-from submit.domain.event import event_factory, Event
-from submit.domain.submission import Submission, SubmissionMetadata
-from submit.domain.agent import agent_factory
+from api.domain.event import event_factory, Event
+from api.domain.submission import Submission, SubmissionMetadata
+from api.domain.agent import agent_factory
 
 
 TEST = os.environ.get(

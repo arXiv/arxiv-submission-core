@@ -1,0 +1,50 @@
+{
+    "title": "UpdateAuthorsEvent",
+    "type": "object",
+    "description": "Describes an update to the authors of an arXiv submission.",
+    "required": ["data"],
+    "properties": {
+        "authors": {
+            "type": "array",
+            "items": {
+                "type": "array",
+                "items": {
+                    "description": "Author(s) of the submitted paper, in order.",
+                    "type": "object",
+                    "required": [
+                        "forename",
+                        "surname"
+                    ],
+                    "properties": {
+                        "forename": {
+                            "type": "string"
+                        },
+                        "surname": {
+                            "type": "string"
+                        },
+                        "initials": {
+                            "type": "string"
+                        },
+                        "affiliation": {
+                            "type": "string"
+                        },
+                        "canonical": {
+                            "description": "`<forename> <initial(s)> <surname> (<affiliation>)`. Read-only.",
+                            "readOnly": true,
+                            "type": "string"
+                        },
+                        "email": {
+                            "description": "E-mail address of the author.",
+                            "type": "string"
+                        },
+                        "identifier": {
+                            "description": "Author authority record URI. This may be an arXiv authority URI or an ORCID identifier.",
+                            "type": "string",
+                            "format": "uri"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

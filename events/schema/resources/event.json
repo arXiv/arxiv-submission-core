@@ -1,0 +1,39 @@
+{
+    "title": "SubmissionEvent",
+    "type": "object",
+    "description": "Describes an arXiv submission event.",
+    "properties": {
+        "submission_id": {
+            "description": "arXiv submission identifier. Read-only.",
+            "readOnly": true,
+            "type": "string"
+        },
+        "event_id": {
+            "description": "Unique identifier for the submission event.",
+            "readOnly": true,
+            "type": "string"
+        },
+        "creator": {
+            "$ref": "file:./agent.json",
+            "readOnly": true
+        },
+        "proxy": {
+            "oneOf": [
+                {"$ref": "file:./agent.json"},
+                {"type": "null"}
+            ],
+            "readOnly": true
+        },
+        "created": {
+            "description": "The date-time at which the event was created.",
+            "readOnly": true,
+            "type": "string",
+            "format": "date-time"
+        },
+        "event_type": {
+            "description": "The name of the event type.",
+            "readOnly": true,
+            "type": "string"
+        }
+    }
+}
