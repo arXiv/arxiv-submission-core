@@ -1,0 +1,100 @@
+version: '3'
+
+services:
+  submission-postgres:
+    image: postgres:latest
+    container_name: submission-postgres
+    networks:
+      - arxiv-submission-local
+    environment:
+      POSTGRES_USER: foouser
+      POSTGRES_PASSWORD: foopass
+
+  submission-redis:
+    image: redis
+    container_name: submission-redis
+    networks:
+      - arxiv-submission-local
+
+  submission-localstack:
+    image: atlassianlabs/localstack
+    container_name: submission-localstack
+    networks:
+      - arxiv-submission-local
+    ports:
+      - "4568:4568"
+      - "4569:4569"
+    environment:
+      USE_SSL: 'true'
+      DEBUG: 'true'
+
+  submission-events:
+    build:
+      context: ./
+      dockerfile: Dockerfile-events
+    environment:
+      REDIS_ENDPOINT: "submission-redis:6379"
+      AWS_ACCESS_KEY_ID: "foo"
+      AWS_SECRET_ACCESS_KEY: "bar"
+      LOGLEVEL: 10
+      SQLALCHEMY_DATABASE_URI: "postgres://foouser:foopass@submission-postgres:5432/postgres"
+    networks:
+      - arxiv-submission-local
+    depends_on:
+      - submission-redis
+      - submission-localstack
+      - submission-postgres
+
+  submission-api:
+    build:
+      context: ./
+      dockerfile: Dockerfile-api
+    container_name: submission-api
+    environment:
+      REDIS_ENDPOINT: "submission-redis:6379"
+      AWS_ACCESS_KEY_ID: "foo"
+      AWS_SECRET_ACCESS_KEY: "bar"
+      LOGLEVEL: 10
+      EVENTS_ENDPOINT: "http://submission-events:8000/"
+      API_DATABASE_URI: "postgres://foouser:foopass@submission-postgres:5432/postgres"
+    networks:
+      - arxiv-submission-local
+    depends_on:
+      - submission-redis
+      - submission-localstack
+      - submission-events
+      - submission-postgres
+
+  submission-authorization:
+    build:
+      context: ./authorization/
+      dockerfile: Dockerfile
+    container_name: submission-authorization
+    environment:
+      LOGLEVEL: 10
+    networks:
+      - arxiv-submission-local
+
+  submission-gateway:
+    build:
+      context: ./gateway/
+      dockerfile: Dockerfile
+    container_name: submission-gateway
+    environment:
+      REDIS_ENDPOINT: "submission-redis:6379"
+      AWS_ACCESS_KEY_ID: "foo"
+      AWS_SECRET_ACCESS_KEY: "bar"
+      LOGLEVEL: 10
+    ports:
+      - "8000:8000"
+    networks:
+      - arxiv-submission-local
+    depends_on:
+      - submission-redis
+      - submission-localstack
+      - submission-events
+      - submission-api
+      - submission-authorization
+
+networks:
+  arxiv-submission-local:

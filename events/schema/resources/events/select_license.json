@@ -1,0 +1,16 @@
+{
+    "title": "SelectLicenseEvent",
+    "type": "object",
+    "description": "Selection of a distribution license for a submission.",
+    "required": ["license"],
+    "properties": {
+        "license": {
+            "description": "License to be applied to the submission.",
+            "oneOf": [
+                {"type": "string"},
+                {"type": "null"}
+            ],
+            "format": "uri"
+        }
+    }
+}

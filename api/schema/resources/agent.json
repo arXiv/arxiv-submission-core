@@ -1,0 +1,19 @@
+{
+    "title": "SubmissionAgent",
+    "description": "Describes an arXiv submission agent, such as a user or API client.",
+    "additionalProperties": false,
+    "required": ["agent_type", "identifier"],
+    "type": "object",
+    "properties": {
+        "agent_type": {
+            "description": "Usually one of ``UserAgent``, ``Client``, or ``System``",
+            "readOnly": true,
+            "type": "string"
+        },
+        "identifier": {
+            "description": "Unique identifier for the agent.",
+            "readOnly": true,
+            "type": "string"
+        }
+    }
+}
