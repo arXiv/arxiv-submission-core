@@ -4,8 +4,8 @@
 # import click
 # from submit.factory import create_web_app
 # from submit.services import database
-# from submit.domain import event, annotation, agent, submission
-# from submit import events
+# from api.domain import event, annotation, agent, submission
+# from api import events
 #
 # app = create_web_app()
 # app.app_context().push()

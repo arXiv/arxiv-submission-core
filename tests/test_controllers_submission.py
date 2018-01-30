@@ -4,9 +4,9 @@ from pyld import jsonld
 from pyld.jsonld import JsonLdError
 
 from submit.controllers import submission
-from submit import status
-from submit.domain.submission import Submission
-from submit.domain.event import *
+from arxiv import status
+from api.domain.submission import Submission
+from api.domain.event import *
 
 
 class TestCreateSubmission(TestCase):

@@ -1,7 +1,7 @@
 # from unittest import TestCase, mock
-# from submit.domain.event import Event
+# from api.domain.event import Event
 # from submit.exceptions import ValidationError
-# from submit import events
+# from api import events
 
 
 # class TestApplyEvent(TestCase):

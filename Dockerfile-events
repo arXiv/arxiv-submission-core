@@ -1,0 +1,21 @@
+# arxiv/submission-events
+
+FROM arxiv/base
+
+RUN pip install uwsgi
+
+# Add Python consumer and configuration.
+ADD requirements.txt /opt/arxiv/requirements.txt
+RUN pip install -U pip
+RUN pip install -r /opt/arxiv/requirements.txt
+
+ADD ./events/ /opt/arxiv/
+ADD ./authorization/ /opt/arxiv/authorization/
+RUN pip install /opt/arxiv/authorization/
+
+ENV JWT_SECRET "foo"
+EXPOSE 8000
+
+WORKDIR /opt/arxiv
+
+CMD ./bin/start_web.sh

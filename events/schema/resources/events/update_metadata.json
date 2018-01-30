@@ -1,0 +1,25 @@
+{
+    "title": "UpdateMetadataEvent",
+    "type": "object",
+    "description": "Describes an update to the metadata of an arXiv submission.",
+    "required": ["metadata"],
+    "properties": {
+        "metadata": {
+            "type": "array",
+            "items": {
+                "type": "array",
+                "items": [
+                    {
+                        "type": "string",
+                        "description": "Metadata field to set.",
+                        "enum": ["title", "abstract", "doi", "msc_class", "acm_class", "report_num", "journal_ref"]
+                    },
+                    {
+                        "type": "string",
+                        "description": "Value of metadata field."
+                    }
+                ]
+            }
+        }
+    }
+}

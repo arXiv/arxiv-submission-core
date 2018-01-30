@@ -5,7 +5,7 @@ import jwt
 from flask import Flask
 from submit.factory import create_web_app
 from submit.services import database
-from submit import schema
+from api import schema
 
 
 TEST_DB_URI = os.environ.get(
