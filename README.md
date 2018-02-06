@@ -4,10 +4,16 @@ This repository houses exploratory development related to the arXiv-NG
 submission system.
 
 - The [API service](api/) provides the client-facing interface for
-  submission-related requests.
+  submission-related requests. **Status: In progress**
+- The [Webhooks service](webhooks/) provides an API for creating and managing
+  submission-related webhooks. **Status: Schema only**
+- The [Upload service](upload/) is a mock implementation of the file management
+  service, to be fully implemented elsewhere. **Status: Schema only**
+- The [Compile service](compile/) is a mock implementation of the compilation
+  service, to be fully implemented elsewhere. **Status: Schema only**
 - The [Events service](events/) is the internal controller for all
   submission and (eventually) moderation activity. It supports the API and
-  other services that intervene on submission state.
+  other services that intervene on submission state. **Status: In progress**
 - The [Authorization service](authorization/) mocks token-based authorization.
   It handles subrequests from the gateway to authorize client requests, and
   mints encrypted JWTs for use by other services.

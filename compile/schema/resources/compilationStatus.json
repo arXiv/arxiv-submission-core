@@ -1,0 +1,23 @@
+{
+  "title": "CompilationStatus",
+  "description": "Describes the current status of a source compilation.",
+  "additionalProperties": false,
+  "required": ["compile_id", "status", "start_time"],
+  "type": "object",
+  "properties": {
+    "task_id": {
+      "description": "Short-lived identifier for the compilation task.",
+      "type": "string"
+    },
+    "status": {
+      "description": "Current status of the compilation job.",
+      "type": "string",
+      "enum": ["FAILED", "SUCCEEDED", "CANCELLED", "PENDING", "IN_PROGRESS"]
+    },
+    "start_time": {
+      "description": "The date-time when the job started.",
+      "type": "string",
+      "format": "datetime"
+    }
+  }
+}
