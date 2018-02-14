@@ -1,0 +1,103 @@
+/webhooks/:
+  get:
+    description: |
+      Get information about registered webhooks.
+    operationId: getWebhooks
+    responses:
+      '200':
+        description: |
+          Information about all registered webhooks for
+          which the user/client is responsible.
+        content:
+          application/json:
+            schema:
+              type: object
+              parameters:
+                webhooks:
+                  type: array
+                  items:
+                    $ref: 'resources/webhook.json'
+
+  post:
+    description: |
+      Register a new webhook for a submission.
+    operationId: createWebhook
+    requestBody:
+      content:
+        application/json:
+          schema:
+            $ref: 'resources/webhook.json'
+
+    responses:
+      '201':
+        description: Webhook has been created successfully
+        headers:
+          Location:
+            description: Status endpoint for the new webhook.
+            schema:
+              type: "string"
+
+/webhooks/{webhook_id}/:
+  parameters:
+    - name: webhook_id
+      in: path
+      description: Unique identifier for a registered submission webhook.
+      required: true
+      schema:
+        type: string
+
+  get:
+    description: |
+      Get information about a specific registered webhook for a submission.
+    operationId: getSubmissionWebhook
+    responses:
+      '200':
+        description: |
+          Information about a specific registered webhook for the
+          submission.
+        content:
+          application/json:
+            schema:
+              $ref: 'resources/webhook.json'
+
+  post:
+    description: |
+      Update the webhook for a submission. May be a partial update.
+    operationId: updateSubmissionWebhook
+    requestBody:
+      content:
+        application/json:
+          schema:
+            $ref: 'resources/webhook.json'
+
+    responses:
+      '200':
+        description: Webhook has been updated successfully
+        content:
+          application/json:
+            schema:
+              $ref: 'resources/webhook.json'
+
+  put:
+    description: |
+      Replace a webhook for a submission.
+    operationId: replaceSubmissionWebhook
+    requestBody:
+      content:
+        application/json:
+          schema:
+            $ref: 'resources/webhook.json'
+
+    responses:
+      '200':
+        description: Webhook has been replaced successfully
+        content:
+          application/json:
+            schema:
+              $ref: 'resources/webhook.json'
+
+  delete:
+    description: Remove a webhook for the submission.
+    operationId: deleteSubmissionWebhook
+    responses:
+      '204':
