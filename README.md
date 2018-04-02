@@ -8,9 +8,15 @@ submission system.
   event-based operations on submission (meta)data. Any web services that
   modify submission data must do so via this package.
 - The [API service](api/) provides the client-facing interface for
-  submission-related requests.
+  submission-related requests. **Status: In progress**
+- The [Webhooks service](webhooks/) provides an API for creating and managing
+  submission-related webhooks. **Status: Schema only**
+- The [Upload service](upload/) is a mock implementation of the file management
+  service, to be fully implemented elsewhere. **Status: Schema only**
+- The [Compile service](compile/) is a mock implementation of the compilation
+  service, to be fully implemented elsewhere. **Status: Schema only**
 - The [Authorization service](authorization/) mocks token-based authorization.
-  It handles subrequests from the gateway to authorize client requests, and
+  It handles sub-requests from the gateway to authorize client requests, and
   mints encrypted JWTs for use by other services.
 - A toy [Gateway service](gateway/) provides a minimal NGINX server configured
   to utilize the authorization service. It provides (proxy) access to

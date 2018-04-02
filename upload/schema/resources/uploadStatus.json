@@ -1,0 +1,23 @@
+{
+  "title": "UploadStatus",
+  "description": "Describes the current processing status of an uploaded source package.",
+  "additionalProperties": false,
+  "required": ["upload_id", "status", "start_time"],
+  "type": "object",
+  "properties": {
+    "task_id": {
+      "description": "Short-lived task identifier for the upload.",
+      "type": "integer"
+    },
+    "status": {
+      "description": "Current status of the upload processing task.",
+      "type": "string",
+      "enum": ["FAILED", "SUCCEEDED", "CANCELLED", "PENDING", "IN_PROGRESS"]
+    },
+    "start_time": {
+      "description": "The date-time when upload processing began.",
+      "type": "string",
+      "format": "datetime"
+    }
+  }
+}

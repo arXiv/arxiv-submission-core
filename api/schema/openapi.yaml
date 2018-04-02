@@ -8,10 +8,9 @@ info:
     email: nextgen@arxiv.org
   license:
     name: MIT
-servers:
-  - url: https://submit.arxiv.org
+
 paths:
-  /submit/:
+  /submission/:
     get:
       operationId: getServiceRoot
       description: |
@@ -21,6 +20,7 @@ paths:
           description: |
             Information about the submission API, including routes to submit
             and poll.
+
     post:
       operationId: createSubmission
       summary: |
@@ -31,6 +31,7 @@ paths:
           application/json:
             schema:
               $ref: 'resources/submission.json'
+
       responses:
         '202':
           description: The submission payload has been accepted for deposit.
@@ -39,7 +40,8 @@ paths:
               description: Status endpoint for the new submission.
               schema:
                 type: "string"
-  /submit/{id}/:
+
+  /submission/{id}/:
     parameters:
       - in: path
         name: id
@@ -49,6 +51,7 @@ paths:
         required: true
         schema:
           type: string
+
     get:
       description: |
         Get the current state of the submission, including procedural
@@ -63,6 +66,7 @@ paths:
             application/json:
               schema:
                 $ref: 'resources/submission.json'
+
     post:
       operationId: updateSubmission
       description: |
@@ -73,6 +77,7 @@ paths:
           application/json:
             schema:
               $ref: 'resources/submission.json'
+
       responses:
         '200':
           description: The submission has been updated.
@@ -80,7 +85,8 @@ paths:
             application/json:
               schema:
                 $ref: 'resources/submission.json'
-  /submit/{id}/source/:
+
+  /submission/{id}/source/:
     parameters:
       - in: path
         name: id
@@ -90,33 +96,33 @@ paths:
         required: true
         schema:
           type: string
+
     get:
       operationId: getSourceInformation
       description: |
-        Get the source package inventory for the submission. Includes the
-        current state of each of the files in the source package.
+        Get information about the submission source package.
       responses:
         '200':
-          description: The source package inventory.
+          description: Source package information.
           content:
             application/json:
               schema:
                 $ref: 'resources/sourceInformation.json'
+
     post:
-      operationId: uploadSourcePackage
+      operationId: addSourcePackage
       description: |
         Add (or replace) the source package for the submission.
       responses:
-        '202':
+        '200':
           description: |
-            The source package has been accepted. At this point the source
-            package will be inspected for safety and suitability, and unpacked.
-          headers:
-            Location:
-              description: Status endpoint for source package.
+            The submission has been updated with a reference to the source package.
+          content:
+            application/json:
               schema:
-                type: "string"
-  /submit/{id}/history/:
+                $ref: 'resources/sourceInformation.json'
+
+  /submission/{id}/history/:
     parameters:
       - in: path
         name: id
@@ -126,6 +132,7 @@ paths:
         required: true
         schema:
           type: string
+
     get:
       description: |
         Get the event log for a submission. This will include only events that
@@ -140,7 +147,8 @@ paths:
             application/json:
               schema:
                 $ref: 'resources/log.json'
-  /submit/{id}/history/{event_id}/:
+
+  /submission/{id}/history/{event_id}/:
     parameters:
       - name: id
         in: path
@@ -157,6 +165,7 @@ paths:
         required: true
         schema:
           type: string
+
     get:
       description: Get data for a submission event.
       operationId: getSubmissionEvent
@@ -168,119 +177,5 @@ paths:
             application/json:
               schema:
                 $ref: 'resources/event.json'
-  /submit/{id}/webhooks/:
-    parameters:
-      - name: id
-        in: path
-        description: |
-          Unique submission ID returned upon createSubmission. This will
-          likely, but not necessesarily, look like an integer.
-        required: true
-        schema:
-          type: string
-    get:
-      description: |
-        Get information about registered webhooks for a submission.
-      operationId: getSubmissionWebhooks
-      responses:
-        '200':
-          description: |
-            Information about all registered webhooks for the submission for
-            which the user/client is responsible.
-          content:
-            application/json:
-              schema:
-                type: object
-                parameters:
-                  webhooks:
-                    type: array
-                    items:
-                      $ref: 'resources/webhook.json'
-    post:
-      description: |
-        Register a new webhook for a submission.
-      operationId: createSubmissionWebhook
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: 'resources/webhook.json'
-      responses:
-        '201':
-          description: Webhook has been created successfully
-          headers:
-            Location:
-              description: Status endpoint for the new webhook.
-              schema:
-                type: "string"
-  /submit/{id}/webhooks/{webhook_id}/:
-    parameters:
-      - name: id
-        in: path
-        description: |
-          Unique submission ID returned upon createSubmission. This will
-          likely, but not necessesarily, look like an integer.
-        required: true
-        schema:
-          type: string
-      - name: webhook_id
-        in: path
-        description: Unique identifier for a registered submission webhook.
-        required: true
-        schema:
-          type: string
-    get:
-      description: |
-        Get information about a specific registered webhook for a submission.
-      operationId: getSubmissionWebhook
-      responses:
-        '200':
-          description: |
-            Information about a specific registered webhook for the
-            submission.
-          content:
-            application/json:
-              schema:
-                $ref: 'resources/webhook.json'
-    post:
-      description: |
-        Update the webhook for a submission. May be a partial update.
-      operationId: updateSubmissionWebhook
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: 'resources/webhook.json'
-      responses:
-        '200':
-          description: Webhook has been updated successfully
-          content:
-            application/json:
-              schema:
-                $ref: 'resources/webhook.json'
-    put:
-      description: |
-        Replace a webhook for a submission.
-      operationId: replaceSubmissionWebhook
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: 'resources/webhook.json'
-      responses:
-        '200':
-          description: Webhook has been replaced successfully
-          content:
-            application/json:
-              schema:
-                $ref: 'resources/webhook.json'
-    delete:
-      description: Remove a webhook for the submission.
-      operationId: deleteSubmissionWebhook
-      responses:
-        '200':
-          description: Webhook has been deleted successfully.
-          content:
-            application/json:
-              schema:
-                $ref: 'resources/webhook.json'
+
+  
