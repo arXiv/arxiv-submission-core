@@ -1,5 +1,0 @@
-{
-    "title": "CreateSubmissionEvent",
-    "type": "object",
-    "description": "Describes the creation of an arXiv submission."
-}

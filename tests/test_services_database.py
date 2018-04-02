@@ -37,7 +37,7 @@ class TestStoreGetEvent(TestCase):
 
     def test_store_event(self):
         """:func:`.database.store_events` persists events and submission."""
-        creator = agent_factory('UserAgent', 'foo-user')
+        creator = agent_factory('User', 'foo-user')
         submission = Submission(
             metadata=SubmissionMetadata(
                 title='foo title'
@@ -65,7 +65,7 @@ class TestStoreGetEvent(TestCase):
 
     def test_get_events_for_submission(self):
         """:func:`.get_events_for_submission` retrieves :class:`.Event`s."""
-        creator = agent_factory('UserAgent', 'foo-user')
+        creator = agent_factory('User', 'foo-user')
         submission = database.models.Submission()
         event = event_factory('UpdateMetadataEvent', creator=creator,
                               metadata=[('title', 'foo title')])
@@ -108,7 +108,7 @@ class TestStoreGetSubmission(TestCase):
 
     def test_store_submission(self):
         """:func:`.database.store_events` persists events and submission."""
-        creator = agent_factory('UserAgent', 'foo-user')
+        creator = agent_factory('User', 'foo-user')
         submission = Submission(
             metadata=SubmissionMetadata(
                 title='foo title'

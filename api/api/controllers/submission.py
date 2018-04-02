@@ -59,7 +59,7 @@ def _get_agents(extra: dict) -> Tuple[Optional[Agent], Optional[Agent]]:
     """Get user and/or API client responsible for the request."""
     user = extra.get('user')
     client = extra.get('client')
-    user_agent = agent_factory('UserAgent', user) if user else None
+    user_agent = agent_factory('User', user) if user else None
     client_agent = agent_factory('Client', client) if client else None
     if user_agent:
         return user_agent, client_agent

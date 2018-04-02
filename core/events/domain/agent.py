@@ -1,20 +1,23 @@
 """Data structures for agents."""
 
 import hashlib
-from typing import Any
-from .data import Data, Property
+from typing import Any, Optional
 
-__all__ = ('Agent', 'UserAgent', 'System', 'Client', 'agent_factory')
+from dataclasses import dataclass, field
+from dataclasses import asdict
+
+__all__ = ('Agent', 'User', 'System', 'Client', 'agent_factory')
 
 
-class Agent(Data):
+@dataclass
+class Agent:
     """
     Base class for agents in the submission system.
 
     An agent is an actor/system that generates/is responsible for events.
     """
 
-    native_id = Property('native_id', object)
+    native_id: Optional[str] = None
     """Type-specific identifier for the agent. This might be an URI."""
 
     @property
@@ -55,19 +58,22 @@ class Agent(Data):
         return self.agent_identifier == other.agent_identifier
 
 
-class UserAgent(Agent):
+@dataclass
+class User(Agent):
     """An (human) end user."""
 
     pass
 
 
 # TODO: extend this to support arXiv-internal services.
+@dataclass
 class System(Agent):
     """The submission application (this application)."""
 
     pass
 
 
+@dataclass
 class Client(Agent):
     """A non-human third party, usually an API client."""
 
@@ -75,7 +81,7 @@ class Client(Agent):
 
 
 _agent_types = {
-    UserAgent.get_agent_type(): UserAgent,
+    User.get_agent_type(): User,
     System.get_agent_type(): System,
     Client.get_agent_type(): Client,
 }

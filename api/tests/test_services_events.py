@@ -52,7 +52,7 @@ class TestCreateSubmission(TestCase):
                     'submission_id': '1',
                     'created': datetime.now(),
                     'creator': {
-                        'agent_type': 'UserAgent',
+                        'agent_type': 'User',
                         'native_id': 'foouser'
                     },
                     'proxy': {
@@ -123,7 +123,7 @@ class TestUpdateMetadata(TestCase):
                     'submission_id': '1',
                     'created': datetime.now(),
                     'creator': {
-                        'agent_type': 'UserAgent',
+                        'agent_type': 'User',
                         'native_id': 'foouser'
                     },
                     'proxy': {

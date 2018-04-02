@@ -9,7 +9,7 @@ import copy
 from api.domain.submission import Submission, SubmissionMetadata, \
     Classification, License
 from api.domain.annotation import Comment
-from api.domain.agent import UserAgent, System, Client, Agent, agent_factory
+from api.domain.agent import User, System, Client, Agent, agent_factory
 # from api.domain.rule import EventRule, RuleCondition, RuleConsequence
 
 from . import models
