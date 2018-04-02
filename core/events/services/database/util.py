@@ -7,9 +7,8 @@ from datetime import datetime
 import copy
 
 from events.domain.submission import Submission, SubmissionMetadata, \
-    Classification, License
-from events.domain.annotation import Comment
-from events.domain.agent import UserAgent, System, Client, Agent, agent_factory
+    Classification, License, Comment
+from events.domain.agent import User, System, Client, Agent, agent_factory
 from events.domain.event import Event, CreateSubmissionEvent, event_factory
 from events.domain.rule import EventRule, RuleCondition, RuleConsequence
 

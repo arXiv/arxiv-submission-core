@@ -3,11 +3,12 @@
 This repository houses exploratory development related to the arXiv-NG
 submission system.
 
+- The [events core package](core/) is provides integrations with the
+  submission database and notification streams, and exposes a Python API for
+  event-based operations on submission (meta)data. Any web services that
+  modify submission data must do so via this package.
 - The [API service](api/) provides the client-facing interface for
   submission-related requests.
-- The [Events service](events/) is the internal controller for all
-  submission and (eventually) moderation activity. It supports the API and
-  other services that intervene on submission state.
 - The [Authorization service](authorization/) mocks token-based authorization.
   It handles subrequests from the gateway to authorize client requests, and
   mints encrypted JWTs for use by other services.

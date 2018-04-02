@@ -6,7 +6,7 @@
     "type": "object",
     "properties": {
         "agent_type": {
-            "description": "Usually one of ``UserAgent``, ``Client``, or ``System``",
+            "description": "Usually one of ``User``, ``Client``, or ``System``",
             "readOnly": true,
             "type": "string"
         },

@@ -36,7 +36,7 @@ class Agent(Data):
         return self.agent_identifier == other.agent_identifier
 
 
-class UserAgent(Agent):
+class User(Agent):
     """An (human) end user, whom generally acts via form-based interfaces."""
 
     pass
@@ -55,7 +55,7 @@ class Client(Agent):
 
 
 _agent_types = {
-    UserAgent.get_agent_type(): UserAgent,
+    User.get_agent_type(): User,
     System.get_agent_type(): System,
     Client.get_agent_type(): Client,
 }
