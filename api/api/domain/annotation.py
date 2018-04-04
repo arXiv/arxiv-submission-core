@@ -1,20 +1,23 @@
 """Data structures for submission annotations."""
 
+from typing import Optional
 import hashlib
 from datetime import datetime
-from api.domain import Data, Property
+from dataclasses import dataclass, field
+from dataclasses import asdict
 from api.domain.submission import Submission
 from api.domain.agent import Agent
 
 
-class Annotation(Data):
+@dataclass
+class Annotation:
     """Auxilliary metadata used by the submission and moderation process."""
 
-    created = Property('created', datetime, datetime.now())
-    creator = Property('creator', Agent)
-    proxy = Property('proxy', Agent, null=True)
-    submission = Property('submission', Submission)
-    scope = Property('scope', str)
+    submission: Submission
+    creator: Agent
+    scope: str
+    proxy: Optional[Agent] = None
+    created: datetime = field(default_factory=datetime.now)
 
     @property
     def annotation_type(self):
@@ -31,17 +34,11 @@ class Annotation(Data):
         return h.hexdigest()
 
 
-class Proposal(Annotation):
-    """Represents a proposal to apply an event to a submission."""
-
-    event_type = Property('event_type', type)
-    event_data = Property('event_data', dict)
-
-
+@dataclass
 class Comment(Annotation):
     """A freeform textual annotation."""
 
-    body = Property('body', str)
+    body: str = field(default_factory=str)
 
     @property
     def comment_id(self):
@@ -49,7 +46,6 @@ class Comment(Annotation):
         return self.annotation_id
 
 
+@dataclass
 class Flag(Annotation):
     """Tags used to route submissions based on moderation policies."""
-
-    pass

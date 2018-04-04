@@ -13,7 +13,8 @@ from arxiv import status
 from api.domain.agent import Agent, agent_factory, System
 from api.domain.submission import Submission, Classification, License, \
     SubmissionMetadata
-from api.services import database, events
+from api.services import database
+import events as ev
 
 from . import util
 
@@ -59,37 +60,48 @@ def _get_agents(extra: dict) -> Tuple[Optional[Agent], Optional[Agent]]:
     """Get user and/or API client responsible for the request."""
     user = extra.get('user')
     client = extra.get('client')
-    user_agent = agent_factory('UserAgent', user) if user else None
-    client_agent = agent_factory('Client', client) if client else None
+    user_agent = ev.User(user) if user else None
+    client_agent = ev.Client(client) if client else None
     if user_agent:
         return user_agent, client_agent
     return client_agent, client_agent
 
 
-def _update_submission(submission_id: str, body: dict, token: str) \
-        -> Submission:
-    """Update a submission."""
+def _update_submission(body: dict, agents: dict) -> Submission:
+    """Generate :class:`.ev.Event`(s) to update a :class:`Submission`."""
 
+    new_events = []
     if 'submitter_is_author' in body:
-        submission = events.assert_authorship(submission_id,
-                                              body['submitter_is_author'],
-                                              token=token)
+        new_events.append(
+            ev.AssertAuthorshipEvent(
+                submitter_is_author=body['submitter_is_author'],
+                **agents,
+            )
+        )
     if 'license' in body:
-        submission = events.select_license(submission_id, body['license'])
+        new_events.append(
+            ev.SelectLicenseEvent(
+                license_name=body['license'].get('name'),
+                license_uri=body['license']['uri'],
+                **agents
+            )
+        )
 
-    if body.get('submitter_accepts_policy'):
-        submission = events.accept_policy(submission_id, token=token)
+    if 'submitter_accepts_policy' in body and body['submitter_accepts_policy']:
+        new_events.append(ev.AcceptPolicyEvent(**agents))
 
     # Generate both primary and secondary classifications.
     if 'primary_classification' in body:
         category = body['primary_classification']['category']
-        submission = events.set_primary_classification(submission_id, category,
-                                                       token=token)
+        new_events.append(
+            ev.SetPrimaryClassificationEvent(category=category, **agents)
+        )
 
     for classification_datum in body.get('secondary_classification', []):
         category = classification_datum['category']
-        submission = events.add_secondary_classification(submission_id,
-                                                         category, token=token)
+        new_events.append(
+            ev.AddSecondaryClassificationEvent(category=category, **agents)
+        )
 
     if 'metadata' in body:
         metadata = [
@@ -97,9 +109,8 @@ def _update_submission(submission_id: str, body: dict, token: str) \
             for field, key in METADATA_FIELDS
             if key in body['metadata']
         ]
-        submission = events.update_metadata(submission_id, metadata,
-                                            token=token)
-    return submission
+        new_events.append(ev.UpdateMetadataEvent(metadata=metadata, **agents))
+    return new_events
 
 
 def _agent_is_owner(submission_id: int, agent: Agent) -> bool:
@@ -143,15 +154,12 @@ def create_submission(body: dict, headers: dict, files: Optional[dict] = None,
         logger.debug('Not authorized')
         return {}, status.HTTP_403_FORBIDDEN, {}
 
-    try:
-        submission = events.create_submission(token=token)
-        submission = _update_submission(submission.submission_id, body, token)
-    except events.ServiceDown as e:
-        raise
-        return (
-            {'reason': 'There was a problem connecting to another service'},
-            status.HTTP_503_SERVICE_UNAVAILABLE, {}
-        )
+    agents = dict(creator=user, proxy=client)
+    new_events = []
+
+    new_events.append(ev.CreateSubmissionEvent(**agents))
+    new_events += _update_submission(body, agents)
+    submission = ev.save(*new_events)
     response_headers = {
         'Location': url_for('submit.get_submission',
                             submission_id=submission.submission_id)
@@ -182,7 +190,7 @@ def update_submission(submission_id: str, body: dict, headers: dict,
     if not _is_authorized(submission_id, user, client):
         return {}, status.HTTP_403_FORBIDDEN, {}
 
-    submission = _update_submission(submission_id, body, token)
+    submission = _update_submission(body, dict(creator=user, proxy=agent))
 
     response_headers = {
         'Location': url_for('submit.get_submission', creator=user,

@@ -3,6 +3,10 @@
 This repository houses exploratory development related to the arXiv-NG
 submission system.
 
+- The [events core package](core/) is provides integrations with the
+  submission database and notification streams, and exposes a Python API for
+  event-based operations on submission (meta)data. Any web services that
+  modify submission data must do so via this package.
 - The [API service](api/) provides the client-facing interface for
   submission-related requests. **Status: In progress**
 - The [Webhooks service](webhooks/) provides an API for creating and managing
@@ -11,11 +15,8 @@ submission system.
   service, to be fully implemented elsewhere. **Status: Schema only**
 - The [Compile service](compile/) is a mock implementation of the compilation
   service, to be fully implemented elsewhere. **Status: Schema only**
-- The [Events service](events/) is the internal controller for all
-  submission and (eventually) moderation activity. It supports the API and
-  other services that intervene on submission state. **Status: In progress**
 - The [Authorization service](authorization/) mocks token-based authorization.
-  It handles subrequests from the gateway to authorize client requests, and
+  It handles sub-requests from the gateway to authorize client requests, and
   mints encrypted JWTs for use by other services.
 - A toy [Gateway service](gateway/) provides a minimal NGINX server configured
   to utilize the authorization service. It provides (proxy) access to

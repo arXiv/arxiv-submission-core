@@ -7,7 +7,7 @@ from datetime import datetime
 import copy
 
 from api.domain.submission import Submission
-from api.domain.agent import UserAgent, System, Client, Agent, agent_factory
+from api.domain.agent import User, System, Client, Agent, agent_factory
 # from api.domain.rule import EventRule
 
 from . import models, util
