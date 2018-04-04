@@ -1,12 +1,14 @@
 """SQLAlchemy ORM classes."""
 
 import json
-
+from datetime import datetime
 from sqlalchemy import Column, Date, DateTime, Enum, ForeignKey, Text, text, \
     ForeignKeyConstraint, Index, Integer, SmallInteger, String, Table
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, joinedload
 
 from sqlalchemy.ext.declarative import declarative_base
+
+from events import domain
 
 Base = declarative_base()
 
@@ -15,6 +17,43 @@ class Submission(Base):    # type: ignore
     """Represents an arXiv submission."""
 
     __tablename__ = 'arXiv_submissions'
+
+    NEW = 0
+    STARTED = 1
+    FILES_ADDED = 2
+    PROCESSED = 3
+    METADATA_ADDED = 4
+    SUBMITTED = 5
+    STAGES = [NEW, STARTED, FILES_ADDED, PROCESSED, METADATA_ADDED, SUBMITTED]
+
+    NOT_SUBMITTED = 0
+    SUBMITTED = 1
+    ON_HOLD = 2
+    UNUSED = 3
+    NEXT_DAY = 4
+    PROCESSING = 5
+    NEEDS_EMAIL = 6
+    PUBLISHED = 7
+    PROCESSING_SUBMISSION = 8
+    REMOVED = 9
+    USER_DELETED = 10
+    ERROR_STATE = 19
+    DELETED_EXPIRED = 20
+    """Was working but expired."""
+    DELETED_ON_HOLD = 22
+    DELETED_PROCESSING = 25
+    DELETED_PUBLISHED = 27
+    """Published and files expired."""
+    DELETED_REMOVED = 29
+    DELETED_USER = 30
+    """User deleted and files expired."""
+
+    NEW_SUBMSSION = 'new'
+    REPLACEMENT = 'rep'
+    JOURNAL_REFERENCE = 'jref'
+    WITHDRAWAL = 'dr'
+
+    WITHDRAWN_FORMAT = 'withdrawn'
 
     submission_id = Column(Integer, primary_key=True)
     document_id = Column(
@@ -80,7 +119,101 @@ class Submission(Base):    # type: ignore
     submitter = relationship('User')
     sword = relationship('Tracking')
     categories = relationship('SubmissionCategory',
-                              back_populates="submission")
+                              back_populates="submission", lazy='joined')
+
+    def update_from_submission(self, submission: domain.Submission) -> None:
+        """Update this database object from a :class:`.domain.Submission`."""
+        self.is_author = int(submission.submitter_is_author)
+        self.agree_policy = int(submission.submitter_accepts_policy)
+        self.userinfo = int(submission.submitter_contact_verified)
+        self.created = submission.created
+        self.updated = datetime.now()
+        self.title = submission.metadata.title
+        self.abstract = submission.metadata.abstract
+        self.authors = submission.metadata.authors_canonical
+        self.comments = submission.metadata.comments
+        self.report_num = submission.metadata.report_num
+        self.doi = submission.metadata.doi
+        self.msc_class = submission.metadata.msc_class
+        self.acm_class = submission.metadata.acm_class
+        self.journal_ref = submission.metadata.journal_ref
+        if submission.license:
+            self.license = submission.license.uri
+        self.type = Submission.NEW   # We're not handling other types here.
+
+        # Only update the submission state if we're transitioning for the first
+        # time. We can relax this later, but for now it will prevent us from
+        # doing something stupid.
+        if submission.finalized and self.status is Submission.NOT_SUBMITTED:
+            self.status = Submission.SUBMITTED
+
+        if submission.primary_classification:
+            self._update_primary(submission)
+        self._update_secondaries(submission)
+
+        self._update_submitter(submission)
+
+    @property
+    def primary_classification(self):
+        """Get the primary classification for this submission."""
+        categories = [
+            db_cat for db_cat in self.categories if db_cat.is_primary == 1
+        ]
+        try:
+            return categories[0]
+        except IndexError:
+            return
+
+    def _update_submitter(self, submission: domain.Submission) -> None:
+        """Update submitter information."""
+        self.submitter_id = submission.creator.native_id
+
+    def _update_primary(self, submission: domain.Submission) -> None:
+        """Update primary classification."""
+        primary_category = submission.primary_classification.category
+        cur_primary = self.primary_classification
+
+        if cur_primary and cur_primary.category != primary_category:
+            self.categories.remove(cur_primary)
+            self.categories.append(
+                SubmissionCategory(submission_id=self.submission_id,
+                                   category=primary_category)
+            )
+        elif cur_primary is None and primary_category:
+            self.categories.append(
+                SubmissionCategory(
+                    submission_id=self.submission_id,
+                    category=primary_category,
+                    is_primary=1
+                )
+            )
+
+    def _update_secondaries(self, submission: domain.Submission) -> None:
+        """Update secondary classifications."""
+        cur_secondaries = [
+            db_cat.category for db_cat
+            in self.categories if db_cat.is_primary == 0
+        ]
+        tgt_secondaries = [
+            cat.category for cat in submission.secondary_classification
+        ]
+        # Remove any categories that have been removed from the Submission.
+        for db_cat in self.categories:
+            if db_cat.is_primary == 1:
+                continue
+            if db_cat.category not in tgt_secondaries:
+                self.categories.remove(db_cat)
+
+        # Add any new secondaries
+        for cat in submission.secondary_classification:
+            if cat.category not in cur_secondaries:
+                self.categories.append(
+                    SubmissionCategory(
+                        submission_id=self.submission_id,
+                        category=cat.category,
+                        is_primary=0
+                    )
+                )
 
 
 class License(Base):    # type: ignore
@@ -101,49 +234,14 @@ class License(Base):    # type: ignore
     sequence = Column(Integer)
 
 
-class Category(Base):    # type: ignore
-    """Classifications available for submissions."""
+class CategoryDef(Base):    # type: ignore
+    """Classification categories available for submissions."""
 
-    __tablename__ = 'arXiv_categories'
+    __tablename__ = 'arXiv_category_def'
 
-    arXiv_endorsement_domain = relationship('EndorsementDomain')
-
-    archive = Column(
-        ForeignKey('arXiv_archives.archive_id'),
-        primary_key=True,
-        nullable=False,
-        server_default=text("''")
-    )
-    """E.g. cond-mat, astro-ph, cs."""
-    arXiv_archive = relationship('Archive')
-
-    subject_class = Column(String(16), primary_key=True, nullable=False,
-                           server_default=text("''"))
-    """E.g. AI, spr-con, str-el, CO, EP."""
-
-    definitive = Column(Integer, nullable=False, server_default=text("'0'"))
-    active = Column(Integer, nullable=False, server_default=text("'0'"))
-    """Only use rows where active == 1."""
-
-    category_name = Column(String(255))
-    endorse_all = Column(
-        Enum('y', 'n', 'd'),
-        nullable=False,
-        server_default=text("'d'")
-    )
-    endorse_email = Column(
-        Enum('y', 'n', 'd'),
-        nullable=False,
-        server_default=text("'d'")
-    )
-    endorsement_domain = Column(
-        ForeignKey('arXiv_endorsement_domains.endorsement_domain'),
-        index=True
-    )
-    """E.g. astro-ph, acc-phys, chem-ph, cs."""
-
-    papers_to_endorse = Column(SmallInteger, nullable=False,
-                               server_default=text("'0'"))
+    category = Column(String(32), primary_key=True)
+    name = Column(String(255))
+    active = Column(Integer, server_default=text("'1'"))
 
 
 class SubmissionCategory(Base):    # type: ignore
@@ -293,9 +391,6 @@ class PolicyClass(Base):    # type: ignore
                              server_default=text("'0'"))
 
 
-
-
-
 class Tracking(Base):    # type: ignore
     """Record of SWORD submissions."""
     __tablename__ = 'arXiv_tracking'
@@ -309,12 +404,7 @@ class Tracking(Base):    # type: ignore
                        server_default=text("CURRENT_TIMESTAMP"))
 
 
-class CategoryDef(Base):    # type: ignore
-    __tablename__ = 'arXiv_category_def'
 
-    category = Column(String(32), primary_key=True)
-    name = Column(String(255))
-    active = Column(Integer, server_default=text("'1'"))
 
 
 
@@ -424,3 +514,47 @@ class UserDemographic(User):
     veto_status = Column(Enum('ok', 'no-endorse', 'no-upload', 'no-replace'), nullable=False, server_default=text("'ok'"))
 
     arXiv_category = relationship('Category')
+
+
+class Category(Base):    # type: ignore
+
+    __tablename__ = 'arXiv_categories'
+
+    arXiv_endorsement_domain = relationship('EndorsementDomain')
+
+    archive = Column(
+        ForeignKey('arXiv_archives.archive_id'),
+        primary_key=True,
+        nullable=False,
+        server_default=text("''")
+    )
+    """E.g. cond-mat, astro-ph, cs."""
+    arXiv_archive = relationship('Archive')
+
+    subject_class = Column(String(16), primary_key=True, nullable=False,
+                           server_default=text("''"))
+    """E.g. AI, spr-con, str-el, CO, EP."""
+
+    definitive = Column(Integer, nullable=False, server_default=text("'0'"))
+    active = Column(Integer, nullable=False, server_default=text("'0'"))
+    """Only use rows where active == 1."""
+
+    category_name = Column(String(255))
+    endorse_all = Column(
+        Enum('y', 'n', 'd'),
+        nullable=False,
+        server_default=text("'d'")
+    )
+    endorse_email = Column(
+        Enum('y', 'n', 'd'),
+        nullable=False,
+        server_default=text("'d'")
+    )
+    endorsement_domain = Column(
+        ForeignKey('arXiv_endorsement_domains.endorsement_domain'),
+        index=True
+    )
+    """E.g. astro-ph, acc-phys, chem-ph, cs."""
+
+    papers_to_endorse = Column(SmallInteger, nullable=False,
+                               server_default=text("'0'"))

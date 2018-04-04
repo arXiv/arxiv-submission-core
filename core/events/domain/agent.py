@@ -57,6 +57,9 @@ class Agent:
             return False
         return self.agent_identifier == other.agent_identifier
 
+    def to_dict(self):
+        return asdict(self)
+
 
 @dataclass
 class User(Agent):

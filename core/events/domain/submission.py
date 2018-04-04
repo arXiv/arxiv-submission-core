@@ -73,6 +73,8 @@ class SubmissionMetadata:
     report_num: Optional[str] = None
     journal_ref: Optional[str] = None
 
+    comments: str = field(default_factory=str)
+
     @property
     def authors_canonical(self):
         """Canonical representation of submission authors."""

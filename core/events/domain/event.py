@@ -98,6 +98,14 @@ class Event:
         """Placeholder for projection, to be implemented by subclasses."""
         pass
 
+    def to_dict(self):
+        data = asdict(self)
+        data.update({
+            'creator': self.creator.to_dict(),
+            'created': self.created.isoformat(),
+        })
+        return data
+
 
 @dataclass(init=False)
 class CreateSubmissionEvent(Event):
@@ -267,6 +275,15 @@ class UpdateAuthorsEvent(Event):
     #         try:
     #             assert 'forename' in author
     #             assert 'surname' in author
+
+
+@dataclass
+class FinalizeSubmissionEvent(Event):
+    """Send the submission to the queue for announcement."""
+
+    def apply(self, submission: Submission) -> Submission:
+        submission.finalized = True
+        return submission
 
 
 @dataclass

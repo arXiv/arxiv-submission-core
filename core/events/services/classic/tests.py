@@ -12,6 +12,10 @@ from sqlalchemy.ext.indexable import index_property
 from flask import Flask
 
 from events.domain.submission import License, Submission
+from events.domain.event import CreateSubmissionEvent, UpdateMetadataEvent, \
+    FinalizeSubmissionEvent, SetPrimaryClassificationEvent, \
+    AddSecondaryClassificationEvent
+from events.domain.agent import User
 from events.services import classic
 
 
@@ -138,8 +142,128 @@ class TestStoreEvents(TestCase):
     def test_store_event(self, mock__declare_event):
         """Store a single event."""
         mock__declare_event.return_value = MockEvent
-        
 
+        with in_memory_db() as session:
+            user = User(12345)
+            ev = CreateSubmissionEvent(creator=user)
+            submission = ev.apply()
+            submission = classic.store_events(ev, submission=submission)
+
+            db_submission = session.query(classic.models.Submission)\
+                .get(submission.submission_id)
+
+        self.assertEqual(db_submission.submission_id, submission.submission_id,
+                         "The submission should be updated with the PK id.")
+        self.assertEqual(db_submission.submitter_id,
+                         submission.creator.native_id,
+                         "The native ID of the creator should be used")
+        self.assertEqual(db_submission.status, db_submission.NOT_SUBMITTED,
+                         "Submission in database should be in status 0 (not"
+                         " submitted) by default.")
+
+    @mock.patch('events.services.classic._declare_event')
+    def test_store_events_with_metadata(self, mock__declare_event):
+        """Store events and attendant submission with metadata."""
+        mock__declare_event.return_value = MockEvent
+
+        metadata = {
+            'title': 'foo title',
+            'abstract': 'very abstract',
+            'comments': 'indeed',
+            'msc_class': 'foo msc',
+            'acm_class': 'computer-y',
+            'doi': '10.01234/5678',
+            'journal_ref': 'Nature 1: 1',
+            'authors': ['Joe Bloggs and friends']
+        }
+        with in_memory_db() as session:
+            user = User(12345)
+            ev = CreateSubmissionEvent(creator=user)
+            ev2 = UpdateMetadataEvent(creator=user,
+                                      metadata=list(metadata.items()))
+
+            submission = ev.apply()
+            submission = ev2.apply(submission)
+            submission = classic.store_events(ev, ev2, submission=submission)
+
+            db_submission = session.query(classic.models.Submission)\
+                .get(submission.submission_id)
+
+            db_events = session.query(classic.Event).all()
+
+        for key, value in metadata.items():
+            if key == 'authors':
+                continue
+            self.assertEqual(getattr(db_submission, key), value,
+                             f"The value of {key} should be {value}")
+        self.assertEqual(db_submission.authors,
+                         submission.metadata.authors_canonical,
+                         "The canonical author string should be used to"
+                         " update the submission in the database.")
+
+        self.assertEqual(len(db_events), 2, "Two events should be stored")
+        for db_event in db_events:
+            self.assertEqual(db_event.submission_id, submission.submission_id,
+                             "The submission id should be set")
+
+    @mock.patch('events.services.classic._declare_event')
+    def test_store_events_with_finalized_submission(self, mock__declare_event):
+        """Store events and a finalized submission."""
+        mock__declare_event.return_value = MockEvent
+
+        with in_memory_db() as session:
+            user = User(12345)
+            ev = CreateSubmissionEvent(creator=user)
+            ev2 = FinalizeSubmissionEvent(creator=user)
+            submission = ev.apply()
+            submission = ev2.apply(submission)
+            submission = classic.store_events(ev, ev2, submission=submission)
+
+            db_submission = session.query(classic.models.Submission)\
+                .get(submission.submission_id)
+            db_events = session.query(classic.Event).all()
+
+        self.assertEqual(db_submission.submission_id, submission.submission_id,
+                         "The submission should be updated with the PK id.")
+        self.assertEqual(len(db_events), 2, "Two events should be stored")
+        for db_event in db_events:
+            self.assertEqual(db_event.submission_id, submission.submission_id,
+                             "The submission id should be set")
+
+    @mock.patch('events.services.classic._declare_event')
+    def test_store_events_with_classification(self, mock__declare_event):
+        """Store events including classification."""
+        mock__declare_event.return_value = MockEvent
+
+        user = User(12345)
+        ev = CreateSubmissionEvent(creator=user)
+        ev2 = SetPrimaryClassificationEvent(creator=user,
+                                            category='physics.soc-ph')
+        ev3 = AddSecondaryClassificationEvent(creator=user,
+                                              category='physics.acc-ph')
+        submission = ev.apply()
+        submission = ev2.apply(submission)
+        submission = ev3.apply(submission)
+
+        with in_memory_db() as session:
+            submission = classic.store_events(ev, ev2, ev3,
+                                              submission=submission)
+
+            db_submission = session.query(classic.models.Submission)\
+                .get(submission.submission_id)
+            db_events = session.query(classic.Event).all()
+
+        self.assertEqual(db_submission.submission_id, submission.submission_id,
+                         "The submission should be updated with the PK id.")
+        self.assertEqual(len(db_events), 3, "Three events should be stored")
+        for db_event in db_events:
+            self.assertEqual(db_event.submission_id, submission.submission_id,
+                             "The submission id should be set")
+        self.assertEqual(len(db_submission.categories), 2,
+                         "Two category relations should be set")
+        self.assertEqual(db_submission.primary_classification.category,
+                         submission.primary_classification.category,
+                         "Primary classification should be set.")
 
 
 class TestGetSubmission(TestCase):
@@ -183,7 +307,8 @@ class TestGetSubmission(TestCase):
           "submission_id": 59944,
           "has_pilot_data": None,
           "submitter_name": "Bob Dole",
-          "submitter_email": "bob@dole.foo"
+          "submitter_email": "bob@dole.foo",
+          "type": "new"
         }
 
         with in_memory_db() as session:

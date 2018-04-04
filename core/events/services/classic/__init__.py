@@ -85,11 +85,9 @@ def store_events(*events: Event, submission: Submission) -> Submission:
                 .get(submission.submission_id)
             if db_submission is None:
                 raise RuntimeError("Submission ID is set, but can't find data")
-        db_submission.title = submission.metadata.title
-        db_submission.abstract = submission.metadata.abstract
 
-        # _update_submission_comments(submission, db_submission)
-        # _update_submission_delegations(submission, db_submission)
+        # Update the submission state from the Submission domain object.
+        db_submission.update_from_submission(submission)
         session.add(db_submission)
 
         for event in events:
@@ -98,7 +96,7 @@ def store_events(*events: Event, submission: Submission) -> Submission:
 
             if event.committed:
                 raise RuntimeError('Event is already committed')
-            db_event = models.Event(
+            db_event = Event(
                 event_type=event.event_type,
                 event_id=event.event_id,
                 data=event.to_dict(),
@@ -129,6 +127,7 @@ def get_engine(app: object = None) -> Engine:
 # TODO: consider making this private.
 def get_session(app: object = None) -> Session:
     """Get a new :class:`.Session`."""
+    global Event
     Event = _declare_event()
     engine = current_engine()
     return sessionmaker(bind=engine)()
