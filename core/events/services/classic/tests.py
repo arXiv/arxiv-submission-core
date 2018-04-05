@@ -7,7 +7,6 @@ This is mostly fine (they are intended to be more-or-less swappable). The one
 iffy bit is the JSON datatype, which is not available by default in the SQLite
 backend, and so we inject a simple one here. End to end tests with a live MySQL
 database will provide more confidence in this area.
-
 """
 
 from unittest import TestCase, mock

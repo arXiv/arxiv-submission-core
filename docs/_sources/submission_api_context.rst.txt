@@ -1,6 +1,11 @@
 Submission API: Context
 ***********************
 
+.. note::
+
+   This section is badly out of date. Disregard for now.
+
+
 The arXiv submission API provides programmatic access to the arXiv submission
 system for API consumers.
 

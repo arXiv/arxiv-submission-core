@@ -1,0 +1,188 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>events.domain.rule &#8212; arXiv submission &amp; moderation 0.1 documentation</title>
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for events.domain.rule</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Conditional business logic as data.</span>
+
+<span class="sd">This is here for demonstration purposes only, and is likely to change</span>
+<span class="sd">substantially in the short term.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="k">import</span> <span class="n">datetime</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">TypeVar</span><span class="p">,</span> <span class="n">Optional</span>
+
+<span class="kn">from</span> <span class="nn">dataclasses</span> <span class="k">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">field</span>
+<span class="kn">from</span> <span class="nn">dataclasses</span> <span class="k">import</span> <span class="n">asdict</span>
+
+<span class="kn">from</span> <span class="nn">.agent</span> <span class="k">import</span> <span class="n">Agent</span><span class="p">,</span> <span class="n">System</span>
+<span class="kn">from</span> <span class="nn">.event</span> <span class="k">import</span> <span class="n">Event</span><span class="p">,</span> <span class="n">event_factory</span>
+<span class="kn">from</span> <span class="nn">.submission</span> <span class="k">import</span> <span class="n">Submission</span>
+
+
+<span class="n">EventRuleType</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s1">&#39;EventRuleType&#39;</span><span class="p">,</span> <span class="n">bound</span><span class="o">=</span><span class="s1">&#39;EventRule&#39;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="RuleCondition"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.rule.RuleCondition">[docs]</a><span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">RuleCondition</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Evaluate whether or not the rule applies to an event.&quot;&quot;&quot;</span>
+
+    <span class="n">event_type</span><span class="p">:</span> <span class="nb">type</span>
+    <span class="n">submission_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">extra_condition</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">Submission</span><span class="p">,</span> <span class="n">event</span><span class="p">:</span> <span class="n">Event</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Evaluate whether or not the rule applies to an event.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">type</span><span class="p">(</span><span class="n">event</span><span class="p">)</span> <span class="ow">is</span> <span class="bp">self</span><span class="o">.</span><span class="n">event_type</span> <span class="ow">and</span> \
+            <span class="bp">self</span><span class="o">.</span><span class="n">_callable_from_condition</span><span class="p">(</span><span class="n">submission</span><span class="p">,</span> <span class="n">event</span><span class="p">)</span> \
+            <span class="ow">and</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">submission_id</span> <span class="ow">is</span> <span class="kc">None</span>
+                 <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">submission_id</span> <span class="o">==</span> <span class="n">submission</span><span class="o">.</span><span class="n">submission_id</span><span class="p">)</span>
+
+    <span class="c1"># TODO: implement some kind of DSL for evaluating submission state?</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_callable_from_condition</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">:</span>
+        <span class="k">return</span> <span class="k">lambda</span> <span class="n">sub</span><span class="p">,</span> <span class="n">event</span><span class="p">:</span> <span class="kc">True</span></div>
+
+
+<div class="viewcode-block" id="RuleConsequence"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.rule.RuleConsequence">[docs]</a><span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">RuleConsequence</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Generate a new event as a result of the rule.&quot;&quot;&quot;</span>
+
+    <span class="n">event_type</span><span class="p">:</span> <span class="nb">type</span>
+    <span class="sd">&quot;&quot;&quot;The type of event to apply when the rule is triggered.&quot;&quot;&quot;</span>
+    <span class="n">event_data</span><span class="p">:</span> <span class="nb">dict</span>
+    <span class="sd">&quot;&quot;&quot;Data for the event applied when the rule is triggered.&quot;&quot;&quot;</span>
+
+    <span class="n">event_creator</span><span class="p">:</span> <span class="n">Agent</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="n">System</span><span class="p">)</span>
+    <span class="sd">&quot;&quot;&quot;The agent responsible for the consequent event.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">Submission</span><span class="p">,</span> <span class="n">event</span><span class="p">:</span> <span class="n">Event</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Event</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Generate a new event as a result of the rule.&quot;&quot;&quot;</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="p">{</span>    <span class="c1"># These are effectively defaults.</span>
+            <span class="s1">&#39;creator&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">event_creator</span><span class="p">,</span>
+            <span class="s1">&#39;proxy&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="s1">&#39;submission_id&#39;</span><span class="p">:</span> <span class="n">submission</span><span class="o">.</span><span class="n">submission_id</span>
+        <span class="p">}</span>
+        <span class="n">data</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">event_data</span><span class="p">)</span>
+        <span class="n">data</span><span class="p">[</span><span class="s1">&#39;created&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
+        <span class="c1"># new_event = event_factory(self.event_type, **data)</span>
+        <span class="n">new_event</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">event_type</span><span class="p">(</span><span class="o">**</span><span class="n">data</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">new_event</span><span class="o">.</span><span class="n">submission_id</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">new_event</span><span class="o">.</span><span class="n">submission_id</span> <span class="o">=</span> <span class="n">submission</span><span class="o">.</span><span class="n">submission_id</span>
+        <span class="k">if</span> <span class="n">new_event</span><span class="o">.</span><span class="n">creator</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">new_event</span><span class="o">.</span><span class="n">creator</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">event_creator</span>
+        <span class="k">return</span> <span class="n">new_event</span></div>
+
+
+<div class="viewcode-block" id="EventRule"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.rule.EventRule">[docs]</a><span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">EventRule</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Expresses conditional business logic to generate automated events.&quot;&quot;&quot;</span>
+
+    <span class="n">creator</span><span class="p">:</span> <span class="n">Agent</span>
+    <span class="n">condition</span><span class="p">:</span> <span class="n">RuleCondition</span>
+    <span class="n">consequence</span><span class="p">:</span> <span class="n">RuleConsequence</span>
+    <span class="n">rule_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">proxy</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Agent</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">created</span><span class="p">:</span> <span class="n">datetime</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">)</span>
+    <span class="n">applied</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="sd">&quot;&quot;&quot;Whether or not the rule has already been triggered and applied.&quot;&quot;&quot;</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../index.html">arXiv submission & moderation</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../architecture.html">Submission &amp; moderation subsystem architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../publication_process.html">Submission &amp; Publication Process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../submission_api_context.html">Submission API: Context</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../containers/core/events.html">Submission core events package</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  <li><a href="../../events.html">events</a><ul>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, arXiv.org.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.6.3</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

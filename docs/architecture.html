@@ -1,0 +1,319 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Submission &amp; moderation subsystem architecture &#8212; arXiv submission &amp; moderation 0.1 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Submission &amp; Publication Process" href="publication_process.html" />
+    <link rel="prev" title="Submission &amp; moderation" href="index.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="submission-moderation-subsystem-architecture">
+<h1>Submission &amp; moderation subsystem architecture<a class="headerlink" href="#submission-moderation-subsystem-architecture" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<p>The submission and moderation subsystem provides:</p>
+<ul class="simple">
+<li>Accession of submission of publication content and metadata via multiple
+interfaces, including interfaces provided by trusted third-party platforms;</li>
+<li>Quality assurance tools and workflows to screen submissions (moderation);</li>
+<li>An extensible system for automating parts of the moderation process;</li>
+<li>An event-based log of all submission and moderation activity related
+associated with a paper.</li>
+</ul>
+<p>In short, the submission and moderation subsystem is responsible for all
+submission-related activities up to (but not including) publication.</p>
+</div>
+<div class="section" id="key-requirements">
+<h2>Key requirements<a class="headerlink" href="#key-requirements" title="Permalink to this headline">¶</a></h2>
+<ol class="arabic simple">
+<li>The system must sensibly incorporate input from, and synchronize the
+activities of, a variety of human and non-human agents.</li>
+<li>It must be possible for administrators to audit all state changes in the
+system (e.g. by submitters, moderators, automated processes, etc).</li>
+<li>Administrators must be able to configure automated rules and processes.</li>
+<li>The system must support future development of potentially many alternative
+interfaces for submission and moderation, including interfaces developed
+and operated by trusted third-parties.</li>
+<li>The system must be able to support a high volume of activity, potentially
+two orders of magnitude greater than current levels (~11k submissions per
+month in early 2018).</li>
+</ol>
+</div>
+<div class="section" id="context">
+<h2>Context<a class="headerlink" href="#context" title="Permalink to this headline">¶</a></h2>
+<p>Authenticated users submit new publications via a user interface. Users can
+view the status of their submissions, including feedback and interventions by
+moderators and administrators, and amend their submissions as necessary. They
+can also view a preview of their submission, and make amendments to the source
+files in their submission. Authors can supplement their published and
+unpublished submissions with links to external resources and other
+supplemental metadata.</p>
+<p>Moderators (authenticated users with a moderator role) screen and curate
+submissions through a moderation interface. They can generate comments, flags,
+proposals, and other annotations attached to submissions.</p>
+<p>Administrators audit and manage the submission platform, including the
+behavior of automated processes and policies, through an administrative
+interface.</p>
+<p>Authors may also submit papers via authorized third-party interfaces, which
+integrate with arXiv via HTTP APIs exposed by the arXiv API gateway. API
+clients may deposit submissions in bulk (e.g. conference proceedings), or on
+an individual basis acting directly on behalf of an arXiv user. Submissions
+handled by clients operated by trusted partners may be handled differently than
+submissions originating from the arXiv submission interface, as dictated by
+arXiv policies.</p>
+</div>
+<div class="section" id="containers-services-building-blocks">
+<h2>Containers (Services &amp; Building Blocks)<a class="headerlink" href="#containers-services-building-blocks" title="Permalink to this headline">¶</a></h2>
+<div class="figure" id="id9">
+<span id="figure-submission-containers"></span><img alt="_images/submissionContainers.png" src="_images/submissionContainers.png" />
+<p class="caption"><span class="caption-number">Fig. 1 </span><span class="caption-text">Containers in the arXiv submission &amp; moderation subsystem.</span></p>
+</div>
+<div class="section" id="submission-database">
+<span id="id1"></span><h3>Submission database<a class="headerlink" href="#submission-database" title="Permalink to this headline">¶</a></h3>
+<p>The submission database (currently MySQL) is responsible for operational and
+core descriptive metadata about submissions. Operational metadata includes
+information related to arXiv workflows and processes. Core descriptive
+metadata are the core publication metadata fields required for arXiv
+submissions (e.g. title, authors, abstract). The primary source of truth
+for the state of each submission is a set of transformation events.
+Derivative representations (e.g. of submission objects) are also stored for
+querying and rapid access.</p>
+<p>In early phases of the classic renewal process, this will be the classic MySQL
+database running in the CUL-IT datacenter. Upon migration to the cloud, this
+will be replaced; likely with a PostgresQL database running in AWS RDS.</p>
+</div>
+<div class="section" id="core-interface-services">
+<h3>Core interface services<a class="headerlink" href="#core-interface-services" title="Permalink to this headline">¶</a></h3>
+<p>These services provide the core submission, moderation, and administrative
+interfaces for the arXiv submission system. Each of these services integrates
+with the <a class="reference internal" href="#submission-database"><span class="std std-ref">Submission database</span></a> to modify submission state, via the
+<a class="reference internal" href="#submission-core-events-package"><span class="std std-ref">Submission core events package</span></a>.</p>
+<p>Asynchronous operations (e.g. to execute rule-based logic) are performed by a
+<span class="xref std std-ref">submission-worker</span> process. Communication between the interface services
+and the worker is mediated by a task queue (Redis). Tasks passed on the queue
+are implemented in the <a class="reference internal" href="#submission-core-events-package"><span class="std std-ref">Submission core events package</span></a> using
+<a class="reference external" href="http://www.celeryproject.org/">Celery</a>.</p>
+<p>These core interface services integrate with other services in the submission
+system (e.g. <a class="reference internal" href="#file-management-service"><span class="std std-ref">File management service</span></a>, <a class="reference internal" href="#compilation-service"><span class="std std-ref">Compilation service</span></a>) via
+their HTTP APIs.</p>
+<div class="section" id="submission-core-events-package">
+<span id="id2"></span><h4>Submission core events package<a class="headerlink" href="#submission-core-events-package" title="Permalink to this headline">¶</a></h4>
+<p>This package provides an event-based Python API for CRUD operations on
+submissions and submission-related (meta)data. Services (below) that operate
+on submission data do so via this abstraction, which integrates with the
+<a class="reference internal" href="#submission-database"><span class="std std-ref">Submission database</span></a></p>
+<p>Rather than perform CRUD operations directly on submission objects, all
+operations that modify submission data are performed through the creation of
+submission events. This ensures that we have a precise and complete record of
+activities concerning submissions, an explicit definition of
+operations that can be performed within the arXiv submission system, and a
+starting-point for building rule-based workflows to support moderation and
+administrative tasks.</p>
+<p>This package also provides integration with a Kinesis notification broker,
+which propagates notifications about events in real time to other services
+in the arXiv system (e.g. the <span class="xref std std-ref">webook-notification-service</span>).</p>
+<p>To support automated processes, this package also implements a set of
+asynchronous tasks using <a class="reference external" href="http://www.celeryproject.org/">Celery</a>. Provides
+integration with a task queue (Redis) for message passing.</p>
+<p>See <a class="reference internal" href="containers/core/events.html#submission-core-events-package-containers"><span class="std std-ref">Submission core events package</span></a></p>
+</div>
+<div class="section" id="submission-ui-service">
+<h4>Submission UI service<a class="headerlink" href="#submission-ui-service" title="Permalink to this headline">¶</a></h4>
+<p>Provides form-based views that allow users
+to create and update submissions, and track the state of their submission
+through the moderation and publication process. The interface supports metadata
+entry, source package upload, and integrates with the
+<a class="reference internal" href="#compilation-service"><span class="std std-ref">Compilation service</span></a> to assist the submitter in preparing a
+publication-ready submission package.</p>
+<p>Uses the <a class="reference internal" href="#submission-core-events-package"><span class="std std-ref">Submission core events package</span></a> to update submission state in
+the <a class="reference internal" href="#submission-database"><span class="std std-ref">Submission database</span></a>.</p>
+</div>
+<div class="section" id="submission-api-service">
+<h4>Submission API service<a class="headerlink" href="#submission-api-service" title="Permalink to this headline">¶</a></h4>
+<p>Provides a RESTful API for trusted clients to facilitate submission to arXiv
+via external/third-party user interfaces.  Uses the
+<a class="reference internal" href="#submission-core-events-package"><span class="std std-ref">Submission core events package</span></a> to update submission state in the
+<a class="reference internal" href="#submission-database"><span class="std std-ref">Submission database</span></a>.</p>
+<p>This will replace the existing <a class="reference external" href="https://arxiv.org/help/submit_sword">arXiv SWORDv1 API</a>.</p>
+</div>
+<div class="section" id="moderation-ui-service">
+<h4>Moderation UI service<a class="headerlink" href="#moderation-ui-service" title="Permalink to this headline">¶</a></h4>
+<p>Supports moderator actions on submissions. Comprised of a client-side
+application (implemented in <a class="reference external" href="https://reactjs.org/">React</a>) backed by a
+lightweight Flask service. Uses the
+<a class="reference internal" href="#submission-core-events-package"><span class="std std-ref">Submission core events package</span></a> to update submission state in the
+<a class="reference internal" href="#submission-database"><span class="std std-ref">Submission database</span></a>.</p>
+</div>
+<div class="section" id="administrative-ui-service">
+<h4>Administrative UI service<a class="headerlink" href="#administrative-ui-service" title="Permalink to this headline">¶</a></h4>
+<p>The administrator interfaces provides visibility onto all parts of the
+submission service, including the state and event history of all submissions
+and submission annotations in the system. Administrators are able to configure
+automated policies and processes, intervene on submission content and metadata,
+and act on moderator proposals and comments.</p>
+</div>
+</div>
+<div class="section" id="utility-services">
+<h3>Utility services<a class="headerlink" href="#utility-services" title="Permalink to this headline">¶</a></h3>
+<p>The following utility services support the submission and moderation workflow,
+providing a menu of functionality used by UI and API services to support
+accession and quality assurance.</p>
+<div class="section" id="file-management-service">
+<span id="id4"></span><h4>File management service<a class="headerlink" href="#file-management-service" title="Permalink to this headline">¶</a></h4>
+<p>This service is responsible for ensuring the safety and suitability of files
+uploaded to the submission system. The file management service accepts
+uploads, performs verification and sanitization, and makes the upload available
+for use by other services.</p>
+</div>
+<div class="section" id="compilation-service">
+<span id="id5"></span><h4>Compilation service<a class="headerlink" href="#compilation-service" title="Permalink to this headline">¶</a></h4>
+<p><a class="reference external" href="https://github.com/cul-it/arxiv-converter">https://github.com/cul-it/arxiv-converter</a></p>
+<p>The build service compiles sanitized upload packages into PDF, PostScript,
+and other formats. This service encompasses the arXiv TeX tree. Compilation
+logs are also made available, for example to provide submitters feedback about
+compilation failures or warnings.</p>
+</div>
+<div class="section" id="plain-text-extraction-service">
+<span id="id6"></span><h4>Plain text extraction service<a class="headerlink" href="#plain-text-extraction-service" title="Permalink to this headline">¶</a></h4>
+<p><a class="reference external" href="https://github.com/cul-it/arxiv-fulltext">https://github.com/cul-it/arxiv-fulltext</a></p>
+<p>Extracts plain text content from PDFs, for use by the for overlap detection
+and classification services. Makes both raw extracted text and normalized
+“PSV” tokenized text available to other services.</p>
+</div>
+<div class="section" id="overlap-detection-service">
+<span id="id7"></span><h4>Overlap detection service<a class="headerlink" href="#overlap-detection-service" title="Permalink to this headline">¶</a></h4>
+<p><a class="reference external" href="https://github.com/cul-it/arxiv-docsim">https://github.com/cul-it/arxiv-docsim</a></p>
+<p>Operates on extracted plain text content and submission metadata to
+detect possibly duplicate submissions. Returns an array of published arXiv
+papers with a high degree of overlap.</p>
+</div>
+<div class="section" id="classifier-service">
+<span id="id8"></span><h4>Classifier service<a class="headerlink" href="#classifier-service" title="Permalink to this headline">¶</a></h4>
+<p><a class="reference external" href="https://github.com/cul-it/arxiv-classifier">https://github.com/cul-it/arxiv-classifier</a></p>
+<p>Operates on extracted plain text content and submission metadata to
+propose categories for submitted papers.</p>
+</div>
+<div class="section" id="notification-service">
+<h4>Notification service<a class="headerlink" href="#notification-service" title="Permalink to this headline">¶</a></h4>
+<p>Responsible for dispatching email notifications to submitters, moderators,
+in response to submission system events. Provides UIs for end-user and
+administrator configuration.</p>
+</div>
+<div class="section" id="endorsement-service">
+<h4>Endorsement service<a class="headerlink" href="#endorsement-service" title="Permalink to this headline">¶</a></h4>
+<p>Provides submitter endorsement mechanisms. Submission services can use the
+backend API provided by this service to validate author endorsement. Provides
+administrative and submitter UIs to manage endorsement status.</p>
+</div>
+</div>
+<div class="section" id="web-hook-notification-service">
+<h3>Web-hook notification service<a class="headerlink" href="#web-hook-notification-service" title="Permalink to this headline">¶</a></h3>
+<p>Provides mechanisms for API clients to register callbacks for submission
+events. Event consumer is implemented using the Kinesis Consumer Library and
+MultiLangDaemon [refs].</p>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">arXiv submission & moderation</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Submission &amp; moderation subsystem architecture</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#key-requirements">Key requirements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#context">Context</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#containers-services-building-blocks">Containers (Services &amp; Building Blocks)</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="publication_process.html">Submission &amp; Publication Process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="submission_api_context.html">Submission API: Context</a></li>
+<li class="toctree-l1"><a class="reference internal" href="containers/core/events.html">Submission core events package</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="index.html" title="previous chapter">Submission &amp; moderation</a></li>
+      <li>Next: <a href="publication_process.html" title="next chapter">Submission &amp; Publication Process</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, arXiv.org.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.6.3</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+      |
+      <a href="_sources/architecture.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

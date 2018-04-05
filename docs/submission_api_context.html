@@ -1,0 +1,302 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Submission API: Context &#8212; arXiv submission &amp; moderation 0.1 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Submission core events package" href="containers/core/events.html" />
+    <link rel="prev" title="Submission &amp; Publication Process" href="publication_process.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="submission-api-context">
+<h1>Submission API: Context<a class="headerlink" href="#submission-api-context" title="Permalink to this headline">¶</a></h1>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">This section is badly out of date. Disregard for now.</p>
+</div>
+<p>The arXiv submission API provides programmatic access to the arXiv submission
+system for API consumers.</p>
+<div class="section" id="submission-workflows">
+<h2>Submission Workflows<a class="headerlink" href="#submission-workflows" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="proxy-submission">
+<h3>Proxy Submission<a class="headerlink" href="#proxy-submission" title="Permalink to this headline">¶</a></h3>
+<p>Proxy submission is when an API client submits on behalf of an arXiv user who
+has explicitly delegated authorization to the client.</p>
+<p>A client that wishes to perform proxy submission must have <code class="docutils literal"><span class="pre">auth:3legged</span></code> and
+<code class="docutils literal"><span class="pre">submit:proxy</span></code> scope, and must implement a secure three-legged OAuth
+authorization process.</p>
+<p>In proxy submission, the arXiv user who has authorized the client to submit
+on their behalf will be the primary owner of the submission. This allows the
+user to intervene directly on the submission process later on, and provides
+some flexibility to clients who may wish only to partially implement the
+submission process.</p>
+<p>Note that in the classic arXiv system, “proxy submission” referred to bulk
+deposit via the SWORDv1 API.</p>
+</div>
+<div class="section" id="bulk-submission">
+<h3>Bulk Submission<a class="headerlink" href="#bulk-submission" title="Permalink to this headline">¶</a></h3>
+<p>Bulk submission is when an API client submits directly to arXiv without the
+involvement of an arXiv user. Bulk submission may be appropriate for
+conference proceedings or other large-volume deposits for which it is
+impossible or impracticable to involve individual users.</p>
+<p>A client that wishes to perform bulk submission must have a <code class="docutils literal"><span class="pre">submit:bulk</span></code>
+scope.</p>
+<p>In bulk submission, the client is the primary owner of the submission. To
+give ownership of the submission to an arXiv user, the client must take
+explicit action to transfer ownership.</p>
+</div>
+</div>
+<div class="section" id="access-authorization">
+<h2>Access &amp; Authorization<a class="headerlink" href="#access-authorization" title="Permalink to this headline">¶</a></h2>
+<p>User of the submission API requires client credentials, which can be obtained
+via the arXiv API Client Registry. See …</p>
+<div class="section" id="relevant-scopes">
+<h3>Relevant Scopes<a class="headerlink" href="#relevant-scopes" title="Permalink to this headline">¶</a></h3>
+<p>Ensure that your client credentials have been granted the necessary scopes for
+your use-case. To request that missing scopes be added to your credentials,
+see …</p>
+<ul class="simple">
+<li><code class="docutils literal"><span class="pre">auth:3legged</span></code>: Required for proxy submission.</li>
+<li><code class="docutils literal"><span class="pre">submit:proxy</span></code>: Required for proxy submission.</li>
+<li><code class="docutils literal"><span class="pre">submit:bulk</span></code>: Required for bulk submission.</li>
+</ul>
+</div>
+<div class="section" id="two-legged-authorization">
+<h3>Two-legged Authorization<a class="headerlink" href="#two-legged-authorization" title="Permalink to this headline">¶</a></h3>
+<p>Two-legged authorization grants access to resources for which end-user
+involvement is not required. This is suitable for bulk submission, but not
+proxy submission. This authorization mechanism involves exchanging your
+client id and client secret for an access token.</p>
+<div class="highlight-bash"><div class="highlight"><pre><span></span>$ curl -i -L <span class="se">\</span>
+&gt;    -d <span class="s2">&quot;client_id=[ your client id ]&quot;</span> <span class="se">\</span>
+&gt;    -d <span class="s2">&quot;client_secret=[ your client secret ]&quot;</span> <span class="se">\</span>
+&gt;    -d <span class="s2">&quot;grant_type=client_credentials&quot;</span> <span class="se">\</span>
+&gt;    <span class="s2">&quot;https://api.arxiv.org/auth/token&quot;</span>
+<span class="o">{</span><span class="s2">&quot;access_token&quot;</span>:<span class="s2">&quot;[ your access token ]&quot;</span>,<span class="s2">&quot;token_type&quot;</span>:<span class="s2">&quot;bearer&quot;</span>,
+<span class="s2">&quot;refresh_token&quot;</span>:<span class="s2">&quot;[ your refresh token ]&quot;</span>,<span class="s2">&quot;expires_in&quot;</span>:3600<span class="o">}</span>
+</pre></div>
+</div>
+<p>Use your access token in subsequent requests by passing it in the Authorization
+header. For example:</p>
+<div class="highlight-bash"><div class="highlight"><pre><span></span>$ curl -i -L <span class="se">\</span>
+&gt;    -H <span class="s2">&quot;Authorization: [ your access token ]&quot;</span> <span class="se">\</span>
+&gt;    <span class="s2">&quot;https://api.arxiv.org/submit/&quot;</span>
+</pre></div>
+</div>
+<p>When your access token expires, you can request a new one with:</p>
+<div class="highlight-bash"><div class="highlight"><pre><span></span>
+</pre></div>
+</div>
+<p>$ curl -i -L &gt;    -d “refresh_token=[ your refresh token ]” &gt;    -d “grant_type=refresh_token” &gt;    “<a class="reference external" href="https://api.arxiv.org/auth/token">https://api.arxiv.org/auth/token</a>”
+{“access_token”:”[ your new access token ]”,”token_type”:”bearer”,
+“refresh_token”:”[ your new refresh token ]”,”expires_in”:3600}</p>
+</div>
+<div class="section" id="three-legged-authorization">
+<h3>Three-legged Authorization<a class="headerlink" href="#three-legged-authorization" title="Permalink to this headline">¶</a></h3>
+<p>Three-legged authorization allows arXiv users to delegate API clients to take
+actions on their behalf. This is required for proxy submission. Note that your
+client credentials must have an associated <code class="docutils literal"><span class="pre">auth:3legged</span></code> scope, and you
+must have entered a valid callback URI for your application.</p>
+<ul>
+<li><p class="first">Client initiates authorization by directing the user to the arXiv API
+authorization endpoint: <code class="docutils literal"><span class="pre">https://api.arxiv.org/auth/authorize?client_id=[</span> <span class="pre">your</span> <span class="pre">client</span> <span class="pre">ID</span> <span class="pre">]</span></code></p>
+</li>
+<li><p class="first">User is asked to log in and authorize your client. If the user does not
+already have an arXiv account, they are given the option to create one at
+this time, and then proceed with authorization.</p>
+</li>
+<li><p class="first">If the user authorizes your client, they will be redirected to your
+registered callback URI. A short-lived authorization code will be included
+as a GET parameter, e.g. <code class="docutils literal"><span class="pre">https://yourapp.foo/callback?code=[</span> <span class="pre">auth</span> <span class="pre">code</span> <span class="pre">]</span></code></p>
+</li>
+<li><p class="first">Client may exchange the short-lived authorization code for a longer-lived
+authorization token:</p>
+<p>$ curl -i -L &gt;    -d “client_id=[ your client id ]” &gt;    -d “client_secret=[ your client secret ]” &gt;    -d “code=[ your auth code ]” &gt;    -d “grant_type=authorization_code” &gt;    “<a class="reference external" href="https://api.arxiv.org/auth/token">https://api.arxiv.org/auth/token</a>”
+{“access_token”:”[ your access token ]”,”token_type”:”bearer”,
+“refresh_token”:”[ your refresh token ]”,”expires_in”:3600}</p>
+</li>
+</ul>
+<p>The authorization code may only be used once. Multiple attempts to exchange the
+authorization code for an authorization token will invalidate both the
+authorization code and the authorization token that was generated on the first
+request.</p>
+<p>Use your authorization token in subsequent requests by passing it in the
+Authorization header. For example:</p>
+<div class="highlight-bash"><div class="highlight"><pre><span></span>$ curl -i -L <span class="se">\</span>
+&gt;    -H <span class="s2">&quot;Authorization: [ your access token ]&quot;</span> <span class="se">\</span>
+&gt;    <span class="s2">&quot;https://api.arxiv.org/submit/&quot;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="endorsement">
+<h3>Endorsement<a class="headerlink" href="#endorsement" title="Permalink to this headline">¶</a></h3>
+<p>Most subject areas in arXiv require that the submitter be endorsed by another
+member of the scientific community. For more information about what endorsement
+is and how it works on a per-user level, see…</p>
+<p>In addition to the required authorization scopes mentioned above, the API
+client must usually also be granted an endorsement scope for the subject areas
+to which it intends to submit. Endorsement scopes may be requested through the
+arXiv API Client Registry; see …</p>
+<p>Exception: in the case of proxy submission, the user on whose behalf the
+client submits  to arXiv may already be endorsed for a particular subject area.
+If so, the client need not be endorsed for that subject area for the submission
+to proceed.</p>
+</div>
+</div>
+<div class="section" id="submission-overview">
+<h2>Submission Overview<a class="headerlink" href="#submission-overview" title="Permalink to this headline">¶</a></h2>
+<p>The submission process is essentially the same for proxy and bulk submissions,
+as ownership is inferred from the authorization token provided in each
+request.</p>
+<p>Submission is initiated upon creation of a new submission resource, by
+POSTing to the <code class="docutils literal"><span class="pre">/submission/</span></code> endpoint. The submission resource need not be
+complete at this time. See <span class="xref std std-ref">api-create</span>.</p>
+<p>The submission source package may then be added by PUTing the package (see
+<span class="xref std std-ref">accepted-package-formats</span>) to the source endpoint:
+<code class="docutils literal"><span class="pre">/submission/{id}/source/</span></code>. The response will include a redirect to a status
+endpoint; the source package will be sanitized and unpacked, which may take a
+little while, and the status endpoint can be monitored for progress.
+Alternatively, a webhook may be configured to receive notifications about
+source processing events. See <span class="xref std std-ref">api-source</span>.</p>
+<p>When a source package is uploaded, by default the arXiv submission system will
+attempt to compile the source to PDF. Automatic compilation may be disabled,
+e.g. to allow for a multi-step upload process. To trigger compilation directly,
+a POST request may be made to the compilation endpoint:
+<code class="docutils literal"><span class="pre">/submission/{id}/source/compile/</span></code>. The response will include a reference to
+a status endpoint that can be monitored for progress; alternatively, a webhook
+may be configured to receive notifications about compilation.</p>
+<p>If compilation is successful, the resulting PDF may be retrieved from:
+<code class="docutils literal"><span class="pre">/submission/{id}/build/pdf/</span></code>. Compilation log output may be retrieved from
+<code class="docutils literal"><span class="pre">/submission/{id}/build/log/</span></code>.</p>
+<p>Note that the source must compile successfully for submission to proceed, and
+the submission resource must be updated to confirm that the client/user is
+satisfied with the compiled paper. It is up to the client whether/how such
+confirmation should occur.</p>
+<p>Updates to the submission may be made via subsequent POST requests to the
+submission endpoint (<code class="docutils literal"><span class="pre">/submission/{id}/</span></code>). This allows the client to
+spread the submission process over several steps, if desired.</p>
+<p>External links may be attached to the submission by POSTing to the links
+endpoint, <code class="docutils literal"><span class="pre">/submission/{id}/links/</span></code>. This may be used to supplement the
+core metadata with links to external resources, such as code, data, multimedia
+content, or an URI for an alternate version of the paper (e.g. in a
+peer-reviewed journal). See <span class="xref std std-ref">api-external-links</span>.</p>
+<p>Once all required procedural and descriptive metadata have been added to the
+submission, it may be submitted by POSTing to the submit endpoint:
+<code class="docutils literal"><span class="pre">/submission/{id}/submit/</span></code>. See <span class="xref std std-ref">api-submit</span>.</p>
+<p>A client may register to receive updates about one or all submissions for which
+it is responsible. To register a webhook for a specific submission, a POST
+request may be made to <code class="docutils literal"><span class="pre">/submission/{id}/webhooks/</span></code>. To register a webhook
+for all submissions for which the client is responsible, a POST request may be
+made to <code class="docutils literal"><span class="pre">/webhooks/</span></code>. See <span class="xref std std-ref">api-webhooks</span>.</p>
+<p>Once the submission has been published, the submission will be updated with
+its arXiv identifier and version number. If a webhook is registered, a
+publication notification will also be issued.</p>
+<p>The client may transfer ownership of the submission to another agent (user or
+another client) via the <code class="docutils literal"><span class="pre">/submission/{id}/transfer/</span></code> endpoint. Note that this
+is non-reversible without intervention from the recipient. An alternative is
+to delegate editing privileges to another agent, via the
+<code class="docutils literal"><span class="pre">/submission/{id}/delegate/</span></code> endpoint. See <span class="xref std std-ref">api-transfer</span> and
+<span class="xref std std-ref">api-delegation</span>.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">arXiv submission & moderation</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="architecture.html">Submission &amp; moderation subsystem architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="publication_process.html">Submission &amp; Publication Process</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Submission API: Context</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#submission-workflows">Submission Workflows</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#access-authorization">Access &amp; Authorization</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#submission-overview">Submission Overview</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="containers/core/events.html">Submission core events package</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="publication_process.html" title="previous chapter">Submission &amp; Publication Process</a></li>
+      <li>Next: <a href="containers/core/events.html" title="next chapter">Submission core events package</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, arXiv.org.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.6.3</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+      |
+      <a href="_sources/submission_api_context.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

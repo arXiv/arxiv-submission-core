@@ -1,0 +1,1509 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>events.services.classic package &#8212; arXiv submission &amp; moderation 0.1 documentation</title>
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="prev" title="events.services package" href="events.services.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-events.services.classic">
+<span id="events-services-classic-package"></span><h1>events.services.classic package<a class="headerlink" href="#module-events.services.classic" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="events.services.classic.DBEventMixin">
+<em class="property">class </em><code class="descclassname">events.services.classic.</code><code class="descname">DBEventMixin</code><a class="reference internal" href="../../_modules/events/services/classic.html#DBEventMixin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.DBEventMixin" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.6/library/functions.html#object" title="(in Python v3.6)"><code class="xref py py-class docutils literal"><span class="pre">object</span></code></a></p>
+<p>Provides data transformation methods for the event db model.</p>
+<dl class="method">
+<dt id="events.services.classic.DBEventMixin.to_event">
+<code class="descname">to_event</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; events.domain.event.Event<a class="reference internal" href="../../_modules/events/services/classic.html#DBEventMixin.to_event"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.DBEventMixin.to_event" title="Permalink to this definition">¶</a></dt>
+<dd><p>Instantiate an <a class="reference internal" href="events.domain.html#events.domain.event.Event" title="events.domain.event.Event"><code class="xref py py-class docutils literal"><span class="pre">Event</span></code></a> using event data from the db.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="events.services.classic.create_all">
+<code class="descclassname">events.services.classic.</code><code class="descname">create_all</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../../_modules/events/services/classic.html#create_all"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.create_all" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create all tables in the database.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="events.services.classic.current_engine">
+<code class="descclassname">events.services.classic.</code><code class="descname">current_engine</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; sqlalchemy.engine.base.Engine<a class="reference internal" href="../../_modules/events/services/classic.html#current_engine"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.current_engine" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get/create <code class="xref py py-class docutils literal"><span class="pre">Engine</span></code> for this context.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="events.services.classic.current_session">
+<code class="descclassname">events.services.classic.</code><code class="descname">current_session</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; sqlalchemy.orm.session.Session<a class="reference internal" href="../../_modules/events/services/classic.html#current_session"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.current_session" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get/create <code class="xref py py-class docutils literal"><span class="pre">Session</span></code> for this context.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="events.services.classic.drop_all">
+<code class="descclassname">events.services.classic.</code><code class="descname">drop_all</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../../_modules/events/services/classic.html#drop_all"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.drop_all" title="Permalink to this definition">¶</a></dt>
+<dd><p>Drop all tables in the database.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="events.services.classic.get_engine">
+<code class="descclassname">events.services.classic.</code><code class="descname">get_engine</code><span class="sig-paren">(</span><em>app: object = None</em><span class="sig-paren">)</span> &#x2192; sqlalchemy.engine.base.Engine<a class="reference internal" href="../../_modules/events/services/classic.html#get_engine"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.get_engine" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="events.services.classic.get_events">
+<code class="descclassname">events.services.classic.</code><code class="descname">get_events</code><span class="sig-paren">(</span><em>submission_id: int</em><span class="sig-paren">)</span> &#x2192; typing.List[events.domain.event.Event]<a class="reference internal" href="../../_modules/events/services/classic.html#get_events"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.get_events" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load events from the classic database.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>submission_id</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/functions.html#int" title="(in Python v3.6)"><em>int</em></a>) – </td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><em>list</em> – Items are <a class="reference internal" href="events.domain.html#events.domain.event.Event" title="events.domain.event.Event"><code class="xref py py-class docutils literal"><span class="pre">Event</span></code></a> instances loaded from the db.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="events.services.classic.get_licenses">
+<code class="descclassname">events.services.classic.</code><code class="descname">get_licenses</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; typing.List[events.domain.submission.License]<a class="reference internal" href="../../_modules/events/services/classic.html#get_licenses"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.get_licenses" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a list of :class:<a href="#id1"><span class="problematic" id="id2">`</span></a>.License`s available for new submissions.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="events.services.classic.get_session">
+<code class="descclassname">events.services.classic.</code><code class="descname">get_session</code><span class="sig-paren">(</span><em>app: object = None</em><span class="sig-paren">)</span> &#x2192; sqlalchemy.orm.session.Session<a class="reference internal" href="../../_modules/events/services/classic.html#get_session"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.get_session" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a new <code class="xref py py-class docutils literal"><span class="pre">Session</span></code>.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="events.services.classic.get_submission">
+<code class="descclassname">events.services.classic.</code><code class="descname">get_submission</code><span class="sig-paren">(</span><em>submission_id: int</em><span class="sig-paren">)</span> &#x2192; events.domain.submission.Submission<a class="reference internal" href="../../_modules/events/services/classic.html#get_submission"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.get_submission" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the current state of a <a class="reference internal" href="events.domain.html#events.domain.submission.Submission" title="events.domain.submission.Submission"><code class="xref py py-class docutils literal"><span class="pre">Submission</span></code></a> from the database.</p>
+<p>In the medium term, services that use this package will need to
+play well with legacy services that integrate with the classic
+database. For example, the moderation system does not use the event
+model implemented here, and will therefore cause direct changes to the
+submission tables that must be reflected in our representation of the
+submission.</p>
+<p>Until those legacy components are replaced, we will need to load both the
+event stack and the current DB state of the submission, and use the DB
+state to patch fields that may have changed outside the purview of the
+event model.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>submission_id</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/functions.html#int" title="(in Python v3.6)"><em>int</em></a>) – </td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><a class="reference internal" href="events.domain.html#events.domain.submission.Submission" title="events.domain.submission.Submission"><code class="xref py py-class docutils literal"><span class="pre">Submission</span></code></a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="events.services.classic.init_app">
+<code class="descclassname">events.services.classic.</code><code class="descname">init_app</code><span class="sig-paren">(</span><em>app: object = None</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../../_modules/events/services/classic.html#init_app"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.init_app" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set default configuration parameters for an application instance.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="events.services.classic.store_events">
+<code class="descclassname">events.services.classic.</code><code class="descname">store_events</code><span class="sig-paren">(</span><em>*events: events.domain.event.Event</em>, <em>submission: events.domain.submission.Submission</em><span class="sig-paren">)</span> &#x2192; events.domain.submission.Submission<a class="reference internal" href="../../_modules/events/services/classic.html#store_events"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.store_events" title="Permalink to this definition">¶</a></dt>
+<dd><p>Store events in the database.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>events</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#list" title="(in Python v3.6)"><em>list</em></a>) – A list of (presumably new) <a class="reference internal" href="events.domain.html#events.domain.event.Event" title="events.domain.event.Event"><code class="xref py py-class docutils literal"><span class="pre">Event</span></code></a> instances to be persisted.
+Events that have already been committed will not be committed again,
+so it’s safe to include them here.</li>
+<li><strong>submission</strong> (<a class="reference internal" href="events.domain.html#events.domain.submission.Submission" title="events.domain.submission.Submission"><code class="xref py py-class docutils literal"><span class="pre">Submission</span></code></a>) – Current state of the submission (after events have been applied).</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><a class="reference internal" href="events.domain.html#events.domain.submission.Submission" title="events.domain.submission.Submission"><code class="xref py py-class docutils literal"><span class="pre">Submission</span></code></a> – Stored submission, updated with current submission ID.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="events.services.classic.transaction">
+<code class="descclassname">events.services.classic.</code><code class="descname">transaction</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; typing.Generator<a class="reference internal" href="../../_modules/events/services/classic.html#transaction"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.transaction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Context manager for database transaction.</p>
+</dd></dl>
+
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-events.services.classic.exceptions">
+<span id="events-services-classic-exceptions-module"></span><h2>events.services.classic.exceptions module<a class="headerlink" href="#module-events.services.classic.exceptions" title="Permalink to this headline">¶</a></h2>
+<p>Exceptions raised by <a class="reference internal" href="#module-events.services.classic" title="events.services.classic"><code class="xref py py-mod docutils literal"><span class="pre">events.services.classic</span></code></a>.</p>
+<dl class="exception">
+<dt id="events.services.classic.exceptions.NoSuchSubmission">
+<em class="property">exception </em><code class="descclassname">events.services.classic.exceptions.</code><code class="descname">NoSuchSubmission</code><a class="reference internal" href="../../_modules/events/services/classic/exceptions.html#NoSuchSubmission"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.exceptions.NoSuchSubmission" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.6/library/exceptions.html#RuntimeError" title="(in Python v3.6)"><code class="xref py py-class docutils literal"><span class="pre">RuntimeError</span></code></a></p>
+<p>A request was made for a submission that does not exist.</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-events.services.classic.models">
+<span id="events-services-classic-models-module"></span><h2>events.services.classic.models module<a class="headerlink" href="#module-events.services.classic.models" title="Permalink to this headline">¶</a></h2>
+<p>SQLAlchemy ORM classes.</p>
+<dl class="class">
+<dt id="events.services.classic.models.Archive">
+<em class="property">class </em><code class="descclassname">events.services.classic.models.</code><code class="descname">Archive</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/services/classic/models.html#Archive"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.models.Archive" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">sqlalchemy.ext.declarative.api.Base</span></code></p>
+<dl class="attribute">
+<dt id="events.services.classic.models.Archive.arXiv_group">
+<code class="descname">arXiv_group</code><a class="headerlink" href="#events.services.classic.models.Archive.arXiv_group" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.Archive.archive_id">
+<code class="descname">archive_id</code><a class="headerlink" href="#events.services.classic.models.Archive.archive_id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.Archive.archive_name">
+<code class="descname">archive_name</code><a class="headerlink" href="#events.services.classic.models.Archive.archive_name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.Archive.end_date">
+<code class="descname">end_date</code><a class="headerlink" href="#events.services.classic.models.Archive.end_date" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.Archive.in_group">
+<code class="descname">in_group</code><a class="headerlink" href="#events.services.classic.models.Archive.in_group" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.Archive.start_date">
+<code class="descname">start_date</code><a class="headerlink" href="#events.services.classic.models.Archive.start_date" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.Archive.subdivided">
+<code class="descname">subdivided</code><a class="headerlink" href="#events.services.classic.models.Archive.subdivided" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="events.services.classic.models.ArchiveCategory">
+<em class="property">class </em><code class="descclassname">events.services.classic.models.</code><code class="descname">ArchiveCategory</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/services/classic/models.html#ArchiveCategory"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.models.ArchiveCategory" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">sqlalchemy.ext.declarative.api.Base</span></code></p>
+<dl class="attribute">
+<dt id="events.services.classic.models.ArchiveCategory.archive_id">
+<code class="descname">archive_id</code><a class="headerlink" href="#events.services.classic.models.ArchiveCategory.archive_id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.ArchiveCategory.category_id">
+<code class="descname">category_id</code><a class="headerlink" href="#events.services.classic.models.ArchiveCategory.category_id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="events.services.classic.models.ArchiveDef">
+<em class="property">class </em><code class="descclassname">events.services.classic.models.</code><code class="descname">ArchiveDef</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/services/classic/models.html#ArchiveDef"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.models.ArchiveDef" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">sqlalchemy.ext.declarative.api.Base</span></code></p>
+<dl class="attribute">
+<dt id="events.services.classic.models.ArchiveDef.archive">
+<code class="descname">archive</code><a class="headerlink" href="#events.services.classic.models.ArchiveDef.archive" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.ArchiveDef.name">
+<code class="descname">name</code><a class="headerlink" href="#events.services.classic.models.ArchiveDef.name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="events.services.classic.models.ArchiveGroup">
+<em class="property">class </em><code class="descclassname">events.services.classic.models.</code><code class="descname">ArchiveGroup</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/services/classic/models.html#ArchiveGroup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.models.ArchiveGroup" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">sqlalchemy.ext.declarative.api.Base</span></code></p>
+<dl class="attribute">
+<dt id="events.services.classic.models.ArchiveGroup.archive_id">
+<code class="descname">archive_id</code><a class="headerlink" href="#events.services.classic.models.ArchiveGroup.archive_id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.ArchiveGroup.group_id">
+<code class="descname">group_id</code><a class="headerlink" href="#events.services.classic.models.ArchiveGroup.group_id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="events.services.classic.models.Category">
+<em class="property">class </em><code class="descclassname">events.services.classic.models.</code><code class="descname">Category</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/services/classic/models.html#Category"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.models.Category" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">sqlalchemy.ext.declarative.api.Base</span></code></p>
+<dl class="attribute">
+<dt id="events.services.classic.models.Category.active">
+<code class="descname">active</code><a class="headerlink" href="#events.services.classic.models.Category.active" title="Permalink to this definition">¶</a></dt>
+<dd><p>Only use rows where active == 1.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.Category.arXiv_archive">
+<code class="descname">arXiv_archive</code><a class="headerlink" href="#events.services.classic.models.Category.arXiv_archive" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.Category.arXiv_endorsement_domain">
+<code class="descname">arXiv_endorsement_domain</code><a class="headerlink" href="#events.services.classic.models.Category.arXiv_endorsement_domain" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.Category.archive">
+<code class="descname">archive</code><a class="headerlink" href="#events.services.classic.models.Category.archive" title="Permalink to this definition">¶</a></dt>
+<dd><p>E.g. cond-mat, astro-ph, cs.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.Category.category_name">
+<code class="descname">category_name</code><a class="headerlink" href="#events.services.classic.models.Category.category_name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.Category.definitive">
+<code class="descname">definitive</code><a class="headerlink" href="#events.services.classic.models.Category.definitive" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.Category.endorse_all">
+<code class="descname">endorse_all</code><a class="headerlink" href="#events.services.classic.models.Category.endorse_all" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.Category.endorse_email">
+<code class="descname">endorse_email</code><a class="headerlink" href="#events.services.classic.models.Category.endorse_email" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.Category.endorsement_domain">
+<code class="descname">endorsement_domain</code><a class="headerlink" href="#events.services.classic.models.Category.endorsement_domain" title="Permalink to this definition">¶</a></dt>
+<dd><p>E.g. astro-ph, acc-phys, chem-ph, cs.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.Category.papers_to_endorse">
+<code class="descname">papers_to_endorse</code><a class="headerlink" href="#events.services.classic.models.Category.papers_to_endorse" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.Category.subject_class">
+<code class="descname">subject_class</code><a class="headerlink" href="#events.services.classic.models.Category.subject_class" title="Permalink to this definition">¶</a></dt>
+<dd><p>E.g. AI, spr-con, str-el, CO, EP.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="events.services.classic.models.CategoryDef">
+<em class="property">class </em><code class="descclassname">events.services.classic.models.</code><code class="descname">CategoryDef</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/services/classic/models.html#CategoryDef"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.models.CategoryDef" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">sqlalchemy.ext.declarative.api.Base</span></code></p>
+<p>Classification categories available for submissions.</p>
+<dl class="attribute">
+<dt id="events.services.classic.models.CategoryDef.active">
+<code class="descname">active</code><a class="headerlink" href="#events.services.classic.models.CategoryDef.active" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.CategoryDef.category">
+<code class="descname">category</code><a class="headerlink" href="#events.services.classic.models.CategoryDef.category" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.CategoryDef.name">
+<code class="descname">name</code><a class="headerlink" href="#events.services.classic.models.CategoryDef.name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="events.services.classic.models.Document">
+<em class="property">class </em><code class="descclassname">events.services.classic.models.</code><code class="descname">Document</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/services/classic/models.html#Document"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.models.Document" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">sqlalchemy.ext.declarative.api.Base</span></code></p>
+<p>Represents a published arXiv paper.</p>
+<p>This is here so that we can look up the arXiv ID after a submission is
+published.</p>
+<dl class="attribute">
+<dt id="events.services.classic.models.Document.authors">
+<code class="descname">authors</code><a class="headerlink" href="#events.services.classic.models.Document.authors" title="Permalink to this definition">¶</a></dt>
+<dd><p>Canonical author string.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.Document.created">
+<code class="descname">created</code><a class="headerlink" href="#events.services.classic.models.Document.created" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.Document.dated">
+<code class="descname">dated</code><a class="headerlink" href="#events.services.classic.models.Document.dated" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.Document.document_id">
+<code class="descname">document_id</code><a class="headerlink" href="#events.services.classic.models.Document.document_id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.Document.paper_id">
+<code class="descname">paper_id</code><a class="headerlink" href="#events.services.classic.models.Document.paper_id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.Document.primary_subject_class">
+<code class="descname">primary_subject_class</code><a class="headerlink" href="#events.services.classic.models.Document.primary_subject_class" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.Document.submitter">
+<code class="descname">submitter</code><a class="headerlink" href="#events.services.classic.models.Document.submitter" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.Document.submitter_email">
+<code class="descname">submitter_email</code><a class="headerlink" href="#events.services.classic.models.Document.submitter_email" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.Document.submitter_id">
+<code class="descname">submitter_id</code><a class="headerlink" href="#events.services.classic.models.Document.submitter_id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.Document.title">
+<code class="descname">title</code><a class="headerlink" href="#events.services.classic.models.Document.title" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="events.services.classic.models.DocumentCategory">
+<em class="property">class </em><code class="descclassname">events.services.classic.models.</code><code class="descname">DocumentCategory</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/services/classic/models.html#DocumentCategory"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.models.DocumentCategory" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">sqlalchemy.ext.declarative.api.Base</span></code></p>
+<p>Relation between published arXiv papers and their classifications.</p>
+<dl class="attribute">
+<dt id="events.services.classic.models.DocumentCategory.category">
+<code class="descname">category</code><a class="headerlink" href="#events.services.classic.models.DocumentCategory.category" title="Permalink to this definition">¶</a></dt>
+<dd><p>E.g. cs.CG, cond-mat.dis-nn, etc.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.DocumentCategory.category_def">
+<code class="descname">category_def</code><a class="headerlink" href="#events.services.classic.models.DocumentCategory.category_def" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.DocumentCategory.document">
+<code class="descname">document</code><a class="headerlink" href="#events.services.classic.models.DocumentCategory.document" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.DocumentCategory.document_id">
+<code class="descname">document_id</code><a class="headerlink" href="#events.services.classic.models.DocumentCategory.document_id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.DocumentCategory.is_primary">
+<code class="descname">is_primary</code><a class="headerlink" href="#events.services.classic.models.DocumentCategory.is_primary" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="events.services.classic.models.EndorsementDomain">
+<em class="property">class </em><code class="descclassname">events.services.classic.models.</code><code class="descname">EndorsementDomain</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/services/classic/models.html#EndorsementDomain"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.models.EndorsementDomain" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">sqlalchemy.ext.declarative.api.Base</span></code></p>
+<dl class="attribute">
+<dt id="events.services.classic.models.EndorsementDomain.endorse_all">
+<code class="descname">endorse_all</code><a class="headerlink" href="#events.services.classic.models.EndorsementDomain.endorse_all" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.EndorsementDomain.endorse_email">
+<code class="descname">endorse_email</code><a class="headerlink" href="#events.services.classic.models.EndorsementDomain.endorse_email" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.EndorsementDomain.endorsement_domain">
+<code class="descname">endorsement_domain</code><a class="headerlink" href="#events.services.classic.models.EndorsementDomain.endorsement_domain" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.EndorsementDomain.mods_endorse_all">
+<code class="descname">mods_endorse_all</code><a class="headerlink" href="#events.services.classic.models.EndorsementDomain.mods_endorse_all" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.EndorsementDomain.papers_to_endorse">
+<code class="descname">papers_to_endorse</code><a class="headerlink" href="#events.services.classic.models.EndorsementDomain.papers_to_endorse" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="events.services.classic.models.Group">
+<em class="property">class </em><code class="descclassname">events.services.classic.models.</code><code class="descname">Group</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/services/classic/models.html#Group"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.models.Group" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">sqlalchemy.ext.declarative.api.Base</span></code></p>
+<dl class="attribute">
+<dt id="events.services.classic.models.Group.group_id">
+<code class="descname">group_id</code><a class="headerlink" href="#events.services.classic.models.Group.group_id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.Group.group_name">
+<code class="descname">group_name</code><a class="headerlink" href="#events.services.classic.models.Group.group_name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.Group.start_year">
+<code class="descname">start_year</code><a class="headerlink" href="#events.services.classic.models.Group.start_year" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="events.services.classic.models.GroupDef">
+<em class="property">class </em><code class="descclassname">events.services.classic.models.</code><code class="descname">GroupDef</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/services/classic/models.html#GroupDef"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.models.GroupDef" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">sqlalchemy.ext.declarative.api.Base</span></code></p>
+<dl class="attribute">
+<dt id="events.services.classic.models.GroupDef.archive_group">
+<code class="descname">archive_group</code><a class="headerlink" href="#events.services.classic.models.GroupDef.archive_group" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.GroupDef.name">
+<code class="descname">name</code><a class="headerlink" href="#events.services.classic.models.GroupDef.name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="events.services.classic.models.License">
+<em class="property">class </em><code class="descclassname">events.services.classic.models.</code><code class="descname">License</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/services/classic/models.html#License"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.models.License" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">sqlalchemy.ext.declarative.api.Base</span></code></p>
+<p>Licenses available for submissions.</p>
+<dl class="attribute">
+<dt id="events.services.classic.models.License.active">
+<code class="descname">active</code><a class="headerlink" href="#events.services.classic.models.License.active" title="Permalink to this definition">¶</a></dt>
+<dd><p>Only offer licenses with active=1.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.License.label">
+<code class="descname">label</code><a class="headerlink" href="#events.services.classic.models.License.label" title="Permalink to this definition">¶</a></dt>
+<dd><p>Display label for the license.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.License.name">
+<code class="descname">name</code><a class="headerlink" href="#events.services.classic.models.License.name" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is the URI of the license.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.License.note">
+<code class="descname">note</code><a class="headerlink" href="#events.services.classic.models.License.note" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.License.sequence">
+<code class="descname">sequence</code><a class="headerlink" href="#events.services.classic.models.License.sequence" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="events.services.classic.models.PolicyClass">
+<em class="property">class </em><code class="descclassname">events.services.classic.models.</code><code class="descname">PolicyClass</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/services/classic/models.html#PolicyClass"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.models.PolicyClass" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">sqlalchemy.ext.declarative.api.Base</span></code></p>
+<dl class="attribute">
+<dt id="events.services.classic.models.PolicyClass.class_id">
+<code class="descname">class_id</code><a class="headerlink" href="#events.services.classic.models.PolicyClass.class_id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.PolicyClass.description">
+<code class="descname">description</code><a class="headerlink" href="#events.services.classic.models.PolicyClass.description" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.PolicyClass.name">
+<code class="descname">name</code><a class="headerlink" href="#events.services.classic.models.PolicyClass.name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.PolicyClass.password_storage">
+<code class="descname">password_storage</code><a class="headerlink" href="#events.services.classic.models.PolicyClass.password_storage" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.PolicyClass.permanent_login">
+<code class="descname">permanent_login</code><a class="headerlink" href="#events.services.classic.models.PolicyClass.permanent_login" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.PolicyClass.recovery_policy">
+<code class="descname">recovery_policy</code><a class="headerlink" href="#events.services.classic.models.PolicyClass.recovery_policy" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="events.services.classic.models.Submission">
+<em class="property">class </em><code class="descclassname">events.services.classic.models.</code><code class="descname">Submission</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/services/classic/models.html#Submission"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.models.Submission" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">sqlalchemy.ext.declarative.api.Base</span></code></p>
+<p>Represents an arXiv submission.</p>
+<dl class="attribute">
+<dt id="events.services.classic.models.Submission.DELETED">
+<code class="descname">DELETED</code><em class="property"> = [10, 22, 25, 29, 30]</em><a class="headerlink" href="#events.services.classic.models.Submission.DELETED" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.Submission.DELETED_EXPIRED">
+<code class="descname">DELETED_EXPIRED</code><em class="property"> = 20</em><a class="headerlink" href="#events.services.classic.models.Submission.DELETED_EXPIRED" title="Permalink to this definition">¶</a></dt>
+<dd><p>Was working but expired.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.Submission.DELETED_ON_HOLD">
+<code class="descname">DELETED_ON_HOLD</code><em class="property"> = 22</em><a class="headerlink" href="#events.services.classic.models.Submission.DELETED_ON_HOLD" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.Submission.DELETED_PROCESSING">
+<code class="descname">DELETED_PROCESSING</code><em class="property"> = 25</em><a class="headerlink" href="#events.services.classic.models.Submission.DELETED_PROCESSING" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.Submission.DELETED_PUBLISHED">
+<code class="descname">DELETED_PUBLISHED</code><em class="property"> = 27</em><a class="headerlink" href="#events.services.classic.models.Submission.DELETED_PUBLISHED" title="Permalink to this definition">¶</a></dt>
+<dd><p>Published and files expired.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.Submission.DELETED_REMOVED">
+<code class="descname">DELETED_REMOVED</code><em class="property"> = 29</em><a class="headerlink" href="#events.services.classic.models.Submission.DELETED_REMOVED" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.Submission.DELETED_USER">
+<code class="descname">DELETED_USER</code><em class="property"> = 30</em><a class="headerlink" href="#events.services.classic.models.Submission.DELETED_USER" title="Permalink to this definition">¶</a></dt>
+<dd><p>User deleted and files expired.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.Submission.ERROR_STATE">
+<code class="descname">ERROR_STATE</code><em class="property"> = 19</em><a class="headerlink" href="#events.services.classic.models.Submission.ERROR_STATE" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.Submission.FILES_ADDED">
+<code class="descname">FILES_ADDED</code><em class="property"> = 2</em><a class="headerlink" href="#events.services.classic.models.Submission.FILES_ADDED" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.Submission.JOURNAL_REFERENCE">
+<code class="descname">JOURNAL_REFERENCE</code><em class="property"> = 'jref'</em><a class="headerlink" href="#events.services.classic.models.Submission.JOURNAL_REFERENCE" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.Submission.METADATA_ADDED">
+<code class="descname">METADATA_ADDED</code><em class="property"> = 4</em><a class="headerlink" href="#events.services.classic.models.Submission.METADATA_ADDED" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.Submission.NEEDS_EMAIL">
+<code class="descname">NEEDS_EMAIL</code><em class="property"> = 6</em><a class="headerlink" href="#events.services.classic.models.Submission.NEEDS_EMAIL" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.Submission.NEW">
+<code class="descname">NEW</code><em class="property"> = 0</em><a class="headerlink" href="#events.services.classic.models.Submission.NEW" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.Submission.NEW_SUBMSSION">
+<code class="descname">NEW_SUBMSSION</code><em class="property"> = 'new'</em><a class="headerlink" href="#events.services.classic.models.Submission.NEW_SUBMSSION" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.Submission.NEXT_DAY">
+<code class="descname">NEXT_DAY</code><em class="property"> = 4</em><a class="headerlink" href="#events.services.classic.models.Submission.NEXT_DAY" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.Submission.NOT_SUBMITTED">
+<code class="descname">NOT_SUBMITTED</code><em class="property"> = 0</em><a class="headerlink" href="#events.services.classic.models.Submission.NOT_SUBMITTED" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.Submission.ON_HOLD">
+<code class="descname">ON_HOLD</code><em class="property"> = 2</em><a class="headerlink" href="#events.services.classic.models.Submission.ON_HOLD" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.Submission.PROCESSED">
+<code class="descname">PROCESSED</code><em class="property"> = 3</em><a class="headerlink" href="#events.services.classic.models.Submission.PROCESSED" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.Submission.PROCESSING">
+<code class="descname">PROCESSING</code><em class="property"> = 5</em><a class="headerlink" href="#events.services.classic.models.Submission.PROCESSING" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.Submission.PROCESSING_SUBMISSION">
+<code class="descname">PROCESSING_SUBMISSION</code><em class="property"> = 8</em><a class="headerlink" href="#events.services.classic.models.Submission.PROCESSING_SUBMISSION" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.Submission.PUBLISHED">
+<code class="descname">PUBLISHED</code><em class="property"> = 7</em><a class="headerlink" href="#events.services.classic.models.Submission.PUBLISHED" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.Submission.REMOVED">
+<code class="descname">REMOVED</code><em class="property"> = 9</em><a class="headerlink" href="#events.services.classic.models.Submission.REMOVED" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.Submission.REPLACEMENT">
+<code class="descname">REPLACEMENT</code><em class="property"> = 'rep'</em><a class="headerlink" href="#events.services.classic.models.Submission.REPLACEMENT" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.Submission.STAGES">
+<code class="descname">STAGES</code><em class="property"> = [0, 1, 2, 3, 4, 5]</em><a class="headerlink" href="#events.services.classic.models.Submission.STAGES" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.Submission.STARTED">
+<code class="descname">STARTED</code><em class="property"> = 1</em><a class="headerlink" href="#events.services.classic.models.Submission.STARTED" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.Submission.SUBMITTED">
+<code class="descname">SUBMITTED</code><em class="property"> = 1</em><a class="headerlink" href="#events.services.classic.models.Submission.SUBMITTED" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.Submission.UNUSED">
+<code class="descname">UNUSED</code><em class="property"> = 3</em><a class="headerlink" href="#events.services.classic.models.Submission.UNUSED" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.Submission.USER_DELETED">
+<code class="descname">USER_DELETED</code><em class="property"> = 10</em><a class="headerlink" href="#events.services.classic.models.Submission.USER_DELETED" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.Submission.WITHDRAWAL">
+<code class="descname">WITHDRAWAL</code><em class="property"> = 'dr'</em><a class="headerlink" href="#events.services.classic.models.Submission.WITHDRAWAL" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.Submission.WITHDRAWN_FORMAT">
+<code class="descname">WITHDRAWN_FORMAT</code><em class="property"> = 'withdrawn'</em><a class="headerlink" href="#events.services.classic.models.Submission.WITHDRAWN_FORMAT" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.Submission.abstract">
+<code class="descname">abstract</code><a class="headerlink" href="#events.services.classic.models.Submission.abstract" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.Submission.acm_class">
+<code class="descname">acm_class</code><a class="headerlink" href="#events.services.classic.models.Submission.acm_class" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.Submission.admin_ok">
+<code class="descname">admin_ok</code><a class="headerlink" href="#events.services.classic.models.Submission.admin_ok" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.Submission.agree_policy">
+<code class="descname">agree_policy</code><a class="headerlink" href="#events.services.classic.models.Submission.agree_policy" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.Submission.allow_tex_produced">
+<code class="descname">allow_tex_produced</code><a class="headerlink" href="#events.services.classic.models.Submission.allow_tex_produced" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.Submission.arXiv_license">
+<code class="descname">arXiv_license</code><a class="headerlink" href="#events.services.classic.models.Submission.arXiv_license" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.Submission.authors">
+<code class="descname">authors</code><a class="headerlink" href="#events.services.classic.models.Submission.authors" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.Submission.auto_hold">
+<code class="descname">auto_hold</code><a class="headerlink" href="#events.services.classic.models.Submission.auto_hold" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.Submission.categories">
+<code class="descname">categories</code><a class="headerlink" href="#events.services.classic.models.Submission.categories" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.Submission.comments">
+<code class="descname">comments</code><a class="headerlink" href="#events.services.classic.models.Submission.comments" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.Submission.created">
+<code class="descname">created</code><a class="headerlink" href="#events.services.classic.models.Submission.created" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.Submission.doc_paper_id">
+<code class="descname">doc_paper_id</code><a class="headerlink" href="#events.services.classic.models.Submission.doc_paper_id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.Submission.document">
+<code class="descname">document</code><a class="headerlink" href="#events.services.classic.models.Submission.document" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.Submission.document_id">
+<code class="descname">document_id</code><a class="headerlink" href="#events.services.classic.models.Submission.document_id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.Submission.doi">
+<code class="descname">doi</code><a class="headerlink" href="#events.services.classic.models.Submission.doi" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.Submission.has_pilot_data">
+<code class="descname">has_pilot_data</code><a class="headerlink" href="#events.services.classic.models.Submission.has_pilot_data" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.Submission.is_author">
+<code class="descname">is_author</code><a class="headerlink" href="#events.services.classic.models.Submission.is_author" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.Submission.is_ok">
+<code class="descname">is_ok</code><a class="headerlink" href="#events.services.classic.models.Submission.is_ok" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.Submission.is_oversize">
+<code class="descname">is_oversize</code><a class="headerlink" href="#events.services.classic.models.Submission.is_oversize" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.Submission.is_withdrawn">
+<code class="descname">is_withdrawn</code><a class="headerlink" href="#events.services.classic.models.Submission.is_withdrawn" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.Submission.journal_ref">
+<code class="descname">journal_ref</code><a class="headerlink" href="#events.services.classic.models.Submission.journal_ref" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.Submission.license">
+<code class="descname">license</code><a class="headerlink" href="#events.services.classic.models.Submission.license" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.Submission.msc_class">
+<code class="descname">msc_class</code><a class="headerlink" href="#events.services.classic.models.Submission.msc_class" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.Submission.must_process">
+<code class="descname">must_process</code><a class="headerlink" href="#events.services.classic.models.Submission.must_process" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.Submission.package">
+<code class="descname">package</code><a class="headerlink" href="#events.services.classic.models.Submission.package" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="events.services.classic.models.Submission.patch">
+<code class="descname">patch</code><span class="sig-paren">(</span><em>submission: events.domain.submission.Submission</em><span class="sig-paren">)</span> &#x2192; events.domain.submission.Submission<a class="reference internal" href="../../_modules/events/services/classic/models.html#Submission.patch"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.models.Submission.patch" title="Permalink to this definition">¶</a></dt>
+<dd><p>Patch a <a class="reference internal" href="#events.services.classic.models.Submission" title="events.services.classic.models.Submission"><code class="xref py py-class docutils literal"><span class="pre">Submission</span></code></a> with data outside the event scope.</p>
+<p>There are several fields that may change after a submission enters the
+classic moderation and publication system, that cannot be inferred
+from the event stack.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>submission</strong> (<code class="xref py py-class docutils literal"><span class="pre">domain.Submission</span></code>) – The submission object to patch.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><code class="xref py py-class docutils literal"><span class="pre">domain.Submission</span></code> – The same submission that was passed; now patched with data outside
+the scope of the event model.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.Submission.primary_classification">
+<code class="descname">primary_classification</code><a class="headerlink" href="#events.services.classic.models.Submission.primary_classification" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the primary classification for this submission.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.Submission.proxy">
+<code class="descname">proxy</code><a class="headerlink" href="#events.services.classic.models.Submission.proxy" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.Submission.release_time">
+<code class="descname">release_time</code><a class="headerlink" href="#events.services.classic.models.Submission.release_time" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.Submission.remote_addr">
+<code class="descname">remote_addr</code><a class="headerlink" href="#events.services.classic.models.Submission.remote_addr" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.Submission.remote_host">
+<code class="descname">remote_host</code><a class="headerlink" href="#events.services.classic.models.Submission.remote_host" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.Submission.report_num">
+<code class="descname">report_num</code><a class="headerlink" href="#events.services.classic.models.Submission.report_num" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.Submission.rt_ticket_id">
+<code class="descname">rt_ticket_id</code><a class="headerlink" href="#events.services.classic.models.Submission.rt_ticket_id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.Submission.source_flags">
+<code class="descname">source_flags</code><a class="headerlink" href="#events.services.classic.models.Submission.source_flags" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.Submission.source_format">
+<code class="descname">source_format</code><a class="headerlink" href="#events.services.classic.models.Submission.source_format" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.Submission.source_size">
+<code class="descname">source_size</code><a class="headerlink" href="#events.services.classic.models.Submission.source_size" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.Submission.stage">
+<code class="descname">stage</code><a class="headerlink" href="#events.services.classic.models.Submission.stage" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.Submission.status">
+<code class="descname">status</code><a class="headerlink" href="#events.services.classic.models.Submission.status" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.Submission.sticky_status">
+<code class="descname">sticky_status</code><a class="headerlink" href="#events.services.classic.models.Submission.sticky_status" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.Submission.submission_id">
+<code class="descname">submission_id</code><a class="headerlink" href="#events.services.classic.models.Submission.submission_id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.Submission.submit_time">
+<code class="descname">submit_time</code><a class="headerlink" href="#events.services.classic.models.Submission.submit_time" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.Submission.submitter">
+<code class="descname">submitter</code><a class="headerlink" href="#events.services.classic.models.Submission.submitter" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.Submission.submitter_email">
+<code class="descname">submitter_email</code><a class="headerlink" href="#events.services.classic.models.Submission.submitter_email" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.Submission.submitter_id">
+<code class="descname">submitter_id</code><a class="headerlink" href="#events.services.classic.models.Submission.submitter_id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.Submission.submitter_name">
+<code class="descname">submitter_name</code><a class="headerlink" href="#events.services.classic.models.Submission.submitter_name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.Submission.sword">
+<code class="descname">sword</code><a class="headerlink" href="#events.services.classic.models.Submission.sword" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.Submission.sword_id">
+<code class="descname">sword_id</code><a class="headerlink" href="#events.services.classic.models.Submission.sword_id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.Submission.title">
+<code class="descname">title</code><a class="headerlink" href="#events.services.classic.models.Submission.title" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="events.services.classic.models.Submission.to_submission">
+<code class="descname">to_submission</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; events.domain.submission.Submission<a class="reference internal" href="../../_modules/events/services/classic/models.html#Submission.to_submission"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.models.Submission.to_submission" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate a representation of submission state from a DB instance.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><code class="xref py py-class docutils literal"><span class="pre">domain.Submission</span></code></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.Submission.type">
+<code class="descname">type</code><a class="headerlink" href="#events.services.classic.models.Submission.type" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="events.services.classic.models.Submission.update_from_submission">
+<code class="descname">update_from_submission</code><span class="sig-paren">(</span><em>submission: events.domain.submission.Submission</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../../_modules/events/services/classic/models.html#Submission.update_from_submission"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.models.Submission.update_from_submission" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update this database object from a <code class="xref py py-class docutils literal"><span class="pre">domain.Submission</span></code>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.Submission.updated">
+<code class="descname">updated</code><a class="headerlink" href="#events.services.classic.models.Submission.updated" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.Submission.userinfo">
+<code class="descname">userinfo</code><a class="headerlink" href="#events.services.classic.models.Submission.userinfo" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.Submission.version">
+<code class="descname">version</code><a class="headerlink" href="#events.services.classic.models.Submission.version" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.Submission.viewed">
+<code class="descname">viewed</code><a class="headerlink" href="#events.services.classic.models.Submission.viewed" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="events.services.classic.models.SubmissionCategory">
+<em class="property">class </em><code class="descclassname">events.services.classic.models.</code><code class="descname">SubmissionCategory</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/services/classic/models.html#SubmissionCategory"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.models.SubmissionCategory" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">sqlalchemy.ext.declarative.api.Base</span></code></p>
+<p>Classification relation for submissions.</p>
+<dl class="attribute">
+<dt id="events.services.classic.models.SubmissionCategory.category">
+<code class="descname">category</code><a class="headerlink" href="#events.services.classic.models.SubmissionCategory.category" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.SubmissionCategory.is_primary">
+<code class="descname">is_primary</code><a class="headerlink" href="#events.services.classic.models.SubmissionCategory.is_primary" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.SubmissionCategory.is_published">
+<code class="descname">is_published</code><a class="headerlink" href="#events.services.classic.models.SubmissionCategory.is_published" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.SubmissionCategory.submission">
+<code class="descname">submission</code><a class="headerlink" href="#events.services.classic.models.SubmissionCategory.submission" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.SubmissionCategory.submission_id">
+<code class="descname">submission_id</code><a class="headerlink" href="#events.services.classic.models.SubmissionCategory.submission_id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="events.services.classic.models.Tracking">
+<em class="property">class </em><code class="descclassname">events.services.classic.models.</code><code class="descname">Tracking</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/services/classic/models.html#Tracking"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.models.Tracking" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">sqlalchemy.ext.declarative.api.Base</span></code></p>
+<p>Record of SWORD submissions.</p>
+<dl class="attribute">
+<dt id="events.services.classic.models.Tracking.paper_id">
+<code class="descname">paper_id</code><a class="headerlink" href="#events.services.classic.models.Tracking.paper_id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.Tracking.submission_errors">
+<code class="descname">submission_errors</code><a class="headerlink" href="#events.services.classic.models.Tracking.submission_errors" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.Tracking.sword_id">
+<code class="descname">sword_id</code><a class="headerlink" href="#events.services.classic.models.Tracking.sword_id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.Tracking.timestamp">
+<code class="descname">timestamp</code><a class="headerlink" href="#events.services.classic.models.Tracking.timestamp" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.Tracking.tracking_id">
+<code class="descname">tracking_id</code><a class="headerlink" href="#events.services.classic.models.Tracking.tracking_id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="events.services.classic.models.User">
+<em class="property">class </em><code class="descclassname">events.services.classic.models.</code><code class="descname">User</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/services/classic/models.html#User"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.models.User" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">sqlalchemy.ext.declarative.api.Base</span></code></p>
+<dl class="attribute">
+<dt id="events.services.classic.models.User.email">
+<code class="descname">email</code><a class="headerlink" href="#events.services.classic.models.User.email" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.User.email_bouncing">
+<code class="descname">email_bouncing</code><a class="headerlink" href="#events.services.classic.models.User.email_bouncing" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.User.first_name">
+<code class="descname">first_name</code><a class="headerlink" href="#events.services.classic.models.User.first_name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.User.flag_allow_tex_produced">
+<code class="descname">flag_allow_tex_produced</code><a class="headerlink" href="#events.services.classic.models.User.flag_allow_tex_produced" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.User.flag_approved">
+<code class="descname">flag_approved</code><a class="headerlink" href="#events.services.classic.models.User.flag_approved" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.User.flag_banned">
+<code class="descname">flag_banned</code><a class="headerlink" href="#events.services.classic.models.User.flag_banned" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.User.flag_deleted">
+<code class="descname">flag_deleted</code><a class="headerlink" href="#events.services.classic.models.User.flag_deleted" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.User.flag_edit_system">
+<code class="descname">flag_edit_system</code><a class="headerlink" href="#events.services.classic.models.User.flag_edit_system" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.User.flag_edit_users">
+<code class="descname">flag_edit_users</code><a class="headerlink" href="#events.services.classic.models.User.flag_edit_users" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.User.flag_email_verified">
+<code class="descname">flag_email_verified</code><a class="headerlink" href="#events.services.classic.models.User.flag_email_verified" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.User.flag_html_email">
+<code class="descname">flag_html_email</code><a class="headerlink" href="#events.services.classic.models.User.flag_html_email" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.User.flag_internal">
+<code class="descname">flag_internal</code><a class="headerlink" href="#events.services.classic.models.User.flag_internal" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.User.flag_wants_email">
+<code class="descname">flag_wants_email</code><a class="headerlink" href="#events.services.classic.models.User.flag_wants_email" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.User.joined_date">
+<code class="descname">joined_date</code><a class="headerlink" href="#events.services.classic.models.User.joined_date" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.User.joined_ip_num">
+<code class="descname">joined_ip_num</code><a class="headerlink" href="#events.services.classic.models.User.joined_ip_num" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.User.joined_remote_host">
+<code class="descname">joined_remote_host</code><a class="headerlink" href="#events.services.classic.models.User.joined_remote_host" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.User.last_name">
+<code class="descname">last_name</code><a class="headerlink" href="#events.services.classic.models.User.last_name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.User.policy_class">
+<code class="descname">policy_class</code><a class="headerlink" href="#events.services.classic.models.User.policy_class" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.User.share_email">
+<code class="descname">share_email</code><a class="headerlink" href="#events.services.classic.models.User.share_email" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.User.share_first_name">
+<code class="descname">share_first_name</code><a class="headerlink" href="#events.services.classic.models.User.share_first_name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.User.share_last_name">
+<code class="descname">share_last_name</code><a class="headerlink" href="#events.services.classic.models.User.share_last_name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.User.suffix_name">
+<code class="descname">suffix_name</code><a class="headerlink" href="#events.services.classic.models.User.suffix_name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.User.tapir_policy_class">
+<code class="descname">tapir_policy_class</code><a class="headerlink" href="#events.services.classic.models.User.tapir_policy_class" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.User.tracking_cookie">
+<code class="descname">tracking_cookie</code><a class="headerlink" href="#events.services.classic.models.User.tracking_cookie" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.User.user_id">
+<code class="descname">user_id</code><a class="headerlink" href="#events.services.classic.models.User.user_id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-events.services.classic.tests">
+<span id="events-services-classic-tests-module"></span><h2>events.services.classic.tests module<a class="headerlink" href="#module-events.services.classic.tests" title="Permalink to this headline">¶</a></h2>
+<p>Integration tests for the classic database service.</p>
+<p>These tests assume that SQLAlchemy’s MySQL backend is implemented correctly:
+instead of using a live MySQL database, they use an in-memory SQLite database.
+This is mostly fine (they are intended to be more-or-less swappable). The one
+iffy bit is the JSON datatype, which is not available by default in the SQLite
+backend, and so we inject a simple one here. End to end tests with a live MySQL
+database will provide more confidence in this area.</p>
+<dl class="class">
+<dt id="events.services.classic.tests.MockEvent">
+<em class="property">class </em><code class="descclassname">events.services.classic.tests.</code><code class="descname">MockEvent</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/services/classic/tests.html#MockEvent"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.tests.MockEvent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">sqlalchemy.ext.declarative.api.Base</span></code>, <a class="reference internal" href="#events.services.classic.DBEventMixin" title="events.services.classic.DBEventMixin"><code class="xref py py-class docutils literal"><span class="pre">events.services.classic.DBEventMixin</span></code></a></p>
+<p>SQLite-friendly alternative for DBEvent model.</p>
+<dl class="attribute">
+<dt id="events.services.classic.tests.MockEvent.created">
+<code class="descname">created</code><a class="headerlink" href="#events.services.classic.tests.MockEvent.created" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.tests.MockEvent.creator">
+<code class="descname">creator</code><a class="headerlink" href="#events.services.classic.tests.MockEvent.creator" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.tests.MockEvent.creator_id">
+<code class="descname">creator_id</code><a class="headerlink" href="#events.services.classic.tests.MockEvent.creator_id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.tests.MockEvent.data">
+<code class="descname">data</code><a class="headerlink" href="#events.services.classic.tests.MockEvent.data" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.tests.MockEvent.event_id">
+<code class="descname">event_id</code><a class="headerlink" href="#events.services.classic.tests.MockEvent.event_id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.tests.MockEvent.event_type">
+<code class="descname">event_type</code><a class="headerlink" href="#events.services.classic.tests.MockEvent.event_type" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.tests.MockEvent.proxy">
+<code class="descname">proxy</code><a class="headerlink" href="#events.services.classic.tests.MockEvent.proxy" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.tests.MockEvent.proxy_id">
+<code class="descname">proxy_id</code><a class="headerlink" href="#events.services.classic.tests.MockEvent.proxy_id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.tests.MockEvent.submission">
+<code class="descname">submission</code><a class="headerlink" href="#events.services.classic.tests.MockEvent.submission" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.tests.MockEvent.submission_id">
+<code class="descname">submission_id</code><a class="headerlink" href="#events.services.classic.tests.MockEvent.submission_id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="events.services.classic.tests.SQLiteJson">
+<em class="property">class </em><code class="descclassname">events.services.classic.tests.</code><code class="descname">SQLiteJson</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/services/classic/tests.html#SQLiteJson"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.tests.SQLiteJson" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">sqlalchemy.sql.type_api.TypeDecorator</span></code></p>
+<p>SQLite-friendly implementation of a JSON type.</p>
+<p>Adapted from <a class="reference external" href="https://bitbucket.org/zzzeek/sqlalchemy/issues/3850/request-sqlite-json1-ext-support">https://bitbucket.org/zzzeek/sqlalchemy/issues/3850/request-sqlite-json1-ext-support</a>.</p>
+<dl class="class">
+<dt id="events.services.classic.tests.SQLiteJson.Comparator">
+<em class="property">class </em><code class="descname">Comparator</code><span class="sig-paren">(</span><em>expr</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/services/classic/tests.html#SQLiteJson.Comparator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.tests.SQLiteJson.Comparator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">sqlalchemy.sql.sqltypes.Comparator</span></code></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.tests.SQLiteJson.comparator_factory">
+<code class="descname">comparator_factory</code><a class="headerlink" href="#events.services.classic.tests.SQLiteJson.comparator_factory" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <a class="reference internal" href="#events.services.classic.tests.SQLiteJson.Comparator" title="events.services.classic.tests.SQLiteJson.Comparator"><code class="xref py py-class docutils literal"><span class="pre">Comparator</span></code></a></p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.tests.SQLiteJson.impl">
+<code class="descname">impl</code><a class="headerlink" href="#events.services.classic.tests.SQLiteJson.impl" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <code class="xref py py-class docutils literal"><span class="pre">String</span></code></p>
+</dd></dl>
+
+<dl class="method">
+<dt id="events.services.classic.tests.SQLiteJson.process_bind_param">
+<code class="descname">process_bind_param</code><span class="sig-paren">(</span><em>value</em>, <em>dialect</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/services/classic/tests.html#SQLiteJson.process_bind_param"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.tests.SQLiteJson.process_bind_param" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="events.services.classic.tests.SQLiteJson.process_result_value">
+<code class="descname">process_result_value</code><span class="sig-paren">(</span><em>value</em>, <em>dialect</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/services/classic/tests.html#SQLiteJson.process_result_value"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.tests.SQLiteJson.process_result_value" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="events.services.classic.tests.TestGetLicenses">
+<em class="property">class </em><code class="descclassname">events.services.classic.tests.</code><code class="descname">TestGetLicenses</code><span class="sig-paren">(</span><em>methodName='runTest'</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/services/classic/tests.html#TestGetLicenses"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.tests.TestGetLicenses" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">unittest.case.TestCase</span></code></p>
+<p>Test <a class="reference internal" href="#events.services.classic.get_licenses" title="events.services.classic.get_licenses"><code class="xref py py-func docutils literal"><span class="pre">classic.get_licenses()</span></code></a>.</p>
+<dl class="method">
+<dt id="events.services.classic.tests.TestGetLicenses.test_get_all_active_licenses">
+<code class="descname">test_get_all_active_licenses</code><span class="sig-paren">(</span><em>mock__declare_event</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/services/classic/tests.html#TestGetLicenses.test_get_all_active_licenses"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.tests.TestGetLicenses.test_get_all_active_licenses" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a <a class="reference internal" href="events.domain.html#events.domain.submission.License" title="events.domain.submission.License"><code class="xref py py-class docutils literal"><span class="pre">License</span></code></a> for each active license in the db.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="events.services.classic.tests.TestGetSubmission">
+<em class="property">class </em><code class="descclassname">events.services.classic.tests.</code><code class="descname">TestGetSubmission</code><span class="sig-paren">(</span><em>methodName='runTest'</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/services/classic/tests.html#TestGetSubmission"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.tests.TestGetSubmission" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">unittest.case.TestCase</span></code></p>
+<p>Test <a class="reference internal" href="#events.services.classic.get_submission" title="events.services.classic.get_submission"><code class="xref py py-func docutils literal"><span class="pre">classic.get_submission()</span></code></a>.</p>
+<dl class="method">
+<dt id="events.services.classic.tests.TestGetSubmission.test_get_submission_that_does_not_exist">
+<code class="descname">test_get_submission_that_does_not_exist</code><span class="sig-paren">(</span><em>mock__declare_event</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/services/classic/tests.html#TestGetSubmission.test_get_submission_that_does_not_exist"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.tests.TestGetSubmission.test_get_submission_that_does_not_exist" title="Permalink to this definition">¶</a></dt>
+<dd><p>Test that an exception is raised when submission doesn’t exist.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="events.services.classic.tests.TestGetSubmission.test_get_submission_with_hold_and_reclass">
+<code class="descname">test_get_submission_with_hold_and_reclass</code><span class="sig-paren">(</span><em>mock__declare_event</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/services/classic/tests.html#TestGetSubmission.test_get_submission_with_hold_and_reclass"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.tests.TestGetSubmission.test_get_submission_with_hold_and_reclass" title="Permalink to this definition">¶</a></dt>
+<dd><p>Test changes made externally are reflected in submission data.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="events.services.classic.tests.TestGetSubmission.test_get_submission_with_publish">
+<code class="descname">test_get_submission_with_publish</code><span class="sig-paren">(</span><em>mock__declare_event</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/services/classic/tests.html#TestGetSubmission.test_get_submission_with_publish"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.tests.TestGetSubmission.test_get_submission_with_publish" title="Permalink to this definition">¶</a></dt>
+<dd><p>Test that publication state is reflected in submission data.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="events.services.classic.tests.TestStoreEvents">
+<em class="property">class </em><code class="descclassname">events.services.classic.tests.</code><code class="descname">TestStoreEvents</code><span class="sig-paren">(</span><em>methodName='runTest'</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/services/classic/tests.html#TestStoreEvents"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.tests.TestStoreEvents" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">unittest.case.TestCase</span></code></p>
+<p>Test <a class="reference internal" href="#events.services.classic.store_events" title="events.services.classic.store_events"><code class="xref py py-func docutils literal"><span class="pre">classic.store_events()</span></code></a>.</p>
+<dl class="method">
+<dt id="events.services.classic.tests.TestStoreEvents.test_store_event">
+<code class="descname">test_store_event</code><span class="sig-paren">(</span><em>mock__declare_event</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/services/classic/tests.html#TestStoreEvents.test_store_event"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.tests.TestStoreEvents.test_store_event" title="Permalink to this definition">¶</a></dt>
+<dd><p>Store a single event.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="events.services.classic.tests.TestStoreEvents.test_store_events_with_classification">
+<code class="descname">test_store_events_with_classification</code><span class="sig-paren">(</span><em>mock__declare_event</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/services/classic/tests.html#TestStoreEvents.test_store_events_with_classification"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.tests.TestStoreEvents.test_store_events_with_classification" title="Permalink to this definition">¶</a></dt>
+<dd><p>Store events including classification.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="events.services.classic.tests.TestStoreEvents.test_store_events_with_finalized_submission">
+<code class="descname">test_store_events_with_finalized_submission</code><span class="sig-paren">(</span><em>mock__declare_event</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/services/classic/tests.html#TestStoreEvents.test_store_events_with_finalized_submission"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.tests.TestStoreEvents.test_store_events_with_finalized_submission" title="Permalink to this definition">¶</a></dt>
+<dd><p>Store events and a finalized submission.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="events.services.classic.tests.TestStoreEvents.test_store_events_with_metadata">
+<code class="descname">test_store_events_with_metadata</code><span class="sig-paren">(</span><em>mock__declare_event</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/services/classic/tests.html#TestStoreEvents.test_store_events_with_metadata"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.tests.TestStoreEvents.test_store_events_with_metadata" title="Permalink to this definition">¶</a></dt>
+<dd><p>Store events and attendant submission with metadata.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="events.services.classic.tests.in_memory_db">
+<code class="descclassname">events.services.classic.tests.</code><code class="descname">in_memory_db</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/services/classic/tests.html#in_memory_db"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.tests.in_memory_db" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">arXiv submission & moderation</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../architecture.html">Submission &amp; moderation subsystem architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../publication_process.html">Submission &amp; Publication Process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../submission_api_context.html">Submission API: Context</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="events.html">Submission core events package</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="events.html#using-events">Using events</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="events.html#subpackages">Subpackages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="events.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="events.html#module-events.context">events.context module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="events.html#module-events.exceptions">events.exceptions module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="events.html#module-events.tests">events.tests module</a></li>
+</ul>
+</li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="events.html">Submission core events package</a><ul>
+  <li><a href="events.services.html">events.services package</a><ul>
+      <li>Previous: <a href="events.services.html" title="previous chapter">events.services package</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, arXiv.org.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.6.3</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+      |
+      <a href="../../_sources/containers/core/events.services.classic.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

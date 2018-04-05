@@ -32,7 +32,7 @@ class Event:
     """
     The agent responsible for the operation represented by this event.
 
-    This is **not** necessarily the creator of the :class:`.Submission`.
+    This is **not** necessarily the creator of the submission.
     """
 
     created: datetime = field(default_factory=datetime.now)
@@ -113,7 +113,7 @@ class Event:
 
 @dataclass(init=False)
 class CreateSubmissionEvent(Event):
-    """Creation of a new :class:`.Submission`."""
+    """Creation of a new :class:`events.domain.submission.Submission`."""
 
     def project(self) -> Submission:
         """Create a new :class:`.Submission`."""
@@ -123,7 +123,7 @@ class CreateSubmissionEvent(Event):
 
 @dataclass(init=False)
 class RemoveSubmissionEvent(Event):
-    """Removal of a :class:`.Submission`."""
+    """Removal of a :class:`events.domain.submission.Submission`."""
 
     def project(self, submission: Submission) -> Submission:
         """Remove the :class:`.Submission` from the system (set inactive)."""
@@ -165,7 +165,7 @@ class AcceptPolicyEvent(Event):
 
 @dataclass
 class SetPrimaryClassificationEvent(Event):
-    """Update the primary classification of a :class:`.Submission`."""
+    """Update the primary classification of a submission."""
 
     category: Optional[str] = None
 
@@ -185,7 +185,7 @@ class SetPrimaryClassificationEvent(Event):
 
 @dataclass
 class AddSecondaryClassificationEvent(Event):
-    """Add a secondary :class:`.Classification` to a :class:`.Submission`."""
+    """Add a secondary :class:`.Classification` to a submission."""
 
     category: Optional[str] = None
 
@@ -206,7 +206,7 @@ class AddSecondaryClassificationEvent(Event):
 
 @dataclass
 class RemoveSecondaryClassificationEvent(Event):
-    """Remove secondary :class:`.Classification` from :class:`.Submission`."""
+    """Remove secondary :class:`.Classification` from submission."""
 
     category: Optional[str] = None
 
@@ -244,21 +244,22 @@ class SelectLicenseEvent(Event):
 
 @dataclass
 class UpdateMetadataEvent(Event):
-    """Update of :class:`.Submission` metadata."""
+    """Update the descriptive metadata for a submission."""
 
     schema = 'schema/resources/events/update_metadata.json'
 
     metadata: List[Tuple[str, Any]] = field(default_factory=list)
 
-    # def validate(self, submission: Submission) -> None:
-    #     """The :prop:`.metadata` should be a list of tuples."""
-    #     try:
-    #         assert len(self.metadata) >= 1
-    #         assert type(self.metadata[0]) in [tuple, list]
-    #         for metadatum in self.metadata:
-    #             assert len(metadatum) == 2
-    #     except AssertionError as e:
-    #         raise InvalidEvent(e) from e
+    def validate(self, submission: Submission) -> None:
+        """The :prop:`.metadata` should be a list of tuples."""
+        try:
+            assert len(self.metadata) >= 1
+            assert type(self.metadata[0]) in [tuple, list]
+            for metadatum in self.metadata:
+                assert len(metadatum) == 2
+        except AssertionError as e:
+            raise InvalidEvent(e) from e
+
     def project(self, submission: Submission) -> Submission:
         """Update metadata on a :class:`.Submission`."""
         for key, value in self.metadata:
@@ -271,14 +272,6 @@ class UpdateAuthorsEvent(Event):
     """Update the authors on a :class:`.Submission`."""
 
     authors: List[Author] = field(default_factory=list)
-
-    # def validate(self, submission: Submission) -> None:
-    #     """The :prop:`.authors` should be a list of authors."""
-    #     allowed = ['forename', 'surname', 'initials', '']
-    #     for author in self.authors:
-    #         try:
-    #             assert 'forename' in author
-    #             assert 'surname' in author
 
 
 @dataclass

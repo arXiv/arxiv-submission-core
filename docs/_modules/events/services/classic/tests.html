@@ -1,0 +1,517 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>events.services.classic.tests &#8212; arXiv submission &amp; moderation 0.1 documentation</title>
+    <link rel="stylesheet" href="../../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for events.services.classic.tests</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Integration tests for the classic database service.</span>
+
+<span class="sd">These tests assume that SQLAlchemy&#39;s MySQL backend is implemented correctly:</span>
+<span class="sd">instead of using a live MySQL database, they use an in-memory SQLite database.</span>
+<span class="sd">This is mostly fine (they are intended to be more-or-less swappable). The one</span>
+<span class="sd">iffy bit is the JSON datatype, which is not available by default in the SQLite</span>
+<span class="sd">backend, and so we inject a simple one here. End to end tests with a live MySQL</span>
+<span class="sd">database will provide more confidence in this area.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">unittest</span> <span class="k">import</span> <span class="n">TestCase</span><span class="p">,</span> <span class="n">mock</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="k">import</span> <span class="n">datetime</span>
+<span class="kn">from</span> <span class="nn">contextlib</span> <span class="k">import</span> <span class="n">contextmanager</span>
+<span class="kn">import</span> <span class="nn">json</span>
+
+<span class="kn">from</span> <span class="nn">sqlalchemy</span> <span class="k">import</span> <span class="n">TypeDecorator</span><span class="p">,</span> <span class="n">func</span><span class="p">,</span> <span class="n">String</span><span class="p">,</span> <span class="n">Column</span>
+<span class="kn">from</span> <span class="nn">sqlalchemy</span> <span class="k">import</span> <span class="n">JSON</span><span class="p">,</span> <span class="n">DateTime</span><span class="p">,</span> <span class="n">ForeignKey</span>
+<span class="kn">from</span> <span class="nn">sqlalchemy.types</span> <span class="k">import</span> <span class="n">NullType</span>
+<span class="kn">from</span> <span class="nn">sqlalchemy.orm</span> <span class="k">import</span> <span class="n">relationship</span>
+<span class="kn">from</span> <span class="nn">sqlalchemy.ext.indexable</span> <span class="k">import</span> <span class="n">index_property</span>
+<span class="kn">from</span> <span class="nn">flask</span> <span class="k">import</span> <span class="n">Flask</span>
+
+<span class="kn">from</span> <span class="nn">events.domain.agent</span> <span class="k">import</span> <span class="n">User</span>
+<span class="kn">from</span> <span class="nn">events.domain.submission</span> <span class="k">import</span> <span class="n">License</span><span class="p">,</span> <span class="n">Submission</span><span class="p">,</span> <span class="n">Author</span>
+<span class="kn">from</span> <span class="nn">events.domain.event</span> <span class="k">import</span> <span class="n">CreateSubmissionEvent</span><span class="p">,</span> <span class="n">UpdateMetadataEvent</span><span class="p">,</span> \
+    <span class="n">FinalizeSubmissionEvent</span><span class="p">,</span> <span class="n">SetPrimaryClassificationEvent</span><span class="p">,</span> \
+    <span class="n">AddSecondaryClassificationEvent</span><span class="p">,</span> <span class="n">SelectLicenseEvent</span><span class="p">,</span> \
+    <span class="n">SetPrimaryClassificationEvent</span><span class="p">,</span> <span class="n">AcceptPolicyEvent</span><span class="p">,</span> \
+    <span class="n">VerifyContactInformationEvent</span>
+<span class="kn">from</span> <span class="nn">events.domain.agent</span> <span class="k">import</span> <span class="n">User</span>
+<span class="kn">from</span> <span class="nn">events.services</span> <span class="k">import</span> <span class="n">classic</span>
+
+
+<div class="viewcode-block" id="SQLiteJson"><a class="viewcode-back" href="../../../../containers/core/events.services.classic.html#events.services.classic.tests.SQLiteJson">[docs]</a><span class="k">class</span> <span class="nc">SQLiteJson</span><span class="p">(</span><span class="n">TypeDecorator</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    SQLite-friendly implementation of a JSON type.</span>
+
+<span class="sd">    Adapted from https://bitbucket.org/zzzeek/sqlalchemy/issues/3850/request-sqlite-json1-ext-support.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">impl</span> <span class="o">=</span> <span class="n">String</span>
+
+<div class="viewcode-block" id="SQLiteJson.Comparator"><a class="viewcode-back" href="../../../../containers/core/events.services.classic.html#events.services.classic.tests.SQLiteJson.Comparator">[docs]</a>    <span class="k">class</span> <span class="nc">Comparator</span><span class="p">(</span><span class="n">String</span><span class="o">.</span><span class="n">Comparator</span><span class="p">):</span>
+        <span class="k">def</span> <span class="nf">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+                <span class="n">index</span> <span class="o">=</span> <span class="s2">&quot;$</span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span>
+                    <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span>
+                        <span class="s2">&quot;[</span><span class="si">%s</span><span class="s2">]&quot;</span> <span class="o">%</span> <span class="n">elem</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">elem</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span>
+                        <span class="k">else</span> <span class="s1">&#39;.&quot;</span><span class="si">%s</span><span class="s1">&quot;&#39;</span> <span class="o">%</span> <span class="n">elem</span> <span class="k">for</span> <span class="n">elem</span> <span class="ow">in</span> <span class="n">index</span>
+                    <span class="p">])</span>
+                <span class="p">)</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+                <span class="n">index</span> <span class="o">=</span> <span class="s2">&quot;$[</span><span class="si">%s</span><span class="s2">]&quot;</span> <span class="o">%</span> <span class="n">index</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">index</span> <span class="o">=</span> <span class="s1">&#39;$.&quot;</span><span class="si">%s</span><span class="s1">&quot;&#39;</span> <span class="o">%</span> <span class="n">index</span>
+
+            <span class="c1"># json_extract does not appear to return JSON sub-elements</span>
+            <span class="c1"># which is weird.</span>
+            <span class="k">return</span> <span class="n">func</span><span class="o">.</span><span class="n">json_extract</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">expr</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">type_</span><span class="o">=</span><span class="n">NullType</span><span class="p">)</span></div>
+
+    <span class="n">comparator_factory</span> <span class="o">=</span> <span class="n">Comparator</span>
+
+<div class="viewcode-block" id="SQLiteJson.process_bind_param"><a class="viewcode-back" href="../../../../containers/core/events.services.classic.html#events.services.classic.tests.SQLiteJson.process_bind_param">[docs]</a>    <span class="k">def</span> <span class="nf">process_bind_param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">dialect</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">value</span></div>
+
+<div class="viewcode-block" id="SQLiteJson.process_result_value"><a class="viewcode-back" href="../../../../containers/core/events.services.classic.html#events.services.classic.tests.SQLiteJson.process_result_value">[docs]</a>    <span class="k">def</span> <span class="nf">process_result_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">dialect</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">value</span></div></div>
+
+
+<div class="viewcode-block" id="in_memory_db"><a class="viewcode-back" href="../../../../containers/core/events.services.classic.html#events.services.classic.tests.in_memory_db">[docs]</a><span class="nd">@contextmanager</span>
+<span class="k">def</span> <span class="nf">in_memory_db</span><span class="p">():</span>
+    <span class="n">app</span> <span class="o">=</span> <span class="n">Flask</span><span class="p">(</span><span class="s1">&#39;foo&#39;</span><span class="p">)</span>
+    <span class="n">app</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;SQLALCHEMY_DATABASE_URI&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;sqlite://&#39;</span>
+    <span class="n">app</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;SQLALCHEMY_TRACK_MODIFICATIONS&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="k">with</span> <span class="n">app</span><span class="o">.</span><span class="n">app_context</span><span class="p">():</span>
+        <span class="n">classic</span><span class="o">.</span><span class="n">init_app</span><span class="p">(</span><span class="n">app</span><span class="p">)</span>
+        <span class="n">classic</span><span class="o">.</span><span class="n">create_all</span><span class="p">()</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">yield</span> <span class="n">classic</span><span class="o">.</span><span class="n">current_session</span><span class="p">()</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="k">raise</span>
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="n">classic</span><span class="o">.</span><span class="n">drop_all</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="MockEvent"><a class="viewcode-back" href="../../../../containers/core/events.services.classic.html#events.services.classic.tests.MockEvent">[docs]</a><span class="k">class</span> <span class="nc">MockEvent</span><span class="p">(</span><span class="n">classic</span><span class="o">.</span><span class="n">Base</span><span class="p">,</span> <span class="n">classic</span><span class="o">.</span><span class="n">DBEventMixin</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;SQLite-friendly alternative for DBEvent model.&quot;&quot;&quot;</span>
+
+    <span class="n">__tablename__</span> <span class="o">=</span> <span class="s1">&#39;event&#39;</span>
+
+    <span class="n">event_id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">String</span><span class="p">(</span><span class="mi">40</span><span class="p">),</span> <span class="n">primary_key</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">event_type</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">String</span><span class="p">(</span><span class="mi">255</span><span class="p">))</span>
+    <span class="n">proxy</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">SQLiteJson</span><span class="p">)</span>
+    <span class="n">proxy_id</span> <span class="o">=</span> <span class="n">index_property</span><span class="p">(</span><span class="s1">&#39;proxy&#39;</span><span class="p">,</span> <span class="s1">&#39;agent_identifier&#39;</span><span class="p">)</span>
+
+    <span class="n">creator</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">SQLiteJson</span><span class="p">)</span>
+    <span class="n">creator_id</span> <span class="o">=</span> <span class="n">index_property</span><span class="p">(</span><span class="s1">&#39;creator&#39;</span><span class="p">,</span> <span class="s1">&#39;agent_identifier&#39;</span><span class="p">)</span>
+
+    <span class="n">created</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">DateTime</span><span class="p">)</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">SQLiteJson</span><span class="p">)</span>
+    <span class="n">submission_id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span>
+        <span class="n">ForeignKey</span><span class="p">(</span><span class="s1">&#39;arXiv_submissions.submission_id&#39;</span><span class="p">),</span>
+        <span class="n">index</span><span class="o">=</span><span class="kc">True</span>
+    <span class="p">)</span>
+    <span class="n">submission</span> <span class="o">=</span> <span class="n">relationship</span><span class="p">(</span><span class="s2">&quot;Submission&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="TestGetLicenses"><a class="viewcode-back" href="../../../../containers/core/events.services.classic.html#events.services.classic.tests.TestGetLicenses">[docs]</a><span class="k">class</span> <span class="nc">TestGetLicenses</span><span class="p">(</span><span class="n">TestCase</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Test :func:`.classic.get_licenses`.&quot;&quot;&quot;</span>
+
+    <span class="c1"># @mock.patch(&#39;events.services.classic.JSON&#39;, new=SQLiteJson)</span>
+<div class="viewcode-block" id="TestGetLicenses.test_get_all_active_licenses"><a class="viewcode-back" href="../../../../containers/core/events.services.classic.html#events.services.classic.tests.TestGetLicenses.test_get_all_active_licenses">[docs]</a>    <span class="nd">@mock</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="s1">&#39;events.services.classic._declare_event&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">test_get_all_active_licenses</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mock__declare_event</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return a :class:`.License` for each active license in the db.&quot;&quot;&quot;</span>
+        <span class="n">mock__declare_event</span><span class="o">.</span><span class="n">return_value</span> <span class="o">=</span> <span class="n">MockEvent</span>
+
+        <span class="k">with</span> <span class="n">in_memory_db</span><span class="p">()</span> <span class="k">as</span> <span class="n">session</span><span class="p">:</span>
+            <span class="n">session</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">classic</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">License</span><span class="p">(</span>
+                <span class="n">name</span><span class="o">=</span><span class="s2">&quot;http://arxiv.org/licenses/assumed-1991-2003&quot;</span><span class="p">,</span>
+                <span class="n">sequence</span><span class="o">=</span><span class="mi">9</span><span class="p">,</span>
+                <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Assumed arXiv.org perpetual, non-exclusive license to&quot;</span><span class="p">,</span>
+                <span class="n">active</span><span class="o">=</span><span class="mi">0</span>
+            <span class="p">))</span>
+            <span class="n">session</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">classic</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">License</span><span class="p">(</span>
+                <span class="n">name</span><span class="o">=</span><span class="s2">&quot;http://creativecommons.org/licenses/publicdomain/&quot;</span><span class="p">,</span>
+                <span class="n">sequence</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+                <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Creative Commons Public Domain Declaration&quot;</span><span class="p">,</span>
+                <span class="n">active</span><span class="o">=</span><span class="mi">1</span>
+            <span class="p">))</span>
+            <span class="n">session</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+            <span class="n">licenses</span> <span class="o">=</span> <span class="n">classic</span><span class="o">.</span><span class="n">get_licenses</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">licenses</span><span class="p">),</span> <span class="mi">1</span><span class="p">,</span>
+                         <span class="s2">&quot;Only the active license should be returned.&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertIsInstance</span><span class="p">(</span><span class="n">licenses</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">License</span><span class="p">,</span>
+                              <span class="s2">&quot;Should return License instances.&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">licenses</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">uri</span><span class="p">,</span>
+                         <span class="s2">&quot;http://creativecommons.org/licenses/publicdomain/&quot;</span><span class="p">,</span>
+                         <span class="s2">&quot;Should use name column to populate License.uri&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">licenses</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                         <span class="s2">&quot;Creative Commons Public Domain Declaration&quot;</span><span class="p">,</span>
+                         <span class="s2">&quot;Should use label column to populate License.name&quot;</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="TestStoreEvents"><a class="viewcode-back" href="../../../../containers/core/events.services.classic.html#events.services.classic.tests.TestStoreEvents">[docs]</a><span class="k">class</span> <span class="nc">TestStoreEvents</span><span class="p">(</span><span class="n">TestCase</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Test :func:`.classic.store_events`.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="TestStoreEvents.test_store_event"><a class="viewcode-back" href="../../../../containers/core/events.services.classic.html#events.services.classic.tests.TestStoreEvents.test_store_event">[docs]</a>    <span class="nd">@mock</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="s1">&#39;events.services.classic._declare_event&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">test_store_event</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mock__declare_event</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Store a single event.&quot;&quot;&quot;</span>
+        <span class="n">mock__declare_event</span><span class="o">.</span><span class="n">return_value</span> <span class="o">=</span> <span class="n">MockEvent</span>
+
+        <span class="k">with</span> <span class="n">in_memory_db</span><span class="p">()</span> <span class="k">as</span> <span class="n">session</span><span class="p">:</span>
+            <span class="n">user</span> <span class="o">=</span> <span class="n">User</span><span class="p">(</span><span class="mi">12345</span><span class="p">)</span>
+            <span class="n">ev</span> <span class="o">=</span> <span class="n">CreateSubmissionEvent</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">user</span><span class="p">)</span>
+            <span class="n">submission</span> <span class="o">=</span> <span class="n">ev</span><span class="o">.</span><span class="n">apply</span><span class="p">()</span>
+            <span class="n">submission</span> <span class="o">=</span> <span class="n">classic</span><span class="o">.</span><span class="n">store_events</span><span class="p">(</span><span class="n">ev</span><span class="p">,</span> <span class="n">submission</span><span class="o">=</span><span class="n">submission</span><span class="p">)</span>
+
+            <span class="n">db_submission</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">classic</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="p">)</span>\
+                <span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">submission</span><span class="o">.</span><span class="n">submission_id</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">db_submission</span><span class="o">.</span><span class="n">submission_id</span><span class="p">,</span> <span class="n">submission</span><span class="o">.</span><span class="n">submission_id</span><span class="p">,</span>
+                         <span class="s2">&quot;The submission should be updated with the PK id.&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">db_submission</span><span class="o">.</span><span class="n">submitter_id</span><span class="p">,</span>
+                         <span class="n">submission</span><span class="o">.</span><span class="n">creator</span><span class="o">.</span><span class="n">native_id</span><span class="p">,</span>
+                         <span class="s2">&quot;The native ID of the creator should be used&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">db_submission</span><span class="o">.</span><span class="n">status</span><span class="p">,</span> <span class="n">db_submission</span><span class="o">.</span><span class="n">NOT_SUBMITTED</span><span class="p">,</span>
+                         <span class="s2">&quot;Submission in database should be in status 0 (not&quot;</span>
+                         <span class="s2">&quot; submitted) by default.&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestStoreEvents.test_store_events_with_metadata"><a class="viewcode-back" href="../../../../containers/core/events.services.classic.html#events.services.classic.tests.TestStoreEvents.test_store_events_with_metadata">[docs]</a>    <span class="nd">@mock</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="s1">&#39;events.services.classic._declare_event&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">test_store_events_with_metadata</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mock__declare_event</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Store events and attendant submission with metadata.&quot;&quot;&quot;</span>
+        <span class="n">mock__declare_event</span><span class="o">.</span><span class="n">return_value</span> <span class="o">=</span> <span class="n">MockEvent</span>
+
+        <span class="n">metadata</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;title&#39;</span><span class="p">:</span> <span class="s1">&#39;foo title&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;abstract&#39;</span><span class="p">:</span> <span class="s1">&#39;very abstract&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;comments&#39;</span><span class="p">:</span> <span class="s1">&#39;indeed&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;msc_class&#39;</span><span class="p">:</span> <span class="s1">&#39;foo msc&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;acm_class&#39;</span><span class="p">:</span> <span class="s1">&#39;computer-y&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;doi&#39;</span><span class="p">:</span> <span class="s1">&#39;10.01234/5678&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;journal_ref&#39;</span><span class="p">:</span> <span class="s1">&#39;Nature 1: 1&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;authors&#39;</span><span class="p">:</span> <span class="p">[</span><span class="n">Author</span><span class="p">(</span><span class="n">order</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">forename</span><span class="o">=</span><span class="s1">&#39;Joe&#39;</span><span class="p">,</span> <span class="n">surname</span><span class="o">=</span><span class="s1">&#39;Bloggs&#39;</span><span class="p">)]</span>
+        <span class="p">}</span>
+        <span class="k">with</span> <span class="n">in_memory_db</span><span class="p">()</span> <span class="k">as</span> <span class="n">session</span><span class="p">:</span>
+            <span class="n">user</span> <span class="o">=</span> <span class="n">User</span><span class="p">(</span><span class="mi">12345</span><span class="p">)</span>
+            <span class="n">ev</span> <span class="o">=</span> <span class="n">CreateSubmissionEvent</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">user</span><span class="p">)</span>
+            <span class="n">ev2</span> <span class="o">=</span> <span class="n">UpdateMetadataEvent</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">user</span><span class="p">,</span>
+                                      <span class="n">metadata</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">metadata</span><span class="o">.</span><span class="n">items</span><span class="p">()))</span>
+
+            <span class="n">submission</span> <span class="o">=</span> <span class="n">ev</span><span class="o">.</span><span class="n">apply</span><span class="p">()</span>
+            <span class="n">submission</span> <span class="o">=</span> <span class="n">ev2</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">submission</span><span class="p">)</span>
+            <span class="n">submission</span> <span class="o">=</span> <span class="n">classic</span><span class="o">.</span><span class="n">store_events</span><span class="p">(</span><span class="n">ev</span><span class="p">,</span> <span class="n">ev2</span><span class="p">,</span> <span class="n">submission</span><span class="o">=</span><span class="n">submission</span><span class="p">)</span>
+
+            <span class="n">db_submission</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">classic</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="p">)</span>\
+                <span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">submission</span><span class="o">.</span><span class="n">submission_id</span><span class="p">)</span>
+
+            <span class="n">db_events</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">classic</span><span class="o">.</span><span class="n">DBEvent</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">metadata</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="s1">&#39;authors&#39;</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">db_submission</span><span class="p">,</span> <span class="n">key</span><span class="p">),</span> <span class="n">value</span><span class="p">,</span>
+                             <span class="n">f</span><span class="s2">&quot;The value of </span><span class="si">{key}</span><span class="s2"> should be </span><span class="si">{value}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">db_submission</span><span class="o">.</span><span class="n">authors</span><span class="p">,</span>
+                         <span class="n">submission</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">authors_canonical</span><span class="p">,</span>
+                         <span class="s2">&quot;The canonical author string should be used to&quot;</span>
+                         <span class="s2">&quot; update the submission in the database.&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">db_events</span><span class="p">),</span> <span class="mi">2</span><span class="p">,</span> <span class="s2">&quot;Two events should be stored&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">db_event</span> <span class="ow">in</span> <span class="n">db_events</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">db_event</span><span class="o">.</span><span class="n">submission_id</span><span class="p">,</span> <span class="n">submission</span><span class="o">.</span><span class="n">submission_id</span><span class="p">,</span>
+                             <span class="s2">&quot;The submission id should be set&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestStoreEvents.test_store_events_with_finalized_submission"><a class="viewcode-back" href="../../../../containers/core/events.services.classic.html#events.services.classic.tests.TestStoreEvents.test_store_events_with_finalized_submission">[docs]</a>    <span class="nd">@mock</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="s1">&#39;events.services.classic._declare_event&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">test_store_events_with_finalized_submission</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mock__declare_event</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Store events and a finalized submission.&quot;&quot;&quot;</span>
+        <span class="n">mock__declare_event</span><span class="o">.</span><span class="n">return_value</span> <span class="o">=</span> <span class="n">MockEvent</span>
+
+        <span class="k">with</span> <span class="n">in_memory_db</span><span class="p">()</span> <span class="k">as</span> <span class="n">session</span><span class="p">:</span>
+            <span class="n">user</span> <span class="o">=</span> <span class="n">User</span><span class="p">(</span><span class="mi">12345</span><span class="p">)</span>
+            <span class="n">ev</span> <span class="o">=</span> <span class="n">CreateSubmissionEvent</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">user</span><span class="p">)</span>
+            <span class="n">ev2</span> <span class="o">=</span> <span class="n">FinalizeSubmissionEvent</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">user</span><span class="p">)</span>
+            <span class="n">submission</span> <span class="o">=</span> <span class="n">ev</span><span class="o">.</span><span class="n">apply</span><span class="p">()</span>
+            <span class="n">submission</span> <span class="o">=</span> <span class="n">ev2</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">submission</span><span class="p">)</span>
+            <span class="n">submission</span> <span class="o">=</span> <span class="n">classic</span><span class="o">.</span><span class="n">store_events</span><span class="p">(</span><span class="n">ev</span><span class="p">,</span> <span class="n">ev2</span><span class="p">,</span> <span class="n">submission</span><span class="o">=</span><span class="n">submission</span><span class="p">)</span>
+
+            <span class="n">db_submission</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">classic</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="p">)</span>\
+                <span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">submission</span><span class="o">.</span><span class="n">submission_id</span><span class="p">)</span>
+            <span class="n">db_events</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">classic</span><span class="o">.</span><span class="n">DBEvent</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">db_submission</span><span class="o">.</span><span class="n">submission_id</span><span class="p">,</span> <span class="n">submission</span><span class="o">.</span><span class="n">submission_id</span><span class="p">,</span>
+                         <span class="s2">&quot;The submission should be updated with the PK id.&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">db_events</span><span class="p">),</span> <span class="mi">2</span><span class="p">,</span> <span class="s2">&quot;Two events should be stored&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">db_event</span> <span class="ow">in</span> <span class="n">db_events</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">db_event</span><span class="o">.</span><span class="n">submission_id</span><span class="p">,</span> <span class="n">submission</span><span class="o">.</span><span class="n">submission_id</span><span class="p">,</span>
+                             <span class="s2">&quot;The submission id should be set&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestStoreEvents.test_store_events_with_classification"><a class="viewcode-back" href="../../../../containers/core/events.services.classic.html#events.services.classic.tests.TestStoreEvents.test_store_events_with_classification">[docs]</a>    <span class="nd">@mock</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="s1">&#39;events.services.classic._declare_event&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">test_store_events_with_classification</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mock__declare_event</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Store events including classification.&quot;&quot;&quot;</span>
+        <span class="n">mock__declare_event</span><span class="o">.</span><span class="n">return_value</span> <span class="o">=</span> <span class="n">MockEvent</span>
+
+        <span class="n">user</span> <span class="o">=</span> <span class="n">User</span><span class="p">(</span><span class="mi">12345</span><span class="p">)</span>
+        <span class="n">ev</span> <span class="o">=</span> <span class="n">CreateSubmissionEvent</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">user</span><span class="p">)</span>
+        <span class="n">ev2</span> <span class="o">=</span> <span class="n">SetPrimaryClassificationEvent</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">user</span><span class="p">,</span>
+                                            <span class="n">category</span><span class="o">=</span><span class="s1">&#39;physics.soc-ph&#39;</span><span class="p">)</span>
+        <span class="n">ev3</span> <span class="o">=</span> <span class="n">AddSecondaryClassificationEvent</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">user</span><span class="p">,</span>
+                                              <span class="n">category</span><span class="o">=</span><span class="s1">&#39;physics.acc-ph&#39;</span><span class="p">)</span>
+        <span class="n">submission</span> <span class="o">=</span> <span class="n">ev</span><span class="o">.</span><span class="n">apply</span><span class="p">()</span>
+        <span class="n">submission</span> <span class="o">=</span> <span class="n">ev2</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">submission</span><span class="p">)</span>
+        <span class="n">submission</span> <span class="o">=</span> <span class="n">ev3</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">submission</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="n">in_memory_db</span><span class="p">()</span> <span class="k">as</span> <span class="n">session</span><span class="p">:</span>
+            <span class="n">submission</span> <span class="o">=</span> <span class="n">classic</span><span class="o">.</span><span class="n">store_events</span><span class="p">(</span><span class="n">ev</span><span class="p">,</span> <span class="n">ev2</span><span class="p">,</span> <span class="n">ev3</span><span class="p">,</span>
+                                              <span class="n">submission</span><span class="o">=</span><span class="n">submission</span><span class="p">)</span>
+
+            <span class="n">db_submission</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">classic</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="p">)</span>\
+                <span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">submission</span><span class="o">.</span><span class="n">submission_id</span><span class="p">)</span>
+            <span class="n">db_events</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">classic</span><span class="o">.</span><span class="n">DBEvent</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">db_submission</span><span class="o">.</span><span class="n">submission_id</span><span class="p">,</span> <span class="n">submission</span><span class="o">.</span><span class="n">submission_id</span><span class="p">,</span>
+                         <span class="s2">&quot;The submission should be updated with the PK id.&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">db_events</span><span class="p">),</span> <span class="mi">3</span><span class="p">,</span> <span class="s2">&quot;Three events should be stored&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">db_event</span> <span class="ow">in</span> <span class="n">db_events</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">db_event</span><span class="o">.</span><span class="n">submission_id</span><span class="p">,</span> <span class="n">submission</span><span class="o">.</span><span class="n">submission_id</span><span class="p">,</span>
+                             <span class="s2">&quot;The submission id should be set&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">db_submission</span><span class="o">.</span><span class="n">categories</span><span class="p">),</span> <span class="mi">2</span><span class="p">,</span>
+                         <span class="s2">&quot;Two category relations should be set&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">db_submission</span><span class="o">.</span><span class="n">primary_classification</span><span class="o">.</span><span class="n">category</span><span class="p">,</span>
+                         <span class="n">submission</span><span class="o">.</span><span class="n">primary_classification</span><span class="o">.</span><span class="n">category</span><span class="p">,</span>
+                         <span class="s2">&quot;Primary classification should be set.&quot;</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="TestGetSubmission"><a class="viewcode-back" href="../../../../containers/core/events.services.classic.html#events.services.classic.tests.TestGetSubmission">[docs]</a><span class="k">class</span> <span class="nc">TestGetSubmission</span><span class="p">(</span><span class="n">TestCase</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Test :func:`.classic.get_submission`.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="TestGetSubmission.test_get_submission_that_does_not_exist"><a class="viewcode-back" href="../../../../containers/core/events.services.classic.html#events.services.classic.tests.TestGetSubmission.test_get_submission_that_does_not_exist">[docs]</a>    <span class="nd">@mock</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="s1">&#39;events.services.classic._declare_event&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">test_get_submission_that_does_not_exist</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mock__declare_event</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Test that an exception is raised when submission doesn&#39;t exist.&quot;&quot;&quot;</span>
+        <span class="n">mock__declare_event</span><span class="o">.</span><span class="n">return_value</span> <span class="o">=</span> <span class="n">MockEvent</span>
+        <span class="k">with</span> <span class="n">in_memory_db</span><span class="p">():</span>
+            <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="n">classic</span><span class="o">.</span><span class="n">exceptions</span><span class="o">.</span><span class="n">NoSuchSubmission</span><span class="p">):</span>
+                <span class="n">classic</span><span class="o">.</span><span class="n">get_submission</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestGetSubmission.test_get_submission_with_publish"><a class="viewcode-back" href="../../../../containers/core/events.services.classic.html#events.services.classic.tests.TestGetSubmission.test_get_submission_with_publish">[docs]</a>    <span class="nd">@mock</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="s1">&#39;events.services.classic._declare_event&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">test_get_submission_with_publish</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mock__declare_event</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Test that publication state is reflected in submission data.&quot;&quot;&quot;</span>
+        <span class="n">mock__declare_event</span><span class="o">.</span><span class="n">return_value</span> <span class="o">=</span> <span class="n">MockEvent</span>
+
+        <span class="n">user</span> <span class="o">=</span> <span class="n">User</span><span class="p">(</span><span class="mi">12345</span><span class="p">)</span>
+        <span class="n">events</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">CreateSubmissionEvent</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">user</span><span class="p">),</span>
+            <span class="n">UpdateMetadataEvent</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">user</span><span class="p">,</span> <span class="n">metadata</span><span class="o">=</span><span class="p">[</span>
+                <span class="p">(</span><span class="s1">&#39;title&#39;</span><span class="p">,</span> <span class="s1">&#39;Foo title&#39;</span><span class="p">),</span>
+                <span class="p">(</span><span class="s1">&#39;abstract&#39;</span><span class="p">,</span> <span class="s1">&#39;Indeed&#39;</span><span class="p">),</span>
+                <span class="p">(</span><span class="s1">&#39;authors&#39;</span><span class="p">,</span> <span class="p">[</span>
+                    <span class="n">Author</span><span class="p">(</span><span class="n">order</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">forename</span><span class="o">=</span><span class="s1">&#39;Joe&#39;</span><span class="p">,</span> <span class="n">surname</span><span class="o">=</span><span class="s1">&#39;Bloggs&#39;</span><span class="p">,</span>
+                           <span class="n">email</span><span class="o">=</span><span class="s1">&#39;joe@blo.ggs&#39;</span><span class="p">),</span>
+                    <span class="n">Author</span><span class="p">(</span><span class="n">order</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">forename</span><span class="o">=</span><span class="s1">&#39;Jane&#39;</span><span class="p">,</span> <span class="n">surname</span><span class="o">=</span><span class="s1">&#39;Doe&#39;</span><span class="p">,</span>
+                           <span class="n">email</span><span class="o">=</span><span class="s1">&#39;j@doe.com&#39;</span><span class="p">),</span>
+                <span class="p">])</span>
+            <span class="p">]),</span>
+            <span class="n">SelectLicenseEvent</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">user</span><span class="p">,</span> <span class="n">license_uri</span><span class="o">=</span><span class="s1">&#39;http://foo.org/1.0/&#39;</span><span class="p">,</span>
+                               <span class="n">license_name</span><span class="o">=</span><span class="s1">&#39;Foo zero 1.0&#39;</span><span class="p">),</span>
+            <span class="n">SetPrimaryClassificationEvent</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">user</span><span class="p">,</span> <span class="n">category</span><span class="o">=</span><span class="s1">&#39;cs.DL&#39;</span><span class="p">),</span>
+            <span class="n">AcceptPolicyEvent</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">user</span><span class="p">),</span>
+            <span class="n">VerifyContactInformationEvent</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">user</span><span class="p">),</span>
+            <span class="n">FinalizeSubmissionEvent</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">user</span><span class="p">)</span>
+        <span class="p">]</span>
+        <span class="n">submission</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">for</span> <span class="n">ev</span> <span class="ow">in</span> <span class="n">events</span><span class="p">:</span>
+            <span class="n">submission</span> <span class="o">=</span> <span class="n">ev</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">submission</span><span class="p">)</span> <span class="k">if</span> <span class="n">submission</span> <span class="k">else</span> <span class="n">ev</span><span class="o">.</span><span class="n">apply</span><span class="p">()</span>
+
+        <span class="k">with</span> <span class="n">in_memory_db</span><span class="p">()</span> <span class="k">as</span> <span class="n">session</span><span class="p">:</span>
+            <span class="c1"># User creates and finalizes submission.</span>
+            <span class="n">submission</span> <span class="o">=</span> <span class="n">classic</span><span class="o">.</span><span class="n">store_events</span><span class="p">(</span><span class="o">*</span><span class="n">events</span><span class="p">,</span> <span class="n">submission</span><span class="o">=</span><span class="n">submission</span><span class="p">)</span>
+            <span class="n">ident</span> <span class="o">=</span> <span class="n">submission</span><span class="o">.</span><span class="n">submission_id</span>
+
+            <span class="c1"># Moderation happens, things change outside the event model.</span>
+            <span class="n">db_submission</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">classic</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">ident</span><span class="p">)</span>
+
+            <span class="c1"># Published!</span>
+            <span class="n">db_submission</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="n">db_submission</span><span class="o">.</span><span class="n">PUBLISHED</span>
+            <span class="n">db_document</span> <span class="o">=</span> <span class="n">classic</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Document</span><span class="p">(</span><span class="n">paper_id</span><span class="o">=</span><span class="s1">&#39;1234.5678&#39;</span><span class="p">)</span>
+            <span class="n">db_submission</span><span class="o">.</span><span class="n">document</span> <span class="o">=</span> <span class="n">db_document</span>
+            <span class="n">session</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">db_submission</span><span class="p">)</span>
+            <span class="n">session</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">db_document</span><span class="p">)</span>
+            <span class="n">session</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+
+            <span class="c1"># Now get the submission.</span>
+            <span class="n">submission_loaded</span> <span class="o">=</span> <span class="n">classic</span><span class="o">.</span><span class="n">get_submission</span><span class="p">(</span><span class="n">ident</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">submission</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">title</span><span class="p">,</span>
+                         <span class="n">submission_loaded</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">title</span><span class="p">,</span>
+                         <span class="s2">&quot;Event-derived metadata should be preserved.&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">submission_loaded</span><span class="o">.</span><span class="n">arxiv_id</span><span class="p">,</span> <span class="s2">&quot;1234.5678&quot;</span><span class="p">,</span>
+                         <span class="s2">&quot;arXiv paper ID should be set&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">submission_loaded</span><span class="o">.</span><span class="n">status</span><span class="p">,</span> <span class="n">Submission</span><span class="o">.</span><span class="n">PUBLISHED</span><span class="p">,</span>
+                         <span class="s2">&quot;Submission status should reflect publish action&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestGetSubmission.test_get_submission_with_hold_and_reclass"><a class="viewcode-back" href="../../../../containers/core/events.services.classic.html#events.services.classic.tests.TestGetSubmission.test_get_submission_with_hold_and_reclass">[docs]</a>    <span class="nd">@mock</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="s1">&#39;events.services.classic._declare_event&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">test_get_submission_with_hold_and_reclass</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mock__declare_event</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Test changes made externally are reflected in submission data.&quot;&quot;&quot;</span>
+        <span class="n">mock__declare_event</span><span class="o">.</span><span class="n">return_value</span> <span class="o">=</span> <span class="n">MockEvent</span>
+
+        <span class="n">user</span> <span class="o">=</span> <span class="n">User</span><span class="p">(</span><span class="mi">12345</span><span class="p">)</span>
+        <span class="n">events</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">CreateSubmissionEvent</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">user</span><span class="p">),</span>
+            <span class="n">UpdateMetadataEvent</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">user</span><span class="p">,</span> <span class="n">metadata</span><span class="o">=</span><span class="p">[</span>
+                <span class="p">(</span><span class="s1">&#39;title&#39;</span><span class="p">,</span> <span class="s1">&#39;Foo title&#39;</span><span class="p">),</span>
+                <span class="p">(</span><span class="s1">&#39;abstract&#39;</span><span class="p">,</span> <span class="s1">&#39;Indeed&#39;</span><span class="p">),</span>
+                <span class="p">(</span><span class="s1">&#39;authors&#39;</span><span class="p">,</span> <span class="p">[</span>
+                    <span class="n">Author</span><span class="p">(</span><span class="n">order</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">forename</span><span class="o">=</span><span class="s1">&#39;Joe&#39;</span><span class="p">,</span> <span class="n">surname</span><span class="o">=</span><span class="s1">&#39;Bloggs&#39;</span><span class="p">,</span>
+                           <span class="n">email</span><span class="o">=</span><span class="s1">&#39;joe@blo.ggs&#39;</span><span class="p">),</span>
+                    <span class="n">Author</span><span class="p">(</span><span class="n">order</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">forename</span><span class="o">=</span><span class="s1">&#39;Jane&#39;</span><span class="p">,</span> <span class="n">surname</span><span class="o">=</span><span class="s1">&#39;Doe&#39;</span><span class="p">,</span>
+                           <span class="n">email</span><span class="o">=</span><span class="s1">&#39;j@doe.com&#39;</span><span class="p">),</span>
+                <span class="p">])</span>
+            <span class="p">]),</span>
+            <span class="n">SelectLicenseEvent</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">user</span><span class="p">,</span> <span class="n">license_uri</span><span class="o">=</span><span class="s1">&#39;http://foo.org/1.0/&#39;</span><span class="p">,</span>
+                               <span class="n">license_name</span><span class="o">=</span><span class="s1">&#39;Foo zero 1.0&#39;</span><span class="p">),</span>
+            <span class="n">SetPrimaryClassificationEvent</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">user</span><span class="p">,</span> <span class="n">category</span><span class="o">=</span><span class="s1">&#39;cs.DL&#39;</span><span class="p">),</span>
+            <span class="n">AcceptPolicyEvent</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">user</span><span class="p">),</span>
+            <span class="n">VerifyContactInformationEvent</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">user</span><span class="p">),</span>
+            <span class="n">FinalizeSubmissionEvent</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">user</span><span class="p">)</span>
+        <span class="p">]</span>
+        <span class="n">submission</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">for</span> <span class="n">ev</span> <span class="ow">in</span> <span class="n">events</span><span class="p">:</span>
+            <span class="n">submission</span> <span class="o">=</span> <span class="n">ev</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">submission</span><span class="p">)</span> <span class="k">if</span> <span class="n">submission</span> <span class="k">else</span> <span class="n">ev</span><span class="o">.</span><span class="n">apply</span><span class="p">()</span>
+
+        <span class="k">with</span> <span class="n">in_memory_db</span><span class="p">()</span> <span class="k">as</span> <span class="n">session</span><span class="p">:</span>
+            <span class="c1"># User creates and finalizes submission.</span>
+            <span class="n">submission</span> <span class="o">=</span> <span class="n">classic</span><span class="o">.</span><span class="n">store_events</span><span class="p">(</span><span class="o">*</span><span class="n">events</span><span class="p">,</span> <span class="n">submission</span><span class="o">=</span><span class="n">submission</span><span class="p">)</span>
+            <span class="n">ident</span> <span class="o">=</span> <span class="n">submission</span><span class="o">.</span><span class="n">submission_id</span>
+
+            <span class="c1"># Moderation happens, things change outside the event model.</span>
+            <span class="n">db_submission</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">classic</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">ident</span><span class="p">)</span>
+
+            <span class="c1"># Reclassification!</span>
+            <span class="n">session</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">db_submission</span><span class="o">.</span><span class="n">primary_classification</span><span class="p">)</span>
+            <span class="n">session</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">classic</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">SubmissionCategory</span><span class="p">(</span>
+                <span class="n">submission_id</span><span class="o">=</span><span class="n">ident</span><span class="p">,</span> <span class="n">category</span><span class="o">=</span><span class="s1">&#39;cs.IR&#39;</span><span class="p">,</span> <span class="n">is_primary</span><span class="o">=</span><span class="mi">1</span>
+            <span class="p">))</span>
+
+            <span class="c1"># On hold!</span>
+            <span class="n">db_submission</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="n">db_submission</span><span class="o">.</span><span class="n">ON_HOLD</span>
+            <span class="n">session</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">db_submission</span><span class="p">)</span>
+            <span class="n">session</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+
+            <span class="c1"># Now get the submission.</span>
+            <span class="n">submission_loaded</span> <span class="o">=</span> <span class="n">classic</span><span class="o">.</span><span class="n">get_submission</span><span class="p">(</span><span class="n">ident</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">submission</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">title</span><span class="p">,</span>
+                         <span class="n">submission_loaded</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">title</span><span class="p">,</span>
+                         <span class="s2">&quot;Event-derived metadata should be preserved.&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">submission_loaded</span><span class="o">.</span><span class="n">primary_classification</span><span class="o">.</span><span class="n">category</span><span class="p">,</span>
+                         <span class="s2">&quot;cs.IR&quot;</span><span class="p">,</span>
+                         <span class="s2">&quot;Primary classification should reflect the&quot;</span>
+                         <span class="s2">&quot; reclassification that occurred outside the purview&quot;</span>
+                         <span class="s2">&quot; of the event model.&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">submission_loaded</span><span class="o">.</span><span class="n">status</span><span class="p">,</span> <span class="n">Submission</span><span class="o">.</span><span class="n">ON_HOLD</span><span class="p">,</span>
+                         <span class="s2">&quot;Submission status should reflect hold action&quot;</span>
+                         <span class="s2">&quot; performed outside the purview of the event model.&quot;</span><span class="p">)</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../index.html">arXiv submission & moderation</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../architecture.html">Submission &amp; moderation subsystem architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../publication_process.html">Submission &amp; Publication Process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../submission_api_context.html">Submission API: Context</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../containers/core/events.html">Submission core events package</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  <li><a href="../../../events.html">events</a><ul>
+  <li><a href="../classic.html">events.services.classic</a><ul>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, arXiv.org.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.6.3</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

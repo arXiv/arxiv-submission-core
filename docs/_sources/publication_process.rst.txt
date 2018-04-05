@@ -1,8 +1,8 @@
-arXiv Submission & Publication Process
-**************************************
+Submission & Publication Process
+********************************
 
-arXiv Submissions & States
---------------------------
+Submissions & States
+--------------------
 An arXiv submission is comprised of a source package and a collection of
 procedural and descriptive metadata. The source package is usually comprised of
 a scientific paper (generally in LaTeX) and auxiliary resources (e.g. images,

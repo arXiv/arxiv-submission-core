@@ -1,0 +1,545 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>events.domain.event &#8212; arXiv submission &amp; moderation 0.1 documentation</title>
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for events.domain.event</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Data structures for submissions events.</span>
+
+<span class="sd">- Events have unique identifiers generated from their data (creation, agent,</span>
+<span class="sd">  submission).</span>
+<span class="sd">- Events provide methods to update a submission based on the event data.</span>
+<span class="sd">- Events provide validation methods for event data.</span>
+<span class="sd">-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">hashlib</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="k">import</span> <span class="n">datetime</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">TypeVar</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span>
+
+<span class="kn">from</span> <span class="nn">dataclasses</span> <span class="k">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">field</span>
+<span class="kn">from</span> <span class="nn">dataclasses</span> <span class="k">import</span> <span class="n">asdict</span>
+
+<span class="kn">from</span> <span class="nn">arxiv.util</span> <span class="k">import</span> <span class="n">schema</span>
+
+<span class="kn">from</span> <span class="nn">.agent</span> <span class="k">import</span> <span class="n">Agent</span>
+<span class="kn">from</span> <span class="nn">.submission</span> <span class="k">import</span> <span class="n">Submission</span><span class="p">,</span> <span class="n">SubmissionMetadata</span><span class="p">,</span> <span class="n">Author</span><span class="p">,</span> \
+    <span class="n">Classification</span><span class="p">,</span> <span class="n">License</span><span class="p">,</span> <span class="n">Delegation</span><span class="p">,</span> <span class="n">Comment</span><span class="p">,</span> <span class="n">Flag</span><span class="p">,</span> <span class="n">Proposal</span>
+
+<span class="kn">from</span> <span class="nn">events.exceptions</span> <span class="k">import</span> <span class="n">InvalidEvent</span>
+
+
+<div class="viewcode-block" id="Event"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.event.Event">[docs]</a><span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">Event</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Base class for submission-related events.&quot;&quot;&quot;</span>
+
+    <span class="n">creator</span><span class="p">:</span> <span class="n">Agent</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The agent responsible for the operation represented by this event.</span>
+
+<span class="sd">    This is **not** necessarily the creator of the submission.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">created</span><span class="p">:</span> <span class="n">datetime</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">)</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The timestamp when the event was originally committed.</span>
+
+<span class="sd">    This should generally not be set from outside this package.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">proxy</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Agent</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The agent who facilitated the operation on behalf of the :prop:`.creator`.</span>
+
+<span class="sd">    This may be an API client, or another user who has been designated as a</span>
+<span class="sd">    proxy.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">submission_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The primary identifier of the submission being operated upon.</span>
+
+<span class="sd">    This is defined as optional to support creation events, and to facilitate</span>
+<span class="sd">    chaining of events with creation events in the same transaction.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">committed</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Indicates whether the event has been committed to the database.</span>
+
+<span class="sd">    This should generally not be set from outside this package.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">event_type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;The name (str) of the event type.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_event_type</span><span class="p">()</span>
+
+<div class="viewcode-block" id="Event.get_event_type"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.event.Event.get_event_type">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">get_event_type</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Get the name (str) of the event type.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="vm">__name__</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">event_id</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;The unique ID for this event.&quot;&quot;&quot;</span>
+        <span class="n">h</span> <span class="o">=</span> <span class="n">hashlib</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="s1">&#39;sha1&#39;</span><span class="p">)</span>
+        <span class="n">h</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="sa">b</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1">:</span><span class="si">%s</span><span class="s1">:</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">created</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">),</span>
+                                <span class="bp">self</span><span class="o">.</span><span class="n">event_type</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">),</span>
+                                <span class="bp">self</span><span class="o">.</span><span class="n">creator</span><span class="o">.</span><span class="n">agent_identifier</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)))</span>
+        <span class="k">return</span> <span class="n">h</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()</span>
+
+<div class="viewcode-block" id="Event.valid"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.event.Event.valid">[docs]</a>    <span class="k">def</span> <span class="nf">valid</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Determine whether this event is valid for the submission.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;validate&#39;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="n">submission</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">InvalidEvent</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">return</span> <span class="kc">True</span></div>
+
+<div class="viewcode-block" id="Event.apply"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.event.Event.apply">[docs]</a>    <span class="k">def</span> <span class="nf">apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Submission</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Submission</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">submission</span><span class="p">:</span>
+            <span class="n">submission</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">project</span><span class="p">(</span><span class="n">submission</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">submission</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">project</span><span class="p">()</span>
+        <span class="n">submission</span><span class="o">.</span><span class="n">updated</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">created</span>
+        <span class="k">return</span> <span class="n">submission</span></div>
+
+<div class="viewcode-block" id="Event.to_dict"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.event.Event.to_dict">[docs]</a>    <span class="k">def</span> <span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">asdict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">data</span><span class="o">.</span><span class="n">update</span><span class="p">({</span>
+            <span class="s1">&#39;creator&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">creator</span><span class="o">.</span><span class="n">to_dict</span><span class="p">(),</span>
+            <span class="s1">&#39;created&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">created</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
+        <span class="p">})</span>
+        <span class="k">return</span> <span class="n">data</span></div></div>
+
+
+<div class="viewcode-block" id="CreateSubmissionEvent"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.event.CreateSubmissionEvent">[docs]</a><span class="nd">@dataclass</span><span class="p">(</span><span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">CreateSubmissionEvent</span><span class="p">(</span><span class="n">Event</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Creation of a new :class:`events.domain.submission.Submission`.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="CreateSubmissionEvent.project"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.event.CreateSubmissionEvent.project">[docs]</a>    <span class="k">def</span> <span class="nf">project</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Submission</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Create a new :class:`.Submission`.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">Submission</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">creator</span><span class="p">,</span> <span class="n">created</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">created</span><span class="p">,</span>
+                          <span class="n">owner</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">creator</span><span class="p">,</span> <span class="n">proxy</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">proxy</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="RemoveSubmissionEvent"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.event.RemoveSubmissionEvent">[docs]</a><span class="nd">@dataclass</span><span class="p">(</span><span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">RemoveSubmissionEvent</span><span class="p">(</span><span class="n">Event</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Removal of a :class:`events.domain.submission.Submission`.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="RemoveSubmissionEvent.project"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.event.RemoveSubmissionEvent.project">[docs]</a>    <span class="k">def</span> <span class="nf">project</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Submission</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Remove the :class:`.Submission` from the system (set inactive).&quot;&quot;&quot;</span>
+        <span class="n">submission</span><span class="o">.</span><span class="n">active</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">return</span> <span class="n">submission</span></div></div>
+
+
+<div class="viewcode-block" id="VerifyContactInformationEvent"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.event.VerifyContactInformationEvent">[docs]</a><span class="nd">@dataclass</span><span class="p">(</span><span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">VerifyContactInformationEvent</span><span class="p">(</span><span class="n">Event</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Submitter has verified their contact information.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="VerifyContactInformationEvent.project"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.event.VerifyContactInformationEvent.project">[docs]</a>    <span class="k">def</span> <span class="nf">project</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Submission</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Update :prop:`.Submission.submitter_contact_verified`.&quot;&quot;&quot;</span>
+        <span class="n">submission</span><span class="o">.</span><span class="n">submitter_contact_verified</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">return</span> <span class="n">submission</span></div></div>
+
+
+<div class="viewcode-block" id="AssertAuthorshipEvent"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.event.AssertAuthorshipEvent">[docs]</a><span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">AssertAuthorshipEvent</span><span class="p">(</span><span class="n">Event</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The submitting user asserts whether they are an author of the paper.&quot;&quot;&quot;</span>
+
+    <span class="n">submitter_is_author</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+
+<div class="viewcode-block" id="AssertAuthorshipEvent.project"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.event.AssertAuthorshipEvent.project">[docs]</a>    <span class="k">def</span> <span class="nf">project</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Submission</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Update the authorship flag on the submission.&quot;&quot;&quot;</span>
+        <span class="n">submission</span><span class="o">.</span><span class="n">submitter_is_author</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">submitter_is_author</span>
+        <span class="k">return</span> <span class="n">submission</span></div></div>
+
+
+<div class="viewcode-block" id="AcceptPolicyEvent"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.event.AcceptPolicyEvent">[docs]</a><span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">AcceptPolicyEvent</span><span class="p">(</span><span class="n">Event</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The submitting user accepts the arXiv submission policy.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="AcceptPolicyEvent.project"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.event.AcceptPolicyEvent.project">[docs]</a>    <span class="k">def</span> <span class="nf">project</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Submission</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Set the policy flag on the submission.&quot;&quot;&quot;</span>
+        <span class="n">submission</span><span class="o">.</span><span class="n">submitter_accepts_policy</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">return</span> <span class="n">submission</span></div></div>
+
+
+<div class="viewcode-block" id="SetPrimaryClassificationEvent"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.event.SetPrimaryClassificationEvent">[docs]</a><span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">SetPrimaryClassificationEvent</span><span class="p">(</span><span class="n">Event</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Update the primary classification of a submission.&quot;&quot;&quot;</span>
+
+    <span class="n">category</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+
+<div class="viewcode-block" id="SetPrimaryClassificationEvent.validate"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.event.SetPrimaryClassificationEvent.validate">[docs]</a>    <span class="k">def</span> <span class="nf">validate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">category</span>
+        <span class="k">except</span> <span class="ne">AssertionError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">InvalidEvent</span><span class="p">(</span><span class="n">e</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span></div>
+
+<div class="viewcode-block" id="SetPrimaryClassificationEvent.project"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.event.SetPrimaryClassificationEvent.project">[docs]</a>    <span class="k">def</span> <span class="nf">project</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Submission</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Set :prop:`.Submission.primary_classification`.&quot;&quot;&quot;</span>
+        <span class="n">submission</span><span class="o">.</span><span class="n">primary_classification</span> <span class="o">=</span> <span class="n">Classification</span><span class="p">(</span>
+            <span class="n">category</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">category</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">submission</span></div></div>
+
+
+<div class="viewcode-block" id="AddSecondaryClassificationEvent"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.event.AddSecondaryClassificationEvent">[docs]</a><span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">AddSecondaryClassificationEvent</span><span class="p">(</span><span class="n">Event</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Add a secondary :class:`.Classification` to a submission.&quot;&quot;&quot;</span>
+
+    <span class="n">category</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+
+<div class="viewcode-block" id="AddSecondaryClassificationEvent.validate"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.event.AddSecondaryClassificationEvent.validate">[docs]</a>    <span class="k">def</span> <span class="nf">validate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;All three fields must be set.&quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">category</span>
+        <span class="k">except</span> <span class="ne">AssertionError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">InvalidEvent</span><span class="p">(</span><span class="n">e</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span></div>
+
+<div class="viewcode-block" id="AddSecondaryClassificationEvent.project"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.event.AddSecondaryClassificationEvent.project">[docs]</a>    <span class="k">def</span> <span class="nf">project</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Submission</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Append to :prop:`.Submission.secondary_classification`.&quot;&quot;&quot;</span>
+        <span class="n">submission</span><span class="o">.</span><span class="n">secondary_classification</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Classification</span><span class="p">(</span>
+            <span class="n">category</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">category</span>
+        <span class="p">))</span>
+        <span class="k">return</span> <span class="n">submission</span></div></div>
+
+
+<div class="viewcode-block" id="RemoveSecondaryClassificationEvent"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.event.RemoveSecondaryClassificationEvent">[docs]</a><span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">RemoveSecondaryClassificationEvent</span><span class="p">(</span><span class="n">Event</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Remove secondary :class:`.Classification` from submission.&quot;&quot;&quot;</span>
+
+    <span class="n">category</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+
+<div class="viewcode-block" id="RemoveSecondaryClassificationEvent.validate"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.event.RemoveSecondaryClassificationEvent.validate">[docs]</a>    <span class="k">def</span> <span class="nf">validate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;All three fields must be set.&quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">category</span>
+        <span class="k">except</span> <span class="ne">AssertionError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">InvalidEvent</span><span class="p">(</span><span class="n">e</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span></div>
+
+<div class="viewcode-block" id="RemoveSecondaryClassificationEvent.project"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.event.RemoveSecondaryClassificationEvent.project">[docs]</a>    <span class="k">def</span> <span class="nf">project</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Submission</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Remove from :prop:`.Submission.secondary_classification`.&quot;&quot;&quot;</span>
+        <span class="n">submission</span><span class="o">.</span><span class="n">secondary_classification</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">classn</span> <span class="k">for</span> <span class="n">classn</span> <span class="ow">in</span> <span class="n">submission</span><span class="o">.</span><span class="n">secondary_classification</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">classn</span><span class="o">.</span><span class="n">category</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">category</span>
+        <span class="p">]</span>
+        <span class="k">return</span> <span class="n">submission</span></div></div>
+
+
+<div class="viewcode-block" id="SelectLicenseEvent"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.event.SelectLicenseEvent">[docs]</a><span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">SelectLicenseEvent</span><span class="p">(</span><span class="n">Event</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The submitter has selected a license for their submission.&quot;&quot;&quot;</span>
+
+    <span class="n">license_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">license_uri</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+
+<div class="viewcode-block" id="SelectLicenseEvent.project"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.event.SelectLicenseEvent.project">[docs]</a>    <span class="k">def</span> <span class="nf">project</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Submission</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Set :prop:`.Submission.license`.&quot;&quot;&quot;</span>
+        <span class="n">submission</span><span class="o">.</span><span class="n">license</span> <span class="o">=</span> <span class="n">License</span><span class="p">(</span>
+            <span class="n">name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">license_name</span><span class="p">,</span>
+            <span class="n">uri</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">license_uri</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">submission</span></div></div>
+
+
+<div class="viewcode-block" id="UpdateMetadataEvent"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.event.UpdateMetadataEvent">[docs]</a><span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">UpdateMetadataEvent</span><span class="p">(</span><span class="n">Event</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Update the descriptive metadata for a submission.&quot;&quot;&quot;</span>
+
+    <span class="n">schema</span> <span class="o">=</span> <span class="s1">&#39;schema/resources/events/update_metadata.json&#39;</span>
+
+    <span class="n">metadata</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
+
+<div class="viewcode-block" id="UpdateMetadataEvent.validate"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.event.UpdateMetadataEvent.validate">[docs]</a>    <span class="k">def</span> <span class="nf">validate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;The :prop:`.metadata` should be a list of tuples.&quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">1</span>
+            <span class="k">assert</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="ow">in</span> <span class="p">[</span><span class="nb">tuple</span><span class="p">,</span> <span class="nb">list</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">metadatum</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="p">:</span>
+                <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">metadatum</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span>
+        <span class="k">except</span> <span class="ne">AssertionError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">InvalidEvent</span><span class="p">(</span><span class="n">e</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span></div>
+
+<div class="viewcode-block" id="UpdateMetadataEvent.project"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.event.UpdateMetadataEvent.project">[docs]</a>    <span class="k">def</span> <span class="nf">project</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Submission</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Update metadata on a :class:`.Submission`.&quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="p">:</span>
+            <span class="nb">setattr</span><span class="p">(</span><span class="n">submission</span><span class="o">.</span><span class="n">metadata</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">submission</span></div></div>
+
+
+<div class="viewcode-block" id="UpdateAuthorsEvent"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.event.UpdateAuthorsEvent">[docs]</a><span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">UpdateAuthorsEvent</span><span class="p">(</span><span class="n">Event</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Update the authors on a :class:`.Submission`.&quot;&quot;&quot;</span>
+
+    <span class="n">authors</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Author</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="FinalizeSubmissionEvent"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.event.FinalizeSubmissionEvent">[docs]</a><span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">FinalizeSubmissionEvent</span><span class="p">(</span><span class="n">Event</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Send the submission to the queue for announcement.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="FinalizeSubmissionEvent.project"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.event.FinalizeSubmissionEvent.project">[docs]</a>    <span class="k">def</span> <span class="nf">project</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Submission</span><span class="p">:</span>
+        <span class="n">submission</span><span class="o">.</span><span class="n">finalized</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">return</span> <span class="n">submission</span></div></div>
+
+
+<div class="viewcode-block" id="CreateCommentEvent"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.event.CreateCommentEvent">[docs]</a><span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">CreateCommentEvent</span><span class="p">(</span><span class="n">Event</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Creation of a :class:`.Comment` on a :class:`.Submission`.&quot;&quot;&quot;</span>
+
+    <span class="n">read_scope</span> <span class="o">=</span> <span class="s1">&#39;submission:moderate&#39;</span>
+    <span class="n">write_scope</span> <span class="o">=</span> <span class="s1">&#39;submission:moderate&#39;</span>
+
+    <span class="n">body</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">str</span><span class="p">)</span>
+    <span class="n">scope</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;private&#39;</span>
+
+<div class="viewcode-block" id="CreateCommentEvent.validate"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.event.CreateCommentEvent.validate">[docs]</a>    <span class="k">def</span> <span class="nf">validate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;The :prop:`.body` should be set.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">body</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Comment body not set&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="CreateCommentEvent.project"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.event.CreateCommentEvent.project">[docs]</a>    <span class="k">def</span> <span class="nf">project</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Submission</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Create a new :class:`.Comment` and attach it to the submission.&quot;&quot;&quot;</span>
+        <span class="n">comment</span> <span class="o">=</span> <span class="n">Comment</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">creator</span><span class="p">,</span> <span class="n">created</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">created</span><span class="p">,</span>
+                          <span class="n">proxy</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">proxy</span><span class="p">,</span> <span class="n">submission</span><span class="o">=</span><span class="n">submission</span><span class="p">,</span>
+                          <span class="n">body</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">body</span><span class="p">,</span> <span class="n">scope</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">scope</span><span class="p">)</span>
+        <span class="n">submission</span><span class="o">.</span><span class="n">comments</span><span class="p">[</span><span class="n">comment</span><span class="o">.</span><span class="n">comment_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">comment</span>
+        <span class="k">return</span> <span class="n">submission</span></div></div>
+
+
+<div class="viewcode-block" id="DeleteCommentEvent"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.event.DeleteCommentEvent">[docs]</a><span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">DeleteCommentEvent</span><span class="p">(</span><span class="n">Event</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Deletion of a :class:`.Comment` on a :class:`.Submission`.&quot;&quot;&quot;</span>
+
+    <span class="n">read_scope</span> <span class="o">=</span> <span class="s1">&#39;submission:moderate&#39;</span>
+    <span class="n">write_scope</span> <span class="o">=</span> <span class="s1">&#39;submission:moderate&#39;</span>
+
+    <span class="n">comment_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">str</span><span class="p">)</span>
+
+<div class="viewcode-block" id="DeleteCommentEvent.validate"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.event.DeleteCommentEvent.validate">[docs]</a>    <span class="k">def</span> <span class="nf">validate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;The :prop:`.comment_id` must present on the submission.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">comment_id</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">InvalidEvent</span><span class="p">(</span><span class="s1">&#39;comment_id is required&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">submission</span><span class="p">,</span> <span class="s1">&#39;comments&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">submission</span><span class="o">.</span><span class="n">comments</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">InvalidEvent</span><span class="p">(</span><span class="s1">&#39;Cannot delete comment that does not exist&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">comment_id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">submission</span><span class="o">.</span><span class="n">comments</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">InvalidEvent</span><span class="p">(</span><span class="s1">&#39;Cannot delete comment that does not exist&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="DeleteCommentEvent.project"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.event.DeleteCommentEvent.project">[docs]</a>    <span class="k">def</span> <span class="nf">project</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Submission</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Remove the comment from the submission.&quot;&quot;&quot;</span>
+        <span class="k">del</span> <span class="n">submission</span><span class="o">.</span><span class="n">comments</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">comment_id</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">submission</span></div></div>
+
+
+<div class="viewcode-block" id="AddDelegateEvent"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.event.AddDelegateEvent">[docs]</a><span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">AddDelegateEvent</span><span class="p">(</span><span class="n">Event</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Owner delegates authority to another agent.&quot;&quot;&quot;</span>
+
+    <span class="n">delegate</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Agent</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+
+<div class="viewcode-block" id="AddDelegateEvent.validate"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.event.AddDelegateEvent.validate">[docs]</a>    <span class="k">def</span> <span class="nf">validate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;The event creator must be the owner of the submission.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">creator</span> <span class="o">==</span> <span class="n">submission</span><span class="o">.</span><span class="n">owner</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">InvalidEvent</span><span class="p">(</span><span class="s1">&#39;Event creator must be submission owner&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="AddDelegateEvent.project"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.event.AddDelegateEvent.project">[docs]</a>    <span class="k">def</span> <span class="nf">project</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Submission</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Add the delegate to the submission.&quot;&quot;&quot;</span>
+        <span class="n">delegation</span> <span class="o">=</span> <span class="n">Delegation</span><span class="p">(</span>
+            <span class="n">creator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">creator</span><span class="p">,</span>
+            <span class="n">delegate</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">delegate</span><span class="p">,</span>
+            <span class="n">created</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">created</span>
+        <span class="p">)</span>
+        <span class="n">submission</span><span class="o">.</span><span class="n">delegations</span><span class="p">[</span><span class="n">delegation</span><span class="o">.</span><span class="n">delegation_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">delegation</span>
+        <span class="k">return</span> <span class="n">submission</span></div></div>
+
+
+<div class="viewcode-block" id="RemoveDelegateEvent"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.event.RemoveDelegateEvent">[docs]</a><span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">RemoveDelegateEvent</span><span class="p">(</span><span class="n">Event</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Owner revokes authority from another agent.&quot;&quot;&quot;</span>
+
+    <span class="n">delegation_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">str</span><span class="p">)</span>
+
+<div class="viewcode-block" id="RemoveDelegateEvent.validate"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.event.RemoveDelegateEvent.validate">[docs]</a>    <span class="k">def</span> <span class="nf">validate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;The event creator must be the owner of the submission.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">creator</span> <span class="o">==</span> <span class="n">submission</span><span class="o">.</span><span class="n">owner</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">InvalidEvent</span><span class="p">(</span><span class="s1">&#39;Event creator must be submission owner&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="RemoveDelegateEvent.project"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.event.RemoveDelegateEvent.project">[docs]</a>    <span class="k">def</span> <span class="nf">project</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Submission</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Remove the delegate from the submission.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">delegation_id</span> <span class="ow">in</span> <span class="n">submission</span><span class="o">.</span><span class="n">delegations</span><span class="p">:</span>
+            <span class="k">del</span> <span class="n">submission</span><span class="o">.</span><span class="n">delegations</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">delegation_id</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">submission</span></div></div>
+
+
+<span class="c1"># class CreateSourcePackageEvent(Event):</span>
+<span class="c1">#     pass</span>
+<span class="c1">#</span>
+<span class="c1"># class UpdateSourcePackageEvent(Event):</span>
+<span class="c1">#     pass</span>
+<span class="c1">#</span>
+<span class="c1">#</span>
+<span class="c1"># class DeleteSourcePackageEvent(Event):</span>
+<span class="c1">#     pass</span>
+<span class="c1">#</span>
+<span class="c1">#</span>
+<span class="c1"># class AnnotationEvent(Event):</span>
+<span class="c1">#     pass</span>
+<span class="c1">#</span>
+<span class="c1">#</span>
+<span class="c1"># class CreateFlagEvent(AnnotationEvent):</span>
+<span class="c1">#     pass</span>
+<span class="c1">#</span>
+<span class="c1">#</span>
+<span class="c1"># class DeleteFlagEvent(AnnotationEvent):</span>
+<span class="c1">#     pass</span>
+<span class="c1">#</span>
+<span class="c1">#</span>
+<span class="c1"># class DeleteCommentEvent(AnnotationEvent):</span>
+<span class="c1">#     pass</span>
+<span class="c1">#</span>
+<span class="c1">#</span>
+<span class="c1"># class CreateProposalEvent(AnnotationEvent):</span>
+<span class="c1">#     pass</span>
+<span class="c1">#</span>
+<span class="c1">#</span>
+<span class="c1"># class DeleteProposalEvent(AnnotationEvent):</span>
+<span class="c1">#     pass</span>
+
+<span class="n">EVENT_TYPES</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="n">obj</span><span class="o">.</span><span class="n">get_event_type</span><span class="p">():</span> <span class="n">obj</span> <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="nb">locals</span><span class="p">()</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
+    <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">type</span> <span class="ow">and</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">Event</span><span class="p">)</span>
+<span class="p">}</span>
+
+
+<div class="viewcode-block" id="event_factory"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.event.event_factory">[docs]</a><span class="k">def</span> <span class="nf">event_factory</span><span class="p">(</span><span class="n">event_type</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">**</span><span class="n">data</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Event</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Convenience factory for generating :class:`.Event`s.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    event_type : str</span>
+<span class="sd">        Should be the name of a :class:`.Event` subclass.</span>
+<span class="sd">    data : kwargs</span>
+<span class="sd">        Keyword parameters passed to the event constructor.</span>
+
+<span class="sd">    Return</span>
+<span class="sd">    ------</span>
+<span class="sd">    :class:`.Event`</span>
+<span class="sd">        An instance of an :class:`.Event` subclass.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="s1">&#39;created&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+        <span class="n">data</span><span class="p">[</span><span class="s1">&#39;created&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">event_type</span> <span class="ow">in</span> <span class="n">EVENT_TYPES</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">EVENT_TYPES</span><span class="p">[</span><span class="n">event_type</span><span class="p">](</span><span class="o">**</span><span class="n">data</span><span class="p">)</span>
+    <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;Unknown event type: </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">event_type</span><span class="p">)</span></div>
+
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span>
+    <span class="p">[</span><span class="s1">&#39;Event&#39;</span><span class="p">,</span> <span class="s1">&#39;event_factory&#39;</span><span class="p">]</span> <span class="o">+</span>
+    <span class="p">[</span><span class="n">obj</span><span class="o">.</span><span class="vm">__name__</span> <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="nb">locals</span><span class="p">()</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
+     <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">type</span> <span class="ow">and</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">Event</span><span class="p">)]</span>
+ <span class="p">)</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../index.html">arXiv submission & moderation</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../architecture.html">Submission &amp; moderation subsystem architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../publication_process.html">Submission &amp; Publication Process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../submission_api_context.html">Submission API: Context</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../containers/core/events.html">Submission core events package</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  <li><a href="../../events.html">events</a><ul>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, arXiv.org.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.6.3</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

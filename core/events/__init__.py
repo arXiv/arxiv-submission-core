@@ -1,5 +1,5 @@
 """
-arXiv submission event core.
+Core event-centric data abstraction for the submission & moderation subsystem.
 
 This package provides an event-based API for CRUD operations on submissions
 and submission-related (meta)data. Management of submission content (i.e.
@@ -19,7 +19,7 @@ state of a submission. For more information about how event types are defined,
 see :class:`events.domain.event.Event`.
 
 Using events
-############
+============
 
 Event types are `PEP 557 data classes
 <https://www.python.org/dev/peps/pep-0557/>`_. Each event type inherits from
@@ -113,7 +113,7 @@ def save(*events: Event, submission_id: Optional[str] = None) \
 
     Returns
     -------
-    :class:`.Submission`
+    :class:`events.domain.submission.Submission`
         The state of the submission after all events (including rule-derived
         events) have been applied. Updated with the submission ID, if a
         :class:`.CreateSubmissionEvent` was included.
