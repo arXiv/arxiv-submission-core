@@ -48,44 +48,92 @@
 <p>Provides data transformation methods for the event db model.</p>
 <dl class="method">
 <dt id="events.services.classic.DBEventMixin.to_event">
-<code class="descname">to_event</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; events.domain.event.Event<a class="reference internal" href="../../_modules/events/services/classic.html#DBEventMixin.to_event"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.DBEventMixin.to_event" title="Permalink to this definition">¶</a></dt>
+<code class="descname">to_event</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/services/classic.html#DBEventMixin.to_event"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.DBEventMixin.to_event" title="Permalink to this definition">¶</a></dt>
 <dd><p>Instantiate an <a class="reference internal" href="events.domain.html#events.domain.event.Event" title="events.domain.event.Event"><code class="xref py py-class docutils literal"><span class="pre">Event</span></code></a> using event data from the db.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="events.domain.html#events.domain.event.Event" title="events.domain.event.Event"><code class="xref py py-class docutils literal"><span class="pre">Event</span></code></a></td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </dd></dl>
 
 <dl class="function">
 <dt id="events.services.classic.create_all">
-<code class="descclassname">events.services.classic.</code><code class="descname">create_all</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../../_modules/events/services/classic.html#create_all"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.create_all" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">events.services.classic.</code><code class="descname">create_all</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/services/classic.html#create_all"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.create_all" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create all tables in the database.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><code class="docutils literal"><span class="pre">None</span></code></td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
 <dt id="events.services.classic.current_engine">
-<code class="descclassname">events.services.classic.</code><code class="descname">current_engine</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; sqlalchemy.engine.base.Engine<a class="reference internal" href="../../_modules/events/services/classic.html#current_engine"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.current_engine" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">events.services.classic.</code><code class="descname">current_engine</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/services/classic.html#current_engine"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.current_engine" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get/create <code class="xref py py-class docutils literal"><span class="pre">Engine</span></code> for this context.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><code class="xref py py-class docutils literal"><span class="pre">Engine</span></code></td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
 <dt id="events.services.classic.current_session">
-<code class="descclassname">events.services.classic.</code><code class="descname">current_session</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; sqlalchemy.orm.session.Session<a class="reference internal" href="../../_modules/events/services/classic.html#current_session"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.current_session" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">events.services.classic.</code><code class="descname">current_session</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/services/classic.html#current_session"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.current_session" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get/create <code class="xref py py-class docutils literal"><span class="pre">Session</span></code> for this context.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><code class="xref py py-class docutils literal"><span class="pre">Session</span></code></td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
 <dt id="events.services.classic.drop_all">
-<code class="descclassname">events.services.classic.</code><code class="descname">drop_all</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../../_modules/events/services/classic.html#drop_all"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.drop_all" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">events.services.classic.</code><code class="descname">drop_all</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/services/classic.html#drop_all"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.drop_all" title="Permalink to this definition">¶</a></dt>
 <dd><p>Drop all tables in the database.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><code class="docutils literal"><span class="pre">None</span></code></td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
 <dt id="events.services.classic.get_engine">
-<code class="descclassname">events.services.classic.</code><code class="descname">get_engine</code><span class="sig-paren">(</span><em>app: object = None</em><span class="sig-paren">)</span> &#x2192; sqlalchemy.engine.base.Engine<a class="reference internal" href="../../_modules/events/services/classic.html#get_engine"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.get_engine" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<code class="descclassname">events.services.classic.</code><code class="descname">get_engine</code><span class="sig-paren">(</span><em>app=None</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/services/classic.html#get_engine"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.get_engine" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><code class="xref py py-class docutils literal"><span class="pre">Engine</span></code></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
 
 <dl class="function">
 <dt id="events.services.classic.get_events">
-<code class="descclassname">events.services.classic.</code><code class="descname">get_events</code><span class="sig-paren">(</span><em>submission_id: int</em><span class="sig-paren">)</span> &#x2192; typing.List[events.domain.event.Event]<a class="reference internal" href="../../_modules/events/services/classic.html#get_events"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.get_events" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">events.services.classic.</code><code class="descname">get_events</code><span class="sig-paren">(</span><em>submission_id</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/services/classic.html#get_events"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.get_events" title="Permalink to this definition">¶</a></dt>
 <dd><p>Load events from the classic database.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -93,7 +141,9 @@
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>submission_id</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/functions.html#int" title="(in Python v3.6)"><em>int</em></a>) – </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><em>list</em> – Items are <a class="reference internal" href="events.domain.html#events.domain.event.Event" title="events.domain.event.Event"><code class="xref py py-class docutils literal"><span class="pre">Event</span></code></a> instances loaded from the db.</td>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.List" title="(in Python v3.6)"><code class="xref py py-class docutils literal"><span class="pre">List</span></code></a>[<a class="reference internal" href="events.domain.html#events.domain.event.Event" title="events.domain.event.Event"><code class="xref py py-class docutils literal"><span class="pre">Event</span></code></a>]</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><em>list</em> – Items are <a class="reference internal" href="events.domain.html#events.domain.event.Event" title="events.domain.event.Event"><code class="xref py py-class docutils literal"><span class="pre">Event</span></code></a> instances loaded from the db.</td>
 </tr>
 </tbody>
 </table>
@@ -101,19 +151,35 @@
 
 <dl class="function">
 <dt id="events.services.classic.get_licenses">
-<code class="descclassname">events.services.classic.</code><code class="descname">get_licenses</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; typing.List[events.domain.submission.License]<a class="reference internal" href="../../_modules/events/services/classic.html#get_licenses"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.get_licenses" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">events.services.classic.</code><code class="descname">get_licenses</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/services/classic.html#get_licenses"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.get_licenses" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get a list of :class:<a href="#id1"><span class="problematic" id="id2">`</span></a>.License`s available for new submissions.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.List" title="(in Python v3.6)"><code class="xref py py-class docutils literal"><span class="pre">List</span></code></a>[<a class="reference internal" href="events.domain.html#events.domain.submission.License" title="events.domain.submission.License"><code class="xref py py-class docutils literal"><span class="pre">License</span></code></a>]</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
 <dt id="events.services.classic.get_session">
-<code class="descclassname">events.services.classic.</code><code class="descname">get_session</code><span class="sig-paren">(</span><em>app: object = None</em><span class="sig-paren">)</span> &#x2192; sqlalchemy.orm.session.Session<a class="reference internal" href="../../_modules/events/services/classic.html#get_session"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.get_session" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">events.services.classic.</code><code class="descname">get_session</code><span class="sig-paren">(</span><em>app=None</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/services/classic.html#get_session"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.get_session" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get a new <code class="xref py py-class docutils literal"><span class="pre">Session</span></code>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><code class="xref py py-class docutils literal"><span class="pre">Session</span></code></td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
 <dt id="events.services.classic.get_submission">
-<code class="descclassname">events.services.classic.</code><code class="descname">get_submission</code><span class="sig-paren">(</span><em>submission_id: int</em><span class="sig-paren">)</span> &#x2192; events.domain.submission.Submission<a class="reference internal" href="../../_modules/events/services/classic.html#get_submission"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.get_submission" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">events.services.classic.</code><code class="descname">get_submission</code><span class="sig-paren">(</span><em>submission_id</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/services/classic.html#get_submission"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.get_submission" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the current state of a <a class="reference internal" href="events.domain.html#events.domain.submission.Submission" title="events.domain.submission.Submission"><code class="xref py py-class docutils literal"><span class="pre">Submission</span></code></a> from the database.</p>
 <p>In the medium term, services that use this package will need to
 play well with legacy services that integrate with the classic
@@ -131,7 +197,9 @@ event model.</p>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>submission_id</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/functions.html#int" title="(in Python v3.6)"><em>int</em></a>) – </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><a class="reference internal" href="events.domain.html#events.domain.submission.Submission" title="events.domain.submission.Submission"><code class="xref py py-class docutils literal"><span class="pre">Submission</span></code></a></td>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="events.domain.html#events.domain.submission.Submission" title="events.domain.submission.Submission"><code class="xref py py-class docutils literal"><span class="pre">Submission</span></code></a></td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><a class="reference internal" href="events.domain.html#events.domain.submission.Submission" title="events.domain.submission.Submission"><code class="xref py py-class docutils literal"><span class="pre">Submission</span></code></a></td>
 </tr>
 </tbody>
 </table>
@@ -139,13 +207,21 @@ event model.</p>
 
 <dl class="function">
 <dt id="events.services.classic.init_app">
-<code class="descclassname">events.services.classic.</code><code class="descname">init_app</code><span class="sig-paren">(</span><em>app: object = None</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../../_modules/events/services/classic.html#init_app"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.init_app" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">events.services.classic.</code><code class="descname">init_app</code><span class="sig-paren">(</span><em>app=None</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/services/classic.html#init_app"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.init_app" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set default configuration parameters for an application instance.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><code class="docutils literal"><span class="pre">None</span></code></td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
 <dt id="events.services.classic.store_events">
-<code class="descclassname">events.services.classic.</code><code class="descname">store_events</code><span class="sig-paren">(</span><em>*events: events.domain.event.Event</em>, <em>submission: events.domain.submission.Submission</em><span class="sig-paren">)</span> &#x2192; events.domain.submission.Submission<a class="reference internal" href="../../_modules/events/services/classic.html#store_events"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.store_events" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">events.services.classic.</code><code class="descname">store_events</code><span class="sig-paren">(</span><em>*events</em>, <em>submission</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/services/classic.html#store_events"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.store_events" title="Permalink to this definition">¶</a></dt>
 <dd><p>Store events in the database.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -159,7 +235,10 @@ so it’s safe to include them here.</li>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><a class="reference internal" href="events.domain.html#events.domain.submission.Submission" title="events.domain.submission.Submission"><code class="xref py py-class docutils literal"><span class="pre">Submission</span></code></a> – Stored submission, updated with current submission ID.</p>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first"><a class="reference internal" href="events.domain.html#events.domain.submission.Submission" title="events.domain.submission.Submission"><code class="xref py py-class docutils literal"><span class="pre">Submission</span></code></a></p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><a class="reference internal" href="events.domain.html#events.domain.submission.Submission" title="events.domain.submission.Submission"><code class="xref py py-class docutils literal"><span class="pre">Submission</span></code></a> – Stored submission, updated with current submission ID.</p>
 </td>
 </tr>
 </tbody>
@@ -168,8 +247,16 @@ so it’s safe to include them here.</li>
 
 <dl class="function">
 <dt id="events.services.classic.transaction">
-<code class="descclassname">events.services.classic.</code><code class="descname">transaction</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; typing.Generator<a class="reference internal" href="../../_modules/events/services/classic.html#transaction"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.transaction" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">events.services.classic.</code><code class="descname">transaction</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/services/classic.html#transaction"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.transaction" title="Permalink to this definition">¶</a></dt>
 <dd><p>Context manager for database transaction.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Generator" title="(in Python v3.6)"><code class="xref py py-class docutils literal"><span class="pre">Generator</span></code></a>[+T_co, -T_contra, +V_co]</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <div class="section" id="submodules">
@@ -882,7 +969,7 @@ published.</p>
 
 <dl class="method">
 <dt id="events.services.classic.models.Submission.patch">
-<code class="descname">patch</code><span class="sig-paren">(</span><em>submission: events.domain.submission.Submission</em><span class="sig-paren">)</span> &#x2192; events.domain.submission.Submission<a class="reference internal" href="../../_modules/events/services/classic/models.html#Submission.patch"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.models.Submission.patch" title="Permalink to this definition">¶</a></dt>
+<code class="descname">patch</code><span class="sig-paren">(</span><em>submission</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/services/classic/models.html#Submission.patch"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.models.Submission.patch" title="Permalink to this definition">¶</a></dt>
 <dd><p>Patch a <a class="reference internal" href="#events.services.classic.models.Submission" title="events.services.classic.models.Submission"><code class="xref py py-class docutils literal"><span class="pre">Submission</span></code></a> with data outside the event scope.</p>
 <p>There are several fields that may change after a submission enters the
 classic moderation and publication system, that cannot be inferred
@@ -893,7 +980,9 @@ from the event stack.</p>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>submission</strong> (<code class="xref py py-class docutils literal"><span class="pre">domain.Submission</span></code>) – The submission object to patch.</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><code class="xref py py-class docutils literal"><span class="pre">domain.Submission</span></code> – The same submission that was passed; now patched with data outside
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="events.domain.html#events.domain.submission.Submission" title="events.domain.submission.Submission"><code class="xref py py-class docutils literal"><span class="pre">Submission</span></code></a></td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><code class="xref py py-class docutils literal"><span class="pre">domain.Submission</span></code> – The same submission that was passed; now patched with data outside
 the scope of the event model.</td>
 </tr>
 </tbody>
@@ -1013,13 +1102,15 @@ the scope of the event model.</td>
 
 <dl class="method">
 <dt id="events.services.classic.models.Submission.to_submission">
-<code class="descname">to_submission</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; events.domain.submission.Submission<a class="reference internal" href="../../_modules/events/services/classic/models.html#Submission.to_submission"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.models.Submission.to_submission" title="Permalink to this definition">¶</a></dt>
+<code class="descname">to_submission</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/services/classic/models.html#Submission.to_submission"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.models.Submission.to_submission" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generate a representation of submission state from a DB instance.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><code class="xref py py-class docutils literal"><span class="pre">domain.Submission</span></code></td>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="events.domain.html#events.domain.submission.Submission" title="events.domain.submission.Submission"><code class="xref py py-class docutils literal"><span class="pre">Submission</span></code></a></td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><code class="xref py py-class docutils literal"><span class="pre">domain.Submission</span></code></td>
 </tr>
 </tbody>
 </table>
@@ -1032,8 +1123,16 @@ the scope of the event model.</td>
 
 <dl class="method">
 <dt id="events.services.classic.models.Submission.update_from_submission">
-<code class="descname">update_from_submission</code><span class="sig-paren">(</span><em>submission: events.domain.submission.Submission</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../../_modules/events/services/classic/models.html#Submission.update_from_submission"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.models.Submission.update_from_submission" title="Permalink to this definition">¶</a></dt>
+<code class="descname">update_from_submission</code><span class="sig-paren">(</span><em>submission</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/services/classic/models.html#Submission.update_from_submission"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.models.Submission.update_from_submission" title="Permalink to this definition">¶</a></dt>
 <dd><p>Update this database object from a <code class="xref py py-class docutils literal"><span class="pre">domain.Submission</span></code>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><code class="docutils literal"><span class="pre">None</span></code></td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="attribute">
