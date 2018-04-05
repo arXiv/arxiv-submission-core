@@ -58,7 +58,11 @@ class Agent:
         return self.agent_identifier == other.agent_identifier
 
     def to_dict(self):
-        return asdict(self)
+        return {
+            'native_id': self.native_id,
+            'agent_type': self.agent_type,
+            'agent_identifier': self.agent_identifier
+        }
 
 
 @dataclass
@@ -93,5 +97,5 @@ _agent_types = {
 def agent_factory(agent_type: str, native_id: Any) -> Agent:
     """Instantiate a subclass of :class:`.Agent`."""
     if agent_type not in _agent_types:
-        raise ValueError('No such agent type.')
+        raise ValueError(f'No such agent type: {agent_type}')
     return _agent_types[agent_type](native_id=native_id)

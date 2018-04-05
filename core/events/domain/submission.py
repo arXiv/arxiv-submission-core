@@ -59,6 +59,16 @@ class Author:
 
 
 @dataclass
+class SubmissionContent:
+    """Represents the submission source package."""
+
+    uri: str
+    content_type: str
+    checksum: str
+    upload_id: int
+
+
+@dataclass
 class SubmissionMetadata:
     """Metadata about a :class:`.Submission` instance."""
 
@@ -78,7 +88,7 @@ class SubmissionMetadata:
     @property
     def authors_canonical(self):
         """Canonical representation of submission authors."""
-        return ", ".join(self.authors)
+        return ", ".join([au.canonical for au in self.authors])
 
 
 @dataclass
@@ -103,24 +113,40 @@ class Delegation:
 class Submission:
     """Represents an arXiv submission object."""
 
+    WORKING = 'working'
+    PROCESSING = 'processing'
+    SUBMITTED = 'submitted'
+    ON_HOLD = 'hold'
+    SCHEDULED = 'scheduled'
+    PUBLISHED = 'published'
+    DELETED = 'deleted'
+
     creator: Agent
     owner: Agent
     created: datetime
+    updated: Optional[datetime] = field(default=None)
     primary_classification: Optional[Classification] = None
     delegations: Dict[str, Delegation] = field(default_factory=dict)
-    proxy: Optional[Agent] = None
-    submission_id: Optional[int] = None
+    proxy: Optional[Agent] = field(default=None)
+    submission_id: Optional[int] = field(default=None)
     metadata: SubmissionMetadata = field(default_factory=SubmissionMetadata)
-    active: bool = True
-    finalized: bool = False
-    published: bool = False
+    active: bool = field(default=True)
+    """Actively moving through the submission workflow."""
+
+    finalized: bool = field(default=False)
+    """Submitter has indicated submission is ready for publication."""
+
+    published: bool = field(default=False)
     # TODO: use a generic to further specify type?
     comments: dict = field(default_factory=dict)
     secondary_classification: List[Classification] = field(default_factory=list)
-    submitter_contact_verified: bool = False
-    submitter_is_author: bool = True
-    submitter_accepts_policy: bool = False
-    license: Optional[License] = None
+    submitter_contact_verified: bool = field(default=False)
+    submitter_is_author: bool = field(default=True)
+    submitter_accepts_policy: bool = field(default=False)
+    license: Optional[License] = field(default=None)
+    status: str = field(default=WORKING)
+    arxiv_id: Optional[str] = field(default=None)
+    """The published arXiv paper ID."""
 
     def to_dict(self) -> dict:
         data = asdict(self)

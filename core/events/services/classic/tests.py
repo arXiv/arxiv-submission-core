@@ -1,3 +1,15 @@
+"""
+Integration tests for the classic database service.
+
+These tests assume that SQLAlchemy's MySQL backend is implemented correctly:
+instead of using a live MySQL database, they use an in-memory SQLite database.
+This is mostly fine (they are intended to be more-or-less swappable). The one
+iffy bit is the JSON datatype, which is not available by default in the SQLite
+backend, and so we inject a simple one here. End to end tests with a live MySQL
+database will provide more confidence in this area.
+
+"""
+
 from unittest import TestCase, mock
 import os
 from datetime import datetime
@@ -11,10 +23,13 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.ext.indexable import index_property
 from flask import Flask
 
-from events.domain.submission import License, Submission
+from events.domain.agent import User
+from events.domain.submission import License, Submission, Author
 from events.domain.event import CreateSubmissionEvent, UpdateMetadataEvent, \
     FinalizeSubmissionEvent, SetPrimaryClassificationEvent, \
-    AddSecondaryClassificationEvent
+    AddSecondaryClassificationEvent, SelectLicenseEvent, \
+    SetPrimaryClassificationEvent, AcceptPolicyEvent, \
+    VerifyContactInformationEvent
 from events.domain.agent import User
 from events.services import classic
 
@@ -76,8 +91,8 @@ def in_memory_db():
             classic.drop_all()
 
 
-class MockEvent(classic.Base):
-    """SQLite-friendly alternative for Event model."""
+class MockEvent(classic.Base, classic.DBEventMixin):
+    """SQLite-friendly alternative for DBEvent model."""
 
     __tablename__ = 'event'
 
@@ -174,7 +189,7 @@ class TestStoreEvents(TestCase):
             'acm_class': 'computer-y',
             'doi': '10.01234/5678',
             'journal_ref': 'Nature 1: 1',
-            'authors': ['Joe Bloggs and friends']
+            'authors': [Author(order=0, forename='Joe', surname='Bloggs')]
         }
         with in_memory_db() as session:
             user = User(12345)
@@ -189,7 +204,7 @@ class TestStoreEvents(TestCase):
             db_submission = session.query(classic.models.Submission)\
                 .get(submission.submission_id)
 
-            db_events = session.query(classic.Event).all()
+            db_events = session.query(classic.DBEvent).all()
 
         for key, value in metadata.items():
             if key == 'authors':
@@ -221,7 +236,7 @@ class TestStoreEvents(TestCase):
 
             db_submission = session.query(classic.models.Submission)\
                 .get(submission.submission_id)
-            db_events = session.query(classic.Event).all()
+            db_events = session.query(classic.DBEvent).all()
 
         self.assertEqual(db_submission.submission_id, submission.submission_id,
                          "The submission should be updated with the PK id.")
@@ -251,7 +266,7 @@ class TestStoreEvents(TestCase):
 
             db_submission = session.query(classic.models.Submission)\
                 .get(submission.submission_id)
-            db_events = session.query(classic.Event).all()
+            db_events = session.query(classic.DBEvent).all()
 
         self.assertEqual(db_submission.submission_id, submission.submission_id,
                          "The submission should be updated with the PK id.")
@@ -270,51 +285,128 @@ class TestGetSubmission(TestCase):
     """Test :func:`.classic.get_submission`."""
 
     @mock.patch('events.services.classic._declare_event')
-    def test_get_submission(self, mock__declare_event):
-        """Get a single submission from the classic database."""
+    def test_get_submission_that_does_not_exist(self, mock__declare_event):
+        """Test that an exception is raised when submission doesn't exist."""
+        mock__declare_event.return_value = MockEvent
+        with in_memory_db():
+            with self.assertRaises(classic.exceptions.NoSuchSubmission):
+                classic.get_submission(1)
+
+    @mock.patch('events.services.classic._declare_event')
+    def test_get_submission_with_publish(self, mock__declare_event):
+        """Test that publication state is reflected in submission data."""
         mock__declare_event.return_value = MockEvent
 
-        sample_submission = {
-          "doi": "10.1063/foo123",
-          "proxy": None,
-          "stage": 0,
-          "title": "Achieving Anisotropy in Foo",
-          "status": 27,
-          "viewed": 0,
-          "authors": "Liang Bloggs, Jane Doe, and Bob Dole",
-          "created": datetime(year=2011, month=6, day=16, hour=14, minute=51, second=9),
-          "updated": datetime(year=2011, month=7, day=2, hour=3, minute=37, second=11),
-          "abstract": "We show that foo",
-          "sword_id": None,
-          "userinfo": 0,
-          "acm_class": None,
-          "is_author": 0,
-          "msc_class": None,
-          "report_num": None,
-          "document_id": 12345,
-          "journal_ref": "Appl. Foo. Lett. 1, 2 (2011)",
-          "source_size": 0,
-          "submit_time": datetime(year=2011, month=7, day=2, hour=3, minute=37, second=12),
-          "agree_policy": 0,
-          "doc_paper_id": "1234.5678",
-          "is_withdrawn": 0,
-          "must_process": 1,
-          "release_time": None,
-          "source_flags": None,
-          "submitter_id": 9876,
-          "source_format": None,
-          "sticky_status": None,
-          "submission_id": 59944,
-          "has_pilot_data": None,
-          "submitter_name": "Bob Dole",
-          "submitter_email": "bob@dole.foo",
-          "type": "new"
-        }
+        user = User(12345)
+        events = [
+            CreateSubmissionEvent(creator=user),
+            UpdateMetadataEvent(creator=user, metadata=[
+                ('title', 'Foo title'),
+                ('abstract', 'Indeed'),
+                ('authors', [
+                    Author(order=0, forename='Joe', surname='Bloggs',
+                           email='joe@blo.ggs'),
+                    Author(order=1, forename='Jane', surname='Doe',
+                           email='j@doe.com'),
+                ])
+            ]),
+            SelectLicenseEvent(creator=user, license_uri='http://foo.org/1.0/',
+                               license_name='Foo zero 1.0'),
+            SetPrimaryClassificationEvent(creator=user, category='cs.DL'),
+            AcceptPolicyEvent(creator=user),
+            VerifyContactInformationEvent(creator=user),
+            FinalizeSubmissionEvent(creator=user)
+        ]
+        submission = None
+        for ev in events:
+            submission = ev.apply(submission) if submission else ev.apply()
 
         with in_memory_db() as session:
-            session.add(classic.models.Submission(
-                **sample_submission
-            ))
+            # User creates and finalizes submission.
+            submission = classic.store_events(*events, submission=submission)
+            ident = submission.submission_id
+
+            # Moderation happens, things change outside the event model.
+            db_submission = session.query(classic.models.Submission).get(ident)
+
+            # Published!
+            db_submission.status = db_submission.PUBLISHED
+            db_document = classic.models.Document(paper_id='1234.5678')
+            db_submission.document = db_document
+            session.add(db_submission)
+            session.add(db_document)
             session.commit()
-            submission = classic.get_submission(59944)
-        self.assertIsInstance(submission, Submission)
+
+            # Now get the submission.
+            submission_loaded = classic.get_submission(ident)
+
+        self.assertEqual(submission.metadata.title,
+                         submission_loaded.metadata.title,
+                         "Event-derived metadata should be preserved.")
+        self.assertEqual(submission_loaded.arxiv_id, "1234.5678",
+                         "arXiv paper ID should be set")
+        self.assertEqual(submission_loaded.status, Submission.PUBLISHED,
+                         "Submission status should reflect publish action")
+
+    @mock.patch('events.services.classic._declare_event')
+    def test_get_submission_with_hold_and_reclass(self, mock__declare_event):
+        """Test changes made externally are reflected in submission data."""
+        mock__declare_event.return_value = MockEvent
+
+        user = User(12345)
+        events = [
+            CreateSubmissionEvent(creator=user),
+            UpdateMetadataEvent(creator=user, metadata=[
+                ('title', 'Foo title'),
+                ('abstract', 'Indeed'),
+                ('authors', [
+                    Author(order=0, forename='Joe', surname='Bloggs',
+                           email='joe@blo.ggs'),
+                    Author(order=1, forename='Jane', surname='Doe',
+                           email='j@doe.com'),
+                ])
+            ]),
+            SelectLicenseEvent(creator=user, license_uri='http://foo.org/1.0/',
+                               license_name='Foo zero 1.0'),
+            SetPrimaryClassificationEvent(creator=user, category='cs.DL'),
+            AcceptPolicyEvent(creator=user),
+            VerifyContactInformationEvent(creator=user),
+            FinalizeSubmissionEvent(creator=user)
+        ]
+        submission = None
+        for ev in events:
+            submission = ev.apply(submission) if submission else ev.apply()
+
+        with in_memory_db() as session:
+            # User creates and finalizes submission.
+            submission = classic.store_events(*events, submission=submission)
+            ident = submission.submission_id
+
+            # Moderation happens, things change outside the event model.
+            db_submission = session.query(classic.models.Submission).get(ident)
+
+            # Reclassification!
+            session.delete(db_submission.primary_classification)
+            session.add(classic.models.SubmissionCategory(
+                submission_id=ident, category='cs.IR', is_primary=1
+            ))
+
+            # On hold!
+            db_submission.status = db_submission.ON_HOLD
+            session.add(db_submission)
+            session.commit()
+
+            # Now get the submission.
+            submission_loaded = classic.get_submission(ident)
+
+        self.assertEqual(submission.metadata.title,
+                         submission_loaded.metadata.title,
+                         "Event-derived metadata should be preserved.")
+        self.assertEqual(submission_loaded.primary_classification.category,
+                         "cs.IR",
+                         "Primary classification should reflect the"
+                         " reclassification that occurred outside the purview"
+                         " of the event model.")
+        self.assertEqual(submission_loaded.status, Submission.ON_HOLD,
+                         "Submission status should reflect hold action"
+                         " performed outside the purview of the event model.")

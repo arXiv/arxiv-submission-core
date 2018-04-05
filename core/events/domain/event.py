@@ -94,9 +94,13 @@ class Event:
             return False
         return True
 
-    def apply(self, submission: Submission) -> Submission:
-        """Placeholder for projection, to be implemented by subclasses."""
-        pass
+    def apply(self, submission: Optional[Submission] = None) -> Submission:
+        if submission:
+            submission = self.project(submission)
+        else:
+            submission = self.project()
+        submission.updated = self.created
+        return submission
 
     def to_dict(self):
         data = asdict(self)
@@ -111,7 +115,7 @@ class Event:
 class CreateSubmissionEvent(Event):
     """Creation of a new :class:`.Submission`."""
 
-    def apply(self) -> Submission:
+    def project(self) -> Submission:
         """Create a new :class:`.Submission`."""
         return Submission(creator=self.creator, created=self.created,
                           owner=self.creator, proxy=self.proxy)
@@ -121,7 +125,7 @@ class CreateSubmissionEvent(Event):
 class RemoveSubmissionEvent(Event):
     """Removal of a :class:`.Submission`."""
 
-    def apply(self, submission: Submission) -> Submission:
+    def project(self, submission: Submission) -> Submission:
         """Remove the :class:`.Submission` from the system (set inactive)."""
         submission.active = False
         return submission
@@ -131,7 +135,7 @@ class RemoveSubmissionEvent(Event):
 class VerifyContactInformationEvent(Event):
     """Submitter has verified their contact information."""
 
-    def apply(self, submission: Submission) -> Submission:
+    def project(self, submission: Submission) -> Submission:
         """Update :prop:`.Submission.submitter_contact_verified`."""
         submission.submitter_contact_verified = True
         return submission
@@ -143,7 +147,7 @@ class AssertAuthorshipEvent(Event):
 
     submitter_is_author: bool = True
 
-    def apply(self, submission: Submission) -> Submission:
+    def project(self, submission: Submission) -> Submission:
         """Update the authorship flag on the submission."""
         submission.submitter_is_author = self.submitter_is_author
         return submission
@@ -153,7 +157,7 @@ class AssertAuthorshipEvent(Event):
 class AcceptPolicyEvent(Event):
     """The submitting user accepts the arXiv submission policy."""
 
-    def apply(self, submission: Submission) -> Submission:
+    def project(self, submission: Submission) -> Submission:
         """Set the policy flag on the submission."""
         submission.submitter_accepts_policy = True
         return submission
@@ -171,7 +175,7 @@ class SetPrimaryClassificationEvent(Event):
         except AssertionError as e:
             raise InvalidEvent(e) from e
 
-    def apply(self, submission: Submission) -> Submission:
+    def project(self, submission: Submission) -> Submission:
         """Set :prop:`.Submission.primary_classification`."""
         submission.primary_classification = Classification(
             category=self.category
@@ -192,7 +196,7 @@ class AddSecondaryClassificationEvent(Event):
         except AssertionError as e:
             raise InvalidEvent(e) from e
 
-    def apply(self, submission: Submission) -> Submission:
+    def project(self, submission: Submission) -> Submission:
         """Append to :prop:`.Submission.secondary_classification`."""
         submission.secondary_classification.append(Classification(
             category=self.category
@@ -213,7 +217,7 @@ class RemoveSecondaryClassificationEvent(Event):
         except AssertionError as e:
             raise InvalidEvent(e) from e
 
-    def apply(self, submission: Submission) -> Submission:
+    def project(self, submission: Submission) -> Submission:
         """Remove from :prop:`.Submission.secondary_classification`."""
         submission.secondary_classification = [
             classn for classn in submission.secondary_classification
@@ -229,7 +233,7 @@ class SelectLicenseEvent(Event):
     license_name: Optional[str] = None
     license_uri: Optional[str] = None
 
-    def apply(self, submission: Submission) -> Submission:
+    def project(self, submission: Submission) -> Submission:
         """Set :prop:`.Submission.license`."""
         submission.license = License(
             name=self.license_name,
@@ -255,7 +259,7 @@ class UpdateMetadataEvent(Event):
     #             assert len(metadatum) == 2
     #     except AssertionError as e:
     #         raise InvalidEvent(e) from e
-    def apply(self, submission: Submission) -> Submission:
+    def project(self, submission: Submission) -> Submission:
         """Update metadata on a :class:`.Submission`."""
         for key, value in self.metadata:
             setattr(submission.metadata, key, value)
@@ -281,7 +285,7 @@ class UpdateAuthorsEvent(Event):
 class FinalizeSubmissionEvent(Event):
     """Send the submission to the queue for announcement."""
 
-    def apply(self, submission: Submission) -> Submission:
+    def project(self, submission: Submission) -> Submission:
         submission.finalized = True
         return submission
 
@@ -301,7 +305,7 @@ class CreateCommentEvent(Event):
         if not self.body:
             raise ValueError('Comment body not set')
 
-    def apply(self, submission: Submission) -> Submission:
+    def project(self, submission: Submission) -> Submission:
         """Create a new :class:`.Comment` and attach it to the submission."""
         comment = Comment(creator=self.creator, created=self.created,
                           proxy=self.proxy, submission=submission,
@@ -328,7 +332,7 @@ class DeleteCommentEvent(Event):
         if self.comment_id not in submission.comments:
             raise InvalidEvent('Cannot delete comment that does not exist')
 
-    def apply(self, submission: Submission) -> Submission:
+    def project(self, submission: Submission) -> Submission:
         """Remove the comment from the submission."""
         del submission.comments[self.comment_id]
         return submission
@@ -345,7 +349,7 @@ class AddDelegateEvent(Event):
         if not self.creator == submission.owner:
             raise InvalidEvent('Event creator must be submission owner')
 
-    def apply(self, submission: Submission) -> Submission:
+    def project(self, submission: Submission) -> Submission:
         """Add the delegate to the submission."""
         delegation = Delegation(
             creator=self.creator,
@@ -367,7 +371,7 @@ class RemoveDelegateEvent(Event):
         if not self.creator == submission.owner:
             raise InvalidEvent('Event creator must be submission owner')
 
-    def apply(self, submission: Submission) -> Submission:
+    def project(self, submission: Submission) -> Submission:
         """Remove the delegate from the submission."""
         if self.delegation_id in submission.delegations:
             del submission.delegations[self.delegation_id]

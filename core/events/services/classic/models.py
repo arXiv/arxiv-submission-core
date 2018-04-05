@@ -1,6 +1,7 @@
 """SQLAlchemy ORM classes."""
 
 import json
+from typing import Optional
 from datetime import datetime
 from sqlalchemy import Column, Date, DateTime, Enum, ForeignKey, Text, text, \
     ForeignKeyConstraint, Index, Integer, SmallInteger, String, Table
@@ -26,27 +27,37 @@ class Submission(Base):    # type: ignore
     SUBMITTED = 5
     STAGES = [NEW, STARTED, FILES_ADDED, PROCESSED, METADATA_ADDED, SUBMITTED]
 
-    NOT_SUBMITTED = 0
-    SUBMITTED = 1
+    NOT_SUBMITTED = 0   # Working.
+    SUBMITTED = 1       # Enqueued for moderation, to be scheduled.
     ON_HOLD = 2
     UNUSED = 3
-    NEXT_DAY = 4
+    NEXT_DAY = 4        # Scheduled for tomorrow.
     PROCESSING = 5
     NEEDS_EMAIL = 6
+
     PUBLISHED = 7
+    DELETED_PUBLISHED = 27
+    """Published and files expired."""
+
     PROCESSING_SUBMISSION = 8
     REMOVED = 9
+
     USER_DELETED = 10
     ERROR_STATE = 19
+
     DELETED_EXPIRED = 20
     """Was working but expired."""
     DELETED_ON_HOLD = 22
     DELETED_PROCESSING = 25
-    DELETED_PUBLISHED = 27
-    """Published and files expired."""
+
     DELETED_REMOVED = 29
     DELETED_USER = 30
     """User deleted and files expired."""
+
+    DELETED = [
+        USER_DELETED, DELETED_ON_HOLD, DELETED_PROCESSING,
+        DELETED_REMOVED, DELETED_USER
+    ]
 
     NEW_SUBMSSION = 'new'
     REPLACEMENT = 'rep'
@@ -121,6 +132,97 @@ class Submission(Base):    # type: ignore
     categories = relationship('SubmissionCategory',
                               back_populates="submission", lazy='joined')
 
+    def patch(self, submission: domain.Submission) -> domain.Submission:
+        """
+        Patch a :class:`.Submission` with data outside the event scope.
+
+        There are several fields that may change after a submission enters the
+        classic moderation and publication system, that cannot be inferred
+        from the event stack.
+
+        Parameters
+        ----------
+        submission : :class:`.domain.Submission`
+            The submission object to patch.
+
+        Returns
+        -------
+        :class:`.domain.Submission`
+            The same submission that was passed; now patched with data outside
+            the scope of the event model.
+
+        """
+        # Status changes.
+        submission.status = self._get_status()
+        submission.active = (submission.status not in [submission.DELETED,
+                                                       submission.PUBLISHED]),
+        submission.published = (submission.status == submission.PUBLISHED)
+        submission.arxiv_id = self._get_arxiv_id()
+
+        # Possible reclassification.
+        primary = self.primary_classification
+        if primary:
+            submission.primary_classification = domain.Classification(
+                category=primary.category
+            )
+        submission.secondary_classification = [
+            domain.Classification(category=db_cat.category)
+            for db_cat in self.categories
+            if db_cat.is_primary == 0
+        ]
+
+        # Comments (admins may modify).
+        submission.metadata.comments = self.comments
+        return submission
+
+    def to_submission(self) -> domain.Submission:
+        """
+        Generate a representation of submission state from a DB instance.
+
+        Returns
+        -------
+        :class:`.domain.Submission`
+
+        """
+        status = self._get_status()
+        primary = self.primary_classification
+        return domain.Submission(
+            creator=domain.User(self.submitter_id),
+            owner=domain.User(self.submitter_id),
+            created=self.created,
+            updated=self.updated,
+            submitter_is_author=bool(self.is_author),
+            submitter_accepts_policy=bool(self.agree_policy),
+            submitter_contact_verified=bool(self.userinfo),
+            status=status,
+            finalized=(status != domain.Submission.WORKING),
+            active=(status not in [domain.Submission.DELETED,
+                                   domain.Submission.PUBLISHED]),
+            published=(status == domain.Submission.PUBLISHED),
+            metadata=domain.SubmissionMetadata(
+                title=self.title,
+                abstract=self.abstract,
+                comments=self.comments,
+                report_num=self.report_num,
+                doi=self.doi,
+                msc_class=self.msc_class,
+                acm_class=self.acm_class,
+                journal_ref=self.journal_ref
+            ),
+            license=domain.License(
+                uri=self.arXiv_license.name,
+                name=self.arXiv_license.label
+            ) if self.arXiv_license else None,
+            primary_classification=domain.Classification(
+                category=primary.category
+            ) if primary else None,
+            secondary_classification=[
+                domain.Classification(category=db_cat.category)
+                for db_cat in self.categories
+                if db_cat.is_primary == 0
+            ]
+        )
+
     def update_from_submission(self, submission: domain.Submission) -> None:
         """Update this database object from a :class:`.domain.Submission`."""
         self.is_author = int(submission.submitter_is_author)
@@ -163,6 +265,27 @@ class Submission(Base):    # type: ignore
             return categories[0]
         except IndexError:
             return
+
+    def _get_arxiv_id(self) -> Optional[str]:
+        if not self.document:
+            return
+        return self.document.paper_id
+
+    def _get_status(self) -> str:
+        """Map classic status codes to :class:`.domain.Submission` status."""
+        if self._get_arxiv_id() is not None:
+            return domain.Submission.PUBLISHED
+        elif self.status is self.NOT_SUBMITTED:
+            return domain.Submission.WORKING
+        elif self.status is self.SUBMITTED:
+            return domain.Submission.PROCESSING
+        elif self.status is self.ON_HOLD:
+            return domain.Submission.ON_HOLD
+        elif self.status is self.NEXT_DAY:
+            return domain.Submission.SCHEDULED
+        elif self.status in self.DELETED:
+            return domain.Submission.DELETED
+        # TODO: raise something?
 
     def _update_submitter(self, submission: domain.Submission) -> None:
         """Update submitter information."""
@@ -404,16 +527,11 @@ class Tracking(Base):    # type: ignore
                        server_default=text("CURRENT_TIMESTAMP"))
 
 
-
-
-
-
-
-
 class ArchiveCategory(Base):    # type: ignore
     __tablename__ = 'arXiv_archive_category'
 
-    archive_id = Column(String(16), primary_key=True, nullable=False, server_default=text("''"))
+    archive_id = Column(String(16), primary_key=True, nullable=False,
+                        server_default=text("''"))
     category_id = Column(String(32), primary_key=True, nullable=False)
 
 
@@ -427,26 +545,33 @@ class ArchiveDef(Base):    # type: ignore
 class ArchiveGroup(Base):    # type: ignore
     __tablename__ = 'arXiv_archive_group'
 
-    archive_id = Column(String(16), primary_key=True, nullable=False, server_default=text("''"))
-    group_id = Column(String(16), primary_key=True, nullable=False, server_default=text("''"))
+    archive_id = Column(String(16), primary_key=True, nullable=False,
+                        server_default=text("''"))
+    group_id = Column(String(16), primary_key=True, nullable=False,
+                      server_default=text("''"))
 
 
 class Archive(Base):    # type: ignore
     __tablename__ = 'arXiv_archives'
 
-    archive_id = Column(String(16), primary_key=True, server_default=text("''"))
-    in_group = Column(ForeignKey('arXiv_groups.group_id'), nullable=False, index=True, server_default=text("''"))
-    archive_name = Column(String(255), nullable=False, server_default=text("''"))
+    archive_id = Column(String(16), primary_key=True,
+                        server_default=text("''"))
+    in_group = Column(ForeignKey('arXiv_groups.group_id'), nullable=False,
+                      index=True, server_default=text("''"))
+    archive_name = Column(String(255), nullable=False,
+                          server_default=text("''"))
     start_date = Column(String(4), nullable=False, server_default=text("''"))
     end_date = Column(String(4), nullable=False, server_default=text("''"))
     subdivided = Column(Integer, nullable=False, server_default=text("'0'"))
 
     arXiv_group = relationship('Group')
 
+
 class GroupDef(Base):    # type: ignore
     __tablename__ = 'arXiv_group_def'
 
-    archive_group = Column(String(16), primary_key=True, server_default=text("''"))
+    archive_group = Column(String(16), primary_key=True,
+                           server_default=text("''"))
     name = Column(String(255))
 
 
@@ -458,62 +583,19 @@ class Group(Base):    # type: ignore
     start_year = Column(String(4), nullable=False, server_default=text("''"))
 
 
-# t_arXiv_in_category = Table(
-#     'arXiv_in_category', metadata,
-#     Column('document_id', ForeignKey('arXiv_documents.document_id'), nullable=False, index=True, server_default=text("'0'")),
-#     Column('archive', String(16), nullable=False, server_default=text("''")),
-#     Column('subject_class', String(16), nullable=False, server_default=text("''")),
-#     Column('is_primary', Integer, nullable=False, server_default=text("'0'")),
-#     ForeignKeyConstraint(['archive', 'subject_class'], ['arXiv_categories.archive', 'arXiv_categories.subject_class']),
-#     Index('arXiv_in_category_mp', 'archive', 'subject_class'),
-#     Index('archive', 'archive', 'subject_class', 'document_id', unique=True)
-# )
-
-
-
-
-
 class EndorsementDomain(Base):    # type: ignore
     __tablename__ = 'arXiv_endorsement_domains'
 
-    endorsement_domain = Column(String(32), primary_key=True, server_default=text("''"))
-    endorse_all = Column(Enum('y', 'n'), nullable=False, server_default=text("'n'"))
-    mods_endorse_all = Column(Enum('y', 'n'), nullable=False, server_default=text("'n'"))
-    endorse_email = Column(Enum('y', 'n'), nullable=False, server_default=text("'y'"))
-    papers_to_endorse = Column(SmallInteger, nullable=False, server_default=text("'4'"))
-
-
-class UserDemographic(User):
-    __tablename__ = 'arXiv_demographics'
-    __table_args__ = (
-        ForeignKeyConstraint(['archive', 'subject_class'], ['arXiv_categories.archive', 'arXiv_categories.subject_class']),
-        Index('archive', 'archive', 'subject_class')
-    )
-
-    user_id = Column(ForeignKey('tapir_users.user_id'), primary_key=True, server_default=text("'0'"))
-    country = Column(String(2), nullable=False, index=True, server_default=text("''"))
-    affiliation = Column(String(255), nullable=False, server_default=text("''"))
-    url = Column(String(255), nullable=False, server_default=text("''"))
-    type = Column(SmallInteger, index=True)
-    archive = Column(String(16))
-    subject_class = Column(String(16))
-    original_subject_classes = Column(String(255), nullable=False, server_default=text("''"))
-    flag_group_physics = Column(Integer, index=True)
-    flag_group_math = Column(Integer, nullable=False, index=True, server_default=text("'0'"))
-    flag_group_cs = Column(Integer, nullable=False, index=True, server_default=text("'0'"))
-    flag_group_nlin = Column(Integer, nullable=False, index=True, server_default=text("'0'"))
-    flag_proxy = Column(Integer, nullable=False, index=True, server_default=text("'0'"))
-    flag_journal = Column(Integer, nullable=False, index=True, server_default=text("'0'"))
-    flag_xml = Column(Integer, nullable=False, index=True, server_default=text("'0'"))
-    dirty = Column(Integer, nullable=False, server_default=text("'2'"))
-    flag_group_test = Column(Integer, nullable=False, server_default=text("'0'"))
-    flag_suspect = Column(Integer, nullable=False, index=True, server_default=text("'0'"))
-    flag_group_q_bio = Column(Integer, nullable=False, index=True, server_default=text("'0'"))
-    flag_group_q_fin = Column(Integer, nullable=False, index=True, server_default=text("'0'"))
-    flag_group_stat = Column(Integer, nullable=False, index=True, server_default=text("'0'"))
-    veto_status = Column(Enum('ok', 'no-endorse', 'no-upload', 'no-replace'), nullable=False, server_default=text("'ok'"))
-
-    arXiv_category = relationship('Category')
+    endorsement_domain = Column(String(32), primary_key=True,
+                                server_default=text("''"))
+    endorse_all = Column(Enum('y', 'n'), nullable=False,
+                         server_default=text("'n'"))
+    mods_endorse_all = Column(Enum('y', 'n'), nullable=False,
+                              server_default=text("'n'"))
+    endorse_email = Column(Enum('y', 'n'), nullable=False,
+                           server_default=text("'y'"))
+    papers_to_endorse = Column(SmallInteger, nullable=False,
+                               server_default=text("'4'"))
 
 
 class Category(Base):    # type: ignore

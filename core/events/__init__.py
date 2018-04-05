@@ -90,7 +90,7 @@ from events.domain.event import (
     DeleteCommentEvent, AddDelegateEvent, RemoveDelegateEvent
 )
 from events.domain.rule import RuleCondition, RuleConsequence, EventRule
-from events.services import database
+from events.services import classic
 from events.exceptions import InvalidEvent
 
 
@@ -135,13 +135,13 @@ def save(*events: Event, submission_id: Optional[str] = None) \
 
     # We want to play events from the beginning.
     if submission_id is not None:
-        existing_events = database.get_events_for_submission(submission_id)
+        existing_events = classic.get_events(submission_id)
     else:
         existing_events = []
     combined = existing_events + list(events)
 
     # Load any relevant event rules for this submission.
-    rules = database.get_rules_for_submission(submission_id)
+    rules = []  # database.get_rules(submission_id)
 
     # Calculate the state of the submission from old and new events.
     submission, combined = _play_events(combined, rules)
@@ -151,7 +151,7 @@ def save(*events: Event, submission_id: Optional[str] = None) \
         submission.submission_id = submission_id    # May still be None.
 
     # Persist in database; submission ID is updated after transaction.
-    submission = database.store_events(*combined, submission=submission)
+    submission = classic.store_events(*combined, submission=submission)
 
     for event in combined:
         event.submission_id = submission.submission_id

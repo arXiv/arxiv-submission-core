@@ -1,8 +1,9 @@
-from typing import List, Optional
+from typing import List, Optional, Generator, Dict, Union
 from contextlib import contextmanager
 
 from flask import Flask
-from sqlalchemy import JSON, Column, String, DateTime, ForeignKey, create_engine
+from sqlalchemy import JSON, Column, String, DateTime, ForeignKey, \
+    create_engine
 from sqlalchemy.ext.indexable import index_property
 from sqlalchemy.orm import relationship
 from sqlalchemy.engine import Engine
@@ -10,23 +11,40 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm.session import Session
 
+from events.domain.event import Event, event_factory
 from events.domain.submission import License, Submission
-from events.domain.agent import User, Client
+from events.domain.agent import User, Client, Agent
 from . import models
 from .models import Base
+from .exceptions import NoSuchSubmission
 from events.context import get_application_config, get_application_global
 
-
-global Event
-Event = None
+DBEvent = None
 
 
-class NoSuchSubmission(RuntimeError):
-    """A request was made for a submission that does not exist."""
+class DBEventMixin(object):
+    """Provides data transformation methods for the event db model."""
+
+    def to_event(self) -> Event:
+        """Instantiate an :class:`.Event` using event data from the db."""
+        _skip = ['creator', 'proxy', 'submission_id', 'created', 'event_type']
+        data = {
+            key: value for key, value in self.data.items()
+            if key not in _skip
+        }
+        data['committed'] = True,     # Since we're loading from the DB.
+        return event_factory(
+            self.event_type,
+            creator=Agent.from_dict(self.creator),
+            proxy=Agent.from_dict(self.proxy) if self.proxy else None,
+            submission_id=self.submission_id,
+            created=self.created,
+            **data
+        )
 
 
 @contextmanager
-def transaction():
+def transaction() -> Generator:
     """Context manager for database transaction."""
     session = current_session()
     try:
@@ -44,16 +62,67 @@ def get_licenses() -> List[License]:
     return [License(uri=row.name, name=row.label) for row in license_data]
 
 
-def get_submission(submission_id: int) -> Submission:
+def get_events(submission_id: int) -> List[Event]:
+    """
+    Load events from the classic database.
 
-    data = current_session().query(models.Submission).get(submission_id)
-    if data is None:
-        raise NoSuchSubmission(f'Submission with id {submission_id} not found')
-    return Submission(
-        creator=User(data.submitter_id),
-        owner=User(data.submitter_id),
-        created=data.created
-    )
+    Parameters
+    ----------
+    submission_id : int
+
+    Returns
+    -------
+    list
+        Items are :class:`.Event` instances loaded from the db.
+    """
+    with transaction() as session:
+        event_data = session.query(DBEvent) \
+            .filter(DBEvent.submission_id == submission_id) \
+            .order_by(DBEvent.created)
+        if not event_data:      # No events, no dice.
+            raise NoSuchSubmission(f'Submission {submission_id} not found')
+        return [datum.to_event() for datum in event_data]
+
+
+def get_submission(submission_id: int) -> Submission:
+    """
+    Get the current state of a :class:`.Submission` from the database.
+
+    In the medium term, services that use this package will need to
+    play well with legacy services that integrate with the classic
+    database. For example, the moderation system does not use the event
+    model implemented here, and will therefore cause direct changes to the
+    submission tables that must be reflected in our representation of the
+    submission.
+
+    Until those legacy components are replaced, we will need to load both the
+    event stack and the current DB state of the submission, and use the DB
+    state to patch fields that may have changed outside the purview of the
+    event model.
+
+    Parameters
+    ----------
+    submission_id : int
+
+    Returns
+    -------
+    :class:`.Submission`
+    """
+    # Load and play events. Eventually, this is the only query we will make
+    # against the database.
+    events = get_events(submission_id)
+    submission = None       # We assume that the first event is a creation.
+    for ev in events:
+        submission = ev.apply(submission) if submission else ev.apply()
+
+    with transaction() as session:
+        # Load the current db state of the submission, and patch. Once we have
+        # retired legacy components that do not follow the event model, this
+        # step should be removed.
+        data = session.query(models.Submission).get(submission_id)
+        if data is None:
+            raise NoSuchSubmission(f'Submission {submission_id} not found')
+        return data.patch(submission)
 
 
 def store_events(*events: Event, submission: Submission) -> Submission:
@@ -96,7 +165,7 @@ def store_events(*events: Event, submission: Submission) -> Submission:
 
             if event.committed:
                 raise RuntimeError('Event is already committed')
-            db_event = Event(
+            db_event = DBEvent(
                 event_type=event.event_type,
                 event_id=event.event_id,
                 data=event.to_dict(),
@@ -127,8 +196,8 @@ def get_engine(app: object = None) -> Engine:
 # TODO: consider making this private.
 def get_session(app: object = None) -> Session:
     """Get a new :class:`.Session`."""
-    global Event
-    Event = _declare_event()
+    global DBEvent
+    DBEvent = _declare_event()
     engine = current_engine()
     return sessionmaker(bind=engine)()
 
@@ -155,26 +224,25 @@ def current_session() -> Session:
 
 def create_all() -> None:
     """Create all tables in the database."""
-    session = current_session()
     Base.metadata.create_all(current_engine())
 
 
 def drop_all() -> None:
     """Drop all tables in the database."""
-    session = current_session()
     Base.metadata.drop_all(current_engine())
 
 
+# TODO: find a better way!
 def _declare_event() -> type:
     """
-    Define Event model.
+    Define DBEvent model.
 
     This is deferred until runtime so that we can inject an alternate model
     for testing. This is less than ideal, but (so far) appears to be the only
     way to effectively replace column data types, which we need in order to
     use JSON columns with SQLite.
     """
-    class Event(Base):  # type: ignore
+    class DBEvent(Base, DBEventMixin):  # type: ignore
         __tablename__ = 'event'
 
         event_id = Column(String(40), primary_key=True)
@@ -193,4 +261,4 @@ def _declare_event() -> type:
         )
 
         submission = relationship("Submission")
-    return Event
+    return DBEvent

@@ -1,4 +1,9 @@
-"""Conditional business logic as data."""
+"""
+Conditional business logic as data.
+
+This is here for demonstration purposes only, and is likely to change
+substantially in the short term.
+"""
 
 from datetime import datetime
 from typing import Callable, TypeVar, Optional
