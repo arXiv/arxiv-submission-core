@@ -1,3 +1,4 @@
+import os
 from typing import Callable, Tuple, Any
 from functools import wraps
 from werkzeug.exceptions import BadRequest
@@ -24,6 +25,11 @@ def validate_request(schema_path: str) -> Callable:
 
 
     """
+    schema_path = os.path.join(
+        os.path.abspath(os.path.dirname(__file__)),
+        '../..',
+        schema_path
+    )
     validate = schema.load(schema_path)
 
     def _decorator(func: Callable) -> Callable:

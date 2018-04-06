@@ -21,6 +21,8 @@
 import sys
 # sys.path.insert(0, os.path.abspath('.'))
 sys.path.append('../core')
+sys.path.append('../api')
+sys.path.append('../authorization')
 
 # -- General configuration ------------------------------------------------
 

@@ -130,8 +130,8 @@ def save(*events: Event, submission_id: Optional[str] = None) \
     state of the submission, and generate external notification(s) on the
     appropriate channels.
 
-    Paramters
-    ---------
+    Parameters
+    ----------
     events : :class:`.Event`
         Events to apply and persist.
     submission_id : int

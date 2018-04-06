@@ -73,7 +73,7 @@
 <span class="sd">.. code-block:: python</span>
 
 <span class="sd">   &gt;&gt;&gt; import events</span>
-<span class="sd">   &gt;&gt;&gt; user = events.User(&#39;bloggsj&#39;)</span>
+<span class="sd">   &gt;&gt;&gt; user = events.User(123, &quot;joe@bloggs.com&quot;)</span>
 <span class="sd">   &gt;&gt;&gt; metadata = [(&#39;title&#39;, &#39;A new theory of foo&#39;)]</span>
 <span class="sd">   &gt;&gt;&gt; update = events.UpdateMetadataEvent(creator=user, metadata=metadata)</span>
 <span class="sd">   &gt;&gt;&gt; submission = events.save(creation, submission_id=12345)</span>
@@ -108,7 +108,7 @@
 
 <span class="sd">   import events</span>
 
-<span class="sd">   &gt;&gt;&gt; user = events.User(&#39;bloggsj&#39;)</span>
+<span class="sd">   &gt;&gt;&gt; user = events.User(123, &quot;joe@bloggs.com&quot;)</span>
 <span class="sd">   &gt;&gt;&gt; creation = events.CreateSubmissionEvent(creator=user)</span>
 <span class="sd">   &gt;&gt;&gt; metadata = [(&#39;title&#39;, &#39;A new theory of foo&#39;)]</span>
 <span class="sd">   &gt;&gt;&gt; update = events.UpdateMetadataEvent(creator=user, metadata=metadata)</span>
@@ -132,7 +132,34 @@
 <span class="p">)</span>
 <span class="kn">from</span> <span class="nn">events.domain.rule</span> <span class="k">import</span> <span class="n">RuleCondition</span><span class="p">,</span> <span class="n">RuleConsequence</span><span class="p">,</span> <span class="n">EventRule</span>
 <span class="kn">from</span> <span class="nn">events.services</span> <span class="k">import</span> <span class="n">classic</span>
-<span class="kn">from</span> <span class="nn">events.exceptions</span> <span class="k">import</span> <span class="n">InvalidEvent</span>
+<span class="kn">from</span> <span class="nn">events.exceptions</span> <span class="k">import</span> <span class="n">InvalidEvent</span><span class="p">,</span> <span class="n">NoSuchSubmission</span><span class="p">,</span> <span class="n">SaveError</span>
+
+
+<div class="viewcode-block" id="load"><a class="viewcode-back" href="../containers/core/events.html#events.load">[docs]</a><span class="k">def</span> <span class="nf">load</span><span class="p">(</span><span class="n">submission_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Submission</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Event</span><span class="p">]]:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Load a submission and its history.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    submission_id : str</span>
+<span class="sd">        Submission identifier.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    :class:`events.domain.submission.Submission`</span>
+<span class="sd">        The current state of the submission.</span>
+<span class="sd">    list</span>
+<span class="sd">        Items are :class:`.Event`s, in order of their occurrence.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    :class:`.NoSuchSubmission`</span>
+<span class="sd">        Raised when a submission with the passed ID cannot be found.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">classic</span><span class="o">.</span><span class="n">get_submission</span><span class="p">(</span><span class="n">submission_id</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">classic</span><span class="o">.</span><span class="n">NoSuchSubmission</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">NoSuchSubmission</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;No submission with id </span><span class="si">{submission_id}</span><span class="s1">&#39;</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span></div>
 
 
 <div class="viewcode-block" id="save"><a class="viewcode-back" href="../containers/core/events.html#events.save">[docs]</a><span class="k">def</span> <span class="nf">save</span><span class="p">(</span><span class="o">*</span><span class="n">events</span><span class="p">:</span> <span class="n">Event</span><span class="p">,</span> <span class="n">submission_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> \
@@ -144,8 +171,8 @@
 <span class="sd">    state of the submission, and generate external notification(s) on the</span>
 <span class="sd">    appropriate channels.</span>
 
-<span class="sd">    Paramters</span>
-<span class="sd">    ---------</span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
 <span class="sd">    events : :class:`.Event`</span>
 <span class="sd">        Events to apply and persist.</span>
 <span class="sd">    submission_id : int</span>
@@ -162,6 +189,20 @@
 <span class="sd">        A list of :class:`.Event` instances applied to the submission. Note</span>
 <span class="sd">        that this list may contain more events than were passed, if event</span>
 <span class="sd">        rules were triggered.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    :class:`.NoSuchSubmission`</span>
+<span class="sd">        Raised if ``submission_id`` is not provided and the first event is not</span>
+<span class="sd">        a :class:`.CreateSubmissionEvent`, or ``submission_id`` is provided but</span>
+<span class="sd">        no such submission exists.</span>
+<span class="sd">    :class:`.InvalidEvent`</span>
+<span class="sd">        If an invalid event is encountered, the entire operation is aborted</span>
+<span class="sd">        and this exception is raised.</span>
+<span class="sd">    :class:`.SaveError`</span>
+<span class="sd">        There was a problem persisting the events and/or submission state</span>
+<span class="sd">        to the database.</span>
+
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">events</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Must pass at least one event&#39;</span><span class="p">)</span>
@@ -172,7 +213,8 @@
             <span class="k">if</span> <span class="n">event</span><span class="o">.</span><span class="n">submission_id</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">event</span><span class="o">.</span><span class="n">submission_id</span> <span class="o">=</span> <span class="n">submission_id</span>
             <span class="k">if</span> <span class="n">event</span><span class="o">.</span><span class="n">submission_id</span> <span class="o">!=</span> <span class="n">submission_id</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Can&#39;t mix events for multiple submissions&quot;</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="n">InvalidEvent</span><span class="p">(</span><span class="n">event</span><span class="p">,</span>
+                                   <span class="s2">&quot;Can&#39;t mix events for multiple submissions&quot;</span><span class="p">)</span>
 
     <span class="c1"># We want to play events from the beginning.</span>
     <span class="k">if</span> <span class="n">submission_id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -185,14 +227,17 @@
     <span class="n">rules</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># database.get_rules(submission_id)</span>
 
     <span class="c1"># Calculate the state of the submission from old and new events.</span>
-    <span class="n">submission</span><span class="p">,</span> <span class="n">combined</span> <span class="o">=</span> <span class="n">_play_events</span><span class="p">(</span><span class="n">combined</span><span class="p">,</span> <span class="n">rules</span><span class="p">)</span>
+    <span class="n">submission</span><span class="p">,</span> <span class="n">combined</span> <span class="o">=</span> <span class="n">_apply_events</span><span class="p">(</span><span class="n">combined</span><span class="p">,</span> <span class="n">rules</span><span class="p">)</span>
 
     <span class="c1"># Update the submission ID to ensure the existing submission is updated.</span>
     <span class="k">if</span> <span class="n">submission</span><span class="o">.</span><span class="n">submission_id</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">submission</span><span class="o">.</span><span class="n">submission_id</span> <span class="o">=</span> <span class="n">submission_id</span>    <span class="c1"># May still be None.</span>
 
     <span class="c1"># Persist in database; submission ID is updated after transaction.</span>
-    <span class="n">submission</span> <span class="o">=</span> <span class="n">classic</span><span class="o">.</span><span class="n">store_events</span><span class="p">(</span><span class="o">*</span><span class="n">combined</span><span class="p">,</span> <span class="n">submission</span><span class="o">=</span><span class="n">submission</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">submission</span> <span class="o">=</span> <span class="n">classic</span><span class="o">.</span><span class="n">store_events</span><span class="p">(</span><span class="o">*</span><span class="n">combined</span><span class="p">,</span> <span class="n">submission</span><span class="o">=</span><span class="n">submission</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">classic</span><span class="o">.</span><span class="n">CommitFailed</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">SaveError</span><span class="p">(</span><span class="s1">&#39;Failed to store events&#39;</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span>
 
     <span class="k">for</span> <span class="n">event</span> <span class="ow">in</span> <span class="n">combined</span><span class="p">:</span>
         <span class="n">event</span><span class="o">.</span><span class="n">submission_id</span> <span class="o">=</span> <span class="n">submission</span><span class="o">.</span><span class="n">submission_id</span>
@@ -204,19 +249,51 @@
     <span class="sd">&quot;&quot;&quot;Generate new event(s) by applying rules to a submission event.&quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">_apply</span><span class="p">(</span><span class="n">rule</span><span class="p">:</span> <span class="n">EventRule</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">rule</span><span class="o">.</span><span class="n">condition</span><span class="p">(</span><span class="n">submission</span><span class="p">,</span> <span class="n">event</span><span class="p">)</span>
-    <span class="k">return</span> <span class="p">[</span><span class="n">rule</span><span class="o">.</span><span class="n">consequence</span><span class="p">(</span><span class="n">submission</span><span class="p">,</span> <span class="n">event</span><span class="p">)</span>
-            <span class="k">for</span> <span class="n">rule</span> <span class="ow">in</span> <span class="nb">filter</span><span class="p">(</span><span class="n">_apply</span><span class="p">,</span> <span class="n">rules</span><span class="p">)]</span>
+    <span class="k">return</span> <span class="p">[</span>
+        <span class="n">rule</span><span class="o">.</span><span class="n">consequence</span><span class="p">(</span><span class="n">submission</span><span class="p">,</span> <span class="n">event</span><span class="p">)</span> <span class="k">for</span> <span class="n">rule</span> <span class="ow">in</span> <span class="nb">filter</span><span class="p">(</span><span class="n">_apply</span><span class="p">,</span> <span class="n">rules</span><span class="p">)</span>
+    <span class="p">]</span>
 
 
-<span class="k">def</span> <span class="nf">_play_events</span><span class="p">(</span><span class="n">events</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Event</span><span class="p">],</span> <span class="n">rules</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">EventRule</span><span class="p">],</span>
-                 <span class="n">submission</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Submission</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> \
+<span class="k">def</span> <span class="nf">_apply_events</span><span class="p">(</span><span class="n">events</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Event</span><span class="p">],</span> <span class="n">rules</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">EventRule</span><span class="p">],</span>
+                  <span class="n">submission</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Submission</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> \
          <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Submission</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Event</span><span class="p">]]:</span>
-    <span class="sd">&quot;&quot;&quot;Apply a set of events in order.&quot;&quot;&quot;</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Apply a set of events in order.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    events : list</span>
+<span class="sd">        Items are :class:`.Event` instances.</span>
+<span class="sd">    rules : list</span>
+<span class="sd">        Items are :class:`.EventRule` instances.</span>
+<span class="sd">    submission : :class:`.Submission` or None</span>
+<span class="sd">        Starting state from which to begin applying ``events``. If</span>
+<span class="sd">        ``submission`` is not provided, ``events`` must contain a</span>
+<span class="sd">        :class:`.CreateSubmissionEvent`.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    :class:`.Submission`</span>
+<span class="sd">        Submission state after events have been applied.</span>
+<span class="sd">    list</span>
+<span class="sd">        Items are :class:`.Event`s that have been applied, including any</span>
+<span class="sd">        additional events generated by ``rules``.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    :class:`.NoSuchSubmission`</span>
+<span class="sd">        If ``submission`` is not provided, and the first event is not a</span>
+<span class="sd">        :class:`.CreateSubmissionEvent`, there&#39;s not much else to go on.</span>
+<span class="sd">    :class:`.InvalidEvent`</span>
+<span class="sd">        If an invalid event is encountered, the entire operation is aborted</span>
+<span class="sd">        and this exception is raised.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">events</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">events</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">e</span><span class="p">:</span> <span class="n">e</span><span class="o">.</span><span class="n">created</span><span class="p">)</span>
 
     <span class="c1"># Need either a creation event or a submission state from which to start.</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">events</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">CreateSubmissionEvent</span><span class="p">)</span> <span class="ow">and</span> <span class="n">submission</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;Creation missing and submission not provided&#39;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="n">NoSuchSubmission</span><span class="p">(</span><span class="s1">&#39;No creation, and submission not provided&#39;</span><span class="p">)</span>
 
     <span class="n">extra_events</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Event</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>    <span class="c1"># Generated by applied rules.</span>
     <span class="k">for</span> <span class="n">event</span> <span class="ow">in</span> <span class="n">events</span><span class="p">:</span>
@@ -232,7 +309,7 @@
             <span class="c1"># Any rule-derived events should be applied before moving on.</span>
             <span class="n">_extra</span> <span class="o">=</span> <span class="n">_apply_rules</span><span class="p">(</span><span class="n">submission</span><span class="p">,</span> <span class="n">event</span><span class="p">,</span> <span class="n">rules</span><span class="p">)</span>
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">_extra</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-                <span class="n">submission</span><span class="p">,</span> <span class="n">_extra</span> <span class="o">=</span> <span class="n">_play_events</span><span class="p">(</span><span class="n">_extra</span><span class="p">,</span> <span class="n">rules</span><span class="p">,</span> <span class="n">submission</span><span class="p">)</span>
+                <span class="n">submission</span><span class="p">,</span> <span class="n">_extra</span> <span class="o">=</span> <span class="n">_apply_events</span><span class="p">(</span><span class="n">_extra</span><span class="p">,</span> <span class="n">rules</span><span class="p">,</span> <span class="n">submission</span><span class="p">)</span>
                 <span class="n">extra_events</span> <span class="o">+=</span> <span class="n">_extra</span>
     <span class="k">return</span> <span class="n">submission</span><span class="p">,</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">events</span> <span class="o">+</span> <span class="n">extra_events</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">e</span><span class="p">:</span> <span class="n">e</span><span class="o">.</span><span class="n">created</span><span class="p">)</span>
 </pre></div>
@@ -256,7 +333,8 @@
 <li class="toctree-l1"><a class="reference internal" href="../architecture.html">Submission &amp; moderation subsystem architecture</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../publication_process.html">Submission &amp; Publication Process</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../submission_api_context.html">Submission API: Context</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../containers/core/events.html">Submission core events package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../containers/core/events.html">events package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../containers/api/api.html">api package</a></li>
 </ul>
 
 <div class="relations">

@@ -83,15 +83,23 @@
 <span class="sd">    This should generally not be set from outside this package.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">proxy</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Agent</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">proxy</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Agent</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    The agent who facilitated the operation on behalf of the :prop:`.creator`.</span>
 
 <span class="sd">    This may be an API client, or another user who has been designated as a</span>
-<span class="sd">    proxy.</span>
+<span class="sd">    proxy. Note that proxy implies that the creator was not directly involved.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">submission_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">client</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Agent</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    The client through which the :prop:`.creator` performed the operation.</span>
+
+<span class="sd">    If the creator was directly involved in the operation, this property should</span>
+<span class="sd">    be the client that facilitated the operation.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">submission_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    The primary identifier of the submission being operated upon.</span>
 
@@ -99,7 +107,7 @@
 <span class="sd">    chaining of events with creation events in the same transaction.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">committed</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">committed</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Indicates whether the event has been committed to the database.</span>
 
@@ -159,7 +167,8 @@
 <div class="viewcode-block" id="CreateSubmissionEvent.project"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.event.CreateSubmissionEvent.project">[docs]</a>    <span class="k">def</span> <span class="nf">project</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Submission</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Create a new :class:`.Submission`.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">Submission</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">creator</span><span class="p">,</span> <span class="n">created</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">created</span><span class="p">,</span>
-                          <span class="n">owner</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">creator</span><span class="p">,</span> <span class="n">proxy</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">proxy</span><span class="p">)</span></div></div>
+                          <span class="n">owner</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">creator</span><span class="p">,</span> <span class="n">proxy</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">proxy</span><span class="p">,</span>
+                          <span class="n">client</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="p">)</span></div></div>
 
 
 <div class="viewcode-block" id="RemoveSubmissionEvent"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.event.RemoveSubmissionEvent">[docs]</a><span class="nd">@dataclass</span><span class="p">(</span><span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
@@ -228,7 +237,7 @@
 <span class="k">class</span> <span class="nc">AddSecondaryClassificationEvent</span><span class="p">(</span><span class="n">Event</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Add a secondary :class:`.Classification` to a submission.&quot;&quot;&quot;</span>
 
-    <span class="n">category</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">category</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 
 <div class="viewcode-block" id="AddSecondaryClassificationEvent.validate"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.event.AddSecondaryClassificationEvent.validate">[docs]</a>    <span class="k">def</span> <span class="nf">validate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;All three fields must be set.&quot;&quot;&quot;</span>
@@ -249,7 +258,7 @@
 <span class="k">class</span> <span class="nc">RemoveSecondaryClassificationEvent</span><span class="p">(</span><span class="n">Event</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Remove secondary :class:`.Classification` from submission.&quot;&quot;&quot;</span>
 
-    <span class="n">category</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">category</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 
 <div class="viewcode-block" id="RemoveSecondaryClassificationEvent.validate"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.event.RemoveSecondaryClassificationEvent.validate">[docs]</a>    <span class="k">def</span> <span class="nf">validate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;All three fields must be set.&quot;&quot;&quot;</span>
@@ -271,8 +280,8 @@
 <span class="k">class</span> <span class="nc">SelectLicenseEvent</span><span class="p">(</span><span class="n">Event</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;The submitter has selected a license for their submission.&quot;&quot;&quot;</span>
 
-    <span class="n">license_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="n">license_uri</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">license_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">license_uri</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 
 <div class="viewcode-block" id="SelectLicenseEvent.project"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.event.SelectLicenseEvent.project">[docs]</a>    <span class="k">def</span> <span class="nf">project</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Submission</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Set :prop:`.Submission.license`.&quot;&quot;&quot;</span>
@@ -501,7 +510,8 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../architecture.html">Submission &amp; moderation subsystem architecture</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../publication_process.html">Submission &amp; Publication Process</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../submission_api_context.html">Submission API: Context</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../containers/core/events.html">Submission core events package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../containers/core/events.html">events package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../containers/api/api.html">api package</a></li>
 </ul>
 
 <div class="relations">

@@ -5,7 +5,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>Submission core events package &#8212; arXiv submission &amp; moderation 0.1 documentation</title>
+    <title>events package &#8212; arXiv submission &amp; moderation 0.1 documentation</title>
     <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
     <script type="text/javascript">
@@ -41,7 +41,7 @@
           <div class="body" role="main">
             
   <div class="section" id="module-events">
-<span id="submission-core-events-package"></span><span id="submission-core-events-package-containers"></span><h1>Submission core events package<a class="headerlink" href="#module-events" title="Permalink to this headline">¶</a></h1>
+<span id="events-package"></span><h1>events package<a class="headerlink" href="#module-events" title="Permalink to this headline">¶</a></h1>
 <p>Core event-centric data abstraction for the submission &amp; moderation subsystem.</p>
 <p>This package provides an event-based API for CRUD operations on submissions
 and submission-related (meta)data. Management of submission content (i.e.
@@ -65,7 +65,7 @@ information about common fields.</p>
 <p>To create a new event, initialize the class with the relevant
 data, and commit the event using <a class="reference internal" href="#events.save" title="events.save"><code class="xref py py-func docutils literal"><span class="pre">save()</span></code></a>. For example:</p>
 <div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">events</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">user</span> <span class="o">=</span> <span class="n">events</span><span class="o">.</span><span class="n">User</span><span class="p">(</span><span class="s1">&#39;bloggsj&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">user</span> <span class="o">=</span> <span class="n">events</span><span class="o">.</span><span class="n">User</span><span class="p">(</span><span class="mi">123</span><span class="p">,</span> <span class="s2">&quot;joe@bloggs.com&quot;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">metadata</span> <span class="o">=</span> <span class="p">[(</span><span class="s1">&#39;title&#39;</span><span class="p">,</span> <span class="s1">&#39;A new theory of foo&#39;</span><span class="p">)]</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">update</span> <span class="o">=</span> <span class="n">events</span><span class="o">.</span><span class="n">UpdateMetadataEvent</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">user</span><span class="p">,</span> <span class="n">metadata</span><span class="o">=</span><span class="n">metadata</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">submission</span> <span class="o">=</span> <span class="n">events</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">creation</span><span class="p">,</span> <span class="n">submission_id</span><span class="o">=</span><span class="mi">12345</span><span class="p">)</span>
@@ -96,7 +96,7 @@ submission ID need not be provided, as we won’t know what it is yet. For
 example:</p>
 <div class="highlight-python"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">events</span>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">user</span> <span class="o">=</span> <span class="n">events</span><span class="o">.</span><span class="n">User</span><span class="p">(</span><span class="s1">&#39;bloggsj&#39;</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">user</span> <span class="o">=</span> <span class="n">events</span><span class="o">.</span><span class="n">User</span><span class="p">(</span><span class="mi">123</span><span class="p">,</span> <span class="s2">&quot;joe@bloggs.com&quot;</span><span class="p">)</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="n">creation</span> <span class="o">=</span> <span class="n">events</span><span class="o">.</span><span class="n">CreateSubmissionEvent</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">user</span><span class="p">)</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="n">metadata</span> <span class="o">=</span> <span class="p">[(</span><span class="s1">&#39;title&#39;</span><span class="p">,</span> <span class="s1">&#39;A new theory of foo&#39;</span><span class="p">)]</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="n">update</span> <span class="o">=</span> <span class="n">events</span><span class="o">.</span><span class="n">UpdateMetadataEvent</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">user</span><span class="p">,</span> <span class="n">metadata</span><span class="o">=</span><span class="n">metadata</span><span class="p">)</span>
@@ -106,30 +106,64 @@ example:</p>
 </pre></div>
 </div>
 <dl class="function">
-<dt id="events.save">
-<code class="descclassname">events.</code><code class="descname">save</code><span class="sig-paren">(</span><em>*events: events.domain.event.Event</em>, <em>submission_id: typing.Union[str</em>, <em>NoneType] = None</em><span class="sig-paren">)</span> &#x2192; typing.Tuple[events.domain.submission.Submission, typing.List[events.domain.event.Event]]<a class="reference internal" href="../../_modules/events.html#save"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.save" title="Permalink to this definition">¶</a></dt>
-<dd><p>Commit a set of new :class:<a href="#id1"><span class="problematic" id="id2">`</span></a>.Event`s for a submission.</p>
-<p>This will persist the events to the database, along with the final
-state of the submission, and generate external notification(s) on the
-appropriate channels.</p>
-<dl class="docutils">
-<dt>events <span class="classifier-delimiter">:</span> <span class="classifier"><a class="reference internal" href="events.domain.html#events.domain.event.Event" title="events.domain.event.Event"><code class="xref py py-class docutils literal"><span class="pre">Event</span></code></a></span></dt>
-<dd>Events to apply and persist.</dd>
-<dt>submission_id <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
-<dd>The unique ID for the submission, if available. If not provided, it is
-expected that <code class="docutils literal"><span class="pre">events</span></code> includes a <a class="reference internal" href="events.domain.html#events.domain.event.CreateSubmissionEvent" title="events.domain.event.CreateSubmissionEvent"><code class="xref py py-class docutils literal"><span class="pre">CreateSubmissionEvent</span></code></a>.</dd>
-</dl>
+<dt id="events.load">
+<code class="descclassname">events.</code><code class="descname">load</code><span class="sig-paren">(</span><em>submission_id: str</em><span class="sig-paren">)</span> &#x2192; typing.Tuple[events.domain.submission.Submission, typing.List[events.domain.event.Event]]<a class="reference internal" href="../../_modules/events.html#load"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.load" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load a submission and its history.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><ul class="simple">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>submission_id</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a>) – Submission identifier.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><ul class="simple">
+<li><a class="reference internal" href="events.domain.html#events.domain.submission.Submission" title="events.domain.submission.Submission"><code class="xref py py-class docutils literal"><span class="pre">events.domain.submission.Submission</span></code></a> – The current state of the submission.</li>
+<li><em>list</em> – Items are :class:<a href="#id1"><span class="problematic" id="id2">`</span></a>.Event`s, in order of their occurrence.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><a class="reference internal" href="#events.exceptions.NoSuchSubmission" title="events.exceptions.NoSuchSubmission"><code class="xref py py-class docutils literal"><span class="pre">NoSuchSubmission</span></code></a> – Raised when a submission with the passed ID cannot be found.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="events.save">
+<code class="descclassname">events.</code><code class="descname">save</code><span class="sig-paren">(</span><em>*events: events.domain.event.Event</em>, <em>submission_id: typing.Union[str</em>, <em>NoneType] = None</em><span class="sig-paren">)</span> &#x2192; typing.Tuple[events.domain.submission.Submission, typing.List[events.domain.event.Event]]<a class="reference internal" href="../../_modules/events.html#save"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.save" title="Permalink to this definition">¶</a></dt>
+<dd><p>Commit a set of new :class:<a href="#id3"><span class="problematic" id="id4">`</span></a>.Event`s for a submission.</p>
+<p>This will persist the events to the database, along with the final
+state of the submission, and generate external notification(s) on the
+appropriate channels.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>events</strong> (<a class="reference internal" href="events.domain.html#events.domain.event.Event" title="events.domain.event.Event"><code class="xref py py-class docutils literal"><span class="pre">Event</span></code></a>) – Events to apply and persist.</li>
+<li><strong>submission_id</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/functions.html#int" title="(in Python v3.6)"><em>int</em></a>) – The unique ID for the submission, if available. If not provided, it is
+expected that <code class="docutils literal"><span class="pre">events</span></code> includes a <a class="reference internal" href="events.domain.html#events.domain.event.CreateSubmissionEvent" title="events.domain.event.CreateSubmissionEvent"><code class="xref py py-class docutils literal"><span class="pre">CreateSubmissionEvent</span></code></a>.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><ul class="simple">
 <li><a class="reference internal" href="events.domain.html#events.domain.submission.Submission" title="events.domain.submission.Submission"><code class="xref py py-class docutils literal"><span class="pre">events.domain.submission.Submission</span></code></a> – The state of the submission after all events (including rule-derived
 events) have been applied. Updated with the submission ID, if a
 <a class="reference internal" href="events.domain.html#events.domain.event.CreateSubmissionEvent" title="events.domain.event.CreateSubmissionEvent"><code class="xref py py-class docutils literal"><span class="pre">CreateSubmissionEvent</span></code></a> was included.</li>
 <li><em>list</em> – A list of <a class="reference internal" href="events.domain.html#events.domain.event.Event" title="events.domain.event.Event"><code class="xref py py-class docutils literal"><span class="pre">Event</span></code></a> instances applied to the submission. Note
 that this list may contain more events than were passed, if event
 rules were triggered.</li>
+</ul>
+</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><ul class="first last simple">
+<li><a class="reference internal" href="#events.exceptions.NoSuchSubmission" title="events.exceptions.NoSuchSubmission"><code class="xref py py-class docutils literal"><span class="pre">NoSuchSubmission</span></code></a> – Raised if <code class="docutils literal"><span class="pre">submission_id</span></code> is not provided and the first event is not
+a <a class="reference internal" href="events.domain.html#events.domain.event.CreateSubmissionEvent" title="events.domain.event.CreateSubmissionEvent"><code class="xref py py-class docutils literal"><span class="pre">CreateSubmissionEvent</span></code></a>, or <code class="docutils literal"><span class="pre">submission_id</span></code> is provided but
+no such submission exists.</li>
+<li><a class="reference internal" href="#events.exceptions.InvalidEvent" title="events.exceptions.InvalidEvent"><code class="xref py py-class docutils literal"><span class="pre">InvalidEvent</span></code></a> – If an invalid event is encountered, the entire operation is aborted
+and this exception is raised.</li>
+<li><a class="reference internal" href="#events.exceptions.SaveError" title="events.exceptions.SaveError"><code class="xref py py-class docutils literal"><span class="pre">SaveError</span></code></a> – There was a problem persisting the events and/or submission state
+to the database.</li>
 </ul>
 </td>
 </tr>
@@ -158,6 +192,7 @@ rules were triggered.</li>
 <li class="toctree-l4"><a class="reference internal" href="events.services.classic.html#module-events.services.classic.exceptions">events.services.classic.exceptions module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="events.services.classic.html#module-events.services.classic.models">events.services.classic.models module</a></li>
 <li class="toctree-l4"><a class="reference internal" href="events.services.classic.html#module-events.services.classic.tests">events.services.classic.tests module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="events.services.classic.html#module-events.services.classic.util">events.services.classic.util module</a></li>
 </ul>
 </li>
 </ul>
@@ -172,55 +207,53 @@ rules were triggered.</li>
 <div class="section" id="submodules">
 <h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
 </div>
-<div class="section" id="module-events.context">
-<span id="events-context-module"></span><h2>events.context module<a class="headerlink" href="#module-events.context" title="Permalink to this headline">¶</a></h2>
-<p>Helpers for working with Flask globals.</p>
-<dl class="function">
-<dt id="events.context.get_application_config">
-<code class="descclassname">events.context.</code><code class="descname">get_application_config</code><span class="sig-paren">(</span><em>app: flask.app.Flask = None</em><span class="sig-paren">)</span> &#x2192; typing.Union[dict, os._Environ]<a class="reference internal" href="../../_modules/events/context.html#get_application_config"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.context.get_application_config" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get a configuration from the current app, or fall back to env.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>app</strong> (<code class="xref py py-class docutils literal"><span class="pre">flask.Flask</span></code>) – </td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><em>dict-like</em> – This is either the current Flask application configuration, or
-<code class="docutils literal"><span class="pre">os.environ</span></code>. Either of these should support the <code class="docutils literal"><span class="pre">get()</span></code> method.</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-<dl class="function">
-<dt id="events.context.get_application_global">
-<code class="descclassname">events.context.</code><code class="descname">get_application_global</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; typing.Union[werkzeug.local.LocalProxy, NoneType]<a class="reference internal" href="../../_modules/events/context.html#get_application_global"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.context.get_application_global" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get the current application global proxy object.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><em>proxy or None</em></td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
-</div>
 <div class="section" id="module-events.exceptions">
 <span id="events-exceptions-module"></span><h2>events.exceptions module<a class="headerlink" href="#module-events.exceptions" title="Permalink to this headline">¶</a></h2>
 <p>Exceptions raised during event handling.</p>
 <dl class="exception">
 <dt id="events.exceptions.InvalidEvent">
-<em class="property">exception </em><code class="descclassname">events.exceptions.</code><code class="descname">InvalidEvent</code><span class="sig-paren">(</span><em>event: EventType</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../../_modules/events/exceptions.html#InvalidEvent"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.exceptions.InvalidEvent" title="Permalink to this definition">¶</a></dt>
+<em class="property">exception </em><code class="descclassname">events.exceptions.</code><code class="descname">InvalidEvent</code><span class="sig-paren">(</span><em>event: EventType</em>, <em>extra: str = ''</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../../_modules/events/exceptions.html#InvalidEvent"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.exceptions.InvalidEvent" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.6/library/exceptions.html#ValueError" title="(in Python v3.6)"><code class="xref py py-class docutils literal"><span class="pre">ValueError</span></code></a></p>
 <p>Raised when an invalid event is encountered.</p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="events.exceptions.NoSuchSubmission">
+<em class="property">exception </em><code class="descclassname">events.exceptions.</code><code class="descname">NoSuchSubmission</code><a class="reference internal" href="../../_modules/events/exceptions.html#NoSuchSubmission"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.exceptions.NoSuchSubmission" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.6/library/exceptions.html#Exception" title="(in Python v3.6)"><code class="xref py py-class docutils literal"><span class="pre">Exception</span></code></a></p>
+<p>An operation was performed on/for a submission that does not exist.</p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="events.exceptions.SaveError">
+<em class="property">exception </em><code class="descclassname">events.exceptions.</code><code class="descname">SaveError</code><a class="reference internal" href="../../_modules/events/exceptions.html#SaveError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.exceptions.SaveError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.6/library/exceptions.html#RuntimeError" title="(in Python v3.6)"><code class="xref py py-class docutils literal"><span class="pre">RuntimeError</span></code></a></p>
+<p>Failed to persist event state.</p>
 </dd></dl>
 
 </div>
 <div class="section" id="module-events.tests">
 <span id="events-tests-module"></span><h2>events.tests module<a class="headerlink" href="#module-events.tests" title="Permalink to this headline">¶</a></h2>
 <p>Tests for <a class="reference internal" href="#module-events" title="events"><code class="xref py py-mod docutils literal"><span class="pre">events</span></code></a> public API.</p>
+<dl class="class">
+<dt id="events.tests.TestLoad">
+<em class="property">class </em><code class="descclassname">events.tests.</code><code class="descname">TestLoad</code><span class="sig-paren">(</span><em>methodName='runTest'</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/tests.html#TestLoad"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.tests.TestLoad" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">unittest.case.TestCase</span></code></p>
+<p>Test <a class="reference internal" href="#events.load" title="events.load"><code class="xref py py-func docutils literal"><span class="pre">load()</span></code></a>.</p>
+<dl class="method">
+<dt id="events.tests.TestLoad.test_load_existant_submission">
+<code class="descname">test_load_existant_submission</code><span class="sig-paren">(</span><em>mock_classic</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/tests.html#TestLoad.test_load_existant_submission"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.tests.TestLoad.test_load_existant_submission" title="Permalink to this definition">¶</a></dt>
+<dd><p>When the submission exists, submission and events are returned.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="events.tests.TestLoad.test_load_nonexistant_submission">
+<code class="descname">test_load_nonexistant_submission</code><span class="sig-paren">(</span><em>mock_classic</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/tests.html#TestLoad.test_load_nonexistant_submission"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.tests.TestLoad.test_load_nonexistant_submission" title="Permalink to this definition">¶</a></dt>
+<dd><p>When the submission does not exist, an exception is raised.</p>
+</dd></dl>
+
+</dd></dl>
+
 <dl class="class">
 <dt id="events.tests.TestSave">
 <em class="property">class </em><code class="descclassname">events.tests.</code><code class="descname">TestSave</code><span class="sig-paren">(</span><em>methodName='runTest'</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/tests.html#TestSave"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.tests.TestSave" title="Permalink to this definition">¶</a></dt>
@@ -248,6 +281,12 @@ rules were triggered.</li>
 <dt id="events.tests.TestSave.test_save_from_scratch_without_creation_event">
 <code class="descname">test_save_from_scratch_without_creation_event</code><span class="sig-paren">(</span><em>mock_database</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/tests.html#TestSave.test_save_from_scratch_without_creation_event"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.tests.TestSave.test_save_from_scratch_without_creation_event" title="Permalink to this definition">¶</a></dt>
 <dd><p>An exception is raised when there is no creation event.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="events.tests.TestSave.test_save_invalid_event">
+<code class="descname">test_save_invalid_event</code><span class="sig-paren">(</span><em>mock_db</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/tests.html#TestSave.test_save_invalid_event"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.tests.TestSave.test_save_invalid_event" title="Permalink to this definition">¶</a></dt>
+<dd><p>An exception is raised when an invalid event is encountered.</p>
 </dd></dl>
 
 </dd></dl>
@@ -281,15 +320,15 @@ rules were triggered.</li>
 <li class="toctree-l1"><a class="reference internal" href="../../architecture.html">Submission &amp; moderation subsystem architecture</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../publication_process.html">Submission &amp; Publication Process</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../submission_api_context.html">Submission API: Context</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Submission core events package</a><ul>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">events package</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#using-events">Using events</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#subpackages">Subpackages</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#submodules">Submodules</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-events.context">events.context module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-events.exceptions">events.exceptions module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-events.tests">events.tests module</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="../api/api.html">api package</a></li>
 </ul>
 
 <div class="relations">

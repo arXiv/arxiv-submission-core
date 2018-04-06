@@ -41,7 +41,7 @@ from events.domain.agent import User, Client, Agent
 from . import models, util
 from .models import Base
 from .exceptions import NoSuchSubmission, CommitFailed
-from events.context import get_application_config, get_application_global
+from arxiv.base.globals import get_application_config, get_application_global
 
 
 class DBEvent(Base):  # type: ignore

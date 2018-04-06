@@ -1,7 +1,5 @@
-.. _submission-core-events-package-containers:
-
-Submission core events package
-==============================
+events package
+==============
 
 .. automodule:: events
     :members:
@@ -19,14 +17,6 @@ Subpackages
 Submodules
 ----------
 
-events\.context module
-----------------------
-
-.. automodule:: events.context
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 events\.exceptions module
 -------------------------
 
@@ -42,3 +32,5 @@ events\.tests module
     :members:
     :undoc-members:
     :show-inheritance:
+
+

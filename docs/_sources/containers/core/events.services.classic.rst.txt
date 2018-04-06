@@ -33,4 +33,12 @@ events\.services\.classic\.tests module
     :undoc-members:
     :show-inheritance:
 
+events\.services\.classic\.util module
+--------------------------------------
+
+.. automodule:: events.services.classic.util
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 

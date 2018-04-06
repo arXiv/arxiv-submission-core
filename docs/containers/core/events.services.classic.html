@@ -23,6 +23,7 @@
     <script type="text/javascript" src="../../_static/doctools.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="api package" href="../api/api.html" />
     <link rel="prev" title="events.services package" href="events.services.html" />
    
   <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
@@ -41,15 +42,92 @@
             
   <div class="section" id="module-events.services.classic">
 <span id="events-services-classic-package"></span><h1>events.services.classic package<a class="headerlink" href="#module-events.services.classic" title="Permalink to this headline">¶</a></h1>
+<p>Integration with the classic database to persist events and submission state.</p>
+<p>As part of the classic renewal strategy, development of new submission
+interfaces must maintain data interoperability with classic components. This
+service module must therefore do two main things:</p>
+<ol class="arabic simple">
+<li>Store and provide access to event data generated during the submission
+process, and</li>
+<li>Keep the classic database tables up to date so that “downstream” components
+can continue to operate. Since classic components work directly on
+submission tables, persisting events and resulting submission state must
+occur in the same transaction.</li>
+</ol>
+<p>An additional challenge is representing changes to submission state made by
+classic components, since those changes will be made directly to submission
+tables and not involve event-generation. See <a class="reference internal" href="#events.services.classic.get_submission" title="events.services.classic.get_submission"><code class="xref py py-func docutils literal"><span class="pre">get_submission()</span></code></a> for
+details.</p>
+<p>ORM representations of the classic database tables involved in submission
+are located in <a class="reference internal" href="#module-events.services.classic.models" title="events.services.classic.models"><code class="xref py py-mod docutils literal"><span class="pre">classic.models</span></code></a>. An additional model, <a class="reference internal" href="#events.services.classic.DBEvent" title="events.services.classic.DBEvent"><code class="xref py py-class docutils literal"><span class="pre">DBEvent</span></code></a>,
+is defined in the current module.</p>
 <dl class="class">
-<dt id="events.services.classic.DBEventMixin">
-<em class="property">class </em><code class="descclassname">events.services.classic.</code><code class="descname">DBEventMixin</code><a class="reference internal" href="../../_modules/events/services/classic.html#DBEventMixin"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.DBEventMixin" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.6/library/functions.html#object" title="(in Python v3.6)"><code class="xref py py-class docutils literal"><span class="pre">object</span></code></a></p>
-<p>Provides data transformation methods for the event db model.</p>
+<dt id="events.services.classic.DBEvent">
+<em class="property">class </em><code class="descclassname">events.services.classic.</code><code class="descname">DBEvent</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/services/classic.html#DBEvent"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.DBEvent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">sqlalchemy.ext.declarative.api.Base</span></code></p>
+<p>Database representation of an <a class="reference internal" href="events.domain.html#events.domain.event.Event" title="events.domain.event.Event"><code class="xref py py-class docutils literal"><span class="pre">Event</span></code></a>.</p>
+<dl class="attribute">
+<dt id="events.services.classic.DBEvent.created">
+<code class="descname">created</code><a class="headerlink" href="#events.services.classic.DBEvent.created" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.DBEvent.creator">
+<code class="descname">creator</code><a class="headerlink" href="#events.services.classic.DBEvent.creator" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.DBEvent.creator_id">
+<code class="descname">creator_id</code><a class="headerlink" href="#events.services.classic.DBEvent.creator_id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.DBEvent.data">
+<code class="descname">data</code><a class="headerlink" href="#events.services.classic.DBEvent.data" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.DBEvent.event_id">
+<code class="descname">event_id</code><a class="headerlink" href="#events.services.classic.DBEvent.event_id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.DBEvent.event_type">
+<code class="descname">event_type</code><a class="headerlink" href="#events.services.classic.DBEvent.event_type" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.DBEvent.proxy">
+<code class="descname">proxy</code><a class="headerlink" href="#events.services.classic.DBEvent.proxy" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.DBEvent.proxy_id">
+<code class="descname">proxy_id</code><a class="headerlink" href="#events.services.classic.DBEvent.proxy_id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.DBEvent.submission">
+<code class="descname">submission</code><a class="headerlink" href="#events.services.classic.DBEvent.submission" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.DBEvent.submission_id">
+<code class="descname">submission_id</code><a class="headerlink" href="#events.services.classic.DBEvent.submission_id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
 <dl class="method">
-<dt id="events.services.classic.DBEventMixin.to_event">
-<code class="descname">to_event</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; events.domain.event.Event<a class="reference internal" href="../../_modules/events/services/classic.html#DBEventMixin.to_event"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.DBEventMixin.to_event" title="Permalink to this definition">¶</a></dt>
-<dd><p>Instantiate an <a class="reference internal" href="events.domain.html#events.domain.event.Event" title="events.domain.event.Event"><code class="xref py py-class docutils literal"><span class="pre">Event</span></code></a> using event data from the db.</p>
+<dt id="events.services.classic.DBEvent.to_event">
+<code class="descname">to_event</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; events.domain.event.Event<a class="reference internal" href="../../_modules/events/services/classic.html#DBEvent.to_event"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.DBEvent.to_event" title="Permalink to this definition">¶</a></dt>
+<dd><p>Instantiate an <a class="reference internal" href="events.domain.html#events.domain.event.Event" title="events.domain.event.Event"><code class="xref py py-class docutils literal"><span class="pre">Event</span></code></a> using event data from this instance.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><a class="reference internal" href="events.domain.html#events.domain.event.Event" title="events.domain.event.Event"><code class="xref py py-class docutils literal"><span class="pre">Event</span></code></a></td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </dd></dl>
@@ -93,7 +171,9 @@
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>submission_id</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/functions.html#int" title="(in Python v3.6)"><em>int</em></a>) – </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><em>list</em> – Items are <a class="reference internal" href="events.domain.html#events.domain.event.Event" title="events.domain.event.Event"><code class="xref py py-class docutils literal"><span class="pre">Event</span></code></a> instances loaded from the db.</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><em>list</em> – Items are <a class="reference internal" href="events.domain.html#events.domain.event.Event" title="events.domain.event.Event"><code class="xref py py-class docutils literal"><span class="pre">Event</span></code></a> instances loaded from the class DB.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><a class="reference internal" href="events.html#events.exceptions.NoSuchSubmission" title="events.exceptions.NoSuchSubmission"><code class="xref py py-class docutils literal"><span class="pre">NoSuchSubmission</span></code></a> – Raised when there are no events for the provided submission ID.</td>
 </tr>
 </tbody>
 </table>
@@ -113,7 +193,7 @@
 
 <dl class="function">
 <dt id="events.services.classic.get_submission">
-<code class="descclassname">events.services.classic.</code><code class="descname">get_submission</code><span class="sig-paren">(</span><em>submission_id: int</em><span class="sig-paren">)</span> &#x2192; events.domain.submission.Submission<a class="reference internal" href="../../_modules/events/services/classic.html#get_submission"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.get_submission" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">events.services.classic.</code><code class="descname">get_submission</code><span class="sig-paren">(</span><em>submission_id: int</em><span class="sig-paren">)</span> &#x2192; typing.Tuple[events.domain.submission.Submission, typing.List[events.domain.event.Event]]<a class="reference internal" href="../../_modules/events/services/classic.html#get_submission"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.get_submission" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the current state of a <a class="reference internal" href="events.domain.html#events.domain.submission.Submission" title="events.domain.submission.Submission"><code class="xref py py-class docutils literal"><span class="pre">Submission</span></code></a> from the database.</p>
 <p>In the medium term, services that use this package will need to
 play well with legacy services that integrate with the classic
@@ -179,6 +259,13 @@ so it’s safe to include them here.</li>
 <span id="events-services-classic-exceptions-module"></span><h2>events.services.classic.exceptions module<a class="headerlink" href="#module-events.services.classic.exceptions" title="Permalink to this headline">¶</a></h2>
 <p>Exceptions raised by <a class="reference internal" href="#module-events.services.classic" title="events.services.classic"><code class="xref py py-mod docutils literal"><span class="pre">events.services.classic</span></code></a>.</p>
 <dl class="exception">
+<dt id="events.services.classic.exceptions.CommitFailed">
+<em class="property">exception </em><code class="descclassname">events.services.classic.exceptions.</code><code class="descname">CommitFailed</code><a class="reference internal" href="../../_modules/events/services/classic/exceptions.html#CommitFailed"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.exceptions.CommitFailed" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.6/library/exceptions.html#RuntimeError" title="(in Python v3.6)"><code class="xref py py-class docutils literal"><span class="pre">RuntimeError</span></code></a></p>
+<p>Raised when there was a problem committing changes to the database.</p>
+</dd></dl>
+
+<dl class="exception">
 <dt id="events.services.classic.exceptions.NoSuchSubmission">
 <em class="property">exception </em><code class="descclassname">events.services.classic.exceptions.</code><code class="descname">NoSuchSubmission</code><a class="reference internal" href="../../_modules/events/services/classic/exceptions.html#NoSuchSubmission"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.exceptions.NoSuchSubmission" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.6/library/exceptions.html#RuntimeError" title="(in Python v3.6)"><code class="xref py py-class docutils literal"><span class="pre">RuntimeError</span></code></a></p>
@@ -188,7 +275,7 @@ so it’s safe to include them here.</li>
 </div>
 <div class="section" id="module-events.services.classic.models">
 <span id="events-services-classic-models-module"></span><h2>events.services.classic.models module<a class="headerlink" href="#module-events.services.classic.models" title="Permalink to this headline">¶</a></h2>
-<p>SQLAlchemy ORM classes.</p>
+<p>SQLAlchemy ORM classes for the classic database.</p>
 <dl class="class">
 <dt id="events.services.classic.models.Archive">
 <em class="property">class </em><code class="descclassname">events.services.classic.models.</code><code class="descname">Archive</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/services/classic/models.html#Archive"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.models.Archive" title="Permalink to this definition">¶</a></dt>
@@ -1264,106 +1351,13 @@ iffy bit is the JSON datatype, which is not available by default in the SQLite
 backend, and so we inject a simple one here. End to end tests with a live MySQL
 database will provide more confidence in this area.</p>
 <dl class="class">
-<dt id="events.services.classic.tests.MockEvent">
-<em class="property">class </em><code class="descclassname">events.services.classic.tests.</code><code class="descname">MockEvent</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/services/classic/tests.html#MockEvent"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.tests.MockEvent" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">sqlalchemy.ext.declarative.api.Base</span></code>, <a class="reference internal" href="#events.services.classic.DBEventMixin" title="events.services.classic.DBEventMixin"><code class="xref py py-class docutils literal"><span class="pre">events.services.classic.DBEventMixin</span></code></a></p>
-<p>SQLite-friendly alternative for DBEvent model.</p>
-<dl class="attribute">
-<dt id="events.services.classic.tests.MockEvent.created">
-<code class="descname">created</code><a class="headerlink" href="#events.services.classic.tests.MockEvent.created" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="events.services.classic.tests.MockEvent.creator">
-<code class="descname">creator</code><a class="headerlink" href="#events.services.classic.tests.MockEvent.creator" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="events.services.classic.tests.MockEvent.creator_id">
-<code class="descname">creator_id</code><a class="headerlink" href="#events.services.classic.tests.MockEvent.creator_id" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="events.services.classic.tests.MockEvent.data">
-<code class="descname">data</code><a class="headerlink" href="#events.services.classic.tests.MockEvent.data" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="events.services.classic.tests.MockEvent.event_id">
-<code class="descname">event_id</code><a class="headerlink" href="#events.services.classic.tests.MockEvent.event_id" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="events.services.classic.tests.MockEvent.event_type">
-<code class="descname">event_type</code><a class="headerlink" href="#events.services.classic.tests.MockEvent.event_type" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="events.services.classic.tests.MockEvent.proxy">
-<code class="descname">proxy</code><a class="headerlink" href="#events.services.classic.tests.MockEvent.proxy" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="events.services.classic.tests.MockEvent.proxy_id">
-<code class="descname">proxy_id</code><a class="headerlink" href="#events.services.classic.tests.MockEvent.proxy_id" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="events.services.classic.tests.MockEvent.submission">
-<code class="descname">submission</code><a class="headerlink" href="#events.services.classic.tests.MockEvent.submission" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="events.services.classic.tests.MockEvent.submission_id">
-<code class="descname">submission_id</code><a class="headerlink" href="#events.services.classic.tests.MockEvent.submission_id" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="events.services.classic.tests.SQLiteJson">
-<em class="property">class </em><code class="descclassname">events.services.classic.tests.</code><code class="descname">SQLiteJson</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/services/classic/tests.html#SQLiteJson"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.tests.SQLiteJson" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">sqlalchemy.sql.type_api.TypeDecorator</span></code></p>
-<p>SQLite-friendly implementation of a JSON type.</p>
-<p>Adapted from <a class="reference external" href="https://bitbucket.org/zzzeek/sqlalchemy/issues/3850/request-sqlite-json1-ext-support">https://bitbucket.org/zzzeek/sqlalchemy/issues/3850/request-sqlite-json1-ext-support</a>.</p>
-<dl class="class">
-<dt id="events.services.classic.tests.SQLiteJson.Comparator">
-<em class="property">class </em><code class="descname">Comparator</code><span class="sig-paren">(</span><em>expr</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/services/classic/tests.html#SQLiteJson.Comparator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.tests.SQLiteJson.Comparator" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">sqlalchemy.sql.sqltypes.Comparator</span></code></p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="events.services.classic.tests.SQLiteJson.comparator_factory">
-<code class="descname">comparator_factory</code><a class="headerlink" href="#events.services.classic.tests.SQLiteJson.comparator_factory" title="Permalink to this definition">¶</a></dt>
-<dd><p>alias of <a class="reference internal" href="#events.services.classic.tests.SQLiteJson.Comparator" title="events.services.classic.tests.SQLiteJson.Comparator"><code class="xref py py-class docutils literal"><span class="pre">Comparator</span></code></a></p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="events.services.classic.tests.SQLiteJson.impl">
-<code class="descname">impl</code><a class="headerlink" href="#events.services.classic.tests.SQLiteJson.impl" title="Permalink to this definition">¶</a></dt>
-<dd><p>alias of <code class="xref py py-class docutils literal"><span class="pre">String</span></code></p>
-</dd></dl>
-
-<dl class="method">
-<dt id="events.services.classic.tests.SQLiteJson.process_bind_param">
-<code class="descname">process_bind_param</code><span class="sig-paren">(</span><em>value</em>, <em>dialect</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/services/classic/tests.html#SQLiteJson.process_bind_param"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.tests.SQLiteJson.process_bind_param" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="events.services.classic.tests.SQLiteJson.process_result_value">
-<code class="descname">process_result_value</code><span class="sig-paren">(</span><em>value</em>, <em>dialect</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/services/classic/tests.html#SQLiteJson.process_result_value"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.tests.SQLiteJson.process_result_value" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="class">
 <dt id="events.services.classic.tests.TestGetLicenses">
 <em class="property">class </em><code class="descclassname">events.services.classic.tests.</code><code class="descname">TestGetLicenses</code><span class="sig-paren">(</span><em>methodName='runTest'</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/services/classic/tests.html#TestGetLicenses"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.tests.TestGetLicenses" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">unittest.case.TestCase</span></code></p>
 <p>Test <a class="reference internal" href="#events.services.classic.get_licenses" title="events.services.classic.get_licenses"><code class="xref py py-func docutils literal"><span class="pre">classic.get_licenses()</span></code></a>.</p>
 <dl class="method">
 <dt id="events.services.classic.tests.TestGetLicenses.test_get_all_active_licenses">
-<code class="descname">test_get_all_active_licenses</code><span class="sig-paren">(</span><em>mock__declare_event</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/services/classic/tests.html#TestGetLicenses.test_get_all_active_licenses"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.tests.TestGetLicenses.test_get_all_active_licenses" title="Permalink to this definition">¶</a></dt>
+<code class="descname">test_get_all_active_licenses</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/services/classic/tests.html#TestGetLicenses.test_get_all_active_licenses"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.tests.TestGetLicenses.test_get_all_active_licenses" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return a <a class="reference internal" href="events.domain.html#events.domain.submission.License" title="events.domain.submission.License"><code class="xref py py-class docutils literal"><span class="pre">License</span></code></a> for each active license in the db.</p>
 </dd></dl>
 
@@ -1376,19 +1370,19 @@ database will provide more confidence in this area.</p>
 <p>Test <a class="reference internal" href="#events.services.classic.get_submission" title="events.services.classic.get_submission"><code class="xref py py-func docutils literal"><span class="pre">classic.get_submission()</span></code></a>.</p>
 <dl class="method">
 <dt id="events.services.classic.tests.TestGetSubmission.test_get_submission_that_does_not_exist">
-<code class="descname">test_get_submission_that_does_not_exist</code><span class="sig-paren">(</span><em>mock__declare_event</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/services/classic/tests.html#TestGetSubmission.test_get_submission_that_does_not_exist"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.tests.TestGetSubmission.test_get_submission_that_does_not_exist" title="Permalink to this definition">¶</a></dt>
+<code class="descname">test_get_submission_that_does_not_exist</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/services/classic/tests.html#TestGetSubmission.test_get_submission_that_does_not_exist"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.tests.TestGetSubmission.test_get_submission_that_does_not_exist" title="Permalink to this definition">¶</a></dt>
 <dd><p>Test that an exception is raised when submission doesn’t exist.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="events.services.classic.tests.TestGetSubmission.test_get_submission_with_hold_and_reclass">
-<code class="descname">test_get_submission_with_hold_and_reclass</code><span class="sig-paren">(</span><em>mock__declare_event</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/services/classic/tests.html#TestGetSubmission.test_get_submission_with_hold_and_reclass"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.tests.TestGetSubmission.test_get_submission_with_hold_and_reclass" title="Permalink to this definition">¶</a></dt>
+<code class="descname">test_get_submission_with_hold_and_reclass</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/services/classic/tests.html#TestGetSubmission.test_get_submission_with_hold_and_reclass"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.tests.TestGetSubmission.test_get_submission_with_hold_and_reclass" title="Permalink to this definition">¶</a></dt>
 <dd><p>Test changes made externally are reflected in submission data.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="events.services.classic.tests.TestGetSubmission.test_get_submission_with_publish">
-<code class="descname">test_get_submission_with_publish</code><span class="sig-paren">(</span><em>mock__declare_event</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/services/classic/tests.html#TestGetSubmission.test_get_submission_with_publish"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.tests.TestGetSubmission.test_get_submission_with_publish" title="Permalink to this definition">¶</a></dt>
+<code class="descname">test_get_submission_with_publish</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/services/classic/tests.html#TestGetSubmission.test_get_submission_with_publish"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.tests.TestGetSubmission.test_get_submission_with_publish" title="Permalink to this definition">¶</a></dt>
 <dd><p>Test that publication state is reflected in submission data.</p>
 </dd></dl>
 
@@ -1401,25 +1395,25 @@ database will provide more confidence in this area.</p>
 <p>Test <a class="reference internal" href="#events.services.classic.store_events" title="events.services.classic.store_events"><code class="xref py py-func docutils literal"><span class="pre">classic.store_events()</span></code></a>.</p>
 <dl class="method">
 <dt id="events.services.classic.tests.TestStoreEvents.test_store_event">
-<code class="descname">test_store_event</code><span class="sig-paren">(</span><em>mock__declare_event</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/services/classic/tests.html#TestStoreEvents.test_store_event"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.tests.TestStoreEvents.test_store_event" title="Permalink to this definition">¶</a></dt>
+<code class="descname">test_store_event</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/services/classic/tests.html#TestStoreEvents.test_store_event"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.tests.TestStoreEvents.test_store_event" title="Permalink to this definition">¶</a></dt>
 <dd><p>Store a single event.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="events.services.classic.tests.TestStoreEvents.test_store_events_with_classification">
-<code class="descname">test_store_events_with_classification</code><span class="sig-paren">(</span><em>mock__declare_event</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/services/classic/tests.html#TestStoreEvents.test_store_events_with_classification"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.tests.TestStoreEvents.test_store_events_with_classification" title="Permalink to this definition">¶</a></dt>
+<code class="descname">test_store_events_with_classification</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/services/classic/tests.html#TestStoreEvents.test_store_events_with_classification"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.tests.TestStoreEvents.test_store_events_with_classification" title="Permalink to this definition">¶</a></dt>
 <dd><p>Store events including classification.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="events.services.classic.tests.TestStoreEvents.test_store_events_with_finalized_submission">
-<code class="descname">test_store_events_with_finalized_submission</code><span class="sig-paren">(</span><em>mock__declare_event</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/services/classic/tests.html#TestStoreEvents.test_store_events_with_finalized_submission"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.tests.TestStoreEvents.test_store_events_with_finalized_submission" title="Permalink to this definition">¶</a></dt>
+<code class="descname">test_store_events_with_finalized_submission</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/services/classic/tests.html#TestStoreEvents.test_store_events_with_finalized_submission"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.tests.TestStoreEvents.test_store_events_with_finalized_submission" title="Permalink to this definition">¶</a></dt>
 <dd><p>Store events and a finalized submission.</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="events.services.classic.tests.TestStoreEvents.test_store_events_with_metadata">
-<code class="descname">test_store_events_with_metadata</code><span class="sig-paren">(</span><em>mock__declare_event</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/services/classic/tests.html#TestStoreEvents.test_store_events_with_metadata"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.tests.TestStoreEvents.test_store_events_with_metadata" title="Permalink to this definition">¶</a></dt>
+<code class="descname">test_store_events_with_metadata</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/services/classic/tests.html#TestStoreEvents.test_store_events_with_metadata"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.tests.TestStoreEvents.test_store_events_with_metadata" title="Permalink to this definition">¶</a></dt>
 <dd><p>Store events and attendant submission with metadata.</p>
 </dd></dl>
 
@@ -1429,6 +1423,35 @@ database will provide more confidence in this area.</p>
 <dt id="events.services.classic.tests.in_memory_db">
 <code class="descclassname">events.services.classic.tests.</code><code class="descname">in_memory_db</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/services/classic/tests.html#in_memory_db"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.tests.in_memory_db" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
+
+</div>
+<div class="section" id="module-events.services.classic.util">
+<span id="events-services-classic-util-module"></span><h2>events.services.classic.util module<a class="headerlink" href="#module-events.services.classic.util" title="Permalink to this headline">¶</a></h2>
+<p>Utility classes and functions for <a class="reference internal" href="#module-events.services.classic" title="events.services.classic"><code class="xref py py-mod docutils literal"><span class="pre">events.services.classic</span></code></a>.</p>
+<dl class="class">
+<dt id="events.services.classic.util.SQLiteJSON">
+<em class="property">class </em><code class="descclassname">events.services.classic.util.</code><code class="descname">SQLiteJSON</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/services/classic/util.html#SQLiteJSON"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.util.SQLiteJSON" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">sqlalchemy.sql.type_api.TypeDecorator</span></code></p>
+<p>A SQLite-friendly JSON data type.</p>
+<dl class="attribute">
+<dt id="events.services.classic.util.SQLiteJSON.impl">
+<code class="descname">impl</code><a class="headerlink" href="#events.services.classic.util.SQLiteJSON.impl" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <code class="xref py py-class docutils literal"><span class="pre">TEXT</span></code></p>
+</dd></dl>
+
+<dl class="method">
+<dt id="events.services.classic.util.SQLiteJSON.process_bind_param">
+<code class="descname">process_bind_param</code><span class="sig-paren">(</span><em>value: typing.Union[dict, NoneType], dialect: str</em><span class="sig-paren">)</span> &#x2192; str<a class="reference internal" href="../../_modules/events/services/classic/util.html#SQLiteJSON.process_bind_param"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.util.SQLiteJSON.process_bind_param" title="Permalink to this definition">¶</a></dt>
+<dd><p>Serialize a dict to JSON.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="events.services.classic.util.SQLiteJSON.process_result_value">
+<code class="descname">process_result_value</code><span class="sig-paren">(</span><em>value: str</em>, <em>dialect: str</em><span class="sig-paren">)</span> &#x2192; typing.Union[dict, NoneType]<a class="reference internal" href="../../_modules/events/services/classic/util.html#SQLiteJSON.process_result_value"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.util.SQLiteJSON.process_result_value" title="Permalink to this definition">¶</a></dt>
+<dd><p>Deserialize JSON content to a dict.</p>
+</dd></dl>
+
+</dd></dl>
 
 </div>
 </div>
@@ -1453,24 +1476,25 @@ database will provide more confidence in this area.</p>
 <li class="toctree-l1"><a class="reference internal" href="../../architecture.html">Submission &amp; moderation subsystem architecture</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../publication_process.html">Submission &amp; Publication Process</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../submission_api_context.html">Submission API: Context</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="events.html">Submission core events package</a><ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="events.html">events package</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="events.html#using-events">Using events</a></li>
 <li class="toctree-l2 current"><a class="reference internal" href="events.html#subpackages">Subpackages</a></li>
 <li class="toctree-l2"><a class="reference internal" href="events.html#submodules">Submodules</a></li>
-<li class="toctree-l2"><a class="reference internal" href="events.html#module-events.context">events.context module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="events.html#module-events.exceptions">events.exceptions module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="events.html#module-events.tests">events.tests module</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="../api/api.html">api package</a></li>
 </ul>
 
 <div class="relations">
 <h3>Related Topics</h3>
 <ul>
   <li><a href="../../index.html">Documentation overview</a><ul>
-  <li><a href="events.html">Submission core events package</a><ul>
+  <li><a href="events.html">events package</a><ul>
   <li><a href="events.services.html">events.services package</a><ul>
       <li>Previous: <a href="events.services.html" title="previous chapter">events.services package</a></li>
+      <li>Next: <a href="../api/api.html" title="next chapter">api package</a></li>
   </ul></li>
   </ul></li>
   </ul></li>

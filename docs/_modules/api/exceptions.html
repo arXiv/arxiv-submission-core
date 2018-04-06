@@ -5,7 +5,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>events &#8212; arXiv submission &amp; moderation 0.1 documentation</title>
+    <title>api.exceptions &#8212; arXiv submission &amp; moderation 0.1 documentation</title>
     <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
     <script type="text/javascript">
@@ -38,41 +38,10 @@
         <div class="bodywrapper">
           <div class="body" role="main">
             
-  <div class="section" id="events">
-<h1>events<a class="headerlink" href="#events" title="Permalink to this headline">¶</a></h1>
-<div class="toctree-wrapper compound">
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="events.html">events package</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="events.html#using-events">Using events</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="events.html#special-case-creation">Special case: creation</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="events.html#subpackages">Subpackages</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="events.domain.html">events.domain package</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="events.domain.html#submodules">Submodules</a></li>
-<li class="toctree-l4"><a class="reference internal" href="events.domain.html#module-events.domain.agent">events.domain.agent module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="events.domain.html#module-events.domain.event">events.domain.event module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="events.domain.html#module-events.domain.rule">events.domain.rule module</a></li>
-<li class="toctree-l4"><a class="reference internal" href="events.domain.html#module-events.domain.submission">events.domain.submission module</a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="events.services.html">events.services package</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="events.services.html#subpackages">Subpackages</a></li>
-<li class="toctree-l4"><a class="reference internal" href="events.services.html#submodules">Submodules</a></li>
-<li class="toctree-l4"><a class="reference internal" href="events.services.html#module-events.services.notification">events.services.notification module</a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="events.html#submodules">Submodules</a></li>
-<li class="toctree-l2"><a class="reference internal" href="events.html#module-events.exceptions">events.exceptions module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="events.html#module-events.tests">events.tests module</a></li>
-</ul>
-</li>
-</ul>
-</div>
-</div>
-
+  <h1>Source code for api.exceptions</h1><div class="highlight"><pre>
+<div class="viewcode-block" id="ValidationError"><a class="viewcode-back" href="../../containers/api/api.html#api.exceptions.ValidationError">[docs]</a><span></span><span class="k">class</span> <span class="nc">ValidationError</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">):</span>
+    <span class="k">pass</span></div>
+</pre></div>
 
           </div>
         </div>
@@ -93,14 +62,16 @@
 <li class="toctree-l1"><a class="reference internal" href="../../architecture.html">Submission &amp; moderation subsystem architecture</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../publication_process.html">Submission &amp; Publication Process</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../submission_api_context.html">Submission API: Context</a></li>
-<li class="toctree-l1"><a class="reference internal" href="events.html">events package</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../api/api.html">api package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../containers/core/events.html">events package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../containers/api/api.html">api package</a></li>
 </ul>
 
 <div class="relations">
 <h3>Related Topics</h3>
 <ul>
   <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  </ul></li>
   </ul></li>
 </ul>
 </div>
@@ -125,9 +96,6 @@
       Powered by <a href="http://sphinx-doc.org/">Sphinx 1.6.3</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
       
-      |
-      <a href="../../_sources/containers/core/modules.rst.txt"
-          rel="nofollow">Page source</a>
     </div>
 
     

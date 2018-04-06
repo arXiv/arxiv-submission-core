@@ -39,11 +39,35 @@
           <div class="body" role="main">
             
   <h1>Source code for events.services.classic</h1><div class="highlight"><pre>
-<span></span><span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Generator</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Union</span>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Integration with the classic database to persist events and submission state.</span>
+
+<span class="sd">As part of the classic renewal strategy, development of new submission</span>
+<span class="sd">interfaces must maintain data interoperability with classic components. This</span>
+<span class="sd">service module must therefore do two main things:</span>
+
+<span class="sd">1. Store and provide access to event data generated during the submission</span>
+<span class="sd">   process, and</span>
+<span class="sd">2. Keep the classic database tables up to date so that &quot;downstream&quot; components</span>
+<span class="sd">   can continue to operate. Since classic components work directly on</span>
+<span class="sd">   submission tables, persisting events and resulting submission state must</span>
+<span class="sd">   occur in the same transaction.</span>
+
+<span class="sd">An additional challenge is representing changes to submission state made by</span>
+<span class="sd">classic components, since those changes will be made directly to submission</span>
+<span class="sd">tables and not involve event-generation. See :func:`get_submission` for</span>
+<span class="sd">details.</span>
+
+<span class="sd">ORM representations of the classic database tables involved in submission</span>
+<span class="sd">are located in :mod:`.classic.models`. An additional model, :class:`.DBEvent`,</span>
+<span class="sd">is defined in the current module.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Generator</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Tuple</span>
 <span class="kn">from</span> <span class="nn">contextlib</span> <span class="k">import</span> <span class="n">contextmanager</span>
 
 <span class="kn">from</span> <span class="nn">flask</span> <span class="k">import</span> <span class="n">Flask</span>
-<span class="kn">from</span> <span class="nn">sqlalchemy</span> <span class="k">import</span> <span class="n">JSON</span><span class="p">,</span> <span class="n">Column</span><span class="p">,</span> <span class="n">String</span><span class="p">,</span> <span class="n">DateTime</span><span class="p">,</span> <span class="n">ForeignKey</span><span class="p">,</span> \
+<span class="kn">from</span> <span class="nn">sqlalchemy</span> <span class="k">import</span> <span class="n">Column</span><span class="p">,</span> <span class="n">String</span><span class="p">,</span> <span class="n">DateTime</span><span class="p">,</span> <span class="n">ForeignKey</span><span class="p">,</span> \
     <span class="n">create_engine</span>
 <span class="kn">from</span> <span class="nn">sqlalchemy.ext.indexable</span> <span class="k">import</span> <span class="n">index_property</span>
 <span class="kn">from</span> <span class="nn">sqlalchemy.orm</span> <span class="k">import</span> <span class="n">relationship</span>
@@ -55,19 +79,43 @@
 <span class="kn">from</span> <span class="nn">events.domain.event</span> <span class="k">import</span> <span class="n">Event</span><span class="p">,</span> <span class="n">event_factory</span>
 <span class="kn">from</span> <span class="nn">events.domain.submission</span> <span class="k">import</span> <span class="n">License</span><span class="p">,</span> <span class="n">Submission</span>
 <span class="kn">from</span> <span class="nn">events.domain.agent</span> <span class="k">import</span> <span class="n">User</span><span class="p">,</span> <span class="n">Client</span><span class="p">,</span> <span class="n">Agent</span>
-<span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">models</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">models</span><span class="p">,</span> <span class="n">util</span>
 <span class="kn">from</span> <span class="nn">.models</span> <span class="k">import</span> <span class="n">Base</span>
-<span class="kn">from</span> <span class="nn">.exceptions</span> <span class="k">import</span> <span class="n">NoSuchSubmission</span>
-<span class="kn">from</span> <span class="nn">events.context</span> <span class="k">import</span> <span class="n">get_application_config</span><span class="p">,</span> <span class="n">get_application_global</span>
-
-<span class="n">DBEvent</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="kn">from</span> <span class="nn">.exceptions</span> <span class="k">import</span> <span class="n">NoSuchSubmission</span><span class="p">,</span> <span class="n">CommitFailed</span>
+<span class="kn">from</span> <span class="nn">arxiv.base.globals</span> <span class="k">import</span> <span class="n">get_application_config</span><span class="p">,</span> <span class="n">get_application_global</span>
 
 
-<div class="viewcode-block" id="DBEventMixin"><a class="viewcode-back" href="../../../containers/core/events.services.classic.html#events.services.classic.DBEventMixin">[docs]</a><span class="k">class</span> <span class="nc">DBEventMixin</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Provides data transformation methods for the event db model.&quot;&quot;&quot;</span>
+<div class="viewcode-block" id="DBEvent"><a class="viewcode-back" href="../../../containers/core/events.services.classic.html#events.services.classic.DBEvent">[docs]</a><span class="k">class</span> <span class="nc">DBEvent</span><span class="p">(</span><span class="n">Base</span><span class="p">):</span>  <span class="c1"># type: ignore</span>
+    <span class="sd">&quot;&quot;&quot;Database representation of an :class:`.Event`.&quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="DBEventMixin.to_event"><a class="viewcode-back" href="../../../containers/core/events.services.classic.html#events.services.classic.DBEventMixin.to_event">[docs]</a>    <span class="k">def</span> <span class="nf">to_event</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Event</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Instantiate an :class:`.Event` using event data from the db.&quot;&quot;&quot;</span>
+    <span class="n">__tablename__</span> <span class="o">=</span> <span class="s1">&#39;event&#39;</span>
+
+    <span class="n">event_id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">String</span><span class="p">(</span><span class="mi">40</span><span class="p">),</span> <span class="n">primary_key</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">event_type</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">String</span><span class="p">(</span><span class="mi">255</span><span class="p">))</span>
+    <span class="n">proxy</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">FriendlyJSON</span><span class="p">)</span>
+    <span class="n">proxy_id</span> <span class="o">=</span> <span class="n">index_property</span><span class="p">(</span><span class="s1">&#39;proxy&#39;</span><span class="p">,</span> <span class="s1">&#39;agent_identifier&#39;</span><span class="p">)</span>
+
+    <span class="n">creator</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">FriendlyJSON</span><span class="p">)</span>
+    <span class="n">creator_id</span> <span class="o">=</span> <span class="n">index_property</span><span class="p">(</span><span class="s1">&#39;creator&#39;</span><span class="p">,</span> <span class="s1">&#39;agent_identifier&#39;</span><span class="p">)</span>
+
+    <span class="n">created</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">DateTime</span><span class="p">)</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">FriendlyJSON</span><span class="p">)</span>
+    <span class="n">submission_id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span>
+        <span class="n">ForeignKey</span><span class="p">(</span><span class="s1">&#39;arXiv_submissions.submission_id&#39;</span><span class="p">),</span>
+        <span class="n">index</span><span class="o">=</span><span class="kc">True</span>
+    <span class="p">)</span>
+
+    <span class="n">submission</span> <span class="o">=</span> <span class="n">relationship</span><span class="p">(</span><span class="s2">&quot;Submission&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="DBEvent.to_event"><a class="viewcode-back" href="../../../containers/core/events.services.classic.html#events.services.classic.DBEvent.to_event">[docs]</a>    <span class="k">def</span> <span class="nf">to_event</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Event</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Instantiate an :class:`.Event` using event data from this instance.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :class:`.Event`</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">_skip</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;creator&#39;</span><span class="p">,</span> <span class="s1">&#39;proxy&#39;</span><span class="p">,</span> <span class="s1">&#39;submission_id&#39;</span><span class="p">,</span> <span class="s1">&#39;created&#39;</span><span class="p">,</span> <span class="s1">&#39;event_type&#39;</span><span class="p">]</span>
         <span class="n">data</span> <span class="o">=</span> <span class="p">{</span>
             <span class="n">key</span><span class="p">:</span> <span class="n">value</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
@@ -93,7 +141,7 @@
         <span class="n">session</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
     <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
         <span class="n">session</span><span class="o">.</span><span class="n">rollback</span><span class="p">()</span>
-        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;Ack! </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">e</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span></div>
+        <span class="k">raise</span> <span class="n">CommitFailed</span><span class="p">(</span><span class="s1">&#39;Failed to commit transaction&#39;</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span></div>
 
 
 <div class="viewcode-block" id="get_licenses"><a class="viewcode-back" href="../../../containers/core/events.services.classic.html#events.services.classic.get_licenses">[docs]</a><span class="k">def</span> <span class="nf">get_licenses</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">License</span><span class="p">]:</span>
@@ -114,7 +162,13 @@
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    list</span>
-<span class="sd">        Items are :class:`.Event` instances loaded from the db.</span>
+<span class="sd">        Items are :class:`.Event` instances loaded from the class DB.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    :class:`.NoSuchSubmission`</span>
+<span class="sd">        Raised when there are no events for the provided submission ID.</span>
+
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">with</span> <span class="n">transaction</span><span class="p">()</span> <span class="k">as</span> <span class="n">session</span><span class="p">:</span>
         <span class="n">event_data</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">DBEvent</span><span class="p">)</span> \
@@ -125,7 +179,7 @@
         <span class="k">return</span> <span class="p">[</span><span class="n">datum</span><span class="o">.</span><span class="n">to_event</span><span class="p">()</span> <span class="k">for</span> <span class="n">datum</span> <span class="ow">in</span> <span class="n">event_data</span><span class="p">]</span></div>
 
 
-<div class="viewcode-block" id="get_submission"><a class="viewcode-back" href="../../../containers/core/events.services.classic.html#events.services.classic.get_submission">[docs]</a><span class="k">def</span> <span class="nf">get_submission</span><span class="p">(</span><span class="n">submission_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Submission</span><span class="p">:</span>
+<div class="viewcode-block" id="get_submission"><a class="viewcode-back" href="../../../containers/core/events.services.classic.html#events.services.classic.get_submission">[docs]</a><span class="k">def</span> <span class="nf">get_submission</span><span class="p">(</span><span class="n">submission_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Submission</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Event</span><span class="p">]]:</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Get the current state of a :class:`.Submission` from the database.</span>
 
@@ -163,7 +217,7 @@
         <span class="n">data</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">submission_id</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">data</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">NoSuchSubmission</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;Submission </span><span class="si">{submission_id}</span><span class="s1"> not found&#39;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">data</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">submission</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">data</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">submission</span><span class="p">),</span> <span class="n">events</span></div>
 
 
 <div class="viewcode-block" id="store_events"><a class="viewcode-back" href="../../../containers/core/events.services.classic.html#events.services.classic.store_events">[docs]</a><span class="k">def</span> <span class="nf">store_events</span><span class="p">(</span><span class="o">*</span><span class="n">events</span><span class="p">:</span> <span class="n">Event</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Submission</span><span class="p">:</span>
@@ -237,8 +291,6 @@
 <span class="c1"># TODO: consider making this private.</span>
 <div class="viewcode-block" id="get_session"><a class="viewcode-back" href="../../../containers/core/events.services.classic.html#events.services.classic.get_session">[docs]</a><span class="k">def</span> <span class="nf">get_session</span><span class="p">(</span><span class="n">app</span><span class="p">:</span> <span class="nb">object</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Session</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;Get a new :class:`.Session`.&quot;&quot;&quot;</span>
-    <span class="k">global</span> <span class="n">DBEvent</span>
-    <span class="n">DBEvent</span> <span class="o">=</span> <span class="n">_declare_event</span><span class="p">()</span>
     <span class="n">engine</span> <span class="o">=</span> <span class="n">current_engine</span><span class="p">()</span>
     <span class="k">return</span> <span class="n">sessionmaker</span><span class="p">(</span><span class="n">bind</span><span class="o">=</span><span class="n">engine</span><span class="p">)()</span></div>
 
@@ -273,36 +325,18 @@
     <span class="n">Base</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">drop_all</span><span class="p">(</span><span class="n">current_engine</span><span class="p">())</span></div>
 
 
-<span class="c1"># TODO: find a better way!</span>
-<span class="k">def</span> <span class="nf">_declare_event</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">type</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Define DBEvent model.</span>
-
-<span class="sd">    This is deferred until runtime so that we can inject an alternate model</span>
-<span class="sd">    for testing. This is less than ideal, but (so far) appears to be the only</span>
-<span class="sd">    way to effectively replace column data types, which we need in order to</span>
-<span class="sd">    use JSON columns with SQLite.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">class</span> <span class="nc">DBEvent</span><span class="p">(</span><span class="n">Base</span><span class="p">,</span> <span class="n">DBEventMixin</span><span class="p">):</span>  <span class="c1"># type: ignore</span>
-        <span class="n">__tablename__</span> <span class="o">=</span> <span class="s1">&#39;event&#39;</span>
-
-        <span class="n">event_id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">String</span><span class="p">(</span><span class="mi">40</span><span class="p">),</span> <span class="n">primary_key</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-        <span class="n">event_type</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">String</span><span class="p">(</span><span class="mi">255</span><span class="p">))</span>
-        <span class="n">proxy</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">JSON</span><span class="p">)</span>
-        <span class="n">proxy_id</span> <span class="o">=</span> <span class="n">index_property</span><span class="p">(</span><span class="s1">&#39;proxy&#39;</span><span class="p">,</span> <span class="s1">&#39;agent_identifier&#39;</span><span class="p">)</span>
-
-        <span class="n">creator</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">JSON</span><span class="p">)</span>
-        <span class="n">creator_id</span> <span class="o">=</span> <span class="n">index_property</span><span class="p">(</span><span class="s1">&#39;creator&#39;</span><span class="p">,</span> <span class="s1">&#39;agent_identifier&#39;</span><span class="p">)</span>
-
-        <span class="n">created</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">DateTime</span><span class="p">)</span>
-        <span class="n">data</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">JSON</span><span class="p">)</span>
-        <span class="n">submission_id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span>
-            <span class="n">ForeignKey</span><span class="p">(</span><span class="s1">&#39;arXiv_submissions.submission_id&#39;</span><span class="p">),</span>
-            <span class="n">index</span><span class="o">=</span><span class="kc">True</span>
-        <span class="p">)</span>
-
-        <span class="n">submission</span> <span class="o">=</span> <span class="n">relationship</span><span class="p">(</span><span class="s2">&quot;Submission&quot;</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">DBEvent</span>
+<span class="c1"># # TODO: find a better way!</span>
+<span class="c1"># def _declare_event() -&gt; type:</span>
+<span class="c1">#     &quot;&quot;&quot;</span>
+<span class="c1">#     Define DBEvent model.</span>
+<span class="c1">#</span>
+<span class="c1">#     This is deferred until runtime so that we can inject an alternate model</span>
+<span class="c1">#     for testing. This is less than ideal, but (so far) appears to be the only</span>
+<span class="c1">#     way to effectively replace column data types, which we need in order to</span>
+<span class="c1">#     use JSON columns with SQLite.</span>
+<span class="c1">#     &quot;&quot;&quot;</span>
+<span class="c1">#</span>
+<span class="c1">#     return DBEvent</span>
 </pre></div>
 
           </div>
@@ -324,7 +358,8 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../architecture.html">Submission &amp; moderation subsystem architecture</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../publication_process.html">Submission &amp; Publication Process</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../submission_api_context.html">Submission API: Context</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../containers/core/events.html">Submission core events package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../containers/core/events.html">events package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../containers/api/api.html">api package</a></li>
 </ul>
 
 <div class="relations">
