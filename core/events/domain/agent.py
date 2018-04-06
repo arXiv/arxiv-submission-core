@@ -57,7 +57,8 @@ class Agent:
             return False
         return self.agent_identifier == other.agent_identifier
 
-    def to_dict(self):
+    def to_dict(self) -> dict:
+        """Generate a dict representation of this :class:`.Agent`."""
         return {
             'native_id': self.native_id,
             'agent_type': self.agent_type,

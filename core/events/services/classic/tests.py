@@ -15,11 +15,6 @@ from datetime import datetime
 from contextlib import contextmanager
 import json
 
-from sqlalchemy import TypeDecorator, func, String, Column
-from sqlalchemy import JSON, DateTime, ForeignKey
-from sqlalchemy.types import NullType
-from sqlalchemy.orm import relationship
-from sqlalchemy.ext.indexable import index_property
 from flask import Flask
 
 from events.domain.agent import User
@@ -31,46 +26,6 @@ from events.domain.event import CreateSubmissionEvent, UpdateMetadataEvent, \
     VerifyContactInformationEvent
 from events.domain.agent import User
 from events.services import classic
-
-
-class SQLiteJson(TypeDecorator):
-    """
-    SQLite-friendly implementation of a JSON type.
-
-    Adapted from https://bitbucket.org/zzzeek/sqlalchemy/issues/3850/request-sqlite-json1-ext-support.
-    """
-
-    impl = String
-
-    class Comparator(String.Comparator):
-        def __getitem__(self, index):
-            if isinstance(index, tuple):
-                index = "$%s" % (
-                    "".join([
-                        "[%s]" % elem if isinstance(elem, int)
-                        else '."%s"' % elem for elem in index
-                    ])
-                )
-            elif isinstance(index, int):
-                index = "$[%s]" % index
-            else:
-                index = '$."%s"' % index
-
-            # json_extract does not appear to return JSON sub-elements
-            # which is weird.
-            return func.json_extract(self.expr, index, type_=NullType)
-
-    comparator_factory = Comparator
-
-    def process_bind_param(self, value, dialect):
-        if value is not None:
-            value = json.dumps(value)
-        return value
-
-    def process_result_value(self, value, dialect):
-        if value is not None:
-            value = json.loads(value)
-        return value
 
 
 @contextmanager
@@ -90,36 +45,12 @@ def in_memory_db():
             classic.drop_all()
 
 
-class MockEvent(classic.Base, classic.DBEventMixin):
-    """SQLite-friendly alternative for DBEvent model."""
-
-    __tablename__ = 'event'
-
-    event_id = Column(String(40), primary_key=True)
-    event_type = Column(String(255))
-    proxy = Column(SQLiteJson)
-    proxy_id = index_property('proxy', 'agent_identifier')
-
-    creator = Column(SQLiteJson)
-    creator_id = index_property('creator', 'agent_identifier')
-
-    created = Column(DateTime)
-    data = Column(SQLiteJson)
-    submission_id = Column(
-        ForeignKey('arXiv_submissions.submission_id'),
-        index=True
-    )
-    submission = relationship("Submission")
-
-
 class TestGetLicenses(TestCase):
     """Test :func:`.classic.get_licenses`."""
 
-    # @mock.patch('events.services.classic.JSON', new=SQLiteJson)
-    @mock.patch('events.services.classic._declare_event')
-    def test_get_all_active_licenses(self, mock__declare_event):
+    def test_get_all_active_licenses(self):
         """Return a :class:`.License` for each active license in the db."""
-        mock__declare_event.return_value = MockEvent
+        # mock_util.json_factory.return_value = SQLiteJSON
 
         with in_memory_db() as session:
             session.add(classic.models.License(
@@ -152,11 +83,8 @@ class TestGetLicenses(TestCase):
 class TestStoreEvents(TestCase):
     """Test :func:`.classic.store_events`."""
 
-    @mock.patch('events.services.classic._declare_event')
-    def test_store_event(self, mock__declare_event):
+    def test_store_event(self):
         """Store a single event."""
-        mock__declare_event.return_value = MockEvent
-
         with in_memory_db() as session:
             user = User(12345)
             ev = CreateSubmissionEvent(creator=user)
@@ -175,11 +103,8 @@ class TestStoreEvents(TestCase):
                          "Submission in database should be in status 0 (not"
                          " submitted) by default.")
 
-    @mock.patch('events.services.classic._declare_event')
-    def test_store_events_with_metadata(self, mock__declare_event):
+    def test_store_events_with_metadata(self):
         """Store events and attendant submission with metadata."""
-        mock__declare_event.return_value = MockEvent
-
         metadata = {
             'title': 'foo title',
             'abstract': 'very abstract',
@@ -220,11 +145,8 @@ class TestStoreEvents(TestCase):
             self.assertEqual(db_event.submission_id, submission.submission_id,
                              "The submission id should be set")
 
-    @mock.patch('events.services.classic._declare_event')
-    def test_store_events_with_finalized_submission(self, mock__declare_event):
+    def test_store_events_with_finalized_submission(self):
         """Store events and a finalized submission."""
-        mock__declare_event.return_value = MockEvent
-
         with in_memory_db() as session:
             user = User(12345)
             ev = CreateSubmissionEvent(creator=user)
@@ -244,11 +166,8 @@ class TestStoreEvents(TestCase):
             self.assertEqual(db_event.submission_id, submission.submission_id,
                              "The submission id should be set")
 
-    @mock.patch('events.services.classic._declare_event')
-    def test_store_events_with_classification(self, mock__declare_event):
+    def test_store_events_with_classification(self):
         """Store events including classification."""
-        mock__declare_event.return_value = MockEvent
-
         user = User(12345)
         ev = CreateSubmissionEvent(creator=user)
         ev2 = SetPrimaryClassificationEvent(creator=user,
@@ -283,19 +202,14 @@ class TestStoreEvents(TestCase):
 class TestGetSubmission(TestCase):
     """Test :func:`.classic.get_submission`."""
 
-    @mock.patch('events.services.classic._declare_event')
-    def test_get_submission_that_does_not_exist(self, mock__declare_event):
+    def test_get_submission_that_does_not_exist(self):
         """Test that an exception is raised when submission doesn't exist."""
-        mock__declare_event.return_value = MockEvent
         with in_memory_db():
             with self.assertRaises(classic.exceptions.NoSuchSubmission):
                 classic.get_submission(1)
 
-    @mock.patch('events.services.classic._declare_event')
-    def test_get_submission_with_publish(self, mock__declare_event):
+    def test_get_submission_with_publish(self):
         """Test that publication state is reflected in submission data."""
-        mock__declare_event.return_value = MockEvent
-
         user = User(12345)
         events = [
             CreateSubmissionEvent(creator=user),
@@ -337,7 +251,7 @@ class TestGetSubmission(TestCase):
             session.commit()
 
             # Now get the submission.
-            submission_loaded = classic.get_submission(ident)
+            submission_loaded, _ = classic.get_submission(ident)
 
         self.assertEqual(submission.metadata.title,
                          submission_loaded.metadata.title,
@@ -347,11 +261,8 @@ class TestGetSubmission(TestCase):
         self.assertEqual(submission_loaded.status, Submission.PUBLISHED,
                          "Submission status should reflect publish action")
 
-    @mock.patch('events.services.classic._declare_event')
-    def test_get_submission_with_hold_and_reclass(self, mock__declare_event):
+    def test_get_submission_with_hold_and_reclass(self):
         """Test changes made externally are reflected in submission data."""
-        mock__declare_event.return_value = MockEvent
-
         user = User(12345)
         events = [
             CreateSubmissionEvent(creator=user),
@@ -396,7 +307,7 @@ class TestGetSubmission(TestCase):
             session.commit()
 
             # Now get the submission.
-            submission_loaded = classic.get_submission(ident)
+            submission_loaded, _ = classic.get_submission(ident)
 
         self.assertEqual(submission.metadata.title,
                          submission_loaded.metadata.title,

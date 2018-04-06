@@ -42,15 +42,23 @@ class Event:
     This should generally not be set from outside this package.
     """
 
-    proxy: Optional[Agent] = None
+    proxy: Optional[Agent] = field(default=None)
     """
     The agent who facilitated the operation on behalf of the :prop:`.creator`.
 
     This may be an API client, or another user who has been designated as a
-    proxy.
+    proxy. Note that proxy implies that the creator was not directly involved.
     """
 
-    submission_id: Optional[int] = None
+    client: Optional[Agent] = field(default=None)
+    """
+    The client through which the :prop:`.creator` performed the operation.
+
+    If the creator was directly involved in the operation, this property should
+    be the client that facilitated the operation.
+    """
+
+    submission_id: Optional[int] = field(default=None)
     """
     The primary identifier of the submission being operated upon.
 
@@ -58,7 +66,7 @@ class Event:
     chaining of events with creation events in the same transaction.
     """
 
-    committed: bool = False
+    committed: bool = field(default=False)
     """
     Indicates whether the event has been committed to the database.
 
@@ -118,7 +126,8 @@ class CreateSubmissionEvent(Event):
     def project(self) -> Submission:
         """Create a new :class:`.Submission`."""
         return Submission(creator=self.creator, created=self.created,
-                          owner=self.creator, proxy=self.proxy)
+                          owner=self.creator, proxy=self.proxy,
+                          client=self.client)
 
 
 @dataclass(init=False)
@@ -187,7 +196,7 @@ class SetPrimaryClassificationEvent(Event):
 class AddSecondaryClassificationEvent(Event):
     """Add a secondary :class:`.Classification` to a submission."""
 
-    category: Optional[str] = None
+    category: Optional[str] = field(default=None)
 
     def validate(self, submission: Submission) -> None:
         """All three fields must be set."""
@@ -208,7 +217,7 @@ class AddSecondaryClassificationEvent(Event):
 class RemoveSecondaryClassificationEvent(Event):
     """Remove secondary :class:`.Classification` from submission."""
 
-    category: Optional[str] = None
+    category: Optional[str] = field(default=None)
 
     def validate(self, submission: Submission) -> None:
         """All three fields must be set."""
@@ -230,8 +239,8 @@ class RemoveSecondaryClassificationEvent(Event):
 class SelectLicenseEvent(Event):
     """The submitter has selected a license for their submission."""
 
-    license_name: Optional[str] = None
-    license_uri: Optional[str] = None
+    license_name: Optional[str] = field(default=None)
+    license_uri: Optional[str] = field(default=None)
 
     def project(self, submission: Submission) -> Submission:
         """Set :prop:`.Submission.license`."""

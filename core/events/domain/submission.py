@@ -16,6 +16,10 @@ class Classification:
 
     category: str
 
+    def to_dict(self) -> dict:
+        """Generate a dict representation of this :class:`.Classification`."""
+        return asdict(self)
+
 
 @dataclass
 class License:
@@ -23,6 +27,10 @@ class License:
 
     uri: str
     name: Optional[str] = None
+
+    def to_dict(self) -> dict:
+        """Generate a dict representation of this :class:`.License`."""
+        return asdict(self)
 
 
 @dataclass
@@ -57,6 +65,12 @@ class Author:
             return "%s (%s)" % (self.name, self.affiliation)
         return name
 
+    def to_dict(self) -> dict:
+        """Generate a dict representation of this :class:`.Author`."""
+        data = asdict(self)
+        data['canonical'] = self.canonical
+        return data
+
 
 @dataclass
 class SubmissionContent:
@@ -66,6 +80,10 @@ class SubmissionContent:
     content_type: str
     checksum: str
     upload_id: int
+
+    def to_dict(self) -> dict:
+        """Generate dict representation of this :class:`.SubmissionContent`."""
+        return asdict(self)
 
 
 @dataclass
@@ -85,10 +103,21 @@ class SubmissionMetadata:
 
     comments: str = field(default_factory=str)
 
+    FIELDS = [
+        'title', 'abstract', 'authors', 'doi', 'msc_class', 'acm_class',
+        'report_num', 'journal_ref'
+    ]
+
     @property
     def authors_canonical(self):
         """Canonical representation of submission authors."""
         return ", ".join([au.canonical for au in self.authors])
+
+    def to_dict(self) -> dict:
+        """Generate dict representation of :class:`.SubmissionMetadata`."""
+        data = asdict(self)
+        data['authors_canonical'] = self.authors_canonical
+        return data
 
 
 @dataclass
@@ -107,6 +136,12 @@ class Delegation:
                                 self.creator.agent_identifier,
                                 self.created.isodate()))
         return h.hexdigest()
+
+    def to_dict(self) -> dict:
+        """Generate a dict representation of this :class:`.Delegation`."""
+        data = asdict(self)
+        data['delegation_id'] = self.delegation_id
+        return data
 
 
 @dataclass
@@ -128,6 +163,7 @@ class Submission:
     primary_classification: Optional[Classification] = None
     delegations: Dict[str, Delegation] = field(default_factory=dict)
     proxy: Optional[Agent] = field(default=None)
+    client: Optional[Agent] = field(default=None)
     submission_id: Optional[int] = field(default=None)
     metadata: SubmissionMetadata = field(default_factory=SubmissionMetadata)
     active: bool = field(default=True)
@@ -149,6 +185,7 @@ class Submission:
     """The published arXiv paper ID."""
 
     def to_dict(self) -> dict:
+        """Generate a dict representation of this :class:`.Submission`."""
         data = asdict(self)
         data.update({
             'creator': self.creator.to_dict(),
@@ -156,7 +193,8 @@ class Submission:
             'created': self.created.isoformat(),
         })
         if self.primary_classification:
-            data['primary_classification'] = self.primary_classification.to_dict()
+            data['primary_classification'] = \
+                self.primary_classification.to_dict()
         if self.delegations:
             data['delegations'] = {
                 key: delegation.to_dict()
@@ -168,6 +206,7 @@ class Submission:
             data['metadata'] = self.metadata.to_dict()
         if self.license:
             data['license'] = self.license.to_dict()
+        return data
 
 
 @dataclass
@@ -194,6 +233,13 @@ class Annotation:
                                 self.creator.agent_identifier.encode('utf-8')))
         return h.hexdigest()
 
+    def to_dict(self) -> dict:
+        """Generate a dict representation of this :class:`.Annotation`."""
+        data = asdict(self)
+        data['annotation_type'] = self.annotation_type
+        data['annotation_id'] = self.annotation_id
+        return data
+
 
 @dataclass
 class Proposal(Annotation):
@@ -201,6 +247,10 @@ class Proposal(Annotation):
 
     event_type: type
     event_data: dict
+
+    def to_dict(self) -> dict:
+        """Generate a dict representation of this :class:`.Proposal`."""
+        return asdict(self)
 
 
 @dataclass
@@ -213,6 +263,12 @@ class Comment(Annotation):
     def comment_id(self):
         """The unique identifier for a :class:`.Comment` instance."""
         return self.annotation_id
+
+    def to_dict(self) -> dict:
+        """Generate a dict representation of this :class:`.Comment`."""
+        data = asdict(self)
+        data['comment_id'] = self.comment_id
+        return data
 
 
 @dataclass

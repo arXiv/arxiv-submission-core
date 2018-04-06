@@ -4,7 +4,7 @@ import json
 from functools import wraps
 from datetime import datetime
 import copy
-import logging
+import logging    # TODO: use arxiv.base.logging when arxiv-base==0.5.1 is out.
 from typing import Tuple, List, Callable, Optional
 
 from flask import url_for, current_app
@@ -68,7 +68,9 @@ def _get_agents(extra: dict) -> Tuple[Optional[Agent], Optional[Agent]]:
 
 
 def _update_submission(body: dict, agents: dict) -> Submission:
-    """Generate :class:`.ev.Event`(s) to update a :class:`Submission`."""
+    """
+    Generate :class:`.ev.Event`(s) to update a :class:`Submission`.
+    """
 
     new_events = []
     if 'submitter_is_author' in body:
@@ -106,18 +108,14 @@ def _update_submission(body: dict, agents: dict) -> Submission:
     if 'metadata' in body:
         metadata = [
             (field, body['metadata'][key])
-            for field, key in METADATA_FIELDS
+            for field, key in SubmissionMetadata.FIELDS
             if key in body['metadata']
         ]
         new_events.append(ev.UpdateMetadataEvent(metadata=metadata, **agents))
     return new_events
 
 
-def _agent_is_owner(submission_id: int, agent: Agent) -> bool:
-    return agent == database.get_submission_owner(submission_id)
-
-
-def create_submission(body: dict, headers: dict, files: Optional[dict] = None,
+def create_submission(body: dict, headers: dict,
                       user: Optional[str] = None, client: Optional[str] = None,
                       token: Optional[str] = None) -> Response:
     """
@@ -131,8 +129,6 @@ def create_submission(body: dict, headers: dict, files: Optional[dict] = None,
         Deserialized compact JSON-LD document.
     headers : dict
         Request headers from the client.
-    files : dict
-        Any files attached to the submission.
     extra : dict
         Additional parameters, e.g. from the URL path.
 
@@ -180,7 +176,7 @@ def get_submission(submission_id: str, user: Optional[str] = None,
 
 
 def update_submission(submission_id: str, body: dict, headers: dict,
-                      files: dict=None, user: Optional[str] = None,
+                      user: Optional[str] = None,
                       client: Optional[str] = None,
                       token: Optional[str] = None) -> Response:
     """Update the submission."""

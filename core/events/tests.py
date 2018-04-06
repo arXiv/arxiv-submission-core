@@ -5,9 +5,11 @@ import os
 from collections import defaultdict
 from datetime import datetime, timedelta
 from flask import Flask
-from events import CreateSubmissionEvent, save, Submission, User, Event, \
+from events import save, load, Submission, User, Event, \
     UpdateMetadataEvent, EventRule, RuleCondition, RuleConsequence, \
-    CreateCommentEvent, SubmissionMetadata
+    CreateCommentEvent, SubmissionMetadata, CreateSubmissionEvent
+from events.exceptions import NoSuchSubmission, InvalidEvent
+from events.services import classic
 
 
 def mock_store_events(*events, submission):
@@ -18,6 +20,36 @@ def mock_store_events(*events, submission):
         event.committed = True
         event.submission_id = submission.submission_id
     return submission
+
+
+class TestLoad(TestCase):
+    """Test :func:`.load`."""
+
+    @mock.patch('events.classic')
+    def test_load_existant_submission(self, mock_classic):
+        """When the submission exists, submission and events are returned."""
+        u = User(12345)
+        mock_classic.get_submission.return_value = (
+            Submission(creator=u, submission_id=1, owner=u,
+                       created=datetime.now()),
+            [CreateSubmissionEvent(creator=u, submission_id=1, committed=True)]
+        )
+        submission, events = load(1)
+        self.assertEqual(mock_classic.get_submission.call_count, 1)
+        self.assertIsInstance(submission, Submission,
+                              "A submission should be returned")
+        self.assertIsInstance(events, list,
+                              "A list of events should be returned")
+        self.assertIsInstance(events[0], Event,
+                              "A list of events should be returned")
+
+    @mock.patch('events.classic')
+    def test_load_nonexistant_submission(self, mock_classic):
+        """When the submission does not exist, an exception is raised."""
+        mock_classic.get_submission.side_effect = classic.NoSuchSubmission
+        mock_classic.NoSuchSubmission = classic.NoSuchSubmission
+        with self.assertRaises(NoSuchSubmission):
+            load(1)
 
 
 class TestSave(TestCase):
@@ -58,8 +90,21 @@ class TestSave(TestCase):
         mock_database.store_events = mock_store_events
         e2 = UpdateMetadataEvent(creator=User('foouser'),
                                  metadata=[['title', 'foo']])
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(NoSuchSubmission):
             save(e2)
+
+    @mock.patch('events.classic')
+    def test_save_invalid_event(self, mock_db):
+        """An exception is raised when an invalid event is encountered."""
+        mock_db.get_events.return_value = []
+
+        class EventMock(CreateSubmissionEvent):
+            def valid(self, *args, **kwargs):
+                return False
+
+        e = EventMock(creator=User(12345), submission_id=1)
+        with self.assertRaises(InvalidEvent):
+            save(e, submission_id=1)
 
     @mock.patch('events.classic')
     def test_save_events_on_existing_submission(self, mock_db):
