@@ -1,7 +1,10 @@
 # arXiv Submission
 
 This repository houses exploratory development related to the arXiv-NG
-submission system.
+submission system. See https://cul-it.github.io/arxiv-submission-core/ for the
+latest documentation.
+
+## What's in the repo
 
 - The [events core package](core/) is provides integrations with the
   submission database and notification streams, and exposes a Python API for
