@@ -17,8 +17,10 @@ class Agent:
     An agent is an actor/system that generates/is responsible for events.
     """
 
-    native_id: Optional[str] = None
+    native_id: str
     """Type-specific identifier for the agent. This might be an URI."""
+
+    FIELDS = []
 
     @property
     def agent_type(self):
@@ -49,7 +51,7 @@ class Agent:
         native_id = data.pop('native_id', None)
         if agent_type is None and type(cls) is Agent:
             raise ValueError('agent_type not provided')
-        return agent_factory(agent_type, native_id)
+        return agent_factory(agent_type, native_id, **data)
 
     def __eq__(self, other: Any) -> bool:
         """Equality comparison for agents based on type and identifier."""
@@ -61,8 +63,7 @@ class Agent:
         """Generate a dict representation of this :class:`.Agent`."""
         return {
             'native_id': self.native_id,
-            'agent_type': self.agent_type,
-            'agent_identifier': self.agent_identifier
+            'agent_type': self.agent_type
         }
 
 
@@ -70,7 +71,32 @@ class Agent:
 class User(Agent):
     """An (human) end user."""
 
-    pass
+    email: str
+    forename: str = field(default_factory=str)
+    surname: str = field(default_factory=str)
+    suffix: str = field(default_factory=str)
+    identifier: Optional[str] = field(default=None)
+    affiliation: str = field(default_factory=str)
+
+    FIELDS = [
+        'email', 'forename', 'surname', 'suffix', 'identifier', 'affiliation'
+    ]
+
+    @property
+    def name(self):
+        return f"{self.forename} {self.surname} {self.suffix}"
+
+    def to_dict(self) -> dict:
+        """Generate a dict representation of this :class:`.User`."""
+        data = super(User, self).to_dict()
+        data['name'] = self.name
+        data['forename'] = self.name
+        data['surname'] = self.name
+        data['suffix'] = self.name
+        data['email'] = self.email
+        data['identifier'] = self.identifier
+        data['affiliation'] = self.affiliation
+        return data
 
 
 # TODO: extend this to support arXiv-internal services.
@@ -78,14 +104,14 @@ class User(Agent):
 class System(Agent):
     """The submission application (this application)."""
 
-    pass
+    FIELDS = []
 
 
 @dataclass
 class Client(Agent):
     """A non-human third party, usually an API client."""
 
-    pass
+    FIELDS = []
 
 
 _agent_types = {
@@ -95,8 +121,10 @@ _agent_types = {
 }
 
 
-def agent_factory(agent_type: str, native_id: Any) -> Agent:
+def agent_factory(agent_type: str, native_id: Any, **extra) -> Agent:
     """Instantiate a subclass of :class:`.Agent`."""
     if agent_type not in _agent_types:
         raise ValueError(f'No such agent type: {agent_type}')
-    return _agent_types[agent_type](native_id=native_id)
+    klass = _agent_types[agent_type]
+    extra = {k: v for k, v in extra.items() if k in klass.FIELDS}
+    return klass(native_id=native_id, **extra)

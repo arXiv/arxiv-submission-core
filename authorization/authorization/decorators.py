@@ -1,7 +1,8 @@
 """Provides scope-based authorization with JWT."""
 
 from functools import wraps
-from flask import g
+from flask import request, g
+from werkzeug.exceptions import Unauthorized, Forbidden
 from arxiv import status
 from . import decode_authorization_token, DecodeError, get_auth_token
 
@@ -18,19 +19,22 @@ def scoped(scope_required: str):
         def wrapper(*args, **kwargs):
             """Check the authorization token before executing the method."""
             # Attach the encrypted token so that we can use it in subrequests.
-            g.token = get_auth_token()
+            auth_data = request.environ.get('auth')
+            if auth_data is None:
+                raise Unauthorized('Missing authentication credentials')
+            scope = auth_data.get('scope')
+            user = auth_data.get('user')
+            client = auth_data.get('client')
+            token = auth_data.get('token')
 
-            try:
-                decoded = decode_authorization_token()
-                scope = decoded.get('scope')
-            except DecodeError:
-                return INVALID_TOKEN, status.HTTP_403_FORBIDDEN, {}
+            if scope is None or user is None or token is None:
+                raise Unauthorized('Missing authentication credentials')
+
             if scope_required not in scope:
-                return INVALID_SCOPE, status.HTTP_403_FORBIDDEN, {}
-            g.user = decoded.get('user')
-            g.client = decoded.get('client')
-            g.scope = scope
-
+                return Forbidden('Missing required scope')
+            g.user = user
+            g.client = client
+            g.token = token
             return func(*args, **kwargs)
         return wrapper
     return protector

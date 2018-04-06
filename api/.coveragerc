@@ -1,0 +1,7 @@
+[run]
+omit =
+    setup.py
+    docs/*
+    */test*
+    app.py
+    api/config.py

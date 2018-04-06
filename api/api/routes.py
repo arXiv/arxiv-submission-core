@@ -1,16 +1,15 @@
 """Provides External REST API."""
 
 import logging
-from typing import Callable
+from typing import Callable, Union
 from functools import wraps
 from flask.json import jsonify
-from flask import Blueprint, current_app, redirect, request, url_for, g
+from flask import Blueprint, current_app, redirect, request, url_for, g, \
+    Response
 
 from authorization.decorators import scoped
 from arxiv import status
-from arxiv.util import schema
 from api.controllers import submission
-
 
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s: %(message)s'
@@ -30,46 +29,10 @@ def json_response(func):
     return wrapper
 
 
-def validate_request(schema_path: str) -> Callable:
-    """Generate a decorator that validates the request body."""
-    validate = schema.load(schema_path)
-
-    def _decorator(func: Callable) -> Callable:
-        @wraps(func)
-        def _wrapper(*args, **kwargs):
-            data = request.get_json()
-            logger.debug('Validating payload: %s', str(data))
-            try:
-                validate(data)
-            except schema.ValidationError as e:
-                # A summary of the exception is on the first line of the repr.
-                msg = str(e).split('\n')[0]
-                logger.debug('Invalid request: %s', msg)
-                return (
-                    {
-                        'reason': 'Metadata validation failed: %s' % msg,
-                        'detail': str(e).replace('\n', ' ')
-                    },
-                    status.HTTP_400_BAD_REQUEST,
-                    {}
-                )
-            return func(*args, **kwargs)
-        return _wrapper
-    return _decorator
-
-
-@blueprint.route('/', methods=['GET'])
-@json_response
-def service() -> tuple:
-    """Say hello."""
-    return {'hi': 'there'}, status.HTTP_200_OK, {}
-
-
 @blueprint.route('/', methods=['POST'])
 @json_response
 @scoped('submission:write')
-@validate_request('schema/resources/submission.json')
-def create_submission() -> tuple:
+def create_submission() -> Union[str, Response]:
     """Accept new submissions."""
     return submission.create_submission(
         request.get_json(),

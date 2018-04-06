@@ -173,9 +173,9 @@ class Submission:
     """Submitter has indicated submission is ready for publication."""
 
     published: bool = field(default=False)
-    # TODO: use a generic to further specify type?
     comments: dict = field(default_factory=dict)
-    secondary_classification: List[Classification] = field(default_factory=list)
+    secondary_classification: List[Classification] = \
+        field(default_factory=list)
     submitter_contact_verified: bool = field(default=False)
     submitter_is_author: bool = field(default=True)
     submitter_accepts_policy: bool = field(default=False)

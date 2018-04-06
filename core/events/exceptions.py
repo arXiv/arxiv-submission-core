@@ -17,3 +17,7 @@ class InvalidEvent(ValueError):
 
 class NoSuchSubmission(Exception):
     """An operation was performed on/for a submission that does not exist."""
+
+
+class SaveError(RuntimeError):
+    """Failed to persist event state."""

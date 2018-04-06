@@ -6,17 +6,17 @@
   "type": "object",
   "properties": {
     "submission_id": {
-        "description": "arXiv submission identifier.",
-        "readOnly": true,
-        "type": "string"
+      "description": "arXiv submission identifier.",
+      "readOnly": true,
+      "type": "string"
     },
     "source": {
       "oneOf": [
         {
           "type": "object",
-          "required": ["href", "checksum", "format", "upload_id"],
-          "parameters": {
-            "href": {
+          "required": ["package_location", "checksum", "package_format", "upload_id"],
+          "properties": {
+            "package_location": {
               "description": "Location of the source package resource.",
               "type": "string",
               "format": "url"
@@ -25,7 +25,7 @@
               "description": "MD5 checksum of the source package resource.",
               "type": "string"
             },
-            "format": {
+            "package_format": {
               "description": "MIME-type of the source package resource.",
               "type": "string"
             },
@@ -39,3 +39,4 @@
       ]
     }
   }
+}

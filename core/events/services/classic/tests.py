@@ -86,7 +86,7 @@ class TestStoreEvents(TestCase):
     def test_store_event(self):
         """Store a single event."""
         with in_memory_db() as session:
-            user = User(12345)
+            user = User(12345, 'joe@joe.joe')
             ev = CreateSubmissionEvent(creator=user)
             submission = ev.apply()
             submission = classic.store_events(ev, submission=submission)
@@ -116,7 +116,7 @@ class TestStoreEvents(TestCase):
             'authors': [Author(order=0, forename='Joe', surname='Bloggs')]
         }
         with in_memory_db() as session:
-            user = User(12345)
+            user = User(12345, 'joe@joe.joe')
             ev = CreateSubmissionEvent(creator=user)
             ev2 = UpdateMetadataEvent(creator=user,
                                       metadata=list(metadata.items()))
@@ -148,7 +148,7 @@ class TestStoreEvents(TestCase):
     def test_store_events_with_finalized_submission(self):
         """Store events and a finalized submission."""
         with in_memory_db() as session:
-            user = User(12345)
+            user = User(12345, 'joe@joe.joe')
             ev = CreateSubmissionEvent(creator=user)
             ev2 = FinalizeSubmissionEvent(creator=user)
             submission = ev.apply()
@@ -168,7 +168,7 @@ class TestStoreEvents(TestCase):
 
     def test_store_events_with_classification(self):
         """Store events including classification."""
-        user = User(12345)
+        user = User(12345, 'joe@joe.joe')
         ev = CreateSubmissionEvent(creator=user)
         ev2 = SetPrimaryClassificationEvent(creator=user,
                                             category='physics.soc-ph')
@@ -210,7 +210,7 @@ class TestGetSubmission(TestCase):
 
     def test_get_submission_with_publish(self):
         """Test that publication state is reflected in submission data."""
-        user = User(12345)
+        user = User(12345, 'joe@joe.joe')
         events = [
             CreateSubmissionEvent(creator=user),
             UpdateMetadataEvent(creator=user, metadata=[
@@ -263,7 +263,7 @@ class TestGetSubmission(TestCase):
 
     def test_get_submission_with_hold_and_reclass(self):
         """Test changes made externally are reflected in submission data."""
-        user = User(12345)
+        user = User(12345, 'joe@joe.joe')
         events = [
             CreateSubmissionEvent(creator=user),
             UpdateMetadataEvent(creator=user, metadata=[

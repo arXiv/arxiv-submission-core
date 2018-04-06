@@ -40,11 +40,13 @@ from events.domain.submission import License, Submission
 from events.domain.agent import User, Client, Agent
 from . import models, util
 from .models import Base
-from .exceptions import NoSuchSubmission
+from .exceptions import NoSuchSubmission, CommitFailed
 from events.context import get_application_config, get_application_global
 
 
 class DBEvent(Base):  # type: ignore
+    """Database representation of an :class:`.Event`."""
+
     __tablename__ = 'event'
 
     event_id = Column(String(40), primary_key=True)
@@ -65,7 +67,14 @@ class DBEvent(Base):  # type: ignore
     submission = relationship("Submission")
 
     def to_event(self) -> Event:
-        """Instantiate an :class:`.Event` using event data from the db."""
+        """
+        Instantiate an :class:`.Event` using event data from this instance.
+
+        Returns
+        -------
+        :class:`.Event`
+
+        """
         _skip = ['creator', 'proxy', 'submission_id', 'created', 'event_type']
         data = {
             key: value for key, value in self.data.items()
@@ -91,7 +100,7 @@ def transaction() -> Generator:
         session.commit()
     except Exception as e:
         session.rollback()
-        raise RuntimeError('Ack! %s' % e) from e
+        raise CommitFailed('Failed to commit transaction') from e
 
 
 def get_licenses() -> List[License]:
@@ -112,7 +121,13 @@ def get_events(submission_id: int) -> List[Event]:
     Returns
     -------
     list
-        Items are :class:`.Event` instances loaded from the db.
+        Items are :class:`.Event` instances loaded from the class DB.
+
+    Raises
+    ------
+    :class:`.NoSuchSubmission`
+        Raised when there are no events for the provided submission ID.
+
     """
     with transaction() as session:
         event_data = session.query(DBEvent) \

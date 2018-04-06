@@ -1,3 +1,5 @@
+"""Tests for the API specification in ``schema/openapi.yaml``."""
+
 from unittest import TestCase
 import os
 from yaml import safe_load
@@ -8,7 +10,7 @@ schema_path = os.path.join(base_path, '..', 'schema/openapi.yaml')
 
 
 class TestOpenAPISchemaValid(TestCase):
-    """Validate the OpenAPI description against the OpenAPI spec."""
+    """Validate the OpenAPI description against the OpenAPI 3.0 spec."""
 
     def setUp(self):
         """Load the OpenAPI description."""

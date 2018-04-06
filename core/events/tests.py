@@ -28,7 +28,7 @@ class TestLoad(TestCase):
     @mock.patch('events.classic')
     def test_load_existant_submission(self, mock_classic):
         """When the submission exists, submission and events are returned."""
-        u = User(12345)
+        u = User(12345, 'joe@joe.joe')
         mock_classic.get_submission.return_value = (
             Submission(creator=u, submission_id=1, owner=u,
                        created=datetime.now()),
@@ -59,7 +59,7 @@ class TestSave(TestCase):
     def test_save_creation_event(self, mock_database):
         """A :class:`.CreationEvent` is passed."""
         mock_database.store_events = mock_store_events
-        user = User('foouser')
+        user = User(12345, 'joe@joe.joe')
         event = CreateSubmissionEvent(creator=user)
         submission, events = save(event)
         self.assertIsInstance(submission, Submission,
@@ -75,9 +75,9 @@ class TestSave(TestCase):
     def test_save_events_from_scratch(self, mock_database):
         """Save multiple events for a nonexistant submission."""
         mock_database.store_events = mock_store_events
-        e = CreateSubmissionEvent(creator=User('foouser'))
-        e2 = UpdateMetadataEvent(creator=User('foouser'),
-                                 metadata=[['title', 'foo']])
+        user = User(12345, 'joe@joe.joe')
+        e = CreateSubmissionEvent(creator=user)
+        e2 = UpdateMetadataEvent(creator=user, metadata=[['title', 'foo']])
         submission, events = save(e, e2)
 
         self.assertEqual(submission.metadata.title, 'foo')
@@ -88,8 +88,8 @@ class TestSave(TestCase):
     def test_save_from_scratch_without_creation_event(self, mock_database):
         """An exception is raised when there is no creation event."""
         mock_database.store_events = mock_store_events
-        e2 = UpdateMetadataEvent(creator=User('foouser'),
-                                 metadata=[['title', 'foo']])
+        user = User(12345, 'joe@joe.joe')
+        e2 = UpdateMetadataEvent(creator=user, metadata=[['title', 'foo']])
         with self.assertRaises(NoSuchSubmission):
             save(e2)
 
@@ -102,7 +102,8 @@ class TestSave(TestCase):
             def valid(self, *args, **kwargs):
                 return False
 
-        e = EventMock(creator=User(12345), submission_id=1)
+        user = User(12345, 'joe@joe.joe')
+        e = EventMock(creator=user, submission_id=1)
         with self.assertRaises(InvalidEvent):
             save(e, submission_id=1)
 
@@ -127,15 +128,14 @@ class TestSave(TestCase):
         mock_db.get_events = mock_get_events
 
         # Here is the first set of events.
-        e = CreateSubmissionEvent(creator=User('foouser'))
-        e2 = UpdateMetadataEvent(creator=User('foouser'),
-                                 metadata=[['title', 'foo']])
+        user = User(12345, 'joe@joe.joe')
+        e = CreateSubmissionEvent(creator=user)
+        e2 = UpdateMetadataEvent(creator=user, metadata=[['title', 'foo']])
         submission, _ = save(e, e2)
         submission_id = submission.submission_id
 
         # Now we apply a second set of events.
-        e3 = UpdateMetadataEvent(creator=User('foouser'),
-                                 metadata=[['abstract', 'bar']])
+        e3 = UpdateMetadataEvent(creator=user, metadata=[['abstract', 'bar']])
         submission2, _ = save(e3, submission_id=submission_id)
 
         # The submission state reflects all three events.

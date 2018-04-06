@@ -32,7 +32,7 @@ data, and commit the event using :func:`.save`. For example:
 .. code-block:: python
 
    >>> import events
-   >>> user = events.User('bloggsj')
+   >>> user = events.User(123, "joe@bloggs.com")
    >>> metadata = [('title', 'A new theory of foo')]
    >>> update = events.UpdateMetadataEvent(creator=user, metadata=metadata)
    >>> submission = events.save(creation, submission_id=12345)
@@ -67,7 +67,7 @@ example:
 
    import events
 
-   >>> user = events.User('bloggsj')
+   >>> user = events.User(123, "joe@bloggs.com")
    >>> creation = events.CreateSubmissionEvent(creator=user)
    >>> metadata = [('title', 'A new theory of foo')]
    >>> update = events.UpdateMetadataEvent(creator=user, metadata=metadata)
@@ -91,7 +91,7 @@ from events.domain.event import (
 )
 from events.domain.rule import RuleCondition, RuleConsequence, EventRule
 from events.services import classic
-from events.exceptions import InvalidEvent, NoSuchSubmission
+from events.exceptions import InvalidEvent, NoSuchSubmission, SaveError
 
 
 def load(submission_id: str) -> Tuple[Submission, List[Event]]:
@@ -158,6 +158,9 @@ def save(*events: Event, submission_id: Optional[str] = None) \
     :class:`.InvalidEvent`
         If an invalid event is encountered, the entire operation is aborted
         and this exception is raised.
+    :class:`.SaveError`
+        There was a problem persisting the events and/or submission state
+        to the database.
 
     """
     if len(events) == 0:
@@ -190,7 +193,10 @@ def save(*events: Event, submission_id: Optional[str] = None) \
         submission.submission_id = submission_id    # May still be None.
 
     # Persist in database; submission ID is updated after transaction.
-    submission = classic.store_events(*combined, submission=submission)
+    try:
+        submission = classic.store_events(*combined, submission=submission)
+    except classic.CommitFailed as e:
+        raise SaveError('Failed to store events') from e
 
     for event in combined:
         event.submission_id = submission.submission_id

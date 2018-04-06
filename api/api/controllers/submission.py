@@ -8,12 +8,13 @@ import logging    # TODO: use arxiv.base.logging when arxiv-base==0.5.1 is out.
 from typing import Tuple, List, Callable, Optional
 
 from flask import url_for, current_app
+from werkzeug.exceptions import NotFound, BadRequest, InternalServerError
 
 from arxiv import status
-from api.domain.agent import Agent, agent_factory, System
-from api.domain.submission import Submission, Classification, License, \
+from events.domain.agent import Agent, agent_factory, System
+from events.domain import Event
+from events.domain.submission import Submission, Classification, License, \
     SubmissionMetadata
-from api.services import database
 import events as ev
 
 from . import util
@@ -27,97 +28,26 @@ logger.setLevel(logging.DEBUG)
 
 Response = Tuple[dict, int, dict]
 
-NO_SUCH_ARCHIVE = {'reason': 'No such archive'}, status.HTTP_404_NOT_FOUND, {}
-NO_USER_OR_CLIENT = (
-    {'reason': 'Neither client nor user is set'},
-    status.HTTP_400_BAD_REQUEST,
-    {}
-)
-METADATA_FIELDS = [
-    ('title', 'title'),
-    ('abstract', 'abstract'),
-    ('doi', 'identifier'),
-    ('msc_class', 'msc_class'),
-    ('acm_class', 'acm_class'),
-    ('report_num', 'report_num'),
-    ('journal_ref', 'journal_ref')
-]
+
+def _get_agents(headers: dict, user_data: dict, client_data: dict) \
+        -> Tuple[Agent, Agent, Optional[Agent]]:
+    user = ev.User(
+        native_id=user_data['user_id'],
+        email=user_data['email']
+    )
+    client = ev.Client(native_id=client_data['client_id'])
+    on_behalf_of = headers.get('X-On-Behalf-Of')
+    if on_behalf_of is not None:
+        proxy = user
+        user = ev.User(on_behalf_of, '', '')
+    else:
+        proxy = None
+    return user, client, proxy
 
 
-def _is_authorized(submission_id: Optional[str], user: Optional[Agent] = None,
-                   client: Optional[Agent] = None) -> bool:
-    if submission_id is None:
-        return True
-    agents = database.get_submission_agents(submission_id)
-    return any([
-        user == agents['owner'] or client == agents['owner'],
-        user in agents['delegates'],
-        type(client) is System
-    ])
-
-
-def _get_agents(extra: dict) -> Tuple[Optional[Agent], Optional[Agent]]:
-    """Get user and/or API client responsible for the request."""
-    user = extra.get('user')
-    client = extra.get('client')
-    user_agent = ev.User(user) if user else None
-    client_agent = ev.Client(client) if client else None
-    if user_agent:
-        return user_agent, client_agent
-    return client_agent, client_agent
-
-
-def _update_submission(body: dict, agents: dict) -> Submission:
-    """
-    Generate :class:`.ev.Event`(s) to update a :class:`Submission`.
-    """
-
-    new_events = []
-    if 'submitter_is_author' in body:
-        new_events.append(
-            ev.AssertAuthorshipEvent(
-                submitter_is_author=body['submitter_is_author'],
-                **agents,
-            )
-        )
-    if 'license' in body:
-        new_events.append(
-            ev.SelectLicenseEvent(
-                license_name=body['license'].get('name'),
-                license_uri=body['license']['uri'],
-                **agents
-            )
-        )
-
-    if 'submitter_accepts_policy' in body and body['submitter_accepts_policy']:
-        new_events.append(ev.AcceptPolicyEvent(**agents))
-
-    # Generate both primary and secondary classifications.
-    if 'primary_classification' in body:
-        category = body['primary_classification']['category']
-        new_events.append(
-            ev.SetPrimaryClassificationEvent(category=category, **agents)
-        )
-
-    for classification_datum in body.get('secondary_classification', []):
-        category = classification_datum['category']
-        new_events.append(
-            ev.AddSecondaryClassificationEvent(category=category, **agents)
-        )
-
-    if 'metadata' in body:
-        metadata = [
-            (field, body['metadata'][key])
-            for field, key in SubmissionMetadata.FIELDS
-            if key in body['metadata']
-        ]
-        new_events.append(ev.UpdateMetadataEvent(metadata=metadata, **agents))
-    return new_events
-
-
-def create_submission(body: dict, headers: dict,
-                      user: Optional[str] = None, client: Optional[str] = None,
-                      token: Optional[str] = None) -> Response:
+@util.validate_request('schema/resources/submission.json')
+def create_submission(data: dict, headers: dict, user_data: dict,
+                      client_data: dict, token: str) -> Response:
     """
     Create a new submission.
 
@@ -125,12 +55,10 @@ def create_submission(body: dict, headers: dict,
 
     Parameters
     ----------
-    body : dict
+    data : dict
         Deserialized compact JSON-LD document.
     headers : dict
         Request headers from the client.
-    extra : dict
-        Additional parameters, e.g. from the URL path.
 
     Returns
     -------
@@ -142,75 +70,122 @@ def create_submission(body: dict, headers: dict,
         Headers to add to the response.
     """
     logger.debug('Received request to create submission')
-    if not user and not client:
-        logger.debug('Neither user nor client set')
-        return NO_USER_OR_CLIENT
+    user, client, proxy = _get_agents(headers, user_data, client_data)
+    logger.debug(f'User: {user}; client: {client}, proxy: {proxy}')
 
-    if not _is_authorized(None, user, client):
-        logger.debug('Not authorized')
-        return {}, status.HTTP_403_FORBIDDEN, {}
+    try:
+        submission, events = ev.save(
+            ev.CreateSubmissionEvent(creator=user, client=client, proxy=proxy),
+            *_update_submission(data, user, client, proxy)
+        )
+    except ev.InvalidEvent as e:
+        raise InternalServerError(str(e)) from e
+    except ev.SaveError as e:
+        raise InternalServerError('Problem interacting with database') from e
+    except Exception as e:
+        raise InternalServerError('Encountered unhandled exception') from e
 
-    agents = dict(creator=user, proxy=client)
-    new_events = []
-
-    new_events.append(ev.CreateSubmissionEvent(**agents))
-    new_events += _update_submission(body, agents)
-    submission = ev.save(*new_events)
     response_headers = {
         'Location': url_for('submit.get_submission',
                             submission_id=submission.submission_id)
     }
-    return (
-        util.serialize_submission(submission),
-        status.HTTP_202_ACCEPTED,
-        response_headers
-    )
+    return submission.to_dict(), status.HTTP_201_CREATED, response_headers
 
 
 def get_submission(submission_id: str, user: Optional[str] = None,
                    client: Optional[str] = None,
                    token: Optional[str] = None) -> Response:
     """Retrieve the current state of a submission."""
-    submission = database.get_submission(submission_id)
-    return util.serialize_submission(submission), status.HTTP_200_OK, {}
+    submission = ev.get_submission(submission_id)
+    return submission.to_dict(), status.HTTP_200_OK, {}
 
 
-def update_submission(submission_id: str, body: dict, headers: dict,
-                      user: Optional[str] = None,
-                      client: Optional[str] = None,
-                      token: Optional[str] = None) -> Response:
+@util.validate_request('schema/resources/submission.json')
+def update_submission(data: dict, headers: dict, user_data: dict,
+                      client_data: dict, token: str, submission_id: str) \
+        -> Response:
     """Update the submission."""
-    if not user and not client:
-        return NO_USER_OR_CLIENT
-
-    if not _is_authorized(submission_id, user, client):
-        return {}, status.HTTP_403_FORBIDDEN, {}
-
-    submission = _update_submission(body, dict(creator=user, proxy=agent))
+    user, client, proxy = _get_agents(headers, user_data, client_data)
+    try:
+        submission, events = ev.save(
+            *_update_submission(data, user, client, proxy),
+            submission_id=submission_id
+        )
+    except ev.NoSuchSubmission as e:
+        raise NotFound(f"No submission found with id {submission_id}")
+    except ev.InvalidEvent as e:
+        raise InternalServerError(str(e)) from e
+    except ev.SaveError as e:
+        raise InternalServerError('Problem interacting with database') from e
+    except Exception as e:
+        raise InternalServerError('Encountered unhandled exception') from e
 
     response_headers = {
         'Location': url_for('submit.get_submission', creator=user,
                             submission_id=submission.submission_id)
     }
-    return (
-        util.serialize_submission(submission),
-        status.HTTP_202_ACCEPTED,
-        response_headers
-    )
+    return submission.to_dict(), status.HTTP_200_OK, response_headers
 
 
-# def get_submission_log(body: dict, headers: dict, files: dict=None, **extra)\
-#         -> Response:
-#     """Get a log of events on a specific submission."""
-#     user, client = _get_agents(extra)
-#     if not user:
-#         return NO_USER_OR_CLIENT
-#
-#     submission_id = extra['submission_id']
-#
-#     events = eventBus.get_events(submission_id)
-#     response_data = {
-#         'events': [util.serialize_event(e) for e in events],
-#         'submission_id': submission_id
-#     }
-#     return response_data, status.HTTP_200_OK, {}
+def _update_submission(data: dict, creator: Agent, client: Agent,
+                       proxy: Optional[Agent] = None) -> List[Event]:
+    """
+    Generate :class:`.ev.Event`(s) to update a :class:`Submission`.
+
+    Parameters
+    ----------
+    data : dict
+    creator : :class:`.Agent`
+    client : :class:`.Agent`
+    proxy : :class:`.Agent`
+
+    Returns
+    -------
+    list
+
+    """
+    # Since these are used in all Event instantiations, it's convenient to
+    # pack these together.
+    agents = dict(creator=creator, client=client, proxy=proxy)
+
+    new_events = []
+    if 'submitter_is_author' in data:
+        new_events.append(
+            ev.AssertAuthorshipEvent(
+                submitter_is_author=data['submitter_is_author'],
+                **agents,
+            )
+        )
+    if 'license' in data:
+        new_events.append(
+            ev.SelectLicenseEvent(
+                license_name=data['license'].get('name'),
+                license_uri=data['license']['uri'],
+                **agents
+            )
+        )
+
+    if 'submitter_accepts_policy' in data and data['submitter_accepts_policy']:
+        new_events.append(ev.AcceptPolicyEvent(**agents))
+
+    # Generate both primary and secondary classifications.
+    if 'primary_classification' in data:
+        category = data['primary_classification']['category']
+        new_events.append(
+            ev.SetPrimaryClassificationEvent(category=category, **agents)
+        )
+
+    for classification_datum in data.get('secondary_classification', []):
+        category = classification_datum['category']
+        new_events.append(
+            ev.AddSecondaryClassificationEvent(category=category, **agents)
+        )
+
+    if 'metadata' in data:
+        metadata = [
+            (key, data['metadata'][key])
+            for key in SubmissionMetadata.FIELDS
+            if key in data['metadata']
+        ]
+        new_events.append(ev.UpdateMetadataEvent(metadata=metadata, **agents))
+    return new_events
