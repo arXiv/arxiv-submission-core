@@ -1,6 +1,6 @@
 """Provides External REST API."""
 
-import logging
+from arxiv.base import logging
 from typing import Callable, Union
 from functools import wraps
 from flask.json import jsonify
@@ -11,11 +11,7 @@ from authorization.decorators import scoped
 from arxiv import status
 from api.controllers import submission
 
-logging.basicConfig(
-    format='%(asctime)s - %(name)s - %(levelname)s: %(message)s'
-)
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
 
 blueprint = Blueprint('submit', __name__, url_prefix='/submit')
 

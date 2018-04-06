@@ -1,6 +1,6 @@
 """Application factory for references service components."""
 
-import logging
+from arxiv.base import logging
 
 from flask import Flask
 

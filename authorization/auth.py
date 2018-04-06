@@ -3,13 +3,10 @@
 import os
 from flask import Flask, jsonify, request
 import jwt
-import logging
+from arxiv.base import logging
 
-logging.basicConfig(
-    format='%(asctime)s - %(name)s - %(levelname)s: %(message)s'
-)
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+
 
 JWT_SECRET = os.environ.get('JWT_SECRET', 'foo')
 TOKENS = {

@@ -4,7 +4,7 @@ import json
 from functools import wraps
 from datetime import datetime
 import copy
-import logging    # TODO: use arxiv.base.logging when arxiv-base==0.5.1 is out.
+from arxiv.base import logging
 from typing import Tuple, List, Callable, Optional
 
 from flask import url_for, current_app
@@ -19,11 +19,7 @@ import events as ev
 
 from . import util
 
-logging.basicConfig(
-    format='%(asctime)s - %(name)s - %(levelname)s: %(message)s'
-)
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
 
 
 Response = Tuple[dict, int, dict]
