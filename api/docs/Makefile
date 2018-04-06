@@ -1,9 +1,10 @@
 # Minimal makefile for Sphinx documentation
+#
 
 # You can set these variables from the command line.
 SPHINXOPTS    =
 SPHINXBUILD   = python -msphinx
-SPHINXPROJ    = submissionCore
+SPHINXPROJ    = submissionAPI
 SOURCEDIR     = source
 BUILDDIR      = build
 
@@ -16,10 +17,4 @@ help:
 # Catch-all target: route all unknown targets to Sphinx using the new
 # "make mode" option.  $(O) is meant as a shortcut for $(SPHINXOPTS).
 %: Makefile
-	mkdir $(SOURCEDIR)/containers/core
-	cp -R $(SOURCEDIR)/../../core/docs/source/api/* $(SOURCEDIR)/containers/core/
-	mkdir $(SOURCEDIR)/containers/api
-	cp -R $(SOURCEDIR)/../../api/docs/source/api/* $(SOURCEDIR)/containers/api/
 	@$(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
-	rm -rf $(SOURCEDIR)/containers/core
-	rm -rf $(SOURCEDIR)/containers/api
