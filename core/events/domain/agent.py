@@ -113,6 +113,11 @@ class Client(Agent):
 
     FIELDS = []
 
+    def to_dict(self):
+        return {
+            'client_id': self.native_id
+        }
+
 
 _agent_types = {
     User.get_agent_type(): User,

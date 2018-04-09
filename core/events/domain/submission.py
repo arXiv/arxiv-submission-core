@@ -99,11 +99,6 @@ class SubmissionMetadata:
 
     comments: str = field(default_factory=str)
 
-    FIELDS = [
-        'title', 'abstract', 'authors', 'doi', 'msc_class', 'acm_class',
-        'report_num', 'journal_ref'
-    ]
-
     @property
     def authors_canonical(self):
         """Canonical representation of submission authors."""
@@ -189,6 +184,7 @@ class Submission:
         data.update({
             'creator': self.creator.to_dict(),
             'owner': self.owner.to_dict(),
+            'client': self.client.to_dict(),
             'created': self.created.isoformat(),
         })
         if self.primary_classification:

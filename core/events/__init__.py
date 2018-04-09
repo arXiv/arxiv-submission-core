@@ -79,7 +79,7 @@ example:
 """
 
 from typing import Optional, List, Tuple
-from events.domain.submission import Submission, SubmissionMetadata
+from events.domain.submission import Submission, SubmissionMetadata, Author
 from events.domain.agent import Agent, User, System, Client
 from events.domain.event import (
     Event, CreateSubmission, RemoveSubmission, VerifyContactInformation,

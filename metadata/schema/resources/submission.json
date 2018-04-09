@@ -68,15 +68,6 @@
       "format": "date-time",
       "readOnly": true
     },
-    "client": {
-      "description": "The client used by the user or proxy to create the submission",
-      "readOnly": true,
-      "oneOf": [
-        {"$ref": "file:./user.json"},
-        {"$ref": "file:./client.json"},
-        {"type": "null"}
-      ]
-    },
     "license": {
       "description": "License to be applied to the submission.",
       "oneOf": [

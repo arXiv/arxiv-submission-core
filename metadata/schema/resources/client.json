@@ -3,7 +3,7 @@
   "description": "Data about an API client",
   "type": "object",
   "additionalProperties": true,
-  "required": ["client_id", "email"],
+  "required": ["client_id"],
   "properties": {
     "client_id": {
       "description": "Native ID of the client.",

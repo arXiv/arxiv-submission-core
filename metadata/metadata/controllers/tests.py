@@ -9,7 +9,7 @@ from arxiv import status
 from events.domain import User, Submission
 from events import CreateSubmission, UpdateMetadata, SaveError, \
     InvalidEvent, NoSuchSubmission, SetPrimaryClassification, \
-    AttachSourceContent
+    AttachSourceContent, UpdateAuthors, Author
 from metadata.controllers import submission
 
 
@@ -19,6 +19,8 @@ def preserve_exceptions_and_events(mock_events):
     mock_events.InvalidEvent = InvalidEvent
     mock_events.NoSuchSubmission = NoSuchSubmission
     mock_events.UpdateMetadata = UpdateMetadata
+    mock_events.UpdateAuthors = UpdateAuthors
+    mock_events.Author = Author
     mock_events.CreateSubmission = CreateSubmission
     mock_events.SetPrimaryClassification = SetPrimaryClassification
     mock_events.AttachSourceContent = AttachSourceContent
@@ -72,7 +74,7 @@ class TestCreateSubmission(TestCase):
         preserve_exceptions_and_events(mock_events)
         url_for.return_value = '/foo/'
         data = {
-            'badkey': 'bizarre value',
+            'metadata': 'bad value',
         }
         with self.assertRaises(BadRequest):
             submission.create_submission(data, self.headers, self.user_data,
@@ -135,7 +137,14 @@ class TestUpdateSubmission(TestCase):
         )
         data = {
             'metadata': {
-                'title': 'foo title'
+                'title': 'foo title',
+                'authors': [
+                    {
+                        'forename': 'Jane',
+                        'surname': 'Doe',
+                        'email': 'jane@doe.com'
+                    }
+                ]
              }
         }
         resp, stat, head = submission.update_submission(data, self.headers,
@@ -150,6 +159,8 @@ class TestUpdateSubmission(TestCase):
 
         self.assertIsInstance(call_args[0], UpdateMetadata,
                               "Should pass an UpdateMetadata")
+        self.assertIsInstance(call_args[1], UpdateAuthors,
+                              "Should pass an UpdateAuthors")
 
     @mock.patch('metadata.controllers.submission.url_for')
     @mock.patch('metadata.controllers.submission.ev')
@@ -174,7 +185,7 @@ class TestUpdateSubmission(TestCase):
         preserve_exceptions_and_events(mock_events)
         url_for.return_value = '/foo/'
         data = {
-            'badkey': 'bizarre value',
+            'metadata': 'bad value',
         }
         with self.assertRaises(BadRequest):
             submission.update_submission(data, self.headers, self.user_data,

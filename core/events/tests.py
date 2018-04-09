@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 from flask import Flask
 from events import save, load, Submission, User, Event, UpdateMetadata, \
     EventRule, RuleCondition, RuleConsequence, CreateComment, \
-    SubmissionMetadata, CreateSubmission
+    SubmissionMetadata, CreateSubmission, UpdateAuthors, Author
 from events.exceptions import NoSuchSubmission, InvalidEvent
 from events.services import classic
 
@@ -83,6 +83,18 @@ class TestSave(TestCase):
         self.assertEqual(submission.metadata.title, 'foo')
         self.assertIsInstance(submission.submission_id, int)
         self.assertEqual(submission.created, e.created)
+
+    @mock.patch('events.classic')
+    def test_create_and_update_authors(self, mock_database):
+        """Save multiple events for a nonexistant submission."""
+        mock_database.store_events = mock_store_events
+        user = User(12345, 'joe@joe.joe')
+        e = CreateSubmission(creator=user)
+        e2 = UpdateAuthors(creator=user, authors=[
+            Author(0, forename='Joe', surname="Bloggs", email="joe@blog.gs")
+        ])
+        submission, events = save(e, e2)
+        self.assertIsInstance(submission.metadata.authors[0], Author)
 
     @mock.patch('events.classic')
     def test_save_from_scratch_without_creation_event(self, mock_database):

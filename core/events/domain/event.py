@@ -259,6 +259,7 @@ class SelectLicense(Event):
         return submission
 
 
+# TODO: consider representing some of these as distinct events/commands?
 @dataclass
 class UpdateMetadata(Event):
     """Update the descriptive metadata for a submission."""
@@ -266,6 +267,11 @@ class UpdateMetadata(Event):
     schema = 'schema/resources/events/update_metadata.json'
 
     metadata: List[Tuple[str, Any]] = field(default_factory=list)
+
+    FIELDS = [
+        'title', 'abstract', 'doi', 'msc_class', 'acm_class',
+        'report_num', 'journal_ref'
+    ]
 
     def validate(self, submission: Submission) -> None:
         """The :prop:`.metadata` should be a list of tuples."""
@@ -289,6 +295,11 @@ class UpdateAuthors(Event):
     """Update the authors on a :class:`.Submission`."""
 
     authors: List[Author] = field(default_factory=list)
+
+    def project(self, submission: Submission) -> Submission:
+        """Replace :prop:`.Submission.metadata.authors`."""
+        submission.metadata.authors = self.authors
+        return submission
 
 
 @dataclass

@@ -78,6 +78,7 @@ def create_submission(data: dict, headers: dict, user_data: dict,
     except ev.SaveError as e:
         raise InternalServerError('Problem interacting with database: %s' % str(e)) from e
     except Exception as e:
+        logger.error('Unhandled exception: (%s) %s', str(type(e)), str(e))
         raise InternalServerError('Encountered unhandled exception') from e
 
     response_headers = {
@@ -96,6 +97,7 @@ def get_submission(submission_id: str, user: Optional[str] = None,
     except ev.NoSuchSubmission as e:
         raise NotFound('Submission not found') from e
     except Exception as e:
+        logger.error('Unhandled exception: (%s) %s', str(type(e)), str(e))
         raise InternalServerError('Encountered unhandled exception') from e
     return submission.to_dict(), status.HTTP_200_OK, {}
 
@@ -118,6 +120,7 @@ def update_submission(data: dict, headers: dict, user_data: dict,
     except ev.SaveError as e:
         raise InternalServerError('Problem interacting with database') from e
     except Exception as e:
+        logger.error('Unhandled exception: (%s) %s', str(type(e)), str(e))
         raise InternalServerError('Encountered unhandled exception') from e
 
     response_headers = {
@@ -182,10 +185,21 @@ def _update_submission(data: dict, creator: Agent, client: Agent,
         )
 
     if 'metadata' in data:
-        metadata = [
-            (key, data['metadata'][key])
-            for key in SubmissionMetadata.FIELDS
-            if key in data['metadata']
-        ]
+        # Most of this could be in a list comprehension, but it may help to
+        # keep this verbose in case we want to intervene on values.
+        metadata = []
+        for key in ev.UpdateMetadata.FIELDS:
+            if key not in data['metadata']:
+                continue
+            value = data['metadata'][key]
+            metadata.append((key, value))
         new_events.append(ev.UpdateMetadata(**agents, metadata=metadata))
+
+        if 'authors' in data['metadata']:
+            authors = []
+            for i, au in enumerate(data['metadata']['authors']):
+                if 'order' not in au:
+                    au['order'] = i
+                authors.append(ev.Author(**au))
+            new_events.append(ev.UpdateAuthors(**agents, authors=authors))
     return new_events
