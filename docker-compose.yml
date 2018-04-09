@@ -1,14 +1,14 @@
 version: '3'
 
 services:
-  submission-postgres:
-    image: postgres:latest
-    container_name: submission-postgres
+  submission-maria:
+    image: mariadb:10.3
+    container_name: submission-maria
     networks:
       - arxiv-submission-local
     environment:
-      POSTGRES_USER: foouser
-      POSTGRES_PASSWORD: foopass
+      MYSQL_USER: foouser
+      MYSQL_PASSWORD: foopass
 
   submission-redis:
     image: redis
@@ -28,42 +28,23 @@ services:
       USE_SSL: 'true'
       DEBUG: 'true'
 
-  submission-events:
+  submission-metadata:
     build:
       context: ./
-      dockerfile: Dockerfile-events
+      dockerfile: Dockerfile-metadata
+    container_name: submission-metadata
     environment:
       REDIS_ENDPOINT: "submission-redis:6379"
       AWS_ACCESS_KEY_ID: "foo"
       AWS_SECRET_ACCESS_KEY: "bar"
       LOGLEVEL: 10
-      SQLALCHEMY_DATABASE_URI: "postgres://foouser:foopass@submission-postgres:5432/postgres"
+      CLASSIC_DATABASE_URI: "maria://foouser:foopass@submission-maria:5432/maria"
     networks:
       - arxiv-submission-local
     depends_on:
       - submission-redis
       - submission-localstack
-      - submission-postgres
-
-  submission-api:
-    build:
-      context: ./
-      dockerfile: Dockerfile-api
-    container_name: submission-api
-    environment:
-      REDIS_ENDPOINT: "submission-redis:6379"
-      AWS_ACCESS_KEY_ID: "foo"
-      AWS_SECRET_ACCESS_KEY: "bar"
-      LOGLEVEL: 10
-      EVENTS_ENDPOINT: "http://submission-events:8000/"
-      API_DATABASE_URI: "postgres://foouser:foopass@submission-postgres:5432/postgres"
-    networks:
-      - arxiv-submission-local
-    depends_on:
-      - submission-redis
-      - submission-localstack
-      - submission-events
-      - submission-postgres
+      - submission-maria
 
   submission-authorization:
     build:
@@ -92,8 +73,7 @@ services:
     depends_on:
       - submission-redis
       - submission-localstack
-      - submission-events
-      - submission-api
+      - submission-metadata
       - submission-authorization
 
 networks:

@@ -31,7 +31,7 @@ def scoped(scope_required: str):
                 raise Unauthorized('Missing authentication credentials')
 
             if scope_required not in scope:
-                return Forbidden('Missing required scope')
+                raise Forbidden('Missing required scope')
             g.user = user
             g.client = client
             g.token = token

@@ -74,16 +74,12 @@ class Author:
 
 @dataclass
 class SubmissionContent:
-    """Represents the submission source package."""
+    """Metadata about the submission source package and compiled products."""
 
-    uri: str
-    content_type: str
+    location: str
+    format: str
     checksum: str
-    upload_id: int
-
-    def to_dict(self) -> dict:
-        """Generate dict representation of this :class:`.SubmissionContent`."""
-        return asdict(self)
+    identifier: int
 
 
 @dataclass
@@ -160,7 +156,11 @@ class Submission:
     owner: Agent
     created: datetime
     updated: Optional[datetime] = field(default=None)
-    primary_classification: Optional[Classification] = None
+
+    source_content: Optional[SubmissionContent] = field(default=None)
+    compiled_content: List[SubmissionContent] = field(default_factory=list)
+
+    primary_classification: Optional[Classification] = field(default=None)
     delegations: Dict[str, Delegation] = field(default_factory=dict)
     proxy: Optional[Agent] = field(default=None)
     client: Optional[Agent] = field(default=None)
@@ -173,7 +173,6 @@ class Submission:
     """Submitter has indicated submission is ready for publication."""
 
     published: bool = field(default=False)
-    comments: dict = field(default_factory=dict)
     secondary_classification: List[Classification] = \
         field(default_factory=list)
     submitter_contact_verified: bool = field(default=False)

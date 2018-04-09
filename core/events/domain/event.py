@@ -11,7 +11,7 @@ Data structures for submissions events.
 import hashlib
 from datetime import datetime
 from typing import Optional, TypeVar, List, Tuple, Any, Dict
-
+from urllib.parse import urlparse
 from dataclasses import dataclass, field
 from dataclasses import asdict
 
@@ -94,6 +94,9 @@ class Event:
 
     def valid(self, submission: Submission) -> bool:
         """Determine whether this event is valid for the submission."""
+        if submission and submission.published:
+            raise InvalidEvent(self, "Cannot alter a published submission")
+
         if not hasattr(self, 'validate'):
             return True
         try:
@@ -119,8 +122,13 @@ class Event:
         return data
 
 
+# Events related to the creation of a new submission.
+#
+# These are largely the domain of the metadata API, and the submission UI.
+
+
 @dataclass(init=False)
-class CreateSubmissionEvent(Event):
+class CreateSubmission(Event):
     """Creation of a new :class:`events.domain.submission.Submission`."""
 
     def project(self) -> Submission:
@@ -131,7 +139,7 @@ class CreateSubmissionEvent(Event):
 
 
 @dataclass(init=False)
-class RemoveSubmissionEvent(Event):
+class RemoveSubmission(Event):
     """Removal of a :class:`events.domain.submission.Submission`."""
 
     def project(self, submission: Submission) -> Submission:
@@ -141,7 +149,7 @@ class RemoveSubmissionEvent(Event):
 
 
 @dataclass(init=False)
-class VerifyContactInformationEvent(Event):
+class VerifyContactInformation(Event):
     """Submitter has verified their contact information."""
 
     def project(self, submission: Submission) -> Submission:
@@ -151,7 +159,7 @@ class VerifyContactInformationEvent(Event):
 
 
 @dataclass
-class AssertAuthorshipEvent(Event):
+class AssertAuthorship(Event):
     """The submitting user asserts whether they are an author of the paper."""
 
     submitter_is_author: bool = True
@@ -163,7 +171,7 @@ class AssertAuthorshipEvent(Event):
 
 
 @dataclass
-class AcceptPolicyEvent(Event):
+class AcceptPolicy(Event):
     """The submitting user accepts the arXiv submission policy."""
 
     def project(self, submission: Submission) -> Submission:
@@ -173,7 +181,7 @@ class AcceptPolicyEvent(Event):
 
 
 @dataclass
-class SetPrimaryClassificationEvent(Event):
+class SetPrimaryClassification(Event):
     """Update the primary classification of a submission."""
 
     category: Optional[str] = None
@@ -193,7 +201,7 @@ class SetPrimaryClassificationEvent(Event):
 
 
 @dataclass
-class AddSecondaryClassificationEvent(Event):
+class AddSecondaryClassification(Event):
     """Add a secondary :class:`.Classification` to a submission."""
 
     category: Optional[str] = field(default=None)
@@ -214,7 +222,7 @@ class AddSecondaryClassificationEvent(Event):
 
 
 @dataclass
-class RemoveSecondaryClassificationEvent(Event):
+class RemoveSecondaryClassification(Event):
     """Remove secondary :class:`.Classification` from submission."""
 
     category: Optional[str] = field(default=None)
@@ -236,7 +244,7 @@ class RemoveSecondaryClassificationEvent(Event):
 
 
 @dataclass
-class SelectLicenseEvent(Event):
+class SelectLicense(Event):
     """The submitter has selected a license for their submission."""
 
     license_name: Optional[str] = field(default=None)
@@ -252,7 +260,7 @@ class SelectLicenseEvent(Event):
 
 
 @dataclass
-class UpdateMetadataEvent(Event):
+class UpdateMetadata(Event):
     """Update the descriptive metadata for a submission."""
 
     schema = 'schema/resources/events/update_metadata.json'
@@ -267,7 +275,7 @@ class UpdateMetadataEvent(Event):
             for metadatum in self.metadata:
                 assert len(metadatum) == 2
         except AssertionError as e:
-            raise InvalidEvent(e) from e
+            raise InvalidEvent(self) from e
 
     def project(self, submission: Submission) -> Submission:
         """Update metadata on a :class:`.Submission`."""
@@ -277,23 +285,85 @@ class UpdateMetadataEvent(Event):
 
 
 @dataclass
-class UpdateAuthorsEvent(Event):
+class UpdateAuthors(Event):
     """Update the authors on a :class:`.Submission`."""
 
     authors: List[Author] = field(default_factory=list)
 
 
 @dataclass
-class FinalizeSubmissionEvent(Event):
+class AttachSourceContent(Event):
+    """Add metadata about a source package to a submission."""
+
+    location: str = field(default_factory=str)
+    format: str = field(default_factory=str)
+    checksum: str = field(default_factory=str)
+    identifier: Optional[int] = field(default=None)
+
+    ALLOWED_FORMATS = [
+        'application/tar+gzip', 'application/tar', 'application/zip'
+    ]
+
+    def validate(self, submission: Submission) -> None:
+        """Validate data for :class:`.SubmissionContent`."""
+        try:
+            parsed = urlparse(self.location)
+        except ValueError as e:
+            raise InvalidEvent('Not a valid URL') from e
+        if not parsed.netloc.endswith('arxiv.org'):
+            raise InvalidEvent('External URLs not allowed.')
+
+        if self.format not in self.ALLOWED_FORMATS:
+            raise InvalidEvent(f'Format {self.package_format} not allowed')
+        if not self.checksum:
+            raise InvalidEvent('Missing checksum')
+        if not self.identifier:
+            raise InvalidEvent('Missing upload ID')
+
+    def project(self, submission: Submission) -> Submission:
+        """Replace :class:`.SubmissionContent` metadata on the submission."""
+        submission.source_content = SubmissionContent(
+            location=self.location,
+            format=self.format,
+            checksum=self.checksum,
+            identifier=self.identifier
+        )
+        return submission
+
+
+@dataclass
+class FinalizeSubmission(Event):
     """Send the submission to the queue for announcement."""
+
+    def validate(self, submission: Submission) -> None:
+        """Ensure that all required data/steps are complete."""
+        if submission.finalized:
+            raise InvalidEvent(self, "Submission already finalized")
+        if not submission.active:
+            raise InvalidEvent(self, "Submision must be active")
+
+        try:
+            assert submission.creator is not None
+            assert submission.primary_classification is not None
+            assert submission.metadata.title is not None
+            assert submission.metadata.abstract is not None
+            assert len(submission.metadata.authors) > 0
+            assert submission.submitter_contact_verified
+            assert submission.submitter_accepts_policy
+            assert submission.license is not None
+            assert submission.source_content is not None
+        except AssertionError as e:
+            raise InvalidEvent(self, "Submission missing required data") from e
 
     def project(self, submission: Submission) -> Submission:
         submission.finalized = True
         return submission
 
 
+# Moderation-related events.
+
 @dataclass
-class CreateCommentEvent(Event):
+class CreateComment(Event):
     """Creation of a :class:`.Comment` on a :class:`.Submission`."""
 
     read_scope = 'submission:moderate'
@@ -317,7 +387,7 @@ class CreateCommentEvent(Event):
 
 
 @dataclass
-class DeleteCommentEvent(Event):
+class DeleteComment(Event):
     """Deletion of a :class:`.Comment` on a :class:`.Submission`."""
 
     read_scope = 'submission:moderate'
@@ -341,7 +411,7 @@ class DeleteCommentEvent(Event):
 
 
 @dataclass
-class AddDelegateEvent(Event):
+class AddDelegate(Event):
     """Owner delegates authority to another agent."""
 
     delegate: Optional[Agent] = None
@@ -363,7 +433,7 @@ class AddDelegateEvent(Event):
 
 
 @dataclass
-class RemoveDelegateEvent(Event):
+class RemoveDelegate(Event):
     """Owner revokes authority from another agent."""
 
     delegation_id: str = field(default_factory=str)
@@ -380,18 +450,18 @@ class RemoveDelegateEvent(Event):
         return submission
 
 
-# class CreateSourcePackageEvent(Event):
+# class CreateSourcePackage(Event):
 #     pass
 #
-# class UpdateSourcePackageEvent(Event):
-#     pass
-#
-#
-# class DeleteSourcePackageEvent(Event):
+# class UpdateSourcePackage(Event):
 #     pass
 #
 #
-# class AnnotationEvent(Event):
+# class DeleteSourcePackage(Event):
+#     pass
+#
+#
+# class Annotation(Event):
 #     pass
 #
 #

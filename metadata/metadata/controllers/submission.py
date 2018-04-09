@@ -1,4 +1,4 @@
-"""Controllers for the external API."""
+"""Controllers for the metadata API."""
 
 import json
 from functools import wraps
@@ -68,21 +68,20 @@ def create_submission(data: dict, headers: dict, user_data: dict,
     logger.debug('Received request to create submission')
     user, client, proxy = _get_agents(headers, user_data, client_data)
     logger.debug(f'User: {user}; client: {client}, proxy: {proxy}')
-
     try:
         submission, events = ev.save(
-            ev.CreateSubmissionEvent(creator=user, client=client, proxy=proxy),
+            ev.CreateSubmission(creator=user, client=client, proxy=proxy),
             *_update_submission(data, user, client, proxy)
         )
     except ev.InvalidEvent as e:
         raise InternalServerError(str(e)) from e
     except ev.SaveError as e:
-        raise InternalServerError('Problem interacting with database') from e
+        raise InternalServerError('Problem interacting with database: %s' % str(e)) from e
     except Exception as e:
         raise InternalServerError('Encountered unhandled exception') from e
 
     response_headers = {
-        'Location': url_for('submit.get_submission',
+        'Location': url_for('submission.get_submission',
                             submission_id=submission.submission_id)
     }
     return submission.to_dict(), status.HTTP_201_CREATED, response_headers
@@ -92,7 +91,12 @@ def get_submission(submission_id: str, user: Optional[str] = None,
                    client: Optional[str] = None,
                    token: Optional[str] = None) -> Response:
     """Retrieve the current state of a submission."""
-    submission = ev.get_submission(submission_id)
+    try:
+        submission, events = ev.load(submission_id)
+    except ev.NoSuchSubmission as e:
+        raise NotFound('Submission not found') from e
+    except Exception as e:
+        raise InternalServerError('Encountered unhandled exception') from e
     return submission.to_dict(), status.HTTP_200_OK, {}
 
 
@@ -147,34 +151,34 @@ def _update_submission(data: dict, creator: Agent, client: Agent,
     new_events = []
     if 'submitter_is_author' in data:
         new_events.append(
-            ev.AssertAuthorshipEvent(
-                submitter_is_author=data['submitter_is_author'],
+            ev.AssertAuthorship(
                 **agents,
+                submitter_is_author=data['submitter_is_author']
             )
         )
     if 'license' in data:
         new_events.append(
-            ev.SelectLicenseEvent(
+            ev.SelectLicense(
+                **agents,
                 license_name=data['license'].get('name'),
-                license_uri=data['license']['uri'],
-                **agents
+                license_uri=data['license']['uri']
             )
         )
 
     if 'submitter_accepts_policy' in data and data['submitter_accepts_policy']:
-        new_events.append(ev.AcceptPolicyEvent(**agents))
+        new_events.append(ev.AcceptPolicy(**agents))
 
     # Generate both primary and secondary classifications.
     if 'primary_classification' in data:
         category = data['primary_classification']['category']
         new_events.append(
-            ev.SetPrimaryClassificationEvent(category=category, **agents)
+            ev.SetPrimaryClassification(**agents, category=category)
         )
 
     for classification_datum in data.get('secondary_classification', []):
         category = classification_datum['category']
         new_events.append(
-            ev.AddSecondaryClassificationEvent(category=category, **agents)
+            ev.AddSecondaryClassification(**agents, category=category)
         )
 
     if 'metadata' in data:
@@ -183,5 +187,5 @@ def _update_submission(data: dict, creator: Agent, client: Agent,
             for key in SubmissionMetadata.FIELDS
             if key in data['metadata']
         ]
-        new_events.append(ev.UpdateMetadataEvent(metadata=metadata, **agents))
+        new_events.append(ev.UpdateMetadata(**agents, metadata=metadata))
     return new_events

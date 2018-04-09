@@ -19,11 +19,10 @@ from flask import Flask
 
 from events.domain.agent import User
 from events.domain.submission import License, Submission, Author
-from events.domain.event import CreateSubmissionEvent, UpdateMetadataEvent, \
-    FinalizeSubmissionEvent, SetPrimaryClassificationEvent, \
-    AddSecondaryClassificationEvent, SelectLicenseEvent, \
-    SetPrimaryClassificationEvent, AcceptPolicyEvent, \
-    VerifyContactInformationEvent
+from events.domain.event import CreateSubmission, UpdateMetadata, \
+    FinalizeSubmission, SetPrimaryClassification, AddSecondaryClassification, \
+    SelectLicense, SetPrimaryClassification, AcceptPolicy, \
+    VerifyContactInformation
 from events.domain.agent import User
 from events.services import classic
 
@@ -87,7 +86,7 @@ class TestStoreEvents(TestCase):
         """Store a single event."""
         with in_memory_db() as session:
             user = User(12345, 'joe@joe.joe')
-            ev = CreateSubmissionEvent(creator=user)
+            ev = CreateSubmission(creator=user)
             submission = ev.apply()
             submission = classic.store_events(ev, submission=submission)
 
@@ -117,8 +116,8 @@ class TestStoreEvents(TestCase):
         }
         with in_memory_db() as session:
             user = User(12345, 'joe@joe.joe')
-            ev = CreateSubmissionEvent(creator=user)
-            ev2 = UpdateMetadataEvent(creator=user,
+            ev = CreateSubmission(creator=user)
+            ev2 = UpdateMetadata(creator=user,
                                       metadata=list(metadata.items()))
 
             submission = ev.apply()
@@ -149,8 +148,8 @@ class TestStoreEvents(TestCase):
         """Store events and a finalized submission."""
         with in_memory_db() as session:
             user = User(12345, 'joe@joe.joe')
-            ev = CreateSubmissionEvent(creator=user)
-            ev2 = FinalizeSubmissionEvent(creator=user)
+            ev = CreateSubmission(creator=user)
+            ev2 = FinalizeSubmission(creator=user)
             submission = ev.apply()
             submission = ev2.apply(submission)
             submission = classic.store_events(ev, ev2, submission=submission)
@@ -169,10 +168,10 @@ class TestStoreEvents(TestCase):
     def test_store_events_with_classification(self):
         """Store events including classification."""
         user = User(12345, 'joe@joe.joe')
-        ev = CreateSubmissionEvent(creator=user)
-        ev2 = SetPrimaryClassificationEvent(creator=user,
+        ev = CreateSubmission(creator=user)
+        ev2 = SetPrimaryClassification(creator=user,
                                             category='physics.soc-ph')
-        ev3 = AddSecondaryClassificationEvent(creator=user,
+        ev3 = AddSecondaryClassification(creator=user,
                                               category='physics.acc-ph')
         submission = ev.apply()
         submission = ev2.apply(submission)
@@ -212,8 +211,8 @@ class TestGetSubmission(TestCase):
         """Test that publication state is reflected in submission data."""
         user = User(12345, 'joe@joe.joe')
         events = [
-            CreateSubmissionEvent(creator=user),
-            UpdateMetadataEvent(creator=user, metadata=[
+            CreateSubmission(creator=user),
+            UpdateMetadata(creator=user, metadata=[
                 ('title', 'Foo title'),
                 ('abstract', 'Indeed'),
                 ('authors', [
@@ -223,12 +222,12 @@ class TestGetSubmission(TestCase):
                            email='j@doe.com'),
                 ])
             ]),
-            SelectLicenseEvent(creator=user, license_uri='http://foo.org/1.0/',
+            SelectLicense(creator=user, license_uri='http://foo.org/1.0/',
                                license_name='Foo zero 1.0'),
-            SetPrimaryClassificationEvent(creator=user, category='cs.DL'),
-            AcceptPolicyEvent(creator=user),
-            VerifyContactInformationEvent(creator=user),
-            FinalizeSubmissionEvent(creator=user)
+            SetPrimaryClassification(creator=user, category='cs.DL'),
+            AcceptPolicy(creator=user),
+            VerifyContactInformation(creator=user),
+            FinalizeSubmission(creator=user)
         ]
         submission = None
         for ev in events:
@@ -265,8 +264,8 @@ class TestGetSubmission(TestCase):
         """Test changes made externally are reflected in submission data."""
         user = User(12345, 'joe@joe.joe')
         events = [
-            CreateSubmissionEvent(creator=user),
-            UpdateMetadataEvent(creator=user, metadata=[
+            CreateSubmission(creator=user),
+            UpdateMetadata(creator=user, metadata=[
                 ('title', 'Foo title'),
                 ('abstract', 'Indeed'),
                 ('authors', [
@@ -276,12 +275,12 @@ class TestGetSubmission(TestCase):
                            email='j@doe.com'),
                 ])
             ]),
-            SelectLicenseEvent(creator=user, license_uri='http://foo.org/1.0/',
+            SelectLicense(creator=user, license_uri='http://foo.org/1.0/',
                                license_name='Foo zero 1.0'),
-            SetPrimaryClassificationEvent(creator=user, category='cs.DL'),
-            AcceptPolicyEvent(creator=user),
-            VerifyContactInformationEvent(creator=user),
-            FinalizeSubmissionEvent(creator=user)
+            SetPrimaryClassification(creator=user, category='cs.DL'),
+            AcceptPolicy(creator=user),
+            VerifyContactInformation(creator=user),
+            FinalizeSubmission(creator=user)
         ]
         submission = None
         for ev in events:

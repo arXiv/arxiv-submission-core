@@ -1,14 +1,16 @@
 """Tests for :mod:`api.controllers`."""
 
 from unittest import TestCase, mock
+import json
 from datetime import datetime
 from werkzeug.exceptions import BadRequest, InternalServerError, NotFound
 
 from arxiv import status
 from events.domain import User, Submission
-from events import CreateSubmissionEvent, UpdateMetadataEvent, SaveError, \
-    InvalidEvent, NoSuchSubmission, SetPrimaryClassificationEvent
-from api.controllers import submission
+from events import CreateSubmission, UpdateMetadata, SaveError, \
+    InvalidEvent, NoSuchSubmission, SetPrimaryClassification, \
+    AttachSourceContent
+from metadata.controllers import submission
 
 
 def preserve_exceptions_and_events(mock_events):
@@ -16,10 +18,10 @@ def preserve_exceptions_and_events(mock_events):
     mock_events.SaveError = SaveError
     mock_events.InvalidEvent = InvalidEvent
     mock_events.NoSuchSubmission = NoSuchSubmission
-    mock_events.UpdateMetadataEvent = UpdateMetadataEvent
-    mock_events.CreateSubmissionEvent = CreateSubmissionEvent
-    mock_events.SetPrimaryClassificationEvent = \
-        SetPrimaryClassificationEvent
+    mock_events.UpdateMetadata = UpdateMetadata
+    mock_events.CreateSubmission = CreateSubmission
+    mock_events.SetPrimaryClassification = SetPrimaryClassification
+    mock_events.AttachSourceContent = AttachSourceContent
 
 
 class TestCreateSubmission(TestCase):
@@ -32,8 +34,8 @@ class TestCreateSubmission(TestCase):
         self.token = 'asdf1234'
         self.headers = {}
 
-    @mock.patch('api.controllers.submission.url_for')
-    @mock.patch('api.controllers.submission.ev')
+    @mock.patch('metadata.controllers.submission.url_for')
+    @mock.patch('metadata.controllers.submission.ev')
     def test_create_submission_with_valid_data(self, mock_events, url_for):
         """Create a submission with valid data."""
         preserve_exceptions_and_events(mock_events)
@@ -41,7 +43,7 @@ class TestCreateSubmission(TestCase):
         user = User(1234, 'foo@bar.baz')
         mock_events.save.return_value = (
             Submission(creator=user, owner=user, created=datetime.now()),
-            [CreateSubmissionEvent(creator=user)]
+            [CreateSubmission(creator=user)]
         )
         data = {
             'primary_classification': {
@@ -54,17 +56,17 @@ class TestCreateSubmission(TestCase):
                                                         self.token)
         call_args, call_kwargs = mock_events.save.call_args
 
-        self.assertIsInstance(call_args[0], CreateSubmissionEvent,
-                              "Should pass a CreateSubmissionEvent first")
-        self.assertIsInstance(call_args[1], SetPrimaryClassificationEvent,
-                              "Should pass a SetPrimaryClassificationEvent")
+        self.assertIsInstance(call_args[0], CreateSubmission,
+                              "Should pass a CreateSubmission first")
+        self.assertIsInstance(call_args[1], SetPrimaryClassification,
+                              "Should pass a SetPrimaryClassification")
         self.assertEqual(stat, status.HTTP_201_CREATED,
                          "Should return 201 Created when submission is"
                          " successfully created.")
         self.assertIn('Location', head, "Should include a Location header.")
 
-    @mock.patch('api.controllers.submission.url_for')
-    @mock.patch('api.controllers.submission.ev')
+    @mock.patch('metadata.controllers.submission.url_for')
+    @mock.patch('metadata.controllers.submission.ev')
     def test_create_submission_with_invalid_data(self, mock_events, url_for):
         """Trying to create a submission with invalid data throws exception."""
         preserve_exceptions_and_events(mock_events)
@@ -76,8 +78,8 @@ class TestCreateSubmission(TestCase):
             submission.create_submission(data, self.headers, self.user_data,
                                          self.client_data, self.token)
 
-    @mock.patch('api.controllers.submission.url_for')
-    @mock.patch('api.controllers.submission.ev')
+    @mock.patch('metadata.controllers.submission.url_for')
+    @mock.patch('metadata.controllers.submission.ev')
     def test_create_submission_with_db_down(self, mock_events, url_for):
         """An internal server error is raised when the database is down."""
         url_for.return_value = '/foo/'
@@ -92,8 +94,8 @@ class TestCreateSubmission(TestCase):
             submission.create_submission(data, self.headers, self.user_data,
                                          self.client_data, self.token)
 
-    @mock.patch('api.controllers.submission.url_for')
-    @mock.patch('api.controllers.submission.ev')
+    @mock.patch('metadata.controllers.submission.url_for')
+    @mock.patch('metadata.controllers.submission.ev')
     def test_create_submission_with_invalid_event(self, mock_events, url_for):
         """An internal server error is raised on an invalid event."""
         url_for.return_value = '/foo/'
@@ -119,8 +121,8 @@ class TestUpdateSubmission(TestCase):
         self.token = 'asdf1234'
         self.headers = {}
 
-    @mock.patch('api.controllers.submission.url_for')
-    @mock.patch('api.controllers.submission.ev')
+    @mock.patch('metadata.controllers.submission.url_for')
+    @mock.patch('metadata.controllers.submission.ev')
     def test_update_submission_with_valid_data(self, mock_events, url_for):
         """Update a submission with valid data."""
         preserve_exceptions_and_events(mock_events)
@@ -128,9 +130,8 @@ class TestUpdateSubmission(TestCase):
         user = User(1234, 'foo@bar.baz')
         mock_events.save.return_value = (
             Submission(creator=user, owner=user, created=datetime.now()),
-            [CreateSubmissionEvent(creator=user),
-             UpdateMetadataEvent(creator=user,
-                                 metadata=[('title', 'foo title')])]
+            [CreateSubmission(creator=user),
+             UpdateMetadata(creator=user, metadata=[('title', 'foo title')])]
         )
         data = {
             'metadata': {
@@ -147,11 +148,11 @@ class TestUpdateSubmission(TestCase):
         self.assertIn('Location', head, "Should include a Location header.")
         call_args, call_kwargs = mock_events.save.call_args
 
-        self.assertIsInstance(call_args[0], UpdateMetadataEvent,
-                              "Should pass an UpdateMetadataEvent")
+        self.assertIsInstance(call_args[0], UpdateMetadata,
+                              "Should pass an UpdateMetadata")
 
-    @mock.patch('api.controllers.submission.url_for')
-    @mock.patch('api.controllers.submission.ev')
+    @mock.patch('metadata.controllers.submission.url_for')
+    @mock.patch('metadata.controllers.submission.ev')
     def test_update_nonexistant_submission(self, mock_events, url_for):
         """Trying to update a nonexistant submission throws exception."""
         preserve_exceptions_and_events(mock_events)
@@ -166,8 +167,8 @@ class TestUpdateSubmission(TestCase):
             submission.update_submission(data, self.headers, self.user_data,
                                          self.client_data, self.token, 1)
 
-    @mock.patch('api.controllers.submission.url_for')
-    @mock.patch('api.controllers.submission.ev')
+    @mock.patch('metadata.controllers.submission.url_for')
+    @mock.patch('metadata.controllers.submission.ev')
     def test_update_submission_with_invalid_data(self, mock_events, url_for):
         """Trying to update a submission with invalid data throws exception."""
         preserve_exceptions_and_events(mock_events)
@@ -179,8 +180,8 @@ class TestUpdateSubmission(TestCase):
             submission.update_submission(data, self.headers, self.user_data,
                                          self.client_data, self.token, 1)
 
-    @mock.patch('api.controllers.submission.url_for')
-    @mock.patch('api.controllers.submission.ev')
+    @mock.patch('metadata.controllers.submission.url_for')
+    @mock.patch('metadata.controllers.submission.ev')
     def test_update_submission_with_db_down(self, mock_events, url_for):
         """An internal server error is raised when the database is down."""
         url_for.return_value = '/foo/'
@@ -195,8 +196,8 @@ class TestUpdateSubmission(TestCase):
             submission.update_submission(data, self.headers, self.user_data,
                                          self.client_data, self.token, 1)
 
-    @mock.patch('api.controllers.submission.url_for')
-    @mock.patch('api.controllers.submission.ev')
+    @mock.patch('metadata.controllers.submission.url_for')
+    @mock.patch('metadata.controllers.submission.ev')
     def test_update_submission_with_invalid_event(self, mock_events, url_for):
         """An internal server error is raised on an invalid event."""
         url_for.return_value = '/foo/'
@@ -214,3 +215,31 @@ class TestUpdateSubmission(TestCase):
 
 class TestGetSubmission(TestCase):
     """Tests for :func:`.submission.get_submission`."""
+
+    @mock.patch('metadata.controllers.submission.ev')
+    def test_get_submission(self, mock_events):
+        """Should return a JSON-serializable dict if submisison exists."""
+        preserve_exceptions_and_events(mock_events)
+        user = User(1234, 'foo@bar.baz')
+        mock_events.load.return_value = (
+            Submission(creator=user, owner=user, created=datetime.now()),
+            [CreateSubmission(creator=user)]
+        )
+        content, status_code, headers = submission.get_submission(1)
+        self.assertEqual(mock_events.load.call_count, 1,
+                         "Should call load() in the events core package")
+        self.assertEqual(status_code, status.HTTP_200_OK,
+                         "Should return 200 OK")
+        self.assertIsInstance(content, dict, "Should return a dict")
+        try:
+            json.dumps(content)
+        except Exception:
+            self.fail("Content should be JSON-serializable.")
+
+    @mock.patch('metadata.controllers.submission.ev')
+    def test_get_nonexistant_submission(self, mock_events):
+        """Should raise NotFound if the submission does not exist."""
+        preserve_exceptions_and_events(mock_events)
+        mock_events.load.side_effect = NoSuchSubmission
+        with self.assertRaises(NotFound):
+            submission.get_submission(1)

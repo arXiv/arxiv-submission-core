@@ -34,7 +34,7 @@ data, and commit the event using :func:`.save`. For example:
    >>> import events
    >>> user = events.User(123, "joe@bloggs.com")
    >>> metadata = [('title', 'A new theory of foo')]
-   >>> update = events.UpdateMetadataEvent(creator=user, metadata=metadata)
+   >>> update = events.UpdateMetadata(creator=user, metadata=metadata)
    >>> submission = events.save(creation, submission_id=12345)
 
 
@@ -59,7 +59,7 @@ Several things will occur:
 
 Special case: creation
 ----------------------
-Note that if the first event is a :class:`.CreateSubmissionEvent` the
+Note that if the first event is a :class:`.CreateSubmission` the
 submission ID need not be provided, as we won't know what it is yet. For
 example:
 
@@ -68,9 +68,9 @@ example:
    import events
 
    >>> user = events.User(123, "joe@bloggs.com")
-   >>> creation = events.CreateSubmissionEvent(creator=user)
+   >>> creation = events.CreateSubmission(creator=user)
    >>> metadata = [('title', 'A new theory of foo')]
-   >>> update = events.UpdateMetadataEvent(creator=user, metadata=metadata)
+   >>> update = events.UpdateMetadata(creator=user, metadata=metadata)
    >>> submission = events.save(creation, update)
    >>> submission.submission_id
    40032
@@ -82,12 +82,11 @@ from typing import Optional, List, Tuple
 from events.domain.submission import Submission, SubmissionMetadata
 from events.domain.agent import Agent, User, System, Client
 from events.domain.event import (
-    Event, CreateSubmissionEvent, RemoveSubmissionEvent,
-    VerifyContactInformationEvent, AssertAuthorshipEvent, AcceptPolicyEvent,
-    SetPrimaryClassificationEvent, AddSecondaryClassificationEvent,
-    RemoveSecondaryClassificationEvent, SelectLicenseEvent,
-    UpdateMetadataEvent, UpdateAuthorsEvent, CreateCommentEvent,
-    DeleteCommentEvent, AddDelegateEvent, RemoveDelegateEvent
+    Event, CreateSubmission, RemoveSubmission, VerifyContactInformation,
+    AssertAuthorship, AcceptPolicy, SetPrimaryClassification, UpdateMetadata,
+    AddSecondaryClassification, RemoveSecondaryClassification, SelectLicense,
+    AttachSourceContent, UpdateAuthors, CreateComment, DeleteComment,
+    AddDelegate, RemoveDelegate
 )
 from events.domain.rule import RuleCondition, RuleConsequence, EventRule
 from events.services import classic
@@ -136,14 +135,14 @@ def save(*events: Event, submission_id: Optional[str] = None) \
         Events to apply and persist.
     submission_id : int
         The unique ID for the submission, if available. If not provided, it is
-        expected that ``events`` includes a :class:`.CreateSubmissionEvent`.
+        expected that ``events`` includes a :class:`.CreateSubmission`.
 
     Returns
     -------
     :class:`events.domain.submission.Submission`
         The state of the submission after all events (including rule-derived
         events) have been applied. Updated with the submission ID, if a
-        :class:`.CreateSubmissionEvent` was included.
+        :class:`.CreateSubmission` was included.
     list
         A list of :class:`.Event` instances applied to the submission. Note
         that this list may contain more events than were passed, if event
@@ -153,7 +152,7 @@ def save(*events: Event, submission_id: Optional[str] = None) \
     ------
     :class:`.NoSuchSubmission`
         Raised if ``submission_id`` is not provided and the first event is not
-        a :class:`.CreateSubmissionEvent`, or ``submission_id`` is provided but
+        a :class:`.CreateSubmission`, or ``submission_id`` is provided but
         no such submission exists.
     :class:`.InvalidEvent`
         If an invalid event is encountered, the entire operation is aborted
@@ -196,7 +195,7 @@ def save(*events: Event, submission_id: Optional[str] = None) \
     try:
         submission = classic.store_events(*combined, submission=submission)
     except classic.CommitFailed as e:
-        raise SaveError('Failed to store events') from e
+        raise SaveError('Failed to store events: %s' % str(e)) from e
 
     for event in combined:
         event.submission_id = submission.submission_id
@@ -228,7 +227,7 @@ def _apply_events(events: List[Event], rules: List[EventRule],
     submission : :class:`.Submission` or None
         Starting state from which to begin applying ``events``. If
         ``submission`` is not provided, ``events`` must contain a
-        :class:`.CreateSubmissionEvent`.
+        :class:`.CreateSubmission`.
 
     Returns
     -------
@@ -242,7 +241,7 @@ def _apply_events(events: List[Event], rules: List[EventRule],
     ------
     :class:`.NoSuchSubmission`
         If ``submission`` is not provided, and the first event is not a
-        :class:`.CreateSubmissionEvent`, there's not much else to go on.
+        :class:`.CreateSubmission`, there's not much else to go on.
     :class:`.InvalidEvent`
         If an invalid event is encountered, the entire operation is aborted
         and this exception is raised.
@@ -251,7 +250,7 @@ def _apply_events(events: List[Event], rules: List[EventRule],
     events = sorted(events, key=lambda e: e.created)
 
     # Need either a creation event or a submission state from which to start.
-    if not isinstance(events[0], CreateSubmissionEvent) and submission is None:
+    if not isinstance(events[0], CreateSubmission) and submission is None:
         raise NoSuchSubmission('No creation, and submission not provided')
 
     extra_events: List[Event] = []    # Generated by applied rules.
@@ -259,7 +258,7 @@ def _apply_events(events: List[Event], rules: List[EventRule],
         if not event.valid(submission):
             raise InvalidEvent(event)
 
-        if isinstance(event, CreateSubmissionEvent):
+        if isinstance(event, CreateSubmission):
             submission = event.apply()
         else:
             submission = event.apply(submission)

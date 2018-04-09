@@ -2,7 +2,7 @@
   "title": "Client",
   "description": "Data about an API client",
   "type": "object",
-  "additionalProperties": false,
+  "additionalProperties": true,
   "required": ["client_id", "email"],
   "properties": {
     "client_id": {

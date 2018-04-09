@@ -2,7 +2,7 @@
   "title": "User",
   "description": "Data about a user in the submission.",
   "type": "object",
-  "additionalProperties": false,
+  "additionalProperties": true,
   "required": ["email"],
   "properties": {
     "user_id": {
@@ -28,7 +28,10 @@
     },
     "identifier": {
       "description": "External unique identifier for the user, e.g. an ORCID ID.",
-      "type": "string"
+      "oneOf": [
+        {"type": "string"},
+        {"type": "null"}
+      ]
     },
     "affiliation": {
       "description": "Name of the institution with which the user is affiliated.",

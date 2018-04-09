@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "04843e08a302675b715e612006ca5e70d083b1acfe8863107bcc2f8f8b94ab24"
+            "sha256": "06151d5b765c69a7d1dcca46883cd619603571e2d91c0ee8f3dda8096ded933d"
         },
         "host-environment-markers": {
             "implementation_name": "cpython",
@@ -29,6 +29,9 @@
     "default": {
         "2ae22c6": {
             "path": "./../core"
+        },
+        "ae4d86c": {
+            "path": "./../authorization"
         },
         "arxiv-base": {
             "hashes": [
@@ -451,10 +454,10 @@
         },
         "openapi-spec-validator": {
             "hashes": [
-                "sha256:c0efe630544e3a2d9ba2109e301d176f92255d7d3864a47fc56305ef058cfc6b",
-                "sha256:6f54ef5e1d24416b18aa858fa9c18fd50ff3a40f48cf5ceb18c2a0928c3d9e5f"
+                "sha256:f97ba93798cc958e04250ffe6418c7a25a13363c6cb0f0269d9e7db1a0e467c1",
+                "sha256:76fcd37c20d14f1a5084f41fb2e4d0d900f6474f5fda40c27ddbeb791eaad16e"
             ],
-            "version": "==0.1.2"
+            "version": "==0.2.0"
         },
         "pyaml": {
             "hashes": [

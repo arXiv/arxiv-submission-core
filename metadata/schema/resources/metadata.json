@@ -12,12 +12,12 @@
       "description": "Paper abstract provided by author.",
       "type": "string"
     },
-    "author_canonical": {
+    "authors_canonical": {
       "description": "Canonical author string generated from the ``authors``. Read-only.",
       "readOnly": true,
       "type": "string"
     },
-    "author": {
+    "authors": {
       "description": "Authors",
       "type": "array",
       "minItems": 1,
@@ -26,7 +26,8 @@
         "type": "object",
         "required": [
           "forename",
-          "surname"
+          "surname",
+          "email"
         ],
         "properties": {
           "forename": {
@@ -60,58 +61,27 @@
     },
     "doi": {
       "description": "External DOI for the submission. See https://arxiv.org/help/prep#doi",
-      "oneOf": [
-        {
-          "type": "string"
-        },
-        {
-          "type": "null"
-        }
-      ]
+      "oneOf": [{"type": "string"}, {"type": "null"}]
     },
     "msc_class": {
       "description": "MSC subject class for this submission. See https://arxiv.org/help/prep#msc",
-      "oneOf": [
-        {
-          "type": "string"
-        },
-        {
-          "type": "null"
-        }
-      ]
+      "oneOf": [{"type": "string"}, {"type": "null"}]
     },
     "acm_class": {
       "description": "ACM subject class for this submission. See https://arxiv.org/help/prep#acm",
-      "oneOf": [
-        {
-          "type": "string"
-        },
-        {
-          "type": "null"
-        }
-      ]
+      "oneOf": [{"type": "string"}, {"type": "null"}]
     },
     "report_num": {
       "description": "Report number for this submission. See https://arxiv.org/help/prep#report",
-      "oneOf": [
-        {
-          "type": "string"
-        },
-        {
-          "type": "null"
-        }
-      ]
+      "oneOf": [{"type": "string"}, {"type": "null"}]
     },
     "journal_ref": {
       "description": "Journal ref (citation) for this submission. See https://arxiv.org/help/prep#journal",
-      "oneOf": [
-        {
-          "type": "string"
-        },
-        {
-          "type": "null"
-        }
-      ]
+      "oneOf": [{"type": "string"}, {"type": "null"}]
+    },
+    "comments": {
+      "description": "A brief comment accompanying the public metadata. See https://arxiv.org/help/prep#comments",
+      "oneOf": [{"type": "string"}, {"type": "null"}]
     }
   }
 }

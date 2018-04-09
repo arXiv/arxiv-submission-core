@@ -43,6 +43,7 @@ pyyaml = "*"
 "2ae22c6" = {path = "./../core"}
 dataclasses = "*"
 pytz = "*"
+"ae4d86c" = {path = "./../authorization"}
 
 
 [dev-packages]

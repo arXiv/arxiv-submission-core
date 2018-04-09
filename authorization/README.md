@@ -9,16 +9,14 @@ functionality of a real authorization service for demonstration purposes.
 A typical client request might go something like this...
 
 ```
-Client     Gateway      Auth    API      Events        Broker
-  | --POST--> |           |      |          |             |
-  |  w/token  | --token-> |      |          |             |
-  |           |           |      |          |             |
-  |           | <--JWT--- |      |          |             |
-  |           |                  |          |             |
-  |           | --POST (w/JWT)-> |          |             |
-  |           |    Submission    | --POST-> |             |
-  |           |                  |  (w/JWT) | --Notify--> |  
-  |           |                  | <--OK--- |   (async)   | --Notify--> ..
-  |           | <------OK------- |
+Client     Gateway      Auth   Service
+  | --POST--> |           |       |   
+  |  w/token  | --token-> |       |   
+  |           |           |       |   
+  |           | <--JWT--- |       |   
+  |           |                   |   
+  |           | --POST (w/JWT)--> |   
+  |           |    Submission     | --- // -->
+  |           | <------OK-------- |
   | <---OK--- |
 ```

@@ -21,8 +21,9 @@ JWT_SECRET = os.environ.get('JWT_SECRET', 'foo')
 
 
 UPLOAD_S3_BUCKET = 'arxiv-submit-upload'
-SQLALCHEMY_DATABASE_URI = os.environ.get('API_DATABASE_URI', 'sqlite:///')
+CLASSIC_DATABASE_URI = os.environ.get('CLASSIC_DATABASE_URI', 'sqlite:///')
 SQLALCHEMY_TRACK_MODIFICATIONS = False
 
 EVENTS_ENDPOINT = os.environ.get('EVENTS_ENDPOINT',
                                  'http://submission-events:8000')
+LOGLEVEL = os.environ.get('LOGLEVEL', 40)

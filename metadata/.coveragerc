@@ -4,4 +4,5 @@ omit =
     docs/*
     */test*
     app.py
-    api/config.py
+    metadata/config.py
+    wsgi.py

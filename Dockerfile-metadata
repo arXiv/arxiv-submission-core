@@ -11,10 +11,11 @@ RUN pip install -r /opt/arxiv/requirements.txt
 
 ADD ./api/ /opt/arxiv/
 ADD ./authorization/ /opt/arxiv/authorization/
+ADD ./core/events/ /opt/arxiv/events/
 RUN pip install /opt/arxiv/authorization/
+RUN pip install /opt/arxiv/events/
 
 ENV JWT_SECRET "foo"
-ENV EVENTS_ENDPOINT "http://submission-events:8000/"
 EXPOSE 8000
 
 WORKDIR /opt/arxiv

@@ -107,7 +107,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: 'resources/sourceInformation.json'
+                $ref: 'resources/content.json'
 
     post:
       operationId: addSourcePackage
@@ -120,7 +120,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: 'resources/sourceInformation.json'
+                $ref: 'resources/content.json'
 
   /submission/{id}/history/:
     parameters:
@@ -177,5 +177,3 @@ paths:
             application/json:
               schema:
                 $ref: 'resources/event.json'
-
-  

@@ -270,8 +270,8 @@ def current_session() -> Session:
     if not g:
         return get_session()
     if 'classic' not in g:
-        g.search = get_session()    # type: ignore
-    return g.search     # type: ignore
+        g.classic = get_session()    # type: ignore
+    return g.classic     # type: ignore
 
 
 def create_all() -> None:

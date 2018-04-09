@@ -44,7 +44,7 @@ def validate_request(schema_path: str) -> Callable:
                     'reason': f'Metadata validation failed: {msg[0]}',
                     'detail': ' '.join(msg)
                 }
-                raise BadRequest(msg[0], detail)
+                raise BadRequest(msg[0])
             response: Tuple[dict, int, dict] = func(data, *args, **kwargs)
             return response
         return _wrpr

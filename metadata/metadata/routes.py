@@ -4,16 +4,15 @@ from arxiv.base import logging
 from typing import Callable, Union
 from functools import wraps
 from flask.json import jsonify
-from flask import Blueprint, current_app, redirect, request, url_for, g, \
-    Response
+from flask import Blueprint, current_app, redirect, request, g, Response
 
 from authorization.decorators import scoped
 from arxiv import status
-from api.controllers import submission
+from metadata.controllers import submission
 
 logger = logging.getLogger(__name__)
 
-blueprint = Blueprint('submit', __name__, url_prefix='/submit')
+blueprint = Blueprint('submission', __name__, url_prefix='/submission')
 
 
 def json_response(func):
@@ -21,20 +20,23 @@ def json_response(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
         r_body, r_status, r_headers = func(*args, **kwargs)
-        return jsonify(r_body), r_status, r_headers
+        response = jsonify(r_body)
+        response.status_code = r_status
+        response.headers.extend(r_headers)
+        return response
     return wrapper
 
 
 @blueprint.route('/', methods=['POST'])
 @json_response
-@scoped('submission:write')
+@scoped('submission:create')
 def create_submission() -> Union[str, Response]:
     """Accept new submissions."""
     return submission.create_submission(
         request.get_json(),
         dict(request.headers),
-        user=g.user,
-        client=g.client,
+        user_data=g.user,
+        client_data=g.client,
         token=g.token
     )
 
