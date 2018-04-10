@@ -1,0 +1,26 @@
+{
+  "title": "Content",
+  "description": "Describes content for a submission.",
+  "additionalProperties": false,
+  "type": "object",
+  "required": ["location", "checksum", "format", "identifier"],
+  "properties": {
+    "location": {
+      "description": "Location of the content resource.",
+      "type": "string",
+      "format": "url"
+    },
+    "checksum": {
+      "description": "MD5 checksum of the content resource.",
+      "type": "string"
+    },
+    "format": {
+      "description": "MIME-type of the content resource.",
+      "type": "string"
+    },
+    "identifier": {
+      "description": "Unique identifier for the content resource.",
+      "type": "integer"
+    }
+  }
+}

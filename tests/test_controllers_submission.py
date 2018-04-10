@@ -46,12 +46,12 @@ class TestCreateSubmission(TestCase):
         self.assertIn('Location', headers)
 
         event_types = [type(e) for e in mock_eventBus.emit.call_args[0]]
-        self.assertIn(CreateSubmissionEvent, event_types)
+        self.assertIn(CreateSubmission, event_types)
         self.assertIn(AssertAuthorshipEvent, event_types)
         self.assertIn(SelectLicenseEvent, event_types)
         self.assertIn(AcceptArXivPolicyEvent, event_types)
-        self.assertIn(SetPrimaryClassificationEvent, event_types)
-        self.assertIn(UpdateMetadataEvent, event_types)
+        self.assertIn(SetPrimaryClassification, event_types)
+        self.assertIn(UpdateMetadata, event_types)
 
     def test_add_submission_no_creator(self):
         """:func:`.submission.create_submission` expects a valid creator."""

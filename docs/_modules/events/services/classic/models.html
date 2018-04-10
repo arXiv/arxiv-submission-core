@@ -39,7 +39,7 @@
           <div class="body" role="main">
             
   <h1>Source code for events.services.classic.models</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;SQLAlchemy ORM classes.&quot;&quot;&quot;</span>
+<span></span><span class="sd">&quot;&quot;&quot;SQLAlchemy ORM classes for the classic database.&quot;&quot;&quot;</span>
 
 <span class="kn">import</span> <span class="nn">json</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Optional</span>
@@ -227,9 +227,16 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">status</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_status</span><span class="p">()</span>
         <span class="n">primary</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">primary_classification</span>
+        <span class="n">submitter</span> <span class="o">=</span> <span class="n">domain</span><span class="o">.</span><span class="n">User</span><span class="p">(</span>
+            <span class="n">native_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">submitter</span><span class="o">.</span><span class="n">user_id</span><span class="p">,</span>
+            <span class="n">email</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">submitter</span><span class="o">.</span><span class="n">email</span><span class="p">,</span>
+            <span class="n">forename</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">submitter</span><span class="o">.</span><span class="n">first_name</span><span class="p">,</span>
+            <span class="n">surname</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">submitter</span><span class="o">.</span><span class="n">last_name</span><span class="p">,</span>
+            <span class="n">suffix</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">submitter</span><span class="o">.</span><span class="n">suffix_name</span>
+        <span class="p">)</span>
         <span class="k">return</span> <span class="n">domain</span><span class="o">.</span><span class="n">Submission</span><span class="p">(</span>
-            <span class="n">creator</span><span class="o">=</span><span class="n">domain</span><span class="o">.</span><span class="n">User</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">submitter_id</span><span class="p">),</span>
-            <span class="n">owner</span><span class="o">=</span><span class="n">domain</span><span class="o">.</span><span class="n">User</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">submitter_id</span><span class="p">),</span>
+            <span class="n">creator</span><span class="o">=</span><span class="n">submitter</span><span class="p">,</span>
+            <span class="n">owner</span><span class="o">=</span><span class="n">submitter</span><span class="p">,</span>
             <span class="n">created</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">created</span><span class="p">,</span>
             <span class="n">updated</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">updated</span><span class="p">,</span>
             <span class="n">submitter_is_author</span><span class="o">=</span><span class="nb">bool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">is_author</span><span class="p">),</span>
@@ -702,7 +709,8 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../architecture.html">Submission &amp; moderation subsystem architecture</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../publication_process.html">Submission &amp; Publication Process</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../submission_api_context.html">Submission API: Context</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../containers/core/events.html">Submission core events package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../containers/core/events.html">events package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../containers/metadata/metadata.html">metadata package</a></li>
 </ul>
 
 <div class="relations">

@@ -49,11 +49,19 @@
 <div class="viewcode-block" id="InvalidEvent"><a class="viewcode-back" href="../../containers/core/events.html#events.exceptions.InvalidEvent">[docs]</a><span class="k">class</span> <span class="nc">InvalidEvent</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Raised when an invalid event is encountered.&quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">:</span> <span class="n">EventType</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">:</span> <span class="n">EventType</span><span class="p">,</span> <span class="n">extra</span><span class="p">:</span> <span class="nb">str</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Use the :class:`.Event` to build an error message.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">event</span><span class="p">:</span> <span class="n">EventType</span> <span class="o">=</span> <span class="n">event</span>
-        <span class="n">msg</span> <span class="o">=</span> <span class="n">f</span><span class="s2">&quot;Invalid event: </span><span class="si">{event.event_type}</span><span class="s2"> (</span><span class="si">{event.event_id}</span><span class="s2">)&quot;</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="n">f</span><span class="s2">&quot;Invalid event: </span><span class="si">{event.event_type}</span><span class="s2"> (</span><span class="si">{event.event_id}</span><span class="s2">): </span><span class="si">{extra}</span><span class="s2">&quot;</span>
         <span class="nb">super</span><span class="p">(</span><span class="n">InvalidEvent</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="NoSuchSubmission"><a class="viewcode-back" href="../../containers/core/events.html#events.exceptions.NoSuchSubmission">[docs]</a><span class="k">class</span> <span class="nc">NoSuchSubmission</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;An operation was performed on/for a submission that does not exist.&quot;&quot;&quot;</span></div>
+
+
+<div class="viewcode-block" id="SaveError"><a class="viewcode-back" href="../../containers/core/events.html#events.exceptions.SaveError">[docs]</a><span class="k">class</span> <span class="nc">SaveError</span><span class="p">(</span><span class="ne">RuntimeError</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Failed to persist event state.&quot;&quot;&quot;</span></div>
 </pre></div>
 
           </div>
@@ -75,7 +83,8 @@
 <li class="toctree-l1"><a class="reference internal" href="../../architecture.html">Submission &amp; moderation subsystem architecture</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../publication_process.html">Submission &amp; Publication Process</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../submission_api_context.html">Submission API: Context</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../containers/core/events.html">Submission core events package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../containers/core/events.html">events package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../containers/metadata/metadata.html">metadata package</a></li>
 </ul>
 
 <div class="relations">

@@ -2,7 +2,6 @@
 
 from setuptools import setup, find_packages
 
-
 setup(
     name='arxiv-submission-events',
     version='0.1',

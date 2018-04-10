@@ -46,7 +46,7 @@ class TestStoreGetEvent(TestCase):
             creator=creator,
             owner=creator
         )
-        event = event_factory('UpdateMetadataEvent', creator=creator,
+        event = event_factory('UpdateMetadata', creator=creator,
                               metadata=[('title', 'foo title')])
         submission = database.store_events(event, submission=submission)
 
@@ -67,12 +67,12 @@ class TestStoreGetEvent(TestCase):
         """:func:`.get_events_for_submission` retrieves :class:`.Event`s."""
         creator = agent_factory('User', 'foo-user')
         submission = database.models.Submission()
-        event = event_factory('UpdateMetadataEvent', creator=creator,
+        event = event_factory('UpdateMetadata', creator=creator,
                               metadata=[('title', 'foo title')])
         database.db.session.add(
             database.models.Event(
                 submission_id=submission.submission_id,
-                event_type='UpdateMetadataEvent',
+                event_type='UpdateMetadata',
                 event_id=event.event_id,
                 data=event.to_dict(),
                 created=event.created,
@@ -117,7 +117,7 @@ class TestStoreGetSubmission(TestCase):
             creator=creator,
             owner=creator
         )
-        event = event_factory('UpdateMetadataEvent', creator=creator,
+        event = event_factory('UpdateMetadata', creator=creator,
                               metadata=[('title', 'foo title')])
         submission = database.store_events(event, submission=submission)
 

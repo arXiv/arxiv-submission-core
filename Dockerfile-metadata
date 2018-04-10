@@ -1,0 +1,27 @@
+# arxiv/submission-api
+
+FROM arxiv/base
+
+RUN pip install uwsgi
+
+# Add Python consumer and configuration.
+ADD requirements.txt /opt/arxiv/requirements.txt
+RUN pip install -U pip
+RUN pip install -r /opt/arxiv/requirements.txt
+
+ADD ./api/ /opt/arxiv/
+ADD ./authorization/ /opt/arxiv/authorization/
+ADD ./core/events/ /opt/arxiv/events/
+RUN pip install /opt/arxiv/authorization/
+RUN pip install /opt/arxiv/events/
+
+ENV JWT_SECRET "foo"
+EXPOSE 8000
+
+WORKDIR /opt/arxiv
+
+#CMD /bin/bash
+
+CMD uwsgi --http-socket :8000 -w wsgi -M \
+        -t 3000 --manage-script-name \
+        --processes 8 --threads 1 --async 100 --ugreen \

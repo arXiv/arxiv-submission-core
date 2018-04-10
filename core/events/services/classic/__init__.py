@@ -1,8 +1,32 @@
-from typing import List, Optional, Generator, Dict, Union
+"""
+Integration with the classic database to persist events and submission state.
+
+As part of the classic renewal strategy, development of new submission
+interfaces must maintain data interoperability with classic components. This
+service module must therefore do two main things:
+
+1. Store and provide access to event data generated during the submission
+   process, and
+2. Keep the classic database tables up to date so that "downstream" components
+   can continue to operate. Since classic components work directly on
+   submission tables, persisting events and resulting submission state must
+   occur in the same transaction.
+
+An additional challenge is representing changes to submission state made by
+classic components, since those changes will be made directly to submission
+tables and not involve event-generation. See :func:`get_submission` for
+details.
+
+ORM representations of the classic database tables involved in submission
+are located in :mod:`.classic.models`. An additional model, :class:`.DBEvent`,
+is defined in the current module.
+"""
+
+from typing import List, Optional, Generator, Dict, Union, Tuple
 from contextlib import contextmanager
 
 from flask import Flask
-from sqlalchemy import JSON, Column, String, DateTime, ForeignKey, \
+from sqlalchemy import Column, String, DateTime, ForeignKey, \
     create_engine
 from sqlalchemy.ext.indexable import index_property
 from sqlalchemy.orm import relationship
@@ -14,19 +38,43 @@ from sqlalchemy.orm.session import Session
 from events.domain.event import Event, event_factory
 from events.domain.submission import License, Submission
 from events.domain.agent import User, Client, Agent
-from . import models
+from . import models, util
 from .models import Base
-from .exceptions import NoSuchSubmission
-from events.context import get_application_config, get_application_global
-
-DBEvent = None
+from .exceptions import NoSuchSubmission, CommitFailed
+from arxiv.base.globals import get_application_config, get_application_global
 
 
-class DBEventMixin(object):
-    """Provides data transformation methods for the event db model."""
+class DBEvent(Base):  # type: ignore
+    """Database representation of an :class:`.Event`."""
+
+    __tablename__ = 'event'
+
+    event_id = Column(String(40), primary_key=True)
+    event_type = Column(String(255))
+    proxy = Column(util.FriendlyJSON)
+    proxy_id = index_property('proxy', 'agent_identifier')
+
+    creator = Column(util.FriendlyJSON)
+    creator_id = index_property('creator', 'agent_identifier')
+
+    created = Column(DateTime)
+    data = Column(util.FriendlyJSON)
+    submission_id = Column(
+        ForeignKey('arXiv_submissions.submission_id'),
+        index=True
+    )
+
+    submission = relationship("Submission")
 
     def to_event(self) -> Event:
-        """Instantiate an :class:`.Event` using event data from the db."""
+        """
+        Instantiate an :class:`.Event` using event data from this instance.
+
+        Returns
+        -------
+        :class:`.Event`
+
+        """
         _skip = ['creator', 'proxy', 'submission_id', 'created', 'event_type']
         data = {
             key: value for key, value in self.data.items()
@@ -52,7 +100,7 @@ def transaction() -> Generator:
         session.commit()
     except Exception as e:
         session.rollback()
-        raise RuntimeError('Ack! %s' % e) from e
+        raise CommitFailed('Failed to commit transaction') from e
 
 
 def get_licenses() -> List[License]:
@@ -73,7 +121,13 @@ def get_events(submission_id: int) -> List[Event]:
     Returns
     -------
     list
-        Items are :class:`.Event` instances loaded from the db.
+        Items are :class:`.Event` instances loaded from the class DB.
+
+    Raises
+    ------
+    :class:`.NoSuchSubmission`
+        Raised when there are no events for the provided submission ID.
+
     """
     with transaction() as session:
         event_data = session.query(DBEvent) \
@@ -84,7 +138,7 @@ def get_events(submission_id: int) -> List[Event]:
         return [datum.to_event() for datum in event_data]
 
 
-def get_submission(submission_id: int) -> Submission:
+def get_submission(submission_id: int) -> Tuple[Submission, List[Event]]:
     """
     Get the current state of a :class:`.Submission` from the database.
 
@@ -122,7 +176,7 @@ def get_submission(submission_id: int) -> Submission:
         data = session.query(models.Submission).get(submission_id)
         if data is None:
             raise NoSuchSubmission(f'Submission {submission_id} not found')
-        return data.patch(submission)
+        return data.patch(submission), events
 
 
 def store_events(*events: Event, submission: Submission) -> Submission:
@@ -196,8 +250,6 @@ def get_engine(app: object = None) -> Engine:
 # TODO: consider making this private.
 def get_session(app: object = None) -> Session:
     """Get a new :class:`.Session`."""
-    global DBEvent
-    DBEvent = _declare_event()
     engine = current_engine()
     return sessionmaker(bind=engine)()
 
@@ -218,8 +270,8 @@ def current_session() -> Session:
     if not g:
         return get_session()
     if 'classic' not in g:
-        g.search = get_session()    # type: ignore
-    return g.search     # type: ignore
+        g.classic = get_session()    # type: ignore
+    return g.classic     # type: ignore
 
 
 def create_all() -> None:
@@ -232,33 +284,15 @@ def drop_all() -> None:
     Base.metadata.drop_all(current_engine())
 
 
-# TODO: find a better way!
-def _declare_event() -> type:
-    """
-    Define DBEvent model.
-
-    This is deferred until runtime so that we can inject an alternate model
-    for testing. This is less than ideal, but (so far) appears to be the only
-    way to effectively replace column data types, which we need in order to
-    use JSON columns with SQLite.
-    """
-    class DBEvent(Base, DBEventMixin):  # type: ignore
-        __tablename__ = 'event'
-
-        event_id = Column(String(40), primary_key=True)
-        event_type = Column(String(255))
-        proxy = Column(JSON)
-        proxy_id = index_property('proxy', 'agent_identifier')
-
-        creator = Column(JSON)
-        creator_id = index_property('creator', 'agent_identifier')
-
-        created = Column(DateTime)
-        data = Column(JSON)
-        submission_id = Column(
-            ForeignKey('arXiv_submissions.submission_id'),
-            index=True
-        )
-
-        submission = relationship("Submission")
-    return DBEvent
+# # TODO: find a better way!
+# def _declare_event() -> type:
+#     """
+#     Define DBEvent model.
+#
+#     This is deferred until runtime so that we can inject an alternate model
+#     for testing. This is less than ideal, but (so far) appears to be the only
+#     way to effectively replace column data types, which we need in order to
+#     use JSON columns with SQLite.
+#     """
+#
+#     return DBEvent

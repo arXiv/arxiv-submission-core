@@ -1,0 +1,60 @@
+{
+  "title": "SubmissionEvent",
+  "type": "object",
+  "description": "Describes an arXiv submission event.",
+  "required": [
+    "submission_id", "event_id", "creator", "created", "event_type", "data"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "submission_id": {
+      "description": "arXiv submission identifier. Read-only.",
+      "readOnly": true,
+      "type": "string"
+    },
+    "event_id": {
+      "description": "Unique identifier for the submission event.",
+      "readOnly": true,
+      "type": "string"
+    },
+    "creator": {
+      "readOnly": true,
+      "oneOf": [
+        {"$ref": "file:./user.json"},
+        {"$ref": "file:./client.json"}
+      ]
+    },
+    "proxy": {
+      "readOnly": true,
+      "oneOf": [
+        {"$ref": "file:./user.json"},
+        {"$ref": "file:./client.json"},
+        {"type": "null"}
+      ]
+    },
+    "client": {
+      "readOnly": true,
+      "oneOf": [
+        {"$ref": "file:./client.json"},
+        {"type": "null"}
+      ]
+    },
+    "created": {
+      "description": "The date-time at which the event was created.",
+      "readOnly": true,
+      "type": "string",
+      "format": "date-time"
+    },
+    "event_type": {
+      "description": "The name of the event type.",
+      "readOnly": true,
+      "type": "string"
+    },
+    "data": {
+      "description": "Event-specific data.",
+      "readOnly": true,
+      "type": "object",
+      "additionalProperties": true
+    }
+  }
+}

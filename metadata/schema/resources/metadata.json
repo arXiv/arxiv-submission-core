@@ -1,0 +1,87 @@
+{
+  "title": "Metadata",
+  "description": "Metadata document for a deposit.",
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "title": {
+      "description": "Title of the submission.",
+      "type": "string"
+    },
+    "abstract": {
+      "description": "Paper abstract provided by author.",
+      "type": "string"
+    },
+    "authors_canonical": {
+      "description": "Canonical author string generated from the ``authors``. Read-only.",
+      "readOnly": true,
+      "type": "string"
+    },
+    "authors": {
+      "description": "Authors",
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "description": "Author(s) of the submitted paper, in order.",
+        "type": "object",
+        "required": [
+          "forename",
+          "surname",
+          "email"
+        ],
+        "properties": {
+          "forename": {
+            "type": "string"
+          },
+          "surname": {
+            "type": "string"
+          },
+          "initials": {
+            "type": "string"
+          },
+          "affiliation": {
+            "type": "string"
+          },
+          "canonical": {
+            "description": "`<forename> <initial(s)> <surname> (<affiliation>)`. Read-only.",
+            "readOnly": true,
+            "type": "string"
+          },
+          "email": {
+            "description": "E-mail address of the author.",
+            "type": "string"
+          },
+          "identifier": {
+            "description": "Author authority record URI. This may be an arXiv authority URI or an ORCID identifier.",
+            "type": "string",
+            "format": "uri"
+          }
+        }
+      }
+    },
+    "doi": {
+      "description": "External DOI for the submission. See https://arxiv.org/help/prep#doi",
+      "oneOf": [{"type": "string"}, {"type": "null"}]
+    },
+    "msc_class": {
+      "description": "MSC subject class for this submission. See https://arxiv.org/help/prep#msc",
+      "oneOf": [{"type": "string"}, {"type": "null"}]
+    },
+    "acm_class": {
+      "description": "ACM subject class for this submission. See https://arxiv.org/help/prep#acm",
+      "oneOf": [{"type": "string"}, {"type": "null"}]
+    },
+    "report_num": {
+      "description": "Report number for this submission. See https://arxiv.org/help/prep#report",
+      "oneOf": [{"type": "string"}, {"type": "null"}]
+    },
+    "journal_ref": {
+      "description": "Journal ref (citation) for this submission. See https://arxiv.org/help/prep#journal",
+      "oneOf": [{"type": "string"}, {"type": "null"}]
+    },
+    "comments": {
+      "description": "A brief comment accompanying the public metadata. See https://arxiv.org/help/prep#comments",
+      "oneOf": [{"type": "string"}, {"type": "null"}]
+    }
+  }
+}

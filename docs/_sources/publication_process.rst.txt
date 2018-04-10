@@ -1,6 +1,9 @@
 Submission & Publication Process
 ********************************
 
+This section describes the classic arXiv submission and publication process at
+a high level. 
+
 Submissions & States
 --------------------
 An arXiv submission is comprised of a source package and a collection of

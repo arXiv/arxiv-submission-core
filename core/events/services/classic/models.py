@@ -1,4 +1,4 @@
-"""SQLAlchemy ORM classes."""
+"""SQLAlchemy ORM classes for the classic database."""
 
 import json
 from typing import Optional
@@ -186,9 +186,16 @@ class Submission(Base):    # type: ignore
         """
         status = self._get_status()
         primary = self.primary_classification
+        submitter = domain.User(
+            native_id=self.submitter.user_id,
+            email=self.submitter.email,
+            forename=self.submitter.first_name,
+            surname=self.submitter.last_name,
+            suffix=self.submitter.suffix_name
+        )
         return domain.Submission(
-            creator=domain.User(self.submitter_id),
-            owner=domain.User(self.submitter_id),
+            creator=submitter,
+            owner=submitter,
             created=self.created,
             updated=self.updated,
             submitter_is_author=bool(self.is_author),

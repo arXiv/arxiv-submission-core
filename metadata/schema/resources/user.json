@@ -1,0 +1,41 @@
+{
+  "title": "User",
+  "description": "Data about a user in the submission.",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["email"],
+  "properties": {
+    "user_id": {
+      "description": "Native ID of the user (e.g. arXiv user ID).",
+      "type": "string"
+    },
+    "first_name": {
+      "description": "Forename of the user",
+      "type": "string"
+    },
+    "last_name": {
+      "description": "Surnamne of the user",
+      "type": "string"
+    },
+    "suffix": {
+      "description": "Name suffix of the user",
+      "type": "string"
+    },
+    "email": {
+      "description": "User's email address",
+      "type": "string",
+      "format": "email"
+    },
+    "identifier": {
+      "description": "External unique identifier for the user, e.g. an ORCID ID.",
+      "oneOf": [
+        {"type": "string"},
+        {"type": "null"}
+      ]
+    },
+    "affiliation": {
+      "description": "Name of the institution with which the user is affiliated.",
+      "type": "string"
+    }
+  }
+}

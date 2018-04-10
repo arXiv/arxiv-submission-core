@@ -55,7 +55,11 @@
 <span class="k">class</span> <span class="nc">Classification</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;An archive/category classification for a :class:`.Submission`.&quot;&quot;&quot;</span>
 
-    <span class="n">category</span><span class="p">:</span> <span class="nb">str</span></div>
+    <span class="n">category</span><span class="p">:</span> <span class="nb">str</span>
+
+<div class="viewcode-block" id="Classification.to_dict"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.submission.Classification.to_dict">[docs]</a>    <span class="k">def</span> <span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Generate a dict representation of this :class:`.Classification`.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">asdict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div></div>
 
 
 <div class="viewcode-block" id="License"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.submission.License">[docs]</a><span class="nd">@dataclass</span>
@@ -63,7 +67,11 @@
     <span class="sd">&quot;&quot;&quot;An license for distribution of the submission.&quot;&quot;&quot;</span>
 
     <span class="n">uri</span><span class="p">:</span> <span class="nb">str</span>
-    <span class="n">name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span></div>
+    <span class="n">name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+
+<div class="viewcode-block" id="License.to_dict"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.submission.License.to_dict">[docs]</a>    <span class="k">def</span> <span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Generate a dict representation of this :class:`.License`.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">asdict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div></div>
 
 
 <div class="viewcode-block" id="Author"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.submission.Author">[docs]</a><span class="nd">@dataclass</span>
@@ -96,17 +104,23 @@
         <span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> </span><span class="si">%s</span><span class="s2"> </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">forename</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">initials</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">surname</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">affiliation</span><span class="p">:</span>
             <span class="k">return</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> (</span><span class="si">%s</span><span class="s2">)&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">affiliation</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">name</span></div>
+        <span class="k">return</span> <span class="n">name</span>
+
+<div class="viewcode-block" id="Author.to_dict"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.submission.Author.to_dict">[docs]</a>    <span class="k">def</span> <span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Generate a dict representation of this :class:`.Author`.&quot;&quot;&quot;</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">asdict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">data</span><span class="p">[</span><span class="s1">&#39;canonical&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">canonical</span>
+        <span class="k">return</span> <span class="n">data</span></div></div>
 
 
 <div class="viewcode-block" id="SubmissionContent"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.submission.SubmissionContent">[docs]</a><span class="nd">@dataclass</span>
 <span class="k">class</span> <span class="nc">SubmissionContent</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;Represents the submission source package.&quot;&quot;&quot;</span>
+    <span class="sd">&quot;&quot;&quot;Metadata about the submission source package and compiled products.&quot;&quot;&quot;</span>
 
-    <span class="n">uri</span><span class="p">:</span> <span class="nb">str</span>
-    <span class="n">content_type</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">location</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="nb">format</span><span class="p">:</span> <span class="nb">str</span>
     <span class="n">checksum</span><span class="p">:</span> <span class="nb">str</span>
-    <span class="n">upload_id</span><span class="p">:</span> <span class="nb">int</span></div>
+    <span class="n">identifier</span><span class="p">:</span> <span class="nb">int</span></div>
 
 
 <div class="viewcode-block" id="SubmissionMetadata"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.submission.SubmissionMetadata">[docs]</a><span class="nd">@dataclass</span>
@@ -129,7 +143,13 @@
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">authors_canonical</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Canonical representation of submission authors.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">au</span><span class="o">.</span><span class="n">canonical</span> <span class="k">for</span> <span class="n">au</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">authors</span><span class="p">])</span></div>
+        <span class="k">return</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">au</span><span class="o">.</span><span class="n">canonical</span> <span class="k">for</span> <span class="n">au</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">authors</span><span class="p">])</span>
+
+<div class="viewcode-block" id="SubmissionMetadata.to_dict"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.submission.SubmissionMetadata.to_dict">[docs]</a>    <span class="k">def</span> <span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Generate dict representation of :class:`.SubmissionMetadata`.&quot;&quot;&quot;</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">asdict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">data</span><span class="p">[</span><span class="s1">&#39;authors_canonical&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">authors_canonical</span>
+        <span class="k">return</span> <span class="n">data</span></div></div>
 
 
 <div class="viewcode-block" id="Delegation"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.submission.Delegation">[docs]</a><span class="nd">@dataclass</span>
@@ -147,7 +167,13 @@
         <span class="n">h</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="sa">b</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1">:</span><span class="si">%s</span><span class="s1">:</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">delegate</span><span class="o">.</span><span class="n">agent_identifier</span><span class="p">,</span>
                                 <span class="bp">self</span><span class="o">.</span><span class="n">creator</span><span class="o">.</span><span class="n">agent_identifier</span><span class="p">,</span>
                                 <span class="bp">self</span><span class="o">.</span><span class="n">created</span><span class="o">.</span><span class="n">isodate</span><span class="p">()))</span>
-        <span class="k">return</span> <span class="n">h</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()</span></div>
+        <span class="k">return</span> <span class="n">h</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()</span>
+
+<div class="viewcode-block" id="Delegation.to_dict"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.submission.Delegation.to_dict">[docs]</a>    <span class="k">def</span> <span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Generate a dict representation of this :class:`.Delegation`.&quot;&quot;&quot;</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">asdict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">data</span><span class="p">[</span><span class="s1">&#39;delegation_id&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">delegation_id</span>
+        <span class="k">return</span> <span class="n">data</span></div></div>
 
 
 <div class="viewcode-block" id="Submission"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.submission.Submission">[docs]</a><span class="nd">@dataclass</span>
@@ -166,9 +192,14 @@
     <span class="n">owner</span><span class="p">:</span> <span class="n">Agent</span>
     <span class="n">created</span><span class="p">:</span> <span class="n">datetime</span>
     <span class="n">updated</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">datetime</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
-    <span class="n">primary_classification</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Classification</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="n">source_content</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">SubmissionContent</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">compiled_content</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">SubmissionContent</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
+
+    <span class="n">primary_classification</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Classification</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
     <span class="n">delegations</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Delegation</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span>
     <span class="n">proxy</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Agent</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">client</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Agent</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
     <span class="n">submission_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
     <span class="n">metadata</span><span class="p">:</span> <span class="n">SubmissionMetadata</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="n">SubmissionMetadata</span><span class="p">)</span>
     <span class="n">active</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -178,9 +209,8 @@
     <span class="sd">&quot;&quot;&quot;Submitter has indicated submission is ready for publication.&quot;&quot;&quot;</span>
 
     <span class="n">published</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-    <span class="c1"># TODO: use a generic to further specify type?</span>
-    <span class="n">comments</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span>
-    <span class="n">secondary_classification</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Classification</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
+    <span class="n">secondary_classification</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Classification</span><span class="p">]</span> <span class="o">=</span> \
+        <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
     <span class="n">submitter_contact_verified</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
     <span class="n">submitter_is_author</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="n">submitter_accepts_policy</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
@@ -190,14 +220,17 @@
     <span class="sd">&quot;&quot;&quot;The published arXiv paper ID.&quot;&quot;&quot;</span>
 
 <div class="viewcode-block" id="Submission.to_dict"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.submission.Submission.to_dict">[docs]</a>    <span class="k">def</span> <span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Generate a dict representation of this :class:`.Submission`.&quot;&quot;&quot;</span>
         <span class="n">data</span> <span class="o">=</span> <span class="n">asdict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
         <span class="n">data</span><span class="o">.</span><span class="n">update</span><span class="p">({</span>
             <span class="s1">&#39;creator&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">creator</span><span class="o">.</span><span class="n">to_dict</span><span class="p">(),</span>
             <span class="s1">&#39;owner&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">owner</span><span class="o">.</span><span class="n">to_dict</span><span class="p">(),</span>
+            <span class="s1">&#39;client&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">to_dict</span><span class="p">(),</span>
             <span class="s1">&#39;created&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">created</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
         <span class="p">})</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">primary_classification</span><span class="p">:</span>
-            <span class="n">data</span><span class="p">[</span><span class="s1">&#39;primary_classification&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">primary_classification</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
+            <span class="n">data</span><span class="p">[</span><span class="s1">&#39;primary_classification&#39;</span><span class="p">]</span> <span class="o">=</span> \
+                <span class="bp">self</span><span class="o">.</span><span class="n">primary_classification</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">delegations</span><span class="p">:</span>
             <span class="n">data</span><span class="p">[</span><span class="s1">&#39;delegations&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
                 <span class="n">key</span><span class="p">:</span> <span class="n">delegation</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
@@ -208,7 +241,8 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="p">:</span>
             <span class="n">data</span><span class="p">[</span><span class="s1">&#39;metadata&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">license</span><span class="p">:</span>
-            <span class="n">data</span><span class="p">[</span><span class="s1">&#39;license&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">license</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span></div></div>
+            <span class="n">data</span><span class="p">[</span><span class="s1">&#39;license&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">license</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">data</span></div></div>
 
 
 <div class="viewcode-block" id="Annotation"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.submission.Annotation">[docs]</a><span class="nd">@dataclass</span>
@@ -233,7 +267,14 @@
         <span class="n">h</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="sa">b</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1">:</span><span class="si">%s</span><span class="s1">:</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">created</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">),</span>
                                 <span class="bp">self</span><span class="o">.</span><span class="n">annotation_type</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">),</span>
                                 <span class="bp">self</span><span class="o">.</span><span class="n">creator</span><span class="o">.</span><span class="n">agent_identifier</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)))</span>
-        <span class="k">return</span> <span class="n">h</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()</span></div>
+        <span class="k">return</span> <span class="n">h</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()</span>
+
+<div class="viewcode-block" id="Annotation.to_dict"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.submission.Annotation.to_dict">[docs]</a>    <span class="k">def</span> <span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Generate a dict representation of this :class:`.Annotation`.&quot;&quot;&quot;</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">asdict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">data</span><span class="p">[</span><span class="s1">&#39;annotation_type&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">annotation_type</span>
+        <span class="n">data</span><span class="p">[</span><span class="s1">&#39;annotation_id&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">annotation_id</span>
+        <span class="k">return</span> <span class="n">data</span></div></div>
 
 
 <div class="viewcode-block" id="Proposal"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.submission.Proposal">[docs]</a><span class="nd">@dataclass</span>
@@ -241,7 +282,11 @@
     <span class="sd">&quot;&quot;&quot;Represents a proposal to apply an event to a submission.&quot;&quot;&quot;</span>
 
     <span class="n">event_type</span><span class="p">:</span> <span class="nb">type</span>
-    <span class="n">event_data</span><span class="p">:</span> <span class="nb">dict</span></div>
+    <span class="n">event_data</span><span class="p">:</span> <span class="nb">dict</span>
+
+<div class="viewcode-block" id="Proposal.to_dict"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.submission.Proposal.to_dict">[docs]</a>    <span class="k">def</span> <span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Generate a dict representation of this :class:`.Proposal`.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">asdict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div></div>
 
 
 <div class="viewcode-block" id="Comment"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.submission.Comment">[docs]</a><span class="nd">@dataclass</span>
@@ -253,7 +298,13 @@
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">comment_id</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;The unique identifier for a :class:`.Comment` instance.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">annotation_id</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">annotation_id</span>
+
+<div class="viewcode-block" id="Comment.to_dict"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.submission.Comment.to_dict">[docs]</a>    <span class="k">def</span> <span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Generate a dict representation of this :class:`.Comment`.&quot;&quot;&quot;</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">asdict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="n">data</span><span class="p">[</span><span class="s1">&#39;comment_id&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">comment_id</span>
+        <span class="k">return</span> <span class="n">data</span></div></div>
 
 
 <div class="viewcode-block" id="Flag"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.submission.Flag">[docs]</a><span class="nd">@dataclass</span>
@@ -282,7 +333,8 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../architecture.html">Submission &amp; moderation subsystem architecture</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../publication_process.html">Submission &amp; Publication Process</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../submission_api_context.html">Submission API: Context</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../containers/core/events.html">Submission core events package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../containers/core/events.html">events package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../containers/metadata/metadata.html">metadata package</a></li>
 </ul>
 
 <div class="relations">

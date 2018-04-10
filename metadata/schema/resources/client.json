@@ -1,0 +1,22 @@
+{
+  "title": "Client",
+  "description": "Data about an API client",
+  "type": "object",
+  "additionalProperties": true,
+  "required": ["client_id"],
+  "properties": {
+    "client_id": {
+      "description": "Native ID of the client.",
+      "type": "string"
+    },
+    "client_name": {
+      "description": "Name of the client",
+      "type": "string"
+    },
+    "email": {
+      "description": "Contact email address for the client",
+      "type": "string",
+      "format": "email"
+    }
+  }
+}

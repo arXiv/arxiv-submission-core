@@ -46,9 +46,11 @@
 <span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">defaultdict</span>
 <span class="kn">from</span> <span class="nn">datetime</span> <span class="k">import</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">timedelta</span>
 <span class="kn">from</span> <span class="nn">flask</span> <span class="k">import</span> <span class="n">Flask</span>
-<span class="kn">from</span> <span class="nn">events</span> <span class="k">import</span> <span class="n">CreateSubmissionEvent</span><span class="p">,</span> <span class="n">save</span><span class="p">,</span> <span class="n">Submission</span><span class="p">,</span> <span class="n">User</span><span class="p">,</span> <span class="n">Event</span><span class="p">,</span> \
-    <span class="n">UpdateMetadataEvent</span><span class="p">,</span> <span class="n">EventRule</span><span class="p">,</span> <span class="n">RuleCondition</span><span class="p">,</span> <span class="n">RuleConsequence</span><span class="p">,</span> \
-    <span class="n">CreateCommentEvent</span><span class="p">,</span> <span class="n">SubmissionMetadata</span>
+<span class="kn">from</span> <span class="nn">events</span> <span class="k">import</span> <span class="n">save</span><span class="p">,</span> <span class="n">load</span><span class="p">,</span> <span class="n">Submission</span><span class="p">,</span> <span class="n">User</span><span class="p">,</span> <span class="n">Event</span><span class="p">,</span> <span class="n">UpdateMetadata</span><span class="p">,</span> \
+    <span class="n">EventRule</span><span class="p">,</span> <span class="n">RuleCondition</span><span class="p">,</span> <span class="n">RuleConsequence</span><span class="p">,</span> <span class="n">CreateComment</span><span class="p">,</span> \
+    <span class="n">SubmissionMetadata</span><span class="p">,</span> <span class="n">CreateSubmission</span><span class="p">,</span> <span class="n">UpdateAuthors</span><span class="p">,</span> <span class="n">Author</span>
+<span class="kn">from</span> <span class="nn">events.exceptions</span> <span class="k">import</span> <span class="n">NoSuchSubmission</span><span class="p">,</span> <span class="n">InvalidEvent</span>
+<span class="kn">from</span> <span class="nn">events.services</span> <span class="k">import</span> <span class="n">classic</span>
 
 
 <div class="viewcode-block" id="mock_store_events"><a class="viewcode-back" href="../../containers/core/events.html#events.tests.mock_store_events">[docs]</a><span class="k">def</span> <span class="nf">mock_store_events</span><span class="p">(</span><span class="o">*</span><span class="n">events</span><span class="p">,</span> <span class="n">submission</span><span class="p">):</span>
@@ -61,6 +63,36 @@
     <span class="k">return</span> <span class="n">submission</span></div>
 
 
+<div class="viewcode-block" id="TestLoad"><a class="viewcode-back" href="../../containers/core/events.html#events.tests.TestLoad">[docs]</a><span class="k">class</span> <span class="nc">TestLoad</span><span class="p">(</span><span class="n">TestCase</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Test :func:`.load`.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="TestLoad.test_load_existant_submission"><a class="viewcode-back" href="../../containers/core/events.html#events.tests.TestLoad.test_load_existant_submission">[docs]</a>    <span class="nd">@mock</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="s1">&#39;events.classic&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">test_load_existant_submission</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mock_classic</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;When the submission exists, submission and events are returned.&quot;&quot;&quot;</span>
+        <span class="n">u</span> <span class="o">=</span> <span class="n">User</span><span class="p">(</span><span class="mi">12345</span><span class="p">,</span> <span class="s1">&#39;joe@joe.joe&#39;</span><span class="p">)</span>
+        <span class="n">mock_classic</span><span class="o">.</span><span class="n">get_submission</span><span class="o">.</span><span class="n">return_value</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">Submission</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">u</span><span class="p">,</span> <span class="n">submission_id</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">owner</span><span class="o">=</span><span class="n">u</span><span class="p">,</span>
+                       <span class="n">created</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()),</span>
+            <span class="p">[</span><span class="n">CreateSubmission</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">u</span><span class="p">,</span> <span class="n">submission_id</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">committed</span><span class="o">=</span><span class="kc">True</span><span class="p">)]</span>
+        <span class="p">)</span>
+        <span class="n">submission</span><span class="p">,</span> <span class="n">events</span> <span class="o">=</span> <span class="n">load</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">mock_classic</span><span class="o">.</span><span class="n">get_submission</span><span class="o">.</span><span class="n">call_count</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertIsInstance</span><span class="p">(</span><span class="n">submission</span><span class="p">,</span> <span class="n">Submission</span><span class="p">,</span>
+                              <span class="s2">&quot;A submission should be returned&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertIsInstance</span><span class="p">(</span><span class="n">events</span><span class="p">,</span> <span class="nb">list</span><span class="p">,</span>
+                              <span class="s2">&quot;A list of events should be returned&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertIsInstance</span><span class="p">(</span><span class="n">events</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">Event</span><span class="p">,</span>
+                              <span class="s2">&quot;A list of events should be returned&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestLoad.test_load_nonexistant_submission"><a class="viewcode-back" href="../../containers/core/events.html#events.tests.TestLoad.test_load_nonexistant_submission">[docs]</a>    <span class="nd">@mock</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="s1">&#39;events.classic&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">test_load_nonexistant_submission</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mock_classic</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;When the submission does not exist, an exception is raised.&quot;&quot;&quot;</span>
+        <span class="n">mock_classic</span><span class="o">.</span><span class="n">get_submission</span><span class="o">.</span><span class="n">side_effect</span> <span class="o">=</span> <span class="n">classic</span><span class="o">.</span><span class="n">NoSuchSubmission</span>
+        <span class="n">mock_classic</span><span class="o">.</span><span class="n">NoSuchSubmission</span> <span class="o">=</span> <span class="n">classic</span><span class="o">.</span><span class="n">NoSuchSubmission</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="n">NoSuchSubmission</span><span class="p">):</span>
+            <span class="n">load</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span></div></div>
+
+
 <div class="viewcode-block" id="TestSave"><a class="viewcode-back" href="../../containers/core/events.html#events.tests.TestSave">[docs]</a><span class="k">class</span> <span class="nc">TestSave</span><span class="p">(</span><span class="n">TestCase</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Test :func:`.save`.&quot;&quot;&quot;</span>
 
@@ -68,8 +100,8 @@
     <span class="k">def</span> <span class="nf">test_save_creation_event</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mock_database</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;A :class:`.CreationEvent` is passed.&quot;&quot;&quot;</span>
         <span class="n">mock_database</span><span class="o">.</span><span class="n">store_events</span> <span class="o">=</span> <span class="n">mock_store_events</span>
-        <span class="n">user</span> <span class="o">=</span> <span class="n">User</span><span class="p">(</span><span class="s1">&#39;foouser&#39;</span><span class="p">)</span>
-        <span class="n">event</span> <span class="o">=</span> <span class="n">CreateSubmissionEvent</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">user</span><span class="p">)</span>
+        <span class="n">user</span> <span class="o">=</span> <span class="n">User</span><span class="p">(</span><span class="mi">12345</span><span class="p">,</span> <span class="s1">&#39;joe@joe.joe&#39;</span><span class="p">)</span>
+        <span class="n">event</span> <span class="o">=</span> <span class="n">CreateSubmission</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">user</span><span class="p">)</span>
         <span class="n">submission</span><span class="p">,</span> <span class="n">events</span> <span class="o">=</span> <span class="n">save</span><span class="p">(</span><span class="n">event</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">assertIsInstance</span><span class="p">(</span><span class="n">submission</span><span class="p">,</span> <span class="n">Submission</span><span class="p">,</span>
                               <span class="s2">&quot;A submission instance should be returned&quot;</span><span class="p">)</span>
@@ -84,23 +116,49 @@
     <span class="k">def</span> <span class="nf">test_save_events_from_scratch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mock_database</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Save multiple events for a nonexistant submission.&quot;&quot;&quot;</span>
         <span class="n">mock_database</span><span class="o">.</span><span class="n">store_events</span> <span class="o">=</span> <span class="n">mock_store_events</span>
-        <span class="n">e</span> <span class="o">=</span> <span class="n">CreateSubmissionEvent</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">User</span><span class="p">(</span><span class="s1">&#39;foouser&#39;</span><span class="p">))</span>
-        <span class="n">e2</span> <span class="o">=</span> <span class="n">UpdateMetadataEvent</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">User</span><span class="p">(</span><span class="s1">&#39;foouser&#39;</span><span class="p">),</span>
-                                 <span class="n">metadata</span><span class="o">=</span><span class="p">[[</span><span class="s1">&#39;title&#39;</span><span class="p">,</span> <span class="s1">&#39;foo&#39;</span><span class="p">]])</span>
+        <span class="n">user</span> <span class="o">=</span> <span class="n">User</span><span class="p">(</span><span class="mi">12345</span><span class="p">,</span> <span class="s1">&#39;joe@joe.joe&#39;</span><span class="p">)</span>
+        <span class="n">e</span> <span class="o">=</span> <span class="n">CreateSubmission</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">user</span><span class="p">)</span>
+        <span class="n">e2</span> <span class="o">=</span> <span class="n">UpdateMetadata</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">user</span><span class="p">,</span> <span class="n">metadata</span><span class="o">=</span><span class="p">[[</span><span class="s1">&#39;title&#39;</span><span class="p">,</span> <span class="s1">&#39;foo&#39;</span><span class="p">]])</span>
         <span class="n">submission</span><span class="p">,</span> <span class="n">events</span> <span class="o">=</span> <span class="n">save</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">e2</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">submission</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">title</span><span class="p">,</span> <span class="s1">&#39;foo&#39;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">assertIsInstance</span><span class="p">(</span><span class="n">submission</span><span class="o">.</span><span class="n">submission_id</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">submission</span><span class="o">.</span><span class="n">created</span><span class="p">,</span> <span class="n">e</span><span class="o">.</span><span class="n">created</span><span class="p">)</span></div>
 
+<div class="viewcode-block" id="TestSave.test_create_and_update_authors"><a class="viewcode-back" href="../../containers/core/events.html#events.tests.TestSave.test_create_and_update_authors">[docs]</a>    <span class="nd">@mock</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="s1">&#39;events.classic&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">test_create_and_update_authors</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mock_database</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Save multiple events for a nonexistant submission.&quot;&quot;&quot;</span>
+        <span class="n">mock_database</span><span class="o">.</span><span class="n">store_events</span> <span class="o">=</span> <span class="n">mock_store_events</span>
+        <span class="n">user</span> <span class="o">=</span> <span class="n">User</span><span class="p">(</span><span class="mi">12345</span><span class="p">,</span> <span class="s1">&#39;joe@joe.joe&#39;</span><span class="p">)</span>
+        <span class="n">e</span> <span class="o">=</span> <span class="n">CreateSubmission</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">user</span><span class="p">)</span>
+        <span class="n">e2</span> <span class="o">=</span> <span class="n">UpdateAuthors</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">user</span><span class="p">,</span> <span class="n">authors</span><span class="o">=</span><span class="p">[</span>
+            <span class="n">Author</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">forename</span><span class="o">=</span><span class="s1">&#39;Joe&#39;</span><span class="p">,</span> <span class="n">surname</span><span class="o">=</span><span class="s2">&quot;Bloggs&quot;</span><span class="p">,</span> <span class="n">email</span><span class="o">=</span><span class="s2">&quot;joe@blog.gs&quot;</span><span class="p">)</span>
+        <span class="p">])</span>
+        <span class="n">submission</span><span class="p">,</span> <span class="n">events</span> <span class="o">=</span> <span class="n">save</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">e2</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertIsInstance</span><span class="p">(</span><span class="n">submission</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">authors</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">Author</span><span class="p">)</span></div>
+
 <div class="viewcode-block" id="TestSave.test_save_from_scratch_without_creation_event"><a class="viewcode-back" href="../../containers/core/events.html#events.tests.TestSave.test_save_from_scratch_without_creation_event">[docs]</a>    <span class="nd">@mock</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="s1">&#39;events.classic&#39;</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">test_save_from_scratch_without_creation_event</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mock_database</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;An exception is raised when there is no creation event.&quot;&quot;&quot;</span>
         <span class="n">mock_database</span><span class="o">.</span><span class="n">store_events</span> <span class="o">=</span> <span class="n">mock_store_events</span>
-        <span class="n">e2</span> <span class="o">=</span> <span class="n">UpdateMetadataEvent</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">User</span><span class="p">(</span><span class="s1">&#39;foouser&#39;</span><span class="p">),</span>
-                                 <span class="n">metadata</span><span class="o">=</span><span class="p">[[</span><span class="s1">&#39;title&#39;</span><span class="p">,</span> <span class="s1">&#39;foo&#39;</span><span class="p">]])</span>
-        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">RuntimeError</span><span class="p">):</span>
+        <span class="n">user</span> <span class="o">=</span> <span class="n">User</span><span class="p">(</span><span class="mi">12345</span><span class="p">,</span> <span class="s1">&#39;joe@joe.joe&#39;</span><span class="p">)</span>
+        <span class="n">e2</span> <span class="o">=</span> <span class="n">UpdateMetadata</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">user</span><span class="p">,</span> <span class="n">metadata</span><span class="o">=</span><span class="p">[[</span><span class="s1">&#39;title&#39;</span><span class="p">,</span> <span class="s1">&#39;foo&#39;</span><span class="p">]])</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="n">NoSuchSubmission</span><span class="p">):</span>
             <span class="n">save</span><span class="p">(</span><span class="n">e2</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestSave.test_save_invalid_event"><a class="viewcode-back" href="../../containers/core/events.html#events.tests.TestSave.test_save_invalid_event">[docs]</a>    <span class="nd">@mock</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="s1">&#39;events.classic&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">test_save_invalid_event</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mock_db</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;An exception is raised when an invalid event is encountered.&quot;&quot;&quot;</span>
+        <span class="n">mock_db</span><span class="o">.</span><span class="n">get_events</span><span class="o">.</span><span class="n">return_value</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">class</span> <span class="nc">EventMock</span><span class="p">(</span><span class="n">CreateSubmission</span><span class="p">):</span>
+            <span class="k">def</span> <span class="nf">valid</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+                <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="n">user</span> <span class="o">=</span> <span class="n">User</span><span class="p">(</span><span class="mi">12345</span><span class="p">,</span> <span class="s1">&#39;joe@joe.joe&#39;</span><span class="p">)</span>
+        <span class="n">e</span> <span class="o">=</span> <span class="n">EventMock</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">user</span><span class="p">,</span> <span class="n">submission_id</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="n">InvalidEvent</span><span class="p">):</span>
+            <span class="n">save</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">submission_id</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="TestSave.test_save_events_on_existing_submission"><a class="viewcode-back" href="../../containers/core/events.html#events.tests.TestSave.test_save_events_on_existing_submission">[docs]</a>    <span class="nd">@mock</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="s1">&#39;events.classic&#39;</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">test_save_events_on_existing_submission</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mock_db</span><span class="p">):</span>
@@ -123,15 +181,14 @@
         <span class="n">mock_db</span><span class="o">.</span><span class="n">get_events</span> <span class="o">=</span> <span class="n">mock_get_events</span>
 
         <span class="c1"># Here is the first set of events.</span>
-        <span class="n">e</span> <span class="o">=</span> <span class="n">CreateSubmissionEvent</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">User</span><span class="p">(</span><span class="s1">&#39;foouser&#39;</span><span class="p">))</span>
-        <span class="n">e2</span> <span class="o">=</span> <span class="n">UpdateMetadataEvent</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">User</span><span class="p">(</span><span class="s1">&#39;foouser&#39;</span><span class="p">),</span>
-                                 <span class="n">metadata</span><span class="o">=</span><span class="p">[[</span><span class="s1">&#39;title&#39;</span><span class="p">,</span> <span class="s1">&#39;foo&#39;</span><span class="p">]])</span>
+        <span class="n">user</span> <span class="o">=</span> <span class="n">User</span><span class="p">(</span><span class="mi">12345</span><span class="p">,</span> <span class="s1">&#39;joe@joe.joe&#39;</span><span class="p">)</span>
+        <span class="n">e</span> <span class="o">=</span> <span class="n">CreateSubmission</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">user</span><span class="p">)</span>
+        <span class="n">e2</span> <span class="o">=</span> <span class="n">UpdateMetadata</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">user</span><span class="p">,</span> <span class="n">metadata</span><span class="o">=</span><span class="p">[[</span><span class="s1">&#39;title&#39;</span><span class="p">,</span> <span class="s1">&#39;foo&#39;</span><span class="p">]])</span>
         <span class="n">submission</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">save</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">e2</span><span class="p">)</span>
         <span class="n">submission_id</span> <span class="o">=</span> <span class="n">submission</span><span class="o">.</span><span class="n">submission_id</span>
 
         <span class="c1"># Now we apply a second set of events.</span>
-        <span class="n">e3</span> <span class="o">=</span> <span class="n">UpdateMetadataEvent</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">User</span><span class="p">(</span><span class="s1">&#39;foouser&#39;</span><span class="p">),</span>
-                                 <span class="n">metadata</span><span class="o">=</span><span class="p">[[</span><span class="s1">&#39;abstract&#39;</span><span class="p">,</span> <span class="s1">&#39;bar&#39;</span><span class="p">]])</span>
+        <span class="n">e3</span> <span class="o">=</span> <span class="n">UpdateMetadata</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">user</span><span class="p">,</span> <span class="n">metadata</span><span class="o">=</span><span class="p">[[</span><span class="s1">&#39;abstract&#39;</span><span class="p">,</span> <span class="s1">&#39;bar&#39;</span><span class="p">]])</span>
         <span class="n">submission2</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">save</span><span class="p">(</span><span class="n">e3</span><span class="p">,</span> <span class="n">submission_id</span><span class="o">=</span><span class="n">submission_id</span><span class="p">)</span>
 
         <span class="c1"># The submission state reflects all three events.</span>
@@ -160,7 +217,7 @@
     <span class="c1">#                 rule_id=1,</span>
     <span class="c1">#                 creator=User(&#39;foo&#39;),</span>
     <span class="c1">#                 condition=RuleCondition(</span>
-    <span class="c1">#                     event_type=UpdateMetadataEvent,</span>
+    <span class="c1">#                     event_type=UpdateMetadata,</span>
     <span class="c1">#                     extra_condition={}</span>
     <span class="c1">#                 ),</span>
     <span class="c1">#                 consequence=RuleConsequence(</span>
@@ -175,8 +232,8 @@
     <span class="c1">#         ]</span>
     <span class="c1">#     mock_db.get_rules = mock_get_rules_for_submission</span>
     <span class="c1">#     mock_db.store_events = mock_store_events</span>
-    <span class="c1">#     e = CreateSubmissionEvent(creator=User(&#39;foo&#39;))</span>
-    <span class="c1">#     e2 = UpdateMetadataEvent(creator=User(&#39;foo&#39;),</span>
+    <span class="c1">#     e = CreateSubmission(creator=User(&#39;foo&#39;))</span>
+    <span class="c1">#     e2 = UpdateMetadata(creator=User(&#39;foo&#39;),</span>
     <span class="c1">#                              metadata=[[&#39;title&#39;, &#39;foo&#39;]])</span>
     <span class="c1">#     submission, events = save(e, e2)</span>
     <span class="c1">#     self.assertEqual(len(submission.comments), 1,</span>
@@ -204,7 +261,8 @@
 <li class="toctree-l1"><a class="reference internal" href="../../architecture.html">Submission &amp; moderation subsystem architecture</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../publication_process.html">Submission &amp; Publication Process</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../submission_api_context.html">Submission API: Context</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../containers/core/events.html">Submission core events package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../containers/core/events.html">events package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../containers/metadata/metadata.html">metadata package</a></li>
 </ul>
 
 <div class="relations">

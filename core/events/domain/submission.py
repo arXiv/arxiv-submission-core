@@ -16,6 +16,10 @@ class Classification:
 
     category: str
 
+    def to_dict(self) -> dict:
+        """Generate a dict representation of this :class:`.Classification`."""
+        return asdict(self)
+
 
 @dataclass
 class License:
@@ -23,6 +27,10 @@ class License:
 
     uri: str
     name: Optional[str] = None
+
+    def to_dict(self) -> dict:
+        """Generate a dict representation of this :class:`.License`."""
+        return asdict(self)
 
 
 @dataclass
@@ -57,15 +65,21 @@ class Author:
             return "%s (%s)" % (self.name, self.affiliation)
         return name
 
+    def to_dict(self) -> dict:
+        """Generate a dict representation of this :class:`.Author`."""
+        data = asdict(self)
+        data['canonical'] = self.canonical
+        return data
+
 
 @dataclass
 class SubmissionContent:
-    """Represents the submission source package."""
+    """Metadata about the submission source package and compiled products."""
 
-    uri: str
-    content_type: str
+    location: str
+    format: str
     checksum: str
-    upload_id: int
+    identifier: int
 
 
 @dataclass
@@ -90,6 +104,12 @@ class SubmissionMetadata:
         """Canonical representation of submission authors."""
         return ", ".join([au.canonical for au in self.authors])
 
+    def to_dict(self) -> dict:
+        """Generate dict representation of :class:`.SubmissionMetadata`."""
+        data = asdict(self)
+        data['authors_canonical'] = self.authors_canonical
+        return data
+
 
 @dataclass
 class Delegation:
@@ -108,6 +128,12 @@ class Delegation:
                                 self.created.isodate()))
         return h.hexdigest()
 
+    def to_dict(self) -> dict:
+        """Generate a dict representation of this :class:`.Delegation`."""
+        data = asdict(self)
+        data['delegation_id'] = self.delegation_id
+        return data
+
 
 @dataclass
 class Submission:
@@ -125,9 +151,14 @@ class Submission:
     owner: Agent
     created: datetime
     updated: Optional[datetime] = field(default=None)
-    primary_classification: Optional[Classification] = None
+
+    source_content: Optional[SubmissionContent] = field(default=None)
+    compiled_content: List[SubmissionContent] = field(default_factory=list)
+
+    primary_classification: Optional[Classification] = field(default=None)
     delegations: Dict[str, Delegation] = field(default_factory=dict)
     proxy: Optional[Agent] = field(default=None)
+    client: Optional[Agent] = field(default=None)
     submission_id: Optional[int] = field(default=None)
     metadata: SubmissionMetadata = field(default_factory=SubmissionMetadata)
     active: bool = field(default=True)
@@ -137,9 +168,8 @@ class Submission:
     """Submitter has indicated submission is ready for publication."""
 
     published: bool = field(default=False)
-    # TODO: use a generic to further specify type?
-    comments: dict = field(default_factory=dict)
-    secondary_classification: List[Classification] = field(default_factory=list)
+    secondary_classification: List[Classification] = \
+        field(default_factory=list)
     submitter_contact_verified: bool = field(default=False)
     submitter_is_author: bool = field(default=True)
     submitter_accepts_policy: bool = field(default=False)
@@ -149,14 +179,17 @@ class Submission:
     """The published arXiv paper ID."""
 
     def to_dict(self) -> dict:
+        """Generate a dict representation of this :class:`.Submission`."""
         data = asdict(self)
         data.update({
             'creator': self.creator.to_dict(),
             'owner': self.owner.to_dict(),
+            'client': self.client.to_dict(),
             'created': self.created.isoformat(),
         })
         if self.primary_classification:
-            data['primary_classification'] = self.primary_classification.to_dict()
+            data['primary_classification'] = \
+                self.primary_classification.to_dict()
         if self.delegations:
             data['delegations'] = {
                 key: delegation.to_dict()
@@ -168,6 +201,7 @@ class Submission:
             data['metadata'] = self.metadata.to_dict()
         if self.license:
             data['license'] = self.license.to_dict()
+        return data
 
 
 @dataclass
@@ -194,6 +228,13 @@ class Annotation:
                                 self.creator.agent_identifier.encode('utf-8')))
         return h.hexdigest()
 
+    def to_dict(self) -> dict:
+        """Generate a dict representation of this :class:`.Annotation`."""
+        data = asdict(self)
+        data['annotation_type'] = self.annotation_type
+        data['annotation_id'] = self.annotation_id
+        return data
+
 
 @dataclass
 class Proposal(Annotation):
@@ -201,6 +242,10 @@ class Proposal(Annotation):
 
     event_type: type
     event_data: dict
+
+    def to_dict(self) -> dict:
+        """Generate a dict representation of this :class:`.Proposal`."""
+        return asdict(self)
 
 
 @dataclass
@@ -213,6 +258,12 @@ class Comment(Annotation):
     def comment_id(self):
         """The unique identifier for a :class:`.Comment` instance."""
         return self.annotation_id
+
+    def to_dict(self) -> dict:
+        """Generate a dict representation of this :class:`.Comment`."""
+        data = asdict(self)
+        data['comment_id'] = self.comment_id
+        return data
 
 
 @dataclass
