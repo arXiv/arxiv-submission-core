@@ -10,7 +10,7 @@ python:
 script:
   - pip install -U pip pipenv
   - pipenv install
-  - pipenv install -dev
+  - pipenv install --dev
   - pipenv run nose2 --with-coverage
 after_success:
   - coveralls
