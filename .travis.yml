@@ -15,5 +15,6 @@ script:
   - pipenv install --dev
   - pipenv run nose2 --with-coverage
   - tests/lint.sh
+  - tests/docstyle.sh
 after_success:
   - coveralls
