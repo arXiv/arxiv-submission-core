@@ -3,12 +3,14 @@ import jwt
 import json
 import os
 import jsonschema
+import tempfile
 
 from arxiv import status
 from metadata.factory import create_web_app
 from metadata.controllers.submission import ev
 
 BASEPATH = os.path.join(os.path.split(os.path.abspath(__file__))[0], '..')
+_, DB_PATH = tempfile.mkstemp(suffix='.db')
 
 
 class TestSubmit(TestCase):
@@ -20,7 +22,7 @@ class TestSubmit(TestCase):
         # mock_classic.store_events.side_effect = lambda *a, **k: print('foo')
         SECRET = 'foo'
         os.environ['JWT_SECRET'] = SECRET
-        os.environ['CLASSIC_DATABASE_URI'] = 'sqlite:///foo.db'
+        os.environ['CLASSIC_DATABASE_URI'] = 'sqlite:///%s' % DB_PATH
 
         self.authorization = jwt.encode({
             'scope': ['submission:create'],
