@@ -152,7 +152,12 @@
 <span class="k">class</span> <span class="nc">Client</span><span class="p">(</span><span class="n">Agent</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;A non-human third party, usually an API client.&quot;&quot;&quot;</span>
 
-    <span class="n">FIELDS</span> <span class="o">=</span> <span class="p">[]</span></div>
+    <span class="n">FIELDS</span> <span class="o">=</span> <span class="p">[]</span>
+
+<div class="viewcode-block" id="Client.to_dict"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.agent.Client.to_dict">[docs]</a>    <span class="k">def</span> <span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="s1">&#39;client_id&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">native_id</span>
+        <span class="p">}</span></div></div>
 
 
 <span class="n">_agent_types</span> <span class="o">=</span> <span class="p">{</span>
@@ -191,7 +196,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../publication_process.html">Submission &amp; Publication Process</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../submission_api_context.html">Submission API: Context</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../containers/core/events.html">events package</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../containers/api/api.html">api package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../containers/metadata/metadata.html">metadata package</a></li>
 </ul>
 
 <div class="relations">

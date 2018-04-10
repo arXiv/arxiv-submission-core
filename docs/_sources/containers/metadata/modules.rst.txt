@@ -1,7 +1,7 @@
-api
-===
+metadata
+========
 
 .. toctree::
    :maxdepth: 4
 
-   api
+   metadata

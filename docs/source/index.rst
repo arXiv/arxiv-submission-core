@@ -11,4 +11,4 @@ subsystem.
    publication_process
    submission_api_context
    containers/core/events
-   containers/api/api
+   containers/metadata/metadata

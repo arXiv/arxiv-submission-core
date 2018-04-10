@@ -5,7 +5,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>api.controllers.tests &#8212; arXiv submission &amp; moderation 0.1 documentation</title>
+    <title>metadata.controllers.tests &#8212; arXiv submission &amp; moderation 0.1 documentation</title>
     <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
     <script type="text/javascript">
@@ -38,43 +38,47 @@
         <div class="bodywrapper">
           <div class="body" role="main">
             
-  <h1>Source code for api.controllers.tests</h1><div class="highlight"><pre>
+  <h1>Source code for metadata.controllers.tests</h1><div class="highlight"><pre>
 <span></span><span class="sd">&quot;&quot;&quot;Tests for :mod:`api.controllers`.&quot;&quot;&quot;</span>
 
 <span class="kn">from</span> <span class="nn">unittest</span> <span class="k">import</span> <span class="n">TestCase</span><span class="p">,</span> <span class="n">mock</span>
+<span class="kn">import</span> <span class="nn">json</span>
 <span class="kn">from</span> <span class="nn">datetime</span> <span class="k">import</span> <span class="n">datetime</span>
 <span class="kn">from</span> <span class="nn">werkzeug.exceptions</span> <span class="k">import</span> <span class="n">BadRequest</span><span class="p">,</span> <span class="n">InternalServerError</span><span class="p">,</span> <span class="n">NotFound</span>
 
 <span class="kn">from</span> <span class="nn">arxiv</span> <span class="k">import</span> <span class="n">status</span>
-<span class="kn">from</span> <span class="nn">events.domain</span> <span class="k">import</span> <span class="n">User</span><span class="p">,</span> <span class="n">Submission</span>
-<span class="kn">from</span> <span class="nn">events</span> <span class="k">import</span> <span class="n">CreateSubmissionEvent</span><span class="p">,</span> <span class="n">UpdateMetadataEvent</span><span class="p">,</span> <span class="n">SaveError</span><span class="p">,</span> \
-    <span class="n">InvalidEvent</span><span class="p">,</span> <span class="n">NoSuchSubmission</span><span class="p">,</span> <span class="n">SetPrimaryClassificationEvent</span>
-<span class="kn">from</span> <span class="nn">api.controllers</span> <span class="k">import</span> <span class="n">submission</span>
+<span class="kn">from</span> <span class="nn">events.domain</span> <span class="k">import</span> <span class="n">User</span><span class="p">,</span> <span class="n">Submission</span><span class="p">,</span> <span class="n">Author</span>
+<span class="kn">from</span> <span class="nn">events</span> <span class="k">import</span> <span class="n">CreateSubmission</span><span class="p">,</span> <span class="n">UpdateMetadata</span><span class="p">,</span> <span class="n">SaveError</span><span class="p">,</span> \
+    <span class="n">InvalidEvent</span><span class="p">,</span> <span class="n">NoSuchSubmission</span><span class="p">,</span> <span class="n">SetPrimaryClassification</span><span class="p">,</span> \
+    <span class="n">AttachSourceContent</span><span class="p">,</span> <span class="n">UpdateAuthors</span>
+<span class="kn">from</span> <span class="nn">metadata.controllers</span> <span class="k">import</span> <span class="n">submission</span>
 
 
-<div class="viewcode-block" id="preserve_exceptions_and_events"><a class="viewcode-back" href="../../../containers/api/api.controllers.html#api.controllers.tests.preserve_exceptions_and_events">[docs]</a><span class="k">def</span> <span class="nf">preserve_exceptions_and_events</span><span class="p">(</span><span class="n">mock_events</span><span class="p">):</span>
+<div class="viewcode-block" id="preserve_exceptions_and_events"><a class="viewcode-back" href="../../../containers/metadata/metadata.controllers.html#metadata.controllers.tests.preserve_exceptions_and_events">[docs]</a><span class="k">def</span> <span class="nf">preserve_exceptions_and_events</span><span class="p">(</span><span class="n">mock_events</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Add real exceptions back to the mock.&quot;&quot;&quot;</span>
     <span class="n">mock_events</span><span class="o">.</span><span class="n">SaveError</span> <span class="o">=</span> <span class="n">SaveError</span>
     <span class="n">mock_events</span><span class="o">.</span><span class="n">InvalidEvent</span> <span class="o">=</span> <span class="n">InvalidEvent</span>
     <span class="n">mock_events</span><span class="o">.</span><span class="n">NoSuchSubmission</span> <span class="o">=</span> <span class="n">NoSuchSubmission</span>
-    <span class="n">mock_events</span><span class="o">.</span><span class="n">UpdateMetadataEvent</span> <span class="o">=</span> <span class="n">UpdateMetadataEvent</span>
-    <span class="n">mock_events</span><span class="o">.</span><span class="n">CreateSubmissionEvent</span> <span class="o">=</span> <span class="n">CreateSubmissionEvent</span>
-    <span class="n">mock_events</span><span class="o">.</span><span class="n">SetPrimaryClassificationEvent</span> <span class="o">=</span> \
-        <span class="n">SetPrimaryClassificationEvent</span></div>
+    <span class="n">mock_events</span><span class="o">.</span><span class="n">UpdateMetadata</span> <span class="o">=</span> <span class="n">UpdateMetadata</span>
+    <span class="n">mock_events</span><span class="o">.</span><span class="n">UpdateAuthors</span> <span class="o">=</span> <span class="n">UpdateAuthors</span>
+    <span class="n">mock_events</span><span class="o">.</span><span class="n">Author</span> <span class="o">=</span> <span class="n">Author</span>
+    <span class="n">mock_events</span><span class="o">.</span><span class="n">CreateSubmission</span> <span class="o">=</span> <span class="n">CreateSubmission</span>
+    <span class="n">mock_events</span><span class="o">.</span><span class="n">SetPrimaryClassification</span> <span class="o">=</span> <span class="n">SetPrimaryClassification</span>
+    <span class="n">mock_events</span><span class="o">.</span><span class="n">AttachSourceContent</span> <span class="o">=</span> <span class="n">AttachSourceContent</span></div>
 
 
-<div class="viewcode-block" id="TestCreateSubmission"><a class="viewcode-back" href="../../../containers/api/api.controllers.html#api.controllers.tests.TestCreateSubmission">[docs]</a><span class="k">class</span> <span class="nc">TestCreateSubmission</span><span class="p">(</span><span class="n">TestCase</span><span class="p">):</span>
+<div class="viewcode-block" id="TestCreateSubmission"><a class="viewcode-back" href="../../../containers/metadata/metadata.controllers.html#metadata.controllers.tests.TestCreateSubmission">[docs]</a><span class="k">class</span> <span class="nc">TestCreateSubmission</span><span class="p">(</span><span class="n">TestCase</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Tests for :func:`.submission.create_submission`.&quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="TestCreateSubmission.setUp"><a class="viewcode-back" href="../../../containers/api/api.controllers.html#api.controllers.tests.TestCreateSubmission.setUp">[docs]</a>    <span class="k">def</span> <span class="nf">setUp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="TestCreateSubmission.setUp"><a class="viewcode-back" href="../../../containers/metadata/metadata.controllers.html#metadata.controllers.tests.TestCreateSubmission.setUp">[docs]</a>    <span class="k">def</span> <span class="nf">setUp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Create some fake request data.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">user_data</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;user_id&#39;</span><span class="p">:</span> <span class="mi">1234</span><span class="p">,</span> <span class="s1">&#39;email&#39;</span><span class="p">:</span> <span class="s1">&#39;foo@bar.baz&#39;</span><span class="p">}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">client_data</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;client_id&#39;</span><span class="p">:</span> <span class="mi">5678</span><span class="p">}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">token</span> <span class="o">=</span> <span class="s1">&#39;asdf1234&#39;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">headers</span> <span class="o">=</span> <span class="p">{}</span></div>
 
-<div class="viewcode-block" id="TestCreateSubmission.test_create_submission_with_valid_data"><a class="viewcode-back" href="../../../containers/api/api.controllers.html#api.controllers.tests.TestCreateSubmission.test_create_submission_with_valid_data">[docs]</a>    <span class="nd">@mock</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="s1">&#39;api.controllers.submission.url_for&#39;</span><span class="p">)</span>
-    <span class="nd">@mock</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="s1">&#39;api.controllers.submission.ev&#39;</span><span class="p">)</span>
+<div class="viewcode-block" id="TestCreateSubmission.test_create_submission_with_valid_data"><a class="viewcode-back" href="../../../containers/metadata/metadata.controllers.html#metadata.controllers.tests.TestCreateSubmission.test_create_submission_with_valid_data">[docs]</a>    <span class="nd">@mock</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="s1">&#39;metadata.controllers.submission.url_for&#39;</span><span class="p">)</span>
+    <span class="nd">@mock</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="s1">&#39;metadata.controllers.submission.ev&#39;</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">test_create_submission_with_valid_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mock_events</span><span class="p">,</span> <span class="n">url_for</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Create a submission with valid data.&quot;&quot;&quot;</span>
         <span class="n">preserve_exceptions_and_events</span><span class="p">(</span><span class="n">mock_events</span><span class="p">)</span>
@@ -82,7 +86,7 @@
         <span class="n">user</span> <span class="o">=</span> <span class="n">User</span><span class="p">(</span><span class="mi">1234</span><span class="p">,</span> <span class="s1">&#39;foo@bar.baz&#39;</span><span class="p">)</span>
         <span class="n">mock_events</span><span class="o">.</span><span class="n">save</span><span class="o">.</span><span class="n">return_value</span> <span class="o">=</span> <span class="p">(</span>
             <span class="n">Submission</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">user</span><span class="p">,</span> <span class="n">owner</span><span class="o">=</span><span class="n">user</span><span class="p">,</span> <span class="n">created</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()),</span>
-            <span class="p">[</span><span class="n">CreateSubmissionEvent</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">user</span><span class="p">)]</span>
+            <span class="p">[</span><span class="n">CreateSubmission</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">user</span><span class="p">)]</span>
         <span class="p">)</span>
         <span class="n">data</span> <span class="o">=</span> <span class="p">{</span>
             <span class="s1">&#39;primary_classification&#39;</span><span class="p">:</span> <span class="p">{</span>
@@ -95,30 +99,30 @@
                                                         <span class="bp">self</span><span class="o">.</span><span class="n">token</span><span class="p">)</span>
         <span class="n">call_args</span><span class="p">,</span> <span class="n">call_kwargs</span> <span class="o">=</span> <span class="n">mock_events</span><span class="o">.</span><span class="n">save</span><span class="o">.</span><span class="n">call_args</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">assertIsInstance</span><span class="p">(</span><span class="n">call_args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">CreateSubmissionEvent</span><span class="p">,</span>
-                              <span class="s2">&quot;Should pass a CreateSubmissionEvent first&quot;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">assertIsInstance</span><span class="p">(</span><span class="n">call_args</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">SetPrimaryClassificationEvent</span><span class="p">,</span>
-                              <span class="s2">&quot;Should pass a SetPrimaryClassificationEvent&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertIsInstance</span><span class="p">(</span><span class="n">call_args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">CreateSubmission</span><span class="p">,</span>
+                              <span class="s2">&quot;Should pass a CreateSubmission first&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertIsInstance</span><span class="p">(</span><span class="n">call_args</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">SetPrimaryClassification</span><span class="p">,</span>
+                              <span class="s2">&quot;Should pass a SetPrimaryClassification&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">stat</span><span class="p">,</span> <span class="n">status</span><span class="o">.</span><span class="n">HTTP_201_CREATED</span><span class="p">,</span>
                          <span class="s2">&quot;Should return 201 Created when submission is&quot;</span>
                          <span class="s2">&quot; successfully created.&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">assertIn</span><span class="p">(</span><span class="s1">&#39;Location&#39;</span><span class="p">,</span> <span class="n">head</span><span class="p">,</span> <span class="s2">&quot;Should include a Location header.&quot;</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="TestCreateSubmission.test_create_submission_with_invalid_data"><a class="viewcode-back" href="../../../containers/api/api.controllers.html#api.controllers.tests.TestCreateSubmission.test_create_submission_with_invalid_data">[docs]</a>    <span class="nd">@mock</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="s1">&#39;api.controllers.submission.url_for&#39;</span><span class="p">)</span>
-    <span class="nd">@mock</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="s1">&#39;api.controllers.submission.ev&#39;</span><span class="p">)</span>
+<div class="viewcode-block" id="TestCreateSubmission.test_create_submission_with_invalid_data"><a class="viewcode-back" href="../../../containers/metadata/metadata.controllers.html#metadata.controllers.tests.TestCreateSubmission.test_create_submission_with_invalid_data">[docs]</a>    <span class="nd">@mock</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="s1">&#39;metadata.controllers.submission.url_for&#39;</span><span class="p">)</span>
+    <span class="nd">@mock</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="s1">&#39;metadata.controllers.submission.ev&#39;</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">test_create_submission_with_invalid_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mock_events</span><span class="p">,</span> <span class="n">url_for</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Trying to create a submission with invalid data throws exception.&quot;&quot;&quot;</span>
         <span class="n">preserve_exceptions_and_events</span><span class="p">(</span><span class="n">mock_events</span><span class="p">)</span>
         <span class="n">url_for</span><span class="o">.</span><span class="n">return_value</span> <span class="o">=</span> <span class="s1">&#39;/foo/&#39;</span>
         <span class="n">data</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="s1">&#39;badkey&#39;</span><span class="p">:</span> <span class="s1">&#39;bizarre value&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;metadata&#39;</span><span class="p">:</span> <span class="s1">&#39;bad value&#39;</span><span class="p">,</span>
         <span class="p">}</span>
         <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="n">BadRequest</span><span class="p">):</span>
             <span class="n">submission</span><span class="o">.</span><span class="n">create_submission</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">headers</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">user_data</span><span class="p">,</span>
                                          <span class="bp">self</span><span class="o">.</span><span class="n">client_data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">token</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="TestCreateSubmission.test_create_submission_with_db_down"><a class="viewcode-back" href="../../../containers/api/api.controllers.html#api.controllers.tests.TestCreateSubmission.test_create_submission_with_db_down">[docs]</a>    <span class="nd">@mock</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="s1">&#39;api.controllers.submission.url_for&#39;</span><span class="p">)</span>
-    <span class="nd">@mock</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="s1">&#39;api.controllers.submission.ev&#39;</span><span class="p">)</span>
+<div class="viewcode-block" id="TestCreateSubmission.test_create_submission_with_db_down"><a class="viewcode-back" href="../../../containers/metadata/metadata.controllers.html#metadata.controllers.tests.TestCreateSubmission.test_create_submission_with_db_down">[docs]</a>    <span class="nd">@mock</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="s1">&#39;metadata.controllers.submission.url_for&#39;</span><span class="p">)</span>
+    <span class="nd">@mock</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="s1">&#39;metadata.controllers.submission.ev&#39;</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">test_create_submission_with_db_down</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mock_events</span><span class="p">,</span> <span class="n">url_for</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;An internal server error is raised when the database is down.&quot;&quot;&quot;</span>
         <span class="n">url_for</span><span class="o">.</span><span class="n">return_value</span> <span class="o">=</span> <span class="s1">&#39;/foo/&#39;</span>
@@ -133,8 +137,8 @@
             <span class="n">submission</span><span class="o">.</span><span class="n">create_submission</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">headers</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">user_data</span><span class="p">,</span>
                                          <span class="bp">self</span><span class="o">.</span><span class="n">client_data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">token</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="TestCreateSubmission.test_create_submission_with_invalid_event"><a class="viewcode-back" href="../../../containers/api/api.controllers.html#api.controllers.tests.TestCreateSubmission.test_create_submission_with_invalid_event">[docs]</a>    <span class="nd">@mock</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="s1">&#39;api.controllers.submission.url_for&#39;</span><span class="p">)</span>
-    <span class="nd">@mock</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="s1">&#39;api.controllers.submission.ev&#39;</span><span class="p">)</span>
+<div class="viewcode-block" id="TestCreateSubmission.test_create_submission_with_invalid_event"><a class="viewcode-back" href="../../../containers/metadata/metadata.controllers.html#metadata.controllers.tests.TestCreateSubmission.test_create_submission_with_invalid_event">[docs]</a>    <span class="nd">@mock</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="s1">&#39;metadata.controllers.submission.url_for&#39;</span><span class="p">)</span>
+    <span class="nd">@mock</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="s1">&#39;metadata.controllers.submission.ev&#39;</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">test_create_submission_with_invalid_event</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mock_events</span><span class="p">,</span> <span class="n">url_for</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;An internal server error is raised on an invalid event.&quot;&quot;&quot;</span>
         <span class="n">url_for</span><span class="o">.</span><span class="n">return_value</span> <span class="o">=</span> <span class="s1">&#39;/foo/&#39;</span>
@@ -150,18 +154,18 @@
                                          <span class="bp">self</span><span class="o">.</span><span class="n">client_data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">token</span><span class="p">)</span></div></div>
 
 
-<div class="viewcode-block" id="TestUpdateSubmission"><a class="viewcode-back" href="../../../containers/api/api.controllers.html#api.controllers.tests.TestUpdateSubmission">[docs]</a><span class="k">class</span> <span class="nc">TestUpdateSubmission</span><span class="p">(</span><span class="n">TestCase</span><span class="p">):</span>
+<div class="viewcode-block" id="TestUpdateSubmission"><a class="viewcode-back" href="../../../containers/metadata/metadata.controllers.html#metadata.controllers.tests.TestUpdateSubmission">[docs]</a><span class="k">class</span> <span class="nc">TestUpdateSubmission</span><span class="p">(</span><span class="n">TestCase</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Tests for :func:`.submission.update_submission`.&quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="TestUpdateSubmission.setUp"><a class="viewcode-back" href="../../../containers/api/api.controllers.html#api.controllers.tests.TestUpdateSubmission.setUp">[docs]</a>    <span class="k">def</span> <span class="nf">setUp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="TestUpdateSubmission.setUp"><a class="viewcode-back" href="../../../containers/metadata/metadata.controllers.html#metadata.controllers.tests.TestUpdateSubmission.setUp">[docs]</a>    <span class="k">def</span> <span class="nf">setUp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Create some fake request data.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">user_data</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;user_id&#39;</span><span class="p">:</span> <span class="mi">1234</span><span class="p">,</span> <span class="s1">&#39;email&#39;</span><span class="p">:</span> <span class="s1">&#39;foo@bar.baz&#39;</span><span class="p">}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">client_data</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;client_id&#39;</span><span class="p">:</span> <span class="mi">5678</span><span class="p">}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">token</span> <span class="o">=</span> <span class="s1">&#39;asdf1234&#39;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">headers</span> <span class="o">=</span> <span class="p">{}</span></div>
 
-<div class="viewcode-block" id="TestUpdateSubmission.test_update_submission_with_valid_data"><a class="viewcode-back" href="../../../containers/api/api.controllers.html#api.controllers.tests.TestUpdateSubmission.test_update_submission_with_valid_data">[docs]</a>    <span class="nd">@mock</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="s1">&#39;api.controllers.submission.url_for&#39;</span><span class="p">)</span>
-    <span class="nd">@mock</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="s1">&#39;api.controllers.submission.ev&#39;</span><span class="p">)</span>
+<div class="viewcode-block" id="TestUpdateSubmission.test_update_submission_with_valid_data"><a class="viewcode-back" href="../../../containers/metadata/metadata.controllers.html#metadata.controllers.tests.TestUpdateSubmission.test_update_submission_with_valid_data">[docs]</a>    <span class="nd">@mock</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="s1">&#39;metadata.controllers.submission.url_for&#39;</span><span class="p">)</span>
+    <span class="nd">@mock</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="s1">&#39;metadata.controllers.submission.ev&#39;</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">test_update_submission_with_valid_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mock_events</span><span class="p">,</span> <span class="n">url_for</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Update a submission with valid data.&quot;&quot;&quot;</span>
         <span class="n">preserve_exceptions_and_events</span><span class="p">(</span><span class="n">mock_events</span><span class="p">)</span>
@@ -169,13 +173,19 @@
         <span class="n">user</span> <span class="o">=</span> <span class="n">User</span><span class="p">(</span><span class="mi">1234</span><span class="p">,</span> <span class="s1">&#39;foo@bar.baz&#39;</span><span class="p">)</span>
         <span class="n">mock_events</span><span class="o">.</span><span class="n">save</span><span class="o">.</span><span class="n">return_value</span> <span class="o">=</span> <span class="p">(</span>
             <span class="n">Submission</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">user</span><span class="p">,</span> <span class="n">owner</span><span class="o">=</span><span class="n">user</span><span class="p">,</span> <span class="n">created</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()),</span>
-            <span class="p">[</span><span class="n">CreateSubmissionEvent</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">user</span><span class="p">),</span>
-             <span class="n">UpdateMetadataEvent</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">user</span><span class="p">,</span>
-                                 <span class="n">metadata</span><span class="o">=</span><span class="p">[(</span><span class="s1">&#39;title&#39;</span><span class="p">,</span> <span class="s1">&#39;foo title&#39;</span><span class="p">)])]</span>
+            <span class="p">[</span><span class="n">CreateSubmission</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">user</span><span class="p">),</span>
+             <span class="n">UpdateMetadata</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">user</span><span class="p">,</span> <span class="n">metadata</span><span class="o">=</span><span class="p">[(</span><span class="s1">&#39;title&#39;</span><span class="p">,</span> <span class="s1">&#39;foo title&#39;</span><span class="p">)])]</span>
         <span class="p">)</span>
         <span class="n">data</span> <span class="o">=</span> <span class="p">{</span>
             <span class="s1">&#39;metadata&#39;</span><span class="p">:</span> <span class="p">{</span>
-                <span class="s1">&#39;title&#39;</span><span class="p">:</span> <span class="s1">&#39;foo title&#39;</span>
+                <span class="s1">&#39;title&#39;</span><span class="p">:</span> <span class="s1">&#39;foo title&#39;</span><span class="p">,</span>
+                <span class="s1">&#39;authors&#39;</span><span class="p">:</span> <span class="p">[</span>
+                    <span class="p">{</span>
+                        <span class="s1">&#39;forename&#39;</span><span class="p">:</span> <span class="s1">&#39;Jane&#39;</span><span class="p">,</span>
+                        <span class="s1">&#39;surname&#39;</span><span class="p">:</span> <span class="s1">&#39;Doe&#39;</span><span class="p">,</span>
+                        <span class="s1">&#39;email&#39;</span><span class="p">:</span> <span class="s1">&#39;jane@doe.com&#39;</span>
+                    <span class="p">}</span>
+                <span class="p">]</span>
              <span class="p">}</span>
         <span class="p">}</span>
         <span class="n">resp</span><span class="p">,</span> <span class="n">stat</span><span class="p">,</span> <span class="n">head</span> <span class="o">=</span> <span class="n">submission</span><span class="o">.</span><span class="n">update_submission</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">headers</span><span class="p">,</span>
@@ -188,11 +198,13 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">assertIn</span><span class="p">(</span><span class="s1">&#39;Location&#39;</span><span class="p">,</span> <span class="n">head</span><span class="p">,</span> <span class="s2">&quot;Should include a Location header.&quot;</span><span class="p">)</span>
         <span class="n">call_args</span><span class="p">,</span> <span class="n">call_kwargs</span> <span class="o">=</span> <span class="n">mock_events</span><span class="o">.</span><span class="n">save</span><span class="o">.</span><span class="n">call_args</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">assertIsInstance</span><span class="p">(</span><span class="n">call_args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">UpdateMetadataEvent</span><span class="p">,</span>
-                              <span class="s2">&quot;Should pass an UpdateMetadataEvent&quot;</span><span class="p">)</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertIsInstance</span><span class="p">(</span><span class="n">call_args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">UpdateMetadata</span><span class="p">,</span>
+                              <span class="s2">&quot;Should pass an UpdateMetadata&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertIsInstance</span><span class="p">(</span><span class="n">call_args</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">UpdateAuthors</span><span class="p">,</span>
+                              <span class="s2">&quot;Should pass an UpdateAuthors&quot;</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="TestUpdateSubmission.test_update_nonexistant_submission"><a class="viewcode-back" href="../../../containers/api/api.controllers.html#api.controllers.tests.TestUpdateSubmission.test_update_nonexistant_submission">[docs]</a>    <span class="nd">@mock</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="s1">&#39;api.controllers.submission.url_for&#39;</span><span class="p">)</span>
-    <span class="nd">@mock</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="s1">&#39;api.controllers.submission.ev&#39;</span><span class="p">)</span>
+<div class="viewcode-block" id="TestUpdateSubmission.test_update_nonexistant_submission"><a class="viewcode-back" href="../../../containers/metadata/metadata.controllers.html#metadata.controllers.tests.TestUpdateSubmission.test_update_nonexistant_submission">[docs]</a>    <span class="nd">@mock</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="s1">&#39;metadata.controllers.submission.url_for&#39;</span><span class="p">)</span>
+    <span class="nd">@mock</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="s1">&#39;metadata.controllers.submission.ev&#39;</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">test_update_nonexistant_submission</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mock_events</span><span class="p">,</span> <span class="n">url_for</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Trying to update a nonexistant submission throws exception.&quot;&quot;&quot;</span>
         <span class="n">preserve_exceptions_and_events</span><span class="p">(</span><span class="n">mock_events</span><span class="p">)</span>
@@ -207,21 +219,21 @@
             <span class="n">submission</span><span class="o">.</span><span class="n">update_submission</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">headers</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">user_data</span><span class="p">,</span>
                                          <span class="bp">self</span><span class="o">.</span><span class="n">client_data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">token</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="TestUpdateSubmission.test_update_submission_with_invalid_data"><a class="viewcode-back" href="../../../containers/api/api.controllers.html#api.controllers.tests.TestUpdateSubmission.test_update_submission_with_invalid_data">[docs]</a>    <span class="nd">@mock</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="s1">&#39;api.controllers.submission.url_for&#39;</span><span class="p">)</span>
-    <span class="nd">@mock</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="s1">&#39;api.controllers.submission.ev&#39;</span><span class="p">)</span>
+<div class="viewcode-block" id="TestUpdateSubmission.test_update_submission_with_invalid_data"><a class="viewcode-back" href="../../../containers/metadata/metadata.controllers.html#metadata.controllers.tests.TestUpdateSubmission.test_update_submission_with_invalid_data">[docs]</a>    <span class="nd">@mock</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="s1">&#39;metadata.controllers.submission.url_for&#39;</span><span class="p">)</span>
+    <span class="nd">@mock</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="s1">&#39;metadata.controllers.submission.ev&#39;</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">test_update_submission_with_invalid_data</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mock_events</span><span class="p">,</span> <span class="n">url_for</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Trying to update a submission with invalid data throws exception.&quot;&quot;&quot;</span>
         <span class="n">preserve_exceptions_and_events</span><span class="p">(</span><span class="n">mock_events</span><span class="p">)</span>
         <span class="n">url_for</span><span class="o">.</span><span class="n">return_value</span> <span class="o">=</span> <span class="s1">&#39;/foo/&#39;</span>
         <span class="n">data</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="s1">&#39;badkey&#39;</span><span class="p">:</span> <span class="s1">&#39;bizarre value&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;metadata&#39;</span><span class="p">:</span> <span class="s1">&#39;bad value&#39;</span><span class="p">,</span>
         <span class="p">}</span>
         <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="n">BadRequest</span><span class="p">):</span>
             <span class="n">submission</span><span class="o">.</span><span class="n">update_submission</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">headers</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">user_data</span><span class="p">,</span>
                                          <span class="bp">self</span><span class="o">.</span><span class="n">client_data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">token</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="TestUpdateSubmission.test_update_submission_with_db_down"><a class="viewcode-back" href="../../../containers/api/api.controllers.html#api.controllers.tests.TestUpdateSubmission.test_update_submission_with_db_down">[docs]</a>    <span class="nd">@mock</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="s1">&#39;api.controllers.submission.url_for&#39;</span><span class="p">)</span>
-    <span class="nd">@mock</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="s1">&#39;api.controllers.submission.ev&#39;</span><span class="p">)</span>
+<div class="viewcode-block" id="TestUpdateSubmission.test_update_submission_with_db_down"><a class="viewcode-back" href="../../../containers/metadata/metadata.controllers.html#metadata.controllers.tests.TestUpdateSubmission.test_update_submission_with_db_down">[docs]</a>    <span class="nd">@mock</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="s1">&#39;metadata.controllers.submission.url_for&#39;</span><span class="p">)</span>
+    <span class="nd">@mock</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="s1">&#39;metadata.controllers.submission.ev&#39;</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">test_update_submission_with_db_down</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mock_events</span><span class="p">,</span> <span class="n">url_for</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;An internal server error is raised when the database is down.&quot;&quot;&quot;</span>
         <span class="n">url_for</span><span class="o">.</span><span class="n">return_value</span> <span class="o">=</span> <span class="s1">&#39;/foo/&#39;</span>
@@ -236,8 +248,8 @@
             <span class="n">submission</span><span class="o">.</span><span class="n">update_submission</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">headers</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">user_data</span><span class="p">,</span>
                                          <span class="bp">self</span><span class="o">.</span><span class="n">client_data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">token</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="TestUpdateSubmission.test_update_submission_with_invalid_event"><a class="viewcode-back" href="../../../containers/api/api.controllers.html#api.controllers.tests.TestUpdateSubmission.test_update_submission_with_invalid_event">[docs]</a>    <span class="nd">@mock</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="s1">&#39;api.controllers.submission.url_for&#39;</span><span class="p">)</span>
-    <span class="nd">@mock</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="s1">&#39;api.controllers.submission.ev&#39;</span><span class="p">)</span>
+<div class="viewcode-block" id="TestUpdateSubmission.test_update_submission_with_invalid_event"><a class="viewcode-back" href="../../../containers/metadata/metadata.controllers.html#metadata.controllers.tests.TestUpdateSubmission.test_update_submission_with_invalid_event">[docs]</a>    <span class="nd">@mock</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="s1">&#39;metadata.controllers.submission.url_for&#39;</span><span class="p">)</span>
+    <span class="nd">@mock</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="s1">&#39;metadata.controllers.submission.ev&#39;</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">test_update_submission_with_invalid_event</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mock_events</span><span class="p">,</span> <span class="n">url_for</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;An internal server error is raised on an invalid event.&quot;&quot;&quot;</span>
         <span class="n">url_for</span><span class="o">.</span><span class="n">return_value</span> <span class="o">=</span> <span class="s1">&#39;/foo/&#39;</span>
@@ -253,8 +265,36 @@
                                          <span class="bp">self</span><span class="o">.</span><span class="n">client_data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">token</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span></div></div>
 
 
-<div class="viewcode-block" id="TestGetSubmission"><a class="viewcode-back" href="../../../containers/api/api.controllers.html#api.controllers.tests.TestGetSubmission">[docs]</a><span class="k">class</span> <span class="nc">TestGetSubmission</span><span class="p">(</span><span class="n">TestCase</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Tests for :func:`.submission.get_submission`.&quot;&quot;&quot;</span></div>
+<div class="viewcode-block" id="TestGetSubmission"><a class="viewcode-back" href="../../../containers/metadata/metadata.controllers.html#metadata.controllers.tests.TestGetSubmission">[docs]</a><span class="k">class</span> <span class="nc">TestGetSubmission</span><span class="p">(</span><span class="n">TestCase</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Tests for :func:`.submission.get_submission`.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="TestGetSubmission.test_get_submission"><a class="viewcode-back" href="../../../containers/metadata/metadata.controllers.html#metadata.controllers.tests.TestGetSubmission.test_get_submission">[docs]</a>    <span class="nd">@mock</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="s1">&#39;metadata.controllers.submission.ev&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">test_get_submission</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mock_events</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Should return a JSON-serializable dict if submisison exists.&quot;&quot;&quot;</span>
+        <span class="n">preserve_exceptions_and_events</span><span class="p">(</span><span class="n">mock_events</span><span class="p">)</span>
+        <span class="n">user</span> <span class="o">=</span> <span class="n">User</span><span class="p">(</span><span class="mi">1234</span><span class="p">,</span> <span class="s1">&#39;foo@bar.baz&#39;</span><span class="p">)</span>
+        <span class="n">mock_events</span><span class="o">.</span><span class="n">load</span><span class="o">.</span><span class="n">return_value</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">Submission</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">user</span><span class="p">,</span> <span class="n">owner</span><span class="o">=</span><span class="n">user</span><span class="p">,</span> <span class="n">created</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()),</span>
+            <span class="p">[</span><span class="n">CreateSubmission</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">user</span><span class="p">)]</span>
+        <span class="p">)</span>
+        <span class="n">content</span><span class="p">,</span> <span class="n">status_code</span><span class="p">,</span> <span class="n">headers</span> <span class="o">=</span> <span class="n">submission</span><span class="o">.</span><span class="n">get_submission</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">mock_events</span><span class="o">.</span><span class="n">load</span><span class="o">.</span><span class="n">call_count</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span>
+                         <span class="s2">&quot;Should call load() in the events core package&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">status_code</span><span class="p">,</span> <span class="n">status</span><span class="o">.</span><span class="n">HTTP_200_OK</span><span class="p">,</span>
+                         <span class="s2">&quot;Should return 200 OK&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertIsInstance</span><span class="p">(</span><span class="n">content</span><span class="p">,</span> <span class="nb">dict</span><span class="p">,</span> <span class="s2">&quot;Should return a dict&quot;</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">content</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fail</span><span class="p">(</span><span class="s2">&quot;Content should be JSON-serializable.&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestGetSubmission.test_get_nonexistant_submission"><a class="viewcode-back" href="../../../containers/metadata/metadata.controllers.html#metadata.controllers.tests.TestGetSubmission.test_get_nonexistant_submission">[docs]</a>    <span class="nd">@mock</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="s1">&#39;metadata.controllers.submission.ev&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">test_get_nonexistant_submission</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mock_events</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Should raise NotFound if the submission does not exist.&quot;&quot;&quot;</span>
+        <span class="n">preserve_exceptions_and_events</span><span class="p">(</span><span class="n">mock_events</span><span class="p">)</span>
+        <span class="n">mock_events</span><span class="o">.</span><span class="n">load</span><span class="o">.</span><span class="n">side_effect</span> <span class="o">=</span> <span class="n">NoSuchSubmission</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="n">NotFound</span><span class="p">):</span>
+            <span class="n">submission</span><span class="o">.</span><span class="n">get_submission</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span></div></div>
 </pre></div>
 
           </div>

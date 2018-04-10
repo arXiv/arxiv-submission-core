@@ -5,7 +5,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>api.controllers.util &#8212; arXiv submission &amp; moderation 0.1 documentation</title>
+    <title>metadata.controllers.util &#8212; arXiv submission &amp; moderation 0.1 documentation</title>
     <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
     <script type="text/javascript">
@@ -38,7 +38,7 @@
         <div class="bodywrapper">
           <div class="body" role="main">
             
-  <h1>Source code for api.controllers.util</h1><div class="highlight"><pre>
+  <h1>Source code for metadata.controllers.util</h1><div class="highlight"><pre>
 <span></span><span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Any</span>
 <span class="kn">from</span> <span class="nn">functools</span> <span class="k">import</span> <span class="n">wraps</span>
@@ -49,9 +49,9 @@
 <span class="n">Response</span> <span class="o">=</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">dict</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">dict</span><span class="p">]</span>
 
 
-<div class="viewcode-block" id="validate_request"><a class="viewcode-back" href="../../../containers/api/api.controllers.html#api.controllers.util.validate_request">[docs]</a><span class="k">def</span> <span class="nf">validate_request</span><span class="p">(</span><span class="n">schema_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">:</span>
+<div class="viewcode-block" id="validate_request"><a class="viewcode-back" href="../../../containers/metadata/metadata.controllers.html#metadata.controllers.util.validate_request">[docs]</a><span class="k">def</span> <span class="nf">validate_request</span><span class="p">(</span><span class="n">schema_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Generate a route decorator that validates the request body.</span>
+<span class="sd">    Generate a controller decorator that validates the request body.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -63,7 +63,6 @@
 <span class="sd">    decorator</span>
 <span class="sd">        Decorates a controller function with request body validation against</span>
 <span class="sd">        the specified JSON Schema.</span>
-
 
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">schema_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
@@ -85,7 +84,7 @@
                     <span class="s1">&#39;reason&#39;</span><span class="p">:</span> <span class="n">f</span><span class="s1">&#39;Metadata validation failed: </span><span class="si">{msg[0]}</span><span class="s1">&#39;</span><span class="p">,</span>
                     <span class="s1">&#39;detail&#39;</span><span class="p">:</span> <span class="s1">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
                 <span class="p">}</span>
-                <span class="k">raise</span> <span class="n">BadRequest</span><span class="p">(</span><span class="n">msg</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">detail</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="n">BadRequest</span><span class="p">(</span><span class="n">msg</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
             <span class="n">response</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">dict</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">dict</span><span class="p">]</span> <span class="o">=</span> <span class="n">func</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">response</span>
         <span class="k">return</span> <span class="n">_wrpr</span>

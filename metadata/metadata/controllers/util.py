@@ -10,7 +10,7 @@ Response = Tuple[dict, int, dict]
 
 def validate_request(schema_path: str) -> Callable:
     """
-    Generate a route decorator that validates the request body.
+    Generate a controller decorator that validates the request body.
 
     Parameters
     ----------
@@ -22,7 +22,6 @@ def validate_request(schema_path: str) -> Callable:
     decorator
         Decorates a controller function with request body validation against
         the specified JSON Schema.
-
 
     """
     schema_path = os.path.join(

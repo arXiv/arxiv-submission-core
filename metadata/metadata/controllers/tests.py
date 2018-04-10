@@ -6,10 +6,10 @@ from datetime import datetime
 from werkzeug.exceptions import BadRequest, InternalServerError, NotFound
 
 from arxiv import status
-from events.domain import User, Submission
+from events.domain import User, Submission, Author
 from events import CreateSubmission, UpdateMetadata, SaveError, \
     InvalidEvent, NoSuchSubmission, SetPrimaryClassification, \
-    AttachSourceContent, UpdateAuthors, Author
+    AttachSourceContent, UpdateAuthors
 from metadata.controllers import submission
 
 

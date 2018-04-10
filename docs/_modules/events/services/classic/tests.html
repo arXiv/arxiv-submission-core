@@ -60,11 +60,10 @@
 
 <span class="kn">from</span> <span class="nn">events.domain.agent</span> <span class="k">import</span> <span class="n">User</span>
 <span class="kn">from</span> <span class="nn">events.domain.submission</span> <span class="k">import</span> <span class="n">License</span><span class="p">,</span> <span class="n">Submission</span><span class="p">,</span> <span class="n">Author</span>
-<span class="kn">from</span> <span class="nn">events.domain.event</span> <span class="k">import</span> <span class="n">CreateSubmissionEvent</span><span class="p">,</span> <span class="n">UpdateMetadataEvent</span><span class="p">,</span> \
-    <span class="n">FinalizeSubmissionEvent</span><span class="p">,</span> <span class="n">SetPrimaryClassificationEvent</span><span class="p">,</span> \
-    <span class="n">AddSecondaryClassificationEvent</span><span class="p">,</span> <span class="n">SelectLicenseEvent</span><span class="p">,</span> \
-    <span class="n">SetPrimaryClassificationEvent</span><span class="p">,</span> <span class="n">AcceptPolicyEvent</span><span class="p">,</span> \
-    <span class="n">VerifyContactInformationEvent</span>
+<span class="kn">from</span> <span class="nn">events.domain.event</span> <span class="k">import</span> <span class="n">CreateSubmission</span><span class="p">,</span> <span class="n">UpdateMetadata</span><span class="p">,</span> \
+    <span class="n">FinalizeSubmission</span><span class="p">,</span> <span class="n">SetPrimaryClassification</span><span class="p">,</span> <span class="n">AddSecondaryClassification</span><span class="p">,</span> \
+    <span class="n">SelectLicense</span><span class="p">,</span> <span class="n">SetPrimaryClassification</span><span class="p">,</span> <span class="n">AcceptPolicy</span><span class="p">,</span> \
+    <span class="n">VerifyContactInformation</span>
 <span class="kn">from</span> <span class="nn">events.domain.agent</span> <span class="k">import</span> <span class="n">User</span>
 <span class="kn">from</span> <span class="nn">events.services</span> <span class="k">import</span> <span class="n">classic</span>
 
@@ -128,7 +127,7 @@
         <span class="sd">&quot;&quot;&quot;Store a single event.&quot;&quot;&quot;</span>
         <span class="k">with</span> <span class="n">in_memory_db</span><span class="p">()</span> <span class="k">as</span> <span class="n">session</span><span class="p">:</span>
             <span class="n">user</span> <span class="o">=</span> <span class="n">User</span><span class="p">(</span><span class="mi">12345</span><span class="p">,</span> <span class="s1">&#39;joe@joe.joe&#39;</span><span class="p">)</span>
-            <span class="n">ev</span> <span class="o">=</span> <span class="n">CreateSubmissionEvent</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">user</span><span class="p">)</span>
+            <span class="n">ev</span> <span class="o">=</span> <span class="n">CreateSubmission</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">user</span><span class="p">)</span>
             <span class="n">submission</span> <span class="o">=</span> <span class="n">ev</span><span class="o">.</span><span class="n">apply</span><span class="p">()</span>
             <span class="n">submission</span> <span class="o">=</span> <span class="n">classic</span><span class="o">.</span><span class="n">store_events</span><span class="p">(</span><span class="n">ev</span><span class="p">,</span> <span class="n">submission</span><span class="o">=</span><span class="n">submission</span><span class="p">)</span>
 
@@ -158,8 +157,8 @@
         <span class="p">}</span>
         <span class="k">with</span> <span class="n">in_memory_db</span><span class="p">()</span> <span class="k">as</span> <span class="n">session</span><span class="p">:</span>
             <span class="n">user</span> <span class="o">=</span> <span class="n">User</span><span class="p">(</span><span class="mi">12345</span><span class="p">,</span> <span class="s1">&#39;joe@joe.joe&#39;</span><span class="p">)</span>
-            <span class="n">ev</span> <span class="o">=</span> <span class="n">CreateSubmissionEvent</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">user</span><span class="p">)</span>
-            <span class="n">ev2</span> <span class="o">=</span> <span class="n">UpdateMetadataEvent</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">user</span><span class="p">,</span>
+            <span class="n">ev</span> <span class="o">=</span> <span class="n">CreateSubmission</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">user</span><span class="p">)</span>
+            <span class="n">ev2</span> <span class="o">=</span> <span class="n">UpdateMetadata</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">user</span><span class="p">,</span>
                                       <span class="n">metadata</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="n">metadata</span><span class="o">.</span><span class="n">items</span><span class="p">()))</span>
 
             <span class="n">submission</span> <span class="o">=</span> <span class="n">ev</span><span class="o">.</span><span class="n">apply</span><span class="p">()</span>
@@ -190,8 +189,8 @@
         <span class="sd">&quot;&quot;&quot;Store events and a finalized submission.&quot;&quot;&quot;</span>
         <span class="k">with</span> <span class="n">in_memory_db</span><span class="p">()</span> <span class="k">as</span> <span class="n">session</span><span class="p">:</span>
             <span class="n">user</span> <span class="o">=</span> <span class="n">User</span><span class="p">(</span><span class="mi">12345</span><span class="p">,</span> <span class="s1">&#39;joe@joe.joe&#39;</span><span class="p">)</span>
-            <span class="n">ev</span> <span class="o">=</span> <span class="n">CreateSubmissionEvent</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">user</span><span class="p">)</span>
-            <span class="n">ev2</span> <span class="o">=</span> <span class="n">FinalizeSubmissionEvent</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">user</span><span class="p">)</span>
+            <span class="n">ev</span> <span class="o">=</span> <span class="n">CreateSubmission</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">user</span><span class="p">)</span>
+            <span class="n">ev2</span> <span class="o">=</span> <span class="n">FinalizeSubmission</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">user</span><span class="p">)</span>
             <span class="n">submission</span> <span class="o">=</span> <span class="n">ev</span><span class="o">.</span><span class="n">apply</span><span class="p">()</span>
             <span class="n">submission</span> <span class="o">=</span> <span class="n">ev2</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">submission</span><span class="p">)</span>
             <span class="n">submission</span> <span class="o">=</span> <span class="n">classic</span><span class="o">.</span><span class="n">store_events</span><span class="p">(</span><span class="n">ev</span><span class="p">,</span> <span class="n">ev2</span><span class="p">,</span> <span class="n">submission</span><span class="o">=</span><span class="n">submission</span><span class="p">)</span>
@@ -210,10 +209,10 @@
 <div class="viewcode-block" id="TestStoreEvents.test_store_events_with_classification"><a class="viewcode-back" href="../../../../containers/core/events.services.classic.html#events.services.classic.tests.TestStoreEvents.test_store_events_with_classification">[docs]</a>    <span class="k">def</span> <span class="nf">test_store_events_with_classification</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Store events including classification.&quot;&quot;&quot;</span>
         <span class="n">user</span> <span class="o">=</span> <span class="n">User</span><span class="p">(</span><span class="mi">12345</span><span class="p">,</span> <span class="s1">&#39;joe@joe.joe&#39;</span><span class="p">)</span>
-        <span class="n">ev</span> <span class="o">=</span> <span class="n">CreateSubmissionEvent</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">user</span><span class="p">)</span>
-        <span class="n">ev2</span> <span class="o">=</span> <span class="n">SetPrimaryClassificationEvent</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">user</span><span class="p">,</span>
+        <span class="n">ev</span> <span class="o">=</span> <span class="n">CreateSubmission</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">user</span><span class="p">)</span>
+        <span class="n">ev2</span> <span class="o">=</span> <span class="n">SetPrimaryClassification</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">user</span><span class="p">,</span>
                                             <span class="n">category</span><span class="o">=</span><span class="s1">&#39;physics.soc-ph&#39;</span><span class="p">)</span>
-        <span class="n">ev3</span> <span class="o">=</span> <span class="n">AddSecondaryClassificationEvent</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">user</span><span class="p">,</span>
+        <span class="n">ev3</span> <span class="o">=</span> <span class="n">AddSecondaryClassification</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">user</span><span class="p">,</span>
                                               <span class="n">category</span><span class="o">=</span><span class="s1">&#39;physics.acc-ph&#39;</span><span class="p">)</span>
         <span class="n">submission</span> <span class="o">=</span> <span class="n">ev</span><span class="o">.</span><span class="n">apply</span><span class="p">()</span>
         <span class="n">submission</span> <span class="o">=</span> <span class="n">ev2</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">submission</span><span class="p">)</span>
@@ -253,8 +252,8 @@
         <span class="sd">&quot;&quot;&quot;Test that publication state is reflected in submission data.&quot;&quot;&quot;</span>
         <span class="n">user</span> <span class="o">=</span> <span class="n">User</span><span class="p">(</span><span class="mi">12345</span><span class="p">,</span> <span class="s1">&#39;joe@joe.joe&#39;</span><span class="p">)</span>
         <span class="n">events</span> <span class="o">=</span> <span class="p">[</span>
-            <span class="n">CreateSubmissionEvent</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">user</span><span class="p">),</span>
-            <span class="n">UpdateMetadataEvent</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">user</span><span class="p">,</span> <span class="n">metadata</span><span class="o">=</span><span class="p">[</span>
+            <span class="n">CreateSubmission</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">user</span><span class="p">),</span>
+            <span class="n">UpdateMetadata</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">user</span><span class="p">,</span> <span class="n">metadata</span><span class="o">=</span><span class="p">[</span>
                 <span class="p">(</span><span class="s1">&#39;title&#39;</span><span class="p">,</span> <span class="s1">&#39;Foo title&#39;</span><span class="p">),</span>
                 <span class="p">(</span><span class="s1">&#39;abstract&#39;</span><span class="p">,</span> <span class="s1">&#39;Indeed&#39;</span><span class="p">),</span>
                 <span class="p">(</span><span class="s1">&#39;authors&#39;</span><span class="p">,</span> <span class="p">[</span>
@@ -264,12 +263,12 @@
                            <span class="n">email</span><span class="o">=</span><span class="s1">&#39;j@doe.com&#39;</span><span class="p">),</span>
                 <span class="p">])</span>
             <span class="p">]),</span>
-            <span class="n">SelectLicenseEvent</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">user</span><span class="p">,</span> <span class="n">license_uri</span><span class="o">=</span><span class="s1">&#39;http://foo.org/1.0/&#39;</span><span class="p">,</span>
+            <span class="n">SelectLicense</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">user</span><span class="p">,</span> <span class="n">license_uri</span><span class="o">=</span><span class="s1">&#39;http://foo.org/1.0/&#39;</span><span class="p">,</span>
                                <span class="n">license_name</span><span class="o">=</span><span class="s1">&#39;Foo zero 1.0&#39;</span><span class="p">),</span>
-            <span class="n">SetPrimaryClassificationEvent</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">user</span><span class="p">,</span> <span class="n">category</span><span class="o">=</span><span class="s1">&#39;cs.DL&#39;</span><span class="p">),</span>
-            <span class="n">AcceptPolicyEvent</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">user</span><span class="p">),</span>
-            <span class="n">VerifyContactInformationEvent</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">user</span><span class="p">),</span>
-            <span class="n">FinalizeSubmissionEvent</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">user</span><span class="p">)</span>
+            <span class="n">SetPrimaryClassification</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">user</span><span class="p">,</span> <span class="n">category</span><span class="o">=</span><span class="s1">&#39;cs.DL&#39;</span><span class="p">),</span>
+            <span class="n">AcceptPolicy</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">user</span><span class="p">),</span>
+            <span class="n">VerifyContactInformation</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">user</span><span class="p">),</span>
+            <span class="n">FinalizeSubmission</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">user</span><span class="p">)</span>
         <span class="p">]</span>
         <span class="n">submission</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">for</span> <span class="n">ev</span> <span class="ow">in</span> <span class="n">events</span><span class="p">:</span>
@@ -306,8 +305,8 @@
         <span class="sd">&quot;&quot;&quot;Test changes made externally are reflected in submission data.&quot;&quot;&quot;</span>
         <span class="n">user</span> <span class="o">=</span> <span class="n">User</span><span class="p">(</span><span class="mi">12345</span><span class="p">,</span> <span class="s1">&#39;joe@joe.joe&#39;</span><span class="p">)</span>
         <span class="n">events</span> <span class="o">=</span> <span class="p">[</span>
-            <span class="n">CreateSubmissionEvent</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">user</span><span class="p">),</span>
-            <span class="n">UpdateMetadataEvent</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">user</span><span class="p">,</span> <span class="n">metadata</span><span class="o">=</span><span class="p">[</span>
+            <span class="n">CreateSubmission</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">user</span><span class="p">),</span>
+            <span class="n">UpdateMetadata</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">user</span><span class="p">,</span> <span class="n">metadata</span><span class="o">=</span><span class="p">[</span>
                 <span class="p">(</span><span class="s1">&#39;title&#39;</span><span class="p">,</span> <span class="s1">&#39;Foo title&#39;</span><span class="p">),</span>
                 <span class="p">(</span><span class="s1">&#39;abstract&#39;</span><span class="p">,</span> <span class="s1">&#39;Indeed&#39;</span><span class="p">),</span>
                 <span class="p">(</span><span class="s1">&#39;authors&#39;</span><span class="p">,</span> <span class="p">[</span>
@@ -317,12 +316,12 @@
                            <span class="n">email</span><span class="o">=</span><span class="s1">&#39;j@doe.com&#39;</span><span class="p">),</span>
                 <span class="p">])</span>
             <span class="p">]),</span>
-            <span class="n">SelectLicenseEvent</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">user</span><span class="p">,</span> <span class="n">license_uri</span><span class="o">=</span><span class="s1">&#39;http://foo.org/1.0/&#39;</span><span class="p">,</span>
+            <span class="n">SelectLicense</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">user</span><span class="p">,</span> <span class="n">license_uri</span><span class="o">=</span><span class="s1">&#39;http://foo.org/1.0/&#39;</span><span class="p">,</span>
                                <span class="n">license_name</span><span class="o">=</span><span class="s1">&#39;Foo zero 1.0&#39;</span><span class="p">),</span>
-            <span class="n">SetPrimaryClassificationEvent</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">user</span><span class="p">,</span> <span class="n">category</span><span class="o">=</span><span class="s1">&#39;cs.DL&#39;</span><span class="p">),</span>
-            <span class="n">AcceptPolicyEvent</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">user</span><span class="p">),</span>
-            <span class="n">VerifyContactInformationEvent</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">user</span><span class="p">),</span>
-            <span class="n">FinalizeSubmissionEvent</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">user</span><span class="p">)</span>
+            <span class="n">SetPrimaryClassification</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">user</span><span class="p">,</span> <span class="n">category</span><span class="o">=</span><span class="s1">&#39;cs.DL&#39;</span><span class="p">),</span>
+            <span class="n">AcceptPolicy</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">user</span><span class="p">),</span>
+            <span class="n">VerifyContactInformation</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">user</span><span class="p">),</span>
+            <span class="n">FinalizeSubmission</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">user</span><span class="p">)</span>
         <span class="p">]</span>
         <span class="n">submission</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">for</span> <span class="n">ev</span> <span class="ow">in</span> <span class="n">events</span><span class="p">:</span>
@@ -383,7 +382,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../publication_process.html">Submission &amp; Publication Process</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../submission_api_context.html">Submission API: Context</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../containers/core/events.html">events package</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../containers/api/api.html">api package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../containers/metadata/metadata.html">metadata package</a></li>
 </ul>
 
 <div class="relations">

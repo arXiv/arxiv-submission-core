@@ -76,7 +76,9 @@ def create_submission(data: dict, headers: dict, user_data: dict,
     except ev.InvalidEvent as e:
         raise InternalServerError(str(e)) from e
     except ev.SaveError as e:
-        raise InternalServerError('Problem interacting with database: %s' % str(e)) from e
+        logger.error('Problem interacting with database: (%s) %s',
+                     str(type(e)), str(e))
+        raise InternalServerError('Problem interacting with database') from e
     except Exception as e:
         logger.error('Unhandled exception: (%s) %s', str(type(e)), str(e))
         raise InternalServerError('Encountered unhandled exception') from e

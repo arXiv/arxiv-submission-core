@@ -75,7 +75,7 @@
 <span class="sd">   &gt;&gt;&gt; import events</span>
 <span class="sd">   &gt;&gt;&gt; user = events.User(123, &quot;joe@bloggs.com&quot;)</span>
 <span class="sd">   &gt;&gt;&gt; metadata = [(&#39;title&#39;, &#39;A new theory of foo&#39;)]</span>
-<span class="sd">   &gt;&gt;&gt; update = events.UpdateMetadataEvent(creator=user, metadata=metadata)</span>
+<span class="sd">   &gt;&gt;&gt; update = events.UpdateMetadata(creator=user, metadata=metadata)</span>
 <span class="sd">   &gt;&gt;&gt; submission = events.save(creation, submission_id=12345)</span>
 
 
@@ -100,7 +100,7 @@
 
 <span class="sd">Special case: creation</span>
 <span class="sd">----------------------</span>
-<span class="sd">Note that if the first event is a :class:`.CreateSubmissionEvent` the</span>
+<span class="sd">Note that if the first event is a :class:`.CreateSubmission` the</span>
 <span class="sd">submission ID need not be provided, as we won&#39;t know what it is yet. For</span>
 <span class="sd">example:</span>
 
@@ -109,9 +109,9 @@
 <span class="sd">   import events</span>
 
 <span class="sd">   &gt;&gt;&gt; user = events.User(123, &quot;joe@bloggs.com&quot;)</span>
-<span class="sd">   &gt;&gt;&gt; creation = events.CreateSubmissionEvent(creator=user)</span>
+<span class="sd">   &gt;&gt;&gt; creation = events.CreateSubmission(creator=user)</span>
 <span class="sd">   &gt;&gt;&gt; metadata = [(&#39;title&#39;, &#39;A new theory of foo&#39;)]</span>
-<span class="sd">   &gt;&gt;&gt; update = events.UpdateMetadataEvent(creator=user, metadata=metadata)</span>
+<span class="sd">   &gt;&gt;&gt; update = events.UpdateMetadata(creator=user, metadata=metadata)</span>
 <span class="sd">   &gt;&gt;&gt; submission = events.save(creation, update)</span>
 <span class="sd">   &gt;&gt;&gt; submission.submission_id</span>
 <span class="sd">   40032</span>
@@ -120,15 +120,14 @@
 <span class="sd">&quot;&quot;&quot;</span>
 
 <span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Tuple</span>
-<span class="kn">from</span> <span class="nn">events.domain.submission</span> <span class="k">import</span> <span class="n">Submission</span><span class="p">,</span> <span class="n">SubmissionMetadata</span>
+<span class="kn">from</span> <span class="nn">events.domain.submission</span> <span class="k">import</span> <span class="n">Submission</span><span class="p">,</span> <span class="n">SubmissionMetadata</span><span class="p">,</span> <span class="n">Author</span>
 <span class="kn">from</span> <span class="nn">events.domain.agent</span> <span class="k">import</span> <span class="n">Agent</span><span class="p">,</span> <span class="n">User</span><span class="p">,</span> <span class="n">System</span><span class="p">,</span> <span class="n">Client</span>
 <span class="kn">from</span> <span class="nn">events.domain.event</span> <span class="k">import</span> <span class="p">(</span>
-    <span class="n">Event</span><span class="p">,</span> <span class="n">CreateSubmissionEvent</span><span class="p">,</span> <span class="n">RemoveSubmissionEvent</span><span class="p">,</span>
-    <span class="n">VerifyContactInformationEvent</span><span class="p">,</span> <span class="n">AssertAuthorshipEvent</span><span class="p">,</span> <span class="n">AcceptPolicyEvent</span><span class="p">,</span>
-    <span class="n">SetPrimaryClassificationEvent</span><span class="p">,</span> <span class="n">AddSecondaryClassificationEvent</span><span class="p">,</span>
-    <span class="n">RemoveSecondaryClassificationEvent</span><span class="p">,</span> <span class="n">SelectLicenseEvent</span><span class="p">,</span>
-    <span class="n">UpdateMetadataEvent</span><span class="p">,</span> <span class="n">UpdateAuthorsEvent</span><span class="p">,</span> <span class="n">CreateCommentEvent</span><span class="p">,</span>
-    <span class="n">DeleteCommentEvent</span><span class="p">,</span> <span class="n">AddDelegateEvent</span><span class="p">,</span> <span class="n">RemoveDelegateEvent</span>
+    <span class="n">Event</span><span class="p">,</span> <span class="n">CreateSubmission</span><span class="p">,</span> <span class="n">RemoveSubmission</span><span class="p">,</span> <span class="n">VerifyContactInformation</span><span class="p">,</span>
+    <span class="n">AssertAuthorship</span><span class="p">,</span> <span class="n">AcceptPolicy</span><span class="p">,</span> <span class="n">SetPrimaryClassification</span><span class="p">,</span> <span class="n">UpdateMetadata</span><span class="p">,</span>
+    <span class="n">AddSecondaryClassification</span><span class="p">,</span> <span class="n">RemoveSecondaryClassification</span><span class="p">,</span> <span class="n">SelectLicense</span><span class="p">,</span>
+    <span class="n">AttachSourceContent</span><span class="p">,</span> <span class="n">UpdateAuthors</span><span class="p">,</span> <span class="n">CreateComment</span><span class="p">,</span> <span class="n">DeleteComment</span><span class="p">,</span>
+    <span class="n">AddDelegate</span><span class="p">,</span> <span class="n">RemoveDelegate</span>
 <span class="p">)</span>
 <span class="kn">from</span> <span class="nn">events.domain.rule</span> <span class="k">import</span> <span class="n">RuleCondition</span><span class="p">,</span> <span class="n">RuleConsequence</span><span class="p">,</span> <span class="n">EventRule</span>
 <span class="kn">from</span> <span class="nn">events.services</span> <span class="k">import</span> <span class="n">classic</span>
@@ -177,14 +176,14 @@
 <span class="sd">        Events to apply and persist.</span>
 <span class="sd">    submission_id : int</span>
 <span class="sd">        The unique ID for the submission, if available. If not provided, it is</span>
-<span class="sd">        expected that ``events`` includes a :class:`.CreateSubmissionEvent`.</span>
+<span class="sd">        expected that ``events`` includes a :class:`.CreateSubmission`.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
 <span class="sd">    :class:`events.domain.submission.Submission`</span>
 <span class="sd">        The state of the submission after all events (including rule-derived</span>
 <span class="sd">        events) have been applied. Updated with the submission ID, if a</span>
-<span class="sd">        :class:`.CreateSubmissionEvent` was included.</span>
+<span class="sd">        :class:`.CreateSubmission` was included.</span>
 <span class="sd">    list</span>
 <span class="sd">        A list of :class:`.Event` instances applied to the submission. Note</span>
 <span class="sd">        that this list may contain more events than were passed, if event</span>
@@ -194,7 +193,7 @@
 <span class="sd">    ------</span>
 <span class="sd">    :class:`.NoSuchSubmission`</span>
 <span class="sd">        Raised if ``submission_id`` is not provided and the first event is not</span>
-<span class="sd">        a :class:`.CreateSubmissionEvent`, or ``submission_id`` is provided but</span>
+<span class="sd">        a :class:`.CreateSubmission`, or ``submission_id`` is provided but</span>
 <span class="sd">        no such submission exists.</span>
 <span class="sd">    :class:`.InvalidEvent`</span>
 <span class="sd">        If an invalid event is encountered, the entire operation is aborted</span>
@@ -237,7 +236,7 @@
     <span class="k">try</span><span class="p">:</span>
         <span class="n">submission</span> <span class="o">=</span> <span class="n">classic</span><span class="o">.</span><span class="n">store_events</span><span class="p">(</span><span class="o">*</span><span class="n">combined</span><span class="p">,</span> <span class="n">submission</span><span class="o">=</span><span class="n">submission</span><span class="p">)</span>
     <span class="k">except</span> <span class="n">classic</span><span class="o">.</span><span class="n">CommitFailed</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="n">SaveError</span><span class="p">(</span><span class="s1">&#39;Failed to store events&#39;</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span>
+        <span class="k">raise</span> <span class="n">SaveError</span><span class="p">(</span><span class="s1">&#39;Failed to store events: </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span> <span class="kn">from</span> <span class="nn">e</span>
 
     <span class="k">for</span> <span class="n">event</span> <span class="ow">in</span> <span class="n">combined</span><span class="p">:</span>
         <span class="n">event</span><span class="o">.</span><span class="n">submission_id</span> <span class="o">=</span> <span class="n">submission</span><span class="o">.</span><span class="n">submission_id</span>
@@ -269,7 +268,7 @@
 <span class="sd">    submission : :class:`.Submission` or None</span>
 <span class="sd">        Starting state from which to begin applying ``events``. If</span>
 <span class="sd">        ``submission`` is not provided, ``events`` must contain a</span>
-<span class="sd">        :class:`.CreateSubmissionEvent`.</span>
+<span class="sd">        :class:`.CreateSubmission`.</span>
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
@@ -283,7 +282,7 @@
 <span class="sd">    ------</span>
 <span class="sd">    :class:`.NoSuchSubmission`</span>
 <span class="sd">        If ``submission`` is not provided, and the first event is not a</span>
-<span class="sd">        :class:`.CreateSubmissionEvent`, there&#39;s not much else to go on.</span>
+<span class="sd">        :class:`.CreateSubmission`, there&#39;s not much else to go on.</span>
 <span class="sd">    :class:`.InvalidEvent`</span>
 <span class="sd">        If an invalid event is encountered, the entire operation is aborted</span>
 <span class="sd">        and this exception is raised.</span>
@@ -292,7 +291,7 @@
     <span class="n">events</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">events</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">e</span><span class="p">:</span> <span class="n">e</span><span class="o">.</span><span class="n">created</span><span class="p">)</span>
 
     <span class="c1"># Need either a creation event or a submission state from which to start.</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">events</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">CreateSubmissionEvent</span><span class="p">)</span> <span class="ow">and</span> <span class="n">submission</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">events</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">CreateSubmission</span><span class="p">)</span> <span class="ow">and</span> <span class="n">submission</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">raise</span> <span class="n">NoSuchSubmission</span><span class="p">(</span><span class="s1">&#39;No creation, and submission not provided&#39;</span><span class="p">)</span>
 
     <span class="n">extra_events</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Event</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>    <span class="c1"># Generated by applied rules.</span>
@@ -300,7 +299,7 @@
         <span class="k">if</span> <span class="ow">not</span> <span class="n">event</span><span class="o">.</span><span class="n">valid</span><span class="p">(</span><span class="n">submission</span><span class="p">):</span>
             <span class="k">raise</span> <span class="n">InvalidEvent</span><span class="p">(</span><span class="n">event</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">CreateSubmissionEvent</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">CreateSubmission</span><span class="p">):</span>
             <span class="n">submission</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">apply</span><span class="p">()</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">submission</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">submission</span><span class="p">)</span>
@@ -334,7 +333,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../publication_process.html">Submission &amp; Publication Process</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../submission_api_context.html">Submission API: Context</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../containers/core/events.html">events package</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../containers/api/api.html">api package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../containers/metadata/metadata.html">metadata package</a></li>
 </ul>
 
 <div class="relations">

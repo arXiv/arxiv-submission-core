@@ -5,7 +5,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>api.factory &#8212; arXiv submission &amp; moderation 0.1 documentation</title>
+    <title>metadata.factory &#8212; arXiv submission &amp; moderation 0.1 documentation</title>
     <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
     <script type="text/javascript">
@@ -38,25 +38,41 @@
         <div class="bodywrapper">
           <div class="body" role="main">
             
-  <h1>Source code for api.factory</h1><div class="highlight"><pre>
+  <h1>Source code for metadata.factory</h1><div class="highlight"><pre>
 <span></span><span class="sd">&quot;&quot;&quot;Application factory for references service components.&quot;&quot;&quot;</span>
 
 <span class="kn">from</span> <span class="nn">arxiv.base</span> <span class="k">import</span> <span class="n">logging</span>
 
-<span class="kn">from</span> <span class="nn">flask</span> <span class="k">import</span> <span class="n">Flask</span>
+<span class="kn">from</span> <span class="nn">flask</span> <span class="k">import</span> <span class="n">Flask</span><span class="p">,</span> <span class="n">jsonify</span><span class="p">,</span> <span class="n">make_response</span>
+<span class="kn">from</span> <span class="nn">werkzeug.exceptions</span> <span class="k">import</span> <span class="n">Forbidden</span><span class="p">,</span> <span class="n">Unauthorized</span><span class="p">,</span> <span class="n">NotFound</span><span class="p">,</span> <span class="n">BadRequest</span>
 
-<span class="kn">from</span> <span class="nn">api</span> <span class="k">import</span> <span class="n">routes</span>
+<span class="kn">from</span> <span class="nn">metadata</span> <span class="k">import</span> <span class="n">routes</span>
 <span class="kn">from</span> <span class="nn">arxiv.base.middleware</span> <span class="k">import</span> <span class="n">wrap</span>
+
+<span class="kn">from</span> <span class="nn">events.services</span> <span class="k">import</span> <span class="n">classic</span>
 
 <span class="kn">from</span> <span class="nn">authorization</span> <span class="k">import</span> <span class="n">middleware</span> <span class="k">as</span> <span class="n">auth</span>
 
 
-<div class="viewcode-block" id="create_web_app"><a class="viewcode-back" href="../../containers/api/api.html#api.factory.create_web_app">[docs]</a><span class="k">def</span> <span class="nf">create_web_app</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Flask</span><span class="p">:</span>
+<div class="viewcode-block" id="jsonify_exception"><a class="viewcode-back" href="../../containers/metadata/metadata.html#metadata.factory.jsonify_exception">[docs]</a><span class="k">def</span> <span class="nf">jsonify_exception</span><span class="p">(</span><span class="n">error</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Render the base 404 error page.&quot;&quot;&quot;</span>
+    <span class="n">exc_resp</span> <span class="o">=</span> <span class="n">error</span><span class="o">.</span><span class="n">get_response</span><span class="p">()</span>
+    <span class="n">response</span> <span class="o">=</span> <span class="n">jsonify</span><span class="p">(</span><span class="n">reason</span><span class="o">=</span><span class="n">error</span><span class="o">.</span><span class="n">description</span><span class="p">)</span>
+    <span class="n">response</span><span class="o">.</span><span class="n">status_code</span> <span class="o">=</span> <span class="n">exc_resp</span><span class="o">.</span><span class="n">status_code</span>
+    <span class="k">return</span> <span class="n">response</span></div>
+
+
+<div class="viewcode-block" id="create_web_app"><a class="viewcode-back" href="../../containers/metadata/metadata.html#metadata.factory.create_web_app">[docs]</a><span class="k">def</span> <span class="nf">create_web_app</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Flask</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;Initialize an instance of the extractor backend service.&quot;&quot;&quot;</span>
-    <span class="n">app</span> <span class="o">=</span> <span class="n">Flask</span><span class="p">(</span><span class="s1">&#39;api&#39;</span><span class="p">)</span>
+    <span class="n">app</span> <span class="o">=</span> <span class="n">Flask</span><span class="p">(</span><span class="s1">&#39;metadata&#39;</span><span class="p">)</span>
+    <span class="n">classic</span><span class="o">.</span><span class="n">init_app</span><span class="p">(</span><span class="n">app</span><span class="p">)</span>
     <span class="n">app</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">from_pyfile</span><span class="p">(</span><span class="s1">&#39;config.py&#39;</span><span class="p">)</span>
 
     <span class="n">app</span><span class="o">.</span><span class="n">register_blueprint</span><span class="p">(</span><span class="n">routes</span><span class="o">.</span><span class="n">blueprint</span><span class="p">)</span>
+    <span class="n">app</span><span class="o">.</span><span class="n">errorhandler</span><span class="p">(</span><span class="n">Forbidden</span><span class="p">)(</span><span class="n">jsonify_exception</span><span class="p">)</span>
+    <span class="n">app</span><span class="o">.</span><span class="n">errorhandler</span><span class="p">(</span><span class="n">NotFound</span><span class="p">)(</span><span class="n">jsonify_exception</span><span class="p">)</span>
+    <span class="n">app</span><span class="o">.</span><span class="n">errorhandler</span><span class="p">(</span><span class="n">BadRequest</span><span class="p">)(</span><span class="n">jsonify_exception</span><span class="p">)</span>
+    <span class="n">app</span><span class="o">.</span><span class="n">errorhandler</span><span class="p">(</span><span class="n">Unauthorized</span><span class="p">)(</span><span class="n">jsonify_exception</span><span class="p">)</span>
 
     <span class="n">wrap</span><span class="p">(</span><span class="n">app</span><span class="p">,</span> <span class="p">[</span><span class="n">auth</span><span class="o">.</span><span class="n">AuthMiddleware</span><span class="p">])</span>
     <span class="k">return</span> <span class="n">app</span></div>

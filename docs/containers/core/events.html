@@ -67,7 +67,7 @@ data, and commit the event using <a class="reference internal" href="#events.sav
 <div class="highlight-python"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span> <span class="nn">events</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">user</span> <span class="o">=</span> <span class="n">events</span><span class="o">.</span><span class="n">User</span><span class="p">(</span><span class="mi">123</span><span class="p">,</span> <span class="s2">&quot;joe@bloggs.com&quot;</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">metadata</span> <span class="o">=</span> <span class="p">[(</span><span class="s1">&#39;title&#39;</span><span class="p">,</span> <span class="s1">&#39;A new theory of foo&#39;</span><span class="p">)]</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">update</span> <span class="o">=</span> <span class="n">events</span><span class="o">.</span><span class="n">UpdateMetadataEvent</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">user</span><span class="p">,</span> <span class="n">metadata</span><span class="o">=</span><span class="n">metadata</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">update</span> <span class="o">=</span> <span class="n">events</span><span class="o">.</span><span class="n">UpdateMetadata</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">user</span><span class="p">,</span> <span class="n">metadata</span><span class="o">=</span><span class="n">metadata</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">submission</span> <span class="o">=</span> <span class="n">events</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">creation</span><span class="p">,</span> <span class="n">submission_id</span><span class="o">=</span><span class="mi">12345</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -91,15 +91,15 @@ propagated as a Kinesis event on the configured stream. See
 </ol>
 <div class="section" id="special-case-creation">
 <h3>Special case: creation<a class="headerlink" href="#special-case-creation" title="Permalink to this headline">¶</a></h3>
-<p>Note that if the first event is a <a class="reference internal" href="events.domain.html#events.domain.event.CreateSubmissionEvent" title="events.domain.event.CreateSubmissionEvent"><code class="xref py py-class docutils literal"><span class="pre">CreateSubmissionEvent</span></code></a> the
+<p>Note that if the first event is a <a class="reference internal" href="events.domain.html#events.domain.event.CreateSubmission" title="events.domain.event.CreateSubmission"><code class="xref py py-class docutils literal"><span class="pre">CreateSubmission</span></code></a> the
 submission ID need not be provided, as we won’t know what it is yet. For
 example:</p>
 <div class="highlight-python"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">events</span>
 
 <span class="o">&gt;&gt;&gt;</span> <span class="n">user</span> <span class="o">=</span> <span class="n">events</span><span class="o">.</span><span class="n">User</span><span class="p">(</span><span class="mi">123</span><span class="p">,</span> <span class="s2">&quot;joe@bloggs.com&quot;</span><span class="p">)</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="n">creation</span> <span class="o">=</span> <span class="n">events</span><span class="o">.</span><span class="n">CreateSubmissionEvent</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">user</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">creation</span> <span class="o">=</span> <span class="n">events</span><span class="o">.</span><span class="n">CreateSubmission</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">user</span><span class="p">)</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="n">metadata</span> <span class="o">=</span> <span class="p">[(</span><span class="s1">&#39;title&#39;</span><span class="p">,</span> <span class="s1">&#39;A new theory of foo&#39;</span><span class="p">)]</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="n">update</span> <span class="o">=</span> <span class="n">events</span><span class="o">.</span><span class="n">UpdateMetadataEvent</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">user</span><span class="p">,</span> <span class="n">metadata</span><span class="o">=</span><span class="n">metadata</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">update</span> <span class="o">=</span> <span class="n">events</span><span class="o">.</span><span class="n">UpdateMetadata</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">user</span><span class="p">,</span> <span class="n">metadata</span><span class="o">=</span><span class="n">metadata</span><span class="p">)</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="n">submission</span> <span class="o">=</span> <span class="n">events</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">creation</span><span class="p">,</span> <span class="n">update</span><span class="p">)</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="n">submission</span><span class="o">.</span><span class="n">submission_id</span>
 <span class="mi">40032</span>
@@ -141,14 +141,14 @@ appropriate channels.</p>
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
 <li><strong>events</strong> (<a class="reference internal" href="events.domain.html#events.domain.event.Event" title="events.domain.event.Event"><code class="xref py py-class docutils literal"><span class="pre">Event</span></code></a>) – Events to apply and persist.</li>
 <li><strong>submission_id</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/functions.html#int" title="(in Python v3.6)"><em>int</em></a>) – The unique ID for the submission, if available. If not provided, it is
-expected that <code class="docutils literal"><span class="pre">events</span></code> includes a <a class="reference internal" href="events.domain.html#events.domain.event.CreateSubmissionEvent" title="events.domain.event.CreateSubmissionEvent"><code class="xref py py-class docutils literal"><span class="pre">CreateSubmissionEvent</span></code></a>.</li>
+expected that <code class="docutils literal"><span class="pre">events</span></code> includes a <a class="reference internal" href="events.domain.html#events.domain.event.CreateSubmission" title="events.domain.event.CreateSubmission"><code class="xref py py-class docutils literal"><span class="pre">CreateSubmission</span></code></a>.</li>
 </ul>
 </td>
 </tr>
 <tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><ul class="simple">
 <li><a class="reference internal" href="events.domain.html#events.domain.submission.Submission" title="events.domain.submission.Submission"><code class="xref py py-class docutils literal"><span class="pre">events.domain.submission.Submission</span></code></a> – The state of the submission after all events (including rule-derived
 events) have been applied. Updated with the submission ID, if a
-<a class="reference internal" href="events.domain.html#events.domain.event.CreateSubmissionEvent" title="events.domain.event.CreateSubmissionEvent"><code class="xref py py-class docutils literal"><span class="pre">CreateSubmissionEvent</span></code></a> was included.</li>
+<a class="reference internal" href="events.domain.html#events.domain.event.CreateSubmission" title="events.domain.event.CreateSubmission"><code class="xref py py-class docutils literal"><span class="pre">CreateSubmission</span></code></a> was included.</li>
 <li><em>list</em> – A list of <a class="reference internal" href="events.domain.html#events.domain.event.Event" title="events.domain.event.Event"><code class="xref py py-class docutils literal"><span class="pre">Event</span></code></a> instances applied to the submission. Note
 that this list may contain more events than were passed, if event
 rules were triggered.</li>
@@ -158,7 +158,7 @@ rules were triggered.</li>
 </tr>
 <tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><ul class="first last simple">
 <li><a class="reference internal" href="#events.exceptions.NoSuchSubmission" title="events.exceptions.NoSuchSubmission"><code class="xref py py-class docutils literal"><span class="pre">NoSuchSubmission</span></code></a> – Raised if <code class="docutils literal"><span class="pre">submission_id</span></code> is not provided and the first event is not
-a <a class="reference internal" href="events.domain.html#events.domain.event.CreateSubmissionEvent" title="events.domain.event.CreateSubmissionEvent"><code class="xref py py-class docutils literal"><span class="pre">CreateSubmissionEvent</span></code></a>, or <code class="docutils literal"><span class="pre">submission_id</span></code> is provided but
+a <a class="reference internal" href="events.domain.html#events.domain.event.CreateSubmission" title="events.domain.event.CreateSubmission"><code class="xref py py-class docutils literal"><span class="pre">CreateSubmission</span></code></a>, or <code class="docutils literal"><span class="pre">submission_id</span></code> is provided but
 no such submission exists.</li>
 <li><a class="reference internal" href="#events.exceptions.InvalidEvent" title="events.exceptions.InvalidEvent"><code class="xref py py-class docutils literal"><span class="pre">InvalidEvent</span></code></a> – If an invalid event is encountered, the entire operation is aborted
 and this exception is raised.</li>
@@ -260,6 +260,12 @@ to the database.</li>
 <dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">unittest.case.TestCase</span></code></p>
 <p>Test <a class="reference internal" href="#events.save" title="events.save"><code class="xref py py-func docutils literal"><span class="pre">save()</span></code></a>.</p>
 <dl class="method">
+<dt id="events.tests.TestSave.test_create_and_update_authors">
+<code class="descname">test_create_and_update_authors</code><span class="sig-paren">(</span><em>mock_database</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/tests.html#TestSave.test_create_and_update_authors"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.tests.TestSave.test_create_and_update_authors" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save multiple events for a nonexistant submission.</p>
+</dd></dl>
+
+<dl class="method">
 <dt id="events.tests.TestSave.test_save_creation_event">
 <code class="descname">test_save_creation_event</code><span class="sig-paren">(</span><em>mock_database</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/tests.html#TestSave.test_save_creation_event"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.tests.TestSave.test_save_creation_event" title="Permalink to this definition">¶</a></dt>
 <dd><p>A <code class="xref py py-class docutils literal"><span class="pre">CreationEvent</span></code> is passed.</p>
@@ -328,7 +334,7 @@ to the database.</li>
 <li class="toctree-l2"><a class="reference internal" href="#module-events.tests">events.tests module</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="../api/api.html">api package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../metadata/metadata.html">metadata package</a></li>
 </ul>
 
 <div class="relations">
