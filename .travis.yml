@@ -1,0 +1,16 @@
+language: python
+sudo: required
+services:
+  - docker
+cache: pip
+os:
+  - linux
+python:
+  - "3.6"
+script:
+  - pip install -U pip pipenv
+  - pipenv install
+  - pipenv install -dev
+  - pipenv run nose2 --with-coverage
+after_success:
+  - coveralls

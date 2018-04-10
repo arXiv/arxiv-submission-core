@@ -187,9 +187,10 @@ class Submission:
         data.update({
             'creator': self.creator.to_dict(),
             'owner': self.owner.to_dict(),
-            'client': self.client.to_dict(),
             'created': self.created.isoformat(),
         })
+        if self.client:
+            data.update({'client': self.client.to_dict()})
         if self.primary_classification:
             data['primary_classification'] = \
                 self.primary_classification.to_dict()
