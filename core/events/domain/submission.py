@@ -61,8 +61,9 @@ class Author:
     def canonical(self):
         """Canonical representation of the author name."""
         name = "%s %s %s" % (self.forename, self.initials, self.surname)
+        name = name.replace('  ', ' ')
         if self.affiliation:
-            return "%s (%s)" % (self.name, self.affiliation)
+            return "%s (%s)" % (name, self.affiliation)
         return name
 
     def to_dict(self) -> dict:
@@ -78,6 +79,8 @@ class SubmissionContent:
 
     location: str
     format: str
+    mime_type: str
+    size: str
     checksum: str
     identifier: int
 

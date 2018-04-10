@@ -86,7 +86,7 @@ from events.domain.event import (
     AssertAuthorship, AcceptPolicy, SetPrimaryClassification, UpdateMetadata,
     AddSecondaryClassification, RemoveSecondaryClassification, SelectLicense,
     AttachSourceContent, UpdateAuthors, CreateComment, DeleteComment,
-    AddDelegate, RemoveDelegate
+    AddDelegate, RemoveDelegate, FinalizeSubmission
 )
 from events.domain.rule import RuleCondition, RuleConsequence, EventRule
 from events.services import classic

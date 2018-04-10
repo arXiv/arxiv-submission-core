@@ -19,7 +19,8 @@ from arxiv.util import schema
 
 from .agent import Agent
 from .submission import Submission, SubmissionMetadata, Author, \
-    Classification, License, Delegation, Comment, Flag, Proposal
+    Classification, License, Delegation, Comment, Flag, Proposal, \
+    SubmissionContent
 
 from events.exceptions import InvalidEvent
 
@@ -301,6 +302,14 @@ class UpdateAuthors(Event):
         submission.metadata.authors = self.authors
         return submission
 
+    @classmethod
+    def from_dict(cls, **data) -> Submission:
+        if 'authors' not in data:
+            raise ValueError('Missing authors')
+        data['authors'] = [Author(**au) for au in data['authors']]
+        return cls(**data)
+
+
 
 @dataclass
 class AttachSourceContent(Event):
@@ -309,9 +318,15 @@ class AttachSourceContent(Event):
     location: str = field(default_factory=str)
     format: str = field(default_factory=str)
     checksum: str = field(default_factory=str)
+    mime_type: str = field(default_factory=str)
     identifier: Optional[int] = field(default=None)
+    size: int = field(default=0)
 
+    # TODO: This should be configurable somewhere.
     ALLOWED_FORMATS = [
+        'pdftex', 'tex', 'pdf', 'ps', 'html', 'invalid'
+    ]
+    ALLOWED_MIME_TYPES = [
         'application/tar+gzip', 'application/tar', 'application/zip'
     ]
 
@@ -337,7 +352,9 @@ class AttachSourceContent(Event):
             location=self.location,
             format=self.format,
             checksum=self.checksum,
-            identifier=self.identifier
+            identifier=self.identifier,
+            mime_type=self.mime_type,
+            size=self.size
         )
         return submission
 
@@ -520,6 +537,9 @@ def event_factory(event_type: str, **data) -> Event:
     if 'created' not in data:
         data['created'] = datetime.now()
     if event_type in EVENT_TYPES:
+        klass = EVENT_TYPES[event_type]
+        if hasattr(klass, 'from_dict'):
+            return klass.from_dict(**data)
         return EVENT_TYPES[event_type](**data)
     raise RuntimeError('Unknown event type: %s' % event_type)
 

@@ -2,9 +2,11 @@
   "finalized": true,
   "source_content": {
     "location": "https://api.arxiv.org/upload/12345",
-    "format": "application/zip",
+    "mime_type": "application/zip",
+    "format": "tex",
     "checksum": "295f43gec1e92a71d3e9e7i456ba80d2",
-    "identifier": 12345
+    "identifier": 12345,
+    "size": 5884992
   },
   "submitter_is_author": true,
   "submitter_accepts_policy": true,

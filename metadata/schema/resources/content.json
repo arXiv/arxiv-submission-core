@@ -15,11 +15,19 @@
       "type": "string"
     },
     "format": {
+      "description": "Content format; e.g. tex, pdf, pdftex, html",
+      "type": "string"
+    },
+    "mime_type": {
       "description": "MIME-type of the content resource.",
       "type": "string"
     },
     "identifier": {
       "description": "Unique identifier for the content resource.",
+      "type": "integer"
+    },
+    "size": {
+      "description": "Content size, in bytes.",
       "type": "integer"
     }
   }

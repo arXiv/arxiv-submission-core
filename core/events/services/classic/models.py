@@ -232,6 +232,9 @@ class Submission(Base):    # type: ignore
 
     def update_from_submission(self, submission: domain.Submission) -> None:
         """Update this database object from a :class:`.domain.Submission`."""
+        self.submitter_id = submission.creator.native_id
+        self.submitter_name = submission.creator.name
+        self.submitter_email = submission.creator.email
         self.is_author = int(submission.submitter_is_author)
         self.agree_policy = int(submission.submitter_accepts_policy)
         self.userinfo = int(submission.submitter_contact_verified)
@@ -250,11 +253,17 @@ class Submission(Base):    # type: ignore
             self.license = submission.license.uri
         self.type = Submission.NEW   # We're not handling other types here.
 
+        if submission.source_content is not None:
+            self.must_process = 0
+            self.source_size = submission.source_content.size
+            self.source_format = submission.source_content.format
+
         # Only update the submission state if we're transitioning for the first
         # time. We can relax this later, but for now it will prevent us from
         # doing something stupid.
         if submission.finalized and self.status is Submission.NOT_SUBMITTED:
             self.status = Submission.SUBMITTED
+            self.submit_time = submission.updated
 
         if submission.primary_classification:
             self._update_primary(submission)
