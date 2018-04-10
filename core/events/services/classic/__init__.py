@@ -40,7 +40,7 @@ from events.domain.submission import License, Submission
 from events.domain.agent import User, Client, Agent
 from . import models, util
 from .models import Base
-from .exceptions import NoSuchSubmission, CommitFailed
+from .exceptions import NoSuchSubmission, CommitFailed, ClassicBaseException
 from arxiv.base.globals import get_application_config, get_application_global
 
 
@@ -98,6 +98,9 @@ def transaction() -> Generator:
     try:
         yield session
         session.commit()
+    except ClassicBaseException:
+        session.rollback()
+        raise   # Propagate exceptions raised from this module.
     except Exception as e:
         session.rollback()
         raise CommitFailed('Failed to commit transaction') from e
