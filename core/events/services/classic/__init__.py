@@ -35,6 +35,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm.session import Session
 
+from arxiv.base import logging
 from events.domain.event import Event, event_factory
 from events.domain.submission import License, Submission
 from events.domain.agent import User, Client, Agent
@@ -42,6 +43,8 @@ from . import models, util
 from .models import Base
 from .exceptions import NoSuchSubmission, CommitFailed, ClassicBaseException
 from arxiv.base.globals import get_application_config, get_application_global
+
+logger = logging.getLogger(__name__)
 
 
 class DBEvent(Base):  # type: ignore
@@ -98,10 +101,12 @@ def transaction() -> Generator:
     try:
         yield session
         session.commit()
-    except ClassicBaseException:
+    except ClassicBaseException as e:
+        logger.debug('Commit failed, rolling back: %s', str(e))
         session.rollback()
         raise   # Propagate exceptions raised from this module.
     except Exception as e:
+        logger.debug('Commit failed, rolling back: %s', str(e))
         session.rollback()
         raise CommitFailed('Failed to commit transaction') from e
 

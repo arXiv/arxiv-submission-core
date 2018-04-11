@@ -4,6 +4,10 @@ FROM arxiv/base
 
 WORKDIR /opt/arxiv
 
+# We're using MariaDB for testing/development, but production is MySQL (for
+# now).
+RUN yum -y install mariadb-devel
+
 # Add Python consumer and configuration.
 ADD Pipfile /opt/arxiv/Pipfile
 ADD Pipfile.lock /opt/arxiv/Pipfile.lock
@@ -13,13 +17,14 @@ RUN pipenv install
 ADD metadata/ /opt/arxiv/
 ADD authorization/authorization/ /opt/arxiv/authorization/
 ADD core/events/ /opt/arxiv/events/
+ADD metadata/bin/entrypoint.sh /opt/arxiv/entrypoint.sh
 
 ENV JWT_SECRET "foo"
 EXPOSE 8000
 
 #CMD /bin/bash
 
-CMD pipenv run uwsgi --http-socket :8000 -w wsgi -M \
+CMD ./entrypoint.sh --http-socket :8000 -w wsgi -M \
         -t 3000 --manage-script-name \
         --processes 8 --threads 1 --async 100 --ugreen \
         --mount /submission=wsgi.py

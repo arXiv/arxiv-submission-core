@@ -10,6 +10,10 @@ services:
       MYSQL_USER: foouser
       MYSQL_PASSWORD: foopass
       MYSQL_ROOT_PASSWORD: foorootpassword
+      MYSQL_DATABASE: submission
+    command: ["mysqld", "--character-set-server=utf8mb4", "--collation-server=utf8mb4_unicode_ci"]
+    ports:
+      - "3307:3306"
 
   submission-redis:
     image: redis
@@ -39,7 +43,7 @@ services:
       AWS_ACCESS_KEY_ID: "foo"
       AWS_SECRET_ACCESS_KEY: "bar"
       LOGLEVEL: 10
-      CLASSIC_DATABASE_URI: "mysql://foouser:foopass@submission-maria:5432/maria"
+      CLASSIC_DATABASE_URI: "mysql+mysqldb://foouser:foopass@submission-maria:3306/submission?charset=utf8"
     networks:
       - arxiv-submission-local
     depends_on:
