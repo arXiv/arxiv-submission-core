@@ -1,4 +1,4 @@
-"""Middleware for decoding encrypted JWTs on each request."""
+"""Middleware for decoding JWTs on requests. For demo purposes only."""
 
 import os
 from typing import Callable, Iterable, Tuple

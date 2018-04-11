@@ -1,3 +1,5 @@
+"""Configuration for the metadata submission API service."""
+
 import os
 
 

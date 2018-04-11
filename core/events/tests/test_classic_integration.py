@@ -8,6 +8,7 @@ from events.services import classic
 
 @contextmanager
 def in_memory_db():
+    """Provide an in-memory sqlite database for testing purposes."""
     app = Flask('foo')
     app.config['CLASSIC_DATABASE_URI'] = 'sqlite://'
 

@@ -1,4 +1,4 @@
-"""Toy authorizer implementation."""
+"""Toy authorizer implementation. For demo purposes only."""
 
 import os
 from flask import Flask, jsonify, request

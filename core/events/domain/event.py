@@ -107,6 +107,7 @@ class Event:
         return True
 
     def apply(self, submission: Optional[Submission] = None) -> Submission:
+        """Apply the projection for this :class:`.Event` instance."""
         if submission:
             submission = self.project(submission)
         else:
@@ -115,6 +116,7 @@ class Event:
         return submission
 
     def to_dict(self):
+        """Generate a dict representation of this :class:`.Event`."""
         data = asdict(self)
         data.update({
             'creator': self.creator.to_dict(),
@@ -187,7 +189,9 @@ class SetPrimaryClassification(Event):
 
     category: Optional[str] = None
 
+    # TODO: this should validate against the arXiv taxonomy.
     def validate(self, submission: Submission) -> None:
+        """Validate the primary classification category."""
         try:
             assert self.category
         except AssertionError as e:
@@ -207,8 +211,9 @@ class AddSecondaryClassification(Event):
 
     category: Optional[str] = field(default=None)
 
+    # TODO: this should validate against the arXiv taxonomy.
     def validate(self, submission: Submission) -> None:
-        """All three fields must be set."""
+        """Validate the secondary classification category to add."""
         try:
             assert self.category
         except AssertionError as e:
@@ -228,8 +233,9 @@ class RemoveSecondaryClassification(Event):
 
     category: Optional[str] = field(default=None)
 
+    # TODO: this should validate against the arXiv taxonomy.
     def validate(self, submission: Submission) -> None:
-        """All three fields must be set."""
+        """Validate the secondary classification category to remove."""
         try:
             assert self.category
         except AssertionError as e:
@@ -265,8 +271,6 @@ class SelectLicense(Event):
 class UpdateMetadata(Event):
     """Update the descriptive metadata for a submission."""
 
-    schema = 'schema/resources/events/update_metadata.json'
-
     metadata: List[Tuple[str, Any]] = field(default_factory=list)
 
     FIELDS = [
@@ -274,6 +278,7 @@ class UpdateMetadata(Event):
         'report_num', 'journal_ref'
     ]
 
+    # TODO: implement more specific validation here.
     def validate(self, submission: Submission) -> None:
         """The :prop:`.metadata` should be a list of tuples."""
         try:
@@ -304,11 +309,11 @@ class UpdateAuthors(Event):
 
     @classmethod
     def from_dict(cls, **data) -> Submission:
+        """Override the default ``from_dict`` constructor to handle authors."""
         if 'authors' not in data:
             raise ValueError('Missing authors')
         data['authors'] = [Author(**au) for au in data['authors']]
         return cls(**data)
-
 
 
 @dataclass
@@ -384,6 +389,7 @@ class FinalizeSubmission(Event):
             raise InvalidEvent(self, "Submission missing required data") from e
 
     def project(self, submission: Submission) -> Submission:
+        """Set :prop:`Submission.finalized`."""
         submission.finalized = True
         return submission
 
@@ -542,10 +548,3 @@ def event_factory(event_type: str, **data) -> Event:
             return klass.from_dict(**data)
         return EVENT_TYPES[event_type](**data)
     raise RuntimeError('Unknown event type: %s' % event_type)
-
-
-__all__ = tuple(
-    ['Event', 'event_factory'] +
-    [obj.__name__ for obj in locals().values()
-     if type(obj) is type and issubclass(obj, Event)]
- )

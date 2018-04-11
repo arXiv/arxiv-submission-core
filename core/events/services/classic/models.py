@@ -417,6 +417,7 @@ class Document(Base):    # type: ignore
     This is here so that we can look up the arXiv ID after a submission is
     published.
     """
+
     __tablename__ = 'arXiv_documents'
 
     document_id = Column(Integer, primary_key=True)
@@ -466,6 +467,8 @@ class DocumentCategory(Base):    # type: ignore
 
 
 class User(Base):    # type: ignore
+    """Represents an arXiv user."""
+
     __tablename__ = 'tapir_users'
 
     user_id = Column(Integer, primary_key=True)
@@ -517,6 +520,8 @@ class User(Base):    # type: ignore
 
 # TODO: what is this?
 class PolicyClass(Base):    # type: ignore
+    """Defines user roles in the system."""
+
     __tablename__ = 'tapir_policy_classes'
 
     class_id = Column(SmallInteger, primary_key=True)
@@ -532,6 +537,7 @@ class PolicyClass(Base):    # type: ignore
 
 class Tracking(Base):    # type: ignore
     """Record of SWORD submissions."""
+
     __tablename__ = 'arXiv_tracking'
 
     tracking_id = Column(Integer, primary_key=True)
@@ -544,6 +550,8 @@ class Tracking(Base):    # type: ignore
 
 
 class ArchiveCategory(Base):    # type: ignore
+    """Maps categories to the archives in which they reside."""
+
     __tablename__ = 'arXiv_archive_category'
 
     archive_id = Column(String(16), primary_key=True, nullable=False,
@@ -552,6 +560,8 @@ class ArchiveCategory(Base):    # type: ignore
 
 
 class ArchiveDef(Base):    # type: ignore
+    """Defines the archives in the arXiv classification taxonomy."""
+
     __tablename__ = 'arXiv_archive_def'
 
     archive = Column(String(16), primary_key=True, server_default=text("''"))
@@ -559,6 +569,8 @@ class ArchiveDef(Base):    # type: ignore
 
 
 class ArchiveGroup(Base):    # type: ignore
+    """Maps archives to the groups in which they reside."""
+
     __tablename__ = 'arXiv_archive_group'
 
     archive_id = Column(String(16), primary_key=True, nullable=False,
@@ -568,6 +580,8 @@ class ArchiveGroup(Base):    # type: ignore
 
 
 class Archive(Base):    # type: ignore
+    """Supplemental data about archives in the classification hierarchy."""
+
     __tablename__ = 'arXiv_archives'
 
     archive_id = Column(String(16), primary_key=True,
@@ -584,6 +598,8 @@ class Archive(Base):    # type: ignore
 
 
 class GroupDef(Base):    # type: ignore
+    """Defines the groups in the arXiv classification taxonomy."""
+
     __tablename__ = 'arXiv_group_def'
 
     archive_group = Column(String(16), primary_key=True,
@@ -592,6 +608,8 @@ class GroupDef(Base):    # type: ignore
 
 
 class Group(Base):    # type: ignore
+    """Supplemental data about groups in the classification hierarchy."""
+
     __tablename__ = 'arXiv_groups'
 
     group_id = Column(String(16), primary_key=True, server_default=text("''"))
@@ -600,6 +618,8 @@ class Group(Base):    # type: ignore
 
 
 class EndorsementDomain(Base):    # type: ignore
+    """Endorsement configurations."""
+
     __tablename__ = 'arXiv_endorsement_domains'
 
     endorsement_domain = Column(String(32), primary_key=True,
@@ -615,7 +635,8 @@ class EndorsementDomain(Base):    # type: ignore
 
 
 class Category(Base):    # type: ignore
-
+    """Supplemental data about arXiv categories, including endorsement."""
+    
     __tablename__ = 'arXiv_categories'
 
     arXiv_endorsement_domain = relationship('EndorsementDomain')

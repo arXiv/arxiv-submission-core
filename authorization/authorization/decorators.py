@@ -1,4 +1,4 @@
-"""Provides scope-based authorization with JWT."""
+"""Provides scope-based authorization with JWT. For demo purposes only."""
 
 from functools import wraps
 from flask import request, g

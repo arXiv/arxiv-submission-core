@@ -29,6 +29,7 @@ from events.services import classic
 
 @contextmanager
 def in_memory_db():
+    """Provide an in-memory sqlite database for testing purposes."""
     app = Flask('foo')
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite://'
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
