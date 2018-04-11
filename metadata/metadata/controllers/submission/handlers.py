@@ -11,6 +11,10 @@ Each handler (a function) should accept two parameters:
 The primary controller in this module is the :func:`.handle_submission`, which
 delegates work to the handlers. The global ``HANDLERS`` defined at the end of
 this module describes how delegation should occur.
+
+Note: data validation should not be implemented here! Events/commands in
+:mod:`events` should define required parameters, perform all validation,
+and carry out any required transformation/cleanup.
 """
 from typing import Tuple, Optional, Dict, Callable, List
 
@@ -18,7 +22,23 @@ import events
 
 
 def handle_submission(data: dict, agents: dict) -> Tuple[events.Event]:
-    """Handle the submission payload."""
+    """
+    Handle the submission payload.
+
+    We assume that schema validation has been performed already, so it's not
+    up to us to verify the shape of the data.
+
+    Parameters
+    ----------
+    data : dict
+    agents : dict
+        Values are :class:`events.Agent` instances.
+
+    Returns
+    -------
+    tuple
+        Zero or more uncommitted :class:`events.Event` instances.
+    """
     _events = []
     for key_path, handler in HANDLERS:
         value = data
@@ -29,15 +49,26 @@ def handle_submission(data: dict, agents: dict) -> Tuple[events.Event]:
             value = value[key]
         if value is None:
             continue
-        new_events = handler(value, agents)
-        if new_events is not None:
-            _events += new_events
+        _events += handler(value, agents)
     return tuple(_events)
 
 
 def handle_submitter_is_author(data: bool, agents: dict) \
         -> Tuple[events.Event]:
-    """Handle the ``submitter_is_author`` field in submission payload."""
+    """
+    Handle the ``submitter_is_author`` field in submission payload.
+
+    Parameters
+    ----------
+    data : dict
+    agents : dict
+        Values are :class:`events.Agent` instances.
+
+    Returns
+    -------
+    tuple
+        Zero or more uncommitted :class:`events.Event` instances.
+    """
     return events.AssertAuthorship(**agents, submitter_is_author=data),
 
 
@@ -51,11 +82,24 @@ def handle_license(data: dict, agents: dict) -> Tuple[events.Event]:
 
 
 def handle_submitter_accepts_policy(data: dict, agents: dict) \
-        -> Optional[Tuple[events.Event]]:
-    """Handle the ``submitter_accepts_policy field in submission payload."""
+        -> Tuple[events.Event]:
+    """
+    Handle the ``submitter_accepts_policy field in submission payload.
+
+    Parameters
+    ----------
+    data : dict
+    agents : dict
+        Values are :class:`events.Agent` instances.
+
+    Returns
+    -------
+    tuple
+        Zero or more uncommitted :class:`events.Event` instances.
+    """
     if data:
         return events.AcceptPolicy(**agents),
-    return
+    return tuple()
 
 
 def handle_primary_classification(data: dict, agents: dict) \
@@ -68,16 +112,42 @@ def handle_primary_classification(data: dict, agents: dict) \
 
 
 def handle_secondary_classification(data: list, agents: dict) \
-        -> Optional[Tuple[events.Event]]:
-    """Handle the ``secondary_classification`` field in submission payload."""
+        -> Tuple[events.Event]:
+    """
+    Handle the ``secondary_classification`` field in submission payload.
+
+    Parameters
+    ----------
+    data : dict
+    agents : dict
+        Values are :class:`events.Agent` instances.
+
+    Returns
+    -------
+    tuple
+        Zero or more uncommitted :class:`events.Event` instances.
+    """
     return tuple([
         events.AddSecondaryClassification(**agents, category=clsn['category'])
         for clsn in data
     ])
 
 
-def handle_metadata(data: dict, agents: dict) -> Optional[Tuple[events.Event]]:
-    """Handle the ``metadata`` field in the submission payload."""
+def handle_metadata(data: dict, agents: dict) -> Tuple[events.Event]:
+    """
+    Handle the ``metadata`` field in the submission payload.
+
+    Parameters
+    ----------
+    data : dict
+    agents : dict
+        Values are :class:`events.Agent` instances.
+
+    Returns
+    -------
+    tuple
+        Zero or more uncommitted :class:`events.Event` instances.
+    """
     # Most of this could be in a list comprehension, but it may help to
     # keep this verbose in case we want to intervene on values.
     _metadata = []
@@ -85,11 +155,28 @@ def handle_metadata(data: dict, agents: dict) -> Optional[Tuple[events.Event]]:
         if key not in data:
             continue
         _metadata.append((key, data[key]))
+    if not _metadata:
+        return tuple()
     return events.UpdateMetadata(**agents, metadata=_metadata),
 
 
-def handle_authors(data: dict, agents: dict) -> Optional[Tuple[events.Event]]:
-    """Handle authors in the submission payload."""
+def handle_authors(data: dict, agents: dict) -> Tuple[events.Event]:
+    """
+    Handle authors in the submission payload.
+
+    Parameters
+    ----------
+    data : dict
+    agents : dict
+        Values are :class:`events.Agent` instances.
+
+    Returns
+    -------
+    tuple
+        Zero or more uncommitted :class:`events.Event` instances.
+    """
+    if not data:
+        return tuple()
     _authors = []
     for i, au in enumerate(data):
         if 'order' not in au:
@@ -117,4 +204,6 @@ A key-path is a tuple of keys to be applied recursively to access the data.
 E.g. the key-path ``('metadata', 'authors')`` will access
 ``payload['metadata']['authors']`` and pass the referent to the corresponding
 handler.
+
+Extra data in the payload is simply ignored.
 """
