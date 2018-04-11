@@ -15,6 +15,7 @@ arxiv-base = "*"
 sqlalchemy = "*"
 pyyaml = "*"
 pytz = "*"
+uwsgi = "*"
 
 
 [dev-packages]
