@@ -46,7 +46,7 @@ class TestSubmit(TestCase):
         with open(os.path.join(BASEPATH, 'examples/complete_submission.json')) as f:
             data = json.load(f)
         response = self.client.post(
-            '/submission',
+            '/',
             data=json.dumps(data),
             content_type='application/json',
             headers={
