@@ -7,18 +7,27 @@ from arxiv.base import logging
 
 logger = logging.getLogger(__name__)
 
-
 JWT_SECRET = os.environ.get('JWT_SECRET', 'foo')
 TOKENS = {
     'as392lks0kk32': {
-        'client': 'fooclient',
-        'user': 'foouser',
-        'scope': ['submission:write', 'submission:read']
+        'scope': ['submission:write', 'submission:read'],
+        'user': {
+            'user_id': 1234,
+            'email': 'joe@bloggs.com'
+        },
+        'client': {
+            'client_id': 5678
+        }
     },
     'f0da9jso3l2m4': {
-        'client': 'barclient',
-        'user': 'baruser',
-        'scope': ['submission:read']
+        'scope': ['submission:read'],
+        'user': {
+            'user_id': 4321,
+            'email': 'jane@doe.com'
+        },
+        'client': {
+            'client_id': 5678
+        }
     }
 }
 NOPE = {'reason': 'Missing or malformed authorization header'}

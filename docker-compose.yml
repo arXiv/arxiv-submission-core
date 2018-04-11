@@ -9,6 +9,7 @@ services:
     environment:
       MYSQL_USER: foouser
       MYSQL_PASSWORD: foopass
+      MYSQL_ROOT_PASSWORD: foorootpassword
 
   submission-redis:
     image: redis
@@ -16,17 +17,17 @@ services:
     networks:
       - arxiv-submission-local
 
-  submission-localstack:
-    image: atlassianlabs/localstack
-    container_name: submission-localstack
-    networks:
-      - arxiv-submission-local
-    ports:
-      - "4568:4568"
-      - "4569:4569"
-    environment:
-      USE_SSL: 'true'
-      DEBUG: 'true'
+  # submission-localstack:
+  #   image: atlassianlabs/localstack
+  #   container_name: submission-localstack
+  #   networks:
+  #     - arxiv-submission-local
+  #   ports:
+  #     - "4568:4568"
+  #     - "4569:4569"
+  #   environment:
+  #     USE_SSL: 'true'
+  #     DEBUG: 'true'
 
   submission-metadata:
     build:
@@ -38,13 +39,14 @@ services:
       AWS_ACCESS_KEY_ID: "foo"
       AWS_SECRET_ACCESS_KEY: "bar"
       LOGLEVEL: 10
-      CLASSIC_DATABASE_URI: "maria://foouser:foopass@submission-maria:5432/maria"
+      CLASSIC_DATABASE_URI: "mysql://foouser:foopass@submission-maria:5432/maria"
     networks:
       - arxiv-submission-local
     depends_on:
       - submission-redis
-      - submission-localstack
       - submission-maria
+      # - submission-localstack
+
 
   submission-authorization:
     build:
@@ -72,9 +74,9 @@ services:
       - arxiv-submission-local
     depends_on:
       - submission-redis
-      - submission-localstack
       - submission-metadata
       - submission-authorization
+      # - submission-localstack
 
 networks:
   arxiv-submission-local:

@@ -25,7 +25,7 @@ class TestSubmit(TestCase):
         os.environ['CLASSIC_DATABASE_URI'] = 'sqlite:///%s' % DB_PATH
 
         self.authorization = jwt.encode({
-            'scope': ['submission:create'],
+            'scope': ['submission:write', 'submission:read'],
             'user': {
                 'user_id': 1234,
                 'email': 'joe@bloggs.com'
@@ -46,7 +46,7 @@ class TestSubmit(TestCase):
         with open(os.path.join(BASEPATH, 'examples/complete_submission.json')) as f:
             data = json.load(f)
         response = self.client.post(
-            '/submission/',
+            '/submission',
             data=json.dumps(data),
             content_type='application/json',
             headers={

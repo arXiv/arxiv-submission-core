@@ -2,7 +2,7 @@
 
 The authorization service handles subrequests from the [gateway](../gateway)
 to authorize API client requests. This implementation merely mocks the
-functionality of a real authorization service for demonstration purposes.
+functionality of a real authorization service; for demonstration purposes only.
 
 ## Example request lifecycle
 
