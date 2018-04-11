@@ -16,6 +16,8 @@ sqlalchemy = "*"
 pyyaml = "*"
 pytz = "*"
 uwsgi = "*"
+mysqlclient = "*"
+mimesis = "*"
 
 
 [dev-packages]
@@ -27,3 +29,4 @@ coveralls = "*"
 pylint = "*"
 pydocstyle = "*"
 mypy = "*"
+mimesis = "*"

@@ -41,6 +41,67 @@ information about using Docker Compose.
 The Compose file included here deploys all services on a custom network, and
 exposes the gateway service at port 8000 on your local machine.
 
+To start up (from the root of the repo, containing ``docker-compose.yml``):
+
+```bash
+$ docker-compose build
+$ docker-compose up
+```
+
+This will generate a lot of output, and bind your terminal. Some things to
+watch for:
+
+MariaDB starting up successfully:
+```
+submission-maria            | 2018-04-11 13:49:16 0 [Note] Reading of all Master_info entries succeded
+submission-maria            | 2018-04-11 13:49:16 0 [Note] Added new Master_info '' to hash table
+submission-maria            | 2018-04-11 13:49:16 0 [Note] mysqld: ready for connections.
+submission-maria            | Version: '10.3.5-MariaDB-10.3.5+maria~jessie'  socket: '/var/run/mysqld/mysqld.sock'  port: 3306  mariadb.org binary distribution
+```
+
+The metadata API service waiting for the database to be ready:
+
+```
+submission-metadata         | application 11/Apr/2018:09:49:13 +0000 - __main__ - None - [arxiv:null] - INFO: "...waiting 4 seconds..."
+```
+
+After the DB is available, you should see something like this as the metadata
+service initializes the database and adds some data.
+
+```
+submission-metadata         | application 11/Apr/2018:09:49:17 +0000 - __main__ - None - [arxiv:null] - INFO: "Checking for database"
+submission-metadata         | application 11/Apr/2018:09:49:17 +0000 - __main__ - None - [arxiv:null] - INFO: "Database not yet initialized; creating tables"
+submission-metadata         | application 11/Apr/2018:09:49:18 +0000 - __main__ - None - [arxiv:null] - INFO: "Populate with base data..."
+submission-metadata         | application 11/Apr/2018:09:49:18 +0000 - __main__ - None - [arxiv:null] - INFO: "Added 10 licenses"
+submission-metadata         | application 11/Apr/2018:09:49:18 +0000 - __main__ - None - [arxiv:null] - INFO: "Added 3 policy classes"
+submission-metadata         | application 11/Apr/2018:09:49:18 +0000 - __main__ - None - [arxiv:null] - INFO: "Added 150 categories"
+submission-metadata         | application 11/Apr/2018:09:49:18 +0000 - __main__ - None - [arxiv:null] - INFO: "Added 500 users"
+```
+
+Note that the users generated here are fake. Licenses, categories, etc are all
+"realistic".
+
+After generating data, the web service starts:
+
+```
+submission-metadata         | spawned uWSGI master process (pid: 13)
+submission-metadata         | spawned uWSGI worker 1 (pid: 21, cores: 100)
+submission-metadata         | spawned uWSGI worker 2 (pid: 22, cores: 100)
+submission-metadata         | spawned uWSGI worker 3 (pid: 23, cores: 100)
+submission-metadata         | spawned uWSGI worker 4 (pid: 24, cores: 100)
+submission-metadata         | spawned uWSGI worker 5 (pid: 25, cores: 100)
+submission-metadata         | spawned uWSGI worker 6 (pid: 26, cores: 100)
+submission-metadata         | spawned uWSGI worker 7 (pid: 27, cores: 100)
+submission-metadata         | spawned uWSGI worker 8 (pid: 28, cores: 100)
+```
+
+At this point, you should be able to interact with the submission API. E.g.
+
+```bash
+$ curl -i -X POST -H "Content-Type: application/json" -H "Authorization: Bearer as392lks0kk32" --data-binary "@metadata/examples/complete_submission.json" http://localhost:8000/submission/
+```
+
+
 ### Authorization
 
 The toy authorization service simulates access token verification, e.g. after

@@ -12,7 +12,7 @@ TOKENS = {
     'as392lks0kk32': {
         'scope': ['submission:write', 'submission:read'],
         'user': {
-            'user_id': 1234,
+            'user_id': 1,
             'email': 'joe@bloggs.com'
         },
         'client': {
@@ -22,7 +22,7 @@ TOKENS = {
     'f0da9jso3l2m4': {
         'scope': ['submission:read'],
         'user': {
-            'user_id': 4321,
+            'user_id': 2,
             'email': 'jane@doe.com'
         },
         'client': {
