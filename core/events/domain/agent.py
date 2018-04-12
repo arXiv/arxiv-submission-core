@@ -84,6 +84,7 @@ class User(Agent):
 
     @property
     def name(self):
+        """Full name of the user."""
         return f"{self.forename} {self.surname} {self.suffix}"
 
     def to_dict(self) -> dict:
@@ -114,6 +115,7 @@ class Client(Agent):
     FIELDS = []
 
     def to_dict(self):
+        """Generate a dict representation of this :class:`.Client` instance."""
         return {
             'client_id': self.native_id
         }

@@ -1,0 +1,28 @@
+[[source]]
+
+url = "https://pypi.python.org/simple"
+verify_ssl = true
+name = "pypi"
+
+
+[packages]
+
+flask = "*"
+dataclasses = "*"
+pyjwt = "*"
+jsonschema = "*"
+arxiv-base = "*"
+sqlalchemy = "*"
+pyyaml = "*"
+pytz = "*"
+
+
+[dev-packages]
+
+"nose2" = "*"
+openapi-spec-validator = "*"
+coverage = "*"
+coveralls = "*"
+pylint = "*"
+pydocstyle = "*"
+mypy = "*"

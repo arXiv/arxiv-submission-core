@@ -40,7 +40,7 @@ from events.domain.submission import License, Submission
 from events.domain.agent import User, Client, Agent
 from . import models, util
 from .models import Base
-from .exceptions import NoSuchSubmission, CommitFailed
+from .exceptions import NoSuchSubmission, CommitFailed, ClassicBaseException
 from arxiv.base.globals import get_application_config, get_application_global
 
 
@@ -98,6 +98,9 @@ def transaction() -> Generator:
     try:
         yield session
         session.commit()
+    except ClassicBaseException:
+        session.rollback()
+        raise   # Propagate exceptions raised from this module.
     except Exception as e:
         session.rollback()
         raise CommitFailed('Failed to commit transaction') from e
@@ -242,6 +245,7 @@ def init_app(app: object = None) -> None:
 
 
 def get_engine(app: object = None) -> Engine:
+    """Get a new :class:`.Engine` for the classic database."""
     config = get_application_config(app)
     database_uri = config.get('CLASSIC_DATABASE_URI', 'sqlite://')
     return create_engine(database_uri)
@@ -249,7 +253,7 @@ def get_engine(app: object = None) -> Engine:
 
 # TODO: consider making this private.
 def get_session(app: object = None) -> Session:
-    """Get a new :class:`.Session`."""
+    """Get a new :class:`.Session` for the classic database."""
     engine = current_engine()
     return sessionmaker(bind=engine)()
 

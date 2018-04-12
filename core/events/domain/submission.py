@@ -61,8 +61,9 @@ class Author:
     def canonical(self):
         """Canonical representation of the author name."""
         name = "%s %s %s" % (self.forename, self.initials, self.surname)
+        name = name.replace('  ', ' ')
         if self.affiliation:
-            return "%s (%s)" % (self.name, self.affiliation)
+            return "%s (%s)" % (name, self.affiliation)
         return name
 
     def to_dict(self) -> dict:
@@ -78,6 +79,8 @@ class SubmissionContent:
 
     location: str
     format: str
+    mime_type: str
+    size: str
     checksum: str
     identifier: int
 
@@ -184,9 +187,10 @@ class Submission:
         data.update({
             'creator': self.creator.to_dict(),
             'owner': self.owner.to_dict(),
-            'client': self.client.to_dict(),
             'created': self.created.isoformat(),
         })
+        if self.client:
+            data.update({'client': self.client.to_dict()})
         if self.primary_classification:
             data['primary_classification'] = \
                 self.primary_classification.to_dict()

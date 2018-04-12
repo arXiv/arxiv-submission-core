@@ -1,3 +1,5 @@
+"""Sphinx configuration for submission API documentation."""
+
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #

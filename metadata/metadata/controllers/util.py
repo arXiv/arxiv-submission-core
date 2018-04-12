@@ -1,3 +1,5 @@
+"""Utilities/helpers for controllers."""
+
 import os
 from typing import Callable, Tuple, Any
 from functools import wraps
@@ -17,6 +19,7 @@ def validate_request(schema_path: str) -> Callable:
     schema_path : str
         Path (absolute, or relative to the execution path) to the JSON Schema
         document.
+
     Returns
     -------
     decorator
