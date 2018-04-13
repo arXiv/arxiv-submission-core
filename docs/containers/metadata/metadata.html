@@ -42,14 +42,27 @@
             
   <div class="section" id="module-metadata">
 <span id="metadata-package"></span><h1>metadata package<a class="headerlink" href="#module-metadata" title="Permalink to this headline">¶</a></h1>
+<p>Metadata submission API service.</p>
+<p>This service is responsible for operational and descriptive metadata about
+new papers submitted to arXiv for announcement, and provides the primary
+point of control for clients in the submission system. Clients may use this
+service to create new submissions and track their progress through the
+moderation and publication process.</p>
 <div class="section" id="subpackages">
 <h2>Subpackages<a class="headerlink" href="#subpackages" title="Permalink to this headline">¶</a></h2>
 <div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="metadata.controllers.html">metadata.controllers package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="metadata.controllers.html#subpackages">Subpackages</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="metadata.controllers.submission.html">metadata.controllers.submission package</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="metadata.controllers.submission.html#submodules">Submodules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="metadata.controllers.submission.html#module-metadata.controllers.submission.handlers">metadata.controllers.submission.handlers module</a></li>
+<li class="toctree-l4"><a class="reference internal" href="metadata.controllers.submission.html#module-metadata.controllers.submission.tests">metadata.controllers.submission.tests module</a></li>
+</ul>
+</li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="metadata.controllers.html#submodules">Submodules</a></li>
-<li class="toctree-l2"><a class="reference internal" href="metadata.controllers.html#module-metadata.controllers.submission">metadata.controllers.submission module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="metadata.controllers.html#module-metadata.controllers.tests">metadata.controllers.tests module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="metadata.controllers.html#module-metadata.controllers.util">metadata.controllers.util module</a></li>
 </ul>
 </li>
@@ -61,15 +74,7 @@
 </div>
 <div class="section" id="module-metadata.config">
 <span id="metadata-config-module"></span><h2>metadata.config module<a class="headerlink" href="#module-metadata.config" title="Permalink to this headline">¶</a></h2>
-</div>
-<div class="section" id="module-metadata.exceptions">
-<span id="metadata-exceptions-module"></span><h2>metadata.exceptions module<a class="headerlink" href="#module-metadata.exceptions" title="Permalink to this headline">¶</a></h2>
-<dl class="exception">
-<dt id="metadata.exceptions.ValidationError">
-<em class="property">exception </em><code class="descclassname">metadata.exceptions.</code><code class="descname">ValidationError</code><a class="reference internal" href="../../_modules/metadata/exceptions.html#ValidationError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metadata.exceptions.ValidationError" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.6/library/exceptions.html#ValueError" title="(in Python v3.6)"><code class="xref py py-class docutils literal"><span class="pre">ValueError</span></code></a></p>
-</dd></dl>
-
+<p>Configuration for the metadata submission API service.</p>
 </div>
 <div class="section" id="module-metadata.factory">
 <span id="metadata-factory-module"></span><h2>metadata.factory module<a class="headerlink" href="#module-metadata.factory" title="Permalink to this headline">¶</a></h2>
@@ -142,7 +147,6 @@
 <li class="toctree-l2"><a class="reference internal" href="#subpackages">Subpackages</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#submodules">Submodules</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-metadata.config">metadata.config module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-metadata.exceptions">metadata.exceptions module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-metadata.factory">metadata.factory module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#module-metadata.routes">metadata.routes module</a></li>
 </ul>

@@ -76,13 +76,16 @@
 <span class="kn">from</span> <span class="nn">sqlalchemy.orm</span> <span class="k">import</span> <span class="n">sessionmaker</span>
 <span class="kn">from</span> <span class="nn">sqlalchemy.orm.session</span> <span class="k">import</span> <span class="n">Session</span>
 
+<span class="kn">from</span> <span class="nn">arxiv.base</span> <span class="k">import</span> <span class="n">logging</span>
 <span class="kn">from</span> <span class="nn">events.domain.event</span> <span class="k">import</span> <span class="n">Event</span><span class="p">,</span> <span class="n">event_factory</span>
 <span class="kn">from</span> <span class="nn">events.domain.submission</span> <span class="k">import</span> <span class="n">License</span><span class="p">,</span> <span class="n">Submission</span>
 <span class="kn">from</span> <span class="nn">events.domain.agent</span> <span class="k">import</span> <span class="n">User</span><span class="p">,</span> <span class="n">Client</span><span class="p">,</span> <span class="n">Agent</span>
 <span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">models</span><span class="p">,</span> <span class="n">util</span>
 <span class="kn">from</span> <span class="nn">.models</span> <span class="k">import</span> <span class="n">Base</span>
-<span class="kn">from</span> <span class="nn">.exceptions</span> <span class="k">import</span> <span class="n">NoSuchSubmission</span><span class="p">,</span> <span class="n">CommitFailed</span>
+<span class="kn">from</span> <span class="nn">.exceptions</span> <span class="k">import</span> <span class="n">NoSuchSubmission</span><span class="p">,</span> <span class="n">CommitFailed</span><span class="p">,</span> <span class="n">ClassicBaseException</span>
 <span class="kn">from</span> <span class="nn">arxiv.base.globals</span> <span class="k">import</span> <span class="n">get_application_config</span><span class="p">,</span> <span class="n">get_application_global</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="DBEvent"><a class="viewcode-back" href="../../../containers/core/events.services.classic.html#events.services.classic.DBEvent">[docs]</a><span class="k">class</span> <span class="nc">DBEvent</span><span class="p">(</span><span class="n">Base</span><span class="p">):</span>  <span class="c1"># type: ignore</span>
@@ -139,7 +142,12 @@
     <span class="k">try</span><span class="p">:</span>
         <span class="k">yield</span> <span class="n">session</span>
         <span class="n">session</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+    <span class="k">except</span> <span class="n">ClassicBaseException</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Commit failed, rolling back: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+        <span class="n">session</span><span class="o">.</span><span class="n">rollback</span><span class="p">()</span>
+        <span class="k">raise</span>   <span class="c1"># Propagate exceptions raised from this module.</span>
     <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Commit failed, rolling back: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
         <span class="n">session</span><span class="o">.</span><span class="n">rollback</span><span class="p">()</span>
         <span class="k">raise</span> <span class="n">CommitFailed</span><span class="p">(</span><span class="s1">&#39;Failed to commit transaction&#39;</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span></div>
 
@@ -283,6 +291,7 @@
 
 
 <div class="viewcode-block" id="get_engine"><a class="viewcode-back" href="../../../containers/core/events.services.classic.html#events.services.classic.get_engine">[docs]</a><span class="k">def</span> <span class="nf">get_engine</span><span class="p">(</span><span class="n">app</span><span class="p">:</span> <span class="nb">object</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Engine</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Get a new :class:`.Engine` for the classic database.&quot;&quot;&quot;</span>
     <span class="n">config</span> <span class="o">=</span> <span class="n">get_application_config</span><span class="p">(</span><span class="n">app</span><span class="p">)</span>
     <span class="n">database_uri</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;CLASSIC_DATABASE_URI&#39;</span><span class="p">,</span> <span class="s1">&#39;sqlite://&#39;</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">create_engine</span><span class="p">(</span><span class="n">database_uri</span><span class="p">)</span></div>
@@ -290,7 +299,7 @@
 
 <span class="c1"># TODO: consider making this private.</span>
 <div class="viewcode-block" id="get_session"><a class="viewcode-back" href="../../../containers/core/events.services.classic.html#events.services.classic.get_session">[docs]</a><span class="k">def</span> <span class="nf">get_session</span><span class="p">(</span><span class="n">app</span><span class="p">:</span> <span class="nb">object</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Session</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;Get a new :class:`.Session`.&quot;&quot;&quot;</span>
+    <span class="sd">&quot;&quot;&quot;Get a new :class:`.Session` for the classic database.&quot;&quot;&quot;</span>
     <span class="n">engine</span> <span class="o">=</span> <span class="n">current_engine</span><span class="p">()</span>
     <span class="k">return</span> <span class="n">sessionmaker</span><span class="p">(</span><span class="n">bind</span><span class="o">=</span><span class="n">engine</span><span class="p">)()</span></div>
 

@@ -70,6 +70,7 @@
 
 <div class="viewcode-block" id="in_memory_db"><a class="viewcode-back" href="../../../../containers/core/events.services.classic.html#events.services.classic.tests.in_memory_db">[docs]</a><span class="nd">@contextmanager</span>
 <span class="k">def</span> <span class="nf">in_memory_db</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;Provide an in-memory sqlite database for testing purposes.&quot;&quot;&quot;</span>
     <span class="n">app</span> <span class="o">=</span> <span class="n">Flask</span><span class="p">(</span><span class="s1">&#39;foo&#39;</span><span class="p">)</span>
     <span class="n">app</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;SQLALCHEMY_DATABASE_URI&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;sqlite://&#39;</span>
     <span class="n">app</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;SQLALCHEMY_TRACK_MODIFICATIONS&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>

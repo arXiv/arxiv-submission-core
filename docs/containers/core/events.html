@@ -234,75 +234,7 @@ to the database.</li>
 </div>
 <div class="section" id="module-events.tests">
 <span id="events-tests-module"></span><h2>events.tests module<a class="headerlink" href="#module-events.tests" title="Permalink to this headline">¶</a></h2>
-<p>Tests for <a class="reference internal" href="#module-events" title="events"><code class="xref py py-mod docutils literal"><span class="pre">events</span></code></a> public API.</p>
-<dl class="class">
-<dt id="events.tests.TestLoad">
-<em class="property">class </em><code class="descclassname">events.tests.</code><code class="descname">TestLoad</code><span class="sig-paren">(</span><em>methodName='runTest'</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/tests.html#TestLoad"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.tests.TestLoad" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">unittest.case.TestCase</span></code></p>
-<p>Test <a class="reference internal" href="#events.load" title="events.load"><code class="xref py py-func docutils literal"><span class="pre">load()</span></code></a>.</p>
-<dl class="method">
-<dt id="events.tests.TestLoad.test_load_existant_submission">
-<code class="descname">test_load_existant_submission</code><span class="sig-paren">(</span><em>mock_classic</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/tests.html#TestLoad.test_load_existant_submission"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.tests.TestLoad.test_load_existant_submission" title="Permalink to this definition">¶</a></dt>
-<dd><p>When the submission exists, submission and events are returned.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="events.tests.TestLoad.test_load_nonexistant_submission">
-<code class="descname">test_load_nonexistant_submission</code><span class="sig-paren">(</span><em>mock_classic</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/tests.html#TestLoad.test_load_nonexistant_submission"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.tests.TestLoad.test_load_nonexistant_submission" title="Permalink to this definition">¶</a></dt>
-<dd><p>When the submission does not exist, an exception is raised.</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="events.tests.TestSave">
-<em class="property">class </em><code class="descclassname">events.tests.</code><code class="descname">TestSave</code><span class="sig-paren">(</span><em>methodName='runTest'</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/tests.html#TestSave"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.tests.TestSave" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">unittest.case.TestCase</span></code></p>
-<p>Test <a class="reference internal" href="#events.save" title="events.save"><code class="xref py py-func docutils literal"><span class="pre">save()</span></code></a>.</p>
-<dl class="method">
-<dt id="events.tests.TestSave.test_create_and_update_authors">
-<code class="descname">test_create_and_update_authors</code><span class="sig-paren">(</span><em>mock_database</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/tests.html#TestSave.test_create_and_update_authors"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.tests.TestSave.test_create_and_update_authors" title="Permalink to this definition">¶</a></dt>
-<dd><p>Save multiple events for a nonexistant submission.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="events.tests.TestSave.test_save_creation_event">
-<code class="descname">test_save_creation_event</code><span class="sig-paren">(</span><em>mock_database</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/tests.html#TestSave.test_save_creation_event"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.tests.TestSave.test_save_creation_event" title="Permalink to this definition">¶</a></dt>
-<dd><p>A <code class="xref py py-class docutils literal"><span class="pre">CreationEvent</span></code> is passed.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="events.tests.TestSave.test_save_events_from_scratch">
-<code class="descname">test_save_events_from_scratch</code><span class="sig-paren">(</span><em>mock_database</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/tests.html#TestSave.test_save_events_from_scratch"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.tests.TestSave.test_save_events_from_scratch" title="Permalink to this definition">¶</a></dt>
-<dd><p>Save multiple events for a nonexistant submission.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="events.tests.TestSave.test_save_events_on_existing_submission">
-<code class="descname">test_save_events_on_existing_submission</code><span class="sig-paren">(</span><em>mock_db</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/tests.html#TestSave.test_save_events_on_existing_submission"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.tests.TestSave.test_save_events_on_existing_submission" title="Permalink to this definition">¶</a></dt>
-<dd><p>Save multiple sets of events in separate calls to <a class="reference internal" href="#events.save" title="events.save"><code class="xref py py-func docutils literal"><span class="pre">save()</span></code></a>.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="events.tests.TestSave.test_save_from_scratch_without_creation_event">
-<code class="descname">test_save_from_scratch_without_creation_event</code><span class="sig-paren">(</span><em>mock_database</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/tests.html#TestSave.test_save_from_scratch_without_creation_event"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.tests.TestSave.test_save_from_scratch_without_creation_event" title="Permalink to this definition">¶</a></dt>
-<dd><p>An exception is raised when there is no creation event.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="events.tests.TestSave.test_save_invalid_event">
-<code class="descname">test_save_invalid_event</code><span class="sig-paren">(</span><em>mock_db</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/tests.html#TestSave.test_save_invalid_event"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.tests.TestSave.test_save_invalid_event" title="Permalink to this definition">¶</a></dt>
-<dd><p>An exception is raised when an invalid event is encountered.</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="function">
-<dt id="events.tests.mock_store_events">
-<code class="descclassname">events.tests.</code><code class="descname">mock_store_events</code><span class="sig-paren">(</span><em>*events</em>, <em>submission</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/tests.html#mock_store_events"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.tests.mock_store_events" title="Permalink to this definition">¶</a></dt>
-<dd><p>Mock for <code class="xref py py-func docutils literal"><span class="pre">events.services.database.store_events()</span></code>.</p>
-</dd></dl>
-
+<p>Package-level tests for <a class="reference internal" href="#module-events" title="events"><code class="xref py py-mod docutils literal"><span class="pre">events</span></code></a>.</p>
 </div>
 </div>
 

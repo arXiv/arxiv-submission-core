@@ -84,7 +84,7 @@ def handle_license(data: dict, agents: dict) -> Tuple[events.Event]:
 def handle_submitter_accepts_policy(data: dict, agents: dict) \
         -> Tuple[events.Event]:
     """
-    Handle the ``submitter_accepts_policy field in submission payload.
+    Handle the ``submitter_accepts_policy`` field in submission payload.
 
     Parameters
     ----------

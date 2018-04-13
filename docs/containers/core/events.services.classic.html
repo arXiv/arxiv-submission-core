@@ -159,7 +159,8 @@ is defined in the current module.</p>
 <dl class="function">
 <dt id="events.services.classic.get_engine">
 <code class="descclassname">events.services.classic.</code><code class="descname">get_engine</code><span class="sig-paren">(</span><em>app: object = None</em><span class="sig-paren">)</span> &#x2192; sqlalchemy.engine.base.Engine<a class="reference internal" href="../../_modules/events/services/classic.html#get_engine"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.get_engine" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Get a new <code class="xref py py-class docutils literal"><span class="pre">Engine</span></code> for the classic database.</p>
+</dd></dl>
 
 <dl class="function">
 <dt id="events.services.classic.get_events">
@@ -188,7 +189,7 @@ is defined in the current module.</p>
 <dl class="function">
 <dt id="events.services.classic.get_session">
 <code class="descclassname">events.services.classic.</code><code class="descname">get_session</code><span class="sig-paren">(</span><em>app: object = None</em><span class="sig-paren">)</span> &#x2192; sqlalchemy.orm.session.Session<a class="reference internal" href="../../_modules/events/services/classic.html#get_session"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.get_session" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get a new <code class="xref py py-class docutils literal"><span class="pre">Session</span></code>.</p>
+<dd><p>Get a new <code class="xref py py-class docutils literal"><span class="pre">Session</span></code> for the classic database.</p>
 </dd></dl>
 
 <dl class="function">
@@ -259,16 +260,23 @@ so it’s safe to include them here.</li>
 <span id="events-services-classic-exceptions-module"></span><h2>events.services.classic.exceptions module<a class="headerlink" href="#module-events.services.classic.exceptions" title="Permalink to this headline">¶</a></h2>
 <p>Exceptions raised by <a class="reference internal" href="#module-events.services.classic" title="events.services.classic"><code class="xref py py-mod docutils literal"><span class="pre">events.services.classic</span></code></a>.</p>
 <dl class="exception">
+<dt id="events.services.classic.exceptions.ClassicBaseException">
+<em class="property">exception </em><code class="descclassname">events.services.classic.exceptions.</code><code class="descname">ClassicBaseException</code><a class="reference internal" href="../../_modules/events/services/classic/exceptions.html#ClassicBaseException"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.exceptions.ClassicBaseException" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.6/library/exceptions.html#RuntimeError" title="(in Python v3.6)"><code class="xref py py-class docutils literal"><span class="pre">RuntimeError</span></code></a></p>
+<p>Base for classic service exceptions.</p>
+</dd></dl>
+
+<dl class="exception">
 <dt id="events.services.classic.exceptions.CommitFailed">
 <em class="property">exception </em><code class="descclassname">events.services.classic.exceptions.</code><code class="descname">CommitFailed</code><a class="reference internal" href="../../_modules/events/services/classic/exceptions.html#CommitFailed"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.exceptions.CommitFailed" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.6/library/exceptions.html#RuntimeError" title="(in Python v3.6)"><code class="xref py py-class docutils literal"><span class="pre">RuntimeError</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#events.services.classic.exceptions.ClassicBaseException" title="events.services.classic.exceptions.ClassicBaseException"><code class="xref py py-class docutils literal"><span class="pre">events.services.classic.exceptions.ClassicBaseException</span></code></a></p>
 <p>Raised when there was a problem committing changes to the database.</p>
 </dd></dl>
 
 <dl class="exception">
 <dt id="events.services.classic.exceptions.NoSuchSubmission">
 <em class="property">exception </em><code class="descclassname">events.services.classic.exceptions.</code><code class="descname">NoSuchSubmission</code><a class="reference internal" href="../../_modules/events/services/classic/exceptions.html#NoSuchSubmission"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.exceptions.NoSuchSubmission" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.6/library/exceptions.html#RuntimeError" title="(in Python v3.6)"><code class="xref py py-class docutils literal"><span class="pre">RuntimeError</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#events.services.classic.exceptions.ClassicBaseException" title="events.services.classic.exceptions.ClassicBaseException"><code class="xref py py-class docutils literal"><span class="pre">events.services.classic.exceptions.ClassicBaseException</span></code></a></p>
 <p>A request was made for a submission that does not exist.</p>
 </dd></dl>
 
@@ -280,6 +288,7 @@ so it’s safe to include them here.</li>
 <dt id="events.services.classic.models.Archive">
 <em class="property">class </em><code class="descclassname">events.services.classic.models.</code><code class="descname">Archive</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/services/classic/models.html#Archive"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.models.Archive" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">sqlalchemy.ext.declarative.api.Base</span></code></p>
+<p>Supplemental data about archives in the classification hierarchy.</p>
 <dl class="attribute">
 <dt id="events.services.classic.models.Archive.arXiv_group">
 <code class="descname">arXiv_group</code><a class="headerlink" href="#events.services.classic.models.Archive.arXiv_group" title="Permalink to this definition">¶</a></dt>
@@ -321,6 +330,7 @@ so it’s safe to include them here.</li>
 <dt id="events.services.classic.models.ArchiveCategory">
 <em class="property">class </em><code class="descclassname">events.services.classic.models.</code><code class="descname">ArchiveCategory</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/services/classic/models.html#ArchiveCategory"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.models.ArchiveCategory" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">sqlalchemy.ext.declarative.api.Base</span></code></p>
+<p>Maps categories to the archives in which they reside.</p>
 <dl class="attribute">
 <dt id="events.services.classic.models.ArchiveCategory.archive_id">
 <code class="descname">archive_id</code><a class="headerlink" href="#events.services.classic.models.ArchiveCategory.archive_id" title="Permalink to this definition">¶</a></dt>
@@ -337,6 +347,7 @@ so it’s safe to include them here.</li>
 <dt id="events.services.classic.models.ArchiveDef">
 <em class="property">class </em><code class="descclassname">events.services.classic.models.</code><code class="descname">ArchiveDef</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/services/classic/models.html#ArchiveDef"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.models.ArchiveDef" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">sqlalchemy.ext.declarative.api.Base</span></code></p>
+<p>Defines the archives in the arXiv classification taxonomy.</p>
 <dl class="attribute">
 <dt id="events.services.classic.models.ArchiveDef.archive">
 <code class="descname">archive</code><a class="headerlink" href="#events.services.classic.models.ArchiveDef.archive" title="Permalink to this definition">¶</a></dt>
@@ -353,6 +364,7 @@ so it’s safe to include them here.</li>
 <dt id="events.services.classic.models.ArchiveGroup">
 <em class="property">class </em><code class="descclassname">events.services.classic.models.</code><code class="descname">ArchiveGroup</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/services/classic/models.html#ArchiveGroup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.models.ArchiveGroup" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">sqlalchemy.ext.declarative.api.Base</span></code></p>
+<p>Maps archives to the groups in which they reside.</p>
 <dl class="attribute">
 <dt id="events.services.classic.models.ArchiveGroup.archive_id">
 <code class="descname">archive_id</code><a class="headerlink" href="#events.services.classic.models.ArchiveGroup.archive_id" title="Permalink to this definition">¶</a></dt>
@@ -369,6 +381,7 @@ so it’s safe to include them here.</li>
 <dt id="events.services.classic.models.Category">
 <em class="property">class </em><code class="descclassname">events.services.classic.models.</code><code class="descname">Category</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/services/classic/models.html#Category"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.models.Category" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">sqlalchemy.ext.declarative.api.Base</span></code></p>
+<p>Supplemental data about arXiv categories, including endorsement.</p>
 <dl class="attribute">
 <dt id="events.services.classic.models.Category.active">
 <code class="descname">active</code><a class="headerlink" href="#events.services.classic.models.Category.active" title="Permalink to this definition">¶</a></dt>
@@ -549,6 +562,7 @@ published.</p>
 <dt id="events.services.classic.models.EndorsementDomain">
 <em class="property">class </em><code class="descclassname">events.services.classic.models.</code><code class="descname">EndorsementDomain</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/services/classic/models.html#EndorsementDomain"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.models.EndorsementDomain" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">sqlalchemy.ext.declarative.api.Base</span></code></p>
+<p>Endorsement configurations.</p>
 <dl class="attribute">
 <dt id="events.services.classic.models.EndorsementDomain.endorse_all">
 <code class="descname">endorse_all</code><a class="headerlink" href="#events.services.classic.models.EndorsementDomain.endorse_all" title="Permalink to this definition">¶</a></dt>
@@ -580,6 +594,7 @@ published.</p>
 <dt id="events.services.classic.models.Group">
 <em class="property">class </em><code class="descclassname">events.services.classic.models.</code><code class="descname">Group</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/services/classic/models.html#Group"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.models.Group" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">sqlalchemy.ext.declarative.api.Base</span></code></p>
+<p>Supplemental data about groups in the classification hierarchy.</p>
 <dl class="attribute">
 <dt id="events.services.classic.models.Group.group_id">
 <code class="descname">group_id</code><a class="headerlink" href="#events.services.classic.models.Group.group_id" title="Permalink to this definition">¶</a></dt>
@@ -601,6 +616,7 @@ published.</p>
 <dt id="events.services.classic.models.GroupDef">
 <em class="property">class </em><code class="descclassname">events.services.classic.models.</code><code class="descname">GroupDef</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/services/classic/models.html#GroupDef"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.models.GroupDef" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">sqlalchemy.ext.declarative.api.Base</span></code></p>
+<p>Defines the groups in the arXiv classification taxonomy.</p>
 <dl class="attribute">
 <dt id="events.services.classic.models.GroupDef.archive_group">
 <code class="descname">archive_group</code><a class="headerlink" href="#events.services.classic.models.GroupDef.archive_group" title="Permalink to this definition">¶</a></dt>
@@ -652,6 +668,7 @@ published.</p>
 <dt id="events.services.classic.models.PolicyClass">
 <em class="property">class </em><code class="descclassname">events.services.classic.models.</code><code class="descname">PolicyClass</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/services/classic/models.html#PolicyClass"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.models.PolicyClass" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">sqlalchemy.ext.declarative.api.Base</span></code></p>
+<p>Defines user roles in the system.</p>
 <dl class="attribute">
 <dt id="events.services.classic.models.PolicyClass.class_id">
 <code class="descname">class_id</code><a class="headerlink" href="#events.services.classic.models.PolicyClass.class_id" title="Permalink to this definition">¶</a></dt>
@@ -1213,6 +1230,7 @@ the scope of the event model.</td>
 <dt id="events.services.classic.models.User">
 <em class="property">class </em><code class="descclassname">events.services.classic.models.</code><code class="descname">User</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/services/classic/models.html#User"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.models.User" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">sqlalchemy.ext.declarative.api.Base</span></code></p>
+<p>Represents an arXiv user.</p>
 <dl class="attribute">
 <dt id="events.services.classic.models.User.email">
 <code class="descname">email</code><a class="headerlink" href="#events.services.classic.models.User.email" title="Permalink to this definition">¶</a></dt>
@@ -1301,7 +1319,25 @@ the scope of the event model.</td>
 <dl class="attribute">
 <dt id="events.services.classic.models.User.policy_class">
 <code class="descname">policy_class</code><a class="headerlink" href="#events.services.classic.models.User.policy_class" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><table border="1" class="docutils">
+<colgroup>
+<col width="40%" />
+<col width="60%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>class_id</td>
+<td>name</td>
+</tr>
+<tr class="row-even"><td>1
+2
+3</td>
+<td>Administrator
+Public user
+Legacy user</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
 
 <dl class="attribute">
 <dt id="events.services.classic.models.User.share_email">
@@ -1422,7 +1458,8 @@ database will provide more confidence in this area.</p>
 <dl class="function">
 <dt id="events.services.classic.tests.in_memory_db">
 <code class="descclassname">events.services.classic.tests.</code><code class="descname">in_memory_db</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/services/classic/tests.html#in_memory_db"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.classic.tests.in_memory_db" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Provide an in-memory sqlite database for testing purposes.</p>
+</dd></dl>
 
 </div>
 <div class="section" id="module-events.services.classic.util">

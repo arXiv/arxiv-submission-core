@@ -42,11 +42,15 @@
 <span></span><span class="sd">&quot;&quot;&quot;Exceptions raised by :mod:`events.services.classic`.&quot;&quot;&quot;</span>
 
 
-<div class="viewcode-block" id="NoSuchSubmission"><a class="viewcode-back" href="../../../../containers/core/events.services.classic.html#events.services.classic.exceptions.NoSuchSubmission">[docs]</a><span class="k">class</span> <span class="nc">NoSuchSubmission</span><span class="p">(</span><span class="ne">RuntimeError</span><span class="p">):</span>
+<div class="viewcode-block" id="ClassicBaseException"><a class="viewcode-back" href="../../../../containers/core/events.services.classic.html#events.services.classic.exceptions.ClassicBaseException">[docs]</a><span class="k">class</span> <span class="nc">ClassicBaseException</span><span class="p">(</span><span class="ne">RuntimeError</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Base for classic service exceptions.&quot;&quot;&quot;</span></div>
+
+
+<div class="viewcode-block" id="NoSuchSubmission"><a class="viewcode-back" href="../../../../containers/core/events.services.classic.html#events.services.classic.exceptions.NoSuchSubmission">[docs]</a><span class="k">class</span> <span class="nc">NoSuchSubmission</span><span class="p">(</span><span class="n">ClassicBaseException</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;A request was made for a submission that does not exist.&quot;&quot;&quot;</span></div>
 
 
-<div class="viewcode-block" id="CommitFailed"><a class="viewcode-back" href="../../../../containers/core/events.services.classic.html#events.services.classic.exceptions.CommitFailed">[docs]</a><span class="k">class</span> <span class="nc">CommitFailed</span><span class="p">(</span><span class="ne">RuntimeError</span><span class="p">):</span>
+<div class="viewcode-block" id="CommitFailed"><a class="viewcode-back" href="../../../../containers/core/events.services.classic.html#events.services.classic.exceptions.CommitFailed">[docs]</a><span class="k">class</span> <span class="nc">CommitFailed</span><span class="p">(</span><span class="n">ClassicBaseException</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Raised when there was a problem committing changes to the database.&quot;&quot;&quot;</span></div>
 </pre></div>
 

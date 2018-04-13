@@ -1,0 +1,314 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>metadata.controllers.submission.handlers &#8212; arXiv submission &amp; moderation 0.1 documentation</title>
+    <link rel="stylesheet" href="../../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../../',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for metadata.controllers.submission.handlers</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Data handling logic for submission data payload.</span>
+
+<span class="sd">Each handler (a function) should accept two parameters:</span>
+
+<span class="sd">- ``data`` is the value of the field that it handles. This can be anything that</span>
+<span class="sd">  is deserializable from a JSON document.</span>
+<span class="sd">- ``agents`` is a dict with the ``creator``, ``proxy``, and ``client`` agents</span>
+<span class="sd">  to use when creating new events.</span>
+
+<span class="sd">The primary controller in this module is the :func:`.handle_submission`, which</span>
+<span class="sd">delegates work to the handlers. The global ``HANDLERS`` defined at the end of</span>
+<span class="sd">this module describes how delegation should occur.</span>
+
+<span class="sd">Note: data validation should not be implemented here! Events/commands in</span>
+<span class="sd">:mod:`events` should define required parameters, perform all validation,</span>
+<span class="sd">and carry out any required transformation/cleanup.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">List</span>
+
+<span class="kn">import</span> <span class="nn">events</span>
+
+
+<div class="viewcode-block" id="handle_submission"><a class="viewcode-back" href="../../../../containers/metadata/metadata.controllers.submission.html#metadata.controllers.submission.handlers.handle_submission">[docs]</a><span class="k">def</span> <span class="nf">handle_submission</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">agents</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">events</span><span class="o">.</span><span class="n">Event</span><span class="p">]:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Handle the submission payload.</span>
+
+<span class="sd">    We assume that schema validation has been performed already, so it&#39;s not</span>
+<span class="sd">    up to us to verify the shape of the data.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    data : dict</span>
+<span class="sd">    agents : dict</span>
+<span class="sd">        Values are :class:`events.Agent` instances.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tuple</span>
+<span class="sd">        Zero or more uncommitted :class:`events.Event` instances.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">_events</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">key_path</span><span class="p">,</span> <span class="n">handler</span> <span class="ow">in</span> <span class="n">HANDLERS</span><span class="p">:</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="n">data</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">key_path</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">value</span><span class="p">:</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="kc">None</span>
+                <span class="k">break</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="n">value</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">_events</span> <span class="o">+=</span> <span class="n">handler</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">agents</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">_events</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="handle_submitter_is_author"><a class="viewcode-back" href="../../../../containers/metadata/metadata.controllers.submission.html#metadata.controllers.submission.handlers.handle_submitter_is_author">[docs]</a><span class="k">def</span> <span class="nf">handle_submitter_is_author</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span> <span class="n">agents</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> \
+        <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">events</span><span class="o">.</span><span class="n">Event</span><span class="p">]:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Handle the ``submitter_is_author`` field in submission payload.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    data : dict</span>
+<span class="sd">    agents : dict</span>
+<span class="sd">        Values are :class:`events.Agent` instances.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tuple</span>
+<span class="sd">        Zero or more uncommitted :class:`events.Event` instances.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">events</span><span class="o">.</span><span class="n">AssertAuthorship</span><span class="p">(</span><span class="o">**</span><span class="n">agents</span><span class="p">,</span> <span class="n">submitter_is_author</span><span class="o">=</span><span class="n">data</span><span class="p">),</span></div>
+
+
+<div class="viewcode-block" id="handle_license"><a class="viewcode-back" href="../../../../containers/metadata/metadata.controllers.submission.html#metadata.controllers.submission.handlers.handle_license">[docs]</a><span class="k">def</span> <span class="nf">handle_license</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">agents</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">events</span><span class="o">.</span><span class="n">Event</span><span class="p">]:</span>
+    <span class="sd">&quot;&quot;&quot;Handle the ``license`` field in submission payload.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">events</span><span class="o">.</span><span class="n">SelectLicense</span><span class="p">(</span>
+        <span class="o">**</span><span class="n">agents</span><span class="p">,</span>
+        <span class="n">license_name</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">),</span>
+        <span class="n">license_uri</span><span class="o">=</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;uri&#39;</span><span class="p">]</span>
+    <span class="p">),</span></div>
+
+
+<div class="viewcode-block" id="handle_submitter_accepts_policy"><a class="viewcode-back" href="../../../../containers/metadata/metadata.controllers.submission.html#metadata.controllers.submission.handlers.handle_submitter_accepts_policy">[docs]</a><span class="k">def</span> <span class="nf">handle_submitter_accepts_policy</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">agents</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> \
+        <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">events</span><span class="o">.</span><span class="n">Event</span><span class="p">]:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Handle the ``submitter_accepts_policy`` field in submission payload.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    data : dict</span>
+<span class="sd">    agents : dict</span>
+<span class="sd">        Values are :class:`events.Agent` instances.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tuple</span>
+<span class="sd">        Zero or more uncommitted :class:`events.Event` instances.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">data</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">events</span><span class="o">.</span><span class="n">AcceptPolicy</span><span class="p">(</span><span class="o">**</span><span class="n">agents</span><span class="p">),</span>
+    <span class="k">return</span> <span class="nb">tuple</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="handle_primary_classification"><a class="viewcode-back" href="../../../../containers/metadata/metadata.controllers.submission.html#metadata.controllers.submission.handlers.handle_primary_classification">[docs]</a><span class="k">def</span> <span class="nf">handle_primary_classification</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">agents</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> \
+        <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">events</span><span class="o">.</span><span class="n">Event</span><span class="p">]]:</span>
+    <span class="sd">&quot;&quot;&quot;Handle the ``primary_classification`` field in submission payload.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">events</span><span class="o">.</span><span class="n">SetPrimaryClassification</span><span class="p">(</span>
+        <span class="o">**</span><span class="n">agents</span><span class="p">,</span>
+        <span class="n">category</span><span class="o">=</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;category&#39;</span><span class="p">]</span>
+    <span class="p">),</span></div>
+
+
+<div class="viewcode-block" id="handle_secondary_classification"><a class="viewcode-back" href="../../../../containers/metadata/metadata.controllers.submission.html#metadata.controllers.submission.handlers.handle_secondary_classification">[docs]</a><span class="k">def</span> <span class="nf">handle_secondary_classification</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="nb">list</span><span class="p">,</span> <span class="n">agents</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> \
+        <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">events</span><span class="o">.</span><span class="n">Event</span><span class="p">]:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Handle the ``secondary_classification`` field in submission payload.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    data : dict</span>
+<span class="sd">    agents : dict</span>
+<span class="sd">        Values are :class:`events.Agent` instances.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tuple</span>
+<span class="sd">        Zero or more uncommitted :class:`events.Event` instances.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="nb">tuple</span><span class="p">([</span>
+        <span class="n">events</span><span class="o">.</span><span class="n">AddSecondaryClassification</span><span class="p">(</span><span class="o">**</span><span class="n">agents</span><span class="p">,</span> <span class="n">category</span><span class="o">=</span><span class="n">clsn</span><span class="p">[</span><span class="s1">&#39;category&#39;</span><span class="p">])</span>
+        <span class="k">for</span> <span class="n">clsn</span> <span class="ow">in</span> <span class="n">data</span>
+    <span class="p">])</span></div>
+
+
+<div class="viewcode-block" id="handle_metadata"><a class="viewcode-back" href="../../../../containers/metadata/metadata.controllers.submission.html#metadata.controllers.submission.handlers.handle_metadata">[docs]</a><span class="k">def</span> <span class="nf">handle_metadata</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">agents</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">events</span><span class="o">.</span><span class="n">Event</span><span class="p">]:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Handle the ``metadata`` field in the submission payload.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    data : dict</span>
+<span class="sd">    agents : dict</span>
+<span class="sd">        Values are :class:`events.Agent` instances.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tuple</span>
+<span class="sd">        Zero or more uncommitted :class:`events.Event` instances.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Most of this could be in a list comprehension, but it may help to</span>
+    <span class="c1"># keep this verbose in case we want to intervene on values.</span>
+    <span class="n">_metadata</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">events</span><span class="o">.</span><span class="n">UpdateMetadata</span><span class="o">.</span><span class="n">FIELDS</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">_metadata</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">key</span><span class="p">,</span> <span class="n">data</span><span class="p">[</span><span class="n">key</span><span class="p">]))</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">_metadata</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">events</span><span class="o">.</span><span class="n">UpdateMetadata</span><span class="p">(</span><span class="o">**</span><span class="n">agents</span><span class="p">,</span> <span class="n">metadata</span><span class="o">=</span><span class="n">_metadata</span><span class="p">),</span></div>
+
+
+<div class="viewcode-block" id="handle_authors"><a class="viewcode-back" href="../../../../containers/metadata/metadata.controllers.submission.html#metadata.controllers.submission.handlers.handle_authors">[docs]</a><span class="k">def</span> <span class="nf">handle_authors</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">agents</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">events</span><span class="o">.</span><span class="n">Event</span><span class="p">]:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Handle authors in the submission payload.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    data : dict</span>
+<span class="sd">    agents : dict</span>
+<span class="sd">        Values are :class:`events.Agent` instances.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tuple</span>
+<span class="sd">        Zero or more uncommitted :class:`events.Event` instances.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">data</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">()</span>
+    <span class="n">_authors</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">au</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+        <span class="k">if</span> <span class="s1">&#39;order&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">au</span><span class="p">:</span>
+            <span class="n">au</span><span class="p">[</span><span class="s1">&#39;order&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">i</span>
+        <span class="n">_authors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">events</span><span class="o">.</span><span class="n">Author</span><span class="p">(</span><span class="o">**</span><span class="n">au</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">events</span><span class="o">.</span><span class="n">UpdateAuthors</span><span class="p">(</span><span class="o">**</span><span class="n">agents</span><span class="p">,</span> <span class="n">authors</span><span class="o">=</span><span class="n">_authors</span><span class="p">),</span></div>
+
+
+<span class="n">HANDLERS</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">Callable</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="p">((</span><span class="s1">&#39;submitter_is_author&#39;</span><span class="p">,</span> <span class="p">),</span> <span class="n">handle_submitter_is_author</span><span class="p">),</span>
+    <span class="p">((</span><span class="s1">&#39;license&#39;</span><span class="p">,</span> <span class="p">),</span> <span class="n">handle_license</span><span class="p">),</span>
+    <span class="p">((</span><span class="s1">&#39;submitter_accepts_policy&#39;</span><span class="p">,</span> <span class="p">),</span> <span class="n">handle_submitter_accepts_policy</span><span class="p">),</span>
+    <span class="p">((</span><span class="s1">&#39;primary_classification&#39;</span><span class="p">,</span> <span class="p">),</span> <span class="n">handle_primary_classification</span><span class="p">),</span>
+    <span class="p">((</span><span class="s1">&#39;secondary_classification&#39;</span><span class="p">,</span> <span class="p">),</span> <span class="n">handle_secondary_classification</span><span class="p">),</span>
+    <span class="p">((</span><span class="s1">&#39;metadata&#39;</span><span class="p">,</span> <span class="p">),</span> <span class="n">handle_metadata</span><span class="p">),</span>
+    <span class="p">((</span><span class="s1">&#39;metadata&#39;</span><span class="p">,</span> <span class="s1">&#39;authors&#39;</span><span class="p">),</span> <span class="n">handle_authors</span><span class="p">)</span>
+<span class="p">]</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Describes how data in the payload should be handled.</span>
+
+<span class="sd">Each item is a two-tuple, defining the key-path to some data in the</span>
+<span class="sd">submission payload and the handler function that should be applied.</span>
+
+<span class="sd">A key-path is a tuple of keys to be applied recursively to access the data.</span>
+<span class="sd">E.g. the key-path ``(&#39;metadata&#39;, &#39;authors&#39;)`` will access</span>
+<span class="sd">``payload[&#39;metadata&#39;][&#39;authors&#39;]`` and pass the referent to the corresponding</span>
+<span class="sd">handler.</span>
+
+<span class="sd">Extra data in the payload is simply ignored.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../index.html">arXiv submission & moderation</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../architecture.html">Submission &amp; moderation subsystem architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../publication_process.html">Submission &amp; Publication Process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../submission_api_context.html">Submission API: Context</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../containers/core/events.html">events package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../containers/metadata/metadata.html">metadata package</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  <li><a href="../submission.html">metadata.controllers.submission</a><ul>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../../search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, arXiv.org.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.6.3</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

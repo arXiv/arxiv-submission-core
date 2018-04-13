@@ -24,14 +24,6 @@ metadata\.config module
     :undoc-members:
     :show-inheritance:
 
-metadata\.exceptions module
----------------------------
-
-.. automodule:: metadata.exceptions
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 metadata\.factory module
 ------------------------
 
