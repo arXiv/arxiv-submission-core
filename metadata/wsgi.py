@@ -1,6 +1,6 @@
 """Web Server Gateway Interface entry-point."""
 
-from api.factory import create_web_app
+from metadata.factory import create_web_app
 import os
 
 

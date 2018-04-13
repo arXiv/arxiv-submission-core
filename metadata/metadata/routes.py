@@ -12,7 +12,7 @@ from metadata.controllers import submission
 
 logger = logging.getLogger(__name__)
 
-blueprint = Blueprint('submission', __name__, url_prefix='/submission')
+blueprint = Blueprint('submission', __name__, url_prefix='')
 
 
 def json_response(func):
@@ -29,7 +29,7 @@ def json_response(func):
 
 @blueprint.route('/', methods=['POST'])
 @json_response
-@scoped('submission:create')
+@scoped('submission:write')
 def create_submission() -> Union[str, Response]:
     """Accept new submissions."""
     return submission.create_submission(
@@ -41,7 +41,7 @@ def create_submission() -> Union[str, Response]:
     )
 
 
-@blueprint.route('/<string:submission_id>/', methods=['GET'])
+@blueprint.route('/<string:submission_id>', methods=['GET'])
 @json_response
 @scoped('submission:read')
 def get_submission(submission_id: str) -> tuple:

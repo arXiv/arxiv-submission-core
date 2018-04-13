@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "4361d6deb0d9a063095058cd20626f73f15d84e3503926e7c357e1616d39166b"
+            "sha256": "839a726c12b3b21f8dc34aa7fba0ad594ec4462b9783a44364242a69630b9976"
         },
         "host-environment-markers": {
             "implementation_name": "cpython",
@@ -80,6 +80,23 @@
             ],
             "version": "==1.0"
         },
+        "mimesis": {
+            "hashes": [
+                "sha256:787e843dd8212e07427144732dc662642e59ee1ba1c5be78af066492bb909966",
+                "sha256:e55a50654cfa1aa718d5983621b5d681409f67b38b542fffbb1282f05ceb2e05"
+            ],
+            "version": "==2.0.1"
+        },
+        "mysqlclient": {
+            "hashes": [
+                "sha256:b3b1a7e4468180afb79289b54069d9499242946a4cedf3928cbf6b2a13800016",
+                "sha256:d56e379c03efad746e84705cbb97401f60d1f98b05e11a27f2d9c2d043936974",
+                "sha256:371df79d000af56b4e540b7ce2120d1c9afb04b751bfce25a1eb609c50fd10ff",
+                "sha256:1e85e48b167e2af3bb08f273fdbd1ad6401cbe75057fa6513f97387dc7b282dc",
+                "sha256:2d9ec33de39f4d9c64ad7322ede0521d85829ce36a76f9dd3d6ab76a9c8648e5"
+            ],
+            "version": "==1.3.12"
+        },
         "pyjwt": {
             "hashes": [
                 "sha256:bca523ef95586d3a8a5be2da766fe6f82754acba27689c984e28e77a12174593",
@@ -118,6 +135,12 @@
                 "sha256:7cb00cc9b9f92ef8b4391c8a2051f81eeafefe32d63c6b395fd51401e9a39edb"
             ],
             "version": "==1.2.6"
+        },
+        "uwsgi": {
+            "hashes": [
+                "sha256:3dc2e9b48db92b67bfec1badec0d3fdcc0771316486c5efa3217569da3528bf2"
+            ],
+            "version": "==2.0.17"
         },
         "werkzeug": {
             "hashes": [
@@ -265,6 +288,13 @@
                 "sha256:dd8d182285a0fe56bace7f45b5e7d1a6ebcbf524e8f3bd87eb0f125271b8831f"
             ],
             "version": "==0.6.1"
+        },
+        "mimesis": {
+            "hashes": [
+                "sha256:787e843dd8212e07427144732dc662642e59ee1ba1c5be78af066492bb909966",
+                "sha256:e55a50654cfa1aa718d5983621b5d681409f67b38b542fffbb1282f05ceb2e05"
+            ],
+            "version": "==2.0.1"
         },
         "mypy": {
             "hashes": [

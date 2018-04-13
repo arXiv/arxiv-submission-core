@@ -50,3 +50,4 @@ pytz = "*"
 
 "nose2" = "*"
 openapi-spec-validator = "*"
+mimesis = "*"

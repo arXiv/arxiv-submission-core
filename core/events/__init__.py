@@ -79,6 +79,7 @@ example:
 """
 
 from typing import Optional, List, Tuple
+from arxiv.base import logging
 from events.domain.submission import Submission, SubmissionMetadata, Author
 from events.domain.agent import Agent, User, System, Client
 from events.domain.event import (
@@ -91,6 +92,8 @@ from events.domain.event import (
 from events.domain.rule import RuleCondition, RuleConsequence, EventRule
 from events.services import classic
 from events.exceptions import InvalidEvent, NoSuchSubmission, SaveError
+
+logger = logging.getLogger(__name__)
 
 
 def load(submission_id: str) -> Tuple[Submission, List[Event]]:
@@ -195,7 +198,8 @@ def save(*events: Event, submission_id: Optional[str] = None) \
     try:
         submission = classic.store_events(*combined, submission=submission)
     except classic.CommitFailed as e:
-        raise SaveError('Failed to store events: %s' % str(e)) from e
+        logger.debug('Encountered CommitFailed exception: %s', str(e))
+        raise SaveError('Failed to store events') from e
 
     for event in combined:
         event.submission_id = submission.submission_id

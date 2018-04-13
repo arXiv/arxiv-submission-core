@@ -487,6 +487,16 @@ class User(Base):    # type: ignore
     policy_class = Column(ForeignKey('tapir_policy_classes.class_id'),
                           nullable=False, index=True,
                           server_default=text("'0'"))
+    """
+    +----------+---------------+
+    | class_id | name          |
+    +----------+---------------+
+    |        1 | Administrator |
+    |        2 | Public user   |
+    |        3 | Legacy user   |
+    +----------+---------------+
+    """
+
     joined_date = Column(Integer, nullable=False, index=True,
                          server_default=text("'0'"))
     joined_ip_num = Column(String(16), index=True)
