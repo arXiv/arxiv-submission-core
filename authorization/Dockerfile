@@ -6,6 +6,9 @@ FROM arxiv/base
 
 WORKDIR /opt/arxiv
 
+ENV LC_ALL en_US.utf8
+ENV LANG en_US.utf8
+
 # Add Python consumer and configuration.
 ADD Pipfile /opt/arxiv/Pipfile
 ADD Pipfile.lock /opt/arxiv/Pipfile.lock

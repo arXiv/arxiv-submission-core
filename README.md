@@ -29,6 +29,21 @@ This project is in its early stages, and has been subject to considerable
 churn. As a consequence, test coverage, documentation, and verification are
 incomplete. We will actively address these issues as we go along.
 
+## Python dependencies
+
+This project uses pipenv to manage Python dependencies. To install dependencies
+do:
+
+```bash
+$ pipenv install
+```
+
+To install dev/testing dependencies, use:
+
+```bash
+$ pipenv install --dev
+```
+
 ## Local deployment (for testing only)
 
 A Compose file ([docker-compose.yml](docker-compose.yml)) is included in the
