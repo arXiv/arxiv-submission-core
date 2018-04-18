@@ -76,3 +76,56 @@ class TestSubmit(TestCase):
                                 resolver=self.resolver)
         except jsonschema.ValidationError as e:
             self.fail("Return content should match submission schema")
+
+
+class TestModerationScenarios(TestCase):
+    """Before scheduling for publication, submissions undergo moderation."""
+
+    def setUp(self):
+        """Initialize the metadata service application."""
+        # mock_classic.store_events.side_effect = lambda *a, **k: print('foo')
+        SECRET = 'foo'
+        os.environ['JWT_SECRET'] = SECRET
+        os.environ['CLASSIC_DATABASE_URI'] = 'sqlite:///%s' % DB_PATH
+
+        self.authorization = jwt.encode({
+            'scope': ['submission:write', 'submission:read'],
+            'user': {
+                'user_id': 1234,
+                'email': 'joe@bloggs.com'
+            },
+            'client': {
+                'client_id': 5678
+            }
+        }, SECRET)
+        self.app = create_web_app()
+        with self.app.app_context():
+            from events.services import classic
+            classic.create_all()
+
+        self.client = self.app.test_client()
+        self.headers = {'Authorization': self.authorization.decode('utf-8')}
+
+    def test_submission_placed_on_hold(self):
+        """Before publication, a submission may be placed on hold."""
+        # Submission is created.
+        example = os.path.join(BASEPATH, 'examples/complete_submission.json')
+        with open(example) as f:
+            data = json.load(f)
+        response = self.client.post('/', data=json.dumps(data),
+                                    content_type='application/json',
+                                    headers=self.headers)
+        submission_id = json.loads(response.data)['submission_id']
+
+        with self.app.app_context():
+            from events.services import classic
+            session = classic.current_session()
+            submission = session.query(classic.models.Submission)\
+                .get(submission_id)
+            submission.status = submission.ON_HOLD
+            session.add(submission)
+            session.commit()
+
+        response = self.client.get(f'/{submission_id}', headers=self.headers)
+        submission_data = json.loads(response.data)
+        print(submission_data)
