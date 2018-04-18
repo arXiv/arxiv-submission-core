@@ -5,7 +5,43 @@ Data structures for submissions events.
   submission).
 - Events provide methods to update a submission based on the event data.
 - Events provide validation methods for event data.
--
+
+Writing new events/commands
+===========================
+
+Events/commands are implemented as classes that inherit from :class:`.Event`.
+It should:
+
+- Be a dataclass (i.e. be decorated with :func:`dataclasses.dataclass`).
+- Define (using :func:`dataclasses.field`) associated data.
+- Implement a validation method with the signature
+  ``validate(self, submission: Submission) -> None`` (see below).
+- Implement a projection method with the signature
+  ``project(self, submission: Submission) -> Submission:`` that mutates
+  the passed :class:`.Submission` instance.
+- Be fully documented. Be sure that the class docstring fully describes the
+  meaning of the event/command, and that both public and private methods have
+  at least a summary docstring.
+
+Adding validation to events
+===========================
+
+Each command/event class should implement an instance method
+``validate(self, submission: Submission) -> None`` that raises
+:class:`.InvalidEvent` exceptions if the data on the event instance is not
+valid.
+
+For clarity, it's a good practice to individuate validation steps as separate
+private instance methods, and call them from the public ``validate`` method.
+This makes it easier to identify which validation criteria are being applied,
+in what order, and what those criteria mean.
+
+See :class:`.SetPrimaryClassification` for an example.
+
+We could consider standalone validation functions for validation checks that
+are performed on several event types (instead of just private instance
+methods).
+
 """
 
 import hashlib
@@ -16,6 +52,7 @@ from dataclasses import dataclass, field
 from dataclasses import asdict
 
 from arxiv.util import schema
+from arxiv import taxonomy
 
 from .agent import Agent
 from .submission import Submission, SubmissionMetadata, Author, \
@@ -189,19 +226,28 @@ class SetPrimaryClassification(Event):
 
     category: Optional[str] = None
 
-    # TODO: this should validate against the arXiv taxonomy.
     def validate(self, submission: Submission) -> None:
         """Validate the primary classification category."""
-        try:
-            assert self.category
-        except AssertionError as e:
-            raise InvalidEvent(e) from e
+        self._must_be_a_valid_category(submission)
+        self._primary_cannot_be_secondary(submission)
+
+    def _must_be_a_valid_category(self, submission: Submission) -> None:
+        """Valid arXiv categories are defined in :mod:`arxiv.taxonomy`."""
+        if not self.category or self.category not in taxonomy.CATEGORIES:
+            raise InvalidEvent(self, "Not a valid category")
+
+    def _primary_cannot_be_secondary(self, submission: Submission) -> None:
+        """The same category can't be used for both primary and secondary."""
+        secondaries = [c.category for c in submission.secondary_classification]
+        if self.category in secondaries:
+            raise InvalidEvent(self,
+                               "The same category cannot be used as both the"
+                               " primary and a secondary category.")
 
     def project(self, submission: Submission) -> Submission:
         """Set :prop:`.Submission.primary_classification`."""
-        submission.primary_classification = Classification(
-            category=self.category
-        )
+        clsn = Classification(category=self.category)
+        submission.primary_classification = clsn
         return submission
 
 
@@ -211,20 +257,39 @@ class AddSecondaryClassification(Event):
 
     category: Optional[str] = field(default=None)
 
-    # TODO: this should validate against the arXiv taxonomy.
     def validate(self, submission: Submission) -> None:
         """Validate the secondary classification category to add."""
-        try:
-            assert self.category
-        except AssertionError as e:
-            raise InvalidEvent(e) from e
+        self._must_be_a_valid_category(submission)
+        self._primary_cannot_be_secondary(submission)
+        self._must_not_already_be_present(submission)
 
     def project(self, submission: Submission) -> Submission:
-        """Append to :prop:`.Submission.secondary_classification`."""
-        submission.secondary_classification.append(Classification(
-            category=self.category
-        ))
+        """Add a :class:`.Classification` as a secondary classification."""
+        classification = Classification(category=self.category)
+        submission.secondary_classification.append(classification)
         return submission
+
+    def _must_be_a_valid_category(self, submission: Submission) -> None:
+        """Valid arXiv categories are defined in :mod:`arxiv.taxonomy`."""
+        if not self.category or self.category not in taxonomy.CATEGORIES:
+            raise InvalidEvent(self, "Not a valid category")
+
+    def _primary_cannot_be_secondary(self, submission: Submission) -> None:
+        """The same category can't be used for both primary and secondary."""
+        if submission.primary_classification is None:
+            return
+        if self.category == submission.primary_classification.category:
+            raise InvalidEvent(self,
+                               "The same category cannot be used as both the"
+                               " primary and a secondary category.")
+
+    def _must_not_already_be_present(self, submission: Submission) -> None:
+        """The same category cannot be added as a secondary twice."""
+        secondaries = [c.category for c in submission.secondary_classification]
+        if self.category in secondaries:
+            raise InvalidEvent(self,
+                               f"Secondary {self.category} already set"
+                               f" on this submission.")
 
 
 @dataclass
@@ -233,13 +298,10 @@ class RemoveSecondaryClassification(Event):
 
     category: Optional[str] = field(default=None)
 
-    # TODO: this should validate against the arXiv taxonomy.
     def validate(self, submission: Submission) -> None:
         """Validate the secondary classification category to remove."""
-        try:
-            assert self.category
-        except AssertionError as e:
-            raise InvalidEvent(e) from e
+        self._must_be_a_valid_category(submission)
+        self._must_already_be_present(submission)
 
     def project(self, submission: Submission) -> Submission:
         """Remove from :prop:`.Submission.secondary_classification`."""
@@ -248,6 +310,17 @@ class RemoveSecondaryClassification(Event):
             if not classn.category == self.category
         ]
         return submission
+
+    def _must_be_a_valid_category(self, submission: Submission) -> None:
+        """Valid arXiv categories are defined in :mod:`arxiv.taxonomy`."""
+        if not self.category or self.category not in taxonomy.CATEGORIES:
+            raise InvalidEvent(self, "Not a valid category")
+
+    def _must_already_be_present(self, submission: Submission) -> None:
+        """One cannot remove a secondary that is not actually set."""
+        current = [c.category for c in submission.secondary_classification]
+        if self.category not in current:
+            raise InvalidEvent(self, 'No such category on submission')
 
 
 @dataclass
