@@ -195,6 +195,10 @@ class Submission(Base):    # type: ignore
 
         # Comments (admins may modify).
         submission.metadata.comments = self.comments
+
+        # Apply sticky status.
+        if submission.finalized and self.sticky_status is self.ON_HOLD:
+            submission.status = submission.ON_HOLD
         return submission
 
     def to_submission(self) -> domain.Submission:
@@ -280,12 +284,14 @@ class Submission(Base):    # type: ignore
             self.source_size = submission.source_content.size
             self.source_format = submission.source_content.format
 
-        # Only update the submission state if we're transitioning for the first
-        # time. We can relax this later, but for now it will prevent us from
-        # doing something stupid.
+        # Not submitted -> Submitted.
         if submission.finalized and self.status is Submission.NOT_SUBMITTED:
             self.status = Submission.SUBMITTED
             self.submit_time = submission.updated
+        # Unsubmit.
+        elif self.status is None or self.status <= Submission.ON_HOLD:
+            if not submission.finalized:
+                self.status = Submission.NOT_SUBMITTED
 
         if submission.primary_classification:
             self._update_primary(submission)

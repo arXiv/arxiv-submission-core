@@ -5,6 +5,7 @@ from datetime import datetime
 from arxiv import taxonomy
 from events import save
 from events.domain import event, agent, submission
+from events.exceptions import InvalidEvent
 
 
 class TestSetPrimaryClassification(TestCase):
@@ -27,7 +28,8 @@ class TestSetPrimaryClassification(TestCase):
             submission_id=1,
             category="nonsense"
         )
-        self.assertFalse(e.valid(self.submission), "Event should not be valid")
+        with self.assertRaises(InvalidEvent):
+            e.validate(self.submission)    # "Event should not be valid".
 
     def test_set_primary_with_valid_category(self):
         """Category is from the arXiv taxonomy."""
@@ -37,7 +39,10 @@ class TestSetPrimaryClassification(TestCase):
                 submission_id=1,
                 category=category
             )
-            self.assertTrue(e.valid(self.submission), "Event should be valid")
+            try:
+                e.validate(self.submission)
+            except InvalidEvent as e:
+                self.fail("Event should be valid")
 
     def test_set_primary_already_secondary(self):
         """Category is already set as a secondary."""
@@ -48,7 +53,8 @@ class TestSetPrimaryClassification(TestCase):
             submission_id=1,
             category='cond-mat.dis-nn'
         )
-        self.assertFalse(e.valid(self.submission), "Event should be invalid")
+        with self.assertRaises(InvalidEvent):
+            e.validate(self.submission)    # "Event should not be valid".
 
 
 class TestAddSecondaryClassification(TestCase):
@@ -72,7 +78,8 @@ class TestAddSecondaryClassification(TestCase):
             submission_id=1,
             category="nonsense"
         )
-        self.assertFalse(e.valid(self.submission), "Event should not be valid")
+        with self.assertRaises(InvalidEvent):
+            e.validate(self.submission)    # "Event should not be valid".
 
     def test_add_secondary_with_valid_category(self):
         """Category is from the arXiv taxonomy."""
@@ -82,7 +89,10 @@ class TestAddSecondaryClassification(TestCase):
                 submission_id=1,
                 category=category
             )
-            self.assertTrue(e.valid(self.submission), "Event should be valid")
+            try:
+                e.validate(self.submission)
+            except InvalidEvent as e:
+                self.fail("Event should be valid")
 
     def test_add_secondary_already_present(self):
         """Category is already present on the submission."""
@@ -94,7 +104,8 @@ class TestAddSecondaryClassification(TestCase):
             submission_id=1,
             category='cond-mat.dis-nn'
         )
-        self.assertFalse(e.valid(self.submission), "Event should be invalid")
+        with self.assertRaises(InvalidEvent):
+            e.validate(self.submission)    # "Event should not be valid".
 
     def test_add_secondary_already_primary(self):
         """Category is already set as primary."""
@@ -106,7 +117,8 @@ class TestAddSecondaryClassification(TestCase):
             submission_id=1,
             category='cond-mat.dis-nn'
         )
-        self.assertFalse(e.valid(self.submission), "Event should be invalid")
+        with self.assertRaises(InvalidEvent):
+            e.validate(self.submission)    # "Event should not be valid".
 
 
 class TestRemoveSecondaryClassification(TestCase):
@@ -130,7 +142,8 @@ class TestRemoveSecondaryClassification(TestCase):
             submission_id=1,
             category="nonsense"
         )
-        self.assertFalse(e.valid(self.submission), "Event should not be valid")
+        with self.assertRaises(InvalidEvent):
+            e.validate(self.submission)    # "Event should not be valid".
 
     def test_remove_secondary_with_valid_category(self):
         """Category is from the arXiv taxonomy."""
@@ -141,7 +154,10 @@ class TestRemoveSecondaryClassification(TestCase):
             submission_id=1,
             category='cond-mat.dis-nn'
         )
-        self.assertTrue(e.valid(self.submission), "Event should be valid")
+        try:
+            e.validate(self.submission)
+        except InvalidEvent as e:
+            self.fail("Event should be valid")
 
     def test_remove_secondary_not_present(self):
         """Category is not present."""
@@ -150,4 +166,5 @@ class TestRemoveSecondaryClassification(TestCase):
             submission_id=1,
             category='cond-mat.dis-nn'
         )
-        self.assertFalse(e.valid(self.submission), "Event should be invalid")
+        with self.assertRaises(InvalidEvent):
+            e.validate(self.submission)    # "Event should not be valid".
