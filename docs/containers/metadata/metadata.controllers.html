@@ -64,7 +64,7 @@
 <p>Utilities/helpers for controllers.</p>
 <dl class="function">
 <dt id="metadata.controllers.util.validate_request">
-<code class="descclassname">metadata.controllers.util.</code><code class="descname">validate_request</code><span class="sig-paren">(</span><em>schema_path: str</em><span class="sig-paren">)</span> &#x2192; typing.Callable<a class="reference internal" href="../../_modules/metadata/controllers/util.html#validate_request"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metadata.controllers.util.validate_request" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">metadata.controllers.util.</code><code class="descname">validate_request</code><span class="sig-paren">(</span><em>schema_path</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/metadata/controllers/util.html#validate_request"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metadata.controllers.util.validate_request" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generate a controller decorator that validates the request body.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -73,7 +73,9 @@
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>schema_path</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a>) – Path (absolute, or relative to the execution path) to the JSON Schema
 document.</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><em>decorator</em> – Decorates a controller function with request body validation against
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Callable" title="(in Python v3.6)"><code class="xref py py-data docutils literal"><span class="pre">Callable</span></code></a></td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><em>decorator</em> – Decorates a controller function with request body validation against
 the specified JSON Schema.</td>
 </tr>
 </tbody>

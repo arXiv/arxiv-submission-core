@@ -44,7 +44,7 @@
 <p>Controllers for the metadata API.</p>
 <dl class="function">
 <dt id="metadata.controllers.submission.create_submission">
-<code class="descclassname">metadata.controllers.submission.</code><code class="descname">create_submission</code><span class="sig-paren">(</span><em>data: dict</em>, <em>headers: dict</em>, <em>user_data: dict</em>, <em>client_data: dict</em>, <em>token: str</em><span class="sig-paren">)</span> &#x2192; typing.Tuple[[dict, int], dict]<a class="reference internal" href="../../_modules/metadata/controllers/submission.html#create_submission"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metadata.controllers.submission.create_submission" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">metadata.controllers.submission.</code><code class="descname">create_submission</code><span class="sig-paren">(</span><em>data</em>, <em>headers</em>, <em>user_data</em>, <em>client_data</em>, <em>token</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/metadata/controllers/submission.html#create_submission"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metadata.controllers.submission.create_submission" title="Permalink to this definition">¶</a></dt>
 <dd><p>Create a new submission.</p>
 <p>Implements the hook for <code class="xref py py-meth docutils literal"><span class="pre">sword.SWORDCollection.add_submission()</span></code>.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -57,7 +57,10 @@
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><ul class="simple">
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first"><code class="xref py py-class docutils literal"><span class="pre">Tuple</span></code>[<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#dict" title="(in Python v3.6)"><code class="xref py py-class docutils literal"><span class="pre">dict</span></code></a>, <a class="reference external" href="https://docs.python.org/3.6/library/functions.html#int" title="(in Python v3.6)"><code class="xref py py-class docutils literal"><span class="pre">int</span></code></a>, <a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#dict" title="(in Python v3.6)"><code class="xref py py-class docutils literal"><span class="pre">dict</span></code></a>]</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><ul class="simple">
 <li><em>dict</em> – Response data.</li>
 <li><em>int</em> – HTTP status code.</li>
 <li><em>dict</em> – Headers to add to the response.</li>
@@ -71,14 +74,30 @@
 
 <dl class="function">
 <dt id="metadata.controllers.submission.get_submission">
-<code class="descclassname">metadata.controllers.submission.</code><code class="descname">get_submission</code><span class="sig-paren">(</span><em>submission_id: str</em>, <em>user: typing.Union[str</em>, <em>NoneType] = None</em>, <em>client: typing.Union[str</em>, <em>NoneType] = None</em>, <em>token: typing.Union[str</em>, <em>NoneType] = None</em><span class="sig-paren">)</span> &#x2192; typing.Tuple[[dict, int], dict]<a class="reference internal" href="../../_modules/metadata/controllers/submission.html#get_submission"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metadata.controllers.submission.get_submission" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">metadata.controllers.submission.</code><code class="descname">get_submission</code><span class="sig-paren">(</span><em>submission_id</em>, <em>user=None</em>, <em>client=None</em>, <em>token=None</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/metadata/controllers/submission.html#get_submission"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metadata.controllers.submission.get_submission" title="Permalink to this definition">¶</a></dt>
 <dd><p>Retrieve the current state of a submission.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><code class="xref py py-class docutils literal"><span class="pre">Tuple</span></code>[<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#dict" title="(in Python v3.6)"><code class="xref py py-class docutils literal"><span class="pre">dict</span></code></a>, <a class="reference external" href="https://docs.python.org/3.6/library/functions.html#int" title="(in Python v3.6)"><code class="xref py py-class docutils literal"><span class="pre">int</span></code></a>, <a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#dict" title="(in Python v3.6)"><code class="xref py py-class docutils literal"><span class="pre">dict</span></code></a>]</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
 <dt id="metadata.controllers.submission.update_submission">
-<code class="descclassname">metadata.controllers.submission.</code><code class="descname">update_submission</code><span class="sig-paren">(</span><em>data: dict</em>, <em>headers: dict</em>, <em>user_data: dict</em>, <em>client_data: dict</em>, <em>token: str</em>, <em>submission_id: str</em><span class="sig-paren">)</span> &#x2192; typing.Tuple[[dict, int], dict]<a class="reference internal" href="../../_modules/metadata/controllers/submission.html#update_submission"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metadata.controllers.submission.update_submission" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">metadata.controllers.submission.</code><code class="descname">update_submission</code><span class="sig-paren">(</span><em>data</em>, <em>headers</em>, <em>user_data</em>, <em>client_data</em>, <em>token</em>, <em>submission_id</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/metadata/controllers/submission.html#update_submission"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metadata.controllers.submission.update_submission" title="Permalink to this definition">¶</a></dt>
 <dd><p>Update the submission.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><code class="xref py py-class docutils literal"><span class="pre">Tuple</span></code>[<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#dict" title="(in Python v3.6)"><code class="xref py py-class docutils literal"><span class="pre">dict</span></code></a>, <a class="reference external" href="https://docs.python.org/3.6/library/functions.html#int" title="(in Python v3.6)"><code class="xref py py-class docutils literal"><span class="pre">int</span></code></a>, <a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#dict" title="(in Python v3.6)"><code class="xref py py-class docutils literal"><span class="pre">dict</span></code></a>]</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <div class="section" id="submodules">
@@ -102,7 +121,7 @@ this module describes how delegation should occur.</p>
 and carry out any required transformation/cleanup.</p>
 <dl class="function">
 <dt id="metadata.controllers.submission.handlers.handle_authors">
-<code class="descclassname">metadata.controllers.submission.handlers.</code><code class="descname">handle_authors</code><span class="sig-paren">(</span><em>data: dict</em>, <em>agents: dict</em><span class="sig-paren">)</span> &#x2192; typing.Tuple[events.domain.event.Event]<a class="reference internal" href="../../_modules/metadata/controllers/submission/handlers.html#handle_authors"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metadata.controllers.submission.handlers.handle_authors" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">metadata.controllers.submission.handlers.</code><code class="descname">handle_authors</code><span class="sig-paren">(</span><em>data</em>, <em>agents</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/metadata/controllers/submission/handlers.html#handle_authors"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metadata.controllers.submission.handlers.handle_authors" title="Permalink to this definition">¶</a></dt>
 <dd><p>Handle authors in the submission payload.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -114,7 +133,10 @@ and carry out any required transformation/cleanup.</p>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><em>tuple</em> – Zero or more uncommitted <code class="xref py py-class docutils literal"><span class="pre">events.Event</span></code> instances.</p>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first"><code class="xref py py-class docutils literal"><span class="pre">Tuple</span></code>[<a class="reference internal" href="../core/events.domain.html#events.domain.event.Event" title="events.domain.event.Event"><code class="xref py py-class docutils literal"><span class="pre">Event</span></code></a>]</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><em>tuple</em> – Zero or more uncommitted <code class="xref py py-class docutils literal"><span class="pre">events.Event</span></code> instances.</p>
 </td>
 </tr>
 </tbody>
@@ -123,13 +145,21 @@ and carry out any required transformation/cleanup.</p>
 
 <dl class="function">
 <dt id="metadata.controllers.submission.handlers.handle_license">
-<code class="descclassname">metadata.controllers.submission.handlers.</code><code class="descname">handle_license</code><span class="sig-paren">(</span><em>data: dict</em>, <em>agents: dict</em><span class="sig-paren">)</span> &#x2192; typing.Tuple[events.domain.event.Event]<a class="reference internal" href="../../_modules/metadata/controllers/submission/handlers.html#handle_license"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metadata.controllers.submission.handlers.handle_license" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">metadata.controllers.submission.handlers.</code><code class="descname">handle_license</code><span class="sig-paren">(</span><em>data</em>, <em>agents</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/metadata/controllers/submission/handlers.html#handle_license"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metadata.controllers.submission.handlers.handle_license" title="Permalink to this definition">¶</a></dt>
 <dd><p>Handle the <code class="docutils literal"><span class="pre">license</span></code> field in submission payload.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><code class="xref py py-class docutils literal"><span class="pre">Tuple</span></code>[<a class="reference internal" href="../core/events.domain.html#events.domain.event.Event" title="events.domain.event.Event"><code class="xref py py-class docutils literal"><span class="pre">Event</span></code></a>]</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
 <dt id="metadata.controllers.submission.handlers.handle_metadata">
-<code class="descclassname">metadata.controllers.submission.handlers.</code><code class="descname">handle_metadata</code><span class="sig-paren">(</span><em>data: dict</em>, <em>agents: dict</em><span class="sig-paren">)</span> &#x2192; typing.Tuple[events.domain.event.Event]<a class="reference internal" href="../../_modules/metadata/controllers/submission/handlers.html#handle_metadata"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metadata.controllers.submission.handlers.handle_metadata" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">metadata.controllers.submission.handlers.</code><code class="descname">handle_metadata</code><span class="sig-paren">(</span><em>data</em>, <em>agents</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/metadata/controllers/submission/handlers.html#handle_metadata"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metadata.controllers.submission.handlers.handle_metadata" title="Permalink to this definition">¶</a></dt>
 <dd><p>Handle the <code class="docutils literal"><span class="pre">metadata</span></code> field in the submission payload.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -141,7 +171,10 @@ and carry out any required transformation/cleanup.</p>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><em>tuple</em> – Zero or more uncommitted <code class="xref py py-class docutils literal"><span class="pre">events.Event</span></code> instances.</p>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first"><code class="xref py py-class docutils literal"><span class="pre">Tuple</span></code>[<a class="reference internal" href="../core/events.domain.html#events.domain.event.Event" title="events.domain.event.Event"><code class="xref py py-class docutils literal"><span class="pre">Event</span></code></a>]</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><em>tuple</em> – Zero or more uncommitted <code class="xref py py-class docutils literal"><span class="pre">events.Event</span></code> instances.</p>
 </td>
 </tr>
 </tbody>
@@ -150,13 +183,21 @@ and carry out any required transformation/cleanup.</p>
 
 <dl class="function">
 <dt id="metadata.controllers.submission.handlers.handle_primary_classification">
-<code class="descclassname">metadata.controllers.submission.handlers.</code><code class="descname">handle_primary_classification</code><span class="sig-paren">(</span><em>data: dict</em>, <em>agents: dict</em><span class="sig-paren">)</span> &#x2192; typing.Union[typing.Tuple[events.domain.event.Event], NoneType]<a class="reference internal" href="../../_modules/metadata/controllers/submission/handlers.html#handle_primary_classification"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metadata.controllers.submission.handlers.handle_primary_classification" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">metadata.controllers.submission.handlers.</code><code class="descname">handle_primary_classification</code><span class="sig-paren">(</span><em>data</em>, <em>agents</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/metadata/controllers/submission/handlers.html#handle_primary_classification"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metadata.controllers.submission.handlers.handle_primary_classification" title="Permalink to this definition">¶</a></dt>
 <dd><p>Handle the <code class="docutils literal"><span class="pre">primary_classification</span></code> field in submission payload.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Optional" title="(in Python v3.6)"><code class="xref py py-data docutils literal"><span class="pre">Optional</span></code></a>[<code class="xref py py-class docutils literal"><span class="pre">Tuple</span></code>[<a class="reference internal" href="../core/events.domain.html#events.domain.event.Event" title="events.domain.event.Event"><code class="xref py py-class docutils literal"><span class="pre">Event</span></code></a>]]</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
 <dt id="metadata.controllers.submission.handlers.handle_secondary_classification">
-<code class="descclassname">metadata.controllers.submission.handlers.</code><code class="descname">handle_secondary_classification</code><span class="sig-paren">(</span><em>data: list</em>, <em>agents: dict</em><span class="sig-paren">)</span> &#x2192; typing.Tuple[events.domain.event.Event]<a class="reference internal" href="../../_modules/metadata/controllers/submission/handlers.html#handle_secondary_classification"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metadata.controllers.submission.handlers.handle_secondary_classification" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">metadata.controllers.submission.handlers.</code><code class="descname">handle_secondary_classification</code><span class="sig-paren">(</span><em>data</em>, <em>agents</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/metadata/controllers/submission/handlers.html#handle_secondary_classification"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metadata.controllers.submission.handlers.handle_secondary_classification" title="Permalink to this definition">¶</a></dt>
 <dd><p>Handle the <code class="docutils literal"><span class="pre">secondary_classification</span></code> field in submission payload.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -168,7 +209,10 @@ and carry out any required transformation/cleanup.</p>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><em>tuple</em> – Zero or more uncommitted <code class="xref py py-class docutils literal"><span class="pre">events.Event</span></code> instances.</p>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first"><code class="xref py py-class docutils literal"><span class="pre">Tuple</span></code>[<a class="reference internal" href="../core/events.domain.html#events.domain.event.Event" title="events.domain.event.Event"><code class="xref py py-class docutils literal"><span class="pre">Event</span></code></a>]</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><em>tuple</em> – Zero or more uncommitted <code class="xref py py-class docutils literal"><span class="pre">events.Event</span></code> instances.</p>
 </td>
 </tr>
 </tbody>
@@ -177,7 +221,7 @@ and carry out any required transformation/cleanup.</p>
 
 <dl class="function">
 <dt id="metadata.controllers.submission.handlers.handle_submission">
-<code class="descclassname">metadata.controllers.submission.handlers.</code><code class="descname">handle_submission</code><span class="sig-paren">(</span><em>data: dict</em>, <em>agents: dict</em><span class="sig-paren">)</span> &#x2192; typing.Tuple[events.domain.event.Event]<a class="reference internal" href="../../_modules/metadata/controllers/submission/handlers.html#handle_submission"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metadata.controllers.submission.handlers.handle_submission" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">metadata.controllers.submission.handlers.</code><code class="descname">handle_submission</code><span class="sig-paren">(</span><em>data</em>, <em>agents</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/metadata/controllers/submission/handlers.html#handle_submission"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metadata.controllers.submission.handlers.handle_submission" title="Permalink to this definition">¶</a></dt>
 <dd><p>Handle the submission payload.</p>
 <p>We assume that schema validation has been performed already, so it’s not
 up to us to verify the shape of the data.</p>
@@ -191,7 +235,10 @@ up to us to verify the shape of the data.</p>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><em>tuple</em> – Zero or more uncommitted <code class="xref py py-class docutils literal"><span class="pre">events.Event</span></code> instances.</p>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first"><code class="xref py py-class docutils literal"><span class="pre">Tuple</span></code>[<a class="reference internal" href="../core/events.domain.html#events.domain.event.Event" title="events.domain.event.Event"><code class="xref py py-class docutils literal"><span class="pre">Event</span></code></a>]</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><em>tuple</em> – Zero or more uncommitted <code class="xref py py-class docutils literal"><span class="pre">events.Event</span></code> instances.</p>
 </td>
 </tr>
 </tbody>
@@ -200,7 +247,7 @@ up to us to verify the shape of the data.</p>
 
 <dl class="function">
 <dt id="metadata.controllers.submission.handlers.handle_submitter_accepts_policy">
-<code class="descclassname">metadata.controllers.submission.handlers.</code><code class="descname">handle_submitter_accepts_policy</code><span class="sig-paren">(</span><em>data: dict</em>, <em>agents: dict</em><span class="sig-paren">)</span> &#x2192; typing.Tuple[events.domain.event.Event]<a class="reference internal" href="../../_modules/metadata/controllers/submission/handlers.html#handle_submitter_accepts_policy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metadata.controllers.submission.handlers.handle_submitter_accepts_policy" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">metadata.controllers.submission.handlers.</code><code class="descname">handle_submitter_accepts_policy</code><span class="sig-paren">(</span><em>data</em>, <em>agents</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/metadata/controllers/submission/handlers.html#handle_submitter_accepts_policy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metadata.controllers.submission.handlers.handle_submitter_accepts_policy" title="Permalink to this definition">¶</a></dt>
 <dd><p>Handle the <code class="docutils literal"><span class="pre">submitter_accepts_policy</span></code> field in submission payload.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -212,7 +259,10 @@ up to us to verify the shape of the data.</p>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><em>tuple</em> – Zero or more uncommitted <code class="xref py py-class docutils literal"><span class="pre">events.Event</span></code> instances.</p>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first"><code class="xref py py-class docutils literal"><span class="pre">Tuple</span></code>[<a class="reference internal" href="../core/events.domain.html#events.domain.event.Event" title="events.domain.event.Event"><code class="xref py py-class docutils literal"><span class="pre">Event</span></code></a>]</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><em>tuple</em> – Zero or more uncommitted <code class="xref py py-class docutils literal"><span class="pre">events.Event</span></code> instances.</p>
 </td>
 </tr>
 </tbody>
@@ -221,7 +271,7 @@ up to us to verify the shape of the data.</p>
 
 <dl class="function">
 <dt id="metadata.controllers.submission.handlers.handle_submitter_is_author">
-<code class="descclassname">metadata.controllers.submission.handlers.</code><code class="descname">handle_submitter_is_author</code><span class="sig-paren">(</span><em>data: bool</em>, <em>agents: dict</em><span class="sig-paren">)</span> &#x2192; typing.Tuple[events.domain.event.Event]<a class="reference internal" href="../../_modules/metadata/controllers/submission/handlers.html#handle_submitter_is_author"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metadata.controllers.submission.handlers.handle_submitter_is_author" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">metadata.controllers.submission.handlers.</code><code class="descname">handle_submitter_is_author</code><span class="sig-paren">(</span><em>data</em>, <em>agents</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/metadata/controllers/submission/handlers.html#handle_submitter_is_author"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metadata.controllers.submission.handlers.handle_submitter_is_author" title="Permalink to this definition">¶</a></dt>
 <dd><p>Handle the <code class="docutils literal"><span class="pre">submitter_is_author</span></code> field in submission payload.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -233,7 +283,10 @@ up to us to verify the shape of the data.</p>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><em>tuple</em> – Zero or more uncommitted <code class="xref py py-class docutils literal"><span class="pre">events.Event</span></code> instances.</p>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first"><code class="xref py py-class docutils literal"><span class="pre">Tuple</span></code>[<a class="reference internal" href="../core/events.domain.html#events.domain.event.Event" title="events.domain.event.Event"><code class="xref py py-class docutils literal"><span class="pre">Event</span></code></a>]</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><em>tuple</em> – Zero or more uncommitted <code class="xref py py-class docutils literal"><span class="pre">events.Event</span></code> instances.</p>
 </td>
 </tr>
 </tbody>

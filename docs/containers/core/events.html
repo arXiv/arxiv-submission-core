@@ -25,21 +25,21 @@
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="events.domain package" href="events.domain.html" />
     <link rel="prev" title="Submission API: Context" href="../../submission_api_context.html" />
-
+   
   <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
-
-
+  
+  
   <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
 
   </head>
   <body>
-
+  
 
     <div class="document">
       <div class="documentwrapper">
         <div class="bodywrapper">
           <div class="body" role="main">
-
+            
   <div class="section" id="module-events">
 <span id="events-package"></span><h1>events package<a class="headerlink" href="#module-events" title="Permalink to this headline">¶</a></h1>
 <p>Core event-centric data abstraction for the submission &amp; moderation subsystem.</p>
@@ -107,7 +107,7 @@ example:</p>
 </div>
 <dl class="function">
 <dt id="events.load">
-<code class="descclassname">events.</code><code class="descname">load</code><span class="sig-paren">(</span><em>submission_id: str</em><span class="sig-paren">)</span> &#x2192; typing.Tuple[events.domain.submission.Submission, typing.List[events.domain.event.Event]]<a class="reference internal" href="../../_modules/events.html#load"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.load" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">events.</code><code class="descname">load</code><span class="sig-paren">(</span><em>submission_id</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events.html#load"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.load" title="Permalink to this definition">¶</a></dt>
 <dd><p>Load a submission and its history.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -115,13 +115,15 @@ example:</p>
 <tbody valign="top">
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>submission_id</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a>) – Submission identifier.</td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><ul class="simple">
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><code class="xref py py-class docutils literal"><span class="pre">Tuple</span></code>[<a class="reference internal" href="events.domain.html#events.domain.submission.Submission" title="events.domain.submission.Submission"><code class="xref py py-class docutils literal"><span class="pre">Submission</span></code></a>, <a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.List" title="(in Python v3.6)"><code class="xref py py-class docutils literal"><span class="pre">List</span></code></a>[<a class="reference internal" href="events.domain.html#events.domain.event.Event" title="events.domain.event.Event"><code class="xref py py-class docutils literal"><span class="pre">Event</span></code></a>]]</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><ul class="simple">
 <li><a class="reference internal" href="events.domain.html#events.domain.submission.Submission" title="events.domain.submission.Submission"><code class="xref py py-class docutils literal"><span class="pre">events.domain.submission.Submission</span></code></a> – The current state of the submission.</li>
 <li><em>list</em> – Items are :class:<a href="#id1"><span class="problematic" id="id2">`</span></a>.Event`s, in order of their occurrence.</li>
 </ul>
 </td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><a class="reference internal" href="#events.exceptions.NoSuchSubmission" title="events.exceptions.NoSuchSubmission"><code class="xref py py-class docutils literal"><span class="pre">NoSuchSubmission</span></code></a> – Raised when a submission with the passed ID cannot be found.</td>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><a class="reference internal" href="#events.exceptions.NoSuchSubmission" title="events.exceptions.NoSuchSubmission"><code class="xref py py-class docutils literal"><span class="pre">NoSuchSubmission</span></code></a> – Raised when a submission with the passed ID cannot be found.</td>
 </tr>
 </tbody>
 </table>
@@ -129,7 +131,7 @@ example:</p>
 
 <dl class="function">
 <dt id="events.save">
-<code class="descclassname">events.</code><code class="descname">save</code><span class="sig-paren">(</span><em>*events: events.domain.event.Event</em>, <em>submission_id: typing.Union[str</em>, <em>NoneType] = None</em><span class="sig-paren">)</span> &#x2192; typing.Tuple[events.domain.submission.Submission, typing.List[events.domain.event.Event]]<a class="reference internal" href="../../_modules/events.html#save"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.save" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">events.</code><code class="descname">save</code><span class="sig-paren">(</span><em>*events</em>, <em>submission_id=None</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events.html#save"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.save" title="Permalink to this definition">¶</a></dt>
 <dd><p>Commit a set of new :class:<a href="#id3"><span class="problematic" id="id4">`</span></a>.Event`s for a submission.</p>
 <p>This will persist the events to the database, along with the final
 state of the submission, and generate external notification(s) on the
@@ -145,7 +147,10 @@ expected that <code class="docutils literal"><span class="pre">events</span></co
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><ul class="simple">
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first"><code class="xref py py-class docutils literal"><span class="pre">Tuple</span></code>[<a class="reference internal" href="events.domain.html#events.domain.submission.Submission" title="events.domain.submission.Submission"><code class="xref py py-class docutils literal"><span class="pre">Submission</span></code></a>, <a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.List" title="(in Python v3.6)"><code class="xref py py-class docutils literal"><span class="pre">List</span></code></a>[<a class="reference internal" href="events.domain.html#events.domain.event.Event" title="events.domain.event.Event"><code class="xref py py-class docutils literal"><span class="pre">Event</span></code></a>]]</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><ul class="simple">
 <li><a class="reference internal" href="events.domain.html#events.domain.submission.Submission" title="events.domain.submission.Submission"><code class="xref py py-class docutils literal"><span class="pre">events.domain.submission.Submission</span></code></a> – The state of the submission after all events (including rule-derived
 events) have been applied. Updated with the submission ID, if a
 <a class="reference internal" href="events.domain.html#events.domain.event.CreateSubmission" title="events.domain.event.CreateSubmission"><code class="xref py py-class docutils literal"><span class="pre">CreateSubmission</span></code></a> was included.</li>
@@ -156,7 +161,7 @@ rules were triggered.</li>
 </p>
 </td>
 </tr>
-<tr class="field-odd field"><th class="field-name">Raises:</th><td class="field-body"><ul class="first last simple">
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><ul class="first last simple">
 <li><a class="reference internal" href="#events.exceptions.NoSuchSubmission" title="events.exceptions.NoSuchSubmission"><code class="xref py py-class docutils literal"><span class="pre">NoSuchSubmission</span></code></a> – Raised if <code class="docutils literal"><span class="pre">submission_id</span></code> is not provided and the first event is not
 a <a class="reference internal" href="events.domain.html#events.domain.event.CreateSubmission" title="events.domain.event.CreateSubmission"><code class="xref py py-class docutils literal"><span class="pre">CreateSubmission</span></code></a>, or <code class="docutils literal"><span class="pre">submission_id</span></code> is provided but
 no such submission exists.</li>
@@ -212,7 +217,7 @@ to the database.</li>
 <p>Exceptions raised during event handling.</p>
 <dl class="exception">
 <dt id="events.exceptions.InvalidEvent">
-<em class="property">exception </em><code class="descclassname">events.exceptions.</code><code class="descname">InvalidEvent</code><span class="sig-paren">(</span><em>event: EventType</em>, <em>extra: str = ''</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../../_modules/events/exceptions.html#InvalidEvent"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.exceptions.InvalidEvent" title="Permalink to this definition">¶</a></dt>
+<em class="property">exception </em><code class="descclassname">events.exceptions.</code><code class="descname">InvalidEvent</code><span class="sig-paren">(</span><em>event</em>, <em>extra=''</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/exceptions.html#InvalidEvent"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.exceptions.InvalidEvent" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.6/library/exceptions.html#ValueError" title="(in Python v3.6)"><code class="xref py py-class docutils literal"><span class="pre">ValueError</span></code></a></p>
 <p>Raised when an invalid event is encountered.</p>
 </dd></dl>
@@ -294,18 +299,18 @@ to the database.</li>
     </div>
     <div class="footer">
       &copy;2017, arXiv.org.
-
+      
       |
       Powered by <a href="http://sphinx-doc.org/">Sphinx 1.6.3</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
-
+      
       |
       <a href="../../_sources/containers/core/events.rst.txt"
           rel="nofollow">Page source</a>
     </div>
 
+    
 
-
-
+    
   </body>
 </html>

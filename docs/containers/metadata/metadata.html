@@ -81,8 +81,16 @@ moderation and publication process.</p>
 <p>Application factory for references service components.</p>
 <dl class="function">
 <dt id="metadata.factory.create_web_app">
-<code class="descclassname">metadata.factory.</code><code class="descname">create_web_app</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; flask.app.Flask<a class="reference internal" href="../../_modules/metadata/factory.html#create_web_app"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metadata.factory.create_web_app" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">metadata.factory.</code><code class="descname">create_web_app</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/metadata/factory.html#create_web_app"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metadata.factory.create_web_app" title="Permalink to this definition">¶</a></dt>
 <dd><p>Initialize an instance of the extractor backend service.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><code class="xref py py-class docutils literal"><span class="pre">Flask</span></code></td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
@@ -97,14 +105,30 @@ moderation and publication process.</p>
 <p>Provides External REST API.</p>
 <dl class="function">
 <dt id="metadata.routes.create_submission">
-<code class="descclassname">metadata.routes.</code><code class="descname">create_submission</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; typing.Union[str, flask.wrappers.Response]<a class="reference internal" href="../../_modules/metadata/routes.html#create_submission"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metadata.routes.create_submission" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">metadata.routes.</code><code class="descname">create_submission</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/metadata/routes.html#create_submission"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metadata.routes.create_submission" title="Permalink to this definition">¶</a></dt>
 <dd><p>Accept new submissions.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Union" title="(in Python v3.6)"><code class="xref py py-data docutils literal"><span class="pre">Union</span></code></a>[<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal"><span class="pre">str</span></code></a>, <code class="xref py py-class docutils literal"><span class="pre">Response</span></code>]</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
 <dt id="metadata.routes.get_submission">
-<code class="descclassname">metadata.routes.</code><code class="descname">get_submission</code><span class="sig-paren">(</span><em>submission_id: str</em><span class="sig-paren">)</span> &#x2192; tuple<a class="reference internal" href="../../_modules/metadata/routes.html#get_submission"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metadata.routes.get_submission" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">metadata.routes.</code><code class="descname">get_submission</code><span class="sig-paren">(</span><em>submission_id</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/metadata/routes.html#get_submission"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metadata.routes.get_submission" title="Permalink to this definition">¶</a></dt>
 <dd><p>Get the current state of a submission.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#tuple" title="(in Python v3.6)"><code class="xref py py-class docutils literal"><span class="pre">tuple</span></code></a></td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="function">
@@ -115,8 +139,16 @@ moderation and publication process.</p>
 
 <dl class="function">
 <dt id="metadata.routes.update_submission">
-<code class="descclassname">metadata.routes.</code><code class="descname">update_submission</code><span class="sig-paren">(</span><em>submission_id: str</em><span class="sig-paren">)</span> &#x2192; tuple<a class="reference internal" href="../../_modules/metadata/routes.html#update_submission"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metadata.routes.update_submission" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">metadata.routes.</code><code class="descname">update_submission</code><span class="sig-paren">(</span><em>submission_id</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/metadata/routes.html#update_submission"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metadata.routes.update_submission" title="Permalink to this definition">¶</a></dt>
 <dd><p>Update the submission.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#tuple" title="(in Python v3.6)"><code class="xref py py-class docutils literal"><span class="pre">tuple</span></code></a></td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </div>
