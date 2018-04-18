@@ -22,6 +22,8 @@ It should:
 - Be fully documented. Be sure that the class docstring fully describes the
   meaning of the event/command, and that both public and private methods have
   at least a summary docstring.
+- Have a corresponding :class:`unittest.TestCase` in
+  :mod:`events.domain.tests.test_events`.
 
 Adding validation to events
 ===========================
