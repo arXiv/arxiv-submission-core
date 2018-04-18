@@ -25,21 +25,21 @@
     <link rel="search" title="Search" href="../../search.html" />
     <link rel="next" title="events.services package" href="events.services.html" />
     <link rel="prev" title="events package" href="events.html" />
-   
+
   <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
-  
-  
+
+
   <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
 
   </head>
   <body>
-  
+
 
     <div class="document">
       <div class="documentwrapper">
         <div class="bodywrapper">
           <div class="body" role="main">
-            
+
   <div class="section" id="module-events.domain">
 <span id="events-domain-package"></span><h1>events.domain package<a class="headerlink" href="#module-events.domain" title="Permalink to this headline">¶</a></h1>
 <p>Core data structures for the submission and moderation system.</p>
@@ -75,8 +75,16 @@
 
 <dl class="classmethod">
 <dt id="events.domain.agent.Agent.from_dict">
-<em class="property">classmethod </em><code class="descname">from_dict</code><span class="sig-paren">(</span><em>data: dict</em><span class="sig-paren">)</span> &#x2192; typing.Any<a class="reference internal" href="../../_modules/events/domain/agent.html#Agent.from_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.domain.agent.Agent.from_dict" title="Permalink to this definition">¶</a></dt>
+<em class="property">classmethod </em><code class="descname">from_dict</code><span class="sig-paren">(</span><em>data</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/domain/agent.html#Agent.from_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.domain.agent.Agent.from_dict" title="Permalink to this definition">¶</a></dt>
 <dd><p>Instantiate an <a class="reference internal" href="#events.domain.agent.Agent" title="events.domain.agent.Agent"><code class="xref py py-class docutils literal"><span class="pre">Agent</span></code></a> instance from a dict.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Any" title="(in Python v3.6)"><code class="xref py py-data docutils literal"><span class="pre">Any</span></code></a></td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="classmethod">
@@ -156,6 +164,14 @@
 <dt id="events.domain.agent.agent_factory">
 <code class="descclassname">events.domain.agent.</code><code class="descname">agent_factory</code><span class="sig-paren">(</span><em>agent_type: str</em>, <em>native_id: typing.Any</em>, <em>**extra</em><span class="sig-paren">)</span> &#x2192; events.domain.agent.Agent<a class="reference internal" href="../../_modules/events/domain/agent.html#agent_factory"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.domain.agent.agent_factory" title="Permalink to this definition">¶</a></dt>
 <dd><p>Instantiate a subclass of <a class="reference internal" href="#events.domain.agent.Agent" title="events.domain.agent.Agent"><code class="xref py py-class docutils literal"><span class="pre">Agent</span></code></a>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="#events.domain.agent.Agent" title="events.domain.agent.Agent"><code class="xref py py-class docutils literal"><span class="pre">Agent</span></code></a></td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </div>
@@ -633,7 +649,7 @@ submission).</li>
 substantially in the short term.</p>
 <dl class="class">
 <dt id="events.domain.rule.EventRule">
-<em class="property">class </em><code class="descclassname">events.domain.rule.</code><code class="descname">EventRule</code><span class="sig-paren">(</span><em>creator: events.domain.agent.Agent</em>, <em>condition: events.domain.rule.RuleCondition</em>, <em>consequence: events.domain.rule.RuleConsequence</em>, <em>rule_id: typing.Union[int</em>, <em>NoneType] = None</em>, <em>proxy: typing.Union[events.domain.agent.Agent</em>, <em>NoneType] = None</em>, <em>created: datetime.datetime = &lt;factory&gt;</em>, <em>applied: bool = False</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../../_modules/events/domain/rule.html#EventRule"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.domain.rule.EventRule" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">events.domain.rule.</code><code class="descname">EventRule</code><span class="sig-paren">(</span><em>creator</em>, <em>condition</em>, <em>consequence</em>, <em>rule_id=None</em>, <em>proxy=None</em>, <em>created=&lt;factory&gt;</em>, <em>applied=False</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/domain/rule.html#EventRule"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.domain.rule.EventRule" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.6/library/functions.html#object" title="(in Python v3.6)"><code class="xref py py-class docutils literal"><span class="pre">object</span></code></a></p>
 <p>Expresses conditional business logic to generate automated events.</p>
 <dl class="attribute">
@@ -655,7 +671,7 @@ substantially in the short term.</p>
 
 <dl class="class">
 <dt id="events.domain.rule.RuleCondition">
-<em class="property">class </em><code class="descclassname">events.domain.rule.</code><code class="descname">RuleCondition</code><span class="sig-paren">(</span><em>event_type: type</em>, <em>submission_id: typing.Union[int</em>, <em>NoneType] = None</em>, <em>extra_condition: typing.Union[dict</em>, <em>NoneType] = None</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../../_modules/events/domain/rule.html#RuleCondition"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.domain.rule.RuleCondition" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">events.domain.rule.</code><code class="descname">RuleCondition</code><span class="sig-paren">(</span><em>event_type</em>, <em>submission_id=None</em>, <em>extra_condition=None</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/domain/rule.html#RuleCondition"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.domain.rule.RuleCondition" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.6/library/functions.html#object" title="(in Python v3.6)"><code class="xref py py-class docutils literal"><span class="pre">object</span></code></a></p>
 <p>Evaluate whether or not the rule applies to an event.</p>
 <dl class="attribute">
@@ -672,7 +688,7 @@ substantially in the short term.</p>
 
 <dl class="class">
 <dt id="events.domain.rule.RuleConsequence">
-<em class="property">class </em><code class="descclassname">events.domain.rule.</code><code class="descname">RuleConsequence</code><span class="sig-paren">(</span><em>event_type: type</em>, <em>event_data: dict</em>, <em>event_creator: events.domain.agent.Agent = &lt;factory&gt;</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../../_modules/events/domain/rule.html#RuleConsequence"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.domain.rule.RuleConsequence" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">events.domain.rule.</code><code class="descname">RuleConsequence</code><span class="sig-paren">(</span><em>event_type</em>, <em>event_data</em>, <em>event_creator=&lt;factory&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/domain/rule.html#RuleConsequence"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.domain.rule.RuleConsequence" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.6/library/functions.html#object" title="(in Python v3.6)"><code class="xref py py-class docutils literal"><span class="pre">object</span></code></a></p>
 <p>Generate a new event as a result of the rule.</p>
 </dd></dl>
@@ -683,7 +699,7 @@ substantially in the short term.</p>
 <p>Data structures for submissions.</p>
 <dl class="class">
 <dt id="events.domain.submission.Annotation">
-<em class="property">class </em><code class="descclassname">events.domain.submission.</code><code class="descname">Annotation</code><span class="sig-paren">(</span><em>creator: events.domain.agent.Agent, submission: events.domain.submission.Submission, created: datetime.datetime, scope: str, proxy: typing.Union[events.domain.agent.Agent, NoneType]</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../../_modules/events/domain/submission.html#Annotation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.domain.submission.Annotation" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">events.domain.submission.</code><code class="descname">Annotation</code><span class="sig-paren">(</span><em>creator</em>, <em>submission</em>, <em>created</em>, <em>scope</em>, <em>proxy</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/domain/submission.html#Annotation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.domain.submission.Annotation" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.6/library/functions.html#object" title="(in Python v3.6)"><code class="xref py py-class docutils literal"><span class="pre">object</span></code></a></p>
 <p>Auxilliary metadata used by the submission and moderation process.</p>
 <dl class="attribute">
@@ -708,7 +724,7 @@ substantially in the short term.</p>
 
 <dl class="class">
 <dt id="events.domain.submission.Author">
-<em class="property">class </em><code class="descclassname">events.domain.submission.</code><code class="descname">Author</code><span class="sig-paren">(</span><em>order: int</em>, <em>forename: str = &lt;factory&gt;</em>, <em>surname: str = &lt;factory&gt;</em>, <em>initials: str = &lt;factory&gt;</em>, <em>affiliation: str = &lt;factory&gt;</em>, <em>email: str = &lt;factory&gt;</em>, <em>identifier: typing.Union[str</em>, <em>NoneType] = None</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../../_modules/events/domain/submission.html#Author"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.domain.submission.Author" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">events.domain.submission.</code><code class="descname">Author</code><span class="sig-paren">(</span><em>order</em>, <em>forename=&lt;factory&gt;</em>, <em>surname=&lt;factory&gt;</em>, <em>initials=&lt;factory&gt;</em>, <em>affiliation=&lt;factory&gt;</em>, <em>email=&lt;factory&gt;</em>, <em>identifier=None</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/domain/submission.html#Author"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.domain.submission.Author" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.6/library/functions.html#object" title="(in Python v3.6)"><code class="xref py py-class docutils literal"><span class="pre">object</span></code></a></p>
 <p>Represents an author of a submission.</p>
 <dl class="attribute">
@@ -732,7 +748,7 @@ substantially in the short term.</p>
 
 <dl class="class">
 <dt id="events.domain.submission.Classification">
-<em class="property">class </em><code class="descclassname">events.domain.submission.</code><code class="descname">Classification</code><span class="sig-paren">(</span><em>category: str</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../../_modules/events/domain/submission.html#Classification"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.domain.submission.Classification" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">events.domain.submission.</code><code class="descname">Classification</code><span class="sig-paren">(</span><em>category</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/domain/submission.html#Classification"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.domain.submission.Classification" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.6/library/functions.html#object" title="(in Python v3.6)"><code class="xref py py-class docutils literal"><span class="pre">object</span></code></a></p>
 <p>An archive/category classification for a <a class="reference internal" href="#events.domain.submission.Submission" title="events.domain.submission.Submission"><code class="xref py py-class docutils literal"><span class="pre">Submission</span></code></a>.</p>
 <dl class="method">
@@ -745,7 +761,7 @@ substantially in the short term.</p>
 
 <dl class="class">
 <dt id="events.domain.submission.Comment">
-<em class="property">class </em><code class="descclassname">events.domain.submission.</code><code class="descname">Comment</code><span class="sig-paren">(</span><em>creator: events.domain.agent.Agent, submission: events.domain.submission.Submission, created: datetime.datetime, scope: str, proxy: typing.Union[events.domain.agent.Agent, NoneType], body: str</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../../_modules/events/domain/submission.html#Comment"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.domain.submission.Comment" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">events.domain.submission.</code><code class="descname">Comment</code><span class="sig-paren">(</span><em>creator</em>, <em>submission</em>, <em>created</em>, <em>scope</em>, <em>proxy</em>, <em>body</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/domain/submission.html#Comment"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.domain.submission.Comment" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#events.domain.submission.Annotation" title="events.domain.submission.Annotation"><code class="xref py py-class docutils literal"><span class="pre">events.domain.submission.Annotation</span></code></a></p>
 <p>A freeform textual annotation.</p>
 <dl class="attribute">
@@ -764,7 +780,7 @@ substantially in the short term.</p>
 
 <dl class="class">
 <dt id="events.domain.submission.Delegation">
-<em class="property">class </em><code class="descclassname">events.domain.submission.</code><code class="descname">Delegation</code><span class="sig-paren">(</span><em>delegate: events.domain.agent.Agent</em>, <em>creator: events.domain.agent.Agent</em>, <em>created: datetime.datetime = &lt;factory&gt;</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../../_modules/events/domain/submission.html#Delegation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.domain.submission.Delegation" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">events.domain.submission.</code><code class="descname">Delegation</code><span class="sig-paren">(</span><em>delegate</em>, <em>creator</em>, <em>created=&lt;factory&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/domain/submission.html#Delegation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.domain.submission.Delegation" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.6/library/functions.html#object" title="(in Python v3.6)"><code class="xref py py-class docutils literal"><span class="pre">object</span></code></a></p>
 <p>Delegation of editing privileges to a non-owning <a class="reference internal" href="#events.domain.agent.Agent" title="events.domain.agent.Agent"><code class="xref py py-class docutils literal"><span class="pre">Agent</span></code></a>.</p>
 <dl class="attribute">
@@ -783,14 +799,14 @@ substantially in the short term.</p>
 
 <dl class="class">
 <dt id="events.domain.submission.Flag">
-<em class="property">class </em><code class="descclassname">events.domain.submission.</code><code class="descname">Flag</code><span class="sig-paren">(</span><em>creator: events.domain.agent.Agent, submission: events.domain.submission.Submission, created: datetime.datetime, scope: str, proxy: typing.Union[events.domain.agent.Agent, NoneType]</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../../_modules/events/domain/submission.html#Flag"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.domain.submission.Flag" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">events.domain.submission.</code><code class="descname">Flag</code><span class="sig-paren">(</span><em>creator</em>, <em>submission</em>, <em>created</em>, <em>scope</em>, <em>proxy</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/domain/submission.html#Flag"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.domain.submission.Flag" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#events.domain.submission.Annotation" title="events.domain.submission.Annotation"><code class="xref py py-class docutils literal"><span class="pre">events.domain.submission.Annotation</span></code></a></p>
 <p>Tags used to route submissions based on moderation policies.</p>
 </dd></dl>
 
 <dl class="class">
 <dt id="events.domain.submission.License">
-<em class="property">class </em><code class="descclassname">events.domain.submission.</code><code class="descname">License</code><span class="sig-paren">(</span><em>uri: str</em>, <em>name: typing.Union[str</em>, <em>NoneType] = None</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../../_modules/events/domain/submission.html#License"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.domain.submission.License" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">events.domain.submission.</code><code class="descname">License</code><span class="sig-paren">(</span><em>uri</em>, <em>name=None</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/domain/submission.html#License"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.domain.submission.License" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.6/library/functions.html#object" title="(in Python v3.6)"><code class="xref py py-class docutils literal"><span class="pre">object</span></code></a></p>
 <p>An license for distribution of the submission.</p>
 <dl class="attribute">
@@ -808,7 +824,7 @@ substantially in the short term.</p>
 
 <dl class="class">
 <dt id="events.domain.submission.Proposal">
-<em class="property">class </em><code class="descclassname">events.domain.submission.</code><code class="descname">Proposal</code><span class="sig-paren">(</span><em>creator: events.domain.agent.Agent, submission: events.domain.submission.Submission, created: datetime.datetime, scope: str, proxy: typing.Union[events.domain.agent.Agent, NoneType], event_type: type, event_data: dict</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../../_modules/events/domain/submission.html#Proposal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.domain.submission.Proposal" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">events.domain.submission.</code><code class="descname">Proposal</code><span class="sig-paren">(</span><em>creator</em>, <em>submission</em>, <em>created</em>, <em>scope</em>, <em>proxy</em>, <em>event_type</em>, <em>event_data</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/domain/submission.html#Proposal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.domain.submission.Proposal" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#events.domain.submission.Annotation" title="events.domain.submission.Annotation"><code class="xref py py-class docutils literal"><span class="pre">events.domain.submission.Annotation</span></code></a></p>
 <p>Represents a proposal to apply an event to a submission.</p>
 <dl class="method">
@@ -951,7 +967,7 @@ substantially in the short term.</p>
 
 <dl class="class">
 <dt id="events.domain.submission.SubmissionMetadata">
-<em class="property">class </em><code class="descclassname">events.domain.submission.</code><code class="descname">SubmissionMetadata</code><span class="sig-paren">(</span><em>title: typing.Union[str</em>, <em>NoneType] = None</em>, <em>abstract: typing.Union[str</em>, <em>NoneType] = None</em>, <em>authors: list = &lt;factory&gt;</em>, <em>doi: typing.Union[str</em>, <em>NoneType] = None</em>, <em>msc_class: typing.Union[str</em>, <em>NoneType] = None</em>, <em>acm_class: typing.Union[str</em>, <em>NoneType] = None</em>, <em>report_num: typing.Union[str</em>, <em>NoneType] = None</em>, <em>journal_ref: typing.Union[str</em>, <em>NoneType] = None</em>, <em>comments: str = &lt;factory&gt;</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../../_modules/events/domain/submission.html#SubmissionMetadata"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.domain.submission.SubmissionMetadata" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">events.domain.submission.</code><code class="descname">SubmissionMetadata</code><span class="sig-paren">(</span><em>title=None</em>, <em>abstract=None</em>, <em>authors=&lt;factory&gt;</em>, <em>doi=None</em>, <em>msc_class=None</em>, <em>acm_class=None</em>, <em>report_num=None</em>, <em>journal_ref=None</em>, <em>comments=&lt;factory&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/domain/submission.html#SubmissionMetadata"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.domain.submission.SubmissionMetadata" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.6/library/functions.html#object" title="(in Python v3.6)"><code class="xref py py-class docutils literal"><span class="pre">object</span></code></a></p>
 <p>Metadata about a <a class="reference internal" href="#events.domain.submission.Submission" title="events.domain.submission.Submission"><code class="xref py py-class docutils literal"><span class="pre">Submission</span></code></a> instance.</p>
 <dl class="attribute">
@@ -1064,18 +1080,18 @@ substantially in the short term.</p>
     </div>
     <div class="footer">
       &copy;2017, arXiv.org.
-      
+
       |
       Powered by <a href="http://sphinx-doc.org/">Sphinx 1.6.3</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
-      
+
       |
       <a href="../../_sources/containers/core/events.domain.rst.txt"
           rel="nofollow">Page source</a>
     </div>
 
-    
 
-    
+
+
   </body>
 </html>

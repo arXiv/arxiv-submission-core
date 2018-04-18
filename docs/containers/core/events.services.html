@@ -69,7 +69,7 @@ arXiv submission and moderation services, including the webhook service (to
 notify external-to-arXiv services).</p>
 <dl class="function">
 <dt id="events.services.notification.emit">
-<code class="descclassname">events.services.notification.</code><code class="descname">emit</code><span class="sig-paren">(</span><em>event: events.domain.event.Event</em>, <em>submission: events.domain.submission.Submission</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../../_modules/events/services/notification.html#emit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.notification.emit" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">events.services.notification.</code><code class="descname">emit</code><span class="sig-paren">(</span><em>event</em>, <em>submission</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/services/notification.html#emit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.services.notification.emit" title="Permalink to this definition">¶</a></dt>
 <dd><p>Emit an event to the notification broker.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -81,7 +81,10 @@ notify external-to-arXiv services).</p>
 </ul>
 </td>
 </tr>
-<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><p class="first last"><code class="xref py py-exc docutils literal"><span class="pre">NotificationFailed</span></code></p>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><p class="first"><code class="xref py py-exc docutils literal"><span class="pre">NotificationFailed</span></code></p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><code class="docutils literal"><span class="pre">None</span></code></p>
 </td>
 </tr>
 </tbody>
