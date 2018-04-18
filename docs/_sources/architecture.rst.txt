@@ -202,7 +202,7 @@ rapid access.
 
 In early phases of the classic renewal process, this will be the classic MySQL
 database running in the CUL-IT datacenter. Upon migration to the cloud, this
-will be replaced; likely with a PostgresQL database running in AWS RDS.
+may be replaced with something else.
 
 .. _core-interface-services:
 
@@ -248,16 +248,24 @@ To support automated processes, this package also implements a set of
 asynchronous tasks using `Celery <http://www.celeryproject.org/>`_. Provides
 integration with a task queue (Redis) for message passing.
 
-See :ref:`submission-core-events-package-containers`
+See :ref:`submission-core-events-package-containers`.
+
+.. _submission-worker:
+
+Submission worker
+^^^^^^^^^^^^^^^^^
+The submission worker is a Celery process that executes tasks defined in the
+:ref:`submission-core-events-package` and dispatched by core interface
+services. This allows us to implement rule processing asynchronously, if needed
+for longer-running operations.
 
 Submission UI service
 ^^^^^^^^^^^^^^^^^^^^^
-Provides form-based views that allow users
-to create and update submissions, and track the state of their submission
-through the moderation and publication process. The interface supports metadata
-entry, source package upload, and integrates with the
-:ref:`compilation-service` to assist the submitter in preparing a
-publication-ready submission package.
+Provides form-based views that allow users to create and update submissions,
+and track the state of their submission through the moderation and publication
+process. The interface supports metadata entry, source package upload, and
+integrates with the :ref:`compilation-service` to assist the submitter in
+preparing a publication-ready submission package.
 
 Uses the :ref:`submission-core-events-package` to update submission state in
 the :ref:`submission-database`.

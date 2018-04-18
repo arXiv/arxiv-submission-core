@@ -17,7 +17,8 @@ from events.domain.submission import Submission, Classification, License, \
     SubmissionMetadata
 import events as ev
 
-from . import util
+from metadata.controllers import util
+from . import handlers
 
 logger = logging.getLogger(__name__)
 
@@ -68,11 +69,11 @@ def create_submission(data: dict, headers: dict, user_data: dict,
     logger.debug('Received request to create submission')
     user, client, proxy = _get_agents(headers, user_data, client_data)
     logger.debug(f'User: {user}; client: {client}, proxy: {proxy}')
+    agents = dict(creator=user, client=client, proxy=proxy)
+    create = ev.CreateSubmission(creator=user, client=client, proxy=proxy)
+    events = handlers.handle_submission(data, agents)
     try:
-        submission, events = ev.save(
-            ev.CreateSubmission(creator=user, client=client, proxy=proxy),
-            *_update_submission(data, user, client, proxy)
-        )
+        submission, events = ev.save(create, *events)
     except ev.InvalidEvent as e:
         raise InternalServerError(str(e)) from e
     except ev.SaveError as e:
@@ -110,11 +111,10 @@ def update_submission(data: dict, headers: dict, user_data: dict,
         -> Response:
     """Update the submission."""
     user, client, proxy = _get_agents(headers, user_data, client_data)
+    agents = dict(creator=user, client=client, proxy=proxy)
+    events = handlers.handle_submission(data, agents)
     try:
-        submission, events = ev.save(
-            *_update_submission(data, user, client, proxy),
-            submission_id=submission_id
-        )
+        submission, events = ev.save(*events, submission_id=submission_id)
     except ev.NoSuchSubmission as e:
         raise NotFound(f"No submission found with id {submission_id}")
     except ev.InvalidEvent as e:
@@ -130,78 +130,3 @@ def update_submission(data: dict, headers: dict, user_data: dict,
                             submission_id=submission.submission_id)
     }
     return submission.to_dict(), status.HTTP_200_OK, response_headers
-
-
-def _update_submission(data: dict, creator: Agent, client: Agent,
-                       proxy: Optional[Agent] = None) -> List[Event]:
-    """
-    Generate :class:`.ev.Event`(s) to update a :class:`Submission`.
-
-    Parameters
-    ----------
-    data : dict
-    creator : :class:`.Agent`
-    client : :class:`.Agent`
-    proxy : :class:`.Agent`
-
-    Returns
-    -------
-    list
-
-    """
-    # Since these are used in all Event instantiations, it's convenient to
-    # pack these together.
-    agents = dict(creator=creator, client=client, proxy=proxy)
-
-    new_events = []
-    if 'submitter_is_author' in data:
-        new_events.append(
-            ev.AssertAuthorship(
-                **agents,
-                submitter_is_author=data['submitter_is_author']
-            )
-        )
-    if 'license' in data:
-        new_events.append(
-            ev.SelectLicense(
-                **agents,
-                license_name=data['license'].get('name'),
-                license_uri=data['license']['uri']
-            )
-        )
-
-    if 'submitter_accepts_policy' in data and data['submitter_accepts_policy']:
-        new_events.append(ev.AcceptPolicy(**agents))
-
-    # Generate both primary and secondary classifications.
-    if 'primary_classification' in data:
-        category = data['primary_classification']['category']
-        new_events.append(
-            ev.SetPrimaryClassification(**agents, category=category)
-        )
-
-    for classification_datum in data.get('secondary_classification', []):
-        category = classification_datum['category']
-        new_events.append(
-            ev.AddSecondaryClassification(**agents, category=category)
-        )
-
-    if 'metadata' in data:
-        # Most of this could be in a list comprehension, but it may help to
-        # keep this verbose in case we want to intervene on values.
-        metadata = []
-        for key in ev.UpdateMetadata.FIELDS:
-            if key not in data['metadata']:
-                continue
-            value = data['metadata'][key]
-            metadata.append((key, value))
-        new_events.append(ev.UpdateMetadata(**agents, metadata=metadata))
-
-        if 'authors' in data['metadata']:
-            authors = []
-            for i, au in enumerate(data['metadata']['authors']):
-                if 'order' not in au:
-                    au['order'] = i
-                authors.append(ev.Author(**au))
-            new_events.append(ev.UpdateAuthors(**agents, authors=authors))
-    return new_events

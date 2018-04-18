@@ -41,9 +41,18 @@ class TestSubmit(TestCase):
 
         self.client = self.app.test_client()
 
+        self.resolver = jsonschema.RefResolver(
+            'file://%s/' % os.path.join(BASEPATH, 'schema/resources'),
+            None)
+
+        _path = os.path.join(BASEPATH, 'schema/resources/submission.json')
+        with open(_path) as f:
+            self.schema = json.load(f)
+
     def test_submit_one_shot(self):
         """Client submits a complete submission record."""
-        with open(os.path.join(BASEPATH, 'examples/complete_submission.json')) as f:
+        example = os.path.join(BASEPATH, 'examples/complete_submission.json')
+        with open(example) as f:
             data = json.load(f)
         response = self.client.post(
             '/',
@@ -62,13 +71,8 @@ class TestSubmit(TestCase):
         self.assertIn("Location", response.headers,
                       "Should redirect to created submission resource")
 
-
-        with open(os.path.join(BASEPATH, 'schema/resources/submission.json')) as f:
-            schema = json.load(f)
         try:
-            resolver = jsonschema.RefResolver(
-                'file://%s/' % os.path.join(BASEPATH, 'schema/resources'),
-                None)
-            jsonschema.validate(response_data, schema, resolver=resolver)
+            jsonschema.validate(response_data, self.schema,
+                                resolver=self.resolver)
         except jsonschema.ValidationError as e:
             self.fail("Return content should match submission schema")

@@ -41,12 +41,7 @@ def validate_request(schema_path: str) -> Callable:
                 validate(data)
             except schema.ValidationError as e:
                 # A summary of the exception is on the first line of the repr.
-                msg = str(e).split('\n')
-                detail = {
-                    'reason': f'Metadata validation failed: {msg[0]}',
-                    'detail': ' '.join(msg)
-                }
-                raise BadRequest(msg[0])
+                raise BadRequest(str(e).split('\n')[0])
             response: Tuple[dict, int, dict] = func(data, *args, **kwargs)
             return response
         return _wrpr

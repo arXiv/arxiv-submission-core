@@ -120,6 +120,7 @@
 <span class="sd">&quot;&quot;&quot;</span>
 
 <span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Tuple</span>
+<span class="kn">from</span> <span class="nn">arxiv.base</span> <span class="k">import</span> <span class="n">logging</span>
 <span class="kn">from</span> <span class="nn">events.domain.submission</span> <span class="k">import</span> <span class="n">Submission</span><span class="p">,</span> <span class="n">SubmissionMetadata</span><span class="p">,</span> <span class="n">Author</span>
 <span class="kn">from</span> <span class="nn">events.domain.agent</span> <span class="k">import</span> <span class="n">Agent</span><span class="p">,</span> <span class="n">User</span><span class="p">,</span> <span class="n">System</span><span class="p">,</span> <span class="n">Client</span>
 <span class="kn">from</span> <span class="nn">events.domain.event</span> <span class="k">import</span> <span class="p">(</span>
@@ -127,11 +128,13 @@
     <span class="n">AssertAuthorship</span><span class="p">,</span> <span class="n">AcceptPolicy</span><span class="p">,</span> <span class="n">SetPrimaryClassification</span><span class="p">,</span> <span class="n">UpdateMetadata</span><span class="p">,</span>
     <span class="n">AddSecondaryClassification</span><span class="p">,</span> <span class="n">RemoveSecondaryClassification</span><span class="p">,</span> <span class="n">SelectLicense</span><span class="p">,</span>
     <span class="n">AttachSourceContent</span><span class="p">,</span> <span class="n">UpdateAuthors</span><span class="p">,</span> <span class="n">CreateComment</span><span class="p">,</span> <span class="n">DeleteComment</span><span class="p">,</span>
-    <span class="n">AddDelegate</span><span class="p">,</span> <span class="n">RemoveDelegate</span>
+    <span class="n">AddDelegate</span><span class="p">,</span> <span class="n">RemoveDelegate</span><span class="p">,</span> <span class="n">FinalizeSubmission</span>
 <span class="p">)</span>
 <span class="kn">from</span> <span class="nn">events.domain.rule</span> <span class="k">import</span> <span class="n">RuleCondition</span><span class="p">,</span> <span class="n">RuleConsequence</span><span class="p">,</span> <span class="n">EventRule</span>
 <span class="kn">from</span> <span class="nn">events.services</span> <span class="k">import</span> <span class="n">classic</span>
 <span class="kn">from</span> <span class="nn">events.exceptions</span> <span class="k">import</span> <span class="n">InvalidEvent</span><span class="p">,</span> <span class="n">NoSuchSubmission</span><span class="p">,</span> <span class="n">SaveError</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="load"><a class="viewcode-back" href="../containers/core/events.html#events.load">[docs]</a><span class="k">def</span> <span class="nf">load</span><span class="p">(</span><span class="n">submission_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Submission</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Event</span><span class="p">]]:</span>
@@ -236,7 +239,8 @@
     <span class="k">try</span><span class="p">:</span>
         <span class="n">submission</span> <span class="o">=</span> <span class="n">classic</span><span class="o">.</span><span class="n">store_events</span><span class="p">(</span><span class="o">*</span><span class="n">combined</span><span class="p">,</span> <span class="n">submission</span><span class="o">=</span><span class="n">submission</span><span class="p">)</span>
     <span class="k">except</span> <span class="n">classic</span><span class="o">.</span><span class="n">CommitFailed</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="n">SaveError</span><span class="p">(</span><span class="s1">&#39;Failed to store events: </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span> <span class="kn">from</span> <span class="nn">e</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Encountered CommitFailed exception: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="n">SaveError</span><span class="p">(</span><span class="s1">&#39;Failed to store events&#39;</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span>
 
     <span class="k">for</span> <span class="n">event</span> <span class="ow">in</span> <span class="n">combined</span><span class="p">:</span>
         <span class="n">event</span><span class="o">.</span><span class="n">submission_id</span> <span class="o">=</span> <span class="n">submission</span><span class="o">.</span><span class="n">submission_id</span>

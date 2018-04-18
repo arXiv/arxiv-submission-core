@@ -6,24 +6,15 @@ metadata\.controllers package
     :undoc-members:
     :show-inheritance:
 
+Subpackages
+-----------
+
+.. toctree::
+
+    metadata.controllers.submission
+
 Submodules
 ----------
-
-metadata\.controllers\.submission module
-----------------------------------------
-
-.. automodule:: metadata.controllers.submission
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-metadata\.controllers\.tests module
------------------------------------
-
-.. automodule:: metadata.controllers.tests
-    :members:
-    :undoc-members:
-    :show-inheritance:
 
 metadata\.controllers\.util module
 ----------------------------------

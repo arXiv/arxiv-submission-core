@@ -214,7 +214,7 @@ arXiv policies.</p>
 </div>
 <div class="section" id="containers-services-building-blocks">
 <h2>Containers (Services &amp; Building Blocks)<a class="headerlink" href="#containers-services-building-blocks" title="Permalink to this headline">¶</a></h2>
-<div class="figure" id="id12">
+<div class="figure" id="id13">
 <span id="figure-submission-containers"></span><img alt="_images/submissionContainers.png" src="_images/submissionContainers.png" />
 <p class="caption"><span class="caption-number">Fig. 1 </span><span class="caption-text">Containers in the arXiv submission &amp; moderation subsystem.</span></p>
 </div>
@@ -230,7 +230,7 @@ representations (e.g. of submission objects) are also stored for querying and
 rapid access.</p>
 <p>In early phases of the classic renewal process, this will be the classic MySQL
 database running in the CUL-IT datacenter. Upon migration to the cloud, this
-will be replaced; likely with a PostgresQL database running in AWS RDS.</p>
+may be replaced with something else.</p>
 </div>
 <div class="section" id="core-interface-services">
 <span id="id3"></span><h3>Core interface services<a class="headerlink" href="#core-interface-services" title="Permalink to this headline">¶</a></h3>
@@ -239,7 +239,7 @@ interfaces for the arXiv submission system. Each of these services integrates
 with the <a class="reference internal" href="#submission-database"><span class="std std-ref">Submission database</span></a> to modify submission state, via the
 <a class="reference internal" href="#submission-core-events-package"><span class="std std-ref">Submission core events package</span></a>.</p>
 <p>Asynchronous operations (e.g. to execute rule-based logic) are performed by a
-<span class="xref std std-ref">submission-worker</span> process. Communication between the interface services
+<a class="reference internal" href="#submission-worker"><span class="std std-ref">Submission worker</span></a> process. Communication between the interface services
 and the worker is mediated by a task queue (Redis). Tasks passed on the queue
 are implemented in the <a class="reference internal" href="#submission-core-events-package"><span class="std std-ref">Submission core events package</span></a> using
 <a class="reference external" href="http://www.celeryproject.org/">Celery</a>.</p>
@@ -265,16 +265,22 @@ in the arXiv system (e.g. the <span class="xref std std-ref">webook-notification
 <p>To support automated processes, this package also implements a set of
 asynchronous tasks using <a class="reference external" href="http://www.celeryproject.org/">Celery</a>. Provides
 integration with a task queue (Redis) for message passing.</p>
-<p>See <span class="xref std std-ref">submission-core-events-package-containers</span></p>
+<p>See <span class="xref std std-ref">submission-core-events-package-containers</span>.</p>
+</div>
+<div class="section" id="submission-worker">
+<span id="id6"></span><h4>Submission worker<a class="headerlink" href="#submission-worker" title="Permalink to this headline">¶</a></h4>
+<p>The submission worker is a Celery process that executes tasks defined in the
+<a class="reference internal" href="#submission-core-events-package"><span class="std std-ref">Submission core events package</span></a> and dispatched by core interface
+services. This allows us to implement rule processing asynchronously, if needed
+for longer-running operations.</p>
 </div>
 <div class="section" id="submission-ui-service">
 <h4>Submission UI service<a class="headerlink" href="#submission-ui-service" title="Permalink to this headline">¶</a></h4>
-<p>Provides form-based views that allow users
-to create and update submissions, and track the state of their submission
-through the moderation and publication process. The interface supports metadata
-entry, source package upload, and integrates with the
-<a class="reference internal" href="#compilation-service"><span class="std std-ref">Compilation service</span></a> to assist the submitter in preparing a
-publication-ready submission package.</p>
+<p>Provides form-based views that allow users to create and update submissions,
+and track the state of their submission through the moderation and publication
+process. The interface supports metadata entry, source package upload, and
+integrates with the <a class="reference internal" href="#compilation-service"><span class="std std-ref">Compilation service</span></a> to assist the submitter in
+preparing a publication-ready submission package.</p>
 <p>Uses the <a class="reference internal" href="#submission-core-events-package"><span class="std std-ref">Submission core events package</span></a> to update submission state in
 the <a class="reference internal" href="#submission-database"><span class="std std-ref">Submission database</span></a>.</p>
 </div>
@@ -304,19 +310,19 @@ and act on moderator proposals and comments.</p>
 </div>
 </div>
 <div class="section" id="utility-services">
-<span id="id6"></span><h3>Utility services<a class="headerlink" href="#utility-services" title="Permalink to this headline">¶</a></h3>
+<span id="id7"></span><h3>Utility services<a class="headerlink" href="#utility-services" title="Permalink to this headline">¶</a></h3>
 <p>The following utility services support the submission and moderation workflow,
 providing a menu of functionality used by UI and API services to support
 accession and quality assurance.</p>
 <div class="section" id="file-management-service">
-<span id="id7"></span><h4>File management service<a class="headerlink" href="#file-management-service" title="Permalink to this headline">¶</a></h4>
+<span id="id8"></span><h4>File management service<a class="headerlink" href="#file-management-service" title="Permalink to this headline">¶</a></h4>
 <p>This service is responsible for ensuring the safety and suitability of files
 uploaded to the submission system. The file management service accepts
 uploads, performs verification and sanitization, and makes the upload available
 for use by other services.</p>
 </div>
 <div class="section" id="compilation-service">
-<span id="id8"></span><h4>Compilation service<a class="headerlink" href="#compilation-service" title="Permalink to this headline">¶</a></h4>
+<span id="id9"></span><h4>Compilation service<a class="headerlink" href="#compilation-service" title="Permalink to this headline">¶</a></h4>
 <p><a class="reference external" href="https://github.com/cul-it/arxiv-converter">https://github.com/cul-it/arxiv-converter</a></p>
 <p>The build service compiles sanitized upload packages into PDF, PostScript,
 and other formats. This service encompasses the arXiv TeX tree. Compilation
@@ -324,21 +330,21 @@ logs are also made available, for example to provide submitters feedback about
 compilation failures or warnings.</p>
 </div>
 <div class="section" id="plain-text-extraction-service">
-<span id="id9"></span><h4>Plain text extraction service<a class="headerlink" href="#plain-text-extraction-service" title="Permalink to this headline">¶</a></h4>
+<span id="id10"></span><h4>Plain text extraction service<a class="headerlink" href="#plain-text-extraction-service" title="Permalink to this headline">¶</a></h4>
 <p><a class="reference external" href="https://github.com/cul-it/arxiv-fulltext">https://github.com/cul-it/arxiv-fulltext</a></p>
 <p>Extracts plain text content from PDFs, for use by the for overlap detection
 and classification services. Makes both raw extracted text and normalized
 “PSV” tokenized text available to other services.</p>
 </div>
 <div class="section" id="overlap-detection-service">
-<span id="id10"></span><h4>Overlap detection service<a class="headerlink" href="#overlap-detection-service" title="Permalink to this headline">¶</a></h4>
+<span id="id11"></span><h4>Overlap detection service<a class="headerlink" href="#overlap-detection-service" title="Permalink to this headline">¶</a></h4>
 <p><a class="reference external" href="https://github.com/cul-it/arxiv-docsim">https://github.com/cul-it/arxiv-docsim</a></p>
 <p>Operates on extracted plain text content and submission metadata to
 detect possibly duplicate submissions. Returns an array of published arXiv
 papers with a high degree of overlap.</p>
 </div>
 <div class="section" id="classifier-service">
-<span id="id11"></span><h4>Classifier service<a class="headerlink" href="#classifier-service" title="Permalink to this headline">¶</a></h4>
+<span id="id12"></span><h4>Classifier service<a class="headerlink" href="#classifier-service" title="Permalink to this headline">¶</a></h4>
 <p><a class="reference external" href="https://github.com/cul-it/arxiv-classifier">https://github.com/cul-it/arxiv-classifier</a></p>
 <p>Operates on extracted plain text content and submission metadata to
 propose categories for submitted papers.</p>

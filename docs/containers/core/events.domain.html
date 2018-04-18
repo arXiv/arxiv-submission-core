@@ -111,7 +111,8 @@
 <dl class="attribute">
 <dt id="events.domain.agent.User.name">
 <code class="descname">name</code><a class="headerlink" href="#events.domain.agent.User.name" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Full name of the user.</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="events.domain.agent.User.to_dict">
@@ -146,7 +147,8 @@
 <dl class="method">
 <dt id="events.domain.agent.Client.to_dict">
 <code class="descname">to_dict</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/domain/agent.html#Client.to_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.domain.agent.Client.to_dict" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Generate a dict representation of this <a class="reference internal" href="#events.domain.agent.Client" title="events.domain.agent.Client"><code class="xref py py-class docutils literal"><span class="pre">Client</span></code></a> instance.</p>
+</dd></dl>
 
 </dd></dl>
 
@@ -168,6 +170,200 @@ submission).</li>
 <li></li>
 </ul>
 <dl class="class">
+<dt id="events.domain.event.AcceptPolicy">
+<em class="property">class </em><code class="descclassname">events.domain.event.</code><code class="descname">AcceptPolicy</code><span class="sig-paren">(</span><em>creator: events.domain.agent.Agent</em>, <em>created: datetime.datetime</em>, <em>proxy: typing.Union[events.domain.agent.Agent</em>, <em>NoneType] = None</em>, <em>client: typing.Union[events.domain.agent.Agent</em>, <em>NoneType] = None</em>, <em>submission_id: typing.Union[int</em>, <em>NoneType] = None</em>, <em>committed: bool = False</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../../_modules/events/domain/event.html#AcceptPolicy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.domain.event.AcceptPolicy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#events.domain.event.Event" title="events.domain.event.Event"><code class="xref py py-class docutils literal"><span class="pre">events.domain.event.Event</span></code></a></p>
+<p>The submitting user accepts the arXiv submission policy.</p>
+<dl class="method">
+<dt id="events.domain.event.AcceptPolicy.project">
+<code class="descname">project</code><span class="sig-paren">(</span><em>submission: events.domain.submission.Submission</em><span class="sig-paren">)</span> &#x2192; events.domain.submission.Submission<a class="reference internal" href="../../_modules/events/domain/event.html#AcceptPolicy.project"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.domain.event.AcceptPolicy.project" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the policy flag on the submission.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="events.domain.event.AddDelegate">
+<em class="property">class </em><code class="descclassname">events.domain.event.</code><code class="descname">AddDelegate</code><span class="sig-paren">(</span><em>creator: events.domain.agent.Agent</em>, <em>created: datetime.datetime = &lt;factory&gt;</em>, <em>proxy: typing.Union[events.domain.agent.Agent</em>, <em>NoneType] = None</em>, <em>client: typing.Union[events.domain.agent.Agent</em>, <em>NoneType] = None</em>, <em>submission_id: typing.Union[int</em>, <em>NoneType] = None</em>, <em>committed: bool = False</em>, <em>delegate: typing.Union[events.domain.agent.Agent</em>, <em>NoneType] = None</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../../_modules/events/domain/event.html#AddDelegate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.domain.event.AddDelegate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#events.domain.event.Event" title="events.domain.event.Event"><code class="xref py py-class docutils literal"><span class="pre">events.domain.event.Event</span></code></a></p>
+<p>Owner delegates authority to another agent.</p>
+<dl class="attribute">
+<dt id="events.domain.event.AddDelegate.delegate">
+<code class="descname">delegate</code><em class="property"> = None</em><a class="headerlink" href="#events.domain.event.AddDelegate.delegate" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="events.domain.event.AddDelegate.project">
+<code class="descname">project</code><span class="sig-paren">(</span><em>submission: events.domain.submission.Submission</em><span class="sig-paren">)</span> &#x2192; events.domain.submission.Submission<a class="reference internal" href="../../_modules/events/domain/event.html#AddDelegate.project"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.domain.event.AddDelegate.project" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add the delegate to the submission.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="events.domain.event.AddDelegate.validate">
+<code class="descname">validate</code><span class="sig-paren">(</span><em>submission: events.domain.submission.Submission</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../../_modules/events/domain/event.html#AddDelegate.validate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.domain.event.AddDelegate.validate" title="Permalink to this definition">¶</a></dt>
+<dd><p>The event creator must be the owner of the submission.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="events.domain.event.AddSecondaryClassification">
+<em class="property">class </em><code class="descclassname">events.domain.event.</code><code class="descname">AddSecondaryClassification</code><span class="sig-paren">(</span><em>creator: events.domain.agent.Agent</em>, <em>created: datetime.datetime = &lt;factory&gt;</em>, <em>proxy: typing.Union[events.domain.agent.Agent</em>, <em>NoneType] = None</em>, <em>client: typing.Union[events.domain.agent.Agent</em>, <em>NoneType] = None</em>, <em>submission_id: typing.Union[int</em>, <em>NoneType] = None</em>, <em>committed: bool = False</em>, <em>category: typing.Union[str</em>, <em>NoneType] = None</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../../_modules/events/domain/event.html#AddSecondaryClassification"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.domain.event.AddSecondaryClassification" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#events.domain.event.Event" title="events.domain.event.Event"><code class="xref py py-class docutils literal"><span class="pre">events.domain.event.Event</span></code></a></p>
+<p>Add a secondary <a class="reference internal" href="#events.domain.submission.Classification" title="events.domain.submission.Classification"><code class="xref py py-class docutils literal"><span class="pre">Classification</span></code></a> to a submission.</p>
+<dl class="attribute">
+<dt id="events.domain.event.AddSecondaryClassification.category">
+<code class="descname">category</code><em class="property"> = None</em><a class="headerlink" href="#events.domain.event.AddSecondaryClassification.category" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="events.domain.event.AddSecondaryClassification.project">
+<code class="descname">project</code><span class="sig-paren">(</span><em>submission: events.domain.submission.Submission</em><span class="sig-paren">)</span> &#x2192; events.domain.submission.Submission<a class="reference internal" href="../../_modules/events/domain/event.html#AddSecondaryClassification.project"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.domain.event.AddSecondaryClassification.project" title="Permalink to this definition">¶</a></dt>
+<dd><p>Append to <a href="#id1"><span class="problematic" id="id2">:prop:`.Submission.secondary_classification`</span></a>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="events.domain.event.AddSecondaryClassification.validate">
+<code class="descname">validate</code><span class="sig-paren">(</span><em>submission: events.domain.submission.Submission</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../../_modules/events/domain/event.html#AddSecondaryClassification.validate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.domain.event.AddSecondaryClassification.validate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Validate the secondary classification category to add.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="events.domain.event.AssertAuthorship">
+<em class="property">class </em><code class="descclassname">events.domain.event.</code><code class="descname">AssertAuthorship</code><span class="sig-paren">(</span><em>creator: events.domain.agent.Agent</em>, <em>created: datetime.datetime = &lt;factory&gt;</em>, <em>proxy: typing.Union[events.domain.agent.Agent</em>, <em>NoneType] = None</em>, <em>client: typing.Union[events.domain.agent.Agent</em>, <em>NoneType] = None</em>, <em>submission_id: typing.Union[int</em>, <em>NoneType] = None</em>, <em>committed: bool = False</em>, <em>submitter_is_author: bool = True</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../../_modules/events/domain/event.html#AssertAuthorship"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.domain.event.AssertAuthorship" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#events.domain.event.Event" title="events.domain.event.Event"><code class="xref py py-class docutils literal"><span class="pre">events.domain.event.Event</span></code></a></p>
+<p>The submitting user asserts whether they are an author of the paper.</p>
+<dl class="method">
+<dt id="events.domain.event.AssertAuthorship.project">
+<code class="descname">project</code><span class="sig-paren">(</span><em>submission: events.domain.submission.Submission</em><span class="sig-paren">)</span> &#x2192; events.domain.submission.Submission<a class="reference internal" href="../../_modules/events/domain/event.html#AssertAuthorship.project"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.domain.event.AssertAuthorship.project" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update the authorship flag on the submission.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="events.domain.event.AssertAuthorship.submitter_is_author">
+<code class="descname">submitter_is_author</code><em class="property"> = True</em><a class="headerlink" href="#events.domain.event.AssertAuthorship.submitter_is_author" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="events.domain.event.AttachSourceContent">
+<em class="property">class </em><code class="descclassname">events.domain.event.</code><code class="descname">AttachSourceContent</code><span class="sig-paren">(</span><em>creator: events.domain.agent.Agent</em>, <em>created: datetime.datetime = &lt;factory&gt;</em>, <em>proxy: typing.Union[events.domain.agent.Agent</em>, <em>NoneType] = None</em>, <em>client: typing.Union[events.domain.agent.Agent</em>, <em>NoneType] = None</em>, <em>submission_id: typing.Union[int</em>, <em>NoneType] = None</em>, <em>committed: bool = False</em>, <em>location: str = &lt;factory&gt;</em>, <em>format: str = &lt;factory&gt;</em>, <em>checksum: str = &lt;factory&gt;</em>, <em>mime_type: str = &lt;factory&gt;</em>, <em>identifier: typing.Union[int</em>, <em>NoneType] = None</em>, <em>size: int = 0</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../../_modules/events/domain/event.html#AttachSourceContent"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.domain.event.AttachSourceContent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#events.domain.event.Event" title="events.domain.event.Event"><code class="xref py py-class docutils literal"><span class="pre">events.domain.event.Event</span></code></a></p>
+<p>Add metadata about a source package to a submission.</p>
+<dl class="attribute">
+<dt id="events.domain.event.AttachSourceContent.ALLOWED_FORMATS">
+<code class="descname">ALLOWED_FORMATS</code><em class="property"> = ['pdftex', 'tex', 'pdf', 'ps', 'html', 'invalid']</em><a class="headerlink" href="#events.domain.event.AttachSourceContent.ALLOWED_FORMATS" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.domain.event.AttachSourceContent.ALLOWED_MIME_TYPES">
+<code class="descname">ALLOWED_MIME_TYPES</code><em class="property"> = ['application/tar+gzip', 'application/tar', 'application/zip']</em><a class="headerlink" href="#events.domain.event.AttachSourceContent.ALLOWED_MIME_TYPES" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.domain.event.AttachSourceContent.identifier">
+<code class="descname">identifier</code><em class="property"> = None</em><a class="headerlink" href="#events.domain.event.AttachSourceContent.identifier" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="events.domain.event.AttachSourceContent.project">
+<code class="descname">project</code><span class="sig-paren">(</span><em>submission: events.domain.submission.Submission</em><span class="sig-paren">)</span> &#x2192; events.domain.submission.Submission<a class="reference internal" href="../../_modules/events/domain/event.html#AttachSourceContent.project"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.domain.event.AttachSourceContent.project" title="Permalink to this definition">¶</a></dt>
+<dd><p>Replace <a class="reference internal" href="#events.domain.submission.SubmissionContent" title="events.domain.submission.SubmissionContent"><code class="xref py py-class docutils literal"><span class="pre">SubmissionContent</span></code></a> metadata on the submission.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="events.domain.event.AttachSourceContent.size">
+<code class="descname">size</code><em class="property"> = 0</em><a class="headerlink" href="#events.domain.event.AttachSourceContent.size" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="events.domain.event.AttachSourceContent.validate">
+<code class="descname">validate</code><span class="sig-paren">(</span><em>submission: events.domain.submission.Submission</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../../_modules/events/domain/event.html#AttachSourceContent.validate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.domain.event.AttachSourceContent.validate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Validate data for <a class="reference internal" href="#events.domain.submission.SubmissionContent" title="events.domain.submission.SubmissionContent"><code class="xref py py-class docutils literal"><span class="pre">SubmissionContent</span></code></a>.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="events.domain.event.CreateComment">
+<em class="property">class </em><code class="descclassname">events.domain.event.</code><code class="descname">CreateComment</code><span class="sig-paren">(</span><em>creator: events.domain.agent.Agent</em>, <em>created: datetime.datetime = &lt;factory&gt;</em>, <em>proxy: typing.Union[events.domain.agent.Agent</em>, <em>NoneType] = None</em>, <em>client: typing.Union[events.domain.agent.Agent</em>, <em>NoneType] = None</em>, <em>submission_id: typing.Union[int</em>, <em>NoneType] = None</em>, <em>committed: bool = False</em>, <em>body: str = &lt;factory&gt;</em>, <em>scope: str = 'private'</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../../_modules/events/domain/event.html#CreateComment"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.domain.event.CreateComment" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#events.domain.event.Event" title="events.domain.event.Event"><code class="xref py py-class docutils literal"><span class="pre">events.domain.event.Event</span></code></a></p>
+<p>Creation of a <a class="reference internal" href="#events.domain.submission.Comment" title="events.domain.submission.Comment"><code class="xref py py-class docutils literal"><span class="pre">Comment</span></code></a> on a <a class="reference internal" href="#events.domain.submission.Submission" title="events.domain.submission.Submission"><code class="xref py py-class docutils literal"><span class="pre">Submission</span></code></a>.</p>
+<dl class="method">
+<dt id="events.domain.event.CreateComment.project">
+<code class="descname">project</code><span class="sig-paren">(</span><em>submission: events.domain.submission.Submission</em><span class="sig-paren">)</span> &#x2192; events.domain.submission.Submission<a class="reference internal" href="../../_modules/events/domain/event.html#CreateComment.project"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.domain.event.CreateComment.project" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a new <a class="reference internal" href="#events.domain.submission.Comment" title="events.domain.submission.Comment"><code class="xref py py-class docutils literal"><span class="pre">Comment</span></code></a> and attach it to the submission.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="events.domain.event.CreateComment.read_scope">
+<code class="descname">read_scope</code><em class="property"> = 'submission:moderate'</em><a class="headerlink" href="#events.domain.event.CreateComment.read_scope" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.domain.event.CreateComment.scope">
+<code class="descname">scope</code><em class="property"> = 'private'</em><a class="headerlink" href="#events.domain.event.CreateComment.scope" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="events.domain.event.CreateComment.validate">
+<code class="descname">validate</code><span class="sig-paren">(</span><em>submission: events.domain.submission.Submission</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../../_modules/events/domain/event.html#CreateComment.validate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.domain.event.CreateComment.validate" title="Permalink to this definition">¶</a></dt>
+<dd><p>The <a href="#id3"><span class="problematic" id="id4">:prop:`.body`</span></a> should be set.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="events.domain.event.CreateComment.write_scope">
+<code class="descname">write_scope</code><em class="property"> = 'submission:moderate'</em><a class="headerlink" href="#events.domain.event.CreateComment.write_scope" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="events.domain.event.CreateSubmission">
+<em class="property">class </em><code class="descclassname">events.domain.event.</code><code class="descname">CreateSubmission</code><span class="sig-paren">(</span><em>creator: events.domain.agent.Agent</em>, <em>created: datetime.datetime = &lt;factory&gt;</em>, <em>proxy: typing.Union[events.domain.agent.Agent</em>, <em>NoneType] = None</em>, <em>client: typing.Union[events.domain.agent.Agent</em>, <em>NoneType] = None</em>, <em>submission_id: typing.Union[int</em>, <em>NoneType] = None</em>, <em>committed: bool = False</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../../_modules/events/domain/event.html#CreateSubmission"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.domain.event.CreateSubmission" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#events.domain.event.Event" title="events.domain.event.Event"><code class="xref py py-class docutils literal"><span class="pre">events.domain.event.Event</span></code></a></p>
+<p>Creation of a new <a class="reference internal" href="#events.domain.submission.Submission" title="events.domain.submission.Submission"><code class="xref py py-class docutils literal"><span class="pre">events.domain.submission.Submission</span></code></a>.</p>
+<dl class="method">
+<dt id="events.domain.event.CreateSubmission.project">
+<code class="descname">project</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; events.domain.submission.Submission<a class="reference internal" href="../../_modules/events/domain/event.html#CreateSubmission.project"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.domain.event.CreateSubmission.project" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a new <a class="reference internal" href="#events.domain.submission.Submission" title="events.domain.submission.Submission"><code class="xref py py-class docutils literal"><span class="pre">Submission</span></code></a>.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="events.domain.event.DeleteComment">
+<em class="property">class </em><code class="descclassname">events.domain.event.</code><code class="descname">DeleteComment</code><span class="sig-paren">(</span><em>creator: events.domain.agent.Agent</em>, <em>created: datetime.datetime = &lt;factory&gt;</em>, <em>proxy: typing.Union[events.domain.agent.Agent</em>, <em>NoneType] = None</em>, <em>client: typing.Union[events.domain.agent.Agent</em>, <em>NoneType] = None</em>, <em>submission_id: typing.Union[int</em>, <em>NoneType] = None</em>, <em>committed: bool = False</em>, <em>comment_id: str = &lt;factory&gt;</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../../_modules/events/domain/event.html#DeleteComment"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.domain.event.DeleteComment" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#events.domain.event.Event" title="events.domain.event.Event"><code class="xref py py-class docutils literal"><span class="pre">events.domain.event.Event</span></code></a></p>
+<p>Deletion of a <a class="reference internal" href="#events.domain.submission.Comment" title="events.domain.submission.Comment"><code class="xref py py-class docutils literal"><span class="pre">Comment</span></code></a> on a <a class="reference internal" href="#events.domain.submission.Submission" title="events.domain.submission.Submission"><code class="xref py py-class docutils literal"><span class="pre">Submission</span></code></a>.</p>
+<dl class="method">
+<dt id="events.domain.event.DeleteComment.project">
+<code class="descname">project</code><span class="sig-paren">(</span><em>submission: events.domain.submission.Submission</em><span class="sig-paren">)</span> &#x2192; events.domain.submission.Submission<a class="reference internal" href="../../_modules/events/domain/event.html#DeleteComment.project"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.domain.event.DeleteComment.project" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remove the comment from the submission.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="events.domain.event.DeleteComment.read_scope">
+<code class="descname">read_scope</code><em class="property"> = 'submission:moderate'</em><a class="headerlink" href="#events.domain.event.DeleteComment.read_scope" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="events.domain.event.DeleteComment.validate">
+<code class="descname">validate</code><span class="sig-paren">(</span><em>submission: events.domain.submission.Submission</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../../_modules/events/domain/event.html#DeleteComment.validate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.domain.event.DeleteComment.validate" title="Permalink to this definition">¶</a></dt>
+<dd><p>The <a href="#id5"><span class="problematic" id="id6">:prop:`.comment_id`</span></a> must present on the submission.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="events.domain.event.DeleteComment.write_scope">
+<code class="descname">write_scope</code><em class="property"> = 'submission:moderate'</em><a class="headerlink" href="#events.domain.event.DeleteComment.write_scope" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
 <dt id="events.domain.event.Event">
 <em class="property">class </em><code class="descclassname">events.domain.event.</code><code class="descname">Event</code><span class="sig-paren">(</span><em>creator: events.domain.agent.Agent</em>, <em>created: datetime.datetime = &lt;factory&gt;</em>, <em>proxy: typing.Union[events.domain.agent.Agent</em>, <em>NoneType] = None</em>, <em>client: typing.Union[events.domain.agent.Agent</em>, <em>NoneType] = None</em>, <em>submission_id: typing.Union[int</em>, <em>NoneType] = None</em>, <em>committed: bool = False</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../../_modules/events/domain/event.html#Event"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.domain.event.Event" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.6/library/functions.html#object" title="(in Python v3.6)"><code class="xref py py-class docutils literal"><span class="pre">object</span></code></a></p>
@@ -175,7 +371,8 @@ submission).</li>
 <dl class="method">
 <dt id="events.domain.event.Event.apply">
 <code class="descname">apply</code><span class="sig-paren">(</span><em>submission: typing.Union[events.domain.submission.Submission</em>, <em>NoneType] = None</em><span class="sig-paren">)</span> &#x2192; events.domain.submission.Submission<a class="reference internal" href="../../_modules/events/domain/event.html#Event.apply"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.domain.event.Event.apply" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Apply the projection for this <a class="reference internal" href="#events.domain.event.Event" title="events.domain.event.Event"><code class="xref py py-class docutils literal"><span class="pre">Event</span></code></a> instance.</p>
+</dd></dl>
 
 <dl class="attribute">
 <dt id="events.domain.event.Event.client">
@@ -218,7 +415,8 @@ submission).</li>
 <dl class="method">
 <dt id="events.domain.event.Event.to_dict">
 <code class="descname">to_dict</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/domain/event.html#Event.to_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.domain.event.Event.to_dict" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Generate a dict representation of this <a class="reference internal" href="#events.domain.event.Event" title="events.domain.event.Event"><code class="xref py py-class docutils literal"><span class="pre">Event</span></code></a>.</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="events.domain.event.Event.valid">
@@ -228,201 +426,40 @@ submission).</li>
 
 </dd></dl>
 
-<dl class="function">
-<dt id="events.domain.event.event_factory">
-<code class="descclassname">events.domain.event.</code><code class="descname">event_factory</code><span class="sig-paren">(</span><em>event_type: str</em>, <em>**data</em><span class="sig-paren">)</span> &#x2192; events.domain.event.Event<a class="reference internal" href="../../_modules/events/domain/event.html#event_factory"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.domain.event.event_factory" title="Permalink to this definition">¶</a></dt>
-<dd><p>Convenience factory for generating :class:<a href="#id1"><span class="problematic" id="id2">`</span></a>.Event`s.</p>
-<table class="docutils field-list" frame="void" rules="none">
-<col class="field-name" />
-<col class="field-body" />
-<tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
-<li><strong>event_type</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a>) – Should be the name of a <a class="reference internal" href="#events.domain.event.Event" title="events.domain.event.Event"><code class="xref py py-class docutils literal"><span class="pre">Event</span></code></a> subclass.</li>
-<li><strong>data</strong> (<em>kwargs</em>) – Keyword parameters passed to the event constructor.</li>
-</ul>
-</td>
-</tr>
-<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><a class="reference internal" href="#events.domain.event.Event" title="events.domain.event.Event"><code class="xref py py-class docutils literal"><span class="pre">Event</span></code></a> – An instance of an <a class="reference internal" href="#events.domain.event.Event" title="events.domain.event.Event"><code class="xref py py-class docutils literal"><span class="pre">Event</span></code></a> subclass.</p>
-</td>
-</tr>
-</tbody>
-</table>
-</dd></dl>
-
 <dl class="class">
-<dt>
-<em class="property">class </em><code class="descclassname">events.domain.event.</code><code class="descname">Event</code><span class="sig-paren">(</span><em>creator: events.domain.agent.Agent</em>, <em>created: datetime.datetime = &lt;factory&gt;</em>, <em>proxy: typing.Union[events.domain.agent.Agent</em>, <em>NoneType] = None</em>, <em>client: typing.Union[events.domain.agent.Agent</em>, <em>NoneType] = None</em>, <em>submission_id: typing.Union[int</em>, <em>NoneType] = None</em>, <em>committed: bool = False</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../../_modules/events/domain/event.html#Event"><span class="viewcode-link">[source]</span></a></dt>
-<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.6/library/functions.html#object" title="(in Python v3.6)"><code class="xref py py-class docutils literal"><span class="pre">object</span></code></a></p>
-<p>Base class for submission-related events.</p>
-<dl class="method">
-<dt>
-<code class="descname">apply</code><span class="sig-paren">(</span><em>submission: typing.Union[events.domain.submission.Submission</em>, <em>NoneType] = None</em><span class="sig-paren">)</span> &#x2192; events.domain.submission.Submission<a class="reference internal" href="../../_modules/events/domain/event.html#Event.apply"><span class="viewcode-link">[source]</span></a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="descname">client</code><em class="property"> = None</em></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="descname">committed</code><em class="property"> = False</em></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="descname">event_id</code></dt>
-<dd><p>The unique ID for this event.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="descname">event_type</code></dt>
-<dd><p>The name (str) of the event type.</p>
-</dd></dl>
-
-<dl class="classmethod">
-<dt>
-<em class="property">classmethod </em><code class="descname">get_event_type</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; str<a class="reference internal" href="../../_modules/events/domain/event.html#Event.get_event_type"><span class="viewcode-link">[source]</span></a></dt>
-<dd><p>Get the name (str) of the event type.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="descname">proxy</code><em class="property"> = None</em></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt>
-<code class="descname">submission_id</code><em class="property"> = None</em></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt>
-<code class="descname">to_dict</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/domain/event.html#Event.to_dict"><span class="viewcode-link">[source]</span></a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt>
-<code class="descname">valid</code><span class="sig-paren">(</span><em>submission: events.domain.submission.Submission</em><span class="sig-paren">)</span> &#x2192; bool<a class="reference internal" href="../../_modules/events/domain/event.html#Event.valid"><span class="viewcode-link">[source]</span></a></dt>
-<dd><p>Determine whether this event is valid for the submission.</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="events.domain.event.CreateSubmission">
-<em class="property">class </em><code class="descclassname">events.domain.event.</code><code class="descname">CreateSubmission</code><span class="sig-paren">(</span><em>creator: events.domain.agent.Agent</em>, <em>created: datetime.datetime = &lt;factory&gt;</em>, <em>proxy: typing.Union[events.domain.agent.Agent</em>, <em>NoneType] = None</em>, <em>client: typing.Union[events.domain.agent.Agent</em>, <em>NoneType] = None</em>, <em>submission_id: typing.Union[int</em>, <em>NoneType] = None</em>, <em>committed: bool = False</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../../_modules/events/domain/event.html#CreateSubmission"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.domain.event.CreateSubmission" title="Permalink to this definition">¶</a></dt>
+<dt id="events.domain.event.FinalizeSubmission">
+<em class="property">class </em><code class="descclassname">events.domain.event.</code><code class="descname">FinalizeSubmission</code><span class="sig-paren">(</span><em>creator: events.domain.agent.Agent</em>, <em>created: datetime.datetime</em>, <em>proxy: typing.Union[events.domain.agent.Agent</em>, <em>NoneType] = None</em>, <em>client: typing.Union[events.domain.agent.Agent</em>, <em>NoneType] = None</em>, <em>submission_id: typing.Union[int</em>, <em>NoneType] = None</em>, <em>committed: bool = False</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../../_modules/events/domain/event.html#FinalizeSubmission"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.domain.event.FinalizeSubmission" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#events.domain.event.Event" title="events.domain.event.Event"><code class="xref py py-class docutils literal"><span class="pre">events.domain.event.Event</span></code></a></p>
-<p>Creation of a new <a class="reference internal" href="#events.domain.submission.Submission" title="events.domain.submission.Submission"><code class="xref py py-class docutils literal"><span class="pre">events.domain.submission.Submission</span></code></a>.</p>
+<p>Send the submission to the queue for announcement.</p>
 <dl class="method">
-<dt id="events.domain.event.CreateSubmission.project">
-<code class="descname">project</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; events.domain.submission.Submission<a class="reference internal" href="../../_modules/events/domain/event.html#CreateSubmission.project"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.domain.event.CreateSubmission.project" title="Permalink to this definition">¶</a></dt>
-<dd><p>Create a new <a class="reference internal" href="#events.domain.submission.Submission" title="events.domain.submission.Submission"><code class="xref py py-class docutils literal"><span class="pre">Submission</span></code></a>.</p>
+<dt id="events.domain.event.FinalizeSubmission.project">
+<code class="descname">project</code><span class="sig-paren">(</span><em>submission: events.domain.submission.Submission</em><span class="sig-paren">)</span> &#x2192; events.domain.submission.Submission<a class="reference internal" href="../../_modules/events/domain/event.html#FinalizeSubmission.project"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.domain.event.FinalizeSubmission.project" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set <a href="#id7"><span class="problematic" id="id8">:prop:`Submission.finalized`</span></a>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="events.domain.event.FinalizeSubmission.validate">
+<code class="descname">validate</code><span class="sig-paren">(</span><em>submission: events.domain.submission.Submission</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../../_modules/events/domain/event.html#FinalizeSubmission.validate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.domain.event.FinalizeSubmission.validate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Ensure that all required data/steps are complete.</p>
 </dd></dl>
 
 </dd></dl>
 
 <dl class="class">
-<dt id="events.domain.event.RemoveSubmission">
-<em class="property">class </em><code class="descclassname">events.domain.event.</code><code class="descname">RemoveSubmission</code><span class="sig-paren">(</span><em>creator: events.domain.agent.Agent</em>, <em>created: datetime.datetime = &lt;factory&gt;</em>, <em>proxy: typing.Union[events.domain.agent.Agent</em>, <em>NoneType] = None</em>, <em>client: typing.Union[events.domain.agent.Agent</em>, <em>NoneType] = None</em>, <em>submission_id: typing.Union[int</em>, <em>NoneType] = None</em>, <em>committed: bool = False</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../../_modules/events/domain/event.html#RemoveSubmission"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.domain.event.RemoveSubmission" title="Permalink to this definition">¶</a></dt>
+<dt id="events.domain.event.RemoveDelegate">
+<em class="property">class </em><code class="descclassname">events.domain.event.</code><code class="descname">RemoveDelegate</code><span class="sig-paren">(</span><em>creator: events.domain.agent.Agent</em>, <em>created: datetime.datetime = &lt;factory&gt;</em>, <em>proxy: typing.Union[events.domain.agent.Agent</em>, <em>NoneType] = None</em>, <em>client: typing.Union[events.domain.agent.Agent</em>, <em>NoneType] = None</em>, <em>submission_id: typing.Union[int</em>, <em>NoneType] = None</em>, <em>committed: bool = False</em>, <em>delegation_id: str = &lt;factory&gt;</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../../_modules/events/domain/event.html#RemoveDelegate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.domain.event.RemoveDelegate" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#events.domain.event.Event" title="events.domain.event.Event"><code class="xref py py-class docutils literal"><span class="pre">events.domain.event.Event</span></code></a></p>
-<p>Removal of a <a class="reference internal" href="#events.domain.submission.Submission" title="events.domain.submission.Submission"><code class="xref py py-class docutils literal"><span class="pre">events.domain.submission.Submission</span></code></a>.</p>
+<p>Owner revokes authority from another agent.</p>
 <dl class="method">
-<dt id="events.domain.event.RemoveSubmission.project">
-<code class="descname">project</code><span class="sig-paren">(</span><em>submission: events.domain.submission.Submission</em><span class="sig-paren">)</span> &#x2192; events.domain.submission.Submission<a class="reference internal" href="../../_modules/events/domain/event.html#RemoveSubmission.project"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.domain.event.RemoveSubmission.project" title="Permalink to this definition">¶</a></dt>
-<dd><p>Remove the <a class="reference internal" href="#events.domain.submission.Submission" title="events.domain.submission.Submission"><code class="xref py py-class docutils literal"><span class="pre">Submission</span></code></a> from the system (set inactive).</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="events.domain.event.VerifyContactInformation">
-<em class="property">class </em><code class="descclassname">events.domain.event.</code><code class="descname">VerifyContactInformation</code><span class="sig-paren">(</span><em>creator: events.domain.agent.Agent</em>, <em>created: datetime.datetime = &lt;factory&gt;</em>, <em>proxy: typing.Union[events.domain.agent.Agent</em>, <em>NoneType] = None</em>, <em>client: typing.Union[events.domain.agent.Agent</em>, <em>NoneType] = None</em>, <em>submission_id: typing.Union[int</em>, <em>NoneType] = None</em>, <em>committed: bool = False</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../../_modules/events/domain/event.html#VerifyContactInformation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.domain.event.VerifyContactInformation" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#events.domain.event.Event" title="events.domain.event.Event"><code class="xref py py-class docutils literal"><span class="pre">events.domain.event.Event</span></code></a></p>
-<p>Submitter has verified their contact information.</p>
-<dl class="method">
-<dt id="events.domain.event.VerifyContactInformation.project">
-<code class="descname">project</code><span class="sig-paren">(</span><em>submission: events.domain.submission.Submission</em><span class="sig-paren">)</span> &#x2192; events.domain.submission.Submission<a class="reference internal" href="../../_modules/events/domain/event.html#VerifyContactInformation.project"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.domain.event.VerifyContactInformation.project" title="Permalink to this definition">¶</a></dt>
-<dd><p>Update <a href="#id3"><span class="problematic" id="id4">:prop:`.Submission.submitter_contact_verified`</span></a>.</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="events.domain.event.AssertAuthorship">
-<em class="property">class </em><code class="descclassname">events.domain.event.</code><code class="descname">AssertAuthorship</code><span class="sig-paren">(</span><em>creator: events.domain.agent.Agent</em>, <em>created: datetime.datetime = &lt;factory&gt;</em>, <em>proxy: typing.Union[events.domain.agent.Agent</em>, <em>NoneType] = None</em>, <em>client: typing.Union[events.domain.agent.Agent</em>, <em>NoneType] = None</em>, <em>submission_id: typing.Union[int</em>, <em>NoneType] = None</em>, <em>committed: bool = False</em>, <em>submitter_is_author: bool = True</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../../_modules/events/domain/event.html#AssertAuthorship"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.domain.event.AssertAuthorship" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#events.domain.event.Event" title="events.domain.event.Event"><code class="xref py py-class docutils literal"><span class="pre">events.domain.event.Event</span></code></a></p>
-<p>The submitting user asserts whether they are an author of the paper.</p>
-<dl class="method">
-<dt id="events.domain.event.AssertAuthorship.project">
-<code class="descname">project</code><span class="sig-paren">(</span><em>submission: events.domain.submission.Submission</em><span class="sig-paren">)</span> &#x2192; events.domain.submission.Submission<a class="reference internal" href="../../_modules/events/domain/event.html#AssertAuthorship.project"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.domain.event.AssertAuthorship.project" title="Permalink to this definition">¶</a></dt>
-<dd><p>Update the authorship flag on the submission.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="events.domain.event.AssertAuthorship.submitter_is_author">
-<code class="descname">submitter_is_author</code><em class="property"> = True</em><a class="headerlink" href="#events.domain.event.AssertAuthorship.submitter_is_author" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="events.domain.event.AcceptPolicy">
-<em class="property">class </em><code class="descclassname">events.domain.event.</code><code class="descname">AcceptPolicy</code><span class="sig-paren">(</span><em>creator: events.domain.agent.Agent</em>, <em>created: datetime.datetime</em>, <em>proxy: typing.Union[events.domain.agent.Agent</em>, <em>NoneType] = None</em>, <em>client: typing.Union[events.domain.agent.Agent</em>, <em>NoneType] = None</em>, <em>submission_id: typing.Union[int</em>, <em>NoneType] = None</em>, <em>committed: bool = False</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../../_modules/events/domain/event.html#AcceptPolicy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.domain.event.AcceptPolicy" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#events.domain.event.Event" title="events.domain.event.Event"><code class="xref py py-class docutils literal"><span class="pre">events.domain.event.Event</span></code></a></p>
-<p>The submitting user accepts the arXiv submission policy.</p>
-<dl class="method">
-<dt id="events.domain.event.AcceptPolicy.project">
-<code class="descname">project</code><span class="sig-paren">(</span><em>submission: events.domain.submission.Submission</em><span class="sig-paren">)</span> &#x2192; events.domain.submission.Submission<a class="reference internal" href="../../_modules/events/domain/event.html#AcceptPolicy.project"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.domain.event.AcceptPolicy.project" title="Permalink to this definition">¶</a></dt>
-<dd><p>Set the policy flag on the submission.</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="events.domain.event.SetPrimaryClassification">
-<em class="property">class </em><code class="descclassname">events.domain.event.</code><code class="descname">SetPrimaryClassification</code><span class="sig-paren">(</span><em>creator: events.domain.agent.Agent</em>, <em>created: datetime.datetime = &lt;factory&gt;</em>, <em>proxy: typing.Union[events.domain.agent.Agent</em>, <em>NoneType] = None</em>, <em>client: typing.Union[events.domain.agent.Agent</em>, <em>NoneType] = None</em>, <em>submission_id: typing.Union[int</em>, <em>NoneType] = None</em>, <em>committed: bool = False</em>, <em>category: typing.Union[str</em>, <em>NoneType] = None</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../../_modules/events/domain/event.html#SetPrimaryClassification"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.domain.event.SetPrimaryClassification" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#events.domain.event.Event" title="events.domain.event.Event"><code class="xref py py-class docutils literal"><span class="pre">events.domain.event.Event</span></code></a></p>
-<p>Update the primary classification of a submission.</p>
-<dl class="attribute">
-<dt id="events.domain.event.SetPrimaryClassification.category">
-<code class="descname">category</code><em class="property"> = None</em><a class="headerlink" href="#events.domain.event.SetPrimaryClassification.category" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="events.domain.event.SetPrimaryClassification.project">
-<code class="descname">project</code><span class="sig-paren">(</span><em>submission: events.domain.submission.Submission</em><span class="sig-paren">)</span> &#x2192; events.domain.submission.Submission<a class="reference internal" href="../../_modules/events/domain/event.html#SetPrimaryClassification.project"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.domain.event.SetPrimaryClassification.project" title="Permalink to this definition">¶</a></dt>
-<dd><p>Set <a href="#id5"><span class="problematic" id="id6">:prop:`.Submission.primary_classification`</span></a>.</p>
+<dt id="events.domain.event.RemoveDelegate.project">
+<code class="descname">project</code><span class="sig-paren">(</span><em>submission: events.domain.submission.Submission</em><span class="sig-paren">)</span> &#x2192; events.domain.submission.Submission<a class="reference internal" href="../../_modules/events/domain/event.html#RemoveDelegate.project"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.domain.event.RemoveDelegate.project" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remove the delegate from the submission.</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="events.domain.event.SetPrimaryClassification.validate">
-<code class="descname">validate</code><span class="sig-paren">(</span><em>submission: events.domain.submission.Submission</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../../_modules/events/domain/event.html#SetPrimaryClassification.validate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.domain.event.SetPrimaryClassification.validate" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="events.domain.event.AddSecondaryClassification">
-<em class="property">class </em><code class="descclassname">events.domain.event.</code><code class="descname">AddSecondaryClassification</code><span class="sig-paren">(</span><em>creator: events.domain.agent.Agent</em>, <em>created: datetime.datetime = &lt;factory&gt;</em>, <em>proxy: typing.Union[events.domain.agent.Agent</em>, <em>NoneType] = None</em>, <em>client: typing.Union[events.domain.agent.Agent</em>, <em>NoneType] = None</em>, <em>submission_id: typing.Union[int</em>, <em>NoneType] = None</em>, <em>committed: bool = False</em>, <em>category: typing.Union[str</em>, <em>NoneType] = None</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../../_modules/events/domain/event.html#AddSecondaryClassification"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.domain.event.AddSecondaryClassification" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#events.domain.event.Event" title="events.domain.event.Event"><code class="xref py py-class docutils literal"><span class="pre">events.domain.event.Event</span></code></a></p>
-<p>Add a secondary <a class="reference internal" href="#events.domain.submission.Classification" title="events.domain.submission.Classification"><code class="xref py py-class docutils literal"><span class="pre">Classification</span></code></a> to a submission.</p>
-<dl class="attribute">
-<dt id="events.domain.event.AddSecondaryClassification.category">
-<code class="descname">category</code><em class="property"> = None</em><a class="headerlink" href="#events.domain.event.AddSecondaryClassification.category" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="events.domain.event.AddSecondaryClassification.project">
-<code class="descname">project</code><span class="sig-paren">(</span><em>submission: events.domain.submission.Submission</em><span class="sig-paren">)</span> &#x2192; events.domain.submission.Submission<a class="reference internal" href="../../_modules/events/domain/event.html#AddSecondaryClassification.project"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.domain.event.AddSecondaryClassification.project" title="Permalink to this definition">¶</a></dt>
-<dd><p>Append to <a href="#id7"><span class="problematic" id="id8">:prop:`.Submission.secondary_classification`</span></a>.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="events.domain.event.AddSecondaryClassification.validate">
-<code class="descname">validate</code><span class="sig-paren">(</span><em>submission: events.domain.submission.Submission</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../../_modules/events/domain/event.html#AddSecondaryClassification.validate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.domain.event.AddSecondaryClassification.validate" title="Permalink to this definition">¶</a></dt>
-<dd><p>All three fields must be set.</p>
+<dt id="events.domain.event.RemoveDelegate.validate">
+<code class="descname">validate</code><span class="sig-paren">(</span><em>submission: events.domain.submission.Submission</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../../_modules/events/domain/event.html#RemoveDelegate.validate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.domain.event.RemoveDelegate.validate" title="Permalink to this definition">¶</a></dt>
+<dd><p>The event creator must be the owner of the submission.</p>
 </dd></dl>
 
 </dd></dl>
@@ -446,7 +483,20 @@ submission).</li>
 <dl class="method">
 <dt id="events.domain.event.RemoveSecondaryClassification.validate">
 <code class="descname">validate</code><span class="sig-paren">(</span><em>submission: events.domain.submission.Submission</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../../_modules/events/domain/event.html#RemoveSecondaryClassification.validate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.domain.event.RemoveSecondaryClassification.validate" title="Permalink to this definition">¶</a></dt>
-<dd><p>All three fields must be set.</p>
+<dd><p>Validate the secondary classification category to remove.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="events.domain.event.RemoveSubmission">
+<em class="property">class </em><code class="descclassname">events.domain.event.</code><code class="descname">RemoveSubmission</code><span class="sig-paren">(</span><em>creator: events.domain.agent.Agent</em>, <em>created: datetime.datetime = &lt;factory&gt;</em>, <em>proxy: typing.Union[events.domain.agent.Agent</em>, <em>NoneType] = None</em>, <em>client: typing.Union[events.domain.agent.Agent</em>, <em>NoneType] = None</em>, <em>submission_id: typing.Union[int</em>, <em>NoneType] = None</em>, <em>committed: bool = False</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../../_modules/events/domain/event.html#RemoveSubmission"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.domain.event.RemoveSubmission" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#events.domain.event.Event" title="events.domain.event.Event"><code class="xref py py-class docutils literal"><span class="pre">events.domain.event.Event</span></code></a></p>
+<p>Removal of a <a class="reference internal" href="#events.domain.submission.Submission" title="events.domain.submission.Submission"><code class="xref py py-class docutils literal"><span class="pre">events.domain.submission.Submission</span></code></a>.</p>
+<dl class="method">
+<dt id="events.domain.event.RemoveSubmission.project">
+<code class="descname">project</code><span class="sig-paren">(</span><em>submission: events.domain.submission.Submission</em><span class="sig-paren">)</span> &#x2192; events.domain.submission.Submission<a class="reference internal" href="../../_modules/events/domain/event.html#RemoveSubmission.project"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.domain.event.RemoveSubmission.project" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remove the <a class="reference internal" href="#events.domain.submission.Submission" title="events.domain.submission.Submission"><code class="xref py py-class docutils literal"><span class="pre">Submission</span></code></a> from the system (set inactive).</p>
 </dd></dl>
 
 </dd></dl>
@@ -475,6 +525,49 @@ submission).</li>
 </dd></dl>
 
 <dl class="class">
+<dt id="events.domain.event.SetPrimaryClassification">
+<em class="property">class </em><code class="descclassname">events.domain.event.</code><code class="descname">SetPrimaryClassification</code><span class="sig-paren">(</span><em>creator: events.domain.agent.Agent</em>, <em>created: datetime.datetime = &lt;factory&gt;</em>, <em>proxy: typing.Union[events.domain.agent.Agent</em>, <em>NoneType] = None</em>, <em>client: typing.Union[events.domain.agent.Agent</em>, <em>NoneType] = None</em>, <em>submission_id: typing.Union[int</em>, <em>NoneType] = None</em>, <em>committed: bool = False</em>, <em>category: typing.Union[str</em>, <em>NoneType] = None</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../../_modules/events/domain/event.html#SetPrimaryClassification"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.domain.event.SetPrimaryClassification" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#events.domain.event.Event" title="events.domain.event.Event"><code class="xref py py-class docutils literal"><span class="pre">events.domain.event.Event</span></code></a></p>
+<p>Update the primary classification of a submission.</p>
+<dl class="attribute">
+<dt id="events.domain.event.SetPrimaryClassification.category">
+<code class="descname">category</code><em class="property"> = None</em><a class="headerlink" href="#events.domain.event.SetPrimaryClassification.category" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="events.domain.event.SetPrimaryClassification.project">
+<code class="descname">project</code><span class="sig-paren">(</span><em>submission: events.domain.submission.Submission</em><span class="sig-paren">)</span> &#x2192; events.domain.submission.Submission<a class="reference internal" href="../../_modules/events/domain/event.html#SetPrimaryClassification.project"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.domain.event.SetPrimaryClassification.project" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set <a href="#id13"><span class="problematic" id="id14">:prop:`.Submission.primary_classification`</span></a>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="events.domain.event.SetPrimaryClassification.validate">
+<code class="descname">validate</code><span class="sig-paren">(</span><em>submission: events.domain.submission.Submission</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../../_modules/events/domain/event.html#SetPrimaryClassification.validate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.domain.event.SetPrimaryClassification.validate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Validate the primary classification category.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="events.domain.event.UpdateAuthors">
+<em class="property">class </em><code class="descclassname">events.domain.event.</code><code class="descname">UpdateAuthors</code><span class="sig-paren">(</span><em>creator: events.domain.agent.Agent</em>, <em>created: datetime.datetime = &lt;factory&gt;</em>, <em>proxy: typing.Union[events.domain.agent.Agent</em>, <em>NoneType] = None</em>, <em>client: typing.Union[events.domain.agent.Agent</em>, <em>NoneType] = None</em>, <em>submission_id: typing.Union[int</em>, <em>NoneType] = None</em>, <em>committed: bool = False</em>, <em>authors: typing.List[events.domain.submission.Author] = &lt;factory&gt;</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../../_modules/events/domain/event.html#UpdateAuthors"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.domain.event.UpdateAuthors" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#events.domain.event.Event" title="events.domain.event.Event"><code class="xref py py-class docutils literal"><span class="pre">events.domain.event.Event</span></code></a></p>
+<p>Update the authors on a <a class="reference internal" href="#events.domain.submission.Submission" title="events.domain.submission.Submission"><code class="xref py py-class docutils literal"><span class="pre">Submission</span></code></a>.</p>
+<dl class="classmethod">
+<dt id="events.domain.event.UpdateAuthors.from_dict">
+<em class="property">classmethod </em><code class="descname">from_dict</code><span class="sig-paren">(</span><em>**data</em><span class="sig-paren">)</span> &#x2192; events.domain.submission.Submission<a class="reference internal" href="../../_modules/events/domain/event.html#UpdateAuthors.from_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.domain.event.UpdateAuthors.from_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Override the default <code class="docutils literal"><span class="pre">from_dict</span></code> constructor to handle authors.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="events.domain.event.UpdateAuthors.project">
+<code class="descname">project</code><span class="sig-paren">(</span><em>submission: events.domain.submission.Submission</em><span class="sig-paren">)</span> &#x2192; events.domain.submission.Submission<a class="reference internal" href="../../_modules/events/domain/event.html#UpdateAuthors.project"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.domain.event.UpdateAuthors.project" title="Permalink to this definition">¶</a></dt>
+<dd><p>Replace <a href="#id15"><span class="problematic" id="id16">:prop:`.Submission.metadata.authors`</span></a>.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
 <dt id="events.domain.event.UpdateMetadata">
 <em class="property">class </em><code class="descclassname">events.domain.event.</code><code class="descname">UpdateMetadata</code><span class="sig-paren">(</span><em>creator: events.domain.agent.Agent</em>, <em>created: datetime.datetime = &lt;factory&gt;</em>, <em>proxy: typing.Union[events.domain.agent.Agent</em>, <em>NoneType] = None</em>, <em>client: typing.Union[events.domain.agent.Agent</em>, <em>NoneType] = None</em>, <em>submission_id: typing.Union[int</em>, <em>NoneType] = None</em>, <em>committed: bool = False</em>, <em>metadata: typing.List[typing.Tuple[str</em>, <em>typing.Any]] = &lt;factory&gt;</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../../_modules/events/domain/event.html#UpdateMetadata"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.domain.event.UpdateMetadata" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#events.domain.event.Event" title="events.domain.event.Event"><code class="xref py py-class docutils literal"><span class="pre">events.domain.event.Event</span></code></a></p>
@@ -490,183 +583,46 @@ submission).</li>
 <dd><p>Update metadata on a <a class="reference internal" href="#events.domain.submission.Submission" title="events.domain.submission.Submission"><code class="xref py py-class docutils literal"><span class="pre">Submission</span></code></a>.</p>
 </dd></dl>
 
-<dl class="attribute">
-<dt id="events.domain.event.UpdateMetadata.schema">
-<code class="descname">schema</code><em class="property"> = 'schema/resources/events/update_metadata.json'</em><a class="headerlink" href="#events.domain.event.UpdateMetadata.schema" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
 <dl class="method">
 <dt id="events.domain.event.UpdateMetadata.validate">
 <code class="descname">validate</code><span class="sig-paren">(</span><em>submission: events.domain.submission.Submission</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../../_modules/events/domain/event.html#UpdateMetadata.validate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.domain.event.UpdateMetadata.validate" title="Permalink to this definition">¶</a></dt>
-<dd><p>The <a href="#id13"><span class="problematic" id="id14">:prop:`.metadata`</span></a> should be a list of tuples.</p>
+<dd><p>The <a href="#id17"><span class="problematic" id="id18">:prop:`.metadata`</span></a> should be a list of tuples.</p>
 </dd></dl>
 
 </dd></dl>
 
 <dl class="class">
-<dt id="events.domain.event.UpdateAuthors">
-<em class="property">class </em><code class="descclassname">events.domain.event.</code><code class="descname">UpdateAuthors</code><span class="sig-paren">(</span><em>creator: events.domain.agent.Agent</em>, <em>created: datetime.datetime = &lt;factory&gt;</em>, <em>proxy: typing.Union[events.domain.agent.Agent</em>, <em>NoneType] = None</em>, <em>client: typing.Union[events.domain.agent.Agent</em>, <em>NoneType] = None</em>, <em>submission_id: typing.Union[int</em>, <em>NoneType] = None</em>, <em>committed: bool = False</em>, <em>authors: typing.List[events.domain.submission.Author] = &lt;factory&gt;</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../../_modules/events/domain/event.html#UpdateAuthors"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.domain.event.UpdateAuthors" title="Permalink to this definition">¶</a></dt>
+<dt id="events.domain.event.VerifyContactInformation">
+<em class="property">class </em><code class="descclassname">events.domain.event.</code><code class="descname">VerifyContactInformation</code><span class="sig-paren">(</span><em>creator: events.domain.agent.Agent</em>, <em>created: datetime.datetime = &lt;factory&gt;</em>, <em>proxy: typing.Union[events.domain.agent.Agent</em>, <em>NoneType] = None</em>, <em>client: typing.Union[events.domain.agent.Agent</em>, <em>NoneType] = None</em>, <em>submission_id: typing.Union[int</em>, <em>NoneType] = None</em>, <em>committed: bool = False</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../../_modules/events/domain/event.html#VerifyContactInformation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.domain.event.VerifyContactInformation" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#events.domain.event.Event" title="events.domain.event.Event"><code class="xref py py-class docutils literal"><span class="pre">events.domain.event.Event</span></code></a></p>
-<p>Update the authors on a <a class="reference internal" href="#events.domain.submission.Submission" title="events.domain.submission.Submission"><code class="xref py py-class docutils literal"><span class="pre">Submission</span></code></a>.</p>
+<p>Submitter has verified their contact information.</p>
 <dl class="method">
-<dt id="events.domain.event.UpdateAuthors.project">
-<code class="descname">project</code><span class="sig-paren">(</span><em>submission: events.domain.submission.Submission</em><span class="sig-paren">)</span> &#x2192; events.domain.submission.Submission<a class="reference internal" href="../../_modules/events/domain/event.html#UpdateAuthors.project"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.domain.event.UpdateAuthors.project" title="Permalink to this definition">¶</a></dt>
-<dd><p>Replace <a href="#id15"><span class="problematic" id="id16">:prop:`.Submission.metadata.authors`</span></a>.</p>
+<dt id="events.domain.event.VerifyContactInformation.project">
+<code class="descname">project</code><span class="sig-paren">(</span><em>submission: events.domain.submission.Submission</em><span class="sig-paren">)</span> &#x2192; events.domain.submission.Submission<a class="reference internal" href="../../_modules/events/domain/event.html#VerifyContactInformation.project"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.domain.event.VerifyContactInformation.project" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update <a href="#id19"><span class="problematic" id="id20">:prop:`.Submission.submitter_contact_verified`</span></a>.</p>
 </dd></dl>
 
 </dd></dl>
 
-<dl class="class">
-<dt id="events.domain.event.AttachSourceContent">
-<em class="property">class </em><code class="descclassname">events.domain.event.</code><code class="descname">AttachSourceContent</code><span class="sig-paren">(</span><em>creator: events.domain.agent.Agent</em>, <em>created: datetime.datetime = &lt;factory&gt;</em>, <em>proxy: typing.Union[events.domain.agent.Agent</em>, <em>NoneType] = None</em>, <em>client: typing.Union[events.domain.agent.Agent</em>, <em>NoneType] = None</em>, <em>submission_id: typing.Union[int</em>, <em>NoneType] = None</em>, <em>committed: bool = False</em>, <em>location: str = &lt;factory&gt;</em>, <em>format: str = &lt;factory&gt;</em>, <em>checksum: str = &lt;factory&gt;</em>, <em>identifier: typing.Union[int</em>, <em>NoneType] = None</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../../_modules/events/domain/event.html#AttachSourceContent"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.domain.event.AttachSourceContent" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#events.domain.event.Event" title="events.domain.event.Event"><code class="xref py py-class docutils literal"><span class="pre">events.domain.event.Event</span></code></a></p>
-<p>Add metadata about a source package to a submission.</p>
-<dl class="attribute">
-<dt id="events.domain.event.AttachSourceContent.ALLOWED_FORMATS">
-<code class="descname">ALLOWED_FORMATS</code><em class="property"> = ['application/tar+gzip', 'application/tar', 'application/zip']</em><a class="headerlink" href="#events.domain.event.AttachSourceContent.ALLOWED_FORMATS" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="events.domain.event.AttachSourceContent.identifier">
-<code class="descname">identifier</code><em class="property"> = None</em><a class="headerlink" href="#events.domain.event.AttachSourceContent.identifier" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="events.domain.event.AttachSourceContent.project">
-<code class="descname">project</code><span class="sig-paren">(</span><em>submission: events.domain.submission.Submission</em><span class="sig-paren">)</span> &#x2192; events.domain.submission.Submission<a class="reference internal" href="../../_modules/events/domain/event.html#AttachSourceContent.project"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.domain.event.AttachSourceContent.project" title="Permalink to this definition">¶</a></dt>
-<dd><p>Replace <a class="reference internal" href="#events.domain.submission.SubmissionContent" title="events.domain.submission.SubmissionContent"><code class="xref py py-class docutils literal"><span class="pre">SubmissionContent</span></code></a> metadata on the submission.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="events.domain.event.AttachSourceContent.validate">
-<code class="descname">validate</code><span class="sig-paren">(</span><em>submission: events.domain.submission.Submission</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../../_modules/events/domain/event.html#AttachSourceContent.validate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.domain.event.AttachSourceContent.validate" title="Permalink to this definition">¶</a></dt>
-<dd><p>Validate data for <a class="reference internal" href="#events.domain.submission.SubmissionContent" title="events.domain.submission.SubmissionContent"><code class="xref py py-class docutils literal"><span class="pre">SubmissionContent</span></code></a>.</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="events.domain.event.FinalizeSubmission">
-<em class="property">class </em><code class="descclassname">events.domain.event.</code><code class="descname">FinalizeSubmission</code><span class="sig-paren">(</span><em>creator: events.domain.agent.Agent</em>, <em>created: datetime.datetime</em>, <em>proxy: typing.Union[events.domain.agent.Agent</em>, <em>NoneType] = None</em>, <em>client: typing.Union[events.domain.agent.Agent</em>, <em>NoneType] = None</em>, <em>submission_id: typing.Union[int</em>, <em>NoneType] = None</em>, <em>committed: bool = False</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../../_modules/events/domain/event.html#FinalizeSubmission"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.domain.event.FinalizeSubmission" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#events.domain.event.Event" title="events.domain.event.Event"><code class="xref py py-class docutils literal"><span class="pre">events.domain.event.Event</span></code></a></p>
-<p>Send the submission to the queue for announcement.</p>
-<dl class="method">
-<dt id="events.domain.event.FinalizeSubmission.project">
-<code class="descname">project</code><span class="sig-paren">(</span><em>submission: events.domain.submission.Submission</em><span class="sig-paren">)</span> &#x2192; events.domain.submission.Submission<a class="reference internal" href="../../_modules/events/domain/event.html#FinalizeSubmission.project"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.domain.event.FinalizeSubmission.project" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="events.domain.event.FinalizeSubmission.validate">
-<code class="descname">validate</code><span class="sig-paren">(</span><em>submission: events.domain.submission.Submission</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../../_modules/events/domain/event.html#FinalizeSubmission.validate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.domain.event.FinalizeSubmission.validate" title="Permalink to this definition">¶</a></dt>
-<dd><p>Ensure that all required data/steps are complete.</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="events.domain.event.CreateComment">
-<em class="property">class </em><code class="descclassname">events.domain.event.</code><code class="descname">CreateComment</code><span class="sig-paren">(</span><em>creator: events.domain.agent.Agent</em>, <em>created: datetime.datetime = &lt;factory&gt;</em>, <em>proxy: typing.Union[events.domain.agent.Agent</em>, <em>NoneType] = None</em>, <em>client: typing.Union[events.domain.agent.Agent</em>, <em>NoneType] = None</em>, <em>submission_id: typing.Union[int</em>, <em>NoneType] = None</em>, <em>committed: bool = False</em>, <em>body: str = &lt;factory&gt;</em>, <em>scope: str = 'private'</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../../_modules/events/domain/event.html#CreateComment"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.domain.event.CreateComment" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#events.domain.event.Event" title="events.domain.event.Event"><code class="xref py py-class docutils literal"><span class="pre">events.domain.event.Event</span></code></a></p>
-<p>Creation of a <a class="reference internal" href="#events.domain.submission.Comment" title="events.domain.submission.Comment"><code class="xref py py-class docutils literal"><span class="pre">Comment</span></code></a> on a <a class="reference internal" href="#events.domain.submission.Submission" title="events.domain.submission.Submission"><code class="xref py py-class docutils literal"><span class="pre">Submission</span></code></a>.</p>
-<dl class="method">
-<dt id="events.domain.event.CreateComment.project">
-<code class="descname">project</code><span class="sig-paren">(</span><em>submission: events.domain.submission.Submission</em><span class="sig-paren">)</span> &#x2192; events.domain.submission.Submission<a class="reference internal" href="../../_modules/events/domain/event.html#CreateComment.project"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.domain.event.CreateComment.project" title="Permalink to this definition">¶</a></dt>
-<dd><p>Create a new <a class="reference internal" href="#events.domain.submission.Comment" title="events.domain.submission.Comment"><code class="xref py py-class docutils literal"><span class="pre">Comment</span></code></a> and attach it to the submission.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="events.domain.event.CreateComment.read_scope">
-<code class="descname">read_scope</code><em class="property"> = 'submission:moderate'</em><a class="headerlink" href="#events.domain.event.CreateComment.read_scope" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="events.domain.event.CreateComment.scope">
-<code class="descname">scope</code><em class="property"> = 'private'</em><a class="headerlink" href="#events.domain.event.CreateComment.scope" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="events.domain.event.CreateComment.validate">
-<code class="descname">validate</code><span class="sig-paren">(</span><em>submission: events.domain.submission.Submission</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../../_modules/events/domain/event.html#CreateComment.validate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.domain.event.CreateComment.validate" title="Permalink to this definition">¶</a></dt>
-<dd><p>The <a href="#id17"><span class="problematic" id="id18">:prop:`.body`</span></a> should be set.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="events.domain.event.CreateComment.write_scope">
-<code class="descname">write_scope</code><em class="property"> = 'submission:moderate'</em><a class="headerlink" href="#events.domain.event.CreateComment.write_scope" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="events.domain.event.DeleteComment">
-<em class="property">class </em><code class="descclassname">events.domain.event.</code><code class="descname">DeleteComment</code><span class="sig-paren">(</span><em>creator: events.domain.agent.Agent</em>, <em>created: datetime.datetime = &lt;factory&gt;</em>, <em>proxy: typing.Union[events.domain.agent.Agent</em>, <em>NoneType] = None</em>, <em>client: typing.Union[events.domain.agent.Agent</em>, <em>NoneType] = None</em>, <em>submission_id: typing.Union[int</em>, <em>NoneType] = None</em>, <em>committed: bool = False</em>, <em>comment_id: str = &lt;factory&gt;</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../../_modules/events/domain/event.html#DeleteComment"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.domain.event.DeleteComment" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#events.domain.event.Event" title="events.domain.event.Event"><code class="xref py py-class docutils literal"><span class="pre">events.domain.event.Event</span></code></a></p>
-<p>Deletion of a <a class="reference internal" href="#events.domain.submission.Comment" title="events.domain.submission.Comment"><code class="xref py py-class docutils literal"><span class="pre">Comment</span></code></a> on a <a class="reference internal" href="#events.domain.submission.Submission" title="events.domain.submission.Submission"><code class="xref py py-class docutils literal"><span class="pre">Submission</span></code></a>.</p>
-<dl class="method">
-<dt id="events.domain.event.DeleteComment.project">
-<code class="descname">project</code><span class="sig-paren">(</span><em>submission: events.domain.submission.Submission</em><span class="sig-paren">)</span> &#x2192; events.domain.submission.Submission<a class="reference internal" href="../../_modules/events/domain/event.html#DeleteComment.project"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.domain.event.DeleteComment.project" title="Permalink to this definition">¶</a></dt>
-<dd><p>Remove the comment from the submission.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="events.domain.event.DeleteComment.read_scope">
-<code class="descname">read_scope</code><em class="property"> = 'submission:moderate'</em><a class="headerlink" href="#events.domain.event.DeleteComment.read_scope" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="events.domain.event.DeleteComment.validate">
-<code class="descname">validate</code><span class="sig-paren">(</span><em>submission: events.domain.submission.Submission</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../../_modules/events/domain/event.html#DeleteComment.validate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.domain.event.DeleteComment.validate" title="Permalink to this definition">¶</a></dt>
-<dd><p>The <a href="#id19"><span class="problematic" id="id20">:prop:`.comment_id`</span></a> must present on the submission.</p>
-</dd></dl>
-
-<dl class="attribute">
-<dt id="events.domain.event.DeleteComment.write_scope">
-<code class="descname">write_scope</code><em class="property"> = 'submission:moderate'</em><a class="headerlink" href="#events.domain.event.DeleteComment.write_scope" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="events.domain.event.AddDelegate">
-<em class="property">class </em><code class="descclassname">events.domain.event.</code><code class="descname">AddDelegate</code><span class="sig-paren">(</span><em>creator: events.domain.agent.Agent</em>, <em>created: datetime.datetime = &lt;factory&gt;</em>, <em>proxy: typing.Union[events.domain.agent.Agent</em>, <em>NoneType] = None</em>, <em>client: typing.Union[events.domain.agent.Agent</em>, <em>NoneType] = None</em>, <em>submission_id: typing.Union[int</em>, <em>NoneType] = None</em>, <em>committed: bool = False</em>, <em>delegate: typing.Union[events.domain.agent.Agent</em>, <em>NoneType] = None</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../../_modules/events/domain/event.html#AddDelegate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.domain.event.AddDelegate" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#events.domain.event.Event" title="events.domain.event.Event"><code class="xref py py-class docutils literal"><span class="pre">events.domain.event.Event</span></code></a></p>
-<p>Owner delegates authority to another agent.</p>
-<dl class="attribute">
-<dt id="events.domain.event.AddDelegate.delegate">
-<code class="descname">delegate</code><em class="property"> = None</em><a class="headerlink" href="#events.domain.event.AddDelegate.delegate" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
-<dt id="events.domain.event.AddDelegate.project">
-<code class="descname">project</code><span class="sig-paren">(</span><em>submission: events.domain.submission.Submission</em><span class="sig-paren">)</span> &#x2192; events.domain.submission.Submission<a class="reference internal" href="../../_modules/events/domain/event.html#AddDelegate.project"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.domain.event.AddDelegate.project" title="Permalink to this definition">¶</a></dt>
-<dd><p>Add the delegate to the submission.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="events.domain.event.AddDelegate.validate">
-<code class="descname">validate</code><span class="sig-paren">(</span><em>submission: events.domain.submission.Submission</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../../_modules/events/domain/event.html#AddDelegate.validate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.domain.event.AddDelegate.validate" title="Permalink to this definition">¶</a></dt>
-<dd><p>The event creator must be the owner of the submission.</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="class">
-<dt id="events.domain.event.RemoveDelegate">
-<em class="property">class </em><code class="descclassname">events.domain.event.</code><code class="descname">RemoveDelegate</code><span class="sig-paren">(</span><em>creator: events.domain.agent.Agent</em>, <em>created: datetime.datetime = &lt;factory&gt;</em>, <em>proxy: typing.Union[events.domain.agent.Agent</em>, <em>NoneType] = None</em>, <em>client: typing.Union[events.domain.agent.Agent</em>, <em>NoneType] = None</em>, <em>submission_id: typing.Union[int</em>, <em>NoneType] = None</em>, <em>committed: bool = False</em>, <em>delegation_id: str = &lt;factory&gt;</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../../_modules/events/domain/event.html#RemoveDelegate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.domain.event.RemoveDelegate" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#events.domain.event.Event" title="events.domain.event.Event"><code class="xref py py-class docutils literal"><span class="pre">events.domain.event.Event</span></code></a></p>
-<p>Owner revokes authority from another agent.</p>
-<dl class="method">
-<dt id="events.domain.event.RemoveDelegate.project">
-<code class="descname">project</code><span class="sig-paren">(</span><em>submission: events.domain.submission.Submission</em><span class="sig-paren">)</span> &#x2192; events.domain.submission.Submission<a class="reference internal" href="../../_modules/events/domain/event.html#RemoveDelegate.project"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.domain.event.RemoveDelegate.project" title="Permalink to this definition">¶</a></dt>
-<dd><p>Remove the delegate from the submission.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="events.domain.event.RemoveDelegate.validate">
-<code class="descname">validate</code><span class="sig-paren">(</span><em>submission: events.domain.submission.Submission</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../../_modules/events/domain/event.html#RemoveDelegate.validate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.domain.event.RemoveDelegate.validate" title="Permalink to this definition">¶</a></dt>
-<dd><p>The event creator must be the owner of the submission.</p>
-</dd></dl>
-
+<dl class="function">
+<dt id="events.domain.event.event_factory">
+<code class="descclassname">events.domain.event.</code><code class="descname">event_factory</code><span class="sig-paren">(</span><em>event_type: str</em>, <em>**data</em><span class="sig-paren">)</span> &#x2192; events.domain.event.Event<a class="reference internal" href="../../_modules/events/domain/event.html#event_factory"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.domain.event.event_factory" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convenience factory for generating :class:<a href="#id21"><span class="problematic" id="id22">`</span></a>.Event`s.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>event_type</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a>) – Should be the name of a <a class="reference internal" href="#events.domain.event.Event" title="events.domain.event.Event"><code class="xref py py-class docutils literal"><span class="pre">Event</span></code></a> subclass.</li>
+<li><strong>data</strong> (<em>kwargs</em>) – Keyword parameters passed to the event constructor.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><a class="reference internal" href="#events.domain.event.Event" title="events.domain.event.Event"><code class="xref py py-class docutils literal"><span class="pre">Event</span></code></a> – An instance of an <a class="reference internal" href="#events.domain.event.Event" title="events.domain.event.Event"><code class="xref py py-class docutils literal"><span class="pre">Event</span></code></a> subclass.</p>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </div>
@@ -988,7 +944,7 @@ substantially in the short term.</p>
 
 <dl class="class">
 <dt id="events.domain.submission.SubmissionContent">
-<em class="property">class </em><code class="descclassname">events.domain.submission.</code><code class="descname">SubmissionContent</code><span class="sig-paren">(</span><em>location: str</em>, <em>format: str</em>, <em>checksum: str</em>, <em>identifier: int</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../../_modules/events/domain/submission.html#SubmissionContent"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.domain.submission.SubmissionContent" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">events.domain.submission.</code><code class="descname">SubmissionContent</code><span class="sig-paren">(</span><em>location: str</em>, <em>format: str</em>, <em>mime_type: str</em>, <em>size: str</em>, <em>checksum: str</em>, <em>identifier: int</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../../_modules/events/domain/submission.html#SubmissionContent"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.domain.submission.SubmissionContent" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.6/library/functions.html#object" title="(in Python v3.6)"><code class="xref py py-class docutils literal"><span class="pre">object</span></code></a></p>
 <p>Metadata about the submission source package and compiled products.</p>
 </dd></dl>
