@@ -132,19 +132,6 @@ class Event:
                                 self.creator.agent_identifier.encode('utf-8')))
         return h.hexdigest()
 
-    def valid(self, submission: Submission) -> bool:
-        """Determine whether this event is valid for the submission."""
-        if submission and submission.published:
-            raise InvalidEvent(self, "Cannot alter a published submission")
-
-        if not hasattr(self, 'validate'):
-            return True
-        try:
-            self.validate(submission)
-        except InvalidEvent:
-            return False
-        return True
-
     def apply(self, submission: Optional[Submission] = None) -> Submission:
         """Apply the projection for this :class:`.Event` instance."""
         if submission:
@@ -173,6 +160,10 @@ class Event:
 class CreateSubmission(Event):
     """Creation of a new :class:`events.domain.submission.Submission`."""
 
+    def validate(self, *args, **kwargs) -> None:
+        """Validate creation of a submission."""
+        return
+
     def project(self) -> Submission:
         """Create a new :class:`.Submission`."""
         return Submission(creator=self.creator, created=self.created,
@@ -184,6 +175,10 @@ class CreateSubmission(Event):
 class RemoveSubmission(Event):
     """Removal of a :class:`events.domain.submission.Submission`."""
 
+    def validate(self, submission: Submission) -> None:
+        """Validate removal of a submission."""
+        return
+
     def project(self, submission: Submission) -> Submission:
         """Remove the :class:`.Submission` from the system (set inactive)."""
         submission.active = False
@@ -193,6 +188,10 @@ class RemoveSubmission(Event):
 @dataclass(init=False)
 class VerifyContactInformation(Event):
     """Submitter has verified their contact information."""
+
+    def validate(self, submission: Submission) -> None:
+        """Cannot apply to a finalized submission."""
+        submission_is_not_finalized(self, submission)
 
     def project(self, submission: Submission) -> Submission:
         """Update :prop:`.Submission.submitter_contact_verified`."""
@@ -206,6 +205,10 @@ class AssertAuthorship(Event):
 
     submitter_is_author: bool = True
 
+    def validate(self, submission: Submission) -> None:
+        """Cannot apply to a finalized submission."""
+        submission_is_not_finalized(self, submission)
+
     def project(self, submission: Submission) -> Submission:
         """Update the authorship flag on the submission."""
         submission.submitter_is_author = self.submitter_is_author
@@ -215,6 +218,10 @@ class AssertAuthorship(Event):
 @dataclass
 class AcceptPolicy(Event):
     """The submitting user accepts the arXiv submission policy."""
+
+    def validate(self, submission: Submission) -> None:
+        """Cannot apply to a finalized submission."""
+        submission_is_not_finalized(self, submission)
 
     def project(self, submission: Submission) -> Submission:
         """Set the policy flag on the submission."""
@@ -232,6 +239,7 @@ class SetPrimaryClassification(Event):
         """Validate the primary classification category."""
         self._must_be_a_valid_category(submission)
         self._primary_cannot_be_secondary(submission)
+        submission_is_not_finalized(self, submission)
 
     def _must_be_a_valid_category(self, submission: Submission) -> None:
         """Valid arXiv categories are defined in :mod:`arxiv.taxonomy`."""
@@ -264,6 +272,7 @@ class AddSecondaryClassification(Event):
         self._must_be_a_valid_category(submission)
         self._primary_cannot_be_secondary(submission)
         self._must_not_already_be_present(submission)
+        submission_is_not_finalized(self, submission)
 
     def project(self, submission: Submission) -> Submission:
         """Add a :class:`.Classification` as a secondary classification."""
@@ -304,6 +313,7 @@ class RemoveSecondaryClassification(Event):
         """Validate the secondary classification category to remove."""
         self._must_be_a_valid_category(submission)
         self._must_already_be_present(submission)
+        submission_is_not_finalized(self, submission)
 
     def project(self, submission: Submission) -> Submission:
         """Remove from :prop:`.Submission.secondary_classification`."""
@@ -332,6 +342,10 @@ class SelectLicense(Event):
     license_name: Optional[str] = field(default=None)
     license_uri: Optional[str] = field(default=None)
 
+    def validate(self, submission: Submission) -> None:
+        """Validate the selected license."""
+        submission_is_not_finalized(self, submission)
+
     def project(self, submission: Submission) -> Submission:
         """Set :prop:`.Submission.license`."""
         submission.license = License(
@@ -356,6 +370,7 @@ class UpdateMetadata(Event):
     # TODO: implement more specific validation here.
     def validate(self, submission: Submission) -> None:
         """The :prop:`.metadata` should be a list of tuples."""
+        submission_is_not_finalized(self, submission)
         try:
             assert len(self.metadata) >= 1
             assert type(self.metadata[0]) in [tuple, list]
@@ -376,6 +391,10 @@ class UpdateAuthors(Event):
     """Update the authors on a :class:`.Submission`."""
 
     authors: List[Author] = field(default_factory=list)
+
+    def validate(self, submission: Submission) -> None:
+        """May not apply to a finalized submission."""
+        submission_is_not_finalized(self, submission)
 
     def project(self, submission: Submission) -> Submission:
         """Replace :prop:`.Submission.metadata.authors`."""
@@ -412,6 +431,7 @@ class AttachSourceContent(Event):
 
     def validate(self, submission: Submission) -> None:
         """Validate data for :class:`.SubmissionContent`."""
+        submission_is_not_finalized(self, submission)
         try:
             parsed = urlparse(self.location)
         except ValueError as e:
@@ -443,33 +463,57 @@ class AttachSourceContent(Event):
 class FinalizeSubmission(Event):
     """Send the submission to the queue for announcement."""
 
+    REQUIRED = [
+        'creator', 'primary_classification', 'submitter_contact_verified',
+        'submitter_accepts_policy', 'license', 'source_content', 'metadata',
+    ]
+    REQUIRED_METADATA = ['title', 'abstract', 'authors']
+
     def validate(self, submission: Submission) -> None:
         """Ensure that all required data/steps are complete."""
         if submission.finalized:
             raise InvalidEvent(self, "Submission already finalized")
         if not submission.active:
             raise InvalidEvent(self, "Submision must be active")
-
-        try:
-            assert submission.creator is not None
-            assert submission.primary_classification is not None
-            assert submission.metadata.title is not None
-            assert submission.metadata.abstract is not None
-            assert len(submission.metadata.authors) > 0
-            assert submission.submitter_contact_verified
-            assert submission.submitter_accepts_policy
-            assert submission.license is not None
-            assert submission.source_content is not None
-        except AssertionError as e:
-            raise InvalidEvent(self, "Submission missing required data") from e
+        self._required_fields_are_complete(submission)
 
     def project(self, submission: Submission) -> Submission:
         """Set :prop:`Submission.finalized`."""
         submission.finalized = True
         return submission
 
+    def _required_fields_are_complete(self, submission: Submission) -> None:
+        """Verify that all required fields are complete."""
+        for key in self.REQUIRED:
+            if not getattr(submission, key):
+                raise InvalidEvent(self, f"Missing {key}")
+        for key in self.REQUIRED_METADATA:
+            if not getattr(submission.metadata, key):
+                raise InvalidEvent(self, f"Missing {key}")
+
+
+@dataclass
+class UnFinalizeSubmission(Event):
+    """Withdraw the submission from the queue for announcement."""
+
+    def validate(self, submission: Submission) -> None:
+        """Validate the unfinalize action."""
+        self._must_be_finalized(submission)
+
+    def _must_be_finalized(self, submission: Submission) -> None:
+        """May only unfinalize a finalized submission."""
+        if not submission.finalized:
+            raise InvalidEvent(self, "Submission is not finalized")
+
+    def project(self, submission: Submission) -> Submission:
+        """Set :prop:`Submission.finalized`."""
+        submission.finalized = False
+        submission.status = Submission.WORKING
+        return submission
+
 
 # Moderation-related events.
+
 
 @dataclass
 class CreateComment(Event):
@@ -623,3 +667,25 @@ def event_factory(event_type: str, **data) -> Event:
             return klass.from_dict(**data)
         return EVENT_TYPES[event_type](**data)
     raise RuntimeError('Unknown event type: %s' % event_type)
+
+
+# General-purpose validators go down here.
+# TODO: should these be in a sub-module? This file is getting big.
+
+def submission_is_not_finalized(event: Event, submission: Submission) -> None:
+    """
+    Verify that the submission is not finalized.
+
+    Parameters
+    ----------
+    event : :class:`.Event`
+    submission : :class:`.Submission`
+
+    Raises
+    ------
+    :class:`.InvalidEvent`
+        Raised if the submission is finalized.
+
+    """
+    if submission.finalized:
+        raise InvalidEvent(event, "Cannot apply to a finalized submission")

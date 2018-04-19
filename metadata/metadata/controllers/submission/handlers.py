@@ -102,6 +102,27 @@ def handle_submitter_accepts_policy(data: dict, agents: dict) \
     return tuple()
 
 
+def handle_submitter_contact_verified(data: dict, agents: dict) \
+        -> Tuple[events.Event]:
+    """
+    Handle the ``submitter_contact_verified`` field in submission payload.
+
+    Parameters
+    ----------
+    data : dict
+    agents : dict
+        Values are :class:`events.Agent` instances.
+
+    Returns
+    -------
+    tuple
+        Zero or more uncommitted :class:`events.Event` instances.
+    """
+    if data:
+        return events.VerifyContactInformation(**agents),
+    return tuple()
+
+
 def handle_primary_classification(data: dict, agents: dict) \
         -> Optional[Tuple[events.Event]]:
     """Handle the ``primary_classification`` field in submission payload."""
@@ -185,14 +206,67 @@ def handle_authors(data: dict, agents: dict) -> Tuple[events.Event]:
     return events.UpdateAuthors(**agents, authors=_authors),
 
 
+def handle_finalization(data: dict, agents: dict) -> Tuple[events.Event]:
+    """
+    Handle finalization flag in the submission payload.
+
+    Parameters
+    ----------
+    data : dict
+    agents : dict
+        Values are :class:`events.Agent` instances.
+
+    Returns
+    -------
+    tuple
+        Zero or more uncommitted :class:`events.Event` instances.
+    """
+    print('finalization!', data)
+    if data:
+        return events.FinalizeSubmission(**agents),
+    else:
+        return events.UnFinalizeSubmission(**agents),
+
+
+def handle_source_content(data: dict, agents: dict) -> Tuple[events.Event]:
+    """
+    Handle source content data in the submission payload.
+
+    Parameters
+    ----------
+    data : dict
+    agents : dict
+        Values are :class:`events.Agent` instances.
+
+    Returns
+    -------
+    tuple
+        Zero or more uncommitted :class:`events.Event` instances.
+    """
+    if not data:
+        return tuple()
+    return events.AttachSourceContent(
+        **agents,
+        location=data.get('location'),
+        format=data.get('format'),
+        checksum=data.get('checksum'),
+        mime_type=data.get('mime_type'),
+        identifier=data.get('identifier'),
+        size=data.get('size'),
+    ),
+
+
 HANDLERS: List[Tuple[Tuple[str], Callable]] = [
     (('submitter_is_author', ), handle_submitter_is_author),
     (('license', ), handle_license),
     (('submitter_accepts_policy', ), handle_submitter_accepts_policy),
+    (('submitter_contact_verified', ), handle_submitter_contact_verified),
     (('primary_classification', ), handle_primary_classification),
     (('secondary_classification', ), handle_secondary_classification),
     (('metadata', ), handle_metadata),
-    (('metadata', 'authors'), handle_authors)
+    (('metadata', 'authors'), handle_authors),
+    (('source_content', ), handle_source_content),
+    (('finalized', ), handle_finalization)
 ]
 """
 Describes how data in the payload should be handled.

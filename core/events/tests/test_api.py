@@ -106,20 +106,6 @@ class TestSave(TestCase):
             save(e2)
 
     @mock.patch('events.classic')
-    def test_save_invalid_event(self, mock_db):
-        """An exception is raised when an invalid event is encountered."""
-        mock_db.get_events.return_value = []
-
-        class EventMock(CreateSubmission):
-            def valid(self, *args, **kwargs):
-                return False
-
-        user = User(12345, 'joe@joe.joe')
-        e = EventMock(creator=user, submission_id=1)
-        with self.assertRaises(InvalidEvent):
-            save(e, submission_id=1)
-
-    @mock.patch('events.classic')
     def test_save_events_on_existing_submission(self, mock_db):
         """Save multiple sets of events in separate calls to :func:`.save`."""
         cache = defaultdict(list)

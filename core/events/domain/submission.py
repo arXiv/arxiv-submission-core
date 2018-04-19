@@ -184,27 +184,7 @@ class Submission:
     def to_dict(self) -> dict:
         """Generate a dict representation of this :class:`.Submission`."""
         data = asdict(self)
-        data.update({
-            'creator': self.creator.to_dict(),
-            'owner': self.owner.to_dict(),
-            'created': self.created.isoformat(),
-        })
-        if self.client:
-            data.update({'client': self.client.to_dict()})
-        if self.primary_classification:
-            data['primary_classification'] = \
-                self.primary_classification.to_dict()
-        if self.delegations:
-            data['delegations'] = {
-                key: delegation.to_dict()
-                for key, delegation in self.delegations.items()
-            }
-        if self.proxy:
-            data['proxy'] = self.proxy.to_dict()
-        if self.metadata:
-            data['metadata'] = self.metadata.to_dict()
-        if self.license:
-            data['license'] = self.license.to_dict()
+        data.update({'created': self.created.isoformat()})
         return data
 
 

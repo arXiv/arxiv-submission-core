@@ -67,6 +67,10 @@ class Submission(Base):    # type: ignore
     WITHDRAWN_FORMAT = 'withdrawn'
 
     submission_id = Column(Integer, primary_key=True)
+
+    type = Column(String(8), index=True)
+    """Submission type (e.g. ``new``, ``jref``, ``cross``)."""
+
     document_id = Column(
         ForeignKey('arXiv_documents.document_id',
                    ondelete='CASCADE',
@@ -92,12 +96,29 @@ class Submission(Base):    # type: ignore
     status = Column(Integer, nullable=False, index=True,
                     server_default=text("'0'"))
     sticky_status = Column(Integer)
+    """
+    If the submission goes out of queue (e.g. submitter makes changes),
+    this status should be applied when the submission is re-finalized
+    (goes back into queue, comes out of working status).
+    """
+
     must_process = Column(Integer, server_default=text("'1'"))
     submit_time = Column(DateTime)
     release_time = Column(DateTime)
+
     source_size = Column(Integer, server_default=text("'0'"))
     source_format = Column(String(12))
+    """Submission content type (e.g. ``pdf``, ``tex``, ``pdftex``)."""
     source_flags = Column(String(12))
+
+    allow_tex_produced = Column(Integer, server_default=text("'0'"))
+    """Whether to allow a TeX-produced PDF."""
+
+    package = Column(String(255), nullable=False, server_default=text("''"))
+    """Path (on disk) to the submission package (tarball, PDF)."""
+
+    is_oversize = Column(Integer, server_default=text("'0'"))
+
     has_pilot_data = Column(Integer)
     is_withdrawn = Column(Integer, nullable=False, server_default=text("'0'"))
     title = Column(Text)
@@ -113,17 +134,18 @@ class Submission(Base):    # type: ignore
     license = Column(ForeignKey('arXiv_licenses.name', onupdate='CASCADE'),
                      index=True)
     version = Column(Integer, nullable=False, server_default=text("'1'"))
-    type = Column(String(8), index=True)
+
     is_ok = Column(Integer, index=True)
+
     admin_ok = Column(Integer)
-    allow_tex_produced = Column(Integer, server_default=text("'0'"))
-    is_oversize = Column(Integer, server_default=text("'0'"))
+    """Used by administrators for reporting/bookkeeping."""
+
     remote_addr = Column(String(16), nullable=False, server_default=text("''"))
     remote_host = Column(String(255), nullable=False,
                          server_default=text("''"))
-    package = Column(String(255), nullable=False, server_default=text("''"))
     rt_ticket_id = Column(Integer, index=True)
     auto_hold = Column(Integer, server_default=text("'0'"))
+    """Should be placed on hold when submission comes out of working status."""
 
     document = relationship('Document')
     arXiv_license = relationship('License')
@@ -173,6 +195,10 @@ class Submission(Base):    # type: ignore
 
         # Comments (admins may modify).
         submission.metadata.comments = self.comments
+
+        # Apply sticky status.
+        if submission.finalized and self.sticky_status is self.ON_HOLD:
+            submission.status = submission.ON_HOLD
         return submission
 
     def to_submission(self) -> domain.Submission:
@@ -258,12 +284,14 @@ class Submission(Base):    # type: ignore
             self.source_size = submission.source_content.size
             self.source_format = submission.source_content.format
 
-        # Only update the submission state if we're transitioning for the first
-        # time. We can relax this later, but for now it will prevent us from
-        # doing something stupid.
+        # Not submitted -> Submitted.
         if submission.finalized and self.status is Submission.NOT_SUBMITTED:
             self.status = Submission.SUBMITTED
             self.submit_time = submission.updated
+        # Unsubmit.
+        elif self.status is None or self.status <= Submission.ON_HOLD:
+            if not submission.finalized:
+                self.status = Submission.NOT_SUBMITTED
 
         if submission.primary_classification:
             self._update_primary(submission)
@@ -646,7 +674,7 @@ class EndorsementDomain(Base):    # type: ignore
 
 class Category(Base):    # type: ignore
     """Supplemental data about arXiv categories, including endorsement."""
-    
+
     __tablename__ = 'arXiv_categories'
 
     arXiv_endorsement_domain = relationship('EndorsementDomain')
