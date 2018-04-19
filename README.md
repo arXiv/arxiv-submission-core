@@ -4,6 +4,10 @@ This repository houses exploratory development related to the arXiv-NG
 submission system. See https://cul-it.github.io/arxiv-submission-core/ for the
 latest documentation.
 
+## Contributions
+
+https://github.com/cul-it/arxiv-submission-core/blob/master/CONTRIBUTING.md
+
 ## What's in the repo
 
 - The [events core package](core/) is provides integrations with the
