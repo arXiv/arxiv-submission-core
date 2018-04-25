@@ -19,6 +19,7 @@ class Submission(Base):    # type: ignore
 
     __tablename__ = 'arXiv_submissions'
 
+    # Pre-moderation stages; these are tied to the classic submission UI.
     NEW = 0
     STARTED = 1
     FILES_ADDED = 2
@@ -27,13 +28,18 @@ class Submission(Base):    # type: ignore
     SUBMITTED = 5
     STAGES = [NEW, STARTED, FILES_ADDED, PROCESSED, METADATA_ADDED, SUBMITTED]
 
+    # Submission status; this describes where the submission is in the
+    # publication workflow.
     NOT_SUBMITTED = 0   # Working.
     SUBMITTED = 1       # Enqueued for moderation, to be scheduled.
     ON_HOLD = 2
     UNUSED = 3
-    NEXT_DAY = 4        # Scheduled for tomorrow.
+    NEXT_DAY = 4
+    """Scheduled for tomorrow."""
     PROCESSING = 5
+    """Scheduled for today."""
     NEEDS_EMAIL = 6
+    """Published, not yet announced."""
 
     PUBLISHED = 7
     DELETED_PUBLISHED = 27
@@ -44,6 +50,7 @@ class Submission(Base):    # type: ignore
 
     USER_DELETED = 10
     ERROR_STATE = 19
+    """There was a problem validating the submission during publication."""
 
     DELETED_EXPIRED = 20
     """Was working but expired."""
@@ -66,6 +73,26 @@ class Submission(Base):    # type: ignore
 
     WITHDRAWN_FORMAT = 'withdrawn'
 
+    # Map classic status to Submission domain status.
+    STATUS_MAP = {
+        NOT_SUBMITTED: domain.Submission.WORKING,
+        SUBMITTED: domain.Submission.SUBMITTED,
+        ON_HOLD: domain.Submission.ON_HOLD,
+        NEXT_DAY: domain.Submission.SCHEDULED,
+        PROCESSING: domain.Submission.SCHEDULED,
+        PROCESSING_SUBMISSION: domain.Submission.SCHEDULED,
+        NEEDS_EMAIL: domain.Submission.SCHEDULED,
+        PUBLISHED: domain.Submission.PUBLISHED,
+        DELETED_PUBLISHED: domain.Submission.PUBLISHED,
+        USER_DELETED:  domain.Submission.DELETED, 
+        DELETED_EXPIRED: domain.Submission.DELETED,
+        DELETED_ON_HOLD: domain.Submission.DELETED,
+        DELETED_PROCESSING: domain.Submission.DELETED,
+        DELETED_REMOVED: domain.Submission.DELETED,
+        DELETED_USER:  domain.Submission.DELETED,
+        ERROR_STATE: domain.Submission.ERROR
+    }
+
     submission_id = Column(Integer, primary_key=True)
 
     type = Column(String(8), index=True)
@@ -78,6 +105,7 @@ class Submission(Base):    # type: ignore
         index=True
     )
     doc_paper_id = Column(String(20), index=True)
+
     sword_id = Column(ForeignKey('arXiv_tracking.sword_id'), index=True)
     userinfo = Column(Integer, server_default=text("'0'"))
     is_author = Column(Integer, nullable=False, server_default=text("'0'"))
@@ -176,8 +204,8 @@ class Submission(Base):    # type: ignore
         """
         # Status changes.
         submission.status = self._get_status()
-        submission.active = (submission.status not in [submission.DELETED,
-                                                       submission.PUBLISHED]),
+        submission.active = (submission.status not in
+                             [submission.DELETED, submission.PUBLISHED])
         submission.published = (submission.status == submission.PUBLISHED)
         submission.arxiv_id = self._get_arxiv_id()
 
@@ -319,17 +347,7 @@ class Submission(Base):    # type: ignore
         """Map classic status codes to :class:`.domain.Submission` status."""
         if self._get_arxiv_id() is not None:
             return domain.Submission.PUBLISHED
-        elif self.status is self.NOT_SUBMITTED:
-            return domain.Submission.WORKING
-        elif self.status is self.SUBMITTED:
-            return domain.Submission.PROCESSING
-        elif self.status is self.ON_HOLD:
-            return domain.Submission.ON_HOLD
-        elif self.status is self.NEXT_DAY:
-            return domain.Submission.SCHEDULED
-        elif self.status in self.DELETED:
-            return domain.Submission.DELETED
-        # TODO: raise something?
+        return self.STATUS_MAP.get(self.status)
 
     def _update_submitter(self, submission: domain.Submission) -> None:
         """Update submitter information."""

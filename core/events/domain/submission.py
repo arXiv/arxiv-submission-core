@@ -143,11 +143,11 @@ class Submission:
     """Represents an arXiv submission object."""
 
     WORKING = 'working'
-    PROCESSING = 'processing'
     SUBMITTED = 'submitted'
     ON_HOLD = 'hold'
     SCHEDULED = 'scheduled'
     PUBLISHED = 'published'
+    ERROR = 'error'
     DELETED = 'deleted'
 
     creator: Agent
