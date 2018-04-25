@@ -184,7 +184,15 @@ class Submission:
     def to_dict(self) -> dict:
         """Generate a dict representation of this :class:`.Submission`."""
         data = asdict(self)
-        data.update({'created': self.created.isoformat()})
+        data.update({
+            'created': self.created.isoformat(),
+            'updated': self.updated.isoformat() if self.updated else None,
+            'metadata': self.metadata.to_dict(),
+            'creator': self.creator.to_dict(),
+            'owner': self.owner.to_dict(),
+            'proxy': self.proxy.to_dict() if self.proxy else None,
+            'client': self.client.to_dict() if self.client else None,
+        })
         return data
 
 
