@@ -33,7 +33,7 @@ class TestClassicUIWorkflow(TestCase):
         self.unicode_submitter = events.domain.User(12345, email='j.user@somewhere.edu',
                                             forename='大', surname='用户')
 
-    def test_classic_workflow(self, submitter=None, metadata=None):
+    def test_classic_workflow(self, submitter=None, metadata=None, authors=None):
         """Submitter proceeds through workflow in a linear fashion."""
         if submitter is None:
             submitter = self.submitter
@@ -48,6 +48,14 @@ class TestClassicUIWorkflow(TestCase):
                 ('journal_ref', 'Foo Rev 1, 2 (1903)')
             ]
 
+
+        if authors is None:
+            authors = [events.Author(order=0,
+                                     forename='Bob',
+                                     surname='Paulson',
+                                     email='Robert.Paulson@nowhere.edu',
+                                     affiliation='Fight Club'
+                        )]
 
         with in_memory_db() as session:
             # Submitter clicks on 'Start new submission' in the user dashboard.
@@ -154,13 +162,7 @@ class TestClassicUIWorkflow(TestCase):
                 ),
                 events.UpdateAuthors(
                     creator=submitter,
-                    authors=[events.Author(
-                        order=0,
-                        forename='Bob',
-                        surname='Paulson',
-                        email='Robert.Paulson@nowhere.edu',
-                        affiliation='Fight Club'
-                    )]
+                    authors=authors
                 ),
                 submission_id=submission.submission_id
             )
@@ -182,7 +184,11 @@ class TestClassicUIWorkflow(TestCase):
             self.assertEqual(db_submission.journal_ref,
                              dict(metadata)['journal_ref'],
                              "Journal ref updated as expected in database")
-            self.assertEqual(db_submission.authors, "Bob Paulson (Fight Club)",
+
+            author_str = ';'.join([f"{author.forename} {author.surname} ({author.affiliation})"
+                                      for author in authors])
+            self.assertEqual(db_submission.authors, 
+                             author_str,
                              "Authors updated in canonical format in database")
 
             self.assertEqual(len(stack), 9,
@@ -239,17 +245,16 @@ class TestClassicUIWorkflow(TestCase):
             ('doi', '10.01234/56789'),
             ('journal_ref', 'Foo Rev 1, 2 (1903)')
         ]
-        '''
-                    authors=[events.Author(
+        authors = [events.Author(
                         order=0,
                         forename='惊人',
                         surname='用户',
                         email='amazing.user@nowhere.edu',
                         affiliation='Fight Club'
                     )]
-        '''
 
-        self.test_classic_workflow(submitter=submitter, metadata=metadata)
+        self.test_classic_workflow(
+            submitter=submitter, metadata=metadata, authors=authors)
 
     def test_texism_titles(self):
         """Submitter proceeds through workflow in a linear fashion."""
