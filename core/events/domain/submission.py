@@ -37,18 +37,26 @@ class License:
 class Author:
     """Represents an author of a submission."""
 
-    order: int
+    order: int = field(default=0)
     forename: str = field(default_factory=str)
     surname: str = field(default_factory=str)
     initials: str = field(default_factory=str)
     affiliation: str = field(default_factory=str)
     email: str = field(default_factory=str)
-    identifier: Optional[str] = None
+    identifier: Optional[str] = field(default=None)
+    display: Optional[str] = field(default=None)
+    """
+    Submitter may include a preferred display name for each author.
+
+    If not provided, will be automatically generated from the other fields.
+    """
 
     def __post_init__(self) -> None:
         """Auto-generate an identifier, if not provided."""
         if not self.identifier:
             self.identifier = self._generate_identifier()
+        if not self.display:
+            self.display = self.canonical
 
     def _generate_identifier(self):
         h = hashlib.new('sha1')
@@ -104,8 +112,8 @@ class SubmissionMetadata:
 
     @property
     def authors_canonical(self):
-        """Canonical representation of submission authors."""
-        return ", ".join([au.canonical for au in self.authors])
+        """Canonical representation of authors, using display names."""
+        return ", ".join([au.display for au in self.authors])
 
     def to_dict(self) -> dict:
         """Generate dict representation of :class:`.SubmissionMetadata`."""

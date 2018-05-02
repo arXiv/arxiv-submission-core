@@ -55,6 +55,10 @@
             "description": "Author authority record URI. This may be an arXiv authority URI or an ORCID identifier.",
             "type": "string",
             "format": "uri"
+          },
+          "display": {
+            "description": "The preferred display representation of the author's name and affiliation.",
+            "type": "string"
           }
         }
       }
