@@ -1,3 +1,12 @@
+"""
+Provides test cases for the new events model's ability to replicate the classic
+model. The function `TestClassicUIWorkflow.test_classic_workflow()` provides
+keyword arguments to pass different types of data through the workflow.
+
+TODO: Presently, `test_classic_workflow` expects `core.domain` objects. That
+should change to instantiate each object at runtime for database imports.
+"""
+
 from unittest import TestCase, mock
 from contextlib import contextmanager
 from flask import Flask
@@ -35,6 +44,8 @@ class TestClassicUIWorkflow(TestCase):
 
     def test_classic_workflow(self, submitter=None, metadata=None, authors=None):
         """Submitter proceeds through workflow in a linear fashion."""
+
+        # Instantiate objects that have not yet been instantiated or use defaults.
         if submitter is None:
             submitter = self.submitter
 
@@ -48,7 +59,8 @@ class TestClassicUIWorkflow(TestCase):
                 ('journal_ref', 'Foo Rev 1, 2 (1903)')
             ]
 
-
+        
+        # TODO: Process data in dictionary form to events.Author objects.
         if authors is None:
             authors = [events.Author(order=0,
                                      forename='Bob',
