@@ -76,9 +76,7 @@ class Author:
 
     def to_dict(self) -> dict:
         """Generate a dict representation of this :class:`.Author`."""
-        data = asdict(self)
-        data['canonical'] = self.canonical
-        return data
+        return asdict(self)
 
 
 @dataclass
@@ -101,6 +99,8 @@ class SubmissionMetadata:
     abstract: Optional[str] = None
 
     authors: list = field(default_factory=list)
+    authors_display: str = field(default_factory=str)
+    """The canonical arXiv author string."""
 
     doi: Optional[str] = None
     msc_class: Optional[str] = None
@@ -110,16 +110,9 @@ class SubmissionMetadata:
 
     comments: str = field(default_factory=str)
 
-    @property
-    def authors_canonical(self):
-        """Canonical representation of authors, using display names."""
-        return ", ".join([au.display for au in self.authors])
-
     def to_dict(self) -> dict:
         """Generate dict representation of :class:`.SubmissionMetadata`."""
-        data = asdict(self)
-        data['authors_canonical'] = self.authors_canonical
-        return data
+        return asdict(self)
 
 
 @dataclass

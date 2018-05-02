@@ -168,3 +168,63 @@ class TestRemoveSecondaryClassification(TestCase):
         )
         with self.assertRaises(InvalidEvent):
             e.validate(self.submission)    # "Event should not be valid".
+
+
+class TestUpdateAuthors(TestCase):
+    """Test :class:`event.UpdateAuthors`."""
+
+    def setUp(self):
+        """Initialize auxiliary data for test cases."""
+        self.user = agent.User(12345, 'uuser@cornell.edu')
+        self.submission = submission.Submission(
+            submission_id=1,
+            creator=self.user,
+            owner=self.user,
+            created=datetime.now()
+        )
+
+    def test_canonical_authors_provided(self):
+        """Data includes canonical author display string."""
+        e = event.UpdateAuthors(creator=self.user,
+                                submission_id=1,
+                                authors=[submission.Author()],
+                                authors_display="Foo authors")
+        try:
+            e.validate(self.submission)
+        except Exception as e:
+            self.fail(str(e), "Data should be valid")
+        s = e.project(self.submission)
+        self.assertEqual(s.metadata.authors_display, e.authors_display,
+                         "Authors string should be updated")
+
+    def test_canonical_authors_not_provided(self):
+        """Data does not include canonical author display string."""
+        e = event.UpdateAuthors(
+            creator=self.user,
+            submission_id=1,
+            authors=[
+                submission.Author(
+                    forename="Bob",
+                    surname="Paulson",
+                    affiliation="FSU"
+                )
+            ])
+        self.assertEqual(e.authors_display, "Bob Paulson (FSU)",
+                         "Display string should be generated automagically")
+
+        try:
+            e.validate(self.submission)
+        except Exception as e:
+            self.fail(str(e), "Data should be valid")
+        s = e.project(self.submission)
+        self.assertEqual(s.metadata.authors_display, e.authors_display,
+                         "Authors string should be updated")
+
+    def test_canonical_authors_contains_et_al(self):
+        """Authors display value contains et al."""
+        e = event.UpdateAuthors(creator=self.user,
+                                submission_id=1,
+                                authors=[submission.Author()],
+                                authors_display="Foo authors, et al")
+        with self.assertRaises(InvalidEvent):
+            e.validate(self.submission)
