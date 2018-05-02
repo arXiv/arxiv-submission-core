@@ -30,6 +30,8 @@ class TestClassicUIWorkflow(TestCase):
         """An arXiv user is submitting a new paper."""
         self.submitter = events.domain.User(1234, email='j.user@somewhere.edu',
                                             forename='Jane', surname='User')
+        self.unicode_submitter = events.domain.User(12345, email='j.user@somewhere.edu',
+                                            forename='大', surname='用户')
 
     def test_classic_workflow(self):
         """Submitter proceeds through workflow in a linear fashion."""
@@ -218,3 +220,107 @@ class TestClassicUIWorkflow(TestCase):
                              "Submit time is set.")
             self.assertEqual(len(stack), 11,
                              "Eleven commands have been executed in total.")
+    
+    
+    def test_unicode_submitter(self):
+        """Submitter proceeds through workflow in a linear fashion."""
+        with in_memory_db() as session:
+            # Submitter clicks on 'Start new submission' in the user dashboard.
+            submission, stack = events.save(
+                events.CreateSubmission(creator=self.unicode_submitter)
+            )
+            self.assertIsNotNone(submission.submission_id,
+                                 "A submission ID is assigned")
+            self.assertEqual(len(stack), 1, "A single command is executed.")
+
+            db_submission = session.query(classic.models.Submission)\
+                .get(submission.submission_id)
+            self.assertEqual(db_submission.submission_id,
+                             submission.submission_id,
+                             "A row is added to the submission table")
+            self.assertEqual(db_submission.submitter_id,
+                             self.unicode_submitter.native_id,
+                             "Submitter ID set on submission")
+            self.assertEqual(db_submission.submitter_email,
+                             self.unicode_submitter.email,
+                             "Submitter email set on submission")
+            self.assertEqual(db_submission.submitter_name, self.unicode_submitter.name,
+                             "Submitter name set on submission")
+            self.assertEqual(db_submission.created, submission.created,
+                             "Creation datetime set correctly")
+
+            # /start: Submitter completes the start submission page.
+            license_uri = 'http://creativecommons.org/publicdomain/zero/1.0/'
+            submission, stack = events.save(
+                events.VerifyContactInformation(creator=self.submitter),
+                events.AssertAuthorship(
+                    creator=self.submitter,
+                    submitter_is_author=True
+                ),
+                events.SelectLicense(
+                    creator=self.submitter,
+                    license_uri=license_uri,
+                    license_name='CC0 1.0'
+                ),
+                events.AcceptPolicy(creator=self.submitter),
+                events.SetPrimaryClassification(
+                    creator=self.submitter,
+                    category='astro-ph.HE'
+                ),
+                submission_id=submission.submission_id
+            )
+            self.assertEqual(len(stack), 6,
+                             "Six commands have been executed in total.")
+
+            # /metadata: Submitter adds metadata to their submission, including
+            # authors. In this package, we model authors in more detail than
+            # in the classic system, but we should preserve the canonical
+            # format in the db for legacy components' sake.
+            metadata = [
+                ('title', '优秀的称号'),
+                ('abstract', "当我有一天正在上学的时候"),
+                ('comments', '5页2龟鸠'),
+                ('report_num', 'asdf1234'),
+                ('doi', '10.01234/56789'),
+                ('journal_ref', 'Foo Rev 1, 2 (1903)')
+            ]
+            submission, stack = events.save(
+                events.UpdateMetadata(
+                    creator=self.submitter,
+                    metadata=metadata
+                ),
+                events.UpdateAuthors(
+                    creator=self.submitter,
+                    authors=[events.Author(
+                        order=0,
+                        forename='惊人',
+                        surname='用户',
+                        email='amazing.user@nowhere.edu',
+                        affiliation='Fight Club'
+                    )]
+                ),
+                submission_id=submission.submission_id
+            )
+            db_submission = session.query(classic.models.Submission)\
+                .get(submission.submission_id)
+            self.assertEqual(db_submission.title, dict(metadata)['title'],
+                             "Title updated as expected in database")
+            self.assertEqual(db_submission.abstract,
+                             dict(metadata)['abstract'],
+                             "Abstract updated as expected in database")
+            self.assertEqual(db_submission.comments,
+                             dict(metadata)['comments'],
+                             "Comments updated as expected in database")
+            self.assertEqual(db_submission.report_num,
+                             dict(metadata)['report_num'],
+                             "Report number updated as expected in database")
+            self.assertEqual(db_submission.doi, dict(metadata)['doi'],
+                             "DOI updated as expected in database")
+            self.assertEqual(db_submission.journal_ref,
+                             dict(metadata)['journal_ref'],
+                             "Journal ref updated as expected in database")
+            self.assertEqual(db_submission.authors, "惊人 用户 (Fight Club)",
+                             "Authors updated in canonical format in database")
+
+            self.assertEqual(len(stack), 8,
+                             "Eight commands have been executed in total.")
