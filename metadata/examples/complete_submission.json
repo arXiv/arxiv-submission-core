@@ -34,12 +34,14 @@
         "initials": "G. G.",
         "surname": "Byron",
         "email": "lord.byron@Μεσολόγγι.gr",
-        "identifier": "https://orcid.org/0000-0001-2345-6789"
+        "identifier": "https://orcid.org/0000-0001-2345-6789",
+        "display": "Lord G. G. Byron"
       },
       {
         "forename": "Tom",
         "surname": "Bombadil",
-        "email": "tom@oldforest.co.uk"
+        "email": "tom@oldforest.co.uk",
+        "display": "T. Bombadil, esq."
       }
     ]
   }
