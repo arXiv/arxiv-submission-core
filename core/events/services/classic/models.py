@@ -34,8 +34,8 @@ class Submission(Base):    # type: ignore
     SUBMITTED = 1       # Enqueued for moderation, to be scheduled.
     ON_HOLD = 2
     UNUSED = 3
-    NEXT_DAY = 4
-    """Scheduled for tomorrow."""
+    NEXT_PUBLISH_DAY = 4
+    """Scheduled for the next publication cycle."""
     PROCESSING = 5
     """Scheduled for today."""
     NEEDS_EMAIL = 6
@@ -78,13 +78,13 @@ class Submission(Base):    # type: ignore
         NOT_SUBMITTED: domain.Submission.WORKING,
         SUBMITTED: domain.Submission.SUBMITTED,
         ON_HOLD: domain.Submission.ON_HOLD,
-        NEXT_DAY: domain.Submission.SCHEDULED,
+        NEXT_PUBLISH_DAY: domain.Submission.SCHEDULED,
         PROCESSING: domain.Submission.SCHEDULED,
         PROCESSING_SUBMISSION: domain.Submission.SCHEDULED,
         NEEDS_EMAIL: domain.Submission.SCHEDULED,
         PUBLISHED: domain.Submission.PUBLISHED,
         DELETED_PUBLISHED: domain.Submission.PUBLISHED,
-        USER_DELETED:  domain.Submission.DELETED, 
+        USER_DELETED:  domain.Submission.DELETED,
         DELETED_EXPIRED: domain.Submission.DELETED,
         DELETED_ON_HOLD: domain.Submission.DELETED,
         DELETED_PROCESSING: domain.Submission.DELETED,

@@ -443,7 +443,7 @@ class TestPublicationIntegration(TestCase):
             # Publication agent publishes the paper.
             db_submission = session.query(classic.models.Submission)\
                 .get(self.submission_id)
-            db_submission.status = db_submission.NEXT_DAY
+            db_submission.status = db_submission.NEXT_PUBLISH_DAY
             session.add(db_submission)
             session.commit()
 
