@@ -37,18 +37,26 @@ class License:
 class Author:
     """Represents an author of a submission."""
 
-    order: int
+    order: int = field(default=0)
     forename: str = field(default_factory=str)
     surname: str = field(default_factory=str)
     initials: str = field(default_factory=str)
     affiliation: str = field(default_factory=str)
     email: str = field(default_factory=str)
-    identifier: Optional[str] = None
+    identifier: Optional[str] = field(default=None)
+    display: Optional[str] = field(default=None)
+    """
+    Submitter may include a preferred display name for each author.
+
+    If not provided, will be automatically generated from the other fields.
+    """
 
     def __post_init__(self) -> None:
         """Auto-generate an identifier, if not provided."""
         if not self.identifier:
             self.identifier = self._generate_identifier()
+        if not self.display:
+            self.display = self.canonical
 
     def _generate_identifier(self):
         h = hashlib.new('sha1')
@@ -68,9 +76,7 @@ class Author:
 
     def to_dict(self) -> dict:
         """Generate a dict representation of this :class:`.Author`."""
-        data = asdict(self)
-        data['canonical'] = self.canonical
-        return data
+        return asdict(self)
 
 
 @dataclass
@@ -93,6 +99,8 @@ class SubmissionMetadata:
     abstract: Optional[str] = None
 
     authors: list = field(default_factory=list)
+    authors_display: str = field(default_factory=str)
+    """The canonical arXiv author string."""
 
     doi: Optional[str] = None
     msc_class: Optional[str] = None
@@ -102,16 +110,9 @@ class SubmissionMetadata:
 
     comments: str = field(default_factory=str)
 
-    @property
-    def authors_canonical(self):
-        """Canonical representation of submission authors."""
-        return ", ".join([au.canonical for au in self.authors])
-
     def to_dict(self) -> dict:
         """Generate dict representation of :class:`.SubmissionMetadata`."""
-        data = asdict(self)
-        data['authors_canonical'] = self.authors_canonical
-        return data
+        return asdict(self)
 
 
 @dataclass

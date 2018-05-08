@@ -47,6 +47,7 @@ methods).
 """
 
 import hashlib
+import re
 from datetime import datetime
 from typing import Optional, TypeVar, List, Tuple, Any, Dict
 from urllib.parse import urlparse
@@ -393,14 +394,46 @@ class UpdateAuthors(Event):
     """Update the authors on a :class:`.Submission`."""
 
     authors: List[Author] = field(default_factory=list)
+    authors_display: Optional[str] = field(default=None)
+    """The authors string may be provided."""
+
+    def __post_init__(self):
+        """Autogenerate and/or clean display names."""
+        if not self.authors_display:
+            self.authors_display = self._canonical_author_string()
+        self.authors_display = self._cleanup(self.authors_display)
 
     def validate(self, submission: Submission) -> None:
         """May not apply to a finalized submission."""
         submission_is_not_finalized(self, submission)
+        self._does_not_contain_et_al()
+
+    def _canonical_author_string(self) -> str:
+        """Canonical representation of authors, using display names."""
+        return ", ".join([au.display for au in self.authors])
+
+    def _cleanup(self, s: str) -> str:
+        """Perform some light tidying on the provided author string(s)."""
+        s = re.sub(r"\s+", " ", s)          # Single spaces only.
+        s = re.sub(r",(\s*,)+", ",", s)     # Remove double commas.
+        # Add spaces between word and opening parenthesis.
+        s = re.sub(r"(\w)\(", "\g<1> (", s)
+        # Add spaces between closing parenthesis and word.
+        s = re.sub(r"\)(\w)", ") \g<1>", s)
+        # Change capitalized or uppercase `And` to `and`.
+        s = re.sub(r"\bA(?i:ND)\b", "and", s)
+        return s.strip()   # Removing leading and trailing whitespace.
+
+    def _does_not_contain_et_al(self) -> None:
+        """The authors display value should not contain `et al`."""
+        if self.authors_display and \
+                re.search(r"et al\.?($|\s*\()", self.authors_display):
+            raise InvalidEvent(self, "Authors should not contain et al.")
 
     def project(self, submission: Submission) -> Submission:
         """Replace :prop:`.Submission.metadata.authors`."""
         submission.metadata.authors = self.authors
+        submission.metadata.authors_display = self.authors_display
         return submission
 
     @classmethod
@@ -437,16 +470,16 @@ class AttachSourceContent(Event):
         try:
             parsed = urlparse(self.location)
         except ValueError as e:
-            raise InvalidEvent('Not a valid URL') from e
+            raise InvalidEvent(self, 'Not a valid URL') from e
         if not parsed.netloc.endswith('arxiv.org'):
-            raise InvalidEvent('External URLs not allowed.')
+            raise InvalidEvent(self, 'External URLs not allowed.')
 
         if self.format not in self.ALLOWED_FORMATS:
             raise InvalidEvent(f'Format {self.package_format} not allowed')
         if not self.checksum:
-            raise InvalidEvent('Missing checksum')
+            raise InvalidEvent(self, 'Missing checksum')
         if not self.identifier:
-            raise InvalidEvent('Missing upload ID')
+            raise InvalidEvent(self, 'Missing upload ID')
 
     def project(self, submission: Submission) -> Submission:
         """Replace :class:`.SubmissionContent` metadata on the submission."""
@@ -553,11 +586,11 @@ class DeleteComment(Event):
     def validate(self, submission: Submission) -> None:
         """The :prop:`.comment_id` must present on the submission."""
         if self.comment_id is None:
-            raise InvalidEvent('comment_id is required')
+            raise InvalidEvent(self, 'comment_id is required')
         if not hasattr(submission, 'comments') or not submission.comments:
-            raise InvalidEvent('Cannot delete comment that does not exist')
+            raise InvalidEvent(self, 'Cannot delete comment that does not exist')
         if self.comment_id not in submission.comments:
-            raise InvalidEvent('Cannot delete comment that does not exist')
+            raise InvalidEvent(self, 'Cannot delete comment that does not exist')
 
     def project(self, submission: Submission) -> Submission:
         """Remove the comment from the submission."""
@@ -574,7 +607,7 @@ class AddDelegate(Event):
     def validate(self, submission: Submission) -> None:
         """The event creator must be the owner of the submission."""
         if not self.creator == submission.owner:
-            raise InvalidEvent('Event creator must be submission owner')
+            raise InvalidEvent(self, 'Event creator must be submission owner')
 
     def project(self, submission: Submission) -> Submission:
         """Add the delegate to the submission."""
@@ -596,7 +629,7 @@ class RemoveDelegate(Event):
     def validate(self, submission: Submission) -> None:
         """The event creator must be the owner of the submission."""
         if not self.creator == submission.owner:
-            raise InvalidEvent('Event creator must be submission owner')
+            raise InvalidEvent(self, 'Event creator must be submission owner')
 
     def project(self, submission: Submission) -> Submission:
         """Remove the delegate from the submission."""

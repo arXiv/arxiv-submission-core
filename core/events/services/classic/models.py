@@ -296,7 +296,7 @@ class Submission(Base):    # type: ignore
         self.updated = datetime.now()
         self.title = submission.metadata.title
         self.abstract = submission.metadata.abstract
-        self.authors = submission.metadata.authors_canonical
+        self.authors = submission.metadata.authors_display
         self.comments = submission.metadata.comments
         self.report_num = submission.metadata.report_num
         self.doi = submission.metadata.doi

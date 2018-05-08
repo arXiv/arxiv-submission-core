@@ -76,6 +76,19 @@ class TestSubmit(TestCase):
         except jsonschema.ValidationError as e:
             self.fail("Return content should match submission schema")
 
+        # Verify that author metadata was preserved.
+        rq_authors = data['metadata']['authors']
+        re_authors = response_data['metadata']['authors']
+        for rq_author, re_author in zip(rq_authors, re_authors):
+            self.assertEqual(rq_author['forename'], re_author['forename'])
+            self.assertEqual(rq_author['surname'], re_author['surname'])
+            self.assertEqual(rq_author['email'], re_author['email'])
+            if 'display' in rq_author:
+                self.assertEqual(rq_author['display'], re_author['display'])
+            else:
+                self.assertGreater(len(re_author['display']), 0,
+                                   "Should be set automatically")
+
     def test_alter_submission_before_finalization(self):
         """Client submits a partial record, and then updates it."""
         example = os.path.join(BASEPATH, 'examples/complete_submission.json')
@@ -316,7 +329,7 @@ class TestPublicationIntegration(TestCase):
                 document_id=1,
                 paper_id='1901.00123',
                 title=self.submission['metadata']['title'],
-                authors=self.submission['metadata']['authors_canonical'],
+                authors=self.submission['metadata']['authors_display'],
                 dated=dated.total_seconds(),
                 primary_subject_class=primary,
                 created=datetime.now(),
@@ -353,7 +366,7 @@ class TestPublicationIntegration(TestCase):
                 document_id=1,
                 paper_id='1901.00123',
                 title=self.submission['metadata']['title'],
-                authors=self.submission['metadata']['authors_canonical'],
+                authors=self.submission['metadata']['authors_display'],
                 dated=dated.total_seconds(),
                 primary_subject_class=primary,
                 created=datetime.now(),

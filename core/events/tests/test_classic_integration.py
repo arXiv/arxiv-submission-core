@@ -64,7 +64,7 @@ class TestClassicUIWorkflow(TestCase):
                 ('journal_ref', 'Foo Rev 1, 2 (1903)')
             ]
 
-        
+
         # TODO: Process data in dictionary form to events.Author objects.
         if authors is None:
             authors = [events.Author(order=0,
@@ -204,7 +204,7 @@ class TestClassicUIWorkflow(TestCase):
 
             author_str = ';'.join([f"{author.forename} {author.surname} ({author.affiliation})"
                                       for author in authors])
-            self.assertEqual(db_submission.authors, 
+            self.assertEqual(db_submission.authors,
                              author_str,
                              "Authors updated in canonical format in database")
 
@@ -249,7 +249,7 @@ class TestClassicUIWorkflow(TestCase):
                              "Submit time is set.")
             self.assertEqual(len(stack), 11,
                              "Eleven commands have been executed in total.")
-            
+
     def test_unicode_submitter(self):
         """Submitter proceeds through workflow in a linear fashion."""
         submitter = self.unicode_submitter
@@ -384,7 +384,7 @@ class TestPublicationIntegration(TestCase):
                 document_id=1,
                 paper_id='1901.00123',
                 title=self.submission.metadata.title,
-                authors=self.submission.metadata.authors_canonical,
+                authors=self.submission.metadata.authors_display,
                 dated=dated.total_seconds(),
                 primary_subject_class=primary,
                 created=datetime.now(),
@@ -418,7 +418,7 @@ class TestPublicationIntegration(TestCase):
                 document_id=1,
                 paper_id='1901.00123',
                 title=self.submission.metadata.title,
-                authors=self.submission.metadata.authors_canonical,
+                authors=self.submission.metadata.authors_display,
                 dated=dated.total_seconds(),
                 primary_subject_class=primary,
                 created=datetime.now(),
