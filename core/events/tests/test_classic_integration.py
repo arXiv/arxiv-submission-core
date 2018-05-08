@@ -1,4 +1,6 @@
 """
+Tests for integration with the classic system.
+
 Provides test cases for the new events model's ability to replicate the classic
 model. The function `TestClassicUIWorkflow.test_classic_workflow()` provides
 keyword arguments to pass different types of data through the workflow.
@@ -8,7 +10,10 @@ should change to instantiate each object at runtime for database imports.
 """
 
 from unittest import TestCase, mock
+from datetime import datetime
+import tempfile
 from contextlib import contextmanager
+
 from flask import Flask
 
 import events
@@ -244,8 +249,7 @@ class TestClassicUIWorkflow(TestCase):
                              "Submit time is set.")
             self.assertEqual(len(stack), 11,
                              "Eleven commands have been executed in total.")
-    
-    
+            
     def test_unicode_submitter(self):
         """Submitter proceeds through workflow in a linear fashion."""
         submitter = self.unicode_submitter
@@ -280,3 +284,258 @@ class TestClassicUIWorkflow(TestCase):
         ]
 
         self.test_classic_workflow(metadata=metadata)
+
+
+class TestPublicationIntegration(TestCase):
+    """
+    Test integration with the classic database concerning publication.
+
+    Since the publication process continues to run outside of the event model
+    in the short term, we need to be certain that publication-related changes
+    are represented accurately in this project.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        """Instantiate an app for use with a SQLite database."""
+        _, db = tempfile.mkstemp(suffix='.sqlite')
+        cls.app = Flask('foo')
+        cls.app.config['CLASSIC_DATABASE_URI'] = f'sqlite:///{db}'
+
+        with cls.app.app_context():
+            classic.init_app(cls.app)
+
+    def setUp(self):
+        """An arXiv user is submitting a new paper."""
+        self.submitter = events.domain.User(1234, email='j.user@somewhere.edu',
+                                            forename='Jane', surname='User')
+
+        # Create and finalize a new submission.
+        cc0 = 'http://creativecommons.org/publicdomain/zero/1.0/'
+        with self.app.app_context():
+            classic.create_all()
+            self.submission, _ = events.save(
+                events.CreateSubmission(creator=self.submitter),
+                events.VerifyContactInformation(creator=self.submitter),
+                events.AssertAuthorship(
+                    creator=self.submitter,
+                    submitter_is_author=True
+                ),
+                events.SelectLicense(
+                    creator=self.submitter,
+                    license_uri=cc0,
+                    license_name='CC0 1.0'
+                ),
+                events.AcceptPolicy(creator=self.submitter),
+                events.SetPrimaryClassification(
+                    creator=self.submitter,
+                    category='cs.DL'
+                ),
+                events.AttachSourceContent(
+                    creator=self.submitter,
+                    location="https://submit.arxiv.org/upload/123",
+                    checksum="a9s9k342900skks03330029k",
+                    format='tex',
+                    mime_type="application/zip",
+                    identifier=123,
+                    size=593992
+                ),
+                events.UpdateMetadata(
+                    creator=self.submitter,
+                    metadata=[
+                        ('title', 'Foo title'),
+                        ('abstract', "One morning, as Gregor Samsa was..."),
+                        ('comments', '5 pages, 2 turtle doves'),
+                        ('report_num', 'asdf1234'),
+                        ('doi', '10.01234/56789'),
+                        ('journal_ref', 'Foo Rev 1, 2 (1903)')
+                    ]
+                ),
+                events.UpdateAuthors(
+                    creator=self.submitter,
+                    authors=[events.Author(
+                        order=0,
+                        forename='Bob',
+                        surname='Paulson',
+                        email='Robert.Paulson@nowhere.edu',
+                        affiliation='Fight Club'
+                    )]
+                ),
+                events.FinalizeSubmission(creator=self.submitter)
+            )
+
+    def tearDown(self):
+        """Clear the database after each test."""
+        with self.app.app_context():
+            classic.drop_all()
+
+    def test_publication_status_is_reflected(self):
+        """The submission has been published/announced."""
+        with self.app.app_context():
+            session = classic.current_session()
+
+            # Publication agent publishes the paper.
+            db_submission = session.query(classic.models.Submission)\
+                .get(self.submission.submission_id)
+            db_submission.status = db_submission.PUBLISHED
+            dated = (datetime.now() - datetime.utcfromtimestamp(0))
+            primary = self.submission.primary_classification.category
+            db_submission.document = classic.models.Document(
+                document_id=1,
+                paper_id='1901.00123',
+                title=self.submission.metadata.title,
+                authors=self.submission.metadata.authors_canonical,
+                dated=dated.total_seconds(),
+                primary_subject_class=primary,
+                created=datetime.now(),
+                submitter_email=self.submission.creator.email,
+                submitter_id=self.submission.creator.native_id
+            )
+            session.add(db_submission)
+            session.commit()
+
+            # Submission state should reflect publication status.
+            submission, _ = events.load(self.submission.submission_id)
+            self.assertEqual(submission.status, submission.PUBLISHED,
+                             "Submission should have published status.")
+            self.assertEqual(submission.arxiv_id, "1901.00123",
+                             "arXiv paper ID should be set")
+            self.assertFalse(submission.active,
+                             "Published submission should no longer be active")
+
+    def test_publication_status_is_reflected_after_files_expire(self):
+        """The submission has been published/announced, and files expired."""
+        with self.app.app_context():
+            session = classic.current_session()
+
+            # Publication agent publishes the paper.
+            db_submission = session.query(classic.models.Submission)\
+                .get(self.submission.submission_id)
+            db_submission.status = db_submission.DELETED_PUBLISHED
+            dated = (datetime.now() - datetime.utcfromtimestamp(0))
+            primary = self.submission.primary_classification.category
+            db_submission.document = classic.models.Document(
+                document_id=1,
+                paper_id='1901.00123',
+                title=self.submission.metadata.title,
+                authors=self.submission.metadata.authors_canonical,
+                dated=dated.total_seconds(),
+                primary_subject_class=primary,
+                created=datetime.now(),
+                submitter_email=self.submission.creator.email,
+                submitter_id=self.submission.creator.native_id
+            )
+            session.add(db_submission)
+            session.commit()
+
+            # Submission state should reflect publication status.
+            submission, _ = events.load(self.submission.submission_id)
+            self.assertEqual(submission.status, submission.PUBLISHED,
+                             "Submission should have published status.")
+            self.assertEqual(submission.arxiv_id, "1901.00123",
+                             "arXiv paper ID should be set")
+            self.assertFalse(submission.active,
+                             "Published submission should no longer be active")
+
+    def test_scheduled_status_is_reflected(self):
+        """The submission has been scheduled for publication today."""
+        with self.app.app_context():
+            session = classic.current_session()
+
+            # Publication agent publishes the paper.
+            db_submission = session.query(classic.models.Submission)\
+                .get(self.submission.submission_id)
+            db_submission.status = db_submission.PROCESSING
+            session.add(db_submission)
+            session.commit()
+
+            # Submission state should reflect scheduled status.
+            submission, _ = events.load(self.submission.submission_id)
+            self.assertEqual(submission.status, submission.SCHEDULED,
+                             "Submission should have scheduled status.")
+
+    def test_scheduled_status_is_reflected_processing_submission(self):
+        """The submission has been scheduled for publication today."""
+        with self.app.app_context():
+            session = classic.current_session()
+
+            # Publication agent publishes the paper.
+            db_submission = session.query(classic.models.Submission)\
+                .get(self.submission.submission_id)
+            db_submission.status = db_submission.PROCESSING_SUBMISSION
+            session.add(db_submission)
+            session.commit()
+
+            # Submission state should reflect scheduled status.
+            submission, _ = events.load(self.submission.submission_id)
+            self.assertEqual(submission.status, submission.SCHEDULED,
+                             "Submission should have scheduled status.")
+
+    def test_scheduled_status_is_reflected_prior_to_announcement(self):
+        """The submission is being published; not yet announced."""
+        with self.app.app_context():
+            session = classic.current_session()
+
+            # Publication agent publishes the paper.
+            db_submission = session.query(classic.models.Submission)\
+                .get(self.submission.submission_id)
+            db_submission.status = db_submission.NEEDS_EMAIL
+            session.add(db_submission)
+            session.commit()
+
+            # Submission state should reflect scheduled status.
+            submission, _ = events.load(self.submission.submission_id)
+            self.assertEqual(submission.status, submission.SCHEDULED,
+                             "Submission should have scheduled status.")
+
+    def test_scheduled_tomorrow_status_is_reflected(self):
+        """The submission has been scheduled for publication tomorrow."""
+        with self.app.app_context():
+            session = classic.current_session()
+
+            # Publication agent publishes the paper.
+            db_submission = session.query(classic.models.Submission)\
+                .get(self.submission.submission_id)
+            db_submission.status = db_submission.NEXT_PUBLISH_DAY
+            session.add(db_submission)
+            session.commit()
+
+            # Submission state should reflect scheduled status.
+            submission, _ = events.load(self.submission.submission_id)
+            self.assertEqual(submission.status, submission.SCHEDULED,
+                             "Submission should be scheduled for tomorrow.")
+
+    def test_publication_failed(self):
+        """The submission was not published successfully."""
+        with self.app.app_context():
+            session = classic.current_session()
+
+            # Publication agent publishes the paper.
+            db_submission = session.query(classic.models.Submission)\
+                .get(self.submission.submission_id)
+            db_submission.status = db_submission.ERROR_STATE
+            session.add(db_submission)
+            session.commit()
+
+            # Submission state should reflect scheduled status.
+            submission, _ = events.load(self.submission.submission_id)
+            self.assertEqual(submission.status, submission.ERROR,
+                             "Submission should have error status.")
+
+    def test_deleted(self):
+        """The submission was deleted."""
+        with self.app.app_context():
+            session = classic.current_session()
+
+            for classic_status in classic.models.Submission.DELETED:
+                # Publication agent publishes the paper.
+                db_submission = session.query(classic.models.Submission)\
+                    .get(self.submission.submission_id)
+                db_submission.status = classic_status
+                session.add(db_submission)
+                session.commit()
+
+                # Submission state should reflect scheduled status.
+                submission, _ = events.load(self.submission.submission_id)
+                self.assertEqual(submission.status, submission.DELETED,
+                                 "Submission should have deleted status.")

@@ -6,8 +6,10 @@ import json
 import os
 import jsonschema
 import tempfile
+from datetime import datetime
 
 from arxiv import status
+from events.domain import Submission
 from metadata.factory import create_web_app
 from metadata.controllers.submission import ev
 
@@ -246,3 +248,249 @@ class TestModerationScenarios(TestCase):
         self.assertTrue(submission_data['finalized'], "Should be finalized")
         self.assertEqual(submission_data['status'], 'hold',
                          "Status should be `hold`, as sticky_status was set")
+
+
+class TestPublicationIntegration(TestCase):
+    """
+    Test integration with the classic database concerning publication.
+
+    Since the publication process continues to run outside of the event model
+    in the short term, we need to be certain that publication-related changes
+    are represented accurately in this project.
+    """
+
+    def setUp(self):
+        """Initialize the metadata service application."""
+        # mock_classic.store_events.side_effect = lambda *a, **k: print('foo')
+        SECRET = 'foo'
+        os.environ['JWT_SECRET'] = SECRET
+        os.environ['CLASSIC_DATABASE_URI'] = 'sqlite:///%s' % DB_PATH
+
+        self.authorization = jwt.encode({
+            'scope': ['submission:write', 'submission:read'],
+            'user': {
+                'user_id': 1234,
+                'email': 'joe@bloggs.com'
+            },
+            'client': {
+                'client_id': 5678
+            }
+        }, SECRET)
+        self.app = create_web_app()
+        with self.app.app_context():
+            from events.services import classic
+            classic.create_all()
+
+        self.client = self.app.test_client()
+        self.headers = {'Authorization': self.authorization.decode('utf-8')}
+
+        # Create and finalize a new submission.
+        example = os.path.join(BASEPATH, 'examples/complete_submission.json')
+        with open(example) as f:
+            data = json.load(f)
+        response = self.client.post('/', data=json.dumps(data),
+                                    content_type='application/json',
+                                    headers=self.headers)
+        self.submission = json.loads(response.data)
+        self.submission_id = self.submission['submission_id']
+
+    def tearDown(self):
+        """Clear the database after each test."""
+        with self.app.app_context():
+            from events.services import classic
+            classic.drop_all()
+
+    def test_publication_status_is_reflected(self):
+        """The submission has been published/announced."""
+        with self.app.app_context():
+            from events.services import classic
+            session = classic.current_session()
+
+            # Publication agent publishes the paper.
+            db_submission = session.query(classic.models.Submission)\
+                .get(self.submission_id)
+            db_submission.status = db_submission.PUBLISHED
+            dated = (datetime.now() - datetime.utcfromtimestamp(0))
+            primary = self.submission['primary_classification']['category']
+            db_submission.document = classic.models.Document(
+                document_id=1,
+                paper_id='1901.00123',
+                title=self.submission['metadata']['title'],
+                authors=self.submission['metadata']['authors_canonical'],
+                dated=dated.total_seconds(),
+                primary_subject_class=primary,
+                created=datetime.now(),
+                submitter_email=self.submission['creator']['email'],
+                submitter_id=self.submission['creator']['user_id']
+            )
+            session.add(db_submission)
+            session.commit()
+
+            # Submission state should reflect publication status.
+            response = self.client.get(f'/{self.submission_id}/',
+                                       headers=self.headers)
+            submission = json.loads(response.data)
+            self.assertEqual(submission['status'], Submission.PUBLISHED,
+                             "Submission should have published status.")
+            self.assertEqual(submission['arxiv_id'], "1901.00123",
+                             "arXiv paper ID should be set")
+            self.assertFalse(submission['active'],
+                             "Published submission should no longer be active")
+
+    def test_publication_status_is_reflected_after_files_expire(self):
+        """The submission has been published/announced, and files expired."""
+        with self.app.app_context():
+            from events.services import classic
+            session = classic.current_session()
+
+            # Publication agent publishes the paper.
+            db_submission = session.query(classic.models.Submission)\
+                .get(self.submission_id)
+            db_submission.status = db_submission.DELETED_PUBLISHED
+            dated = (datetime.now() - datetime.utcfromtimestamp(0))
+            primary = self.submission['primary_classification']['category']
+            db_submission.document = classic.models.Document(
+                document_id=1,
+                paper_id='1901.00123',
+                title=self.submission['metadata']['title'],
+                authors=self.submission['metadata']['authors_canonical'],
+                dated=dated.total_seconds(),
+                primary_subject_class=primary,
+                created=datetime.now(),
+                submitter_email=self.submission['creator']['email'],
+                submitter_id=self.submission['creator']['user_id']
+            )
+            session.add(db_submission)
+            session.commit()
+
+            # Submission state should reflect publication status.
+            response = self.client.get(f'/{self.submission_id}/',
+                                       headers=self.headers)
+            submission = json.loads(response.data)
+            self.assertEqual(submission['status'], Submission.PUBLISHED,
+                             "Submission should have published status.")
+            self.assertEqual(submission['arxiv_id'], "1901.00123",
+                             "arXiv paper ID should be set")
+            self.assertFalse(submission['active'],
+                             "Published submission should no longer be active")
+
+    def test_scheduled_status_is_reflected(self):
+        """The submission has been scheduled for publication today."""
+        with self.app.app_context():
+            from events.services import classic
+            session = classic.current_session()
+
+            # Publication agent publishes the paper.
+            db_submission = session.query(classic.models.Submission)\
+                .get(self.submission_id)
+            db_submission.status = db_submission.PROCESSING
+            session.add(db_submission)
+            session.commit()
+
+            # Submission state should reflect scheduled status.
+            response = self.client.get(f'/{self.submission_id}/',
+                                       headers=self.headers)
+            submission = json.loads(response.data)
+            self.assertEqual(submission['status'], Submission.SCHEDULED,
+                             "Submission should have scheduled status.")
+
+    def test_scheduled_status_is_reflected_processing_submission(self):
+        """The submission has been scheduled for publication today."""
+        with self.app.app_context():
+            from events.services import classic
+            session = classic.current_session()
+
+            # Publication agent publishes the paper.
+            db_submission = session.query(classic.models.Submission)\
+                .get(self.submission_id)
+            db_submission.status = db_submission.PROCESSING_SUBMISSION
+            session.add(db_submission)
+            session.commit()
+
+            # Submission state should reflect scheduled status.
+            response = self.client.get(f'/{self.submission_id}/',
+                                       headers=self.headers)
+            submission = json.loads(response.data)
+            self.assertEqual(submission['status'], Submission.SCHEDULED,
+                             "Submission should have scheduled status.")
+
+    def test_scheduled_status_is_reflected_prior_to_announcement(self):
+        """The submission is being published; not yet announced."""
+        with self.app.app_context():
+            from events.services import classic
+            session = classic.current_session()
+
+            # Publication agent publishes the paper.
+            db_submission = session.query(classic.models.Submission)\
+                .get(self.submission_id)
+            db_submission.status = db_submission.NEEDS_EMAIL
+            session.add(db_submission)
+            session.commit()
+
+            # Submission state should reflect scheduled status.
+            response = self.client.get(f'/{self.submission_id}/',
+                                       headers=self.headers)
+            submission = json.loads(response.data)
+            self.assertEqual(submission['status'], Submission.SCHEDULED,
+                             "Submission should have scheduled status.")
+
+    def test_scheduled_tomorrow_status_is_reflected(self):
+        """The submission has been scheduled for publication tomorrow."""
+        with self.app.app_context():
+            from events.services import classic
+            session = classic.current_session()
+
+            # Publication agent publishes the paper.
+            db_submission = session.query(classic.models.Submission)\
+                .get(self.submission_id)
+            db_submission.status = db_submission.NEXT_PUBLISH_DAY
+            session.add(db_submission)
+            session.commit()
+
+            # Submission state should reflect scheduled status.
+            response = self.client.get(f'/{self.submission_id}/',
+                                       headers=self.headers)
+            submission = json.loads(response.data)
+            self.assertEqual(submission['status'], Submission.SCHEDULED,
+                             "Submission should be scheduled for tomorrow.")
+
+    def test_publication_failed(self):
+        """The submission was not published successfully."""
+        with self.app.app_context():
+            from events.services import classic
+            session = classic.current_session()
+
+            # Publication agent publishes the paper.
+            db_submission = session.query(classic.models.Submission)\
+                .get(self.submission_id)
+            db_submission.status = db_submission.ERROR_STATE
+            session.add(db_submission)
+            session.commit()
+
+            # Submission state should reflect scheduled status.
+            response = self.client.get(f'/{self.submission_id}/',
+                                       headers=self.headers)
+            submission = json.loads(response.data)
+            self.assertEqual(submission['status'], Submission.ERROR,
+                             "Submission should have error status.")
+
+    def test_deleted(self):
+        """The submission was deleted."""
+        with self.app.app_context():
+            from events.services import classic
+            session = classic.current_session()
+
+            for classic_status in classic.models.Submission.DELETED:
+                # Publication agent publishes the paper.
+                db_submission = session.query(classic.models.Submission)\
+                    .get(self.submission_id)
+                db_submission.status = classic_status
+                session.add(db_submission)
+                session.commit()
+
+                # Submission state should reflect scheduled status.
+                response = self.client.get(f'/{self.submission_id}/',
+                                           headers=self.headers)
+                submission = json.loads(response.data)
+                self.assertEqual(submission['status'], Submission.DELETED,
+                                 "Submission should have deleted status.")
