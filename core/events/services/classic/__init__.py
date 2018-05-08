@@ -56,6 +56,8 @@ class DBEvent(Base):  # type: ignore
     event_type = Column(String(255))
     proxy = Column(util.FriendlyJSON)
     proxy_id = index_property('proxy', 'agent_identifier')
+    client = Column(util.FriendlyJSON)
+    client_id = index_property('client', 'agent_identifier')
 
     creator = Column(util.FriendlyJSON)
     creator_id = index_property('creator', 'agent_identifier')
@@ -78,7 +80,8 @@ class DBEvent(Base):  # type: ignore
         :class:`.Event`
 
         """
-        _skip = ['creator', 'proxy', 'submission_id', 'created', 'event_type']
+        _skip = ['creator', 'proxy', 'client', 'submission_id', 'created',
+                 'event_type']
         data = {
             key: value for key, value in self.data.items()
             if key not in _skip
@@ -88,6 +91,7 @@ class DBEvent(Base):  # type: ignore
             self.event_type,
             creator=Agent.from_dict(self.creator),
             proxy=Agent.from_dict(self.proxy) if self.proxy else None,
+            client=Agent.from_dict(self.client) if self.client else None,
             submission_id=self.submission_id,
             created=self.created,
             **data

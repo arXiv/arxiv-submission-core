@@ -147,6 +147,8 @@ class Event:
         data = asdict(self)
         data.update({
             'creator': self.creator.to_dict(),
+            'proxy': self.proxy.to_dict() if self.proxy else None,
+            'client': self.client.to_dict() if self.client else None,
             'created': self.created.isoformat(),
         })
         return data

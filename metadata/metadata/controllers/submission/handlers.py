@@ -221,7 +221,6 @@ def handle_finalization(data: dict, agents: dict) -> Tuple[events.Event]:
     tuple
         Zero or more uncommitted :class:`events.Event` instances.
     """
-    print('finalization!', data)
     if data:
         return events.FinalizeSubmission(**agents),
     else:
