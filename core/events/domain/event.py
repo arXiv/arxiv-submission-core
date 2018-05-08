@@ -405,7 +405,6 @@ class UpdateAuthors(Event):
         """May not apply to a finalized submission."""
         submission_is_not_finalized(self, submission)
         self._does_not_contain_et_al()
-        self._display_names_are_valid()
 
     def _canonical_author_string(self) -> str:
         """Canonical representation of authors, using display names."""
@@ -422,9 +421,6 @@ class UpdateAuthors(Event):
         # Change capitalized or uppercase `And` to `and`.
         s = re.sub(r"\bA(?i:ND)\b", "and", s)
         return s.strip()   # Removing leading and trailing whitespace.
-
-    def _display_names_are_valid(self) -> None:
-        """Verify that display names match the canonical format."""
 
     def _does_not_contain_et_al(self) -> None:
         """The authors display value should not contain `et al`."""
