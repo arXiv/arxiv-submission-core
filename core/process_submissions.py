@@ -34,8 +34,9 @@ def process_csv(csvfile, session):
         reader = DictReader(csvfh)
         for submission in reader:
             try:
-                process_submission(submission, session)
-            except InvalidEvent as e:
+                submission_id = process_submission(submission, session)
+                verify_submission(submission, session, submission_id)
+            except (AssertionError, InvalidEvent) as e:
                 logging.error('{}: {}'.format(submission['submission_id'], e))
                 
 
@@ -107,9 +108,34 @@ def process_submission(s, session):
         submission_id=submission.submission_id
     )
 
+    return submission.submission_id
+
 
     # If it goes to the end, then verify that results come in
     # events.load() returns a submission object, then verify it looks as expected
+
+def verify_submission(s, session, submission_id):
+    submission, stack = events.load(submission_id)
+
+    assert submission.metadata.title == s['title']
+    assert submission.metadata.abstract == s['abstract']
+    assert submission.metadata.comments == s['comments']
+    assert submission.metadata.report_num == s['report_num']
+    assert submission.metadata.doi == s['doi']
+    assert submission.metadata.journal_ref == s['journal_ref']
+    
+    if s.get('agree_policy') == '1':
+        assert submission.submitter_accepts_policy
+    else:
+        assert not submission.submitter_accepts_policy
+
+    if s.get('license'):
+        assert submission.license.uri == s['license']
+
+    if s.get('is_author') == '1':
+        assert submission.submitter_is_author
+    else:
+        assert not submission.submitter_is_author
 
 if __name__ == '__main__':
     parser = ArgumentParser()
