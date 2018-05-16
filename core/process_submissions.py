@@ -8,7 +8,7 @@ from flask import Flask
 import events
 from events.services import classic
 
-from events.exceptions import InvalidEvent
+from events.exceptions import InvalidStack
 
 @contextmanager
 def in_memory_db():
@@ -34,13 +34,13 @@ def process_csv(csvfile, session):
         reader = DictReader(csvfh)
         for submission in reader:
             try:
-                submission_id = process_submission(submission, session)
-                verify_submission(submission, session, submission_id)
-            except (AssertionError, InvalidEvent) as e:
+                submission_id = process_submission(submission)
+                verify_submission(submission, submission_id)
+            except (AssertionError, InvalidStack) as e:
                 logging.error('{}: {}'.format(submission['submission_id'], e))
-                
 
-def process_submission(s, session):
+
+def process_submission(s):
     """
     Process a submission using a csvfile
     """
@@ -74,10 +74,24 @@ def process_submission(s, session):
             ),
             submission_id=submission.submission_id
         )
-    
+    else:
+        submission, stack = events.save(
+            events.AssertAuthorship(
+                creator=submitter,
+                submitter_is_author=False
+            ),
+            submission_id=submission.submission_id
+        )
+
     if s.get('agree_policy') == '1':
         submission, stack = events.save(
             events.AcceptPolicy(creator=submitter),
+            submission_id=submission.submission_id
+        )
+
+    if s.get('userinfo') == '1':
+        submission, stack = events.save(
+            events.VerifyContactInformation(creator=submitter),
             submission_id=submission.submission_id
         )
 
@@ -85,6 +99,14 @@ def process_submission(s, session):
         events.UpdateAuthors(
             authors_display=s['authors'],
             creator=submitter
+        ),
+        events.UpdateMetadata(
+            creator=submitter,
+            metadata=metadata
+        ),
+        events.SetPrimaryClassification(
+            creator=submitter,
+            category=s['category']
         ),
         submission_id=submission.submission_id
     )
@@ -100,13 +122,14 @@ def process_submission(s, session):
             submission_id=submission.submission_id
         )
 
-    submission, stack = events.save(
-        events.UpdateMetadata(
-            creator=submitter,
-            metadata=metadata
-        ),
-        submission_id=submission.submission_id
-    )
+    if s.get('status') != '0':
+        submission, stack = events.save(
+            events.FinalizeSubmission(
+                creator=submitter
+            ),
+            submission_id=submission.submission_id
+        )
+
 
     return submission.submission_id
 
@@ -114,7 +137,7 @@ def process_submission(s, session):
     # If it goes to the end, then verify that results come in
     # events.load() returns a submission object, then verify it looks as expected
 
-def verify_submission(s, session, submission_id):
+def verify_submission(s, submission_id):
     submission, stack = events.load(submission_id)
 
     assert submission.metadata.title == s['title']
@@ -125,7 +148,7 @@ def verify_submission(s, session, submission_id):
     assert submission.metadata.journal_ref == s['journal_ref']
     
     if s.get('agree_policy') == '1':
-        assert submission.submitter_accepts_policy
+        assert submission.submitter_accepts_policy, "AcceptPolicy Error"
     else:
         assert not submission.submitter_accepts_policy
 
@@ -133,9 +156,14 @@ def verify_submission(s, session, submission_id):
         assert submission.license.uri == s['license']
 
     if s.get('is_author') == '1':
-        assert submission.submitter_is_author
+        assert submission.submitter_is_author, "AssertAuthorship not aligned: returns False, should be True"
     else:
-        assert not submission.submitter_is_author
+        assert not submission.submitter_is_author, "AssertAuthorship does not match: returns True, should be False"
+
+    if s.get('status') != '0':
+        assert submission.status == Submission.SUBMITTED
+    else:
+        assert submission.status == Submission.WORKING
 
 if __name__ == '__main__':
     parser = ArgumentParser()
