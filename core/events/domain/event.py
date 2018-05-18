@@ -503,7 +503,7 @@ class FinalizeSubmission(Event):
         'creator', 'primary_classification', 'submitter_contact_verified',
         'submitter_accepts_policy', 'license', 'source_content', 'metadata',
     ]
-    REQUIRED_METADATA = ['title', 'abstract', 'authors']
+    REQUIRED_METADATA = ['title', 'abstract', 'authors_display']
 
     def validate(self, submission: Submission) -> None:
         """Ensure that all required data/steps are complete."""

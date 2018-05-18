@@ -23,6 +23,7 @@ import logging
 from flask import Flask
 
 import events
+from events.domain.submission import Submission
 from events.services import classic
 
 from events.exceptions import InvalidStack
