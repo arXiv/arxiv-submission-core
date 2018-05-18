@@ -1,3 +1,13 @@
+"""
+process_submissions
+
+Usage: python process_submissions.py <TSVFILE>
+
+TSVFILE is a TSVFILE containing the export_submissions.sql
+"""
+
+
+
 from argparse import ArgumentParser
 from contextlib import contextmanager
 from csv import DictReader
@@ -26,12 +36,12 @@ def in_memory_db():
         finally:
             classic.drop_all()
 
-def process_csv(csvfile, session):
+def process_csv(tsvfile, session):
     """
-    Process a csvfile using DictReader so any order of files will be possible.
+    Process a tsvfile using DictReader so any order of files will be possible.
     """
-    with open(csvfile) as csvfh:
-        reader = DictReader(csvfh)
+    with open(tsvfile) as tsvfh:
+        reader = DictReader(tsvfh, delimiter='\t')
         for submission in reader:
             try:
                 submission_id = process_submission(submission)
@@ -42,7 +52,7 @@ def process_csv(csvfile, session):
 
 def process_submission(s):
     """
-    Process a submission using a csvfile
+    Process a submission using a tsvfile
     """
     # TODO: Make sure forename surname separation are better
     try:
@@ -178,8 +188,8 @@ def verify_submission(s, submission_id):
 
 if __name__ == '__main__':
     parser = ArgumentParser()
-    parser.add_argument('csvfile', help='CSV file')
+    parser.add_argument('tsvfile', help='TSV file')
     args = parser.parse_args()
 
     with in_memory_db() as session:
-        process_csv(args.csvfile, session)
+        process_csv(args.tsvfile, session)
