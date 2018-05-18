@@ -122,6 +122,18 @@ def process_submission(s):
             submission_id=submission.submission_id
         )
 
+    if s.get('package'):
+        submission, stack = events.save(
+            events.AttachSourceContent(
+                location='https://example.arxiv.org/' + s['package'],
+                format=s['source_format'],
+                checksum='0',
+                identifier=1,
+                creator=submitter
+            ),
+            submission_id=submission.submission_id
+        )
+
     if s.get('status') != '0':
         submission, stack = events.save(
             events.FinalizeSubmission(
@@ -129,7 +141,6 @@ def process_submission(s):
             ),
             submission_id=submission.submission_id
         )
-
 
     return submission.submission_id
 
