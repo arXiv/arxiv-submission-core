@@ -3,10 +3,17 @@ process_submissions
 
 Usage: python process_submissions.py <TSVFILE>
 
-TSVFILE is a TSVFILE containing the export_submissions.sql
+TSVFILE is a TSVFILE containing the export_submissions.sql output.
+
+Over all process (from arxiv-submission-core as working dir):
+pipenv install --dev
+pipenv shell
+cd core
+python setup.py develop
+cd scripts
+mysql -u root -B arXiv < export_submissions.sql > submissions.tsv
+python process_submissions.py submissions.tsv
 """
-
-
 
 from argparse import ArgumentParser
 from contextlib import contextmanager
