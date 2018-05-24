@@ -1,0 +1,30 @@
+{% extends "submit/base.html" %}
+
+{% block content %}
+<h2>Select a license</h2>
+<div class="field is-grouped">
+  <div class="control">
+    <div class="radio">
+      <input id="license_1" name="license_1" type="radio" value="y">
+      <label>arXiv.org perpetual, non-exclusive license to distribute this article.</label>
+    </div>
+  </div>
+  <div class="control">
+    <div class="radio">
+      <input id="license_2" name="license_2" type="radio" value="n">
+      <label>I know there is a variable for this in the base config and should be a loop of options.</label>
+    </div>
+  </div>
+</div>
+<div class="field is-grouped">
+  <div class="control">
+    <button class="button">Previous</button>
+  </div>
+  <div class="control">
+    <button class="button is-link">Save and Continue</button>
+  </div>
+  <div class="control">
+    <button class="button">Save and Exit</button>
+  </div>
+</div>
+{% endblock content %}
