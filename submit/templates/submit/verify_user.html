@@ -1,7 +1,9 @@
 {% extends "submit/base.html" %}
 
-{% block content %}
-<h2>Verify your contact information</h2>
+{% import "submit/submit_macros.html" as submit_macros %}
+
+{% block within_content %}
+<h2 class="is-size-4">Verify your contact information</h2>
 <p><span class="label">Forename:</span> Ima</p>
 <p><span class="label">Surname:</span> Nauthor</p>
 <p><span class="label">Suffix:</span></p>
@@ -9,21 +11,12 @@
 <p><span class="label">E-mail:</span> ian413@cornell.edu</p>
 <div class="field">
   <div class="control">
-    <div class="checkbox">
+    <label class="checkbox">
       <input id="user_verification" name="user_verification" type="checkbox" value="y">
-      <label>By checking this box, I verify that my user information is correct.</label>
-    </div>
+      By checking this box, I verify that my user information is correct.
+    </label>
   </div>
 </div>
-<div class="field is-grouped">
-  <div class="control">
-    <button class="button">Previous</button>
-  </div>
-  <div class="control">
-    <button class="button is-link">Save and Continue</button>
-  </div>
-  <div class="control">
-    <button class="button">Save and Exit</button>
-  </div>
-</div>
-{% endblock content %}
+
+{{ submit_macros.submit_nav() }}
+{% endblock within_content %}

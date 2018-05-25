@@ -2,10 +2,49 @@
 
 {% import "submit/submit_macros.html" as submit_macros %}
 
-{% block content %}
-<h2>Process Files</h2>
+{% block within_content %}
+<h2 class="is-size-4">Process Files</h2>
 
-whoa this will be a big one with lots of context
+<div class="columns">
+  <div class="column">
+    <div class="field">
+      <div class="control">
+        <label class="label">Primary compiler:</label>
+        <div class="select">
+          <select>
+            <option>pdflatex</option>
+            <option>some other compiler</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="field">
+      <div class="control">
+        <button type="button" class="button is-link">Process</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="column">
+    <div class="message is-info is-inline-block submit-nav">
+      <div class="message-body">
+        <p><span class="icon has-text-link"><i class="fa fa-info-circle"></i></span>
+        Our system has automatically detected your files as type <strong>filetype</strong>.</p>
+        <p> If your submission is not of the type shown above, or if you know which
+          <a href="#">TeXLive 2016</a> compiler will process your files best,
+          choose that compiler. If you do not know which compiler will process best,
+          leave this default alone.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="message is-info is-inline-block submit-nav">
+  <div class="message-body">
+    <p><span class="icon has-text-link"><i class="fa fa-info-circle"></i></span>
+    You can upload all your files at once as a single .tar.gz file or upload individual files as needed.</p>
+  </div>
+</div>
 
 {{ submit_macros.submit_nav() }}
-{% endblock content %}
+{% endblock within_content %}

@@ -2,9 +2,9 @@
 
 {% import "submit/submit_macros.html" as submit_macros %}
 
-{% block content %}
-<h2>Select a license</h2>
-<div class="field is-grouped">
+{% block within_content %}
+<h2 class="is-size-4">Select a license</h2>
+<div class="field">
   <div class="control">
     <label class="radio">
     <input id="license_1" name="license_1" type="radio" value="y">
@@ -20,4 +20,4 @@
 </div>
 
 {{ submit_macros.submit_nav() }}
-{% endblock content %}
+{% endblock within_content %}

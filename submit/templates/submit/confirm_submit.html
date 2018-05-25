@@ -1,10 +1,12 @@
 {% extends "submit/base.html" %}
 
-{% block content %}
-<h2>Your submission has been received</h2>
+{% import "submit/submit_macros.html" as submit_macros %}
+
+{% block within_content %}
+<h2 class="is-size-4">Your submission has been received</h2>
 
 Now, a message about what comes next.
 
 Link to user page and tools for changing submission.
 
-{% endblock content %}
+{% endblock within_content %}

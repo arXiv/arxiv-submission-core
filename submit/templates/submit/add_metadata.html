@@ -2,10 +2,74 @@
 
 {% import "submit/submit_macros.html" as submit_macros %}
 
-{% block content %}
-<h2>Add or edit metadata</h2>
+{% block within_content %}
+<h2 class="is-size-4">Add or edit metadata</h2>
 
-whole bunch of fields here, break into two fieldsets
+<div class="field">
+  <div class="control">
+    <label class="label">*Title <span class="icon has-text-link"><i class="fa fa-question-circle"></i></span></label>
+    <input class="input" type="text" placeholder="Title here">
+  </div>
+</div>
+
+<div class="field">
+  <div class="control">
+    <label class="label">*Author(s) <span class="icon has-text-link"><i class="fa fa-question-circle"></i></span></label>
+    <input class="input" type="text" placeholder="Authors here">
+    <p class="help">use <code>Forename Surname</code> or <code>I. Surname</code>; separate individual authors with a comma or 'and'</p>
+  </div>
+</div>
+
+<div class="field">
+  <div class="control">
+    <label class="label">*Abstract <span class="icon has-text-link"><i class="fa fa-question-circle"></i></span></label>
+    <input class="input" type="textarea" placeholder="Abstract here">
+    <p class="help">Limit of 1920 characters</p>
+  </div>
+</div>
+
+<div class="field">
+  <div class="control">
+    <label class="label">Comments <span class="icon has-text-link"><i class="fa fa-question-circle"></i></span></label>
+    <input class="input" type="text" placeholder="Comments here">
+    <p class="help">supplemental information such as number of pages or figures, conference information</p>
+  </div>
+</div>
+
+<div class="field">
+  <div class="control">
+    <label class="label">Report Number <span class="icon has-text-link"><i class="fa fa-question-circle"></i></span></label>
+    <input class="input" type="text" placeholder="leave blank if you don't have one">
+  </div>
+</div>
+
+<div class="field">
+  <div class="control">
+    <label class="label">Journal Reference <span class="icon has-text-link"><i class="fa fa-question-circle"></i></span></label>
+    <input class="input" type="text" placeholder="Jref placeholder">
+  </div>
+</div>
+
+<div class="field">
+  <div class="control">
+    <label class="label">DOI <span class="icon has-text-link"><i class="fa fa-question-circle"></i></span></label>
+    <input class="input" type="text" placeholder="Placeholder">
+  </div>
+</div>
+
+<div class="field">
+  <div class="control">
+    <label class="label">ACM Class <span class="icon has-text-link"><i class="fa fa-question-circle"></i></span></label>
+    <input class="input" type="text" placeholder="show only on CS?">
+  </div>
+</div>
+
+<div class="field">
+  <div class="control">
+    <label class="label">MSC Class <span class="icon has-text-link"><i class="fa fa-question-circle"></i></span></label>
+    <input class="input" type="text" placeholder="show only on math?">
+  </div>
+</div>
 
 {{ submit_macros.submit_nav() }}
-{% endblock content %}
+{% endblock within_content %}

@@ -1,13 +1,28 @@
-{%- macro submit_nav() -%}
-  <div class="field is-grouped">
-    <div class="control">
-      <button class="button">Previous</button>
-    </div>
-    <div class="control">
-      <button class="button is-link">Save and Continue</button>
-    </div>
-    <div class="control">
-      <button class="button">Save and Exit</button>
-    </div>
+{% macro submit_nav() %}
+
+  <div class="buttons submit-nav" role="navigation">
+      <a class="button">Previous</a>
+      <a class="button">Save and Exit</a>
+      <a class="button is-link">Next</a>
   </div>
-{%- endmacro -%}
+
+{% endmacro %}
+
+{% macro progress_bar() %}
+{# TODO: make this into a real navigation mechanism, with variables to relate
+   tooltips, page name, template, and page order. Also real routenames instead
+   of this initial hack. #}
+
+  <span><a href="http://127.0.0.1:5000/">1</a></span>
+  <span><a href="http://127.0.0.1:5000/authorship">2</a></span>
+  <span><a href="http://127.0.0.1:5000/license">3</a></span>
+  <span><a href="http://127.0.0.1:5000/policy_ack">4</a></span>
+  <span><a href="http://127.0.0.1:5000/classification">5</a></span>
+  <span><a href="http://127.0.0.1:5000/cross">6</a></span>
+  <span><a href="http://127.0.0.1:5000/file_upload">7</a></span>
+  <span><a href="http://127.0.0.1:5000/file_process">8</a></span>
+  <span><a href="http://127.0.0.1:5000/add_metadata">9</a></span>
+  <span><a href="http://127.0.0.1:5000/final_preview">10</a></span> 
+  <span><a href="http://127.0.0.1:5000/confirm_submit">11</a></span>
+
+{% endmacro %}
