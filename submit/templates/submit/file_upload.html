@@ -1,0 +1,17 @@
+{% extends "submit/base.html" %}
+
+{% import "submit/submit_macros.html" as submit_macros %}
+
+{% block content %}
+<h2>Add or Edit Files</h2>
+
+message
+
+Upload
+
+Files currently attached to this submission
+
+message
+
+{{ submit_macros.submit_nav() }}
+{% endblock content %}

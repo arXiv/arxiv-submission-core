@@ -1,0 +1,24 @@
+{% extends "submit/base.html" %}
+
+{% import "submit/submit_macros.html" as submit_macros %}
+
+{% block content %}
+<h2>Acknowledge policy statement</h2>
+<ul>
+  <li>I understand that submissions cannot be completely removed once accepted.</li>
+  <li>I understand that arXiv reserves the right to reclassify or reject any submission.</li>
+  <li>I understand that this submission will be automatically compared with the
+    text of other arXiv articles, and detected text overlap may be noted.</li>
+</ul>
+
+<div class="field">
+  <div class="control">
+    <label class="checkbox">
+      <input type="checkbox" id="policy_ack" name="policy_ack" value="y">
+      By checking this box, I agree to the above policies.
+    </label>
+  </div>
+</div>
+
+{{ submit_macros.submit_nav() }}
+{% endblock content %}
