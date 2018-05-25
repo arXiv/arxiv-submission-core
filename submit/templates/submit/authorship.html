@@ -1,34 +1,27 @@
 {% extends "submit/base.html" %}
 
+{% import "submit/submit_macros.html" as submit_macros %}
+
 {% block content %}
 <h2>Confirm authorship or proxy approval</h2>
 <div class="field is-grouped">
   <div class="control">
-    <div class="radio">
-      <input id="iam_author" name="iam_author" type="radio" value="y">
-      <label>I am an author of this paper.</label>
-    </div>
+    <label class="radio">
+    <input id="iam_author" name="iam_author" type="radio" value="y">
+    I am an author of this paper.</label>
   </div>
   <div class="control">
-    <div class="radio">
-      <input id="iam_not_author" name="iam_not_author" type="radio" value="n">
-      <label>I am not an author of this paper.</label>
-    </div>
-    <div class="checkbox">
-      <input type="checkbox"><label>By checking this box, I certify that I have
-        received authorization from arXiv to submit papers on behalf of the authors.</label>
-    </div>
+    <label class="radio">
+    <input id="iam_not_author" name="iam_not_author" type="radio" value="n">
+    I am not an author of this paper.</label>
+  </div>
+  <div class="control">
+    <label class="checkbox">
+    <input type="checkbox">
+    By checking this box, I certify that I have received authorization from
+    arXiv to submit papers on behalf of the authors.</label>
   </div>
 </div>
-<div class="field is-grouped">
-  <div class="control">
-    <button class="button">Previous</button>
-  </div>
-  <div class="control">
-    <button class="button is-link">Save and Continue</button>
-  </div>
-  <div class="control">
-    <button class="button">Save and Exit</button>
-  </div>
-</div>
+
+{{ submit_macros.submit_nav() }}
 {% endblock content %}

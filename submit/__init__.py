@@ -1,1 +1,1 @@
-"""Main submit UI"""
+"""Main submit UI."""
