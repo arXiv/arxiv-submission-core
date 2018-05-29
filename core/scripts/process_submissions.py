@@ -28,6 +28,8 @@ from events.services import classic
 
 from events.exceptions import InvalidStack
 
+INVALID_STATUSES = ['0', '20', '29', '30']
+
 @contextmanager
 def in_memory_db():
     """Provide an in-memory sqlite database for testing purposes."""
@@ -152,7 +154,7 @@ def process_submission(s):
             submission_id=submission.submission_id
         )
 
-    if s.get('status') != '0':
+    if s.get('status') not in INVALID_STATUSES:
         submission, stack = events.save(
             events.FinalizeSubmission(
                 creator=submitter
@@ -189,7 +191,7 @@ def verify_submission(s, submission_id):
     else:
         assert not submission.submitter_is_author, "AssertAuthorship does not match: returns True, should be False"
 
-    if s.get('status') != '0':
+    if s.get('status') not in INVALID_STATUSES:
         assert submission.status == Submission.SUBMITTED
     else:
         assert submission.status == Submission.WORKING
