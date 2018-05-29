@@ -2,7 +2,7 @@
 #
 # This is a simple mockup for an eventual authorization service.
 
-FROM arxiv/base:0.7
+FROM arxiv/base:0.7.1
 
 WORKDIR /opt/arxiv
 
