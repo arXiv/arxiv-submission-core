@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "839a726c12b3b21f8dc34aa7fba0ad594ec4462b9783a44364242a69630b9976"
+            "sha256": "e0449f5d811c509e623437f899e38ca0f577a960a0112b1002a7ed9e2f9b01df"
         },
         "host-environment-markers": {
             "implementation_name": "cpython",
@@ -29,9 +29,9 @@
     "default": {
         "arxiv-base": {
             "hashes": [
-                "sha256:60840fad2c607aac0554135683e7f41aae786a070c60b0177bb0d0d42a02a73d"
+                "sha256:73afac321bd5a358ea63ba3dddeaa63834a22f44afb8b4872c73aa1a857c7a88"
             ],
-            "version": "==0.5.1"
+            "version": "==0.5.2"
         },
         "click": {
             "hashes": [
@@ -160,10 +160,10 @@
         },
         "certifi": {
             "hashes": [
-                "sha256:14131608ad2fd56836d33a71ee60fa1c82bc9d2c8d98b7bdbc631fe1b3cd1296",
-                "sha256:edbc3f203427eef571f79a7692bb160a2b0f7ccaa31953e99bd17e307cf63f7d"
+                "sha256:9fa520c1bacfb634fa7af20a76bcbd3d5fb390481724c597da32c719a7dca4b0",
+                "sha256:13e698f54293db9f89122b0581843a782ad0934a4fe0172d2a980ba77fc61bb7"
             ],
-            "version": "==2018.1.18"
+            "version": "==2018.4.16"
         },
         "chardet": {
             "hashes": [
@@ -298,10 +298,10 @@
         },
         "mypy": {
             "hashes": [
-                "sha256:7247f9948d7cdaae9408a4ee1662a01853c24e668117b4419acf025b05fbe3ce",
-                "sha256:3bd95a1369810f7693366911d85be9f0a0bd994f6cb7162b7a994e5ded90e3d9"
+                "sha256:cdd3ddf96a2cc2e955bcc7b2a16b25e400f132393375b45a2d719c91ac1a8291",
+                "sha256:04bffef22377b3f56f96da2d032e5d0b2e8a9062a127afc008dc4b0e64cede7a"
             ],
-            "version": "==0.580"
+            "version": "==0.590"
         },
         "nose2": {
             "hashes": [

@@ -41,7 +41,7 @@ def create_submission() -> Union[str, Response]:
     )
 
 
-@blueprint.route('/<string:submission_id>', methods=['GET'])
+@blueprint.route('/<string:submission_id>/', methods=['GET'])
 @json_response
 @scoped('submission:read')
 def get_submission(submission_id: str) -> tuple:
@@ -76,10 +76,10 @@ def get_submission(submission_id: str) -> tuple:
 def update_submission(submission_id: str) -> tuple:
     """Update the submission."""
     return submission.update_submission(
-        submission_id,
         request.get_json(),
         dict(request.headers),
-        user=g.user,
-        client=g.client,
-        token=g.token
+        user_data=g.user,
+        client_data=g.client,
+        token=g.token,
+        submission_id=submission_id
     )

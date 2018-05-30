@@ -7,14 +7,14 @@
   "properties": {
     "user_id": {
       "description": "Native ID of the user (e.g. arXiv user ID).",
-      "type": "string"
+      "type": "integer"
     },
-    "first_name": {
+    "forename": {
       "description": "Forename of the user",
       "type": "string"
     },
-    "last_name": {
-      "description": "Surnamne of the user",
+    "surname": {
+      "description": "Surname of the user",
       "type": "string"
     },
     "suffix": {

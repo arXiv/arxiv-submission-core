@@ -75,14 +75,11 @@ def create_submission(data: dict, headers: dict, user_data: dict,
     try:
         submission, events = ev.save(create, *events)
     except ev.InvalidEvent as e:
-        raise InternalServerError(str(e)) from e
+        raise BadRequest(str(e)) from e
     except ev.SaveError as e:
         logger.error('Problem interacting with database: (%s) %s',
                      str(type(e)), str(e))
         raise InternalServerError('Problem interacting with database') from e
-    except Exception as e:
-        logger.error('Unhandled exception: (%s) %s', str(type(e)), str(e))
-        raise InternalServerError('Encountered unhandled exception') from e
 
     response_headers = {
         'Location': url_for('submission.get_submission',
@@ -118,15 +115,12 @@ def update_submission(data: dict, headers: dict, user_data: dict,
     except ev.NoSuchSubmission as e:
         raise NotFound(f"No submission found with id {submission_id}")
     except ev.InvalidEvent as e:
-        raise InternalServerError(str(e)) from e
+        raise BadRequest(str(e)) from e
     except ev.SaveError as e:
         raise InternalServerError('Problem interacting with database') from e
-    except Exception as e:
-        logger.error('Unhandled exception: (%s) %s', str(type(e)), str(e))
-        raise InternalServerError('Encountered unhandled exception') from e
 
     response_headers = {
-        'Location': url_for('submit.get_submission', creator=user,
+        'Location': url_for('submission.get_submission', creator=user,
                             submission_id=submission.submission_id)
     }
     return submission.to_dict(), status.HTTP_200_OK, response_headers

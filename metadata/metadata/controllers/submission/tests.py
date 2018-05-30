@@ -99,16 +99,23 @@ class TestCreateSubmission(TestCase):
     @mock.patch('metadata.controllers.submission.url_for')
     @mock.patch('metadata.controllers.submission.ev')
     def test_create_submission_with_invalid_event(self, mock_events, url_for):
-        """An internal server error is raised on an invalid event."""
+        """A Bad Request error is raised on an invalid event."""
         url_for.return_value = '/foo/'
-        mock_events.save.side_effect = InvalidEvent
+
+        def raise_invalid_event(*events, **kwargs):
+            user = dict(**self.user_data)
+            user['native_id'] = user['user_id']
+            user.pop('user_id')
+            raise InvalidEvent(CreateSubmission(creator=User(**user)), 'foo')
+
+        mock_events.save.side_effect = raise_invalid_event
         preserve_exceptions_and_events(mock_events)
         data = {
             'primary_classification': {
                 'category': 'astro-ph'
             }
         }
-        with self.assertRaises(InternalServerError):
+        with self.assertRaises(BadRequest):
             submission.create_submission(data, self.headers, self.user_data,
                                          self.client_data, self.token)
 
@@ -210,16 +217,23 @@ class TestUpdateSubmission(TestCase):
     @mock.patch('metadata.controllers.submission.url_for')
     @mock.patch('metadata.controllers.submission.ev')
     def test_update_submission_with_invalid_event(self, mock_events, url_for):
-        """An internal server error is raised on an invalid event."""
+        """A Bad Request is raised on an invalid event."""
         url_for.return_value = '/foo/'
         preserve_exceptions_and_events(mock_events)
-        mock_events.save.side_effect = InvalidEvent
+
+        def raise_invalid_event(*events, **kwargs):
+            user = dict(**self.user_data)
+            user['native_id'] = user['user_id']
+            user.pop('user_id')
+            raise InvalidEvent(CreateSubmission(creator=User(**user)), 'foo')
+
+        mock_events.save.side_effect = raise_invalid_event
         data = {
             'primary_classification': {
                 'category': 'astro-ph'
             }
         }
-        with self.assertRaises(InternalServerError):
+        with self.assertRaises(BadRequest):
             submission.update_submission(data, self.headers, self.user_data,
                                          self.client_data, self.token, 1)
 

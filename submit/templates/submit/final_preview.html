@@ -1,0 +1,16 @@
+{% extends "submit/base.html" %}
+
+{% import "submit/submit_macros.html" as submit_macros %}
+
+{% block within_content %}
+<h2 class="is-size-4">Preview and approve your submission</h2>
+
+Final arXiv abstract preview (how it will appear on the website)
+preview
+
+Final PDF Preview
+
+message - check carefully!
+
+{{ submit_macros.submit_nav() }}
+{% endblock within_content %}

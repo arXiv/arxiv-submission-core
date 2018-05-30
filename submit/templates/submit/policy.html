@@ -1,0 +1,29 @@
+{% extends "submit/base.html" %}
+
+{% import "submit/submit_macros.html" as submit_macros %}
+
+{% block within_content %}
+<h2 class="is-size-4">Acknowledge policy statement</h2>
+<ul>
+  <li>I confirm that I have the rights to agree to the license designated for this submission.</li>
+  <li>I understand that submissions cannot be completely removed once accepted.</li>
+  <li>I understand that arXiv reserves the right to reclassify or reject any submission.</li>
+  <li>I understand that this submission will automatically be compared with the
+    text of other arXiv articles and detected text overlap may be noted.</li>
+  <li>I understand that metadata may be corrected to conform to arXiv standards.</li>
+  <li>For third-party submissions, I have obtained pre-authorization from arXiv
+    to submit as a third-party submitter.</li>
+</ul>
+
+<div class="field">
+  <div class="control">
+    <label class="checkbox">
+      <input type="checkbox" id="policy_ack" name="policy_ack" value="y">
+      By checking this box, I agree to the above policies.
+    </label>
+  </div>
+</div>
+
+{{ submit_macros.submit_nav() }}
+
+{% endblock within_content %}

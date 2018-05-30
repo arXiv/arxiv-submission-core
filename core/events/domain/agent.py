@@ -91,12 +91,13 @@ class User(Agent):
         """Generate a dict representation of this :class:`.User`."""
         data = super(User, self).to_dict()
         data['name'] = self.name
-        data['forename'] = self.name
-        data['surname'] = self.name
-        data['suffix'] = self.name
+        data['forename'] = self.forename
+        data['surname'] = self.surname
+        data['suffix'] = self.suffix
         data['email'] = self.email
         data['identifier'] = self.identifier
         data['affiliation'] = self.affiliation
+        data['user_id'] = self.native_id
         return data
 
 

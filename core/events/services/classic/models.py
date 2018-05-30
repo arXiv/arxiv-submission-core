@@ -19,6 +19,7 @@ class Submission(Base):    # type: ignore
 
     __tablename__ = 'arXiv_submissions'
 
+    # Pre-moderation stages; these are tied to the classic submission UI.
     NEW = 0
     STARTED = 1
     FILES_ADDED = 2
@@ -27,13 +28,18 @@ class Submission(Base):    # type: ignore
     SUBMITTED = 5
     STAGES = [NEW, STARTED, FILES_ADDED, PROCESSED, METADATA_ADDED, SUBMITTED]
 
+    # Submission status; this describes where the submission is in the
+    # publication workflow.
     NOT_SUBMITTED = 0   # Working.
     SUBMITTED = 1       # Enqueued for moderation, to be scheduled.
     ON_HOLD = 2
     UNUSED = 3
-    NEXT_DAY = 4        # Scheduled for tomorrow.
+    NEXT_PUBLISH_DAY = 4
+    """Scheduled for the next publication cycle."""
     PROCESSING = 5
+    """Scheduled for today."""
     NEEDS_EMAIL = 6
+    """Published, not yet announced."""
 
     PUBLISHED = 7
     DELETED_PUBLISHED = 27
@@ -44,6 +50,7 @@ class Submission(Base):    # type: ignore
 
     USER_DELETED = 10
     ERROR_STATE = 19
+    """There was a problem validating the submission during publication."""
 
     DELETED_EXPIRED = 20
     """Was working but expired."""
@@ -66,7 +73,31 @@ class Submission(Base):    # type: ignore
 
     WITHDRAWN_FORMAT = 'withdrawn'
 
+    # Map classic status to Submission domain status.
+    STATUS_MAP = {
+        NOT_SUBMITTED: domain.Submission.WORKING,
+        SUBMITTED: domain.Submission.SUBMITTED,
+        ON_HOLD: domain.Submission.ON_HOLD,
+        NEXT_PUBLISH_DAY: domain.Submission.SCHEDULED,
+        PROCESSING: domain.Submission.SCHEDULED,
+        PROCESSING_SUBMISSION: domain.Submission.SCHEDULED,
+        NEEDS_EMAIL: domain.Submission.SCHEDULED,
+        PUBLISHED: domain.Submission.PUBLISHED,
+        DELETED_PUBLISHED: domain.Submission.PUBLISHED,
+        USER_DELETED:  domain.Submission.DELETED,
+        DELETED_EXPIRED: domain.Submission.DELETED,
+        DELETED_ON_HOLD: domain.Submission.DELETED,
+        DELETED_PROCESSING: domain.Submission.DELETED,
+        DELETED_REMOVED: domain.Submission.DELETED,
+        DELETED_USER:  domain.Submission.DELETED,
+        ERROR_STATE: domain.Submission.ERROR
+    }
+
     submission_id = Column(Integer, primary_key=True)
+
+    type = Column(String(8), index=True)
+    """Submission type (e.g. ``new``, ``jref``, ``cross``)."""
+
     document_id = Column(
         ForeignKey('arXiv_documents.document_id',
                    ondelete='CASCADE',
@@ -74,6 +105,7 @@ class Submission(Base):    # type: ignore
         index=True
     )
     doc_paper_id = Column(String(20), index=True)
+
     sword_id = Column(ForeignKey('arXiv_tracking.sword_id'), index=True)
     userinfo = Column(Integer, server_default=text("'0'"))
     is_author = Column(Integer, nullable=False, server_default=text("'0'"))
@@ -92,12 +124,29 @@ class Submission(Base):    # type: ignore
     status = Column(Integer, nullable=False, index=True,
                     server_default=text("'0'"))
     sticky_status = Column(Integer)
+    """
+    If the submission goes out of queue (e.g. submitter makes changes),
+    this status should be applied when the submission is re-finalized
+    (goes back into queue, comes out of working status).
+    """
+
     must_process = Column(Integer, server_default=text("'1'"))
     submit_time = Column(DateTime)
     release_time = Column(DateTime)
+
     source_size = Column(Integer, server_default=text("'0'"))
     source_format = Column(String(12))
+    """Submission content type (e.g. ``pdf``, ``tex``, ``pdftex``)."""
     source_flags = Column(String(12))
+
+    allow_tex_produced = Column(Integer, server_default=text("'0'"))
+    """Whether to allow a TeX-produced PDF."""
+
+    package = Column(String(255), nullable=False, server_default=text("''"))
+    """Path (on disk) to the submission package (tarball, PDF)."""
+
+    is_oversize = Column(Integer, server_default=text("'0'"))
+
     has_pilot_data = Column(Integer)
     is_withdrawn = Column(Integer, nullable=False, server_default=text("'0'"))
     title = Column(Text)
@@ -113,17 +162,18 @@ class Submission(Base):    # type: ignore
     license = Column(ForeignKey('arXiv_licenses.name', onupdate='CASCADE'),
                      index=True)
     version = Column(Integer, nullable=False, server_default=text("'1'"))
-    type = Column(String(8), index=True)
+
     is_ok = Column(Integer, index=True)
+
     admin_ok = Column(Integer)
-    allow_tex_produced = Column(Integer, server_default=text("'0'"))
-    is_oversize = Column(Integer, server_default=text("'0'"))
+    """Used by administrators for reporting/bookkeeping."""
+
     remote_addr = Column(String(16), nullable=False, server_default=text("''"))
     remote_host = Column(String(255), nullable=False,
                          server_default=text("''"))
-    package = Column(String(255), nullable=False, server_default=text("''"))
     rt_ticket_id = Column(Integer, index=True)
     auto_hold = Column(Integer, server_default=text("'0'"))
+    """Should be placed on hold when submission comes out of working status."""
 
     document = relationship('Document')
     arXiv_license = relationship('License')
@@ -154,8 +204,8 @@ class Submission(Base):    # type: ignore
         """
         # Status changes.
         submission.status = self._get_status()
-        submission.active = (submission.status not in [submission.DELETED,
-                                                       submission.PUBLISHED]),
+        submission.active = (submission.status not in
+                             [submission.DELETED, submission.PUBLISHED])
         submission.published = (submission.status == submission.PUBLISHED)
         submission.arxiv_id = self._get_arxiv_id()
 
@@ -173,6 +223,10 @@ class Submission(Base):    # type: ignore
 
         # Comments (admins may modify).
         submission.metadata.comments = self.comments
+
+        # Apply sticky status.
+        if submission.finalized and self.sticky_status is self.ON_HOLD:
+            submission.status = submission.ON_HOLD
         return submission
 
     def to_submission(self) -> domain.Submission:
@@ -242,7 +296,7 @@ class Submission(Base):    # type: ignore
         self.updated = datetime.now()
         self.title = submission.metadata.title
         self.abstract = submission.metadata.abstract
-        self.authors = submission.metadata.authors_canonical
+        self.authors = submission.metadata.authors_display
         self.comments = submission.metadata.comments
         self.report_num = submission.metadata.report_num
         self.doi = submission.metadata.doi
@@ -258,12 +312,14 @@ class Submission(Base):    # type: ignore
             self.source_size = submission.source_content.size
             self.source_format = submission.source_content.format
 
-        # Only update the submission state if we're transitioning for the first
-        # time. We can relax this later, but for now it will prevent us from
-        # doing something stupid.
+        # Not submitted -> Submitted.
         if submission.finalized and self.status is Submission.NOT_SUBMITTED:
             self.status = Submission.SUBMITTED
             self.submit_time = submission.updated
+        # Unsubmit.
+        elif self.status is None or self.status <= Submission.ON_HOLD:
+            if not submission.finalized:
+                self.status = Submission.NOT_SUBMITTED
 
         if submission.primary_classification:
             self._update_primary(submission)
@@ -291,17 +347,7 @@ class Submission(Base):    # type: ignore
         """Map classic status codes to :class:`.domain.Submission` status."""
         if self._get_arxiv_id() is not None:
             return domain.Submission.PUBLISHED
-        elif self.status is self.NOT_SUBMITTED:
-            return domain.Submission.WORKING
-        elif self.status is self.SUBMITTED:
-            return domain.Submission.PROCESSING
-        elif self.status is self.ON_HOLD:
-            return domain.Submission.ON_HOLD
-        elif self.status is self.NEXT_DAY:
-            return domain.Submission.SCHEDULED
-        elif self.status in self.DELETED:
-            return domain.Submission.DELETED
-        # TODO: raise something?
+        return self.STATUS_MAP.get(self.status)
 
     def _update_submitter(self, submission: domain.Submission) -> None:
         """Update submitter information."""
@@ -646,7 +692,7 @@ class EndorsementDomain(Base):    # type: ignore
 
 class Category(Base):    # type: ignore
     """Supplemental data about arXiv categories, including endorsement."""
-    
+
     __tablename__ = 'arXiv_categories'
 
     arXiv_endorsement_domain = relationship('EndorsementDomain')

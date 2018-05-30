@@ -136,7 +136,7 @@ class TestStoreEvents(TestCase):
             self.assertEqual(getattr(db_submission, key), value,
                              f"The value of {key} should be {value}")
         self.assertEqual(db_submission.authors,
-                         submission.metadata.authors_canonical,
+                         submission.metadata.authors_display,
                          "The canonical author string should be used to"
                          " update the submission in the database.")
 
