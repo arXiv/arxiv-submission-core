@@ -1,0 +1,29 @@
+{% extends "submit/base.html" %}
+
+{% import "submit/submit_macros.html" as submit_macros %}
+
+{% block within_content %}
+<h2 class="is-size-4">Confirm authorship or proxy approval</h2>
+<div class="field">
+  <div class="control">
+    <label class="radio">
+    <input id="iam_author" name="iam_author" type="radio" value="y">
+    I am an author of this paper.</label>
+  </div>
+</div>
+<div class="field">
+  <div class="control">
+    <label class="radio">
+    <input id="iam_author" name="iam_author" type="radio" value="n">
+    I am not an author of this paper.</label>
+  </div>
+  <div class="control" style="margin-left: 1.25em">
+    <label class="checkbox">
+    <input type="checkbox">
+    By checking this box, I certify that I have received authorization from
+    arXiv to submit papers on behalf of the authors.</label>
+  </div>
+</div>
+
+{{ submit_macros.submit_nav() }}
+{% endblock within_content %}

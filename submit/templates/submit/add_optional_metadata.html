@@ -1,0 +1,49 @@
+{% extends "submit/base.html" %}
+
+{% import "submit/submit_macros.html" as submit_macros %}
+
+{% block within_content %}
+<h2 class="is-size-4">Add or edit optional metadata</h2>
+
+<div class="field">
+  <div class="control">
+    <label class="label">Report Number <span class="icon has-text-link"><i class="fa fa-question-circle"></i></span></label>
+    <input class="input is-short-field" type="text" placeholder="leave blank if you don't have one">
+    <p class="help">If your institution supplies a report number, enter it here.</p>
+  </div>
+</div>
+
+<div class="field">
+  <div class="control">
+    <label class="label">Journal Reference <span class="icon has-text-link"><i class="fa fa-question-circle"></i></span></label>
+    <input class="input is-short-field" type="text" placeholder="Jref placeholder">
+    <p class="help">Journal reference information, if available.</p>
+  </div>
+</div>
+
+<div class="field">
+  <div class="control">
+    <label class="label">DOI <span class="icon has-text-link"><i class="fa fa-question-circle"></i></span></label>
+    <input class="input is-short-field" type="text" placeholder="DOI Placeholder">
+    <p class="help">Full DOI only if available. How does a person enter a second DOI?</p>
+  </div>
+</div>
+
+<div class="field">
+  <div class="control">
+    <label class="label">ACM Class <span class="icon has-text-link"><i class="fa fa-question-circle"></i></span></label>
+    <input class="input is-short-field" type="text" placeholder="example: F.2.2; I.2.7">
+    <p class="help">show only on CS?</p>
+  </div>
+</div>
+
+<div class="field">
+  <div class="control">
+    <label class="label">MSC Class <span class="icon has-text-link"><i class="fa fa-question-circle"></i></span></label>
+    <input class="input is-short-field" type="text" placeholder="example: 14J60 (Primary),  14F05, 14J26 (Secondary)">
+    <p class="help">Show only on math?</p>
+  </div>
+</div>
+
+{{ submit_macros.submit_nav() }}
+{% endblock within_content %}
