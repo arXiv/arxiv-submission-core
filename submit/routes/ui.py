@@ -109,6 +109,17 @@ def add_metadata():
     return response
 
 
+@blueprint.route('add_optional_metadata', methods=['GET'])
+def add_optional_metadata():
+    """Render step 9, metadata."""
+    rendered = render_template(
+        "submit/add_optional_metadata.html",
+        pagetitle='Add or Edit Metadata'
+        )
+    response = make_response(rendered, status.HTTP_200_OK)
+    return response
+
+
 @blueprint.route('final_preview', methods=['GET'])
 def final_preview():
     """Render step 10, preview."""
