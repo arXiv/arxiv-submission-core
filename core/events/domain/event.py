@@ -247,7 +247,7 @@ class SetPrimaryClassification(Event):
     def _must_be_a_valid_category(self, submission: Submission) -> None:
         """Valid arXiv categories are defined in :mod:`arxiv.taxonomy`."""
         if not self.category or self.category not in taxonomy.CATEGORIES:
-            raise InvalidEvent(self, "Not a valid category")
+            raise InvalidEvent(self, f"Not a valid category: {self.category}")
 
     def _primary_cannot_be_secondary(self, submission: Submission) -> None:
         """The same category can't be used for both primary and secondary."""
@@ -453,6 +453,7 @@ class AttachSourceContent(Event):
     format: str = field(default_factory=str)
     checksum: str = field(default_factory=str)
     mime_type: str = field(default_factory=str)
+    # TODO: Examine the necessity of an identifier when we are storing URIs.
     identifier: Optional[int] = field(default=None)
     size: int = field(default=0)
 
@@ -475,7 +476,7 @@ class AttachSourceContent(Event):
             raise InvalidEvent(self, 'External URLs not allowed.')
 
         if self.format not in self.ALLOWED_FORMATS:
-            raise InvalidEvent(f'Format {self.package_format} not allowed')
+            raise InvalidEvent(self, f'Format {self.format} not allowed')
         if not self.checksum:
             raise InvalidEvent(self, 'Missing checksum')
         if not self.identifier:
@@ -502,7 +503,7 @@ class FinalizeSubmission(Event):
         'creator', 'primary_classification', 'submitter_contact_verified',
         'submitter_accepts_policy', 'license', 'source_content', 'metadata',
     ]
-    REQUIRED_METADATA = ['title', 'abstract', 'authors']
+    REQUIRED_METADATA = ['title', 'abstract', 'authors_display']
 
     def validate(self, submission: Submission) -> None:
         """Ensure that all required data/steps are complete."""

@@ -1,6 +1,6 @@
 # arxiv/submission-api
 
-FROM arxiv/base:0.6.1
+FROM arxiv/base:0.7.1
 
 WORKDIR /opt/arxiv
 
