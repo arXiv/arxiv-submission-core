@@ -1,5 +1,5 @@
 """
-process_submissions
+Script to validate the events model using classic db submissiions.
 
 Usage: python process_submissions.py <TSVFILE>
 
@@ -47,9 +47,7 @@ def in_memory_db():
             classic.drop_all()
 
 def process_csv(tsvfile, session):
-    """
-    Process a tsvfile using DictReader so any order of files will be possible.
-    """
+    """Process a tsvfile using DictReader."""
     with open(tsvfile) as tsvfh:
         reader = DictReader(tsvfh, delimiter='\t')
         for submission in reader:
@@ -61,9 +59,7 @@ def process_csv(tsvfile, session):
 
 
 def process_submission(s):
-    """
-    Process a submission from a tsvfile row.
-    """
+    """Process a submission from a tsvfile row."""
     # TODO: Make sure forename surname separation are better
     try:
         forename, surname = s['submitter_name'].rsplit(maxsplit=1)
@@ -169,10 +165,7 @@ def process_submission(s):
     # events.load() returns a submission object, then verify it looks as expected
 
 def verify_submission(s, submission_id):
-    """
-    Verify that the data in tsvfile row `s` matches the stored event data for
-    Submission `submission_id`.
-    """
+    """Validate event database storage of classic db import data."""
     submission, stack = events.load(submission_id)
 
     assert submission.metadata.title == s['title']
