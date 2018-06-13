@@ -1,0 +1,38 @@
+{% extends "submit/base.html" %}
+
+{% import "submit/submit_macros.html" as submit_macros %}
+
+{% block within_content %}
+<h2 class="is-size-4">Choose a primary classification</h2>
+<div class="field">
+  <label class="label">Archive <span class="icon has-text-link"><i class="fa fa-question-circle"></i></span></label>
+  <div class="control">
+    <div class="select">
+      <select>
+        <option>archive1</option>
+        <option>archive2</option>
+      </select>
+    </div>
+  </div>
+</div>
+<div class="field">
+  <label class="label">Subject <span class="icon has-text-link"><i class="fa fa-question-circle"></i></span></label>
+  <div class="control">
+    <div class="select">
+      <select>
+        <option>subject1</option>
+        <option>subject2</option>
+      </select>
+    </div>
+  </div>
+</div>
+
+<div class="message is-link is-inline-block submit-nav">
+  <div class="message-body">
+    <p><span class="icon has-text-link"><i class="fa fa-info-circle"></i></span>
+    You may add archives to the list and change defaults in your <a href="#">user account settings</a>.</p>
+</div>
+</div>
+
+{{ submit_macros.submit_nav() }}
+{% endblock within_content %}

@@ -1,0 +1,19 @@
+{%- extends "base/base.html" %}
+
+{% block addl_head %}
+ <link rel="stylesheet" href="{{ url_for('static', filename='css/submit.css')}}" />
+{% endblock addl_head %}
+
+{% block content %}
+  <h1 class="title">{% block title %}Submit an Article{% endblock title %}</h1>
+  <div class="message">
+    <div class="message-body">
+    {{ submit_macros.progress_bar() }}
+  </div>
+  </div>
+  <content>
+    {% block within_content %}
+      Specific content here
+    {% endblock within_content %}
+  </content>
+{% endblock content %}
