@@ -62,7 +62,7 @@ def process_csv(tsvfile, session):
 
 def process_submission(s):
     """
-    Process a submission using a tsvfile
+    Process a submission from a tsvfile row.
     """
     # TODO: Make sure forename surname separation are better
     try:
@@ -169,6 +169,10 @@ def process_submission(s):
     # events.load() returns a submission object, then verify it looks as expected
 
 def verify_submission(s, submission_id):
+    """
+    Verify that the data in tsvfile row `s` matches the stored event data for
+    Submission `submission_id`.
+    """
     submission, stack = events.load(submission_id)
 
     assert submission.metadata.title == s['title']
@@ -177,7 +181,12 @@ def verify_submission(s, submission_id):
     assert submission.metadata.report_num == s['report_num']
     assert submission.metadata.doi == s['doi']
     assert submission.metadata.journal_ref == s['journal_ref']
-    
+   
+    if s.get('userinfo') == '1':
+        assert submission.submitter_contact_verified, "VerifyContactInformationError"
+    else:
+        assert not submission.submitter_contact_verified
+
     if s.get('agree_policy') == '1':
         assert submission.submitter_accepts_policy, "AcceptPolicy Error"
     else:
