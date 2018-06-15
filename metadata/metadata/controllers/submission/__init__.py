@@ -74,7 +74,7 @@ def create_submission(data: dict, headers: dict, user_data: dict,
     events = handlers.handle_submission(data, agents)
     try:
         submission, events = ev.save(create, *events)
-    except ev.InvalidEvent as e:
+    except (ev.InvalidEvent, ev.InvalidStack) as e:
         raise BadRequest(str(e)) from e
     except ev.SaveError as e:
         logger.error('Problem interacting with database: (%s) %s',
@@ -114,7 +114,7 @@ def update_submission(data: dict, headers: dict, user_data: dict,
         submission, events = ev.save(*events, submission_id=submission_id)
     except ev.NoSuchSubmission as e:
         raise NotFound(f"No submission found with id {submission_id}")
-    except ev.InvalidEvent as e:
+    except (ev.InvalidEvent, ev.InvalidStack) as e:
         raise BadRequest(str(e)) from e
     except ev.SaveError as e:
         raise InternalServerError('Problem interacting with database') from e

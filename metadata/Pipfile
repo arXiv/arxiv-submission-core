@@ -38,7 +38,7 @@ typed-ast = "==1.1.0"
 uwsgi = "==2.0.15"
 werkzeug = "==0.12.2"
 openapi-spec-validator = "==0.1.2"
-arxiv-base = "==0.5.1"
+arxiv-base = "==0.7.1"
 pyyaml = "*"
 "2ae22c6" = {path = "./../core"}
 dataclasses = "*"

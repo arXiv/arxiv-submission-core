@@ -9,7 +9,7 @@ from arxiv import status
 from events.domain import User, Submission, Author
 from events import CreateSubmission, UpdateMetadata, SaveError, \
     InvalidEvent, NoSuchSubmission, SetPrimaryClassification, \
-    AttachSourceContent, UpdateAuthors
+    AttachSourceContent, UpdateAuthors, InvalidStack
 from metadata.controllers import submission
 
 
@@ -17,6 +17,7 @@ def preserve_exceptions_and_events(mock_events):
     """Add real exceptions back to the mock."""
     mock_events.SaveError = SaveError
     mock_events.InvalidEvent = InvalidEvent
+    mock_events.InvalidStack = InvalidStack
     mock_events.NoSuchSubmission = NoSuchSubmission
     mock_events.UpdateMetadata = UpdateMetadata
     mock_events.UpdateAuthors = UpdateAuthors
