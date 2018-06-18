@@ -180,7 +180,8 @@ class Submission(Base):    # type: ignore
     submitter = relationship('User')
     sword = relationship('Tracking')
     categories = relationship('SubmissionCategory',
-                              back_populates='submission', lazy='joined')
+                              back_populates='submission', lazy='joined',
+                              cascade="all, delete-orphan")
 
     def patch(self, submission: domain.Submission) -> domain.Submission:
         """
