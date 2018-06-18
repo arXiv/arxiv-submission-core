@@ -5,7 +5,7 @@ from typing import Optional
 from datetime import datetime
 from sqlalchemy import Column, Date, DateTime, Enum, ForeignKey, Text, text, \
     ForeignKeyConstraint, Index, Integer, SmallInteger, String, Table
-from sqlalchemy.orm import relationship, joinedload
+from sqlalchemy.orm import relationship, joinedload, backref
 
 from sqlalchemy.ext.declarative import declarative_base
 
@@ -180,7 +180,7 @@ class Submission(Base):    # type: ignore
     submitter = relationship('User')
     sword = relationship('Tracking')
     categories = relationship('SubmissionCategory',
-                              back_populates="submission", lazy='joined')
+                              back_populates='submission', lazy='joined')
 
     def patch(self, submission: domain.Submission) -> domain.Submission:
         """
