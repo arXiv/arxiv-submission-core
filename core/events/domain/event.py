@@ -367,7 +367,7 @@ class UpdateMetadata(Event):
 
     FIELDS = [
         'title', 'abstract', 'doi', 'msc_class', 'acm_class',
-        'report_num', 'journal_ref'
+        'report_num', 'journal_ref', 'comments'
     ]
 
     # TODO: implement more specific validation here.
