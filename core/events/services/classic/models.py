@@ -290,9 +290,9 @@ class Submission(Base):    # type: ignore
         self.submitter_id = submission.creator.native_id
         self.submitter_name = submission.creator.name
         self.submitter_email = submission.creator.email
-        self.is_author = int(submission.submitter_is_author)
-        self.agree_policy = int(submission.submitter_accepts_policy)
-        self.userinfo = int(submission.submitter_contact_verified)
+        self.is_author = 1 if submission.submitter_is_author else 0
+        self.agree_policy = 1 if submission.submitter_accepts_policy else 0
+        self.userinfo = 1 if submission.submitter_contact_verified else 0 
         self.created = submission.created
         self.updated = datetime.now()
         self.title = submission.metadata.title
