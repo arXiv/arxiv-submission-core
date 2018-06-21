@@ -67,6 +67,16 @@ is defined in the current module.</p>
 <dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">sqlalchemy.ext.declarative.api.Base</span></code></p>
 <p>Database representation of an <a class="reference internal" href="events.domain.html#events.domain.event.Event" title="events.domain.event.Event"><code class="xref py py-class docutils literal"><span class="pre">Event</span></code></a>.</p>
 <dl class="attribute">
+<dt id="events.services.classic.DBEvent.client">
+<code class="descname">client</code><a class="headerlink" href="#events.services.classic.DBEvent.client" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.DBEvent.client_id">
+<code class="descname">client_id</code><a class="headerlink" href="#events.services.classic.DBEvent.client_id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
 <dt id="events.services.classic.DBEvent.created">
 <code class="descname">created</code><a class="headerlink" href="#events.services.classic.DBEvent.created" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
@@ -828,7 +838,8 @@ published.</p>
 <dl class="attribute">
 <dt id="events.services.classic.models.Submission.ERROR_STATE">
 <code class="descname">ERROR_STATE</code><em class="property"> = 19</em><a class="headerlink" href="#events.services.classic.models.Submission.ERROR_STATE" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>There was a problem validating the submission during publication.</p>
+</dd></dl>
 
 <dl class="attribute">
 <dt id="events.services.classic.models.Submission.FILES_ADDED">
@@ -848,7 +859,8 @@ published.</p>
 <dl class="attribute">
 <dt id="events.services.classic.models.Submission.NEEDS_EMAIL">
 <code class="descname">NEEDS_EMAIL</code><em class="property"> = 6</em><a class="headerlink" href="#events.services.classic.models.Submission.NEEDS_EMAIL" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Published, not yet announced.</p>
+</dd></dl>
 
 <dl class="attribute">
 <dt id="events.services.classic.models.Submission.NEW">
@@ -861,9 +873,10 @@ published.</p>
 <dd></dd></dl>
 
 <dl class="attribute">
-<dt id="events.services.classic.models.Submission.NEXT_DAY">
-<code class="descname">NEXT_DAY</code><em class="property"> = 4</em><a class="headerlink" href="#events.services.classic.models.Submission.NEXT_DAY" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dt id="events.services.classic.models.Submission.NEXT_PUBLISH_DAY">
+<code class="descname">NEXT_PUBLISH_DAY</code><em class="property"> = 4</em><a class="headerlink" href="#events.services.classic.models.Submission.NEXT_PUBLISH_DAY" title="Permalink to this definition">¶</a></dt>
+<dd><p>Scheduled for the next publication cycle.</p>
+</dd></dl>
 
 <dl class="attribute">
 <dt id="events.services.classic.models.Submission.NOT_SUBMITTED">
@@ -883,7 +896,8 @@ published.</p>
 <dl class="attribute">
 <dt id="events.services.classic.models.Submission.PROCESSING">
 <code class="descname">PROCESSING</code><em class="property"> = 5</em><a class="headerlink" href="#events.services.classic.models.Submission.PROCESSING" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Scheduled for today.</p>
+</dd></dl>
 
 <dl class="attribute">
 <dt id="events.services.classic.models.Submission.PROCESSING_SUBMISSION">
@@ -913,6 +927,11 @@ published.</p>
 <dl class="attribute">
 <dt id="events.services.classic.models.Submission.STARTED">
 <code class="descname">STARTED</code><em class="property"> = 1</em><a class="headerlink" href="#events.services.classic.models.Submission.STARTED" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="events.services.classic.models.Submission.STATUS_MAP">
+<code class="descname">STATUS_MAP</code><em class="property"> = {0: 'working', 1: 'submitted', 2: 'hold', 4: 'scheduled', 5: 'scheduled', 8: 'scheduled', 6: 'scheduled', 7: 'published', 27: 'published', 10: 'deleted', 20: 'deleted', 22: 'deleted', 25: 'deleted', 29: 'deleted', 30: 'deleted', 19: 'error'}</em><a class="headerlink" href="#events.services.classic.models.Submission.STATUS_MAP" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="attribute">
@@ -953,7 +972,8 @@ published.</p>
 <dl class="attribute">
 <dt id="events.services.classic.models.Submission.admin_ok">
 <code class="descname">admin_ok</code><a class="headerlink" href="#events.services.classic.models.Submission.admin_ok" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Used by administrators for reporting/bookkeeping.</p>
+</dd></dl>
 
 <dl class="attribute">
 <dt id="events.services.classic.models.Submission.agree_policy">
@@ -963,7 +983,8 @@ published.</p>
 <dl class="attribute">
 <dt id="events.services.classic.models.Submission.allow_tex_produced">
 <code class="descname">allow_tex_produced</code><a class="headerlink" href="#events.services.classic.models.Submission.allow_tex_produced" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Whether to allow a TeX-produced PDF.</p>
+</dd></dl>
 
 <dl class="attribute">
 <dt id="events.services.classic.models.Submission.arXiv_license">
@@ -978,7 +999,8 @@ published.</p>
 <dl class="attribute">
 <dt id="events.services.classic.models.Submission.auto_hold">
 <code class="descname">auto_hold</code><a class="headerlink" href="#events.services.classic.models.Submission.auto_hold" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Should be placed on hold when submission comes out of working status.</p>
+</dd></dl>
 
 <dl class="attribute">
 <dt id="events.services.classic.models.Submission.categories">
@@ -1063,7 +1085,8 @@ published.</p>
 <dl class="attribute">
 <dt id="events.services.classic.models.Submission.package">
 <code class="descname">package</code><a class="headerlink" href="#events.services.classic.models.Submission.package" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Path (on disk) to the submission package (tarball, PDF).</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="events.services.classic.models.Submission.patch">
@@ -1131,7 +1154,8 @@ the scope of the event model.</td>
 <dl class="attribute">
 <dt id="events.services.classic.models.Submission.source_format">
 <code class="descname">source_format</code><a class="headerlink" href="#events.services.classic.models.Submission.source_format" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Submission content type (e.g. <code class="docutils literal"><span class="pre">pdf</span></code>, <code class="docutils literal"><span class="pre">tex</span></code>, <code class="docutils literal"><span class="pre">pdftex</span></code>).</p>
+</dd></dl>
 
 <dl class="attribute">
 <dt id="events.services.classic.models.Submission.source_size">
@@ -1151,7 +1175,10 @@ the scope of the event model.</td>
 <dl class="attribute">
 <dt id="events.services.classic.models.Submission.sticky_status">
 <code class="descname">sticky_status</code><a class="headerlink" href="#events.services.classic.models.Submission.sticky_status" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>If the submission goes out of queue (e.g. submitter makes changes),
+this status should be applied when the submission is re-finalized
+(goes back into queue, comes out of working status).</p>
+</dd></dl>
 
 <dl class="attribute">
 <dt id="events.services.classic.models.Submission.submission_id">
@@ -1217,7 +1244,8 @@ the scope of the event model.</td>
 <dl class="attribute">
 <dt id="events.services.classic.models.Submission.type">
 <code class="descname">type</code><a class="headerlink" href="#events.services.classic.models.Submission.type" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Submission type (e.g. <code class="docutils literal"><span class="pre">new</span></code>, <code class="docutils literal"><span class="pre">jref</span></code>, <code class="docutils literal"><span class="pre">cross</span></code>).</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="events.services.classic.models.Submission.update_from_submission">

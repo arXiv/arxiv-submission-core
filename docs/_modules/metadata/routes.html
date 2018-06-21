@@ -82,7 +82,7 @@
     <span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="get_submission"><a class="viewcode-back" href="../../containers/metadata/metadata.html#metadata.routes.get_submission">[docs]</a><span class="nd">@blueprint</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s1">&#39;/&lt;string:submission_id&gt;&#39;</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;GET&#39;</span><span class="p">])</span>
+<div class="viewcode-block" id="get_submission"><a class="viewcode-back" href="../../containers/metadata/metadata.html#metadata.routes.get_submission">[docs]</a><span class="nd">@blueprint</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s1">&#39;/&lt;string:submission_id&gt;/&#39;</span><span class="p">,</span> <span class="n">methods</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;GET&#39;</span><span class="p">])</span>
 <span class="nd">@json_response</span>
 <span class="nd">@scoped</span><span class="p">(</span><span class="s1">&#39;submission:read&#39;</span><span class="p">)</span>
 <span class="k">def</span> <span class="nf">get_submission</span><span class="p">(</span><span class="n">submission_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">:</span>
@@ -117,12 +117,12 @@
 <span class="k">def</span> <span class="nf">update_submission</span><span class="p">(</span><span class="n">submission_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;Update the submission.&quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="n">submission</span><span class="o">.</span><span class="n">update_submission</span><span class="p">(</span>
-        <span class="n">submission_id</span><span class="p">,</span>
         <span class="n">request</span><span class="o">.</span><span class="n">get_json</span><span class="p">(),</span>
         <span class="nb">dict</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">headers</span><span class="p">),</span>
-        <span class="n">user</span><span class="o">=</span><span class="n">g</span><span class="o">.</span><span class="n">user</span><span class="p">,</span>
-        <span class="n">client</span><span class="o">=</span><span class="n">g</span><span class="o">.</span><span class="n">client</span><span class="p">,</span>
-        <span class="n">token</span><span class="o">=</span><span class="n">g</span><span class="o">.</span><span class="n">token</span>
+        <span class="n">user_data</span><span class="o">=</span><span class="n">g</span><span class="o">.</span><span class="n">user</span><span class="p">,</span>
+        <span class="n">client_data</span><span class="o">=</span><span class="n">g</span><span class="o">.</span><span class="n">client</span><span class="p">,</span>
+        <span class="n">token</span><span class="o">=</span><span class="n">g</span><span class="o">.</span><span class="n">token</span><span class="p">,</span>
+        <span class="n">submission_id</span><span class="o">=</span><span class="n">submission_id</span>
     <span class="p">)</span></div>
 </pre></div>
 

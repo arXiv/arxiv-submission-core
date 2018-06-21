@@ -177,7 +177,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">db_submission</span><span class="p">,</span> <span class="n">key</span><span class="p">),</span> <span class="n">value</span><span class="p">,</span>
                              <span class="n">f</span><span class="s2">&quot;The value of </span><span class="si">{key}</span><span class="s2"> should be </span><span class="si">{value}</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">db_submission</span><span class="o">.</span><span class="n">authors</span><span class="p">,</span>
-                         <span class="n">submission</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">authors_canonical</span><span class="p">,</span>
+                         <span class="n">submission</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">authors_display</span><span class="p">,</span>
                          <span class="s2">&quot;The canonical author string should be used to&quot;</span>
                          <span class="s2">&quot; update the submission in the database.&quot;</span><span class="p">)</span>
 

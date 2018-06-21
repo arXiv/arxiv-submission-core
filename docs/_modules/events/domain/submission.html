@@ -78,18 +78,26 @@
 <span class="k">class</span> <span class="nc">Author</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;Represents an author of a submission.&quot;&quot;&quot;</span>
 
-    <span class="n">order</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">order</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
     <span class="n">forename</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">str</span><span class="p">)</span>
     <span class="n">surname</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">str</span><span class="p">)</span>
     <span class="n">initials</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">str</span><span class="p">)</span>
     <span class="n">affiliation</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">str</span><span class="p">)</span>
     <span class="n">email</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">str</span><span class="p">)</span>
-    <span class="n">identifier</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">identifier</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">display</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Submitter may include a preferred display name for each author.</span>
+
+<span class="sd">    If not provided, will be automatically generated from the other fields.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Auto-generate an identifier, if not provided.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">identifier</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">identifier</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate_identifier</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">display</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">display</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">canonical</span>
 
     <span class="k">def</span> <span class="nf">_generate_identifier</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">h</span> <span class="o">=</span> <span class="n">hashlib</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="s1">&#39;sha1&#39;</span><span class="p">)</span>
@@ -109,9 +117,7 @@
 
 <div class="viewcode-block" id="Author.to_dict"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.submission.Author.to_dict">[docs]</a>    <span class="k">def</span> <span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Generate a dict representation of this :class:`.Author`.&quot;&quot;&quot;</span>
-        <span class="n">data</span> <span class="o">=</span> <span class="n">asdict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
-        <span class="n">data</span><span class="p">[</span><span class="s1">&#39;canonical&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">canonical</span>
-        <span class="k">return</span> <span class="n">data</span></div></div>
+        <span class="k">return</span> <span class="n">asdict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div></div>
 
 
 <div class="viewcode-block" id="SubmissionContent"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.submission.SubmissionContent">[docs]</a><span class="nd">@dataclass</span>
@@ -134,6 +140,8 @@
     <span class="n">abstract</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
 
     <span class="n">authors</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
+    <span class="n">authors_display</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">str</span><span class="p">)</span>
+    <span class="sd">&quot;&quot;&quot;The canonical arXiv author string.&quot;&quot;&quot;</span>
 
     <span class="n">doi</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">msc_class</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
@@ -143,16 +151,9 @@
 
     <span class="n">comments</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">str</span><span class="p">)</span>
 
-    <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">authors_canonical</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Canonical representation of submission authors.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">au</span><span class="o">.</span><span class="n">canonical</span> <span class="k">for</span> <span class="n">au</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">authors</span><span class="p">])</span>
-
 <div class="viewcode-block" id="SubmissionMetadata.to_dict"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.submission.SubmissionMetadata.to_dict">[docs]</a>    <span class="k">def</span> <span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Generate dict representation of :class:`.SubmissionMetadata`.&quot;&quot;&quot;</span>
-        <span class="n">data</span> <span class="o">=</span> <span class="n">asdict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
-        <span class="n">data</span><span class="p">[</span><span class="s1">&#39;authors_canonical&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">authors_canonical</span>
-        <span class="k">return</span> <span class="n">data</span></div></div>
+        <span class="k">return</span> <span class="n">asdict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div></div>
 
 
 <div class="viewcode-block" id="Delegation"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.submission.Delegation">[docs]</a><span class="nd">@dataclass</span>
@@ -184,11 +185,11 @@
     <span class="sd">&quot;&quot;&quot;Represents an arXiv submission object.&quot;&quot;&quot;</span>
 
     <span class="n">WORKING</span> <span class="o">=</span> <span class="s1">&#39;working&#39;</span>
-    <span class="n">PROCESSING</span> <span class="o">=</span> <span class="s1">&#39;processing&#39;</span>
     <span class="n">SUBMITTED</span> <span class="o">=</span> <span class="s1">&#39;submitted&#39;</span>
     <span class="n">ON_HOLD</span> <span class="o">=</span> <span class="s1">&#39;hold&#39;</span>
     <span class="n">SCHEDULED</span> <span class="o">=</span> <span class="s1">&#39;scheduled&#39;</span>
     <span class="n">PUBLISHED</span> <span class="o">=</span> <span class="s1">&#39;published&#39;</span>
+    <span class="n">ERROR</span> <span class="o">=</span> <span class="s1">&#39;error&#39;</span>
     <span class="n">DELETED</span> <span class="o">=</span> <span class="s1">&#39;deleted&#39;</span>
 
     <span class="n">creator</span><span class="p">:</span> <span class="n">Agent</span>
@@ -226,26 +227,14 @@
         <span class="sd">&quot;&quot;&quot;Generate a dict representation of this :class:`.Submission`.&quot;&quot;&quot;</span>
         <span class="n">data</span> <span class="o">=</span> <span class="n">asdict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
         <span class="n">data</span><span class="o">.</span><span class="n">update</span><span class="p">({</span>
+            <span class="s1">&#39;created&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">created</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
+            <span class="s1">&#39;updated&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">updated</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">updated</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="s1">&#39;metadata&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">to_dict</span><span class="p">(),</span>
             <span class="s1">&#39;creator&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">creator</span><span class="o">.</span><span class="n">to_dict</span><span class="p">(),</span>
             <span class="s1">&#39;owner&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">owner</span><span class="o">.</span><span class="n">to_dict</span><span class="p">(),</span>
-            <span class="s1">&#39;created&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">created</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
+            <span class="s1">&#39;proxy&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">proxy</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">proxy</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="s1">&#39;client&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">client</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
         <span class="p">})</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="p">:</span>
-            <span class="n">data</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s1">&#39;client&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()})</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">primary_classification</span><span class="p">:</span>
-            <span class="n">data</span><span class="p">[</span><span class="s1">&#39;primary_classification&#39;</span><span class="p">]</span> <span class="o">=</span> \
-                <span class="bp">self</span><span class="o">.</span><span class="n">primary_classification</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">delegations</span><span class="p">:</span>
-            <span class="n">data</span><span class="p">[</span><span class="s1">&#39;delegations&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
-                <span class="n">key</span><span class="p">:</span> <span class="n">delegation</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
-                <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">delegation</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">delegations</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
-            <span class="p">}</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">proxy</span><span class="p">:</span>
-            <span class="n">data</span><span class="p">[</span><span class="s1">&#39;proxy&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">proxy</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="p">:</span>
-            <span class="n">data</span><span class="p">[</span><span class="s1">&#39;metadata&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">license</span><span class="p">:</span>
-            <span class="n">data</span><span class="p">[</span><span class="s1">&#39;license&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">license</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
         <span class="k">return</span> <span class="n">data</span></div></div>
 
 

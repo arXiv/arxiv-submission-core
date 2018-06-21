@@ -358,34 +358,131 @@ class SelectLicense(Event):
         return submission
 
 
-# TODO: consider representing some of these as distinct events/commands?
 @dataclass
-class UpdateMetadata(Event):
-    """Update the descriptive metadata for a submission."""
+class SetTitle(Event):
+    """Update the title of a submission."""
 
-    metadata: List[Tuple[str, Any]] = field(default_factory=list)
+    title: str = field(default='')
 
-    FIELDS = [
-        'title', 'abstract', 'doi', 'msc_class', 'acm_class',
-        'report_num', 'journal_ref', 'comments'
-    ]
-
-    # TODO: implement more specific validation here.
     def validate(self, submission: Submission) -> None:
-        """The :prop:`.metadata` should be a list of tuples."""
+        """Validate the title value."""
         submission_is_not_finalized(self, submission)
-        try:
-            assert len(self.metadata) >= 1
-            assert type(self.metadata[0]) in [tuple, list]
-            for metadatum in self.metadata:
-                assert len(metadatum) == 2
-        except AssertionError as e:
-            raise InvalidEvent(self) from e
 
     def project(self, submission: Submission) -> Submission:
-        """Update metadata on a :class:`.Submission`."""
-        for key, value in self.metadata:
-            setattr(submission.metadata, key, value)
+        """Update the title on a :class:`.Submission`."""
+        submission.metadata.title = self.title
+        return submission
+
+
+@dataclass
+class SetAbstract(Event):
+    """Update the abstract of a submission."""
+
+    abstract: str = field(default='')
+
+    def validate(self, submission: Submission) -> None:
+        """Validate the abstract value."""
+        submission_is_not_finalized(self, submission)
+
+    def project(self, submission: Submission) -> Submission:
+        """Update the abstract on a :class:`.Submission`."""
+        submission.metadata.abstract = self.abstract
+        return submission
+
+
+@dataclass
+class SetDOI(Event):
+    """Update the external DOI of a submission."""
+
+    doi: str = field(default='')
+
+    def validate(self, submission: Submission) -> None:
+        """Validate the DOI value."""
+        submission_is_not_finalized(self, submission)
+
+    def project(self, submission: Submission) -> Submission:
+        """Update the doi on a :class:`.Submission`."""
+        submission.metadata.doi = self.doi
+        return submission
+
+
+@dataclass
+class SetMSCClassification(Event):
+    """Update the MSC classification codes of a submission."""
+
+    msc_class: str = field(default='')
+
+    def validate(self, submission: Submission) -> None:
+        """Validate the MSC classification value."""
+        submission_is_not_finalized(self, submission)
+
+    def project(self, submission: Submission) -> Submission:
+        """Update the MSC classification on a :class:`.Submission`."""
+        submission.metadata.msc_class = self.msc_class
+        return submission
+
+
+@dataclass
+class SetACMClassification(Event):
+    """Update the ACM classification codes of a submission."""
+
+    acm_class: str = field(default='')
+
+    def validate(self, submission: Submission) -> None:
+        """Validate the ACM classification value."""
+        submission_is_not_finalized(self, submission)
+
+    def project(self, submission: Submission) -> Submission:
+        """Update the ACM classification on a :class:`.Submission`."""
+        submission.metadata.acm_class = self.acm_class
+        return submission
+
+
+@dataclass
+class SetJournalReference(Event):
+    """Update the journal reference of a submission."""
+
+    journal_ref: str = field(default='')
+
+    def validate(self, submission: Submission) -> None:
+        """Validate the journal reference value."""
+        submission_is_not_finalized(self, submission)
+
+    def project(self, submission: Submission) -> Submission:
+        """Update the journal reference on a :class:`.Submission`."""
+        submission.metadata.journal_ref = self.journal_ref
+        return submission
+
+
+@dataclass
+class SetReportNumber(Event):
+    """Update the report number of a submission."""
+
+    report_num: str = field(default='')
+
+    def validate(self, submission: Submission) -> None:
+        """Validate the report number value."""
+        submission_is_not_finalized(self, submission)
+
+    def project(self, submission: Submission) -> Submission:
+        """Update the report number on a :class:`.Submission`."""
+        submission.metadata.report_num = self.report_num
+        return submission
+
+
+@dataclass
+class SetComments(Event):
+    """Update the comments of a submission."""
+
+    comments: str = field(default='')
+
+    def validate(self, submission: Submission) -> None:
+        """Validate the comments value."""
+        submission_is_not_finalized(self, submission)
+
+    def project(self, submission: Submission) -> Submission:
+        """Update the comments on a :class:`.Submission`."""
+        submission.metadata.comments = self.comments
         return submission
 
 

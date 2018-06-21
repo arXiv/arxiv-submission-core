@@ -97,6 +97,8 @@
     <span class="n">event_type</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">String</span><span class="p">(</span><span class="mi">255</span><span class="p">))</span>
     <span class="n">proxy</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">FriendlyJSON</span><span class="p">)</span>
     <span class="n">proxy_id</span> <span class="o">=</span> <span class="n">index_property</span><span class="p">(</span><span class="s1">&#39;proxy&#39;</span><span class="p">,</span> <span class="s1">&#39;agent_identifier&#39;</span><span class="p">)</span>
+    <span class="n">client</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">FriendlyJSON</span><span class="p">)</span>
+    <span class="n">client_id</span> <span class="o">=</span> <span class="n">index_property</span><span class="p">(</span><span class="s1">&#39;client&#39;</span><span class="p">,</span> <span class="s1">&#39;agent_identifier&#39;</span><span class="p">)</span>
 
     <span class="n">creator</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">util</span><span class="o">.</span><span class="n">FriendlyJSON</span><span class="p">)</span>
     <span class="n">creator_id</span> <span class="o">=</span> <span class="n">index_property</span><span class="p">(</span><span class="s1">&#39;creator&#39;</span><span class="p">,</span> <span class="s1">&#39;agent_identifier&#39;</span><span class="p">)</span>
@@ -119,7 +121,8 @@
 <span class="sd">        :class:`.Event`</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">_skip</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;creator&#39;</span><span class="p">,</span> <span class="s1">&#39;proxy&#39;</span><span class="p">,</span> <span class="s1">&#39;submission_id&#39;</span><span class="p">,</span> <span class="s1">&#39;created&#39;</span><span class="p">,</span> <span class="s1">&#39;event_type&#39;</span><span class="p">]</span>
+        <span class="n">_skip</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;creator&#39;</span><span class="p">,</span> <span class="s1">&#39;proxy&#39;</span><span class="p">,</span> <span class="s1">&#39;client&#39;</span><span class="p">,</span> <span class="s1">&#39;submission_id&#39;</span><span class="p">,</span> <span class="s1">&#39;created&#39;</span><span class="p">,</span>
+                 <span class="s1">&#39;event_type&#39;</span><span class="p">]</span>
         <span class="n">data</span> <span class="o">=</span> <span class="p">{</span>
             <span class="n">key</span><span class="p">:</span> <span class="n">value</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
             <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">_skip</span>
@@ -129,6 +132,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">event_type</span><span class="p">,</span>
             <span class="n">creator</span><span class="o">=</span><span class="n">Agent</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">creator</span><span class="p">),</span>
             <span class="n">proxy</span><span class="o">=</span><span class="n">Agent</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">proxy</span><span class="p">)</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">proxy</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">client</span><span class="o">=</span><span class="n">Agent</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="p">)</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">client</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
             <span class="n">submission_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">submission_id</span><span class="p">,</span>
             <span class="n">created</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">created</span><span class="p">,</span>
             <span class="o">**</span><span class="n">data</span>

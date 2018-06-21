@@ -30,6 +30,7 @@ from events.exceptions import InvalidStack
 
 INVALID_STATUSES = ['0', '20', '29', '30']
 
+
 @contextmanager
 def in_memory_db():
     """Provide an in-memory sqlite database for testing purposes."""
@@ -66,7 +67,8 @@ def process_submission(s):
     except ValueError:
         forename = ''
         surname = s['submitter_name']
-    submitter = events.domain.User(s['submitter_id'], email=s['submitter_email'],
+    submitter = events.domain.User(s['submitter_id'],
+                                   email=s['submitter_email'],
                                    forename=forename, surname=surname)
 
     metadata = [
@@ -116,17 +118,24 @@ def process_submission(s):
             authors_display=s['authors'],
             creator=submitter
         ),
-        events.UpdateMetadata(
-            creator=submitter,
-            metadata=metadata
-        ),
+        events.SetTitle(creator=submitter,
+                        title=metadata['title']),
+        events.SetAbstract(creator=submitter,
+                           abstract=metadata['abstract']),
+        events.SetComments(creator=submitter,
+                           comments=metadata['comments']),
+        events.SetJournalReference(creator=submitter,
+                                   journal_ref=metadata['journal_ref']),
+        events.SetDOI(creator=submitter, doi=metadata['doi']),
+        events.SetReportNumber(creator=submitter,
+                               report_num=metadata['report_num']),
         events.SetPrimaryClassification(
             creator=submitter,
             category=s['category']
         ),
         submission_id=submission.submission_id
     )
-    
+
     # Parse the license
     license_uri = s.get('license')
     if license_uri:
@@ -174,7 +183,7 @@ def verify_submission(s, submission_id):
     assert submission.metadata.report_num == s['report_num']
     assert submission.metadata.doi == s['doi']
     assert submission.metadata.journal_ref == s['journal_ref']
-   
+
     if s.get('userinfo') == '1':
         assert submission.submitter_contact_verified, "VerifyContactInformationError"
     else:

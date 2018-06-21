@@ -19,10 +19,12 @@ from flask import Flask
 
 from events.domain.agent import User
 from events.domain.submission import License, Submission, Author
-from events.domain.event import CreateSubmission, UpdateMetadata, \
+from events.domain.event import CreateSubmission, \
     FinalizeSubmission, SetPrimaryClassification, AddSecondaryClassification, \
     SelectLicense, SetPrimaryClassification, AcceptPolicy, \
-    VerifyContactInformation
+    VerifyContactInformation, SetTitle, SetAbstract, SetDOI, \
+    SetMSCClassification, SetACMClassification, SetJournalReference, \
+    SetComments, UpdateAuthors
 from events.domain.agent import User
 from events.services import classic
 
@@ -118,12 +120,27 @@ class TestStoreEvents(TestCase):
         with in_memory_db() as session:
             user = User(12345, 'joe@joe.joe')
             ev = CreateSubmission(creator=user)
-            ev2 = UpdateMetadata(creator=user,
-                                      metadata=list(metadata.items()))
+            ev2 = SetTitle(creator=user, title=metadata['title'])
+            ev3 = SetAbstract(creator=user, abstract=metadata['abstract'])
+            ev4 = SetComments(creator=user, comments=metadata['comments'])
+            ev5 = SetMSCClassification(creator=user,
+                                       msc_class=metadata['msc_class'])
+            ev6 = SetACMClassification(creator=user,
+                                       acm_class=metadata['acm_class'])
+            ev7 = SetJournalReference(creator=user,
+                                      journal_ref=metadata['journal_ref'])
+            ev8 = SetDOI(creator=user, doi=metadata['doi'])
 
             submission = ev.apply()
             submission = ev2.apply(submission)
-            submission = classic.store_events(ev, ev2, submission=submission)
+            submission = ev3.apply(submission)
+            submission = ev4.apply(submission)
+            submission = ev5.apply(submission)
+            submission = ev6.apply(submission)
+            submission = ev7.apply(submission)
+            submission = ev8.apply(submission)
+            submission = classic.store_events(ev, ev2, ev3, ev4, ev5, ev6, ev7,
+                                              ev8, submission=submission)
 
             db_submission = session.query(classic.models.Submission)\
                 .get(submission.submission_id)
@@ -140,7 +157,7 @@ class TestStoreEvents(TestCase):
                          "The canonical author string should be used to"
                          " update the submission in the database.")
 
-        self.assertEqual(len(db_events), 2, "Two events should be stored")
+        self.assertEqual(len(db_events), 8, "Eight events should be stored")
         for db_event in db_events:
             self.assertEqual(db_event.submission_id, submission.submission_id,
                              "The submission id should be set")
@@ -171,9 +188,9 @@ class TestStoreEvents(TestCase):
         user = User(12345, 'joe@joe.joe')
         ev = CreateSubmission(creator=user)
         ev2 = SetPrimaryClassification(creator=user,
-                                            category='physics.soc-ph')
+                                       category='physics.soc-ph')
         ev3 = AddSecondaryClassification(creator=user,
-                                              category='physics.acc-ph')
+                                         category='physics.acc-ph')
         submission = ev.apply()
         submission = ev2.apply(submission)
         submission = ev3.apply(submission)
@@ -211,20 +228,19 @@ class TestGetSubmission(TestCase):
     def test_get_submission_with_publish(self):
         """Test that publication state is reflected in submission data."""
         user = User(12345, 'joe@joe.joe')
+
         events = [
             CreateSubmission(creator=user),
-            UpdateMetadata(creator=user, metadata=[
-                ('title', 'Foo title'),
-                ('abstract', 'Indeed'),
-                ('authors', [
-                    Author(order=0, forename='Joe', surname='Bloggs',
-                           email='joe@blo.ggs'),
-                    Author(order=1, forename='Jane', surname='Doe',
-                           email='j@doe.com'),
-                ])
+            SetTitle(creator=user, title='Foo title'),
+            SetAbstract(creator=user, abstract='Indeed'),
+            UpdateAuthors(creator=user, authors=[
+                Author(order=0, forename='Joe', surname='Bloggs',
+                       email='joe@blo.ggs'),
+                Author(order=1, forename='Jane', surname='Doe',
+                       email='j@doe.com'),
             ]),
             SelectLicense(creator=user, license_uri='http://foo.org/1.0/',
-                               license_name='Foo zero 1.0'),
+                          license_name='Foo zero 1.0'),
             SetPrimaryClassification(creator=user, category='cs.DL'),
             AcceptPolicy(creator=user),
             VerifyContactInformation(creator=user),
@@ -266,18 +282,16 @@ class TestGetSubmission(TestCase):
         user = User(12345, 'joe@joe.joe')
         events = [
             CreateSubmission(creator=user),
-            UpdateMetadata(creator=user, metadata=[
-                ('title', 'Foo title'),
-                ('abstract', 'Indeed'),
-                ('authors', [
-                    Author(order=0, forename='Joe', surname='Bloggs',
-                           email='joe@blo.ggs'),
-                    Author(order=1, forename='Jane', surname='Doe',
-                           email='j@doe.com'),
-                ])
+            SetTitle(creator=user, title='Foo title'),
+            SetAbstract(creator=user, abstract='Indeed'),
+            UpdateAuthors(creator=user, authors=[
+                Author(order=0, forename='Joe', surname='Bloggs',
+                       email='joe@blo.ggs'),
+                Author(order=1, forename='Jane', surname='Doe',
+                       email='j@doe.com'),
             ]),
             SelectLicense(creator=user, license_uri='http://foo.org/1.0/',
-                               license_name='Foo zero 1.0'),
+                          license_name='Foo zero 1.0'),
             SetPrimaryClassification(creator=user, category='cs.DL'),
             AcceptPolicy(creator=user),
             VerifyContactInformation(creator=user),

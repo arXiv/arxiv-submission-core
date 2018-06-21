@@ -46,7 +46,7 @@
 <span class="kn">from</span> <span class="nn">datetime</span> <span class="k">import</span> <span class="n">datetime</span>
 <span class="kn">from</span> <span class="nn">sqlalchemy</span> <span class="k">import</span> <span class="n">Column</span><span class="p">,</span> <span class="n">Date</span><span class="p">,</span> <span class="n">DateTime</span><span class="p">,</span> <span class="n">Enum</span><span class="p">,</span> <span class="n">ForeignKey</span><span class="p">,</span> <span class="n">Text</span><span class="p">,</span> <span class="n">text</span><span class="p">,</span> \
     <span class="n">ForeignKeyConstraint</span><span class="p">,</span> <span class="n">Index</span><span class="p">,</span> <span class="n">Integer</span><span class="p">,</span> <span class="n">SmallInteger</span><span class="p">,</span> <span class="n">String</span><span class="p">,</span> <span class="n">Table</span>
-<span class="kn">from</span> <span class="nn">sqlalchemy.orm</span> <span class="k">import</span> <span class="n">relationship</span><span class="p">,</span> <span class="n">joinedload</span>
+<span class="kn">from</span> <span class="nn">sqlalchemy.orm</span> <span class="k">import</span> <span class="n">relationship</span><span class="p">,</span> <span class="n">joinedload</span><span class="p">,</span> <span class="n">backref</span>
 
 <span class="kn">from</span> <span class="nn">sqlalchemy.ext.declarative</span> <span class="k">import</span> <span class="n">declarative_base</span>
 
@@ -60,6 +60,7 @@
 
     <span class="n">__tablename__</span> <span class="o">=</span> <span class="s1">&#39;arXiv_submissions&#39;</span>
 
+    <span class="c1"># Pre-moderation stages; these are tied to the classic submission UI.</span>
     <span class="n">NEW</span> <span class="o">=</span> <span class="mi">0</span>
     <span class="n">STARTED</span> <span class="o">=</span> <span class="mi">1</span>
     <span class="n">FILES_ADDED</span> <span class="o">=</span> <span class="mi">2</span>
@@ -68,13 +69,18 @@
     <span class="n">SUBMITTED</span> <span class="o">=</span> <span class="mi">5</span>
     <span class="n">STAGES</span> <span class="o">=</span> <span class="p">[</span><span class="n">NEW</span><span class="p">,</span> <span class="n">STARTED</span><span class="p">,</span> <span class="n">FILES_ADDED</span><span class="p">,</span> <span class="n">PROCESSED</span><span class="p">,</span> <span class="n">METADATA_ADDED</span><span class="p">,</span> <span class="n">SUBMITTED</span><span class="p">]</span>
 
+    <span class="c1"># Submission status; this describes where the submission is in the</span>
+    <span class="c1"># publication workflow.</span>
     <span class="n">NOT_SUBMITTED</span> <span class="o">=</span> <span class="mi">0</span>   <span class="c1"># Working.</span>
     <span class="n">SUBMITTED</span> <span class="o">=</span> <span class="mi">1</span>       <span class="c1"># Enqueued for moderation, to be scheduled.</span>
     <span class="n">ON_HOLD</span> <span class="o">=</span> <span class="mi">2</span>
     <span class="n">UNUSED</span> <span class="o">=</span> <span class="mi">3</span>
-    <span class="n">NEXT_DAY</span> <span class="o">=</span> <span class="mi">4</span>        <span class="c1"># Scheduled for tomorrow.</span>
+    <span class="n">NEXT_PUBLISH_DAY</span> <span class="o">=</span> <span class="mi">4</span>
+    <span class="sd">&quot;&quot;&quot;Scheduled for the next publication cycle.&quot;&quot;&quot;</span>
     <span class="n">PROCESSING</span> <span class="o">=</span> <span class="mi">5</span>
+    <span class="sd">&quot;&quot;&quot;Scheduled for today.&quot;&quot;&quot;</span>
     <span class="n">NEEDS_EMAIL</span> <span class="o">=</span> <span class="mi">6</span>
+    <span class="sd">&quot;&quot;&quot;Published, not yet announced.&quot;&quot;&quot;</span>
 
     <span class="n">PUBLISHED</span> <span class="o">=</span> <span class="mi">7</span>
     <span class="n">DELETED_PUBLISHED</span> <span class="o">=</span> <span class="mi">27</span>
@@ -85,6 +91,7 @@
 
     <span class="n">USER_DELETED</span> <span class="o">=</span> <span class="mi">10</span>
     <span class="n">ERROR_STATE</span> <span class="o">=</span> <span class="mi">19</span>
+    <span class="sd">&quot;&quot;&quot;There was a problem validating the submission during publication.&quot;&quot;&quot;</span>
 
     <span class="n">DELETED_EXPIRED</span> <span class="o">=</span> <span class="mi">20</span>
     <span class="sd">&quot;&quot;&quot;Was working but expired.&quot;&quot;&quot;</span>
@@ -107,7 +114,31 @@
 
     <span class="n">WITHDRAWN_FORMAT</span> <span class="o">=</span> <span class="s1">&#39;withdrawn&#39;</span>
 
+    <span class="c1"># Map classic status to Submission domain status.</span>
+    <span class="n">STATUS_MAP</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="n">NOT_SUBMITTED</span><span class="p">:</span> <span class="n">domain</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">WORKING</span><span class="p">,</span>
+        <span class="n">SUBMITTED</span><span class="p">:</span> <span class="n">domain</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">SUBMITTED</span><span class="p">,</span>
+        <span class="n">ON_HOLD</span><span class="p">:</span> <span class="n">domain</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">ON_HOLD</span><span class="p">,</span>
+        <span class="n">NEXT_PUBLISH_DAY</span><span class="p">:</span> <span class="n">domain</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">SCHEDULED</span><span class="p">,</span>
+        <span class="n">PROCESSING</span><span class="p">:</span> <span class="n">domain</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">SCHEDULED</span><span class="p">,</span>
+        <span class="n">PROCESSING_SUBMISSION</span><span class="p">:</span> <span class="n">domain</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">SCHEDULED</span><span class="p">,</span>
+        <span class="n">NEEDS_EMAIL</span><span class="p">:</span> <span class="n">domain</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">SCHEDULED</span><span class="p">,</span>
+        <span class="n">PUBLISHED</span><span class="p">:</span> <span class="n">domain</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">PUBLISHED</span><span class="p">,</span>
+        <span class="n">DELETED_PUBLISHED</span><span class="p">:</span> <span class="n">domain</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">PUBLISHED</span><span class="p">,</span>
+        <span class="n">USER_DELETED</span><span class="p">:</span>  <span class="n">domain</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">DELETED</span><span class="p">,</span>
+        <span class="n">DELETED_EXPIRED</span><span class="p">:</span> <span class="n">domain</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">DELETED</span><span class="p">,</span>
+        <span class="n">DELETED_ON_HOLD</span><span class="p">:</span> <span class="n">domain</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">DELETED</span><span class="p">,</span>
+        <span class="n">DELETED_PROCESSING</span><span class="p">:</span> <span class="n">domain</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">DELETED</span><span class="p">,</span>
+        <span class="n">DELETED_REMOVED</span><span class="p">:</span> <span class="n">domain</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">DELETED</span><span class="p">,</span>
+        <span class="n">DELETED_USER</span><span class="p">:</span>  <span class="n">domain</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">DELETED</span><span class="p">,</span>
+        <span class="n">ERROR_STATE</span><span class="p">:</span> <span class="n">domain</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">ERROR</span>
+    <span class="p">}</span>
+
     <span class="n">submission_id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Integer</span><span class="p">,</span> <span class="n">primary_key</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="nb">type</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">String</span><span class="p">(</span><span class="mi">8</span><span class="p">),</span> <span class="n">index</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="sd">&quot;&quot;&quot;Submission type (e.g. ``new``, ``jref``, ``cross``).&quot;&quot;&quot;</span>
+
     <span class="n">document_id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span>
         <span class="n">ForeignKey</span><span class="p">(</span><span class="s1">&#39;arXiv_documents.document_id&#39;</span><span class="p">,</span>
                    <span class="n">ondelete</span><span class="o">=</span><span class="s1">&#39;CASCADE&#39;</span><span class="p">,</span>
@@ -115,6 +146,7 @@
         <span class="n">index</span><span class="o">=</span><span class="kc">True</span>
     <span class="p">)</span>
     <span class="n">doc_paper_id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">String</span><span class="p">(</span><span class="mi">20</span><span class="p">),</span> <span class="n">index</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
     <span class="n">sword_id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">ForeignKey</span><span class="p">(</span><span class="s1">&#39;arXiv_tracking.sword_id&#39;</span><span class="p">),</span> <span class="n">index</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="n">userinfo</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Integer</span><span class="p">,</span> <span class="n">server_default</span><span class="o">=</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&#39;0&#39;&quot;</span><span class="p">))</span>
     <span class="n">is_author</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Integer</span><span class="p">,</span> <span class="n">nullable</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">server_default</span><span class="o">=</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&#39;0&#39;&quot;</span><span class="p">))</span>
@@ -133,12 +165,29 @@
     <span class="n">status</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Integer</span><span class="p">,</span> <span class="n">nullable</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                     <span class="n">server_default</span><span class="o">=</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&#39;0&#39;&quot;</span><span class="p">))</span>
     <span class="n">sticky_status</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Integer</span><span class="p">)</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    If the submission goes out of queue (e.g. submitter makes changes),</span>
+<span class="sd">    this status should be applied when the submission is re-finalized</span>
+<span class="sd">    (goes back into queue, comes out of working status).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
     <span class="n">must_process</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Integer</span><span class="p">,</span> <span class="n">server_default</span><span class="o">=</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&#39;1&#39;&quot;</span><span class="p">))</span>
     <span class="n">submit_time</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">DateTime</span><span class="p">)</span>
     <span class="n">release_time</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">DateTime</span><span class="p">)</span>
+
     <span class="n">source_size</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Integer</span><span class="p">,</span> <span class="n">server_default</span><span class="o">=</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&#39;0&#39;&quot;</span><span class="p">))</span>
     <span class="n">source_format</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">String</span><span class="p">(</span><span class="mi">12</span><span class="p">))</span>
+    <span class="sd">&quot;&quot;&quot;Submission content type (e.g. ``pdf``, ``tex``, ``pdftex``).&quot;&quot;&quot;</span>
     <span class="n">source_flags</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">String</span><span class="p">(</span><span class="mi">12</span><span class="p">))</span>
+
+    <span class="n">allow_tex_produced</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Integer</span><span class="p">,</span> <span class="n">server_default</span><span class="o">=</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&#39;0&#39;&quot;</span><span class="p">))</span>
+    <span class="sd">&quot;&quot;&quot;Whether to allow a TeX-produced PDF.&quot;&quot;&quot;</span>
+
+    <span class="n">package</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">String</span><span class="p">(</span><span class="mi">255</span><span class="p">),</span> <span class="n">nullable</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">server_default</span><span class="o">=</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&#39;&#39;&quot;</span><span class="p">))</span>
+    <span class="sd">&quot;&quot;&quot;Path (on disk) to the submission package (tarball, PDF).&quot;&quot;&quot;</span>
+
+    <span class="n">is_oversize</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Integer</span><span class="p">,</span> <span class="n">server_default</span><span class="o">=</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&#39;0&#39;&quot;</span><span class="p">))</span>
+
     <span class="n">has_pilot_data</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Integer</span><span class="p">)</span>
     <span class="n">is_withdrawn</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Integer</span><span class="p">,</span> <span class="n">nullable</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">server_default</span><span class="o">=</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&#39;0&#39;&quot;</span><span class="p">))</span>
     <span class="n">title</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Text</span><span class="p">)</span>
@@ -154,24 +203,26 @@
     <span class="n">license</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">ForeignKey</span><span class="p">(</span><span class="s1">&#39;arXiv_licenses.name&#39;</span><span class="p">,</span> <span class="n">onupdate</span><span class="o">=</span><span class="s1">&#39;CASCADE&#39;</span><span class="p">),</span>
                      <span class="n">index</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="n">version</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Integer</span><span class="p">,</span> <span class="n">nullable</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">server_default</span><span class="o">=</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&#39;1&#39;&quot;</span><span class="p">))</span>
-    <span class="nb">type</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">String</span><span class="p">(</span><span class="mi">8</span><span class="p">),</span> <span class="n">index</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
     <span class="n">is_ok</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Integer</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
     <span class="n">admin_ok</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Integer</span><span class="p">)</span>
-    <span class="n">allow_tex_produced</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Integer</span><span class="p">,</span> <span class="n">server_default</span><span class="o">=</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&#39;0&#39;&quot;</span><span class="p">))</span>
-    <span class="n">is_oversize</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Integer</span><span class="p">,</span> <span class="n">server_default</span><span class="o">=</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&#39;0&#39;&quot;</span><span class="p">))</span>
+    <span class="sd">&quot;&quot;&quot;Used by administrators for reporting/bookkeeping.&quot;&quot;&quot;</span>
+
     <span class="n">remote_addr</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">String</span><span class="p">(</span><span class="mi">16</span><span class="p">),</span> <span class="n">nullable</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">server_default</span><span class="o">=</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&#39;&#39;&quot;</span><span class="p">))</span>
     <span class="n">remote_host</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">String</span><span class="p">(</span><span class="mi">255</span><span class="p">),</span> <span class="n">nullable</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                          <span class="n">server_default</span><span class="o">=</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&#39;&#39;&quot;</span><span class="p">))</span>
-    <span class="n">package</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">String</span><span class="p">(</span><span class="mi">255</span><span class="p">),</span> <span class="n">nullable</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">server_default</span><span class="o">=</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&#39;&#39;&quot;</span><span class="p">))</span>
     <span class="n">rt_ticket_id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Integer</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="n">auto_hold</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Integer</span><span class="p">,</span> <span class="n">server_default</span><span class="o">=</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&#39;0&#39;&quot;</span><span class="p">))</span>
+    <span class="sd">&quot;&quot;&quot;Should be placed on hold when submission comes out of working status.&quot;&quot;&quot;</span>
 
     <span class="n">document</span> <span class="o">=</span> <span class="n">relationship</span><span class="p">(</span><span class="s1">&#39;Document&#39;</span><span class="p">)</span>
     <span class="n">arXiv_license</span> <span class="o">=</span> <span class="n">relationship</span><span class="p">(</span><span class="s1">&#39;License&#39;</span><span class="p">)</span>
     <span class="n">submitter</span> <span class="o">=</span> <span class="n">relationship</span><span class="p">(</span><span class="s1">&#39;User&#39;</span><span class="p">)</span>
     <span class="n">sword</span> <span class="o">=</span> <span class="n">relationship</span><span class="p">(</span><span class="s1">&#39;Tracking&#39;</span><span class="p">)</span>
     <span class="n">categories</span> <span class="o">=</span> <span class="n">relationship</span><span class="p">(</span><span class="s1">&#39;SubmissionCategory&#39;</span><span class="p">,</span>
-                              <span class="n">back_populates</span><span class="o">=</span><span class="s2">&quot;submission&quot;</span><span class="p">,</span> <span class="n">lazy</span><span class="o">=</span><span class="s1">&#39;joined&#39;</span><span class="p">)</span>
+                              <span class="n">back_populates</span><span class="o">=</span><span class="s1">&#39;submission&#39;</span><span class="p">,</span> <span class="n">lazy</span><span class="o">=</span><span class="s1">&#39;joined&#39;</span><span class="p">,</span>
+                              <span class="n">cascade</span><span class="o">=</span><span class="s2">&quot;all, delete-orphan&quot;</span><span class="p">)</span>
 
 <div class="viewcode-block" id="Submission.patch"><a class="viewcode-back" href="../../../../containers/core/events.services.classic.html#events.services.classic.models.Submission.patch">[docs]</a>    <span class="k">def</span> <span class="nf">patch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">domain</span><span class="o">.</span><span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">domain</span><span class="o">.</span><span class="n">Submission</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -195,8 +246,8 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># Status changes.</span>
         <span class="n">submission</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_status</span><span class="p">()</span>
-        <span class="n">submission</span><span class="o">.</span><span class="n">active</span> <span class="o">=</span> <span class="p">(</span><span class="n">submission</span><span class="o">.</span><span class="n">status</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="n">submission</span><span class="o">.</span><span class="n">DELETED</span><span class="p">,</span>
-                                                       <span class="n">submission</span><span class="o">.</span><span class="n">PUBLISHED</span><span class="p">]),</span>
+        <span class="n">submission</span><span class="o">.</span><span class="n">active</span> <span class="o">=</span> <span class="p">(</span><span class="n">submission</span><span class="o">.</span><span class="n">status</span> <span class="ow">not</span> <span class="ow">in</span>
+                             <span class="p">[</span><span class="n">submission</span><span class="o">.</span><span class="n">DELETED</span><span class="p">,</span> <span class="n">submission</span><span class="o">.</span><span class="n">PUBLISHED</span><span class="p">])</span>
         <span class="n">submission</span><span class="o">.</span><span class="n">published</span> <span class="o">=</span> <span class="p">(</span><span class="n">submission</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="n">submission</span><span class="o">.</span><span class="n">PUBLISHED</span><span class="p">)</span>
         <span class="n">submission</span><span class="o">.</span><span class="n">arxiv_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_arxiv_id</span><span class="p">()</span>
 
@@ -214,6 +265,10 @@
 
         <span class="c1"># Comments (admins may modify).</span>
         <span class="n">submission</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">comments</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">comments</span>
+
+        <span class="c1"># Apply sticky status.</span>
+        <span class="k">if</span> <span class="n">submission</span><span class="o">.</span><span class="n">finalized</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">sticky_status</span> <span class="ow">is</span> <span class="bp">self</span><span class="o">.</span><span class="n">ON_HOLD</span><span class="p">:</span>
+            <span class="n">submission</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="n">submission</span><span class="o">.</span><span class="n">ON_HOLD</span>
         <span class="k">return</span> <span class="n">submission</span></div>
 
 <div class="viewcode-block" id="Submission.to_submission"><a class="viewcode-back" href="../../../../containers/core/events.services.classic.html#events.services.classic.models.Submission.to_submission">[docs]</a>    <span class="k">def</span> <span class="nf">to_submission</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">domain</span><span class="o">.</span><span class="n">Submission</span><span class="p">:</span>
@@ -283,7 +338,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">updated</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">title</span> <span class="o">=</span> <span class="n">submission</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">title</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">abstract</span> <span class="o">=</span> <span class="n">submission</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">abstract</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">authors</span> <span class="o">=</span> <span class="n">submission</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">authors_canonical</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">authors</span> <span class="o">=</span> <span class="n">submission</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">authors_display</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">comments</span> <span class="o">=</span> <span class="n">submission</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">comments</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">report_num</span> <span class="o">=</span> <span class="n">submission</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">report_num</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">doi</span> <span class="o">=</span> <span class="n">submission</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">doi</span>
@@ -299,12 +354,14 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">source_size</span> <span class="o">=</span> <span class="n">submission</span><span class="o">.</span><span class="n">source_content</span><span class="o">.</span><span class="n">size</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">source_format</span> <span class="o">=</span> <span class="n">submission</span><span class="o">.</span><span class="n">source_content</span><span class="o">.</span><span class="n">format</span>
 
-        <span class="c1"># Only update the submission state if we&#39;re transitioning for the first</span>
-        <span class="c1"># time. We can relax this later, but for now it will prevent us from</span>
-        <span class="c1"># doing something stupid.</span>
+        <span class="c1"># Not submitted -&gt; Submitted.</span>
         <span class="k">if</span> <span class="n">submission</span><span class="o">.</span><span class="n">finalized</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="ow">is</span> <span class="n">Submission</span><span class="o">.</span><span class="n">NOT_SUBMITTED</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="n">Submission</span><span class="o">.</span><span class="n">SUBMITTED</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">submit_time</span> <span class="o">=</span> <span class="n">submission</span><span class="o">.</span><span class="n">updated</span>
+        <span class="c1"># Unsubmit.</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="o">&lt;=</span> <span class="n">Submission</span><span class="o">.</span><span class="n">ON_HOLD</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">submission</span><span class="o">.</span><span class="n">finalized</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="n">Submission</span><span class="o">.</span><span class="n">NOT_SUBMITTED</span>
 
         <span class="k">if</span> <span class="n">submission</span><span class="o">.</span><span class="n">primary_classification</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_update_primary</span><span class="p">(</span><span class="n">submission</span><span class="p">)</span>
@@ -332,17 +389,7 @@
         <span class="sd">&quot;&quot;&quot;Map classic status codes to :class:`.domain.Submission` status.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_arxiv_id</span><span class="p">()</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">domain</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">PUBLISHED</span>
-        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="ow">is</span> <span class="bp">self</span><span class="o">.</span><span class="n">NOT_SUBMITTED</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">domain</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">WORKING</span>
-        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="ow">is</span> <span class="bp">self</span><span class="o">.</span><span class="n">SUBMITTED</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">domain</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">PROCESSING</span>
-        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="ow">is</span> <span class="bp">self</span><span class="o">.</span><span class="n">ON_HOLD</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">domain</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">ON_HOLD</span>
-        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="ow">is</span> <span class="bp">self</span><span class="o">.</span><span class="n">NEXT_DAY</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">domain</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">SCHEDULED</span>
-        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">DELETED</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">domain</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">DELETED</span>
-        <span class="c1"># TODO: raise something?</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">STATUS_MAP</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">status</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_update_submitter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">domain</span><span class="o">.</span><span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Update submitter information.&quot;&quot;&quot;</span>
@@ -687,7 +734,7 @@
 
 <div class="viewcode-block" id="Category"><a class="viewcode-back" href="../../../../containers/core/events.services.classic.html#events.services.classic.models.Category">[docs]</a><span class="k">class</span> <span class="nc">Category</span><span class="p">(</span><span class="n">Base</span><span class="p">):</span>    <span class="c1"># type: ignore</span>
     <span class="sd">&quot;&quot;&quot;Supplemental data about arXiv categories, including endorsement.&quot;&quot;&quot;</span>
-    
+
     <span class="n">__tablename__</span> <span class="o">=</span> <span class="s1">&#39;arXiv_categories&#39;</span>
 
     <span class="n">arXiv_endorsement_domain</span> <span class="o">=</span> <span class="n">relationship</span><span class="p">(</span><span class="s1">&#39;EndorsementDomain&#39;</span><span class="p">)</span>

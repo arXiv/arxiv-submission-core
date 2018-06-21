@@ -185,7 +185,11 @@ to the database.</li>
 <li class="toctree-l1"><a class="reference internal" href="events.domain.html">events.domain package</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="events.domain.html#submodules">Submodules</a></li>
 <li class="toctree-l2"><a class="reference internal" href="events.domain.html#module-events.domain.agent">events.domain.agent module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="events.domain.html#module-events.domain.event">events.domain.event module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="events.domain.html#module-events.domain.event">events.domain.event module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="events.domain.html#writing-new-events-commands">Writing new events/commands</a></li>
+<li class="toctree-l3"><a class="reference internal" href="events.domain.html#adding-validation-to-events">Adding validation to events</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="events.domain.html#module-events.domain.rule">events.domain.rule module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="events.domain.html#module-events.domain.submission">events.domain.submission module</a></li>
 </ul>
@@ -218,6 +222,13 @@ to the database.</li>
 <dl class="exception">
 <dt id="events.exceptions.InvalidEvent">
 <em class="property">exception </em><code class="descclassname">events.exceptions.</code><code class="descname">InvalidEvent</code><span class="sig-paren">(</span><em>event</em>, <em>extra=''</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/exceptions.html#InvalidEvent"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.exceptions.InvalidEvent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.6/library/exceptions.html#ValueError" title="(in Python v3.6)"><code class="xref py py-class docutils literal"><span class="pre">ValueError</span></code></a></p>
+<p>Raised when an invalid event is encountered.</p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="events.exceptions.InvalidStack">
+<em class="property">exception </em><code class="descclassname">events.exceptions.</code><code class="descname">InvalidStack</code><span class="sig-paren">(</span><em>event_exceptions</em>, <em>extra=''</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/events/exceptions.html#InvalidStack"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#events.exceptions.InvalidStack" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.6/library/exceptions.html#ValueError" title="(in Python v3.6)"><code class="xref py py-class docutils literal"><span class="pre">ValueError</span></code></a></p>
 <p>Raised when an invalid event is encountered.</p>
 </dd></dl>

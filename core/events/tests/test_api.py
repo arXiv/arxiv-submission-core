@@ -5,9 +5,10 @@ import os
 from collections import defaultdict
 from datetime import datetime, timedelta
 from flask import Flask
-from events import save, load, Submission, User, Event, UpdateMetadata, \
+from events import save, load, Submission, User, Event, \
     EventRule, RuleCondition, RuleConsequence, CreateComment, \
-    SubmissionMetadata, CreateSubmission, UpdateAuthors, Author
+    SubmissionMetadata, CreateSubmission, UpdateAuthors, Author, \
+    SetTitle, SetAbstract
 from events.exceptions import NoSuchSubmission, InvalidEvent
 from events.services import classic
 
@@ -77,7 +78,7 @@ class TestSave(TestCase):
         mock_database.store_events = mock_store_events
         user = User(12345, 'joe@joe.joe')
         e = CreateSubmission(creator=user)
-        e2 = UpdateMetadata(creator=user, metadata=[['title', 'foo']])
+        e2 = SetTitle(creator=user, title='foo')
         submission, events = save(e, e2)
 
         self.assertEqual(submission.metadata.title, 'foo')
@@ -101,7 +102,7 @@ class TestSave(TestCase):
         """An exception is raised when there is no creation event."""
         mock_database.store_events = mock_store_events
         user = User(12345, 'joe@joe.joe')
-        e2 = UpdateMetadata(creator=user, metadata=[['title', 'foo']])
+        e2 = SetTitle(creator=user, title='foo')
         with self.assertRaises(NoSuchSubmission):
             save(e2)
 
@@ -128,12 +129,12 @@ class TestSave(TestCase):
         # Here is the first set of events.
         user = User(12345, 'joe@joe.joe')
         e = CreateSubmission(creator=user)
-        e2 = UpdateMetadata(creator=user, metadata=[['title', 'foo']])
+        e2 = SetTitle(creator=user, title='foo')
         submission, _ = save(e, e2)
         submission_id = submission.submission_id
 
         # Now we apply a second set of events.
-        e3 = UpdateMetadata(creator=user, metadata=[['abstract', 'bar']])
+        e3 = SetAbstract(creator=user, abstract='bar')
         submission2, _ = save(e3, submission_id=submission_id)
 
         # The submission state reflects all three events.
@@ -148,40 +149,3 @@ class TestSave(TestCase):
                          " original creation date.")
         self.assertEqual(submission2.submission_id, submission_id,
                          "The submission ID should remain the same.")
-
-    # TODO: restore this when rules are implemented.
-    #
-    # @mock.patch('events.classic')
-    # def test_apply_events_with_rules(self, mock_db):
-    #     """Save a set of events for which some rules apply."""
-    #     # Given the following rule...
-    #     def mock_get_rules_for_submission(submission_id):
-    #         return [
-    #             # If the metadata of any submission was updated, add a comment.
-    #             EventRule(
-    #                 rule_id=1,
-    #                 creator=User('foo'),
-    #                 condition=RuleCondition(
-    #                     event_type=UpdateMetadata,
-    #                     extra_condition={}
-    #                 ),
-    #                 consequence=RuleConsequence(
-    #                     event_creator=User('foo'),
-    #                     event_type=CreateCommentEvent,
-    #                     event_data={
-    #                         'body': 'The metadata was updated',
-    #                         'scope': 'private'
-    #                     }
-    #                 )
-    #             )
-    #         ]
-    #     mock_db.get_rules = mock_get_rules_for_submission
-    #     mock_db.store_events = mock_store_events
-    #     e = CreateSubmission(creator=User('foo'))
-    #     e2 = UpdateMetadata(creator=User('foo'),
-    #                              metadata=[['title', 'foo']])
-    #     submission, events = save(e, e2)
-    #     self.assertEqual(len(submission.comments), 1,
-    #                      "A comment should be added to the submission.")
-    #     self.assertEqual(len(events), 3,
-    #                      "A third event is added to the stack.")

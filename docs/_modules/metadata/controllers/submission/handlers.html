@@ -143,6 +143,27 @@
     <span class="k">return</span> <span class="nb">tuple</span><span class="p">()</span></div>
 
 
+<div class="viewcode-block" id="handle_submitter_contact_verified"><a class="viewcode-back" href="../../../../containers/metadata/metadata.controllers.submission.html#metadata.controllers.submission.handlers.handle_submitter_contact_verified">[docs]</a><span class="k">def</span> <span class="nf">handle_submitter_contact_verified</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">agents</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> \
+        <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">events</span><span class="o">.</span><span class="n">Event</span><span class="p">]:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Handle the ``submitter_contact_verified`` field in submission payload.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    data : dict</span>
+<span class="sd">    agents : dict</span>
+<span class="sd">        Values are :class:`events.Agent` instances.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tuple</span>
+<span class="sd">        Zero or more uncommitted :class:`events.Event` instances.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">data</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">events</span><span class="o">.</span><span class="n">VerifyContactInformation</span><span class="p">(</span><span class="o">**</span><span class="n">agents</span><span class="p">),</span>
+    <span class="k">return</span> <span class="nb">tuple</span><span class="p">()</span></div>
+
+
 <div class="viewcode-block" id="handle_primary_classification"><a class="viewcode-back" href="../../../../containers/metadata/metadata.controllers.submission.html#metadata.controllers.submission.handlers.handle_primary_classification">[docs]</a><span class="k">def</span> <span class="nf">handle_primary_classification</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">agents</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> \
         <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">events</span><span class="o">.</span><span class="n">Event</span><span class="p">]]:</span>
     <span class="sd">&quot;&quot;&quot;Handle the ``primary_classification`` field in submission payload.&quot;&quot;&quot;</span>
@@ -191,14 +212,39 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># Most of this could be in a list comprehension, but it may help to</span>
     <span class="c1"># keep this verbose in case we want to intervene on values.</span>
-    <span class="n">_metadata</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">events</span><span class="o">.</span><span class="n">UpdateMetadata</span><span class="o">.</span><span class="n">FIELDS</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
-            <span class="k">continue</span>
-        <span class="n">_metadata</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">key</span><span class="p">,</span> <span class="n">data</span><span class="p">[</span><span class="n">key</span><span class="p">]))</span>
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">_metadata</span><span class="p">:</span>
+    <span class="n">_events</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">if</span> <span class="s1">&#39;title&#39;</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+        <span class="n">_events</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">events</span><span class="o">.</span><span class="n">SetTitle</span><span class="p">(</span><span class="o">**</span><span class="n">agents</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;title&#39;</span><span class="p">]))</span>
+    <span class="k">if</span> <span class="s1">&#39;abstract&#39;</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+        <span class="n">_events</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">events</span><span class="o">.</span><span class="n">SetAbstract</span><span class="p">(</span><span class="o">**</span><span class="n">agents</span><span class="p">,</span> <span class="n">abstract</span><span class="o">=</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;abstract&#39;</span><span class="p">]))</span>
+    <span class="k">if</span> <span class="s1">&#39;comments&#39;</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+        <span class="n">_events</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">events</span><span class="o">.</span><span class="n">SetComments</span><span class="p">(</span><span class="o">**</span><span class="n">agents</span><span class="p">,</span> <span class="n">comments</span><span class="o">=</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;comments&#39;</span><span class="p">]))</span>
+    <span class="k">if</span> <span class="s1">&#39;msc_class&#39;</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+        <span class="n">_events</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">events</span><span class="o">.</span><span class="n">SetMSCClassification</span><span class="p">(</span>
+            <span class="o">**</span><span class="n">agents</span><span class="p">,</span>
+            <span class="n">msc_class</span><span class="o">=</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;msc_class&#39;</span><span class="p">])</span>
+        <span class="p">)</span>
+    <span class="k">if</span> <span class="s1">&#39;acm_class&#39;</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+        <span class="n">_events</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">events</span><span class="o">.</span><span class="n">SetACMClassification</span><span class="p">(</span>
+            <span class="o">**</span><span class="n">agents</span><span class="p">,</span>
+            <span class="n">acm_class</span><span class="o">=</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;acm_class&#39;</span><span class="p">])</span>
+        <span class="p">)</span>
+    <span class="k">if</span> <span class="s1">&#39;journal_ref&#39;</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+        <span class="n">_events</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">events</span><span class="o">.</span><span class="n">SetJournalReference</span><span class="p">(</span>
+            <span class="o">**</span><span class="n">agents</span><span class="p">,</span>
+            <span class="n">journal_ref</span><span class="o">=</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;journal_ref&#39;</span><span class="p">])</span>
+        <span class="p">)</span>
+    <span class="k">if</span> <span class="s1">&#39;report_num&#39;</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+        <span class="n">_events</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">events</span><span class="o">.</span><span class="n">SetReportNumber</span><span class="p">(</span>
+            <span class="o">**</span><span class="n">agents</span><span class="p">,</span>
+            <span class="n">report_num</span><span class="o">=</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;report_num&#39;</span><span class="p">])</span>
+        <span class="p">)</span>
+    <span class="k">if</span> <span class="s1">&#39;doi&#39;</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+        <span class="n">_events</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">events</span><span class="o">.</span><span class="n">SetDOI</span><span class="p">(</span><span class="o">**</span><span class="n">agents</span><span class="p">,</span> <span class="n">doi</span><span class="o">=</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;doi&#39;</span><span class="p">]))</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">_events</span><span class="p">:</span>
         <span class="k">return</span> <span class="nb">tuple</span><span class="p">()</span>
-    <span class="k">return</span> <span class="n">events</span><span class="o">.</span><span class="n">UpdateMetadata</span><span class="p">(</span><span class="o">**</span><span class="n">agents</span><span class="p">,</span> <span class="n">metadata</span><span class="o">=</span><span class="n">_metadata</span><span class="p">),</span></div>
+    <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">_events</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="handle_authors"><a class="viewcode-back" href="../../../../containers/metadata/metadata.controllers.submission.html#metadata.controllers.submission.handlers.handle_authors">[docs]</a><span class="k">def</span> <span class="nf">handle_authors</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">agents</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">events</span><span class="o">.</span><span class="n">Event</span><span class="p">]:</span>
@@ -226,14 +272,66 @@
     <span class="k">return</span> <span class="n">events</span><span class="o">.</span><span class="n">UpdateAuthors</span><span class="p">(</span><span class="o">**</span><span class="n">agents</span><span class="p">,</span> <span class="n">authors</span><span class="o">=</span><span class="n">_authors</span><span class="p">),</span></div>
 
 
+<div class="viewcode-block" id="handle_finalization"><a class="viewcode-back" href="../../../../containers/metadata/metadata.controllers.submission.html#metadata.controllers.submission.handlers.handle_finalization">[docs]</a><span class="k">def</span> <span class="nf">handle_finalization</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">agents</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">events</span><span class="o">.</span><span class="n">Event</span><span class="p">]:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Handle finalization flag in the submission payload.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    data : dict</span>
+<span class="sd">    agents : dict</span>
+<span class="sd">        Values are :class:`events.Agent` instances.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tuple</span>
+<span class="sd">        Zero or more uncommitted :class:`events.Event` instances.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">data</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">events</span><span class="o">.</span><span class="n">FinalizeSubmission</span><span class="p">(</span><span class="o">**</span><span class="n">agents</span><span class="p">),</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">events</span><span class="o">.</span><span class="n">UnFinalizeSubmission</span><span class="p">(</span><span class="o">**</span><span class="n">agents</span><span class="p">),</span></div>
+
+
+<div class="viewcode-block" id="handle_source_content"><a class="viewcode-back" href="../../../../containers/metadata/metadata.controllers.submission.html#metadata.controllers.submission.handlers.handle_source_content">[docs]</a><span class="k">def</span> <span class="nf">handle_source_content</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">agents</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">events</span><span class="o">.</span><span class="n">Event</span><span class="p">]:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Handle source content data in the submission payload.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    data : dict</span>
+<span class="sd">    agents : dict</span>
+<span class="sd">        Values are :class:`events.Agent` instances.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tuple</span>
+<span class="sd">        Zero or more uncommitted :class:`events.Event` instances.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">data</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">events</span><span class="o">.</span><span class="n">AttachSourceContent</span><span class="p">(</span>
+        <span class="o">**</span><span class="n">agents</span><span class="p">,</span>
+        <span class="n">location</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;location&#39;</span><span class="p">),</span>
+        <span class="nb">format</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;format&#39;</span><span class="p">),</span>
+        <span class="n">checksum</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;checksum&#39;</span><span class="p">),</span>
+        <span class="n">mime_type</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;mime_type&#39;</span><span class="p">),</span>
+        <span class="n">identifier</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;identifier&#39;</span><span class="p">),</span>
+        <span class="n">size</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;size&#39;</span><span class="p">),</span>
+    <span class="p">),</span></div>
+
+
 <span class="n">HANDLERS</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">Callable</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[</span>
     <span class="p">((</span><span class="s1">&#39;submitter_is_author&#39;</span><span class="p">,</span> <span class="p">),</span> <span class="n">handle_submitter_is_author</span><span class="p">),</span>
     <span class="p">((</span><span class="s1">&#39;license&#39;</span><span class="p">,</span> <span class="p">),</span> <span class="n">handle_license</span><span class="p">),</span>
     <span class="p">((</span><span class="s1">&#39;submitter_accepts_policy&#39;</span><span class="p">,</span> <span class="p">),</span> <span class="n">handle_submitter_accepts_policy</span><span class="p">),</span>
+    <span class="p">((</span><span class="s1">&#39;submitter_contact_verified&#39;</span><span class="p">,</span> <span class="p">),</span> <span class="n">handle_submitter_contact_verified</span><span class="p">),</span>
     <span class="p">((</span><span class="s1">&#39;primary_classification&#39;</span><span class="p">,</span> <span class="p">),</span> <span class="n">handle_primary_classification</span><span class="p">),</span>
     <span class="p">((</span><span class="s1">&#39;secondary_classification&#39;</span><span class="p">,</span> <span class="p">),</span> <span class="n">handle_secondary_classification</span><span class="p">),</span>
     <span class="p">((</span><span class="s1">&#39;metadata&#39;</span><span class="p">,</span> <span class="p">),</span> <span class="n">handle_metadata</span><span class="p">),</span>
-    <span class="p">((</span><span class="s1">&#39;metadata&#39;</span><span class="p">,</span> <span class="s1">&#39;authors&#39;</span><span class="p">),</span> <span class="n">handle_authors</span><span class="p">)</span>
+    <span class="p">((</span><span class="s1">&#39;metadata&#39;</span><span class="p">,</span> <span class="s1">&#39;authors&#39;</span><span class="p">),</span> <span class="n">handle_authors</span><span class="p">),</span>
+    <span class="p">((</span><span class="s1">&#39;source_content&#39;</span><span class="p">,</span> <span class="p">),</span> <span class="n">handle_source_content</span><span class="p">),</span>
+    <span class="p">((</span><span class="s1">&#39;finalized&#39;</span><span class="p">,</span> <span class="p">),</span> <span class="n">handle_finalization</span><span class="p">)</span>
 <span class="p">]</span>
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">Describes how data in the payload should be handled.</span>
