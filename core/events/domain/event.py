@@ -53,9 +53,11 @@ from typing import Optional, TypeVar, List, Tuple, Any, Dict
 from urllib.parse import urlparse
 from dataclasses import dataclass, field
 from dataclasses import asdict
+import bleach
 
 from arxiv.util import schema
 from arxiv import taxonomy
+from arxiv.base import logging
 
 from .agent import Agent
 from .submission import Submission, SubmissionMetadata, Author, \
@@ -63,6 +65,8 @@ from .submission import Submission, SubmissionMetadata, Author, \
     SubmissionContent
 
 from events.exceptions import InvalidEvent
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -364,14 +368,54 @@ class SetTitle(Event):
 
     title: str = field(default='')
 
+    MIN_LENGTH = 5
+    MAX_LENGTH = 240
+    ALLOWED_HTML = ["br", "sup", "sub", "hr", "em", "strong", "h"]
+
+    def __post_init__(self):
+        """Perform some light cleanup on the provided value."""
+        self.title = self._cleanup(self.title)
+
     def validate(self, submission: Submission) -> None:
         """Validate the title value."""
         submission_is_not_finalized(self, submission)
+        self._does_not_contain_html_escapes(submission)
+        self._acceptable_length(submission)
+        no_trailing_period(self, submission, self.title)
+        if self.title.isupper():
+            raise InvalidEvent(self, "Must not be all-caps")
+        self._check_for_html(submission)
 
     def project(self, submission: Submission) -> Submission:
         """Update the title on a :class:`.Submission`."""
         submission.metadata.title = self.title
         return submission
+
+    def _does_not_contain_html_escapes(self, submission: Submission) -> None:
+        """The title must not contain HTML escapes."""
+        if re.search(r"\&(?:[a-z]{3,4}|#x?[0-9a-f]{1,4})\;", self.title):
+            raise InvalidEvent(self, "Title may not contain HTML escapes")
+
+    def _acceptable_length(self, submission: Submission) -> None:
+        """Verify that the title is an acceptable length."""
+        N = len(self.title)
+        if N < self.MIN_LENGTH or N > self.MAX_LENGTH:
+            raise InvalidEvent(self, f"Must be between {self.MIN_LENGTH} and"
+                                     f" {self.MAX_LENGTH} characters")
+
+    # In classic, this is only an admin post-hoc check.
+    def _check_for_html(self, submission: Submission) -> None:
+        """Check for disallowed HTML."""
+        N = len(self.title)
+        N_after = len(bleach.clean(self.title, tags=self.ALLOWED_HTML,
+                                   strip=True))
+        if N > N_after:
+            raise InvalidEvent(self, "Unacceptable HTML tags")
+
+    def _cleanup(self, value: str) -> str:
+        """Perform some light tidying on the title."""
+        value = re.sub(r"\s+", " ", value).strip()       # Single spaces only.
+        return value
 
 
 @dataclass
@@ -380,14 +424,48 @@ class SetAbstract(Event):
 
     abstract: str = field(default='')
 
+    MIN_LENGTH = 20
+    MAX_LENGTH = 1920
+
+    def __post_init__(self):
+        """Perform some light cleanup on the provided value."""
+        self.abstract = self._cleanup(self.abstract)
+
     def validate(self, submission: Submission) -> None:
         """Validate the abstract value."""
         submission_is_not_finalized(self, submission)
+        self._acceptable_length(submission)
 
     def project(self, submission: Submission) -> Submission:
         """Update the abstract on a :class:`.Submission`."""
         submission.metadata.abstract = self.abstract
         return submission
+
+    def _acceptable_length(self, submission: Submission) -> None:
+        N = len(self.abstract)
+        if N < self.MIN_LENGTH or N > self.MAX_LENGTH:
+            raise InvalidEvent(self, f"Must be between {self.MIN_LENGTH} and"
+                                     f" {self.MAX_LENGTH} characters")
+
+    def _cleanup(self, value: str) -> str:
+        """Perform some light tidying on the abstract."""
+        value = re.sub(r"\s+", " ", value)          # Single spaces only.
+        value = value.strip()   # Remove leading or trailing spaces
+        # Tidy paragraphs which should be indicated with "\n  ".
+        value = re.sub(r"[ ]+\n", "\n", value)
+        value = re.sub(r"\n\s+", "\n  ", value)
+        # Newline with no following space is removed, so treated as just a
+        # space in paragraph.
+        value = re.sub(r"(\S)\n(\S)", "\g<1> \g<2>", value)
+        # Tab->space, multiple spaces->space.
+        value = re.sub(r"\t", " ", value)
+        value = re.sub(r"(?<!\n)[ ]{2,}", " ", value)
+        # Remove tex return (\\) at end of line or end of abstract.
+        value = re.sub(r"\s*\\\\(\n|$)", "\g<1>", value)
+        # Remove lone period.
+        value = re.sub(r"\n\.\n", "\n", value)
+        value = re.sub(r"\n\.$", "", value)
+        return value
 
 
 @dataclass
@@ -396,14 +474,33 @@ class SetDOI(Event):
 
     doi: str = field(default='')
 
+    def __post_init__(self):
+        """Perform some light cleanup on the provided value."""
+        self.doi = self._cleanup(self.doi)
+
     def validate(self, submission: Submission) -> None:
         """Validate the DOI value."""
         submission_is_not_finalized(self, submission)
+        if not self.doi:    # Can be blank.
+            return
+        for value in re.split('[;,]', self.doi):
+            if not self._valid_doi(value.strip()):
+                raise InvalidEvent(self, f"Invalid DOI: {value}")
 
     def project(self, submission: Submission) -> Submission:
         """Update the doi on a :class:`.Submission`."""
         submission.metadata.doi = self.doi
         return submission
+
+    def _valid_doi(self, value: str) -> bool:
+        if re.match(r"^10\.\d{4,5}\/\S+$", value):
+            return True
+        return False
+
+    def _cleanup(self, value: str) -> str:
+        """Perform some light tidying on the title."""
+        value = re.sub(r"\s+", " ", value).strip()        # Single spaces only.
+        return value
 
 
 @dataclass
@@ -412,14 +509,33 @@ class SetMSCClassification(Event):
 
     msc_class: str = field(default='')
 
+    MAX_LENGTH = 160
+
+    def __post_init__(self):
+        """Perform some light cleanup on the provided value."""
+        self.msc_class = self._cleanup(self.msc_class)
+
     def validate(self, submission: Submission) -> None:
         """Validate the MSC classification value."""
         submission_is_not_finalized(self, submission)
+        if not self.msc_class:    # Blank values are OK.
+            return
 
     def project(self, submission: Submission) -> Submission:
         """Update the MSC classification on a :class:`.Submission`."""
         submission.metadata.msc_class = self.msc_class
         return submission
+
+    def _cleanup(self, value: str) -> str:
+        """Perform some light fixes on the MSC classification value."""
+        value = re.sub(r"\s+", " ", value).strip()
+        value = re.sub(r"\s*\.[\s.]*$", "", value)
+        value = value.replace(";", ",")     # No semicolons, should be comma.
+        value = re.sub(r"\s*,\s*", ", ", value)     # Want: comma, space.
+        value = re.sub(r"^MSC([\s:\-]{0,4}(classification|class|number))?"
+                       r"([\s:\-]{0,4}\(?2000\)?)?[\s:\-]*",
+                       "", value, flags=re.I)
+        return value
 
 
 @dataclass
@@ -428,14 +544,45 @@ class SetACMClassification(Event):
 
     acm_class: str = field(default='')
 
+    MAX_LENGTH = 160
+
+    def __post_init__(self):
+        """Perform some light cleanup on the provided value."""
+        self.acm_class = self._cleanup(self.acm_class)
+
     def validate(self, submission: Submission) -> None:
         """Validate the ACM classification value."""
         submission_is_not_finalized(self, submission)
+        if not self.acm_class:    # Blank values are OK.
+            return
+        self._valid_acm_class(submission)
 
     def project(self, submission: Submission) -> Submission:
         """Update the ACM classification on a :class:`.Submission`."""
         submission.metadata.acm_class = self.acm_class
         return submission
+
+    def _valid_acm_class(self, submission: Submission) -> None:
+        """Check that the value is a valid ACM class."""
+        ptn = r"^[A-K]\.[0-9m](\.(\d{1,2}|m)(\.[a-o])?)?$"
+        for acm_class in self.acm_class.split(';'):
+            if not re.match(ptn, acm_class.strip()):
+                raise InvalidEvent(self, f"Not a valid ACM class: {acm_class}")
+
+    def _cleanup(self, value: str) -> str:
+        """Perform light cleanup."""
+        value = re.sub(r"\s+", " ", value).strip()
+        value = re.sub(r"\s*\.[\s.]*$", "", value)
+        value = re.sub(r"^ACM-class:\s+", "", value, flags=re.I)
+        value = value.replace(",", ";")
+        _value = []
+        for v in value.split(';'):
+            v = v.strip().upper().rstrip('.')
+            v = re.sub(r"^([A-K])(\d)", "\g<1>.\g<2>", v)
+            v = re.sub(r"M$", "m", v)
+            _value.append(v)
+        value = ";".join(_value)
+        return value
 
 
 @dataclass
@@ -444,14 +591,43 @@ class SetJournalReference(Event):
 
     journal_ref: str = field(default='')
 
+    def __post_init__(self):
+        """Perform some light cleanup on the provided value."""
+        self.journal_ref = self._cleanup(self.journal_ref)
+
     def validate(self, submission: Submission) -> None:
         """Validate the journal reference value."""
         submission_is_not_finalized(self, submission)
+        if not self.journal_ref:    # Blank values are OK.
+            return
+        self._no_disallowed_words(submission)
+        self._contains_valid_year(submission)
 
     def project(self, submission: Submission) -> Submission:
         """Update the journal reference on a :class:`.Submission`."""
         submission.metadata.journal_ref = self.journal_ref
         return submission
+
+    def _no_disallowed_words(self, submission: Submission) -> None:
+        """Certain words are not permitted."""
+        for word in ['submit', 'in press', 'appear', 'accept', 'to be publ']:
+            if word in self.journal_ref.lower():
+                raise InvalidEvent(self,
+                                   f"The word '{word}' should appear in the"
+                                   f" comments, not the Journal ref")
+
+    def _contains_valid_year(self, submission: Submission) -> None:
+        """Must contain a valid year."""
+        if not re.search(r"(\A|\D)(19|20)\d\d(\D|\Z)", self.journal_ref):
+            raise InvalidEvent(self, "Must include a valid year")
+
+    def _cleanup(self, value: str) -> str:
+        """Perform light cleanup."""
+        value = value.replace('PHYSICAL REVIEW LETTERS',
+                              'Physical Review Letters')
+        value = value.replace('PHYSICAL REVIEW', 'Physical Review')
+        value = value.replace('OPTICS LETTERS', 'Optics Letters')
+        return value
 
 
 @dataclass
@@ -460,14 +636,28 @@ class SetReportNumber(Event):
 
     report_num: str = field(default='')
 
+    def __post_init__(self):
+        """Perform some light cleanup on the provided value."""
+        self.report_num = self._cleanup(self.report_num)
+
     def validate(self, submission: Submission) -> None:
         """Validate the report number value."""
         submission_is_not_finalized(self, submission)
+        if not self.report_num:    # Blank values are OK.
+            return
+        if not re.search(r"\d\d", self.report_num):
+            raise InvalidEvent(self, "Must contain two consecutive digits")
 
     def project(self, submission: Submission) -> Submission:
         """Update the report number on a :class:`.Submission`."""
         submission.metadata.report_num = self.report_num
         return submission
+
+    def _cleanup(self, value: str) -> str:
+        """Light cleanup on report number value."""
+        value = re.sub(r"\s+", " ", value).strip()
+        value = re.sub(r"\s*\.[\s.]*$", "", value)
+        return value
 
 
 @dataclass
@@ -476,14 +666,32 @@ class SetComments(Event):
 
     comments: str = field(default='')
 
+    MAX_LENGTH = 400
+
+    def __post_init__(self):
+        """Perform some light cleanup on the provided value."""
+        self.comments = self._cleanup(self.comments)
+
     def validate(self, submission: Submission) -> None:
         """Validate the comments value."""
         submission_is_not_finalized(self, submission)
+        if not self.comments:    # Blank values are OK.
+            return
+        if len(self.comments) > self.MAX_LENGTH:
+            raise InvalidEvent(
+                self, f"Must be no more than {self.MAX_LENGTH} characters"
+            )
 
     def project(self, submission: Submission) -> Submission:
         """Update the comments on a :class:`.Submission`."""
         submission.metadata.comments = self.comments
         return submission
+
+    def _cleanup(self, value: str) -> str:
+        """Light cleanup on comment value."""
+        value = re.sub(r"\s+", " ", value).strip()
+        value = re.sub(r"\s*\.[\s.]*$", "", value)
+        return value
 
 
 @dataclass
@@ -822,3 +1030,13 @@ def submission_is_not_finalized(event: Event, submission: Submission) -> None:
     """
     if submission.finalized:
         raise InvalidEvent(event, "Cannot apply to a finalized submission")
+
+
+def no_trailing_period(event: Event, submission: Submission,
+                       value: str) -> None:
+    """
+    Verify that there are no trailing periods in ``value`` except ellipses.
+    """
+    if re.search(r"(?<!\.\.)\.$", value):
+        raise InvalidEvent(event,
+                           "Must not contain trailing periods except ellipses")

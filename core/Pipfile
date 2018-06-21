@@ -36,6 +36,8 @@ openapi-spec-validator = "==0.1.2"
 arxiv-base = "==0.7.2"
 dataclasses = "*"
 pytz = "*"
+bleach = "*"
 
 [dev-packages]
 "nose2" = "*"
+mimesis = "*"
