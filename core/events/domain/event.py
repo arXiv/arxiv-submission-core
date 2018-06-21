@@ -383,7 +383,7 @@ class SetTitle(Event):
         self._acceptable_length(submission)
         no_trailing_period(self, submission, self.title)
         if self.title.isupper():
-            raise InvalidEvent(self, "Must not be all-caps")
+            raise InvalidEvent(self, "Title must not be all-caps")
         self._check_for_html(submission)
 
     def project(self, submission: Submission) -> Submission:
@@ -400,8 +400,8 @@ class SetTitle(Event):
         """Verify that the title is an acceptable length."""
         N = len(self.title)
         if N < self.MIN_LENGTH or N > self.MAX_LENGTH:
-            raise InvalidEvent(self, f"Must be between {self.MIN_LENGTH} and"
-                                     f" {self.MAX_LENGTH} characters")
+            raise InvalidEvent(self, f"Title must be between {self.MIN_LENGTH}"
+                                     f" and {self.MAX_LENGTH} characters")
 
     # In classic, this is only an admin post-hoc check.
     def _check_for_html(self, submission: Submission) -> None:
@@ -410,7 +410,7 @@ class SetTitle(Event):
         N_after = len(bleach.clean(self.title, tags=self.ALLOWED_HTML,
                                    strip=True))
         if N > N_after:
-            raise InvalidEvent(self, "Unacceptable HTML tags")
+            raise InvalidEvent(self, "Title contains unacceptable HTML tags")
 
     def _cleanup(self, value: str) -> str:
         """Perform some light tidying on the title."""
@@ -444,8 +444,9 @@ class SetAbstract(Event):
     def _acceptable_length(self, submission: Submission) -> None:
         N = len(self.abstract)
         if N < self.MIN_LENGTH or N > self.MAX_LENGTH:
-            raise InvalidEvent(self, f"Must be between {self.MIN_LENGTH} and"
-                                     f" {self.MAX_LENGTH} characters")
+            raise InvalidEvent(self,
+                               f"Abstract must be between {self.MIN_LENGTH}"
+                               f" and {self.MAX_LENGTH} characters")
 
     def _cleanup(self, value: str) -> str:
         """Perform some light tidying on the abstract."""
@@ -619,7 +620,7 @@ class SetJournalReference(Event):
     def _contains_valid_year(self, submission: Submission) -> None:
         """Must contain a valid year."""
         if not re.search(r"(\A|\D)(19|20)\d\d(\D|\Z)", self.journal_ref):
-            raise InvalidEvent(self, "Must include a valid year")
+            raise InvalidEvent(self, "Journal reference must include a year")
 
     def _cleanup(self, value: str) -> str:
         """Perform light cleanup."""
@@ -646,7 +647,8 @@ class SetReportNumber(Event):
         if not self.report_num:    # Blank values are OK.
             return
         if not re.search(r"\d\d", self.report_num):
-            raise InvalidEvent(self, "Must contain two consecutive digits")
+            raise InvalidEvent(self, "Report number must contain two"
+                                     " consecutive digits")
 
     def project(self, submission: Submission) -> Submission:
         """Update the report number on a :class:`.Submission`."""
@@ -678,9 +680,8 @@ class SetComments(Event):
         if not self.comments:    # Blank values are OK.
             return
         if len(self.comments) > self.MAX_LENGTH:
-            raise InvalidEvent(
-                self, f"Must be no more than {self.MAX_LENGTH} characters"
-            )
+            raise InvalidEvent(self, f"Comments must be no more than"
+                                     f" {self.MAX_LENGTH} characters long")
 
     def project(self, submission: Submission) -> Submission:
         """Update the comments on a :class:`.Submission`."""
