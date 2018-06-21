@@ -112,7 +112,7 @@ class TestStoreEvents(TestCase):
             'abstract': 'very abstract',
             'comments': 'indeed',
             'msc_class': 'foo msc',
-            'acm_class': 'computer-y',
+            'acm_class': 'COMPUTER-Y',
             'doi': '10.01234/5678',
             'journal_ref': 'Nature 1: 1',
             'authors': [Author(order=0, forename='Joe', surname='Bloggs')]

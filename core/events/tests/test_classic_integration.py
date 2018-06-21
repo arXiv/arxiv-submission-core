@@ -265,7 +265,7 @@ class TestClassicUIWorkflow(TestCase):
         submitter = self.unicode_submitter
         metadata = [
             ('title', '优秀的称号'),
-            ('abstract', "当我有一天正在上学的时候"),
+            ('abstract', "当我有一天正在上学的时候当我有一天正在上学的时候"),
             ('comments', '5页2龟鸠'),
             ('report_num', 'asdf1234'),
             ('doi', '10.01234/56789'),

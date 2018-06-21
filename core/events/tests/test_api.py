@@ -78,10 +78,10 @@ class TestSave(TestCase):
         mock_database.store_events = mock_store_events
         user = User(12345, 'joe@joe.joe')
         e = CreateSubmission(creator=user)
-        e2 = SetTitle(creator=user, title='foo')
+        e2 = SetTitle(creator=user, title='footitle')
         submission, events = save(e, e2)
 
-        self.assertEqual(submission.metadata.title, 'foo')
+        self.assertEqual(submission.metadata.title, 'footitle')
         self.assertIsInstance(submission.submission_id, int)
         self.assertEqual(submission.created, e.created)
 
@@ -129,19 +129,19 @@ class TestSave(TestCase):
         # Here is the first set of events.
         user = User(12345, 'joe@joe.joe')
         e = CreateSubmission(creator=user)
-        e2 = SetTitle(creator=user, title='foo')
+        e2 = SetTitle(creator=user, title='footitle')
         submission, _ = save(e, e2)
         submission_id = submission.submission_id
 
         # Now we apply a second set of events.
-        e3 = SetAbstract(creator=user, abstract='bar')
+        e3 = SetAbstract(creator=user, abstract='bar'*10)
         submission2, _ = save(e3, submission_id=submission_id)
 
         # The submission state reflects all three events.
-        self.assertEqual(submission2.metadata.abstract, 'bar',
+        self.assertEqual(submission2.metadata.abstract, 'bar'*10,
                          "State of the submission should reflect both sets"
                          " of events.")
-        self.assertEqual(submission2.metadata.title, 'foo',
+        self.assertEqual(submission2.metadata.title, 'footitle',
                          "State of the submission should reflect both sets"
                          " of events.")
         self.assertEqual(submission2.created, e.created,
