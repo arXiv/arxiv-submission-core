@@ -175,8 +175,8 @@ class Submission:
     secondary_classification: List[Classification] = \
         field(default_factory=list)
     submitter_contact_verified: bool = field(default=False)
-    submitter_is_author: bool = field(default=True)
-    submitter_accepts_policy: bool = field(default=False)
+    submitter_is_author: Optional[bool] = field(default=None)
+    submitter_accepts_policy: Optional[bool] = field(default=None)
     license: Optional[License] = field(default=None)
     status: str = field(default=WORKING)
     arxiv_id: Optional[str] = field(default=None)

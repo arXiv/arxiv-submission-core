@@ -174,7 +174,7 @@
         <li><a href="containers/core/events.services.classic.html#events.services.classic.models.Submission.authors">(events.services.classic.models.Submission attribute)</a>
 </li>
       </ul></li>
-      <li><a href="containers/core/events.domain.html#events.domain.submission.SubmissionMetadata.authors_canonical">authors_canonical (events.domain.submission.SubmissionMetadata attribute)</a>
+      <li><a href="containers/core/events.domain.html#events.domain.event.UpdateAuthors.authors_display">authors_display (events.domain.event.UpdateAuthors attribute)</a>
 </li>
       <li><a href="containers/core/events.services.classic.html#events.services.classic.models.Submission.auto_hold">auto_hold (events.services.classic.models.Submission attribute)</a>
 </li>
@@ -225,9 +225,13 @@
       <ul>
         <li><a href="containers/core/events.domain.html#events.domain.submission.Submission.client">(events.domain.submission.Submission attribute)</a>
 </li>
+        <li><a href="containers/core/events.services.classic.html#events.services.classic.DBEvent.client">(events.services.classic.DBEvent attribute)</a>
+</li>
       </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="containers/core/events.services.classic.html#events.services.classic.DBEvent.client_id">client_id (events.services.classic.DBEvent attribute)</a>
+</li>
       <li><a href="containers/core/events.domain.html#events.domain.submission.Comment">Comment (class in events.domain.submission)</a>
 </li>
       <li><a href="containers/core/events.domain.html#events.domain.submission.Comment.comment_id">comment_id (events.domain.submission.Comment attribute)</a>
@@ -312,6 +316,8 @@
 </li>
       <li><a href="containers/core/events.services.classic.html#events.services.classic.models.PolicyClass.description">description (events.services.classic.models.PolicyClass attribute)</a>
 </li>
+      <li><a href="containers/core/events.domain.html#events.domain.submission.Author.display">display (events.domain.submission.Author attribute)</a>
+</li>
       <li><a href="containers/core/events.services.classic.html#events.services.classic.models.Submission.doc_paper_id">doc_paper_id (events.services.classic.models.Submission attribute)</a>
 </li>
       <li><a href="containers/core/events.services.classic.html#events.services.classic.models.Document">Document (class in events.services.classic.models)</a>
@@ -373,6 +379,8 @@
 </li>
       </ul></li>
       <li><a href="containers/core/events.services.classic.html#events.services.classic.models.EndorsementDomain">EndorsementDomain (class in events.services.classic.models)</a>
+</li>
+      <li><a href="containers/core/events.domain.html#events.domain.submission.Submission.ERROR">ERROR (events.domain.submission.Submission attribute)</a>
 </li>
       <li><a href="containers/core/events.services.classic.html#events.services.classic.models.Submission.ERROR_STATE">ERROR_STATE (events.services.classic.models.Submission attribute)</a>
 </li>
@@ -532,19 +540,25 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="containers/metadata/metadata.controllers.submission.html#metadata.controllers.submission.handlers.handle_authors">handle_authors() (in module metadata.controllers.submission.handlers)</a>
 </li>
+      <li><a href="containers/metadata/metadata.controllers.submission.html#metadata.controllers.submission.handlers.handle_finalization">handle_finalization() (in module metadata.controllers.submission.handlers)</a>
+</li>
       <li><a href="containers/metadata/metadata.controllers.submission.html#metadata.controllers.submission.handlers.handle_license">handle_license() (in module metadata.controllers.submission.handlers)</a>
 </li>
       <li><a href="containers/metadata/metadata.controllers.submission.html#metadata.controllers.submission.handlers.handle_metadata">handle_metadata() (in module metadata.controllers.submission.handlers)</a>
 </li>
       <li><a href="containers/metadata/metadata.controllers.submission.html#metadata.controllers.submission.handlers.handle_primary_classification">handle_primary_classification() (in module metadata.controllers.submission.handlers)</a>
 </li>
+      <li><a href="containers/metadata/metadata.controllers.submission.html#metadata.controllers.submission.handlers.handle_secondary_classification">handle_secondary_classification() (in module metadata.controllers.submission.handlers)</a>
+</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="containers/metadata/metadata.controllers.submission.html#metadata.controllers.submission.handlers.handle_secondary_classification">handle_secondary_classification() (in module metadata.controllers.submission.handlers)</a>
+      <li><a href="containers/metadata/metadata.controllers.submission.html#metadata.controllers.submission.handlers.handle_source_content">handle_source_content() (in module metadata.controllers.submission.handlers)</a>
 </li>
       <li><a href="containers/metadata/metadata.controllers.submission.html#metadata.controllers.submission.handlers.handle_submission">handle_submission() (in module metadata.controllers.submission.handlers)</a>
 </li>
       <li><a href="containers/metadata/metadata.controllers.submission.html#metadata.controllers.submission.handlers.handle_submitter_accepts_policy">handle_submitter_accepts_policy() (in module metadata.controllers.submission.handlers)</a>
+</li>
+      <li><a href="containers/metadata/metadata.controllers.submission.html#metadata.controllers.submission.handlers.handle_submitter_contact_verified">handle_submitter_contact_verified() (in module metadata.controllers.submission.handlers)</a>
 </li>
       <li><a href="containers/metadata/metadata.controllers.submission.html#metadata.controllers.submission.handlers.handle_submitter_is_author">handle_submitter_is_author() (in module metadata.controllers.submission.handlers)</a>
 </li>
@@ -572,9 +586,11 @@
 </li>
       <li><a href="containers/core/events.services.classic.html#events.services.classic.init_app">init_app() (in module events.services.classic)</a>
 </li>
+      <li><a href="containers/core/events.html#events.exceptions.InvalidEvent">InvalidEvent</a>
+</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="containers/core/events.html#events.exceptions.InvalidEvent">InvalidEvent</a>
+      <li><a href="containers/core/events.html#events.exceptions.InvalidStack">InvalidStack</a>
 </li>
       <li><a href="containers/core/events.services.classic.html#events.services.classic.models.Submission.is_author">is_author (events.services.classic.models.Submission attribute)</a>
 </li>
@@ -664,8 +680,6 @@
 </li>
       <li><a href="containers/metadata/metadata.controllers.submission.html#module-metadata.controllers.submission.handlers">metadata.controllers.submission.handlers (module)</a>
 </li>
-      <li><a href="containers/metadata/metadata.controllers.submission.html#module-metadata.controllers.submission.tests">metadata.controllers.submission.tests (module)</a>
-</li>
       <li><a href="containers/metadata/metadata.controllers.html#module-metadata.controllers.util">metadata.controllers.util (module)</a>
 </li>
   </ul></td>
@@ -716,7 +730,7 @@
 </li>
       <li><a href="containers/core/events.services.classic.html#events.services.classic.models.Submission.NEW_SUBMSSION">NEW_SUBMSSION (events.services.classic.models.Submission attribute)</a>
 </li>
-      <li><a href="containers/core/events.services.classic.html#events.services.classic.models.Submission.NEXT_DAY">NEXT_DAY (events.services.classic.models.Submission attribute)</a>
+      <li><a href="containers/core/events.services.classic.html#events.services.classic.models.Submission.NEXT_PUBLISH_DAY">NEXT_PUBLISH_DAY (events.services.classic.models.Submission attribute)</a>
 </li>
       <li><a href="containers/core/events.html#events.exceptions.NoSuchSubmission">NoSuchSubmission</a>, <a href="containers/core/events.services.classic.html#events.services.classic.exceptions.NoSuchSubmission">[1]</a>
 </li>
@@ -736,6 +750,10 @@
         <li><a href="containers/core/events.services.classic.html#events.services.classic.models.Submission.ON_HOLD">(events.services.classic.models.Submission attribute)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="containers/core/events.domain.html#events.domain.submission.Author.order">order (events.domain.submission.Author attribute)</a>
+</li>
   </ul></td>
 </tr></table>
 
@@ -766,8 +784,6 @@
 </li>
       <li><a href="containers/core/events.services.classic.html#events.services.classic.models.PolicyClass">PolicyClass (class in events.services.classic.models)</a>
 </li>
-      <li><a href="containers/metadata/metadata.controllers.submission.html#metadata.controllers.submission.tests.preserve_exceptions_and_events">preserve_exceptions_and_events() (in module metadata.controllers.submission.tests)</a>
-</li>
       <li><a href="containers/core/events.domain.html#events.domain.submission.Submission.primary_classification">primary_classification (events.domain.submission.Submission attribute)</a>
 
       <ul>
@@ -782,12 +798,8 @@
 </li>
       <li><a href="containers/core/events.services.classic.html#events.services.classic.models.Submission.PROCESSED">PROCESSED (events.services.classic.models.Submission attribute)</a>
 </li>
-      <li><a href="containers/core/events.domain.html#events.domain.submission.Submission.PROCESSING">PROCESSING (events.domain.submission.Submission attribute)</a>
-
-      <ul>
-        <li><a href="containers/core/events.services.classic.html#events.services.classic.models.Submission.PROCESSING">(events.services.classic.models.Submission attribute)</a>
+      <li><a href="containers/core/events.services.classic.html#events.services.classic.models.Submission.PROCESSING">PROCESSING (events.services.classic.models.Submission attribute)</a>
 </li>
-      </ul></li>
       <li><a href="containers/core/events.services.classic.html#events.services.classic.models.Submission.PROCESSING_SUBMISSION">PROCESSING_SUBMISSION (events.services.classic.models.Submission attribute)</a>
 </li>
       <li><a href="containers/core/events.domain.html#events.domain.event.AcceptPolicy.project">project() (events.domain.event.AcceptPolicy method)</a>
@@ -818,6 +830,8 @@
         <li><a href="containers/core/events.domain.html#events.domain.event.SelectLicense.project">(events.domain.event.SelectLicense method)</a>
 </li>
         <li><a href="containers/core/events.domain.html#events.domain.event.SetPrimaryClassification.project">(events.domain.event.SetPrimaryClassification method)</a>
+</li>
+        <li><a href="containers/core/events.domain.html#events.domain.event.UnFinalizeSubmission.project">(events.domain.event.UnFinalizeSubmission method)</a>
 </li>
         <li><a href="containers/core/events.domain.html#events.domain.event.UpdateAuthors.project">(events.domain.event.UpdateAuthors method)</a>
 </li>
@@ -874,10 +888,10 @@
 </li>
       <li><a href="containers/core/events.domain.html#events.domain.event.RemoveDelegate">RemoveDelegate (class in events.domain.event)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="containers/core/events.domain.html#events.domain.event.RemoveSecondaryClassification">RemoveSecondaryClassification (class in events.domain.event)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="containers/core/events.domain.html#events.domain.event.RemoveSubmission">RemoveSubmission (class in events.domain.event)</a>
 </li>
       <li><a href="containers/core/events.services.classic.html#events.services.classic.models.Submission.REPLACEMENT">REPLACEMENT (events.services.classic.models.Submission attribute)</a>
@@ -888,6 +902,10 @@
         <li><a href="containers/core/events.services.classic.html#events.services.classic.models.Submission.report_num">(events.services.classic.models.Submission attribute)</a>
 </li>
       </ul></li>
+      <li><a href="containers/core/events.domain.html#events.domain.event.FinalizeSubmission.REQUIRED">REQUIRED (events.domain.event.FinalizeSubmission attribute)</a>
+</li>
+      <li><a href="containers/core/events.domain.html#events.domain.event.FinalizeSubmission.REQUIRED_METADATA">REQUIRED_METADATA (events.domain.event.FinalizeSubmission attribute)</a>
+</li>
       <li><a href="containers/core/events.services.classic.html#events.services.classic.models.Submission.rt_ticket_id">rt_ticket_id (events.services.classic.models.Submission attribute)</a>
 </li>
       <li><a href="containers/core/events.domain.html#events.domain.rule.EventRule.rule_id">rule_id (events.domain.rule.EventRule attribute)</a>
@@ -916,12 +934,6 @@
 </li>
       <li><a href="containers/core/events.domain.html#events.domain.event.SetPrimaryClassification">SetPrimaryClassification (class in events.domain.event)</a>
 </li>
-      <li><a href="containers/metadata/metadata.controllers.submission.html#metadata.controllers.submission.tests.TestCreateSubmission.setUp">setUp() (metadata.controllers.submission.tests.TestCreateSubmission method)</a>
-
-      <ul>
-        <li><a href="containers/metadata/metadata.controllers.submission.html#metadata.controllers.submission.tests.TestUpdateSubmission.setUp">(metadata.controllers.submission.tests.TestUpdateSubmission method)</a>
-</li>
-      </ul></li>
       <li><a href="containers/core/events.services.classic.html#events.services.classic.models.User.share_email">share_email (events.services.classic.models.User attribute)</a>
 </li>
       <li><a href="containers/core/events.services.classic.html#events.services.classic.models.User.share_first_name">share_first_name (events.services.classic.models.User attribute)</a>
@@ -956,6 +968,8 @@
         <li><a href="containers/core/events.services.classic.html#events.services.classic.models.Submission.status">(events.services.classic.models.Submission attribute)</a>
 </li>
       </ul></li>
+      <li><a href="containers/core/events.services.classic.html#events.services.classic.models.Submission.STATUS_MAP">STATUS_MAP (events.services.classic.models.Submission attribute)</a>
+</li>
       <li><a href="containers/core/events.services.classic.html#events.services.classic.models.Submission.sticky_status">sticky_status (events.services.classic.models.Submission attribute)</a>
 </li>
       <li><a href="containers/core/events.services.classic.html#events.services.classic.store_events">store_events() (in module events.services.classic)</a>
@@ -970,14 +984,14 @@
         <li><a href="containers/core/events.services.classic.html#events.services.classic.models.Submission">(class in events.services.classic.models)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="containers/core/events.services.classic.html#events.services.classic.DBEvent.submission">submission (events.services.classic.DBEvent attribute)</a>
 
       <ul>
         <li><a href="containers/core/events.services.classic.html#events.services.classic.models.SubmissionCategory.submission">(events.services.classic.models.SubmissionCategory attribute)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="containers/core/events.services.classic.html#events.services.classic.models.Tracking.submission_errors">submission_errors (events.services.classic.models.Tracking attribute)</a>
 </li>
       <li><a href="containers/core/events.domain.html#events.domain.event.Event.submission_id">submission_id (events.domain.event.Event attribute)</a>
@@ -994,6 +1008,8 @@
         <li><a href="containers/core/events.services.classic.html#events.services.classic.models.SubmissionCategory.submission_id">(events.services.classic.models.SubmissionCategory attribute)</a>
 </li>
       </ul></li>
+      <li><a href="containers/core/events.domain.html#events.domain.event.submission_is_not_finalized">submission_is_not_finalized() (in module events.domain.event)</a>
+</li>
       <li><a href="containers/core/events.services.classic.html#events.services.classic.models.SubmissionCategory">SubmissionCategory (class in events.services.classic.models)</a>
 </li>
       <li><a href="containers/core/events.domain.html#events.domain.submission.SubmissionContent">SubmissionContent (class in events.domain.submission)</a>
@@ -1058,19 +1074,7 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="containers/core/events.services.classic.html#events.services.classic.models.User.tapir_policy_class">tapir_policy_class (events.services.classic.models.User attribute)</a>
 </li>
-      <li><a href="containers/metadata/metadata.controllers.submission.html#metadata.controllers.submission.tests.TestCreateSubmission.test_create_submission_with_db_down">test_create_submission_with_db_down() (metadata.controllers.submission.tests.TestCreateSubmission method)</a>
-</li>
-      <li><a href="containers/metadata/metadata.controllers.submission.html#metadata.controllers.submission.tests.TestCreateSubmission.test_create_submission_with_invalid_data">test_create_submission_with_invalid_data() (metadata.controllers.submission.tests.TestCreateSubmission method)</a>
-</li>
-      <li><a href="containers/metadata/metadata.controllers.submission.html#metadata.controllers.submission.tests.TestCreateSubmission.test_create_submission_with_invalid_event">test_create_submission_with_invalid_event() (metadata.controllers.submission.tests.TestCreateSubmission method)</a>
-</li>
-      <li><a href="containers/metadata/metadata.controllers.submission.html#metadata.controllers.submission.tests.TestCreateSubmission.test_create_submission_with_valid_data">test_create_submission_with_valid_data() (metadata.controllers.submission.tests.TestCreateSubmission method)</a>
-</li>
       <li><a href="containers/core/events.services.classic.html#events.services.classic.tests.TestGetLicenses.test_get_all_active_licenses">test_get_all_active_licenses() (events.services.classic.tests.TestGetLicenses method)</a>
-</li>
-      <li><a href="containers/metadata/metadata.controllers.submission.html#metadata.controllers.submission.tests.TestGetSubmission.test_get_nonexistant_submission">test_get_nonexistant_submission() (metadata.controllers.submission.tests.TestGetSubmission method)</a>
-</li>
-      <li><a href="containers/metadata/metadata.controllers.submission.html#metadata.controllers.submission.tests.TestGetSubmission.test_get_submission">test_get_submission() (metadata.controllers.submission.tests.TestGetSubmission method)</a>
 </li>
       <li><a href="containers/core/events.services.classic.html#events.services.classic.tests.TestGetSubmission.test_get_submission_that_does_not_exist">test_get_submission_that_does_not_exist() (events.services.classic.tests.TestGetSubmission method)</a>
 </li>
@@ -1086,31 +1090,11 @@
 </li>
       <li><a href="containers/core/events.services.classic.html#events.services.classic.tests.TestStoreEvents.test_store_events_with_metadata">test_store_events_with_metadata() (events.services.classic.tests.TestStoreEvents method)</a>
 </li>
-      <li><a href="containers/metadata/metadata.controllers.submission.html#metadata.controllers.submission.tests.TestUpdateSubmission.test_update_nonexistant_submission">test_update_nonexistant_submission() (metadata.controllers.submission.tests.TestUpdateSubmission method)</a>
-</li>
-      <li><a href="containers/metadata/metadata.controllers.submission.html#metadata.controllers.submission.tests.TestUpdateSubmission.test_update_submission_with_db_down">test_update_submission_with_db_down() (metadata.controllers.submission.tests.TestUpdateSubmission method)</a>
-</li>
-      <li><a href="containers/metadata/metadata.controllers.submission.html#metadata.controllers.submission.tests.TestUpdateSubmission.test_update_submission_with_invalid_data">test_update_submission_with_invalid_data() (metadata.controllers.submission.tests.TestUpdateSubmission method)</a>
-</li>
-      <li><a href="containers/metadata/metadata.controllers.submission.html#metadata.controllers.submission.tests.TestUpdateSubmission.test_update_submission_with_invalid_event">test_update_submission_with_invalid_event() (metadata.controllers.submission.tests.TestUpdateSubmission method)</a>
-</li>
-      <li><a href="containers/metadata/metadata.controllers.submission.html#metadata.controllers.submission.tests.TestUpdateSubmission.test_update_submission_with_valid_data">test_update_submission_with_valid_data() (metadata.controllers.submission.tests.TestUpdateSubmission method)</a>
-</li>
-      <li><a href="containers/metadata/metadata.controllers.submission.html#metadata.controllers.submission.tests.TestCreateSubmission">TestCreateSubmission (class in metadata.controllers.submission.tests)</a>
-</li>
       <li><a href="containers/core/events.services.classic.html#events.services.classic.tests.TestGetLicenses">TestGetLicenses (class in events.services.classic.tests)</a>
 </li>
       <li><a href="containers/core/events.services.classic.html#events.services.classic.tests.TestGetSubmission">TestGetSubmission (class in events.services.classic.tests)</a>
-
-      <ul>
-        <li><a href="containers/metadata/metadata.controllers.submission.html#metadata.controllers.submission.tests.TestGetSubmission">(class in metadata.controllers.submission.tests)</a>
 </li>
-      </ul></li>
       <li><a href="containers/core/events.services.classic.html#events.services.classic.tests.TestStoreEvents">TestStoreEvents (class in events.services.classic.tests)</a>
-</li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="containers/metadata/metadata.controllers.submission.html#metadata.controllers.submission.tests.TestUpdateSubmission">TestUpdateSubmission (class in metadata.controllers.submission.tests)</a>
 </li>
       <li><a href="containers/core/events.services.classic.html#events.services.classic.models.Tracking.timestamp">timestamp (events.services.classic.models.Tracking attribute)</a>
 </li>
@@ -1150,6 +1134,8 @@
         <li><a href="containers/core/events.domain.html#events.domain.submission.SubmissionMetadata.to_dict">(events.domain.submission.SubmissionMetadata method)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="containers/core/events.services.classic.html#events.services.classic.DBEvent.to_event">to_event() (events.services.classic.DBEvent method)</a>
 </li>
       <li><a href="containers/core/events.services.classic.html#events.services.classic.models.Submission.to_submission">to_submission() (events.services.classic.models.Submission method)</a>
@@ -1170,6 +1156,8 @@
 <h2 id="U">U</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="containers/core/events.domain.html#events.domain.event.UnFinalizeSubmission">UnFinalizeSubmission (class in events.domain.event)</a>
+</li>
       <li><a href="containers/core/events.services.classic.html#events.services.classic.models.Submission.UNUSED">UNUSED (events.services.classic.models.Submission attribute)</a>
 </li>
       <li><a href="containers/core/events.services.classic.html#events.services.classic.models.Submission.update_from_submission">update_from_submission() (events.services.classic.models.Submission method)</a>
@@ -1210,16 +1198,20 @@
 <h2 id="V">V</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="containers/core/events.domain.html#events.domain.event.Event.valid">valid() (events.domain.event.Event method)</a>
-</li>
-      <li><a href="containers/core/events.domain.html#events.domain.event.AddDelegate.validate">validate() (events.domain.event.AddDelegate method)</a>
+      <li><a href="containers/core/events.domain.html#events.domain.event.AcceptPolicy.validate">validate() (events.domain.event.AcceptPolicy method)</a>
 
       <ul>
+        <li><a href="containers/core/events.domain.html#events.domain.event.AddDelegate.validate">(events.domain.event.AddDelegate method)</a>
+</li>
         <li><a href="containers/core/events.domain.html#events.domain.event.AddSecondaryClassification.validate">(events.domain.event.AddSecondaryClassification method)</a>
+</li>
+        <li><a href="containers/core/events.domain.html#events.domain.event.AssertAuthorship.validate">(events.domain.event.AssertAuthorship method)</a>
 </li>
         <li><a href="containers/core/events.domain.html#events.domain.event.AttachSourceContent.validate">(events.domain.event.AttachSourceContent method)</a>
 </li>
         <li><a href="containers/core/events.domain.html#events.domain.event.CreateComment.validate">(events.domain.event.CreateComment method)</a>
+</li>
+        <li><a href="containers/core/events.domain.html#events.domain.event.CreateSubmission.validate">(events.domain.event.CreateSubmission method)</a>
 </li>
         <li><a href="containers/core/events.domain.html#events.domain.event.DeleteComment.validate">(events.domain.event.DeleteComment method)</a>
 </li>
@@ -1229,9 +1221,19 @@
 </li>
         <li><a href="containers/core/events.domain.html#events.domain.event.RemoveSecondaryClassification.validate">(events.domain.event.RemoveSecondaryClassification method)</a>
 </li>
+        <li><a href="containers/core/events.domain.html#events.domain.event.RemoveSubmission.validate">(events.domain.event.RemoveSubmission method)</a>
+</li>
+        <li><a href="containers/core/events.domain.html#events.domain.event.SelectLicense.validate">(events.domain.event.SelectLicense method)</a>
+</li>
         <li><a href="containers/core/events.domain.html#events.domain.event.SetPrimaryClassification.validate">(events.domain.event.SetPrimaryClassification method)</a>
 </li>
+        <li><a href="containers/core/events.domain.html#events.domain.event.UnFinalizeSubmission.validate">(events.domain.event.UnFinalizeSubmission method)</a>
+</li>
+        <li><a href="containers/core/events.domain.html#events.domain.event.UpdateAuthors.validate">(events.domain.event.UpdateAuthors method)</a>
+</li>
         <li><a href="containers/core/events.domain.html#events.domain.event.UpdateMetadata.validate">(events.domain.event.UpdateMetadata method)</a>
+</li>
+        <li><a href="containers/core/events.domain.html#events.domain.event.VerifyContactInformation.validate">(events.domain.event.VerifyContactInformation method)</a>
 </li>
       </ul></li>
   </ul></td>

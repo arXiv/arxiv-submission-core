@@ -171,14 +171,39 @@ def handle_metadata(data: dict, agents: dict) -> Tuple[events.Event]:
     """
     # Most of this could be in a list comprehension, but it may help to
     # keep this verbose in case we want to intervene on values.
-    _metadata = []
-    for key in events.UpdateMetadata.FIELDS:
-        if key not in data:
-            continue
-        _metadata.append((key, data[key]))
-    if not _metadata:
+    _events = []
+    if 'title' in data:
+        _events.append(events.SetTitle(**agents, title=data['title']))
+    if 'abstract' in data:
+        _events.append(events.SetAbstract(**agents, abstract=data['abstract']))
+    if 'comments' in data:
+        _events.append(events.SetComments(**agents, comments=data['comments']))
+    if 'msc_class' in data:
+        _events.append(events.SetMSCClassification(
+            **agents,
+            msc_class=data['msc_class'])
+        )
+    if 'acm_class' in data:
+        _events.append(events.SetACMClassification(
+            **agents,
+            acm_class=data['acm_class'])
+        )
+    if 'journal_ref' in data:
+        _events.append(events.SetJournalReference(
+            **agents,
+            journal_ref=data['journal_ref'])
+        )
+    if 'report_num' in data:
+        _events.append(events.SetReportNumber(
+            **agents,
+            report_num=data['report_num'])
+        )
+    if 'doi' in data:
+        _events.append(events.SetDOI(**agents, doi=data['doi']))
+
+    if not _events:
         return tuple()
-    return events.UpdateMetadata(**agents, metadata=_metadata),
+    return tuple(_events)
 
 
 def handle_authors(data: dict, agents: dict) -> Tuple[events.Event]:

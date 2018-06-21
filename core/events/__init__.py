@@ -33,8 +33,7 @@ data, and commit the event using :func:`.save`. For example:
 
    >>> import events
    >>> user = events.User(123, "joe@bloggs.com")
-   >>> metadata = [('title', 'A new theory of foo')]
-   >>> update = events.UpdateMetadata(creator=user, metadata=metadata)
+   >>> update = events.SetTitle(creator=user, title='A new theory of foo')
    >>> submission = events.save(creation, submission_id=12345)
 
 
@@ -69,8 +68,7 @@ example:
 
    >>> user = events.User(123, "joe@bloggs.com")
    >>> creation = events.CreateSubmission(creator=user)
-   >>> metadata = [('title', 'A new theory of foo')]
-   >>> update = events.UpdateMetadata(creator=user, metadata=metadata)
+   >>> update = events.SetTitle(creator=user, title='A new theory of foo')
    >>> submission = events.save(creation, update)
    >>> submission.submission_id
    40032
@@ -84,10 +82,12 @@ from events.domain.submission import Submission, SubmissionMetadata, Author
 from events.domain.agent import Agent, User, System, Client
 from events.domain.event import (
     Event, CreateSubmission, RemoveSubmission, VerifyContactInformation,
-    AssertAuthorship, AcceptPolicy, SetPrimaryClassification, UpdateMetadata,
+    AssertAuthorship, AcceptPolicy, SetPrimaryClassification,
     AddSecondaryClassification, RemoveSecondaryClassification, SelectLicense,
     AttachSourceContent, UpdateAuthors, CreateComment, DeleteComment,
-    AddDelegate, RemoveDelegate, FinalizeSubmission, UnFinalizeSubmission
+    AddDelegate, RemoveDelegate, FinalizeSubmission, UnFinalizeSubmission,
+    SetTitle, SetAbstract, SetDOI, SetComments, SetReportNumber,
+    SetMSCClassification, SetACMClassification, SetJournalReference
 )
 from events.domain.rule import RuleCondition, RuleConsequence, EventRule
 from events.services import classic
@@ -281,9 +281,8 @@ def _apply_events(events: List[Event], rules: List[EventRule],
                 except InvalidStack as e:
                     # TODO: Handle merging of stacks
                     invalid_events.extend(e.event_exceptions)
-   
+
     if invalid_events:
         raise InvalidStack(invalid_events)
-    
-    return submission, sorted(events + extra_events, key=lambda e: e.created)
 
+    return submission, sorted(events + extra_events, key=lambda e: e.created)

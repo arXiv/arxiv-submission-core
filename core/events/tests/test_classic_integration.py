@@ -63,6 +63,7 @@ class TestClassicUIWorkflow(TestCase):
                 ('doi', '10.01234/56789'),
                 ('journal_ref', 'Foo Rev 1, 2 (1903)')
             ]
+        metadata = dict(metadata)
 
 
         # TODO: Process data in dictionary form to events.Author objects.
@@ -173,10 +174,19 @@ class TestClassicUIWorkflow(TestCase):
             # in the classic system, but we should preserve the canonical
             # format in the db for legacy components' sake.
             submission, stack = events.save(
-                events.UpdateMetadata(
-                    creator=submitter,
-                    metadata=metadata
+                events.SetTitle(creator=self.submitter,
+                                title=metadata['title']),
+                events.SetAbstract(creator=self.submitter,
+                                   abstract=metadata['abstract']),
+                events.SetComments(creator=self.submitter,
+                                   comments=metadata['comments']),
+                events.SetJournalReference(
+                    creator=self.submitter,
+                    journal_ref=metadata['journal_ref']
                 ),
+                events.SetDOI(creator=self.submitter, doi=metadata['doi']),
+                events.SetReportNumber(creator=self.submitter,
+                                       report_num=metadata['report_num']),
                 events.UpdateAuthors(
                     creator=submitter,
                     authors=authors
@@ -208,8 +218,8 @@ class TestClassicUIWorkflow(TestCase):
                              author_str,
                              "Authors updated in canonical format in database")
 
-            self.assertEqual(len(stack), 9,
-                             "Nine commands have been executed in total.")
+            self.assertEqual(len(stack), 14,
+                             "Fourteen commands have been executed in total.")
 
             # /preview: Submitter adds a secondary classification.
             submission, stack = events.save(
@@ -232,8 +242,8 @@ class TestClassicUIWorkflow(TestCase):
                              "A secondary category is added in the database")
             self.assertEqual(secondaries[0].category, 'cs.IR',
                              "A secondary category is added in the database")
-            self.assertEqual(len(stack), 10,
-                             "Ten commands have been executed in total.")
+            self.assertEqual(len(stack), 15,
+                             "Fifteen commands have been executed in total.")
 
             # /preview: Submitter finalizes submission.
             finalize = events.FinalizeSubmission(creator=submitter)
@@ -247,15 +257,15 @@ class TestClassicUIWorkflow(TestCase):
                              "Submission status set correctly in database")
             self.assertEqual(db_submission.submit_time, finalize.created,
                              "Submit time is set.")
-            self.assertEqual(len(stack), 11,
-                             "Eleven commands have been executed in total.")
+            self.assertEqual(len(stack), 16,
+                             "Sixteen commands have been executed in total.")
 
     def test_unicode_submitter(self):
         """Submitter proceeds through workflow in a linear fashion."""
         submitter = self.unicode_submitter
         metadata = [
             ('title', '优秀的称号'),
-            ('abstract', "当我有一天正在上学的时候"),
+            ('abstract', "当我有一天正在上学的时候当我有一天正在上学的时候"),
             ('comments', '5页2龟鸠'),
             ('report_num', 'asdf1234'),
             ('doi', '10.01234/56789'),
@@ -314,6 +324,14 @@ class TestPublicationIntegration(TestCase):
         cc0 = 'http://creativecommons.org/publicdomain/zero/1.0/'
         with self.app.app_context():
             classic.create_all()
+            metadata=dict([
+                ('title', 'Foo title'),
+                ('abstract', "One morning, as Gregor Samsa was..."),
+                ('comments', '5 pages, 2 turtle doves'),
+                ('report_num', 'asdf1234'),
+                ('doi', '10.01234/56789'),
+                ('journal_ref', 'Foo Rev 1, 2 (1903)')
+            ])
             self.submission, _ = events.save(
                 events.CreateSubmission(creator=self.submitter),
                 events.VerifyContactInformation(creator=self.submitter),
@@ -340,17 +358,19 @@ class TestPublicationIntegration(TestCase):
                     identifier=123,
                     size=593992
                 ),
-                events.UpdateMetadata(
+                events.SetTitle(creator=self.submitter,
+                                title=metadata['title']),
+                events.SetAbstract(creator=self.submitter,
+                            abstract=metadata['abstract']),
+                events.SetComments(creator=self.submitter,
+                            comments=metadata['comments']),
+                events.SetJournalReference(
                     creator=self.submitter,
-                    metadata=[
-                        ('title', 'Foo title'),
-                        ('abstract', "One morning, as Gregor Samsa was..."),
-                        ('comments', '5 pages, 2 turtle doves'),
-                        ('report_num', 'asdf1234'),
-                        ('doi', '10.01234/56789'),
-                        ('journal_ref', 'Foo Rev 1, 2 (1903)')
-                    ]
+                    journal_ref=metadata['journal_ref']
                 ),
+                events.SetDOI(creator=self.submitter, doi=metadata['doi']),
+                events.SetReportNumber(creator=self.submitter,
+                                       report_num=metadata['report_num']),
                 events.UpdateAuthors(
                     creator=self.submitter,
                     authors=[events.Author(

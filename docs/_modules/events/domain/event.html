@@ -46,10 +46,49 @@
 <span class="sd">  submission).</span>
 <span class="sd">- Events provide methods to update a submission based on the event data.</span>
 <span class="sd">- Events provide validation methods for event data.</span>
-<span class="sd">-</span>
+
+<span class="sd">Writing new events/commands</span>
+<span class="sd">===========================</span>
+
+<span class="sd">Events/commands are implemented as classes that inherit from :class:`.Event`.</span>
+<span class="sd">It should:</span>
+
+<span class="sd">- Be a dataclass (i.e. be decorated with :func:`dataclasses.dataclass`).</span>
+<span class="sd">- Define (using :func:`dataclasses.field`) associated data.</span>
+<span class="sd">- Implement a validation method with the signature</span>
+<span class="sd">  ``validate(self, submission: Submission) -&gt; None`` (see below).</span>
+<span class="sd">- Implement a projection method with the signature</span>
+<span class="sd">  ``project(self, submission: Submission) -&gt; Submission:`` that mutates</span>
+<span class="sd">  the passed :class:`.Submission` instance.</span>
+<span class="sd">- Be fully documented. Be sure that the class docstring fully describes the</span>
+<span class="sd">  meaning of the event/command, and that both public and private methods have</span>
+<span class="sd">  at least a summary docstring.</span>
+<span class="sd">- Have a corresponding :class:`unittest.TestCase` in</span>
+<span class="sd">  :mod:`events.domain.tests.test_events`.</span>
+
+<span class="sd">Adding validation to events</span>
+<span class="sd">===========================</span>
+
+<span class="sd">Each command/event class should implement an instance method</span>
+<span class="sd">``validate(self, submission: Submission) -&gt; None`` that raises</span>
+<span class="sd">:class:`.InvalidEvent` exceptions if the data on the event instance is not</span>
+<span class="sd">valid.</span>
+
+<span class="sd">For clarity, it&#39;s a good practice to individuate validation steps as separate</span>
+<span class="sd">private instance methods, and call them from the public ``validate`` method.</span>
+<span class="sd">This makes it easier to identify which validation criteria are being applied,</span>
+<span class="sd">in what order, and what those criteria mean.</span>
+
+<span class="sd">See :class:`.SetPrimaryClassification` for an example.</span>
+
+<span class="sd">We could consider standalone validation functions for validation checks that</span>
+<span class="sd">are performed on several event types (instead of just private instance</span>
+<span class="sd">methods).</span>
+
 <span class="sd">&quot;&quot;&quot;</span>
 
 <span class="kn">import</span> <span class="nn">hashlib</span>
+<span class="kn">import</span> <span class="nn">re</span>
 <span class="kn">from</span> <span class="nn">datetime</span> <span class="k">import</span> <span class="n">datetime</span>
 <span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">TypeVar</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span>
 <span class="kn">from</span> <span class="nn">urllib.parse</span> <span class="k">import</span> <span class="n">urlparse</span>
@@ -57,6 +96,7 @@
 <span class="kn">from</span> <span class="nn">dataclasses</span> <span class="k">import</span> <span class="n">asdict</span>
 
 <span class="kn">from</span> <span class="nn">arxiv.util</span> <span class="k">import</span> <span class="n">schema</span>
+<span class="kn">from</span> <span class="nn">arxiv</span> <span class="k">import</span> <span class="n">taxonomy</span>
 
 <span class="kn">from</span> <span class="nn">.agent</span> <span class="k">import</span> <span class="n">Agent</span>
 <span class="kn">from</span> <span class="nn">.submission</span> <span class="k">import</span> <span class="n">Submission</span><span class="p">,</span> <span class="n">SubmissionMetadata</span><span class="p">,</span> <span class="n">Author</span><span class="p">,</span> \
@@ -134,19 +174,6 @@
                                 <span class="bp">self</span><span class="o">.</span><span class="n">creator</span><span class="o">.</span><span class="n">agent_identifier</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)))</span>
         <span class="k">return</span> <span class="n">h</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()</span>
 
-<div class="viewcode-block" id="Event.valid"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.event.Event.valid">[docs]</a>    <span class="k">def</span> <span class="nf">valid</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Determine whether this event is valid for the submission.&quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="n">submission</span> <span class="ow">and</span> <span class="n">submission</span><span class="o">.</span><span class="n">published</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">InvalidEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;Cannot alter a published submission&quot;</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;validate&#39;</span><span class="p">):</span>
-            <span class="k">return</span> <span class="kc">True</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="n">submission</span><span class="p">)</span>
-        <span class="k">except</span> <span class="n">InvalidEvent</span><span class="p">:</span>
-            <span class="k">return</span> <span class="kc">False</span>
-        <span class="k">return</span> <span class="kc">True</span></div>
-
 <div class="viewcode-block" id="Event.apply"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.event.Event.apply">[docs]</a>    <span class="k">def</span> <span class="nf">apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Submission</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Submission</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Apply the projection for this :class:`.Event` instance.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">submission</span><span class="p">:</span>
@@ -161,6 +188,8 @@
         <span class="n">data</span> <span class="o">=</span> <span class="n">asdict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
         <span class="n">data</span><span class="o">.</span><span class="n">update</span><span class="p">({</span>
             <span class="s1">&#39;creator&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">creator</span><span class="o">.</span><span class="n">to_dict</span><span class="p">(),</span>
+            <span class="s1">&#39;proxy&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">proxy</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">proxy</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="s1">&#39;client&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">client</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
             <span class="s1">&#39;created&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">created</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
         <span class="p">})</span>
         <span class="k">return</span> <span class="n">data</span></div></div>
@@ -175,6 +204,10 @@
 <span class="k">class</span> <span class="nc">CreateSubmission</span><span class="p">(</span><span class="n">Event</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Creation of a new :class:`events.domain.submission.Submission`.&quot;&quot;&quot;</span>
 
+<div class="viewcode-block" id="CreateSubmission.validate"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.event.CreateSubmission.validate">[docs]</a>    <span class="k">def</span> <span class="nf">validate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Validate creation of a submission.&quot;&quot;&quot;</span>
+        <span class="k">return</span></div>
+
 <div class="viewcode-block" id="CreateSubmission.project"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.event.CreateSubmission.project">[docs]</a>    <span class="k">def</span> <span class="nf">project</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Submission</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Create a new :class:`.Submission`.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">Submission</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">creator</span><span class="p">,</span> <span class="n">created</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">created</span><span class="p">,</span>
@@ -186,6 +219,10 @@
 <span class="k">class</span> <span class="nc">RemoveSubmission</span><span class="p">(</span><span class="n">Event</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Removal of a :class:`events.domain.submission.Submission`.&quot;&quot;&quot;</span>
 
+<div class="viewcode-block" id="RemoveSubmission.validate"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.event.RemoveSubmission.validate">[docs]</a>    <span class="k">def</span> <span class="nf">validate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Validate removal of a submission.&quot;&quot;&quot;</span>
+        <span class="k">return</span></div>
+
 <div class="viewcode-block" id="RemoveSubmission.project"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.event.RemoveSubmission.project">[docs]</a>    <span class="k">def</span> <span class="nf">project</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Submission</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Remove the :class:`.Submission` from the system (set inactive).&quot;&quot;&quot;</span>
         <span class="n">submission</span><span class="o">.</span><span class="n">active</span> <span class="o">=</span> <span class="kc">False</span>
@@ -195,6 +232,10 @@
 <div class="viewcode-block" id="VerifyContactInformation"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.event.VerifyContactInformation">[docs]</a><span class="nd">@dataclass</span><span class="p">(</span><span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">VerifyContactInformation</span><span class="p">(</span><span class="n">Event</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Submitter has verified their contact information.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="VerifyContactInformation.validate"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.event.VerifyContactInformation.validate">[docs]</a>    <span class="k">def</span> <span class="nf">validate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Cannot apply to a finalized submission.&quot;&quot;&quot;</span>
+        <span class="n">submission_is_not_finalized</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="VerifyContactInformation.project"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.event.VerifyContactInformation.project">[docs]</a>    <span class="k">def</span> <span class="nf">project</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Submission</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Update :prop:`.Submission.submitter_contact_verified`.&quot;&quot;&quot;</span>
@@ -208,6 +249,10 @@
 
     <span class="n">submitter_is_author</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
 
+<div class="viewcode-block" id="AssertAuthorship.validate"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.event.AssertAuthorship.validate">[docs]</a>    <span class="k">def</span> <span class="nf">validate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Cannot apply to a finalized submission.&quot;&quot;&quot;</span>
+        <span class="n">submission_is_not_finalized</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">)</span></div>
+
 <div class="viewcode-block" id="AssertAuthorship.project"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.event.AssertAuthorship.project">[docs]</a>    <span class="k">def</span> <span class="nf">project</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Submission</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Update the authorship flag on the submission.&quot;&quot;&quot;</span>
         <span class="n">submission</span><span class="o">.</span><span class="n">submitter_is_author</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">submitter_is_author</span>
@@ -217,6 +262,10 @@
 <div class="viewcode-block" id="AcceptPolicy"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.event.AcceptPolicy">[docs]</a><span class="nd">@dataclass</span>
 <span class="k">class</span> <span class="nc">AcceptPolicy</span><span class="p">(</span><span class="n">Event</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;The submitting user accepts the arXiv submission policy.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="AcceptPolicy.validate"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.event.AcceptPolicy.validate">[docs]</a>    <span class="k">def</span> <span class="nf">validate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Cannot apply to a finalized submission.&quot;&quot;&quot;</span>
+        <span class="n">submission_is_not_finalized</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="AcceptPolicy.project"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.event.AcceptPolicy.project">[docs]</a>    <span class="k">def</span> <span class="nf">project</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Submission</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Set the policy flag on the submission.&quot;&quot;&quot;</span>
@@ -230,19 +279,29 @@
 
     <span class="n">category</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
 
-    <span class="c1"># TODO: this should validate against the arXiv taxonomy.</span>
 <div class="viewcode-block" id="SetPrimaryClassification.validate"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.event.SetPrimaryClassification.validate">[docs]</a>    <span class="k">def</span> <span class="nf">validate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Validate the primary classification category.&quot;&quot;&quot;</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">category</span>
-        <span class="k">except</span> <span class="ne">AssertionError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">InvalidEvent</span><span class="p">(</span><span class="n">e</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_must_be_a_valid_category</span><span class="p">(</span><span class="n">submission</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_primary_cannot_be_secondary</span><span class="p">(</span><span class="n">submission</span><span class="p">)</span>
+        <span class="n">submission_is_not_finalized</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_must_be_a_valid_category</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Valid arXiv categories are defined in :mod:`arxiv.taxonomy`.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">category</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">category</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">taxonomy</span><span class="o">.</span><span class="n">CATEGORIES</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">InvalidEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">f</span><span class="s2">&quot;Not a valid category: </span><span class="si">{self.category}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_primary_cannot_be_secondary</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;The same category can&#39;t be used for both primary and secondary.&quot;&quot;&quot;</span>
+        <span class="n">secondaries</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span><span class="o">.</span><span class="n">category</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">submission</span><span class="o">.</span><span class="n">secondary_classification</span><span class="p">]</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">category</span> <span class="ow">in</span> <span class="n">secondaries</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">InvalidEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                               <span class="s2">&quot;The same category cannot be used as both the&quot;</span>
+                               <span class="s2">&quot; primary and a secondary category.&quot;</span><span class="p">)</span>
 
 <div class="viewcode-block" id="SetPrimaryClassification.project"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.event.SetPrimaryClassification.project">[docs]</a>    <span class="k">def</span> <span class="nf">project</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Submission</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Set :prop:`.Submission.primary_classification`.&quot;&quot;&quot;</span>
-        <span class="n">submission</span><span class="o">.</span><span class="n">primary_classification</span> <span class="o">=</span> <span class="n">Classification</span><span class="p">(</span>
-            <span class="n">category</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">category</span>
-        <span class="p">)</span>
+        <span class="n">clsn</span> <span class="o">=</span> <span class="n">Classification</span><span class="p">(</span><span class="n">category</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">category</span><span class="p">)</span>
+        <span class="n">submission</span><span class="o">.</span><span class="n">primary_classification</span> <span class="o">=</span> <span class="n">clsn</span>
         <span class="k">return</span> <span class="n">submission</span></div></div>
 
 
@@ -252,20 +311,40 @@
 
     <span class="n">category</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 
-    <span class="c1"># TODO: this should validate against the arXiv taxonomy.</span>
 <div class="viewcode-block" id="AddSecondaryClassification.validate"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.event.AddSecondaryClassification.validate">[docs]</a>    <span class="k">def</span> <span class="nf">validate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Validate the secondary classification category to add.&quot;&quot;&quot;</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">category</span>
-        <span class="k">except</span> <span class="ne">AssertionError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">InvalidEvent</span><span class="p">(</span><span class="n">e</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_must_be_a_valid_category</span><span class="p">(</span><span class="n">submission</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_primary_cannot_be_secondary</span><span class="p">(</span><span class="n">submission</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_must_not_already_be_present</span><span class="p">(</span><span class="n">submission</span><span class="p">)</span>
+        <span class="n">submission_is_not_finalized</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="AddSecondaryClassification.project"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.event.AddSecondaryClassification.project">[docs]</a>    <span class="k">def</span> <span class="nf">project</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Submission</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Append to :prop:`.Submission.secondary_classification`.&quot;&quot;&quot;</span>
-        <span class="n">submission</span><span class="o">.</span><span class="n">secondary_classification</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Classification</span><span class="p">(</span>
-            <span class="n">category</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">category</span>
-        <span class="p">))</span>
-        <span class="k">return</span> <span class="n">submission</span></div></div>
+        <span class="sd">&quot;&quot;&quot;Add a :class:`.Classification` as a secondary classification.&quot;&quot;&quot;</span>
+        <span class="n">classification</span> <span class="o">=</span> <span class="n">Classification</span><span class="p">(</span><span class="n">category</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">category</span><span class="p">)</span>
+        <span class="n">submission</span><span class="o">.</span><span class="n">secondary_classification</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">classification</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">submission</span></div>
+
+    <span class="k">def</span> <span class="nf">_must_be_a_valid_category</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Valid arXiv categories are defined in :mod:`arxiv.taxonomy`.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">category</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">category</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">taxonomy</span><span class="o">.</span><span class="n">CATEGORIES</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">InvalidEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;Not a valid category&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_primary_cannot_be_secondary</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;The same category can&#39;t be used for both primary and secondary.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">submission</span><span class="o">.</span><span class="n">primary_classification</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">category</span> <span class="o">==</span> <span class="n">submission</span><span class="o">.</span><span class="n">primary_classification</span><span class="o">.</span><span class="n">category</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">InvalidEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                               <span class="s2">&quot;The same category cannot be used as both the&quot;</span>
+                               <span class="s2">&quot; primary and a secondary category.&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_must_not_already_be_present</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;The same category cannot be added as a secondary twice.&quot;&quot;&quot;</span>
+        <span class="n">secondaries</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span><span class="o">.</span><span class="n">category</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">submission</span><span class="o">.</span><span class="n">secondary_classification</span><span class="p">]</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">category</span> <span class="ow">in</span> <span class="n">secondaries</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">InvalidEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                               <span class="n">f</span><span class="s2">&quot;Secondary </span><span class="si">{self.category}</span><span class="s2"> already set&quot;</span>
+                               <span class="n">f</span><span class="s2">&quot; on this submission.&quot;</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="RemoveSecondaryClassification"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.event.RemoveSecondaryClassification">[docs]</a><span class="nd">@dataclass</span>
@@ -274,13 +353,11 @@
 
     <span class="n">category</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 
-    <span class="c1"># TODO: this should validate against the arXiv taxonomy.</span>
 <div class="viewcode-block" id="RemoveSecondaryClassification.validate"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.event.RemoveSecondaryClassification.validate">[docs]</a>    <span class="k">def</span> <span class="nf">validate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Validate the secondary classification category to remove.&quot;&quot;&quot;</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">category</span>
-        <span class="k">except</span> <span class="ne">AssertionError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">InvalidEvent</span><span class="p">(</span><span class="n">e</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_must_be_a_valid_category</span><span class="p">(</span><span class="n">submission</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_must_already_be_present</span><span class="p">(</span><span class="n">submission</span><span class="p">)</span>
+        <span class="n">submission_is_not_finalized</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="RemoveSecondaryClassification.project"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.event.RemoveSecondaryClassification.project">[docs]</a>    <span class="k">def</span> <span class="nf">project</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Submission</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Remove from :prop:`.Submission.secondary_classification`.&quot;&quot;&quot;</span>
@@ -288,7 +365,18 @@
             <span class="n">classn</span> <span class="k">for</span> <span class="n">classn</span> <span class="ow">in</span> <span class="n">submission</span><span class="o">.</span><span class="n">secondary_classification</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">classn</span><span class="o">.</span><span class="n">category</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">category</span>
         <span class="p">]</span>
-        <span class="k">return</span> <span class="n">submission</span></div></div>
+        <span class="k">return</span> <span class="n">submission</span></div>
+
+    <span class="k">def</span> <span class="nf">_must_be_a_valid_category</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Valid arXiv categories are defined in :mod:`arxiv.taxonomy`.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">category</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">category</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">taxonomy</span><span class="o">.</span><span class="n">CATEGORIES</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">InvalidEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;Not a valid category&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_must_already_be_present</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;One cannot remove a secondary that is not actually set.&quot;&quot;&quot;</span>
+        <span class="n">current</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span><span class="o">.</span><span class="n">category</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">submission</span><span class="o">.</span><span class="n">secondary_classification</span><span class="p">]</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">category</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">current</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">InvalidEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;No such category on submission&#39;</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="SelectLicense"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.event.SelectLicense">[docs]</a><span class="nd">@dataclass</span>
@@ -297,6 +385,10 @@
 
     <span class="n">license_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
     <span class="n">license_uri</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+
+<div class="viewcode-block" id="SelectLicense.validate"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.event.SelectLicense.validate">[docs]</a>    <span class="k">def</span> <span class="nf">validate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Validate the selected license.&quot;&quot;&quot;</span>
+        <span class="n">submission_is_not_finalized</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="SelectLicense.project"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.event.SelectLicense.project">[docs]</a>    <span class="k">def</span> <span class="nf">project</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Submission</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Set :prop:`.Submission.license`.&quot;&quot;&quot;</span>
@@ -316,12 +408,13 @@
 
     <span class="n">FIELDS</span> <span class="o">=</span> <span class="p">[</span>
         <span class="s1">&#39;title&#39;</span><span class="p">,</span> <span class="s1">&#39;abstract&#39;</span><span class="p">,</span> <span class="s1">&#39;doi&#39;</span><span class="p">,</span> <span class="s1">&#39;msc_class&#39;</span><span class="p">,</span> <span class="s1">&#39;acm_class&#39;</span><span class="p">,</span>
-        <span class="s1">&#39;report_num&#39;</span><span class="p">,</span> <span class="s1">&#39;journal_ref&#39;</span>
+        <span class="s1">&#39;report_num&#39;</span><span class="p">,</span> <span class="s1">&#39;journal_ref&#39;</span><span class="p">,</span> <span class="s1">&#39;comments&#39;</span>
     <span class="p">]</span>
 
     <span class="c1"># TODO: implement more specific validation here.</span>
 <div class="viewcode-block" id="UpdateMetadata.validate"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.event.UpdateMetadata.validate">[docs]</a>    <span class="k">def</span> <span class="nf">validate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;The :prop:`.metadata` should be a list of tuples.&quot;&quot;&quot;</span>
+        <span class="n">submission_is_not_finalized</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">)</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">1</span>
             <span class="k">assert</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="ow">in</span> <span class="p">[</span><span class="nb">tuple</span><span class="p">,</span> <span class="nb">list</span><span class="p">]</span>
@@ -342,10 +435,46 @@
     <span class="sd">&quot;&quot;&quot;Update the authors on a :class:`.Submission`.&quot;&quot;&quot;</span>
 
     <span class="n">authors</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Author</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
+    <span class="n">authors_display</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="sd">&quot;&quot;&quot;The authors string may be provided.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Autogenerate and/or clean display names.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">authors_display</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">authors_display</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_canonical_author_string</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">authors_display</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_cleanup</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">authors_display</span><span class="p">)</span>
+
+<div class="viewcode-block" id="UpdateAuthors.validate"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.event.UpdateAuthors.validate">[docs]</a>    <span class="k">def</span> <span class="nf">validate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;May not apply to a finalized submission.&quot;&quot;&quot;</span>
+        <span class="n">submission_is_not_finalized</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_does_not_contain_et_al</span><span class="p">()</span></div>
+
+    <span class="k">def</span> <span class="nf">_canonical_author_string</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Canonical representation of authors, using display names.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">au</span><span class="o">.</span><span class="n">display</span> <span class="k">for</span> <span class="n">au</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">authors</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">_cleanup</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">s</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Perform some light tidying on the provided author string(s).&quot;&quot;&quot;</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;\s+&quot;</span><span class="p">,</span> <span class="s2">&quot; &quot;</span><span class="p">,</span> <span class="n">s</span><span class="p">)</span>          <span class="c1"># Single spaces only.</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;,(\s*,)+&quot;</span><span class="p">,</span> <span class="s2">&quot;,&quot;</span><span class="p">,</span> <span class="n">s</span><span class="p">)</span>     <span class="c1"># Remove double commas.</span>
+        <span class="c1"># Add spaces between word and opening parenthesis.</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;(\w)\(&quot;</span><span class="p">,</span> <span class="s2">&quot;\g&lt;1&gt; (&quot;</span><span class="p">,</span> <span class="n">s</span><span class="p">)</span>
+        <span class="c1"># Add spaces between closing parenthesis and word.</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;\)(\w)&quot;</span><span class="p">,</span> <span class="s2">&quot;) \g&lt;1&gt;&quot;</span><span class="p">,</span> <span class="n">s</span><span class="p">)</span>
+        <span class="c1"># Change capitalized or uppercase `And` to `and`.</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;\bA(?i:ND)\b&quot;</span><span class="p">,</span> <span class="s2">&quot;and&quot;</span><span class="p">,</span> <span class="n">s</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">s</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>   <span class="c1"># Removing leading and trailing whitespace.</span>
+
+    <span class="k">def</span> <span class="nf">_does_not_contain_et_al</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;The authors display value should not contain `et al`.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">authors_display</span> <span class="ow">and</span> \
+                <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;et al\.?($|\s*\()&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">authors_display</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">InvalidEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;Authors should not contain et al.&quot;</span><span class="p">)</span>
 
 <div class="viewcode-block" id="UpdateAuthors.project"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.event.UpdateAuthors.project">[docs]</a>    <span class="k">def</span> <span class="nf">project</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Submission</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Replace :prop:`.Submission.metadata.authors`.&quot;&quot;&quot;</span>
         <span class="n">submission</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">authors</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">authors</span>
+        <span class="n">submission</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">authors_display</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">authors_display</span>
         <span class="k">return</span> <span class="n">submission</span></div>
 
 <div class="viewcode-block" id="UpdateAuthors.from_dict"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.event.UpdateAuthors.from_dict">[docs]</a>    <span class="nd">@classmethod</span>
@@ -365,6 +494,7 @@
     <span class="nb">format</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">str</span><span class="p">)</span>
     <span class="n">checksum</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">str</span><span class="p">)</span>
     <span class="n">mime_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">str</span><span class="p">)</span>
+    <span class="c1"># TODO: Examine the necessity of an identifier when we are storing URIs.</span>
     <span class="n">identifier</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
     <span class="n">size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 
@@ -378,19 +508,20 @@
 
 <div class="viewcode-block" id="AttachSourceContent.validate"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.event.AttachSourceContent.validate">[docs]</a>    <span class="k">def</span> <span class="nf">validate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Validate data for :class:`.SubmissionContent`.&quot;&quot;&quot;</span>
+        <span class="n">submission_is_not_finalized</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">)</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">parsed</span> <span class="o">=</span> <span class="n">urlparse</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">location</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">InvalidEvent</span><span class="p">(</span><span class="s1">&#39;Not a valid URL&#39;</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span>
+            <span class="k">raise</span> <span class="n">InvalidEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;Not a valid URL&#39;</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">parsed</span><span class="o">.</span><span class="n">netloc</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s1">&#39;arxiv.org&#39;</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="n">InvalidEvent</span><span class="p">(</span><span class="s1">&#39;External URLs not allowed.&#39;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">InvalidEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;External URLs not allowed.&#39;</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">format</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">ALLOWED_FORMATS</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">InvalidEvent</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;Format </span><span class="si">{self.package_format}</span><span class="s1"> not allowed&#39;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">InvalidEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">f</span><span class="s1">&#39;Format </span><span class="si">{self.format}</span><span class="s1"> not allowed&#39;</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">checksum</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">InvalidEvent</span><span class="p">(</span><span class="s1">&#39;Missing checksum&#39;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">InvalidEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;Missing checksum&#39;</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">identifier</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">InvalidEvent</span><span class="p">(</span><span class="s1">&#39;Missing upload ID&#39;</span><span class="p">)</span></div>
+            <span class="k">raise</span> <span class="n">InvalidEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;Missing upload ID&#39;</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="AttachSourceContent.project"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.event.AttachSourceContent.project">[docs]</a>    <span class="k">def</span> <span class="nf">project</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Submission</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Replace :class:`.SubmissionContent` metadata on the submission.&quot;&quot;&quot;</span>
@@ -409,33 +540,57 @@
 <span class="k">class</span> <span class="nc">FinalizeSubmission</span><span class="p">(</span><span class="n">Event</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Send the submission to the queue for announcement.&quot;&quot;&quot;</span>
 
+    <span class="n">REQUIRED</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="s1">&#39;creator&#39;</span><span class="p">,</span> <span class="s1">&#39;primary_classification&#39;</span><span class="p">,</span> <span class="s1">&#39;submitter_contact_verified&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;submitter_accepts_policy&#39;</span><span class="p">,</span> <span class="s1">&#39;license&#39;</span><span class="p">,</span> <span class="s1">&#39;source_content&#39;</span><span class="p">,</span> <span class="s1">&#39;metadata&#39;</span><span class="p">,</span>
+    <span class="p">]</span>
+    <span class="n">REQUIRED_METADATA</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;title&#39;</span><span class="p">,</span> <span class="s1">&#39;abstract&#39;</span><span class="p">,</span> <span class="s1">&#39;authors_display&#39;</span><span class="p">]</span>
+
 <div class="viewcode-block" id="FinalizeSubmission.validate"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.event.FinalizeSubmission.validate">[docs]</a>    <span class="k">def</span> <span class="nf">validate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Ensure that all required data/steps are complete.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">submission</span><span class="o">.</span><span class="n">finalized</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">InvalidEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;Submission already finalized&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">submission</span><span class="o">.</span><span class="n">active</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">InvalidEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;Submision must be active&quot;</span><span class="p">)</span>
-
-        <span class="k">try</span><span class="p">:</span>
-            <span class="k">assert</span> <span class="n">submission</span><span class="o">.</span><span class="n">creator</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
-            <span class="k">assert</span> <span class="n">submission</span><span class="o">.</span><span class="n">primary_classification</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
-            <span class="k">assert</span> <span class="n">submission</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">title</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
-            <span class="k">assert</span> <span class="n">submission</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">abstract</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
-            <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">submission</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">authors</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span>
-            <span class="k">assert</span> <span class="n">submission</span><span class="o">.</span><span class="n">submitter_contact_verified</span>
-            <span class="k">assert</span> <span class="n">submission</span><span class="o">.</span><span class="n">submitter_accepts_policy</span>
-            <span class="k">assert</span> <span class="n">submission</span><span class="o">.</span><span class="n">license</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
-            <span class="k">assert</span> <span class="n">submission</span><span class="o">.</span><span class="n">source_content</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
-        <span class="k">except</span> <span class="ne">AssertionError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">InvalidEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;Submission missing required data&quot;</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_required_fields_are_complete</span><span class="p">(</span><span class="n">submission</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="FinalizeSubmission.project"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.event.FinalizeSubmission.project">[docs]</a>    <span class="k">def</span> <span class="nf">project</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Submission</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Set :prop:`Submission.finalized`.&quot;&quot;&quot;</span>
         <span class="n">submission</span><span class="o">.</span><span class="n">finalized</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">return</span> <span class="n">submission</span></div>
+
+    <span class="k">def</span> <span class="nf">_required_fields_are_complete</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Verify that all required fields are complete.&quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">REQUIRED</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">submission</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="n">InvalidEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">f</span><span class="s2">&quot;Missing </span><span class="si">{key}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">REQUIRED_METADATA</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">submission</span><span class="o">.</span><span class="n">metadata</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="n">InvalidEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">f</span><span class="s2">&quot;Missing </span><span class="si">{key}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="UnFinalizeSubmission"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.event.UnFinalizeSubmission">[docs]</a><span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">UnFinalizeSubmission</span><span class="p">(</span><span class="n">Event</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Withdraw the submission from the queue for announcement.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="UnFinalizeSubmission.validate"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.event.UnFinalizeSubmission.validate">[docs]</a>    <span class="k">def</span> <span class="nf">validate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Validate the unfinalize action.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_must_be_finalized</span><span class="p">(</span><span class="n">submission</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_must_be_finalized</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;May only unfinalize a finalized submission.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">submission</span><span class="o">.</span><span class="n">finalized</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">InvalidEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;Submission is not finalized&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="UnFinalizeSubmission.project"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.event.UnFinalizeSubmission.project">[docs]</a>    <span class="k">def</span> <span class="nf">project</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Submission</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Set :prop:`Submission.finalized`.&quot;&quot;&quot;</span>
+        <span class="n">submission</span><span class="o">.</span><span class="n">finalized</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="n">submission</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="n">Submission</span><span class="o">.</span><span class="n">WORKING</span>
         <span class="k">return</span> <span class="n">submission</span></div></div>
 
 
 <span class="c1"># Moderation-related events.</span>
+
 
 <div class="viewcode-block" id="CreateComment"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.event.CreateComment">[docs]</a><span class="nd">@dataclass</span>
 <span class="k">class</span> <span class="nc">CreateComment</span><span class="p">(</span><span class="n">Event</span><span class="p">):</span>
@@ -473,11 +628,11 @@
 <div class="viewcode-block" id="DeleteComment.validate"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.event.DeleteComment.validate">[docs]</a>    <span class="k">def</span> <span class="nf">validate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;The :prop:`.comment_id` must present on the submission.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">comment_id</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">InvalidEvent</span><span class="p">(</span><span class="s1">&#39;comment_id is required&#39;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">InvalidEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;comment_id is required&#39;</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">submission</span><span class="p">,</span> <span class="s1">&#39;comments&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">submission</span><span class="o">.</span><span class="n">comments</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">InvalidEvent</span><span class="p">(</span><span class="s1">&#39;Cannot delete comment that does not exist&#39;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">InvalidEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;Cannot delete comment that does not exist&#39;</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">comment_id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">submission</span><span class="o">.</span><span class="n">comments</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">InvalidEvent</span><span class="p">(</span><span class="s1">&#39;Cannot delete comment that does not exist&#39;</span><span class="p">)</span></div>
+            <span class="k">raise</span> <span class="n">InvalidEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;Cannot delete comment that does not exist&#39;</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="DeleteComment.project"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.event.DeleteComment.project">[docs]</a>    <span class="k">def</span> <span class="nf">project</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Submission</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Remove the comment from the submission.&quot;&quot;&quot;</span>
@@ -494,7 +649,7 @@
 <div class="viewcode-block" id="AddDelegate.validate"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.event.AddDelegate.validate">[docs]</a>    <span class="k">def</span> <span class="nf">validate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;The event creator must be the owner of the submission.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">creator</span> <span class="o">==</span> <span class="n">submission</span><span class="o">.</span><span class="n">owner</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">InvalidEvent</span><span class="p">(</span><span class="s1">&#39;Event creator must be submission owner&#39;</span><span class="p">)</span></div>
+            <span class="k">raise</span> <span class="n">InvalidEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;Event creator must be submission owner&#39;</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="AddDelegate.project"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.event.AddDelegate.project">[docs]</a>    <span class="k">def</span> <span class="nf">project</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Submission</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Add the delegate to the submission.&quot;&quot;&quot;</span>
@@ -516,7 +671,7 @@
 <div class="viewcode-block" id="RemoveDelegate.validate"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.event.RemoveDelegate.validate">[docs]</a>    <span class="k">def</span> <span class="nf">validate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;The event creator must be the owner of the submission.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">creator</span> <span class="o">==</span> <span class="n">submission</span><span class="o">.</span><span class="n">owner</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">InvalidEvent</span><span class="p">(</span><span class="s1">&#39;Event creator must be submission owner&#39;</span><span class="p">)</span></div>
+            <span class="k">raise</span> <span class="n">InvalidEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;Event creator must be submission owner&#39;</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="RemoveDelegate.project"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.event.RemoveDelegate.project">[docs]</a>    <span class="k">def</span> <span class="nf">project</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Submission</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Remove the delegate from the submission.&quot;&quot;&quot;</span>
@@ -589,6 +744,28 @@
             <span class="k">return</span> <span class="n">klass</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="o">**</span><span class="n">data</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">EVENT_TYPES</span><span class="p">[</span><span class="n">event_type</span><span class="p">](</span><span class="o">**</span><span class="n">data</span><span class="p">)</span>
     <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;Unknown event type: </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">event_type</span><span class="p">)</span></div>
+
+
+<span class="c1"># General-purpose validators go down here.</span>
+<span class="c1"># TODO: should these be in a sub-module? This file is getting big.</span>
+
+<div class="viewcode-block" id="submission_is_not_finalized"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.event.submission_is_not_finalized">[docs]</a><span class="k">def</span> <span class="nf">submission_is_not_finalized</span><span class="p">(</span><span class="n">event</span><span class="p">:</span> <span class="n">Event</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Verify that the submission is not finalized.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    event : :class:`.Event`</span>
+<span class="sd">    submission : :class:`.Submission`</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    :class:`.InvalidEvent`</span>
+<span class="sd">        Raised if the submission is finalized.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">submission</span><span class="o">.</span><span class="n">finalized</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">InvalidEvent</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="s2">&quot;Cannot apply to a finalized submission&quot;</span><span class="p">)</span></div>
 </pre></div>
 
           </div>

@@ -1,9 +1,9 @@
-"""Install arXiv submission event core package."""
+"""Install mock arXiv authorization package."""
 
 from setuptools import setup, find_packages
 
 setup(
-    name='arxiv-submission-events',
+    name='arxiv-authorization',
     version='0.2.4',
     packages=find_packages(exclude=['test*']),
     zip_safe=False

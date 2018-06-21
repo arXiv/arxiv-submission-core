@@ -1,12 +1,9 @@
 [[source]]
-
 url = "https://pypi.python.org/simple"
 verify_ssl = true
 name = "pypi"
 
-
 [packages]
-
 flask = "*"
 dataclasses = "*"
 pyjwt = "*"
@@ -18,10 +15,9 @@ pytz = "*"
 uwsgi = "*"
 mysqlclient = "*"
 mimesis = "*"
-
+bleach = "*"
 
 [dev-packages]
-
 "nose2" = "*"
 openapi-spec-validator = "*"
 coverage = "*"

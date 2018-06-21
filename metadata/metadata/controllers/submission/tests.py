@@ -7,9 +7,12 @@ from werkzeug.exceptions import BadRequest, InternalServerError, NotFound
 
 from arxiv import status
 from events.domain import User, Submission, Author
-from events import CreateSubmission, UpdateMetadata, SaveError, \
+from events import CreateSubmission, SaveError, \
     InvalidEvent, NoSuchSubmission, SetPrimaryClassification, \
-    AttachSourceContent, UpdateAuthors, InvalidStack
+    AttachSourceContent, UpdateAuthors, InvalidStack, \
+    SetTitle, SetAbstract, SetDOI, \
+    SetMSCClassification, SetACMClassification, SetJournalReference,  \
+    SetComments 
 from metadata.controllers import submission
 
 
@@ -19,7 +22,14 @@ def preserve_exceptions_and_events(mock_events):
     mock_events.InvalidEvent = InvalidEvent
     mock_events.InvalidStack = InvalidStack
     mock_events.NoSuchSubmission = NoSuchSubmission
-    mock_events.UpdateMetadata = UpdateMetadata
+    mock_events.SetTitle = SetTitle
+    mock_events.SetAbstract = SetAbstract
+    mock_events.SetComments = SetComments
+    mock_events.SetDOI = SetDOI
+    mock_events.SetMSCClassification = SetMSCClassification
+    mock_events.SetACMClassification = SetACMClassification
+    mock_events.SetJournalReference = SetJournalReference
+
     mock_events.UpdateAuthors = UpdateAuthors
     mock_events.Author = Author
     mock_events.CreateSubmission = CreateSubmission
@@ -141,7 +151,7 @@ class TestUpdateSubmission(TestCase):
         mock_events.save.return_value = (
             Submission(creator=user, owner=user, created=datetime.now()),
             [CreateSubmission(creator=user),
-             UpdateMetadata(creator=user, metadata=[('title', 'foo title')])]
+             SetTitle(creator=user, title='foo title')]
         )
         data = {
             'metadata': {
@@ -165,8 +175,8 @@ class TestUpdateSubmission(TestCase):
         self.assertIn('Location', head, "Should include a Location header.")
         call_args, call_kwargs = mock_events.save.call_args
 
-        self.assertIsInstance(call_args[0], UpdateMetadata,
-                              "Should pass an UpdateMetadata")
+        self.assertIsInstance(call_args[0], SetTitle,
+                              "Should pass a SetTitle")
         self.assertIsInstance(call_args[1], UpdateAuthors,
                               "Should pass an UpdateAuthors")
 
