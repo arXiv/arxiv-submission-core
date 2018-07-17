@@ -7,7 +7,7 @@ from mimesis import Text
 
 from arxiv import taxonomy
 from ... import save
-from .. import event, agent, submission
+from .. import event, agent, submission, meta
 from ...exceptions import InvalidEvent
 
 
@@ -16,7 +16,12 @@ class TestSetPrimaryClassification(TestCase):
 
     def setUp(self):
         """Initialize auxiliary data for test cases."""
-        self.user = agent.User(12345, 'uuser@cornell.edu')
+        self.user = agent.User(
+            12345,
+            'uuser@cornell.edu',
+            endorsements=[meta.Classification('astro-ph.GA'),
+                          meta.Classification('astro-ph.CO')]
+        )
         self.submission = submission.Submission(
             submission_id=1,
             creator=self.user,
@@ -42,10 +47,14 @@ class TestSetPrimaryClassification(TestCase):
                 submission_id=1,
                 category=category
             )
-            try:
-                e.validate(self.submission)
-            except InvalidEvent as e:
-                self.fail("Event should be valid")
+            if category in self.user.endorsements:
+                try:
+                    e.validate(self.submission)
+                except InvalidEvent as e:
+                    self.fail("Event should be valid")
+            else:
+                with self.assertRaises(InvalidEvent):
+                    e.validate(self.submission)
 
     def test_set_primary_already_secondary(self):
         """Category is already set as a secondary."""

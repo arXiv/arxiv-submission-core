@@ -8,29 +8,7 @@ from dataclasses import dataclass, field
 from dataclasses import asdict
 
 from .agent import Agent
-
-
-@dataclass
-class Classification:
-    """An archive/category classification for a :class:`.Submission`."""
-
-    category: str
-
-    def to_dict(self) -> dict:
-        """Generate a dict representation of this :class:`.Classification`."""
-        return asdict(self)
-
-
-@dataclass
-class License:
-    """An license for distribution of the submission."""
-
-    uri: str
-    name: Optional[str] = None
-
-    def to_dict(self) -> dict:
-        """Generate a dict representation of this :class:`.License`."""
-        return asdict(self)
+from .meta import License, Classification
 
 
 @dataclass

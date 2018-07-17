@@ -1,10 +1,12 @@
 """Data structures for agents."""
 
 import hashlib
-from typing import Any, Optional
+from typing import Any, Optional, List
 
 from dataclasses import dataclass, field
 from dataclasses import asdict
+
+from .meta import Classification
 
 __all__ = ('Agent', 'User', 'System', 'Client', 'agent_factory')
 
@@ -76,6 +78,8 @@ class User(Agent):
     identifier: Optional[str] = field(default=None)
     affiliation: str = field(default_factory=str)
 
+    endorsements: List[str] = field(default_factory=list)
+
     @property
     def name(self):
         """Full name of the user."""
@@ -92,6 +96,7 @@ class User(Agent):
         data['identifier'] = self.identifier
         data['affiliation'] = self.affiliation
         data['user_id'] = self.native_id
+        data['endorsements'] = self.endorsements
         return data
 
 
