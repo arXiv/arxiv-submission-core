@@ -1,4 +1,4 @@
-"""Exceptions raised by :mod:`events.services.classic`."""
+"""Exceptions raised by :mod:`arxiv.submission.services.classic`."""
 
 
 class ClassicBaseException(RuntimeError):

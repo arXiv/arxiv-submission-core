@@ -22,11 +22,16 @@ import logging
 
 from flask import Flask
 
-import events
-from events.domain.submission import Submission
-from events.services import classic
+from arxiv.submission import save, domain, CreateSubmission, AssertAuthorship,\
+    VerifyContactInformation, AcceptPolicy, SetTitle, SetAbstract, \
+    SetComments, SetDOI, SetReportNumber, SetJournalReference, \
+    AttachSourceContent, SelectLicense, SetPrimaryClassification, \
+    AddSecondaryClassification, UpdateAuthors, FinalizeSubmission, load
 
-from events.exceptions import InvalidStack
+from arxiv.submission.domain.submission import Submission
+from arxiv.submission.services import classic
+
+from arxiv.submission.exceptions import InvalidStack
 
 INVALID_STATUSES = ['0', '20', '29', '30']
 
@@ -46,6 +51,7 @@ def in_memory_db():
             raise
         finally:
             classic.drop_all()
+
 
 def process_csv(tsvfile, session):
     """Process a tsvfile using DictReader."""
@@ -67,9 +73,8 @@ def process_submission(s):
     except ValueError:
         forename = ''
         surname = s['submitter_name']
-    submitter = events.domain.User(s['submitter_id'],
-                                   email=s['submitter_email'],
-                                   forename=forename, surname=surname)
+    submitter = domain.User(s['submitter_id'], email=s['submitter_email'],
+                            forename=forename, surname=surname)
 
     metadata = [
         ('title', s['title']),
@@ -80,21 +85,21 @@ def process_submission(s):
         ('journal_ref', s['journal_ref'])
     ]
 
-    submission, stack = events.save(
-        events.CreateSubmission(creator=submitter)
+    submission, stack = save(
+        CreateSubmission(creator=submitter)
     )
 
     if s.get('is_author') == '1':
-        submission, stack = events.save(
-            events.AssertAuthorship(
+        submission, stack = save(
+            AssertAuthorship(
                 creator=submitter,
                 submitter_is_author=True
             ),
             submission_id=submission.submission_id
         )
     else:
-        submission, stack = events.save(
-            events.AssertAuthorship(
+        submission, stack = save(
+            AssertAuthorship(
                 creator=submitter,
                 submitter_is_author=False
             ),
@@ -102,54 +107,44 @@ def process_submission(s):
         )
 
     if s.get('agree_policy') == '1':
-        submission, stack = events.save(
-            events.AcceptPolicy(creator=submitter),
+        submission, stack = save(
+            AcceptPolicy(creator=submitter),
             submission_id=submission.submission_id
         )
 
     if s.get('userinfo') == '1':
-        submission, stack = events.save(
-            events.VerifyContactInformation(creator=submitter),
+        submission, stack = save(
+            VerifyContactInformation(creator=submitter),
             submission_id=submission.submission_id
         )
 
-    submission, stack = events.save(
-        events.UpdateAuthors(
+    submission, stack = save(
+        UpdateAuthors(
             authors_display=s['authors'],
             creator=submitter
         ),
-        events.SetTitle(creator=submitter,
-                        title=metadata['title']),
-        events.SetAbstract(creator=submitter,
-                           abstract=metadata['abstract']),
-        events.SetComments(creator=submitter,
-                           comments=metadata['comments']),
-        events.SetJournalReference(creator=submitter,
-                                   journal_ref=metadata['journal_ref']),
-        events.SetDOI(creator=submitter, doi=metadata['doi']),
-        events.SetReportNumber(creator=submitter,
-                               report_num=metadata['report_num']),
-        events.SetPrimaryClassification(
-            creator=submitter,
-            category=s['category']
-        ),
+        SetTitle(creator=submitter, title=metadata['title']),
+        SetAbstract(creator=submitter, abstract=metadata['abstract']),
+        SetComments(creator=submitter, comments=metadata['comments']),
+        SetJournalReference(creator=submitter,
+                            journal_ref=metadata['journal_ref']),
+        SetDOI(creator=submitter, doi=metadata['doi']),
+        SetReportNumber(creator=submitter, report_num=metadata['report_num']),
+        SetPrimaryClassification(creator=submitter, category=s['category']),
         submission_id=submission.submission_id
     )
 
     # Parse the license
     license_uri = s.get('license')
     if license_uri:
-        submission, stack = events.save(
-            events.SelectLicense(
-                creator=submitter,
-                license_uri=license_uri
-            ),
+        submission, stack = save(
+            SelectLicense(creator=submitter, license_uri=license_uri),
             submission_id=submission.submission_id
         )
 
     if s.get('package'):
-        submission, stack = events.save(
-            events.AttachSourceContent(
+        submission, stack = save(
+            AttachSourceContent(
                 location='https://example.arxiv.org/' + s['package'],
                 format=s['source_format'],
                 checksum='0',
@@ -160,22 +155,19 @@ def process_submission(s):
         )
 
     if s.get('status') not in INVALID_STATUSES:
-        submission, stack = events.save(
-            events.FinalizeSubmission(
-                creator=submitter
-            ),
+        submission, stack = save(
+            FinalizeSubmission(creator=submitter),
             submission_id=submission.submission_id
         )
 
     return submission.submission_id
 
-
     # If it goes to the end, then verify that results come in
-    # events.load() returns a submission object, then verify it looks as expected
+    # load() returns a submission object, then verify it looks as expected
 
 def verify_submission(s, submission_id):
     """Validate event database storage of classic db import data."""
-    submission, stack = events.load(submission_id)
+    submission, stack = load(submission_id)
 
     assert submission.metadata.title == s['title']
     assert submission.metadata.abstract == s['abstract']
@@ -185,7 +177,8 @@ def verify_submission(s, submission_id):
     assert submission.metadata.journal_ref == s['journal_ref']
 
     if s.get('userinfo') == '1':
-        assert submission.submitter_contact_verified, "VerifyContactInformationError"
+        assert submission.submitter_contact_verified, \
+            "VerifyContactInformationError"
     else:
         assert not submission.submitter_contact_verified
 
@@ -198,14 +191,17 @@ def verify_submission(s, submission_id):
         assert submission.license.uri == s['license']
 
     if s.get('is_author') == '1':
-        assert submission.submitter_is_author, "AssertAuthorship not aligned: returns False, should be True"
+        assert submission.submitter_is_author, \
+            "AssertAuthorship not aligned: returns False, should be True"
     else:
-        assert not submission.submitter_is_author, "AssertAuthorship does not match: returns True, should be False"
+        assert not submission.submitter_is_author, \
+            "AssertAuthorship does not match: returns True, should be False"
 
     if s.get('status') not in INVALID_STATUSES:
         assert submission.status == Submission.SUBMITTED
     else:
         assert submission.status == Submission.WORKING
+
 
 if __name__ == '__main__':
     parser = ArgumentParser()

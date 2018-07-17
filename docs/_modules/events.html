@@ -52,12 +52,12 @@
 <span class="sd">activities concerning submissions, and provides an explicit definition of</span>
 <span class="sd">operations that can be performed within the arXiv submission system.</span>
 
-<span class="sd">Event classes are defined in :mod:`events.domain.event`, and are accessible</span>
+<span class="sd">Event classes are defined in :mod:`arxiv.submission.domain.event`, and are accessible</span>
 <span class="sd">from the root namespace of this package. Each event type defines a</span>
 <span class="sd">transformation/operation on a single submission, and defines the data required</span>
 <span class="sd">to perform that operation. Events are played forward, in order, to derive the</span>
 <span class="sd">state of a submission. For more information about how event types are defined,</span>
-<span class="sd">see :class:`events.domain.event.Event`.</span>
+<span class="sd">see :class:`arxiv.submission.domain.event.Event`.</span>
 
 <span class="sd">Using events</span>
 <span class="sd">============</span>
@@ -95,7 +95,7 @@
 <span class="sd">   exception is raised.</span>
 <span class="sd">4. If the notification service is configured, a message about the event is</span>
 <span class="sd">   propagated as a Kinesis event on the configured stream. See</span>
-<span class="sd">   :mod:`events.services.notification` for details.</span>
+<span class="sd">   :mod:`arxiv.submission.services.notification` for details.</span>
 
 
 <span class="sd">Special case: creation</span>
@@ -148,7 +148,7 @@
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    :class:`events.domain.submission.Submission`</span>
+<span class="sd">    :class:`arxiv.submission.domain.submission.Submission`</span>
 <span class="sd">        The current state of the submission.</span>
 <span class="sd">    list</span>
 <span class="sd">        Items are :class:`.Event`s, in order of their occurrence.</span>
@@ -183,7 +183,7 @@
 
 <span class="sd">    Returns</span>
 <span class="sd">    -------</span>
-<span class="sd">    :class:`events.domain.submission.Submission`</span>
+<span class="sd">    :class:`arxiv.submission.domain.submission.Submission`</span>
 <span class="sd">        The state of the submission after all events (including rule-derived</span>
 <span class="sd">        events) have been applied. Updated with the submission ID, if a</span>
 <span class="sd">        :class:`.CreateSubmission` was included.</span>

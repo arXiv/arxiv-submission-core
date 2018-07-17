@@ -1,4 +1,4 @@
-"""Utility classes and functions for :mod:`events.services.classic`."""
+"""Utility classes and functions for :mod:`arxiv.submission.services.classic`."""
 
 import json
 from typing import Optional

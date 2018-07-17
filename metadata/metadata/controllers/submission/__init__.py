@@ -11,11 +11,11 @@ from flask import url_for, current_app
 from werkzeug.exceptions import NotFound, BadRequest, InternalServerError
 
 from arxiv import status
-from events.domain.agent import Agent, agent_factory, System
-from events.domain import Event
-from events.domain.submission import Submission, Classification, License, \
+from arxiv.submission.domain.agent import Agent, agent_factory, System
+from arxiv.submission.domain import Event
+from arxiv.submission.domain.submission import Submission, Classification, License, \
     SubmissionMetadata
-import events as ev
+import arxiv.submission as ev
 
 from metadata.controllers import util
 from . import handlers

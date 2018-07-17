@@ -23,7 +23,7 @@ It should:
   meaning of the event/command, and that both public and private methods have
   at least a summary docstring.
 - Have a corresponding :class:`unittest.TestCase` in
-  :mod:`events.domain.tests.test_events`.
+  :mod:`arxiv.submission.domain.tests.test_events`.
 
 Adding validation to events
 ===========================
@@ -165,7 +165,7 @@ class Event:
 
 @dataclass(init=False)
 class CreateSubmission(Event):
-    """Creation of a new :class:`events.domain.submission.Submission`."""
+    """Creation of a new :class:`arxiv.submission.domain.submission.Submission`."""
 
     def validate(self, *args, **kwargs) -> None:
         """Validate creation of a submission."""
@@ -180,7 +180,7 @@ class CreateSubmission(Event):
 
 @dataclass(init=False)
 class RemoveSubmission(Event):
-    """Removal of a :class:`events.domain.submission.Submission`."""
+    """Removal of a :class:`arxiv.submission.domain.submission.Submission`."""
 
     def validate(self, submission: Submission) -> None:
         """Validate removal of a submission."""

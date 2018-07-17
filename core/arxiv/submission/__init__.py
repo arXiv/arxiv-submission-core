@@ -11,12 +11,12 @@ submission events. This ensures that we have a precise and complete record of
 activities concerning submissions, and provides an explicit definition of
 operations that can be performed within the arXiv submission system.
 
-Event classes are defined in :mod:`events.domain.event`, and are accessible
+Event classes are defined in :mod:`arxiv.submission.domain.event`, and are accessible
 from the root namespace of this package. Each event type defines a
 transformation/operation on a single submission, and defines the data required
 to perform that operation. Events are played forward, in order, to derive the
 state of a submission. For more information about how event types are defined,
-see :class:`events.domain.event.Event`.
+see :class:`arxiv.submission.domain.event.Event`.
 
 Using events
 ============
@@ -31,10 +31,10 @@ data, and commit the event using :func:`.save`. For example:
 
 .. code-block:: python
 
-   >>> import events
-   >>> user = events.User(123, "joe@bloggs.com")
-   >>> update = events.SetTitle(creator=user, title='A new theory of foo')
-   >>> submission = events.save(creation, submission_id=12345)
+   >>> from arxiv.submission import User, SetTitle, save
+   >>> user = User(123, "joe@bloggs.com")
+   >>> update = SetTitle(creator=user, title='A new theory of foo')
+   >>> submission = save(creation, submission_id=12345)
 
 
 Several things will occur:
@@ -53,7 +53,7 @@ Several things will occur:
    exception is raised.
 4. If the notification service is configured, a message about the event is
    propagated as a Kinesis event on the configured stream. See
-   :mod:`events.services.notification` for details.
+   :mod:`arxiv.submission.services.notification` for details.
 
 
 Special case: creation
@@ -64,12 +64,12 @@ example:
 
 .. code-block:: python
 
-   import events
+   from arxiv.submission import User, CreateSubmission, SetTitle, save
 
-   >>> user = events.User(123, "joe@bloggs.com")
-   >>> creation = events.CreateSubmission(creator=user)
-   >>> update = events.SetTitle(creator=user, title='A new theory of foo')
-   >>> submission = events.save(creation, update)
+   >>> user = User(123, "joe@bloggs.com")
+   >>> creation = CreateSubmission(creator=user)
+   >>> update = SetTitle(creator=user, title='A new theory of foo')
+   >>> submission = save(creation, update)
    >>> submission.submission_id
    40032
 
@@ -107,7 +107,7 @@ def load(submission_id: str) -> Tuple[Submission, List[Event]]:
 
     Returns
     -------
-    :class:`events.domain.submission.Submission`
+    :class:`arxiv.submission.domain.submission.Submission`
         The current state of the submission.
     list
         Items are :class:`.Event`s, in order of their occurrence.
@@ -142,7 +142,7 @@ def save(*events: Event, submission_id: Optional[str] = None) \
 
     Returns
     -------
-    :class:`events.domain.submission.Submission`
+    :class:`arxiv.submission.domain.submission.Submission`
         The state of the submission after all events (including rule-derived
         events) have been applied. Updated with the submission ID, if a
         :class:`.CreateSubmission` was included.

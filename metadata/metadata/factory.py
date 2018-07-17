@@ -8,7 +8,7 @@ from werkzeug.exceptions import Forbidden, Unauthorized, NotFound, BadRequest
 from metadata import routes
 from arxiv.base.middleware import wrap
 
-from events.services import classic
+from arxiv.submission.services import classic
 
 from authorization import middleware as auth
 

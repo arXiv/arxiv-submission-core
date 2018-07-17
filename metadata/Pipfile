@@ -40,6 +40,8 @@ pyyaml = "*"
 dataclasses = "*"
 pytz = "*"
 "ae4d86c" = {path = "./../authorization"}
+arxiv-submission-core = "==0.4.1"
+bleach = "*"
 
 [dev-packages]
 "nose2" = "*"

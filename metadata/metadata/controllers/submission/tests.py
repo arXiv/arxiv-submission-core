@@ -6,8 +6,8 @@ from datetime import datetime
 from werkzeug.exceptions import BadRequest, InternalServerError, NotFound
 
 from arxiv import status
-from events.domain import User, Submission, Author
-from events import CreateSubmission, SaveError, \
+from arxiv.submission.domain import User, Submission, Author
+from arxiv.submission import CreateSubmission, SaveError, \
     InvalidEvent, NoSuchSubmission, SetPrimaryClassification, \
     AttachSourceContent, UpdateAuthors, InvalidStack, \
     SetTitle, SetAbstract, SetDOI, \

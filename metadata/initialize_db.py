@@ -2,8 +2,8 @@
 import time
 from arxiv.base import logging
 from metadata.factory import create_web_app
-from events.services import classic
-from events.services.classic import bootstrap
+from arxiv.submission.services import classic
+from arxiv.submission.services.classic import bootstrap
 
 logger = logging.getLogger(__name__)
 

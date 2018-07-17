@@ -1,1 +1,1 @@
-"""Tests for :mod:`events.domain`."""
+"""Tests for :mod:`arxiv.submission.domain`."""

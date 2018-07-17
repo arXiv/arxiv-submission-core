@@ -9,7 +9,7 @@ import tempfile
 from datetime import datetime
 
 from arxiv import status
-from events.domain import Submission
+from arxiv.submission.domain import Submission
 from metadata.factory import create_web_app
 from metadata.controllers.submission import ev
 
@@ -40,7 +40,7 @@ class TestSubmit(TestCase):
         self.headers = {'Authorization': self.authorization.decode('utf-8')}
         self.app = create_web_app()
         with self.app.app_context():
-            from events.services import classic
+            from arxiv.submission.services import classic
             classic.create_all()
 
         self.client = self.app.test_client()
@@ -169,7 +169,7 @@ class TestModerationScenarios(TestCase):
         }, SECRET)
         self.app = create_web_app()
         with self.app.app_context():
-            from events.services import classic
+            from arxiv.submission.services import classic
             classic.create_all()
 
         self.client = self.app.test_client()
@@ -188,7 +188,7 @@ class TestModerationScenarios(TestCase):
 
         # Moderator, admin, or other agent places the submission on hold.
         with self.app.app_context():
-            from events.services import classic
+            from arxiv.submission.services import classic
             session = classic.current_session()
             submission = session.query(classic.models.Submission) \
                 .get(submission_id)
@@ -216,7 +216,7 @@ class TestModerationScenarios(TestCase):
         # Moderator, admin, or other agent places the submission on hold,
         #  and a sticky status is set.
         with self.app.app_context():
-            from events.services import classic
+            from arxiv.submission.services import classic
             session = classic.current_session()
             submission = session.query(classic.models.Submission)\
                 .get(submission_id)
@@ -291,7 +291,7 @@ class TestPublicationIntegration(TestCase):
         }, SECRET)
         self.app = create_web_app()
         with self.app.app_context():
-            from events.services import classic
+            from arxiv.submission.services import classic
             classic.create_all()
 
         self.client = self.app.test_client()
@@ -310,13 +310,13 @@ class TestPublicationIntegration(TestCase):
     def tearDown(self):
         """Clear the database after each test."""
         with self.app.app_context():
-            from events.services import classic
+            from arxiv.submission.services import classic
             classic.drop_all()
 
     def test_publication_status_is_reflected(self):
         """The submission has been published/announced."""
         with self.app.app_context():
-            from events.services import classic
+            from arxiv.submission.services import classic
             session = classic.current_session()
 
             # Publication agent publishes the paper.
@@ -353,7 +353,7 @@ class TestPublicationIntegration(TestCase):
     def test_publication_status_is_reflected_after_files_expire(self):
         """The submission has been published/announced, and files expired."""
         with self.app.app_context():
-            from events.services import classic
+            from arxiv.submission.services import classic
             session = classic.current_session()
 
             # Publication agent publishes the paper.
@@ -390,7 +390,7 @@ class TestPublicationIntegration(TestCase):
     def test_scheduled_status_is_reflected(self):
         """The submission has been scheduled for publication today."""
         with self.app.app_context():
-            from events.services import classic
+            from arxiv.submission.services import classic
             session = classic.current_session()
 
             # Publication agent publishes the paper.
@@ -410,7 +410,7 @@ class TestPublicationIntegration(TestCase):
     def test_scheduled_status_is_reflected_processing_submission(self):
         """The submission has been scheduled for publication today."""
         with self.app.app_context():
-            from events.services import classic
+            from arxiv.submission.services import classic
             session = classic.current_session()
 
             # Publication agent publishes the paper.
@@ -430,7 +430,7 @@ class TestPublicationIntegration(TestCase):
     def test_scheduled_status_is_reflected_prior_to_announcement(self):
         """The submission is being published; not yet announced."""
         with self.app.app_context():
-            from events.services import classic
+            from arxiv.submission.services import classic
             session = classic.current_session()
 
             # Publication agent publishes the paper.
@@ -450,7 +450,7 @@ class TestPublicationIntegration(TestCase):
     def test_scheduled_tomorrow_status_is_reflected(self):
         """The submission has been scheduled for publication tomorrow."""
         with self.app.app_context():
-            from events.services import classic
+            from arxiv.submission.services import classic
             session = classic.current_session()
 
             # Publication agent publishes the paper.
@@ -470,7 +470,7 @@ class TestPublicationIntegration(TestCase):
     def test_publication_failed(self):
         """The submission was not published successfully."""
         with self.app.app_context():
-            from events.services import classic
+            from arxiv.submission.services import classic
             session = classic.current_session()
 
             # Publication agent publishes the paper.
@@ -490,7 +490,7 @@ class TestPublicationIntegration(TestCase):
     def test_deleted(self):
         """The submission was deleted."""
         with self.app.app_context():
-            from events.services import classic
+            from arxiv.submission.services import classic
             session = classic.current_session()
 
             for classic_status in classic.models.Submission.DELETED:

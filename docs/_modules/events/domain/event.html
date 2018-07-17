@@ -64,7 +64,7 @@
 <span class="sd">  meaning of the event/command, and that both public and private methods have</span>
 <span class="sd">  at least a summary docstring.</span>
 <span class="sd">- Have a corresponding :class:`unittest.TestCase` in</span>
-<span class="sd">  :mod:`events.domain.tests.test_events`.</span>
+<span class="sd">  :mod:`arxiv.submission.domain.tests.test_events`.</span>
 
 <span class="sd">Adding validation to events</span>
 <span class="sd">===========================</span>
@@ -202,7 +202,7 @@
 
 <div class="viewcode-block" id="CreateSubmission"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.event.CreateSubmission">[docs]</a><span class="nd">@dataclass</span><span class="p">(</span><span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">CreateSubmission</span><span class="p">(</span><span class="n">Event</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Creation of a new :class:`events.domain.submission.Submission`.&quot;&quot;&quot;</span>
+    <span class="sd">&quot;&quot;&quot;Creation of a new :class:`arxiv.submission.domain.submission.Submission`.&quot;&quot;&quot;</span>
 
 <div class="viewcode-block" id="CreateSubmission.validate"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.event.CreateSubmission.validate">[docs]</a>    <span class="k">def</span> <span class="nf">validate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Validate creation of a submission.&quot;&quot;&quot;</span>
@@ -217,7 +217,7 @@
 
 <div class="viewcode-block" id="RemoveSubmission"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.event.RemoveSubmission">[docs]</a><span class="nd">@dataclass</span><span class="p">(</span><span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 <span class="k">class</span> <span class="nc">RemoveSubmission</span><span class="p">(</span><span class="n">Event</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Removal of a :class:`events.domain.submission.Submission`.&quot;&quot;&quot;</span>
+    <span class="sd">&quot;&quot;&quot;Removal of a :class:`arxiv.submission.domain.submission.Submission`.&quot;&quot;&quot;</span>
 
 <div class="viewcode-block" id="RemoveSubmission.validate"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.event.RemoveSubmission.validate">[docs]</a>    <span class="k">def</span> <span class="nf">validate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Validate removal of a submission.&quot;&quot;&quot;</span>

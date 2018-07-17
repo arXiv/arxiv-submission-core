@@ -1,4 +1,4 @@
-"""Helpers for :mod:`events.domain`."""
+"""Helpers for :mod:`arxiv.submission.domain`."""
 
 ACCEPTABLE_CAPITALIZATIONS = [
     "AADEBUG",
