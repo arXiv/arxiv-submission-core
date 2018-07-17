@@ -17,16 +17,16 @@ import json
 
 from flask import Flask
 
-from events.domain.agent import User
-from events.domain.submission import License, Submission, Author
-from events.domain.event import CreateSubmission, \
+from ...domain.agent import User
+from ...domain.submission import License, Submission, Author
+from ...domain.event import CreateSubmission, \
     FinalizeSubmission, SetPrimaryClassification, AddSecondaryClassification, \
     SelectLicense, SetPrimaryClassification, AcceptPolicy, \
     VerifyContactInformation, SetTitle, SetAbstract, SetDOI, \
     SetMSCClassification, SetACMClassification, SetJournalReference, \
     SetComments, UpdateAuthors
-from events.domain.agent import User
-from events.services import classic
+from . import init_app, create_all, drop_all, models, store_events, DBEvent, \
+    get_submission, current_session, get_licenses, exceptions
 
 
 @contextmanager
@@ -37,38 +37,38 @@ def in_memory_db():
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
     with app.app_context():
-        classic.init_app(app)
-        classic.create_all()
+        init_app(app)
+        create_all()
         try:
-            yield classic.current_session()
+            yield current_session()
         except Exception:
             raise
         finally:
-            classic.drop_all()
+            drop_all()
 
 
 class TestGetLicenses(TestCase):
-    """Test :func:`.classic.get_licenses`."""
+    """Test :func:`.get_licenses`."""
 
     def test_get_all_active_licenses(self):
         """Return a :class:`.License` for each active license in the db."""
         # mock_util.json_factory.return_value = SQLiteJSON
 
         with in_memory_db() as session:
-            session.add(classic.models.License(
+            session.add(models.License(
                 name="http://arxiv.org/licenses/assumed-1991-2003",
                 sequence=9,
                 label="Assumed arXiv.org perpetual, non-exclusive license to",
                 active=0
             ))
-            session.add(classic.models.License(
+            session.add(models.License(
                 name="http://creativecommons.org/licenses/publicdomain/",
                 sequence=4,
                 label="Creative Commons Public Domain Declaration",
                 active=1
             ))
             session.commit()
-            licenses = classic.get_licenses()
+            licenses = get_licenses()
 
         self.assertEqual(len(licenses), 1,
                          "Only the active license should be returned.")
@@ -83,7 +83,7 @@ class TestGetLicenses(TestCase):
 
 
 class TestStoreEvents(TestCase):
-    """Test :func:`.classic.store_events`."""
+    """Test :func:`.store_events`."""
 
     def test_store_event(self):
         """Store a single event."""
@@ -91,9 +91,9 @@ class TestStoreEvents(TestCase):
             user = User(12345, 'joe@joe.joe')
             ev = CreateSubmission(creator=user)
             submission = ev.apply()
-            submission = classic.store_events(ev, submission=submission)
+            submission = store_events(ev, submission=submission)
 
-            db_submission = session.query(classic.models.Submission)\
+            db_submission = session.query(models.Submission)\
                 .get(submission.submission_id)
 
         self.assertEqual(db_submission.submission_id, submission.submission_id,
@@ -139,13 +139,13 @@ class TestStoreEvents(TestCase):
             submission = ev6.apply(submission)
             submission = ev7.apply(submission)
             submission = ev8.apply(submission)
-            submission = classic.store_events(ev, ev2, ev3, ev4, ev5, ev6, ev7,
-                                              ev8, submission=submission)
+            submission = store_events(ev, ev2, ev3, ev4, ev5, ev6, ev7, ev8,
+                                      submission=submission)
 
-            db_submission = session.query(classic.models.Submission)\
+            db_submission = session.query(models.Submission)\
                 .get(submission.submission_id)
 
-            db_events = session.query(classic.DBEvent).all()
+            db_events = session.query(DBEvent).all()
 
         for key, value in metadata.items():
             if key == 'authors':
@@ -170,11 +170,11 @@ class TestStoreEvents(TestCase):
             ev2 = FinalizeSubmission(creator=user)
             submission = ev.apply()
             submission = ev2.apply(submission)
-            submission = classic.store_events(ev, ev2, submission=submission)
+            submission = store_events(ev, ev2, submission=submission)
 
-            db_submission = session.query(classic.models.Submission)\
+            db_submission = session.query(models.Submission)\
                 .get(submission.submission_id)
-            db_events = session.query(classic.DBEvent).all()
+            db_events = session.query(DBEvent).all()
 
         self.assertEqual(db_submission.submission_id, submission.submission_id,
                          "The submission should be updated with the PK id.")
@@ -196,12 +196,11 @@ class TestStoreEvents(TestCase):
         submission = ev3.apply(submission)
 
         with in_memory_db() as session:
-            submission = classic.store_events(ev, ev2, ev3,
-                                              submission=submission)
+            submission = store_events(ev, ev2, ev3, submission=submission)
 
-            db_submission = session.query(classic.models.Submission)\
+            db_submission = session.query(models.Submission)\
                 .get(submission.submission_id)
-            db_events = session.query(classic.DBEvent).all()
+            db_events = session.query(DBEvent).all()
 
         self.assertEqual(db_submission.submission_id, submission.submission_id,
                          "The submission should be updated with the PK id.")
@@ -217,13 +216,13 @@ class TestStoreEvents(TestCase):
 
 
 class TestGetSubmission(TestCase):
-    """Test :func:`.classic.get_submission`."""
+    """Test :func:`.get_submission`."""
 
     def test_get_submission_that_does_not_exist(self):
         """Test that an exception is raised when submission doesn't exist."""
         with in_memory_db():
-            with self.assertRaises(classic.exceptions.NoSuchSubmission):
-                classic.get_submission(1)
+            with self.assertRaises(exceptions.NoSuchSubmission):
+                get_submission(1)
 
     def test_get_submission_with_publish(self):
         """Test that publication state is reflected in submission data."""
@@ -252,22 +251,22 @@ class TestGetSubmission(TestCase):
 
         with in_memory_db() as session:
             # User creates and finalizes submission.
-            submission = classic.store_events(*events, submission=submission)
+            submission = store_events(*events, submission=submission)
             ident = submission.submission_id
 
             # Moderation happens, things change outside the event model.
-            db_submission = session.query(classic.models.Submission).get(ident)
+            db_submission = session.query(models.Submission).get(ident)
 
             # Published!
             db_submission.status = db_submission.PUBLISHED
-            db_document = classic.models.Document(paper_id='1234.5678')
+            db_document = models.Document(paper_id='1234.5678')
             db_submission.document = db_document
             session.add(db_submission)
             session.add(db_document)
             session.commit()
 
             # Now get the submission.
-            submission_loaded, _ = classic.get_submission(ident)
+            submission_loaded, _ = get_submission(ident)
 
         self.assertEqual(submission.metadata.title,
                          submission_loaded.metadata.title,
@@ -303,15 +302,15 @@ class TestGetSubmission(TestCase):
 
         with in_memory_db() as session:
             # User creates and finalizes submission.
-            submission = classic.store_events(*events, submission=submission)
+            submission = store_events(*events, submission=submission)
             ident = submission.submission_id
 
             # Moderation happens, things change outside the event model.
-            db_submission = session.query(classic.models.Submission).get(ident)
+            db_submission = session.query(models.Submission).get(ident)
 
             # Reclassification!
             session.delete(db_submission.primary_classification)
-            session.add(classic.models.SubmissionCategory(
+            session.add(models.SubmissionCategory(
                 submission_id=ident, category='cs.IR', is_primary=1
             ))
 
@@ -321,7 +320,7 @@ class TestGetSubmission(TestCase):
             session.commit()
 
             # Now get the submission.
-            submission_loaded, _ = classic.get_submission(ident)
+            submission_loaded, _ = get_submission(ident)
 
         self.assertEqual(submission.metadata.title,
                          submission_loaded.metadata.title,

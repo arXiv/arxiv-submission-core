@@ -20,8 +20,6 @@ class Agent:
     native_id: str
     """Type-specific identifier for the agent. This might be an URI."""
 
-    FIELDS = []
-
     @property
     def agent_type(self):
         """The name of the agent instance's class."""
@@ -78,10 +76,6 @@ class User(Agent):
     identifier: Optional[str] = field(default=None)
     affiliation: str = field(default_factory=str)
 
-    FIELDS = [
-        'email', 'forename', 'surname', 'suffix', 'identifier', 'affiliation'
-    ]
-
     @property
     def name(self):
         """Full name of the user."""
@@ -106,14 +100,10 @@ class User(Agent):
 class System(Agent):
     """The submission application (this application)."""
 
-    FIELDS = []
-
 
 @dataclass
 class Client(Agent):
     """A non-human third party, usually an API client."""
-
-    FIELDS = []
 
     def to_dict(self):
         """Generate a dict representation of this :class:`.Client` instance."""
@@ -134,5 +124,5 @@ def agent_factory(agent_type: str, native_id: Any, **extra) -> Agent:
     if agent_type not in _agent_types:
         raise ValueError(f'No such agent type: {agent_type}')
     klass = _agent_types[agent_type]
-    extra = {k: v for k, v in extra.items() if k in klass.FIELDS}
+    extra = {k: v for k, v in extra.items() if k in klass.__dataclass_fields__}
     return klass(native_id=native_id, **extra)

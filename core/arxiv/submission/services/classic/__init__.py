@@ -36,13 +36,14 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm.session import Session
 
 from arxiv.base import logging
-from events.domain.event import Event, event_factory
-from events.domain.submission import License, Submission
-from events.domain.agent import User, Client, Agent
-from . import models, util
+from arxiv.base.globals import get_application_config, get_application_global
+from ...domain.event import Event, event_factory
+from ...domain.submission import License, Submission
+from ...domain.agent import User, Client, Agent
 from .models import Base
 from .exceptions import NoSuchSubmission, CommitFailed, ClassicBaseException
-from arxiv.base.globals import get_application_config, get_application_global
+from . import models, util
+
 
 logger = logging.getLogger(__name__)
 

@@ -16,8 +16,8 @@ from contextlib import contextmanager
 
 from flask import Flask
 
-import events
-from events.services import classic
+from .. import *
+from ..services import classic
 
 
 @contextmanager
@@ -42,9 +42,9 @@ class TestClassicUIWorkflow(TestCase):
 
     def setUp(self):
         """An arXiv user is submitting a new paper."""
-        self.submitter = events.domain.User(1234, email='j.user@somewhere.edu',
+        self.submitter = domain.User(1234, email='j.user@somewhere.edu',
                                             forename='Jane', surname='User')
-        self.unicode_submitter = events.domain.User(12345, email='j.user@somewhere.edu',
+        self.unicode_submitter = domain.User(12345, email='j.user@somewhere.edu',
                                             forename='大', surname='用户')
 
     def test_classic_workflow(self, submitter=None, metadata=None, authors=None):
@@ -66,9 +66,9 @@ class TestClassicUIWorkflow(TestCase):
         metadata = dict(metadata)
 
 
-        # TODO: Process data in dictionary form to events.Author objects.
+        # TODO: Process data in dictionary form to Author objects.
         if authors is None:
-            authors = [events.Author(order=0,
+            authors = [Author(order=0,
                                      forename='Bob',
                                      surname='Paulson',
                                      email='Robert.Paulson@nowhere.edu',
@@ -77,8 +77,8 @@ class TestClassicUIWorkflow(TestCase):
 
         with in_memory_db() as session:
             # Submitter clicks on 'Start new submission' in the user dashboard.
-            submission, stack = events.save(
-                events.CreateSubmission(creator=submitter)
+            submission, stack = save(
+                CreateSubmission(creator=submitter)
             )
             self.assertIsNotNone(submission.submission_id,
                                  "A submission ID is assigned")
@@ -104,19 +104,19 @@ class TestClassicUIWorkflow(TestCase):
 
             # /start: Submitter completes the start submission page.
             license_uri = 'http://creativecommons.org/publicdomain/zero/1.0/'
-            submission, stack = events.save(
-                events.VerifyContactInformation(creator=submitter),
-                events.AssertAuthorship(
+            submission, stack = save(
+                VerifyContactInformation(creator=submitter),
+                AssertAuthorship(
                     creator=submitter,
                     submitter_is_author=True
                 ),
-                events.SelectLicense(
+                SelectLicense(
                     creator=submitter,
                     license_uri=license_uri,
                     license_name='CC0 1.0'
                 ),
-                events.AcceptPolicy(creator=submitter),
-                events.SetPrimaryClassification(
+                AcceptPolicy(creator=submitter),
+                SetPrimaryClassification(
                     creator=submitter,
                     category='cs.DL'
                 ),
@@ -145,8 +145,8 @@ class TestClassicUIWorkflow(TestCase):
             # /addfiles: Submitter has uploaded files to the file management
             # service, and verified that they compile. Now they associate the
             # content package with the submission.
-            submission, stack = events.save(
-                events.AttachSourceContent(
+            submission, stack = save(
+                AttachSourceContent(
                     creator=submitter,
                     location="https://submit.arxiv.org/upload/123",
                     checksum="a9s9k342900skks03330029k",
@@ -173,21 +173,21 @@ class TestClassicUIWorkflow(TestCase):
             # authors. In this package, we model authors in more detail than
             # in the classic system, but we should preserve the canonical
             # format in the db for legacy components' sake.
-            submission, stack = events.save(
-                events.SetTitle(creator=self.submitter,
+            submission, stack = save(
+                SetTitle(creator=self.submitter,
                                 title=metadata['title']),
-                events.SetAbstract(creator=self.submitter,
+                SetAbstract(creator=self.submitter,
                                    abstract=metadata['abstract']),
-                events.SetComments(creator=self.submitter,
+                SetComments(creator=self.submitter,
                                    comments=metadata['comments']),
-                events.SetJournalReference(
+                SetJournalReference(
                     creator=self.submitter,
                     journal_ref=metadata['journal_ref']
                 ),
-                events.SetDOI(creator=self.submitter, doi=metadata['doi']),
-                events.SetReportNumber(creator=self.submitter,
+                SetDOI(creator=self.submitter, doi=metadata['doi']),
+                SetReportNumber(creator=self.submitter,
                                        report_num=metadata['report_num']),
-                events.UpdateAuthors(
+                UpdateAuthors(
                     creator=submitter,
                     authors=authors
                 ),
@@ -222,8 +222,8 @@ class TestClassicUIWorkflow(TestCase):
                              "Fourteen commands have been executed in total.")
 
             # /preview: Submitter adds a secondary classification.
-            submission, stack = events.save(
-                events.AddSecondaryClassification(
+            submission, stack = save(
+                AddSecondaryClassification(
                     creator=submitter,
                     category='cs.IR'
                 ),
@@ -246,8 +246,8 @@ class TestClassicUIWorkflow(TestCase):
                              "Fifteen commands have been executed in total.")
 
             # /preview: Submitter finalizes submission.
-            finalize = events.FinalizeSubmission(creator=submitter)
-            submission, stack = events.save(
+            finalize = FinalizeSubmission(creator=submitter)
+            submission, stack = save(
                 finalize, submission_id=submission.submission_id
             )
             db_submission = session.query(classic.models.Submission)\
@@ -271,7 +271,7 @@ class TestClassicUIWorkflow(TestCase):
             ('doi', '10.01234/56789'),
             ('journal_ref', 'Foo Rev 1, 2 (1903)')
         ]
-        authors = [events.Author(
+        authors = [Author(
                         order=0,
                         forename='惊人',
                         surname='用户',
@@ -317,7 +317,7 @@ class TestPublicationIntegration(TestCase):
 
     def setUp(self):
         """An arXiv user is submitting a new paper."""
-        self.submitter = events.domain.User(1234, email='j.user@somewhere.edu',
+        self.submitter = domain.User(1234, email='j.user@somewhere.edu',
                                             forename='Jane', surname='User')
 
         # Create and finalize a new submission.
@@ -332,24 +332,24 @@ class TestPublicationIntegration(TestCase):
                 ('doi', '10.01234/56789'),
                 ('journal_ref', 'Foo Rev 1, 2 (1903)')
             ])
-            self.submission, _ = events.save(
-                events.CreateSubmission(creator=self.submitter),
-                events.VerifyContactInformation(creator=self.submitter),
-                events.AssertAuthorship(
+            self.submission, _ = save(
+                CreateSubmission(creator=self.submitter),
+                VerifyContactInformation(creator=self.submitter),
+                AssertAuthorship(
                     creator=self.submitter,
                     submitter_is_author=True
                 ),
-                events.SelectLicense(
+                SelectLicense(
                     creator=self.submitter,
                     license_uri=cc0,
                     license_name='CC0 1.0'
                 ),
-                events.AcceptPolicy(creator=self.submitter),
-                events.SetPrimaryClassification(
+                AcceptPolicy(creator=self.submitter),
+                SetPrimaryClassification(
                     creator=self.submitter,
                     category='cs.DL'
                 ),
-                events.AttachSourceContent(
+                AttachSourceContent(
                     creator=self.submitter,
                     location="https://submit.arxiv.org/upload/123",
                     checksum="a9s9k342900skks03330029k",
@@ -358,22 +358,22 @@ class TestPublicationIntegration(TestCase):
                     identifier=123,
                     size=593992
                 ),
-                events.SetTitle(creator=self.submitter,
+                SetTitle(creator=self.submitter,
                                 title=metadata['title']),
-                events.SetAbstract(creator=self.submitter,
+                SetAbstract(creator=self.submitter,
                             abstract=metadata['abstract']),
-                events.SetComments(creator=self.submitter,
+                SetComments(creator=self.submitter,
                             comments=metadata['comments']),
-                events.SetJournalReference(
+                SetJournalReference(
                     creator=self.submitter,
                     journal_ref=metadata['journal_ref']
                 ),
-                events.SetDOI(creator=self.submitter, doi=metadata['doi']),
-                events.SetReportNumber(creator=self.submitter,
+                SetDOI(creator=self.submitter, doi=metadata['doi']),
+                SetReportNumber(creator=self.submitter,
                                        report_num=metadata['report_num']),
-                events.UpdateAuthors(
+                UpdateAuthors(
                     creator=self.submitter,
-                    authors=[events.Author(
+                    authors=[Author(
                         order=0,
                         forename='Bob',
                         surname='Paulson',
@@ -381,7 +381,7 @@ class TestPublicationIntegration(TestCase):
                         affiliation='Fight Club'
                     )]
                 ),
-                events.FinalizeSubmission(creator=self.submitter)
+                FinalizeSubmission(creator=self.submitter)
             )
 
     def tearDown(self):
@@ -415,7 +415,7 @@ class TestPublicationIntegration(TestCase):
             session.commit()
 
             # Submission state should reflect publication status.
-            submission, _ = events.load(self.submission.submission_id)
+            submission, _ = load(self.submission.submission_id)
             self.assertEqual(submission.status, submission.PUBLISHED,
                              "Submission should have published status.")
             self.assertEqual(submission.arxiv_id, "1901.00123",
@@ -449,7 +449,7 @@ class TestPublicationIntegration(TestCase):
             session.commit()
 
             # Submission state should reflect publication status.
-            submission, _ = events.load(self.submission.submission_id)
+            submission, _ = load(self.submission.submission_id)
             self.assertEqual(submission.status, submission.PUBLISHED,
                              "Submission should have published status.")
             self.assertEqual(submission.arxiv_id, "1901.00123",
@@ -470,7 +470,7 @@ class TestPublicationIntegration(TestCase):
             session.commit()
 
             # Submission state should reflect scheduled status.
-            submission, _ = events.load(self.submission.submission_id)
+            submission, _ = load(self.submission.submission_id)
             self.assertEqual(submission.status, submission.SCHEDULED,
                              "Submission should have scheduled status.")
 
@@ -487,7 +487,7 @@ class TestPublicationIntegration(TestCase):
             session.commit()
 
             # Submission state should reflect scheduled status.
-            submission, _ = events.load(self.submission.submission_id)
+            submission, _ = load(self.submission.submission_id)
             self.assertEqual(submission.status, submission.SCHEDULED,
                              "Submission should have scheduled status.")
 
@@ -504,7 +504,7 @@ class TestPublicationIntegration(TestCase):
             session.commit()
 
             # Submission state should reflect scheduled status.
-            submission, _ = events.load(self.submission.submission_id)
+            submission, _ = load(self.submission.submission_id)
             self.assertEqual(submission.status, submission.SCHEDULED,
                              "Submission should have scheduled status.")
 
@@ -521,7 +521,7 @@ class TestPublicationIntegration(TestCase):
             session.commit()
 
             # Submission state should reflect scheduled status.
-            submission, _ = events.load(self.submission.submission_id)
+            submission, _ = load(self.submission.submission_id)
             self.assertEqual(submission.status, submission.SCHEDULED,
                              "Submission should be scheduled for tomorrow.")
 
@@ -538,7 +538,7 @@ class TestPublicationIntegration(TestCase):
             session.commit()
 
             # Submission state should reflect scheduled status.
-            submission, _ = events.load(self.submission.submission_id)
+            submission, _ = load(self.submission.submission_id)
             self.assertEqual(submission.status, submission.ERROR,
                              "Submission should have error status.")
 
@@ -556,6 +556,6 @@ class TestPublicationIntegration(TestCase):
                 session.commit()
 
                 # Submission state should reflect scheduled status.
-                submission, _ = events.load(self.submission.submission_id)
+                submission, _ = load(self.submission.submission_id)
                 self.assertEqual(submission.status, submission.DELETED,
                                  "Submission should have deleted status.")

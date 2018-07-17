@@ -6,9 +6,9 @@ from datetime import datetime
 from mimesis import Text
 
 from arxiv import taxonomy
-from events import save
-from events.domain import event, agent, submission
-from events.exceptions import InvalidEvent
+from ... import save
+from .. import event, agent, submission
+from ...exceptions import InvalidEvent
 
 
 class TestSetPrimaryClassification(TestCase):

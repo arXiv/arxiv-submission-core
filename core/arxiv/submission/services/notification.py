@@ -6,7 +6,7 @@ arXiv submission and moderation services, including the webhook service (to
 notify external-to-arXiv services).
 """
 
-from events.domain import Event, Submission
+from ..domain import Event, Submission
 
 
 def emit(event: Event, submission: Submission) -> None:

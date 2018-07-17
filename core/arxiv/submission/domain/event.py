@@ -64,7 +64,7 @@ from .submission import Submission, SubmissionMetadata, Author, \
     Classification, License, Delegation, Comment, Flag, Proposal, \
     SubmissionContent
 
-from events.exceptions import InvalidEvent
+from ..exceptions import InvalidEvent
 
 logger = logging.getLogger(__name__)
 

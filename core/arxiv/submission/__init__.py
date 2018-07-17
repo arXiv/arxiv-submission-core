@@ -78,9 +78,9 @@ example:
 
 from typing import Optional, List, Tuple
 from arxiv.base import logging
-from events.domain.submission import Submission, SubmissionMetadata, Author
-from events.domain.agent import Agent, User, System, Client
-from events.domain.event import (
+from .domain.submission import Submission, SubmissionMetadata, Author
+from .domain.agent import Agent, User, System, Client
+from .domain.event import (
     Event, CreateSubmission, RemoveSubmission, VerifyContactInformation,
     AssertAuthorship, AcceptPolicy, SetPrimaryClassification,
     AddSecondaryClassification, RemoveSecondaryClassification, SelectLicense,
@@ -89,9 +89,9 @@ from events.domain.event import (
     SetTitle, SetAbstract, SetDOI, SetComments, SetReportNumber,
     SetMSCClassification, SetACMClassification, SetJournalReference
 )
-from events.domain.rule import RuleCondition, RuleConsequence, EventRule
-from events.services import classic
-from events.exceptions import InvalidEvent, InvalidStack, NoSuchSubmission, SaveError
+from .domain.rule import RuleCondition, RuleConsequence, EventRule
+from .services import classic
+from .exceptions import InvalidEvent, InvalidStack, NoSuchSubmission, SaveError
 
 logger = logging.getLogger(__name__)
 

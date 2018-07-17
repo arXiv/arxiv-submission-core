@@ -11,9 +11,8 @@ python:
   - "3.6"
 script:
   - pip install pipenv
-  - pipenv install
   - pipenv install --dev
-  - pipenv run nose2 --with-coverage
+  - cd core && pipenv run nose2 -s arxiv/ --with-coverage && cd ..
   - tests/lint.sh
   - tests/docstyle.sh
 after_success:

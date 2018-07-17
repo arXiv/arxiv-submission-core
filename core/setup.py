@@ -1,10 +1,11 @@
-"""Install arXiv submission event core package."""
+"""Install arXiv submission core package."""
 
 from setuptools import setup, find_packages
 
 setup(
-    name='arxiv-submission-events',
-    version='0.3.1',
-    packages=find_packages(exclude=['test*']),
+    name='arxiv-submission-core',
+    version='0.4.1',
+    packages=[f'arxiv.{package}' for package
+              in find_packages('arxiv', exclude=['*test*'])],
     zip_safe=False
 )
