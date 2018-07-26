@@ -324,6 +324,8 @@ See :ref:`submission-core-events-package-containers`.
 
 Submission UI service
 ^^^^^^^^^^^^^^^^^^^^^
+https://github.com/cul-it/arxiv-submission-ui
+
 Provides form-based views that allow users to create and update submissions,
 and track the state of their submission through the moderation and publication
 process. The interface supports metadata entry, source package upload, and
@@ -335,6 +337,8 @@ the :ref:`submission-database`.
 
 Submission API service
 ^^^^^^^^^^^^^^^^^^^^^^
+https://github.com/cul-it/arxiv-submission-core/tree/master/metadata
+
 Provides a RESTful API for trusted clients to facilitate submission to arXiv
 via external/third-party user interfaces.  Uses the
 :ref:`submission-core-events-package` to update submission state in the
@@ -372,10 +376,16 @@ accession and quality assurance.
 
 File management service
 ^^^^^^^^^^^^^^^^^^^^^^^
+https://github.com/cul-it/arxiv-filemanager
+
 This service is responsible for ensuring the safety and suitability of files
 uploaded to the submission system. The file management service accepts
 uploads, performs verification and sanitization, and makes the upload available
 for use by other services.
+
+During on-premises deployment, the file management service is backed by an
+SFS volume provided by Cornell IT. Upon migration to the cloud, the file
+management service will be backed by an EFS volume.
 
 .. _compilation-service:
 
@@ -388,6 +398,9 @@ and other formats. This service encompasses the arXiv TeX tree. Compilation
 logs are also made available, for example to provide submitters feedback about
 compilation failures or warnings.
 
+The compilation service is backed by an AWS S3 bucket.
+
+
 .. _plain-text-extraction-service:
 
 Plain text extraction service
@@ -398,6 +411,7 @@ Extracts plain text content from PDFs, for use by the for overlap detection
 and classification services. Makes both raw extracted text and normalized
 "PSV" tokenized text available to other services.
 
+
 .. _overlap-detection-service:
 
 Overlap detection service
@@ -407,6 +421,7 @@ https://github.com/cul-it/arxiv-docsim
 Operates on extracted plain text content and submission metadata to
 detect possibly duplicate submissions. Returns an array of published arXiv
 papers with a high degree of overlap.
+
 
 .. _classifier-service:
 

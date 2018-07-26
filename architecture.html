@@ -322,6 +322,7 @@ integration with a task queue (Redis) for message passing.</p>
 </div>
 <div class="section" id="submission-ui-service">
 <h4>Submission UI service<a class="headerlink" href="#submission-ui-service" title="Permalink to this headline">¶</a></h4>
+<p><a class="reference external" href="https://github.com/cul-it/arxiv-submission-ui">https://github.com/cul-it/arxiv-submission-ui</a></p>
 <p>Provides form-based views that allow users to create and update submissions,
 and track the state of their submission through the moderation and publication
 process. The interface supports metadata entry, source package upload, and
@@ -332,6 +333,7 @@ the <a class="reference internal" href="#submission-database"><span class="std s
 </div>
 <div class="section" id="submission-api-service">
 <h4>Submission API service<a class="headerlink" href="#submission-api-service" title="Permalink to this headline">¶</a></h4>
+<p><a class="reference external" href="https://github.com/cul-it/arxiv-submission-core/tree/master/metadata">https://github.com/cul-it/arxiv-submission-core/tree/master/metadata</a></p>
 <p>Provides a RESTful API for trusted clients to facilitate submission to arXiv
 via external/third-party user interfaces.  Uses the
 <a class="reference internal" href="#submission-core-events-package"><span class="std std-ref">Submission core events package</span></a> to update submission state in the
@@ -362,10 +364,14 @@ providing a menu of functionality used by UI and API services to support
 accession and quality assurance.</p>
 <div class="section" id="file-management-service">
 <span id="id6"></span><h4>File management service<a class="headerlink" href="#file-management-service" title="Permalink to this headline">¶</a></h4>
+<p><a class="reference external" href="https://github.com/cul-it/arxiv-filemanager">https://github.com/cul-it/arxiv-filemanager</a></p>
 <p>This service is responsible for ensuring the safety and suitability of files
 uploaded to the submission system. The file management service accepts
 uploads, performs verification and sanitization, and makes the upload available
 for use by other services.</p>
+<p>During on-premises deployment, the file management service is backed by an
+SFS volume provided by Cornell IT. Upon migration to the cloud, the file
+management service will be backed by an EFS volume.</p>
 </div>
 <div class="section" id="compilation-service">
 <span id="id7"></span><h4>Compilation service<a class="headerlink" href="#compilation-service" title="Permalink to this headline">¶</a></h4>
@@ -374,6 +380,7 @@ for use by other services.</p>
 and other formats. This service encompasses the arXiv TeX tree. Compilation
 logs are also made available, for example to provide submitters feedback about
 compilation failures or warnings.</p>
+<p>The compilation service is backed by an AWS S3 bucket.</p>
 </div>
 <div class="section" id="plain-text-extraction-service">
 <span id="id8"></span><h4>Plain text extraction service<a class="headerlink" href="#plain-text-extraction-service" title="Permalink to this headline">¶</a></h4>
