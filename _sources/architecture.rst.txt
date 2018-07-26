@@ -174,7 +174,7 @@ Context
 
 .. _figure-submission-context:
 
-.. figure:: ../_static/diagrams/submission-context.png
+.. figure:: _static/diagrams/submission-context.png
    :width: 400px
 
    System context for the arXiv submission system.
@@ -250,7 +250,7 @@ The submission & moderation subsystem is comprised of the following parts:
 
 .. _figure-submission-services:
 
-.. figure:: ../_static/diagrams/submission-services.png
+.. figure:: _static/diagrams/submission-services.png
    :width: 400px
 
    Services in the arXiv submission system.
