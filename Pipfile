@@ -16,6 +16,7 @@ uwsgi = "*"
 mysqlclient = "*"
 mimesis = "*"
 bleach = "*"
+"c6a1273" = {path = "./core"}
 
 [dev-packages]
 "nose2" = "*"
@@ -26,3 +27,5 @@ pylint = "*"
 pydocstyle = "*"
 mypy = "*"
 mimesis = "*"
+sphinx = "*"
+sphinx-autodoc-typehints = "*"
