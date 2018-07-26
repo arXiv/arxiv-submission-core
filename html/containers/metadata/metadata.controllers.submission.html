@@ -1,0 +1,562 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>metadata.controllers.submission package &#8212; arXiv submission &amp; moderation 0.1 documentation</title>
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="prev" title="metadata.controllers package" href="metadata.controllers.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="module-metadata.controllers.submission">
+<span id="metadata-controllers-submission-package"></span><h1>metadata.controllers.submission package<a class="headerlink" href="#module-metadata.controllers.submission" title="Permalink to this headline">¶</a></h1>
+<p>Controllers for the metadata API.</p>
+<dl class="function">
+<dt id="metadata.controllers.submission.create_submission">
+<code class="descclassname">metadata.controllers.submission.</code><code class="descname">create_submission</code><span class="sig-paren">(</span><em>data</em>, <em>headers</em>, <em>user_data</em>, <em>client_data</em>, <em>token</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/metadata/controllers/submission.html#create_submission"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metadata.controllers.submission.create_submission" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a new submission.</p>
+<p>Implements the hook for <code class="xref py py-meth docutils literal notranslate"><span class="pre">sword.SWORDCollection.add_submission()</span></code>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>data</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#dict" title="(in Python v3.6)"><em>dict</em></a>) – Deserialized compact JSON-LD document.</li>
+<li><strong>headers</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#dict" title="(in Python v3.6)"><em>dict</em></a>) – Request headers from the client.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tuple</span></code>[<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#dict" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>, <a class="reference external" href="https://docs.python.org/3.6/library/functions.html#int" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>, <a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#dict" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>]</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><ul class="simple">
+<li><em>dict</em> – Response data.</li>
+<li><em>int</em> – HTTP status code.</li>
+<li><em>dict</em> – Headers to add to the response.</li>
+</ul>
+</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="metadata.controllers.submission.get_submission">
+<code class="descclassname">metadata.controllers.submission.</code><code class="descname">get_submission</code><span class="sig-paren">(</span><em>submission_id</em>, <em>user=None</em>, <em>client=None</em>, <em>token=None</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/metadata/controllers/submission.html#get_submission"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metadata.controllers.submission.get_submission" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieve the current state of a submission.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tuple</span></code>[<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#dict" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>, <a class="reference external" href="https://docs.python.org/3.6/library/functions.html#int" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>, <a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#dict" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>]</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="metadata.controllers.submission.update_submission">
+<code class="descclassname">metadata.controllers.submission.</code><code class="descname">update_submission</code><span class="sig-paren">(</span><em>data</em>, <em>headers</em>, <em>user_data</em>, <em>client_data</em>, <em>token</em>, <em>submission_id</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/metadata/controllers/submission.html#update_submission"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metadata.controllers.submission.update_submission" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update the submission.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tuple</span></code>[<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#dict" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>, <a class="reference external" href="https://docs.python.org/3.6/library/functions.html#int" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>, <a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#dict" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>]</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-metadata.controllers.submission.handlers">
+<span id="metadata-controllers-submission-handlers-module"></span><h2>metadata.controllers.submission.handlers module<a class="headerlink" href="#module-metadata.controllers.submission.handlers" title="Permalink to this headline">¶</a></h2>
+<p>Data handling logic for submission data payload.</p>
+<p>Each handler (a function) should accept two parameters:</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">data</span></code> is the value of the field that it handles. This can be anything that
+is deserializable from a JSON document.</li>
+<li><code class="docutils literal notranslate"><span class="pre">agents</span></code> is a dict with the <code class="docutils literal notranslate"><span class="pre">creator</span></code>, <code class="docutils literal notranslate"><span class="pre">proxy</span></code>, and <code class="docutils literal notranslate"><span class="pre">client</span></code> agents
+to use when creating new events.</li>
+</ul>
+<p>The primary controller in this module is the <a class="reference internal" href="#metadata.controllers.submission.handlers.handle_submission" title="metadata.controllers.submission.handlers.handle_submission"><code class="xref py py-func docutils literal notranslate"><span class="pre">handle_submission()</span></code></a>, which
+delegates work to the handlers. The global <code class="docutils literal notranslate"><span class="pre">HANDLERS</span></code> defined at the end of
+this module describes how delegation should occur.</p>
+<p>Note: data validation should not be implemented here! Events/commands in
+<a class="reference internal" href="../core/events.html#module-events" title="events"><code class="xref py py-mod docutils literal notranslate"><span class="pre">events</span></code></a> should define required parameters, perform all validation,
+and carry out any required transformation/cleanup.</p>
+<dl class="data">
+<dt id="metadata.controllers.submission.handlers.HANDLERS">
+<code class="descclassname">metadata.controllers.submission.handlers.</code><code class="descname">HANDLERS</code><em class="property"> = [(('submitter_is_author',), &lt;function handle_submitter_is_author&gt;), (('license',), &lt;function handle_license&gt;), (('submitter_accepts_policy',), &lt;function handle_submitter_accepts_policy&gt;), (('submitter_contact_verified',), &lt;function handle_submitter_contact_verified&gt;), (('primary_classification',), &lt;function handle_primary_classification&gt;), (('secondary_classification',), &lt;function handle_secondary_classification&gt;), (('metadata',), &lt;function handle_metadata&gt;), (('metadata', 'authors'), &lt;function handle_authors&gt;), (('source_content',), &lt;function handle_source_content&gt;), (('finalized',), &lt;function handle_finalization&gt;)]</em><a class="headerlink" href="#metadata.controllers.submission.handlers.HANDLERS" title="Permalink to this definition">¶</a></dt>
+<dd><p>Describes how data in the payload should be handled.</p>
+<p>Each item is a two-tuple, defining the key-path to some data in the
+submission payload and the handler function that should be applied.</p>
+<p>A key-path is a tuple of keys to be applied recursively to access the data.
+E.g. the key-path <code class="docutils literal notranslate"><span class="pre">('metadata',</span> <span class="pre">'authors')</span></code> will access
+<code class="docutils literal notranslate"><span class="pre">payload['metadata']['authors']</span></code> and pass the referent to the corresponding
+handler.</p>
+<p>Extra data in the payload is simply ignored.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="metadata.controllers.submission.handlers.handle_authors">
+<code class="descclassname">metadata.controllers.submission.handlers.</code><code class="descname">handle_authors</code><span class="sig-paren">(</span><em>data</em>, <em>agents</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/metadata/controllers/submission/handlers.html#handle_authors"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metadata.controllers.submission.handlers.handle_authors" title="Permalink to this definition">¶</a></dt>
+<dd><p>Handle authors in the submission payload.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>data</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#dict" title="(in Python v3.6)"><em>dict</em></a>) – </li>
+<li><strong>agents</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#dict" title="(in Python v3.6)"><em>dict</em></a>) – Values are <code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.submission.Agent</span></code> instances.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tuple</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Event</span></code>]</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><em>tuple</em> – Zero or more uncommitted <code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.submission.Event</span></code> instances.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="metadata.controllers.submission.handlers.handle_finalization">
+<code class="descclassname">metadata.controllers.submission.handlers.</code><code class="descname">handle_finalization</code><span class="sig-paren">(</span><em>data</em>, <em>agents</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/metadata/controllers/submission/handlers.html#handle_finalization"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metadata.controllers.submission.handlers.handle_finalization" title="Permalink to this definition">¶</a></dt>
+<dd><p>Handle finalization flag in the submission payload.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>data</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#dict" title="(in Python v3.6)"><em>dict</em></a>) – </li>
+<li><strong>agents</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#dict" title="(in Python v3.6)"><em>dict</em></a>) – Values are <code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.submission.Agent</span></code> instances.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tuple</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Event</span></code>]</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><em>tuple</em> – Zero or more uncommitted <code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.submission.Event</span></code> instances.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="metadata.controllers.submission.handlers.handle_license">
+<code class="descclassname">metadata.controllers.submission.handlers.</code><code class="descname">handle_license</code><span class="sig-paren">(</span><em>data</em>, <em>agents</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/metadata/controllers/submission/handlers.html#handle_license"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metadata.controllers.submission.handlers.handle_license" title="Permalink to this definition">¶</a></dt>
+<dd><p>Handle the <code class="docutils literal notranslate"><span class="pre">license</span></code> field in submission payload.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tuple</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Event</span></code>]</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="metadata.controllers.submission.handlers.handle_metadata">
+<code class="descclassname">metadata.controllers.submission.handlers.</code><code class="descname">handle_metadata</code><span class="sig-paren">(</span><em>data</em>, <em>agents</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/metadata/controllers/submission/handlers.html#handle_metadata"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metadata.controllers.submission.handlers.handle_metadata" title="Permalink to this definition">¶</a></dt>
+<dd><p>Handle the <code class="docutils literal notranslate"><span class="pre">metadata</span></code> field in the submission payload.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>data</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#dict" title="(in Python v3.6)"><em>dict</em></a>) – </li>
+<li><strong>agents</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#dict" title="(in Python v3.6)"><em>dict</em></a>) – Values are <code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.submission.Agent</span></code> instances.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tuple</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Event</span></code>]</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><em>tuple</em> – Zero or more uncommitted <code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.submission.Event</span></code> instances.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="metadata.controllers.submission.handlers.handle_primary_classification">
+<code class="descclassname">metadata.controllers.submission.handlers.</code><code class="descname">handle_primary_classification</code><span class="sig-paren">(</span><em>data</em>, <em>agents</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/metadata/controllers/submission/handlers.html#handle_primary_classification"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metadata.controllers.submission.handlers.handle_primary_classification" title="Permalink to this definition">¶</a></dt>
+<dd><p>Handle the <code class="docutils literal notranslate"><span class="pre">primary_classification</span></code> field in submission payload.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Optional" title="(in Python v3.6)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Tuple</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Event</span></code>]]</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="metadata.controllers.submission.handlers.handle_secondary_classification">
+<code class="descclassname">metadata.controllers.submission.handlers.</code><code class="descname">handle_secondary_classification</code><span class="sig-paren">(</span><em>data</em>, <em>agents</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/metadata/controllers/submission/handlers.html#handle_secondary_classification"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metadata.controllers.submission.handlers.handle_secondary_classification" title="Permalink to this definition">¶</a></dt>
+<dd><p>Handle the <code class="docutils literal notranslate"><span class="pre">secondary_classification</span></code> field in submission payload.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>data</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#dict" title="(in Python v3.6)"><em>dict</em></a>) – </li>
+<li><strong>agents</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#dict" title="(in Python v3.6)"><em>dict</em></a>) – Values are <code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.submission.Agent</span></code> instances.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tuple</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Event</span></code>]</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><em>tuple</em> – Zero or more uncommitted <code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.submission.Event</span></code> instances.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="metadata.controllers.submission.handlers.handle_source_content">
+<code class="descclassname">metadata.controllers.submission.handlers.</code><code class="descname">handle_source_content</code><span class="sig-paren">(</span><em>data</em>, <em>agents</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/metadata/controllers/submission/handlers.html#handle_source_content"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metadata.controllers.submission.handlers.handle_source_content" title="Permalink to this definition">¶</a></dt>
+<dd><p>Handle source content data in the submission payload.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>data</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#dict" title="(in Python v3.6)"><em>dict</em></a>) – </li>
+<li><strong>agents</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#dict" title="(in Python v3.6)"><em>dict</em></a>) – Values are <code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.submission.Agent</span></code> instances.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tuple</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Event</span></code>]</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><em>tuple</em> – Zero or more uncommitted <code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.submission.Event</span></code> instances.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="metadata.controllers.submission.handlers.handle_submission">
+<code class="descclassname">metadata.controllers.submission.handlers.</code><code class="descname">handle_submission</code><span class="sig-paren">(</span><em>data</em>, <em>agents</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/metadata/controllers/submission/handlers.html#handle_submission"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metadata.controllers.submission.handlers.handle_submission" title="Permalink to this definition">¶</a></dt>
+<dd><p>Handle the submission payload.</p>
+<p>We assume that schema validation has been performed already, so it’s not
+up to us to verify the shape of the data.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>data</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#dict" title="(in Python v3.6)"><em>dict</em></a>) – </li>
+<li><strong>agents</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#dict" title="(in Python v3.6)"><em>dict</em></a>) – Values are <code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.submission.Agent</span></code> instances.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tuple</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Event</span></code>]</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><em>tuple</em> – Zero or more uncommitted <code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.submission.Event</span></code> instances.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="metadata.controllers.submission.handlers.handle_submitter_accepts_policy">
+<code class="descclassname">metadata.controllers.submission.handlers.</code><code class="descname">handle_submitter_accepts_policy</code><span class="sig-paren">(</span><em>data</em>, <em>agents</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/metadata/controllers/submission/handlers.html#handle_submitter_accepts_policy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metadata.controllers.submission.handlers.handle_submitter_accepts_policy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Handle the <code class="docutils literal notranslate"><span class="pre">submitter_accepts_policy</span></code> field in submission payload.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>data</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#dict" title="(in Python v3.6)"><em>dict</em></a>) – </li>
+<li><strong>agents</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#dict" title="(in Python v3.6)"><em>dict</em></a>) – Values are <code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.submission.Agent</span></code> instances.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tuple</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Event</span></code>]</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><em>tuple</em> – Zero or more uncommitted <code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.submission.Event</span></code> instances.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="metadata.controllers.submission.handlers.handle_submitter_contact_verified">
+<code class="descclassname">metadata.controllers.submission.handlers.</code><code class="descname">handle_submitter_contact_verified</code><span class="sig-paren">(</span><em>data</em>, <em>agents</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/metadata/controllers/submission/handlers.html#handle_submitter_contact_verified"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metadata.controllers.submission.handlers.handle_submitter_contact_verified" title="Permalink to this definition">¶</a></dt>
+<dd><p>Handle the <code class="docutils literal notranslate"><span class="pre">submitter_contact_verified</span></code> field in submission payload.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>data</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#dict" title="(in Python v3.6)"><em>dict</em></a>) – </li>
+<li><strong>agents</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#dict" title="(in Python v3.6)"><em>dict</em></a>) – Values are <code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.submission.Agent</span></code> instances.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tuple</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Event</span></code>]</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><em>tuple</em> – Zero or more uncommitted <code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.submission.Event</span></code> instances.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="metadata.controllers.submission.handlers.handle_submitter_is_author">
+<code class="descclassname">metadata.controllers.submission.handlers.</code><code class="descname">handle_submitter_is_author</code><span class="sig-paren">(</span><em>data</em>, <em>agents</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/metadata/controllers/submission/handlers.html#handle_submitter_is_author"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metadata.controllers.submission.handlers.handle_submitter_is_author" title="Permalink to this definition">¶</a></dt>
+<dd><p>Handle the <code class="docutils literal notranslate"><span class="pre">submitter_is_author</span></code> field in submission payload.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>data</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#dict" title="(in Python v3.6)"><em>dict</em></a>) – </li>
+<li><strong>agents</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#dict" title="(in Python v3.6)"><em>dict</em></a>) – Values are <code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.submission.Agent</span></code> instances.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tuple</span></code>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Event</span></code>]</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><em>tuple</em> – Zero or more uncommitted <code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.submission.Event</span></code> instances.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+<div class="section" id="module-metadata.controllers.submission.tests">
+<span id="metadata-controllers-submission-tests-module"></span><h2>metadata.controllers.submission.tests module<a class="headerlink" href="#module-metadata.controllers.submission.tests" title="Permalink to this headline">¶</a></h2>
+<p>Tests for <code class="xref py py-mod docutils literal notranslate"><span class="pre">api.controllers</span></code>.</p>
+<dl class="class">
+<dt id="metadata.controllers.submission.tests.TestCreateSubmission">
+<em class="property">class </em><code class="descclassname">metadata.controllers.submission.tests.</code><code class="descname">TestCreateSubmission</code><span class="sig-paren">(</span><em>methodName='runTest'</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/metadata/controllers/submission/tests.html#TestCreateSubmission"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metadata.controllers.submission.tests.TestCreateSubmission" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">unittest.case.TestCase</span></code></p>
+<p>Tests for <a class="reference internal" href="#metadata.controllers.submission.create_submission" title="metadata.controllers.submission.create_submission"><code class="xref py py-func docutils literal notranslate"><span class="pre">submission.create_submission()</span></code></a>.</p>
+<dl class="method">
+<dt id="metadata.controllers.submission.tests.TestCreateSubmission.setUp">
+<code class="descname">setUp</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/metadata/controllers/submission/tests.html#TestCreateSubmission.setUp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metadata.controllers.submission.tests.TestCreateSubmission.setUp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create some fake request data.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="metadata.controllers.submission.tests.TestCreateSubmission.test_create_submission_with_db_down">
+<code class="descname">test_create_submission_with_db_down</code><span class="sig-paren">(</span><em>mock_events</em>, <em>url_for</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/metadata/controllers/submission/tests.html#TestCreateSubmission.test_create_submission_with_db_down"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metadata.controllers.submission.tests.TestCreateSubmission.test_create_submission_with_db_down" title="Permalink to this definition">¶</a></dt>
+<dd><p>An internal server error is raised when the database is down.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="metadata.controllers.submission.tests.TestCreateSubmission.test_create_submission_with_invalid_data">
+<code class="descname">test_create_submission_with_invalid_data</code><span class="sig-paren">(</span><em>mock_events</em>, <em>url_for</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/metadata/controllers/submission/tests.html#TestCreateSubmission.test_create_submission_with_invalid_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metadata.controllers.submission.tests.TestCreateSubmission.test_create_submission_with_invalid_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Trying to create a submission with invalid data throws exception.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="metadata.controllers.submission.tests.TestCreateSubmission.test_create_submission_with_invalid_event">
+<code class="descname">test_create_submission_with_invalid_event</code><span class="sig-paren">(</span><em>mock_events</em>, <em>url_for</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/metadata/controllers/submission/tests.html#TestCreateSubmission.test_create_submission_with_invalid_event"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metadata.controllers.submission.tests.TestCreateSubmission.test_create_submission_with_invalid_event" title="Permalink to this definition">¶</a></dt>
+<dd><p>A Bad Request error is raised on an invalid event.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="metadata.controllers.submission.tests.TestCreateSubmission.test_create_submission_with_valid_data">
+<code class="descname">test_create_submission_with_valid_data</code><span class="sig-paren">(</span><em>mock_events</em>, <em>url_for</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/metadata/controllers/submission/tests.html#TestCreateSubmission.test_create_submission_with_valid_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metadata.controllers.submission.tests.TestCreateSubmission.test_create_submission_with_valid_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a submission with valid data.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="metadata.controllers.submission.tests.TestGetSubmission">
+<em class="property">class </em><code class="descclassname">metadata.controllers.submission.tests.</code><code class="descname">TestGetSubmission</code><span class="sig-paren">(</span><em>methodName='runTest'</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/metadata/controllers/submission/tests.html#TestGetSubmission"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metadata.controllers.submission.tests.TestGetSubmission" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">unittest.case.TestCase</span></code></p>
+<p>Tests for <a class="reference internal" href="#metadata.controllers.submission.get_submission" title="metadata.controllers.submission.get_submission"><code class="xref py py-func docutils literal notranslate"><span class="pre">submission.get_submission()</span></code></a>.</p>
+<dl class="method">
+<dt id="metadata.controllers.submission.tests.TestGetSubmission.test_get_nonexistant_submission">
+<code class="descname">test_get_nonexistant_submission</code><span class="sig-paren">(</span><em>mock_events</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/metadata/controllers/submission/tests.html#TestGetSubmission.test_get_nonexistant_submission"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metadata.controllers.submission.tests.TestGetSubmission.test_get_nonexistant_submission" title="Permalink to this definition">¶</a></dt>
+<dd><p>Should raise NotFound if the submission does not exist.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="metadata.controllers.submission.tests.TestGetSubmission.test_get_submission">
+<code class="descname">test_get_submission</code><span class="sig-paren">(</span><em>mock_events</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/metadata/controllers/submission/tests.html#TestGetSubmission.test_get_submission"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metadata.controllers.submission.tests.TestGetSubmission.test_get_submission" title="Permalink to this definition">¶</a></dt>
+<dd><p>Should return a JSON-serializable dict if submisison exists.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="metadata.controllers.submission.tests.TestUpdateSubmission">
+<em class="property">class </em><code class="descclassname">metadata.controllers.submission.tests.</code><code class="descname">TestUpdateSubmission</code><span class="sig-paren">(</span><em>methodName='runTest'</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/metadata/controllers/submission/tests.html#TestUpdateSubmission"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metadata.controllers.submission.tests.TestUpdateSubmission" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">unittest.case.TestCase</span></code></p>
+<p>Tests for <a class="reference internal" href="#metadata.controllers.submission.update_submission" title="metadata.controllers.submission.update_submission"><code class="xref py py-func docutils literal notranslate"><span class="pre">submission.update_submission()</span></code></a>.</p>
+<dl class="method">
+<dt id="metadata.controllers.submission.tests.TestUpdateSubmission.setUp">
+<code class="descname">setUp</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/metadata/controllers/submission/tests.html#TestUpdateSubmission.setUp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metadata.controllers.submission.tests.TestUpdateSubmission.setUp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create some fake request data.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="metadata.controllers.submission.tests.TestUpdateSubmission.test_update_nonexistant_submission">
+<code class="descname">test_update_nonexistant_submission</code><span class="sig-paren">(</span><em>mock_events</em>, <em>url_for</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/metadata/controllers/submission/tests.html#TestUpdateSubmission.test_update_nonexistant_submission"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metadata.controllers.submission.tests.TestUpdateSubmission.test_update_nonexistant_submission" title="Permalink to this definition">¶</a></dt>
+<dd><p>Trying to update a nonexistant submission throws exception.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="metadata.controllers.submission.tests.TestUpdateSubmission.test_update_submission_with_db_down">
+<code class="descname">test_update_submission_with_db_down</code><span class="sig-paren">(</span><em>mock_events</em>, <em>url_for</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/metadata/controllers/submission/tests.html#TestUpdateSubmission.test_update_submission_with_db_down"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metadata.controllers.submission.tests.TestUpdateSubmission.test_update_submission_with_db_down" title="Permalink to this definition">¶</a></dt>
+<dd><p>An internal server error is raised when the database is down.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="metadata.controllers.submission.tests.TestUpdateSubmission.test_update_submission_with_invalid_data">
+<code class="descname">test_update_submission_with_invalid_data</code><span class="sig-paren">(</span><em>mock_events</em>, <em>url_for</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/metadata/controllers/submission/tests.html#TestUpdateSubmission.test_update_submission_with_invalid_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metadata.controllers.submission.tests.TestUpdateSubmission.test_update_submission_with_invalid_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Trying to update a submission with invalid data throws exception.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="metadata.controllers.submission.tests.TestUpdateSubmission.test_update_submission_with_invalid_event">
+<code class="descname">test_update_submission_with_invalid_event</code><span class="sig-paren">(</span><em>mock_events</em>, <em>url_for</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/metadata/controllers/submission/tests.html#TestUpdateSubmission.test_update_submission_with_invalid_event"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metadata.controllers.submission.tests.TestUpdateSubmission.test_update_submission_with_invalid_event" title="Permalink to this definition">¶</a></dt>
+<dd><p>A Bad Request is raised on an invalid event.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="metadata.controllers.submission.tests.TestUpdateSubmission.test_update_submission_with_valid_data">
+<code class="descname">test_update_submission_with_valid_data</code><span class="sig-paren">(</span><em>mock_events</em>, <em>url_for</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/metadata/controllers/submission/tests.html#TestUpdateSubmission.test_update_submission_with_valid_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metadata.controllers.submission.tests.TestUpdateSubmission.test_update_submission_with_valid_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update a submission with valid data.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="metadata.controllers.submission.tests.preserve_exceptions_and_events">
+<code class="descclassname">metadata.controllers.submission.tests.</code><code class="descname">preserve_exceptions_and_events</code><span class="sig-paren">(</span><em>mock_events</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/metadata/controllers/submission/tests.html#preserve_exceptions_and_events"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metadata.controllers.submission.tests.preserve_exceptions_and_events" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add real exceptions back to the mock.</p>
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">arXiv submission & moderation</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../architecture.html">Submission &amp; moderation subsystem architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../publication_process.html">Submission &amp; Publication Process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../submission_api_context.html">Submission API: Context</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../core/events.html">events package</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="metadata.html">metadata package</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="metadata.html#subpackages">Subpackages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="metadata.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="metadata.html#module-metadata.config">metadata.config module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="metadata.html#module-metadata.factory">metadata.factory module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="metadata.html#module-metadata.routes">metadata.routes module</a></li>
+</ul>
+</li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="metadata.html">metadata package</a><ul>
+  <li><a href="metadata.controllers.html">metadata.controllers package</a><ul>
+      <li>Previous: <a href="metadata.controllers.html" title="previous chapter">metadata.controllers package</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, arXiv.org.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.6</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.11</a>
+      
+      |
+      <a href="../../_sources/containers/metadata/metadata.controllers.submission.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
