@@ -59,7 +59,17 @@ class Author:
 
 @dataclass
 class SubmissionContent:
-    """Metadata about the submission source package and compiled products."""
+    """Metadata about the submission source package."""
+
+    identifier: str
+    format: str
+    checksum: str
+    size: int
+
+
+@dataclass
+class SubmissionCompiled:
+    """Metadata about a submission compilation product."""
 
     identifier: str
     format: str
@@ -133,7 +143,7 @@ class Submission:
     updated: Optional[datetime] = field(default=None)
 
     source_content: Optional[SubmissionContent] = field(default=None)
-    compiled_content: List[SubmissionContent] = field(default_factory=list)
+    compiled_content: List[SubmissionCompiled] = field(default_factory=list)
 
     primary_classification: Optional[Classification] = field(default=None)
     delegations: Dict[str, Delegation] = field(default_factory=dict)
