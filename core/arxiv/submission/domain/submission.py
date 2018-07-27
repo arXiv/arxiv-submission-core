@@ -61,12 +61,10 @@ class Author:
 class SubmissionContent:
     """Metadata about the submission source package and compiled products."""
 
-    location: str
+    identifier: str
     format: str
-    mime_type: str
-    size: str
     checksum: str
-    identifier: int
+    size: int
 
 
 @dataclass

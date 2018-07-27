@@ -149,12 +149,10 @@ class TestClassicUIWorkflow(TestCase):
             # service, and verified that they compile. Now they associate the
             # content package with the submission.
             submission, stack = save(
-                AttachSourceContent(
+                SetUploadPackage(
                     creator=submitter,
-                    location="https://submit.arxiv.org/upload/123",
                     checksum="a9s9k342900skks03330029k",
                     format='tex',
-                    mime_type="application/zip",
                     identifier=123,
                     size=593992
                 ),
@@ -344,12 +342,10 @@ class TestPublicationIntegration(TestCase):
                     creator=self.submitter,
                     category='cs.DL'
                 ),
-                AttachSourceContent(
+                SetUploadPackage(
                     creator=self.submitter,
-                    location="https://submit.arxiv.org/upload/123",
                     checksum="a9s9k342900skks03330029k",
                     format='tex',
-                    mime_type="application/zip",
                     identifier=123,
                     size=593992
                 ),

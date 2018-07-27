@@ -25,7 +25,7 @@ from flask import Flask
 from arxiv.submission import save, domain, CreateSubmission, AssertAuthorship,\
     VerifyContactInformation, AcceptPolicy, SetTitle, SetAbstract, \
     SetComments, SetDOI, SetReportNumber, SetJournalReference, \
-    AttachSourceContent, SelectLicense, SetPrimaryClassification, \
+    SetUploadPackage, SelectLicense, SetPrimaryClassification, \
     AddSecondaryClassification, UpdateAuthors, FinalizeSubmission, load
 
 from arxiv.submission.domain.submission import Submission
@@ -144,8 +144,7 @@ def process_submission(s):
 
     if s.get('package'):
         submission, stack = save(
-            AttachSourceContent(
-                location='https://example.arxiv.org/' + s['package'],
+            SetUploadPackage(
                 format=s['source_format'],
                 checksum='0',
                 identifier=1,

@@ -759,53 +759,99 @@ class UpdateAuthors(Event):
 
 
 @dataclass
-class AttachSourceContent(Event):
-    """Add metadata about a source package to a submission."""
+class SetUploadPackage(Event):
+    """Set the upload workspace for this submission."""
 
-    location: str = field(default_factory=str)
+    identifier: str = field(default_factory=str)
     format: str = field(default_factory=str)
     checksum: str = field(default_factory=str)
-    mime_type: str = field(default_factory=str)
-    # TODO: Examine the necessity of an identifier when we are storing URIs.
-    identifier: Optional[int] = field(default=None)
     size: int = field(default=0)
 
-    # TODO: This should be configurable somewhere.
     ALLOWED_FORMATS = [
         'pdftex', 'tex', 'pdf', 'ps', 'html', 'invalid'
     ]
-    ALLOWED_MIME_TYPES = [
-        'application/tar+gzip', 'application/tar', 'application/zip'
-    ]
 
     def validate(self, submission: Submission) -> None:
-        """Validate data for :class:`.SubmissionContent`."""
+        """Validate data for :class:`.SetUploadPackage`."""
         submission_is_not_finalized(self, submission)
-        try:
-            parsed = urlparse(self.location)
-        except ValueError as e:
-            raise InvalidEvent(self, 'Not a valid URL') from e
-        if not parsed.netloc.endswith('arxiv.org'):
-            raise InvalidEvent(self, 'External URLs not allowed.')
 
-        if self.format not in self.ALLOWED_FORMATS:
-            raise InvalidEvent(self, f'Format {self.format} not allowed')
-        if not self.checksum:
-            raise InvalidEvent(self, 'Missing checksum')
         if not self.identifier:
             raise InvalidEvent(self, 'Missing upload ID')
+
+        if self.format and self.format not in self.ALLOWED_FORMATS:
+            raise InvalidEvent(self, f'Format {self.format} not allowed')
 
     def project(self, submission: Submission) -> Submission:
         """Replace :class:`.SubmissionContent` metadata on the submission."""
         submission.source_content = SubmissionContent(
-            location=self.location,
             format=self.format,
             checksum=self.checksum,
             identifier=self.identifier,
-            mime_type=self.mime_type,
             size=self.size
         )
         return submission
+
+
+class UnsetUploadPackage(Event):
+    """Unset the upload workspace for this submission."""
+
+    def validate(self, submission: Submission) -> None:
+        """Validate data for :class:`.UnsetUploadPackage`."""
+        submission_is_not_finalized(self, submission)
+
+    def project(self, submission: Submission) -> Submission:
+        """Set :prop:`Submission.source_content` to None."""
+        submission.source_content = None
+        return submission
+
+# @dataclass
+# class AttachSourceContent(Event):
+#     """Add metadata about a source package to a submission."""
+#
+#     location: str = field(default_factory=str)
+#     format: str = field(default_factory=str)
+#     checksum: str = field(default_factory=str)
+#     mime_type: str = field(default_factory=str)
+#     # TODO: Examine the necessity of an identifier when we are storing URIs.
+#     identifier: Optional[int] = field(default=None)
+#     size: int = field(default=0)
+#
+#     # TODO: This should be configurable somewhere.
+#     ALLOWED_FORMATS = [
+#         'pdftex', 'tex', 'pdf', 'ps', 'html', 'invalid'
+#     ]
+#     ALLOWED_MIME_TYPES = [
+#         'application/tar+gzip', 'application/tar', 'application/zip'
+#     ]
+#
+#     def validate(self, submission: Submission) -> None:
+#         """Validate data for :class:`.SubmissionContent`."""
+#         submission_is_not_finalized(self, submission)
+#         try:
+#             parsed = urlparse(self.location)
+#         except ValueError as e:
+#             raise InvalidEvent(self, 'Not a valid URL') from e
+#         if not parsed.netloc.endswith('arxiv.org'):
+#             raise InvalidEvent(self, 'External URLs not allowed.')
+#
+#         if self.format not in self.ALLOWED_FORMATS:
+#             raise InvalidEvent(self, f'Format {self.format} not allowed')
+#         if not self.checksum:
+#             raise InvalidEvent(self, 'Missing checksum')
+#         if not self.identifier:
+#             raise InvalidEvent(self, 'Missing upload ID')
+#
+#     def project(self, submission: Submission) -> Submission:
+#         """Replace :class:`.SubmissionContent` metadata on the submission."""
+#         submission.source_content = SubmissionContent(
+#             location=self.location,
+#             format=self.format,
+#             checksum=self.checksum,
+#             identifier=self.identifier,
+#             mime_type=self.mime_type,
+#             size=self.size
+#         )
+#         return submission
 
 
 @dataclass

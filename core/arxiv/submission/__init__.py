@@ -84,7 +84,7 @@ from .domain.event import (
     Event, CreateSubmission, RemoveSubmission, VerifyContactInformation,
     AssertAuthorship, AcceptPolicy, SetPrimaryClassification,
     AddSecondaryClassification, RemoveSecondaryClassification, SelectLicense,
-    AttachSourceContent, UpdateAuthors, CreateComment, DeleteComment,
+    SetUploadPackage, UpdateAuthors, CreateComment, DeleteComment,
     AddDelegate, RemoveDelegate, FinalizeSubmission, UnFinalizeSubmission,
     SetTitle, SetAbstract, SetDOI, SetComments, SetReportNumber,
     SetMSCClassification, SetACMClassification, SetJournalReference
