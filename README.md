@@ -18,13 +18,8 @@ https://github.com/cul-it/arxiv-submission-core/blob/master/CONTRIBUTING.md
   submission-related requests. **Status: In progress**
 - The [Webhooks service](webhooks/) provides an API for creating and managing
   submission-related webhooks. **Status: Schema only**
-- The [Upload service](upload/) is a mock implementation of the file management
-  service, to be fully implemented elsewhere. **Status: Schema only**
 - The [Compile service](compile/) is a mock implementation of the compilation
   service, to be fully implemented elsewhere. **Status: Schema only**
-- The [Authorization service](authorization/) mocks token-based authorization.
-  It handles sub-requests from the gateway to authorize client requests, and
-  mints encrypted JWTs for use by other services.
 - A toy [Gateway service](gateway/) provides a minimal NGINX server configured
   to utilize the authorization service. It provides (proxy) access to
   client-facing services, including the API service.
@@ -32,6 +27,18 @@ https://github.com/cul-it/arxiv-submission-core/blob/master/CONTRIBUTING.md
 This project is in its early stages, and has been subject to considerable
 churn. As a consequence, test coverage, documentation, and verification are
 incomplete. We will actively address these issues as we go along.
+
+## Related components/dependencies
+
+- The [authentication service](https://github.com/cul-it/arxiv-auth) handles
+  sub-requests from the gateway to authorize client requests, and
+  mints encrypted JWTs for use by other services.
+- The [file management service](https://github.com/cul-it/arxiv-filemanager) is
+  responsible for handling client/user uploads, and perform sanitization and
+  other QA checks.
+- The [submission UI](https://github.com/cul-it/arxiv-submission-ui) provides a
+  form-driven UI for submission. The UI is built on top of the submission core
+  package (this repo).
 
 ## Python dependencies
 
