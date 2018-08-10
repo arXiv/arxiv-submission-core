@@ -193,7 +193,7 @@ class RemoveSubmission(Event):
 
 
 @dataclass(init=False)
-class VerifyContactInformation(Event):
+class ConfirmContactInformation(Event):
     """Submitter has verified their contact information."""
 
     def validate(self, submission: Submission) -> None:
@@ -207,7 +207,7 @@ class VerifyContactInformation(Event):
 
 
 @dataclass
-class AssertAuthorship(Event):
+class ConfirmAuthorship(Event):
     """The submitting user asserts whether they are an author of the paper."""
 
     submitter_is_author: bool = True
@@ -223,7 +223,7 @@ class AssertAuthorship(Event):
 
 
 @dataclass
-class AcceptPolicy(Event):
+class ConfirmPolicy(Event):
     """The submitting user accepts the arXiv submission policy."""
 
     def validate(self, submission: Submission) -> None:
@@ -350,7 +350,7 @@ class RemoveSecondaryClassification(Event):
 
 
 @dataclass
-class SelectLicense(Event):
+class SetLicense(Event):
     """The submitter has selected a license for their submission."""
 
     license_name: Optional[str] = field(default=None)
@@ -703,7 +703,7 @@ class SetComments(Event):
 
 
 @dataclass
-class UpdateAuthors(Event):
+class SetAuthors(Event):
     """Update the authors on a :class:`.Submission`."""
 
     authors: List[Author] = field(default_factory=list)
@@ -759,7 +759,7 @@ class UpdateAuthors(Event):
 
 
 @dataclass
-class AttachSourceContent(Event):
+class SetSourceContent(Event):
     """Add metadata about a source package to a submission."""
 
     location: str = field(default_factory=str)

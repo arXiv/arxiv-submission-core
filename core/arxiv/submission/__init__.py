@@ -81,10 +81,10 @@ from arxiv.base import logging
 from .domain.submission import Submission, SubmissionMetadata, Author
 from .domain.agent import Agent, User, System, Client
 from .domain.event import (
-    Event, CreateSubmission, RemoveSubmission, VerifyContactInformation,
-    AssertAuthorship, AcceptPolicy, SetPrimaryClassification,
-    AddSecondaryClassification, RemoveSecondaryClassification, SelectLicense,
-    AttachSourceContent, UpdateAuthors, CreateComment, DeleteComment,
+    Event, CreateSubmission, RemoveSubmission, ConfirmContactInformation,
+    ConfirmAuthorship, ConfirmPolicy, SetPrimaryClassification,
+    AddSecondaryClassification, RemoveSecondaryClassification, SetLicense,
+    SetSourceContent, SetAuthors, CreateComment, DeleteComment,
     AddDelegate, RemoveDelegate, FinalizeSubmission, UnFinalizeSubmission,
     SetTitle, SetAbstract, SetDOI, SetComments, SetReportNumber,
     SetMSCClassification, SetACMClassification, SetJournalReference

@@ -22,11 +22,11 @@ import logging
 
 from flask import Flask
 
-from arxiv.submission import save, domain, CreateSubmission, AssertAuthorship,\
-    VerifyContactInformation, AcceptPolicy, SetTitle, SetAbstract, \
+from arxiv.submission import save, domain, CreateSubmission, ConfirmAuthorship,\
+    ConfirmContactInformation, ConfirmPolicy, SetTitle, SetAbstract, \
     SetComments, SetDOI, SetReportNumber, SetJournalReference, \
-    AttachSourceContent, SelectLicense, SetPrimaryClassification, \
-    AddSecondaryClassification, UpdateAuthors, FinalizeSubmission, load
+    SetSourceContent, SetLicense, SetPrimaryClassification, \
+    AddSecondaryClassification, SetAuthors, FinalizeSubmission, load
 
 from arxiv.submission.domain.submission import Submission
 from arxiv.submission.services import classic
@@ -91,7 +91,7 @@ def process_submission(s):
 
     if s.get('is_author') == '1':
         submission, stack = save(
-            AssertAuthorship(
+            ConfirmAuthorship(
                 creator=submitter,
                 submitter_is_author=True
             ),
@@ -99,7 +99,7 @@ def process_submission(s):
         )
     else:
         submission, stack = save(
-            AssertAuthorship(
+            ConfirmAuthorship(
                 creator=submitter,
                 submitter_is_author=False
             ),
@@ -108,18 +108,18 @@ def process_submission(s):
 
     if s.get('agree_policy') == '1':
         submission, stack = save(
-            AcceptPolicy(creator=submitter),
+            ConfirmPolicy(creator=submitter),
             submission_id=submission.submission_id
         )
 
     if s.get('userinfo') == '1':
         submission, stack = save(
-            VerifyContactInformation(creator=submitter),
+            ConfirmContactInformation(creator=submitter),
             submission_id=submission.submission_id
         )
 
     submission, stack = save(
-        UpdateAuthors(
+        SetAuthors(
             authors_display=s['authors'],
             creator=submitter
         ),
@@ -138,13 +138,13 @@ def process_submission(s):
     license_uri = s.get('license')
     if license_uri:
         submission, stack = save(
-            SelectLicense(creator=submitter, license_uri=license_uri),
+            SetLicense(creator=submitter, license_uri=license_uri),
             submission_id=submission.submission_id
         )
 
     if s.get('package'):
         submission, stack = save(
-            AttachSourceContent(
+            SetSourceContent(
                 location='https://example.arxiv.org/' + s['package'],
                 format=s['source_format'],
                 checksum='0',
@@ -178,12 +178,12 @@ def verify_submission(s, submission_id):
 
     if s.get('userinfo') == '1':
         assert submission.submitter_contact_verified, \
-            "VerifyContactInformationError"
+            "ConfirmContactInformationError"
     else:
         assert not submission.submitter_contact_verified
 
     if s.get('agree_policy') == '1':
-        assert submission.submitter_accepts_policy, "AcceptPolicy Error"
+        assert submission.submitter_accepts_policy, "ConfirmPolicy Error"
     else:
         assert not submission.submitter_accepts_policy
 
@@ -192,10 +192,10 @@ def verify_submission(s, submission_id):
 
     if s.get('is_author') == '1':
         assert submission.submitter_is_author, \
-            "AssertAuthorship not aligned: returns False, should be True"
+            "ConfirmAuthorship not aligned: returns False, should be True"
     else:
         assert not submission.submitter_is_author, \
-            "AssertAuthorship does not match: returns True, should be False"
+            "ConfirmAuthorship does not match: returns True, should be False"
 
     if s.get('status') not in INVALID_STATUSES:
         assert submission.status == Submission.SUBMITTED

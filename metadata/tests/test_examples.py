@@ -13,6 +13,8 @@ from arxiv.submission.domain import Submission
 from metadata.factory import create_web_app
 from metadata.controllers.submission import ev
 
+from . import util
+
 BASEPATH = os.path.join(os.path.split(os.path.abspath(__file__))[0], '..')
 _, DB_PATH = tempfile.mkstemp(suffix='.db')
 
@@ -27,17 +29,11 @@ class TestSubmit(TestCase):
         os.environ['JWT_SECRET'] = SECRET
         os.environ['CLASSIC_DATABASE_URI'] = 'sqlite:///%s' % DB_PATH
 
-        self.authorization = jwt.encode({
-            'scope': ['submission:write', 'submission:read'],
-            'user': {
-                'user_id': 1234,
-                'email': 'joe@bloggs.com'
-            },
-            'client': {
-                'client_id': 5678
-            }
-        }, SECRET)
-        self.headers = {'Authorization': self.authorization.decode('utf-8')}
+        self.authorization = util.generate_client_token(
+            client_id=1, owner_id=52, name='the client',
+            endorsements='astro-ph.CO', secret=SECRET
+        )
+        self.headers = {'Authorization': self.authorization}
         self.app = create_web_app()
         with self.app.app_context():
             from arxiv.submission.services import classic
@@ -157,23 +153,17 @@ class TestModerationScenarios(TestCase):
         os.environ['JWT_SECRET'] = SECRET
         os.environ['CLASSIC_DATABASE_URI'] = 'sqlite:///%s' % DB_PATH
 
-        self.authorization = jwt.encode({
-            'scope': ['submission:write', 'submission:read'],
-            'user': {
-                'user_id': 1234,
-                'email': 'joe@bloggs.com'
-            },
-            'client': {
-                'client_id': 5678
-            }
-        }, SECRET)
+        self.authorization = util.generate_client_token(
+            client_id=1, owner_id=52, name='the client',
+            endorsements='astro-ph.CO', secret=SECRET
+        )
         self.app = create_web_app()
         with self.app.app_context():
             from arxiv.submission.services import classic
             classic.create_all()
 
         self.client = self.app.test_client()
-        self.headers = {'Authorization': self.authorization.decode('utf-8')}
+        self.headers = {'Authorization': self.authorization}
 
     def test_submission_placed_on_hold(self):
         """Before publication, a submission may be placed on hold."""
@@ -279,23 +269,17 @@ class TestPublicationIntegration(TestCase):
         os.environ['JWT_SECRET'] = SECRET
         os.environ['CLASSIC_DATABASE_URI'] = 'sqlite:///%s' % DB_PATH
 
-        self.authorization = jwt.encode({
-            'scope': ['submission:write', 'submission:read'],
-            'user': {
-                'user_id': 1234,
-                'email': 'joe@bloggs.com'
-            },
-            'client': {
-                'client_id': 5678
-            }
-        }, SECRET)
+        self.authorization = util.generate_client_token(
+            client_id=1, owner_id=52, name='the client',
+            endorsements='astro-ph.CO', secret=SECRET
+        )
         self.app = create_web_app()
         with self.app.app_context():
             from arxiv.submission.services import classic
             classic.create_all()
 
         self.client = self.app.test_client()
-        self.headers = {'Authorization': self.authorization.decode('utf-8')}
+        self.headers = {'Authorization': self.authorization}
 
         # Create and finalize a new submission.
         example = os.path.join(BASEPATH, 'examples/complete_submission.json')

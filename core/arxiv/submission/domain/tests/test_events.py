@@ -182,8 +182,8 @@ class TestRemoveSecondaryClassification(TestCase):
             e.validate(self.submission)    # "Event should not be valid".
 
 
-class TestUpdateAuthors(TestCase):
-    """Test :class:`event.UpdateAuthors`."""
+class TestSetAuthors(TestCase):
+    """Test :class:`event.SetAuthors`."""
 
     def setUp(self):
         """Initialize auxiliary data for test cases."""
@@ -197,7 +197,7 @@ class TestUpdateAuthors(TestCase):
 
     def test_canonical_authors_provided(self):
         """Data includes canonical author display string."""
-        e = event.UpdateAuthors(creator=self.user,
+        e = event.SetAuthors(creator=self.user,
                                 submission_id=1,
                                 authors=[submission.Author()],
                                 authors_display="Foo authors")
@@ -211,7 +211,7 @@ class TestUpdateAuthors(TestCase):
 
     def test_canonical_authors_not_provided(self):
         """Data does not include canonical author display string."""
-        e = event.UpdateAuthors(
+        e = event.SetAuthors(
             creator=self.user,
             submission_id=1,
             authors=[
@@ -234,7 +234,7 @@ class TestUpdateAuthors(TestCase):
 
     def test_canonical_authors_contains_et_al(self):
         """Author display value contains et al."""
-        e = event.UpdateAuthors(creator=self.user,
+        e = event.SetAuthors(creator=self.user,
                                 submission_id=1,
                                 authors=[submission.Author()],
                                 authors_display="Foo authors, et al")

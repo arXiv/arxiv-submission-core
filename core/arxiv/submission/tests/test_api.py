@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 from flask import Flask
 from .. import save, load, Submission, User, Event, \
     EventRule, RuleCondition, RuleConsequence, CreateComment, \
-    SubmissionMetadata, CreateSubmission, UpdateAuthors, Author, \
+    SubmissionMetadata, CreateSubmission, SetAuthors, Author, \
     SetTitle, SetAbstract
 from ..exceptions import NoSuchSubmission, InvalidEvent
 from ..services import classic
@@ -91,7 +91,7 @@ class TestSave(TestCase):
         mock_database.store_events = mock_store_events
         user = User(12345, 'joe@joe.joe')
         e = CreateSubmission(creator=user)
-        e2 = UpdateAuthors(creator=user, authors=[
+        e2 = SetAuthors(creator=user, authors=[
             Author(0, forename='Joe', surname="Bloggs", email="joe@blog.gs")
         ])
         submission, events = save(e, e2)

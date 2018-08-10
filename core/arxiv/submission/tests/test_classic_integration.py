@@ -108,17 +108,17 @@ class TestClassicUIWorkflow(TestCase):
             # /start: Submitter completes the start submission page.
             license_uri = 'http://creativecommons.org/publicdomain/zero/1.0/'
             submission, stack = save(
-                VerifyContactInformation(creator=submitter),
-                AssertAuthorship(
+                ConfirmContactInformation(creator=submitter),
+                ConfirmAuthorship(
                     creator=submitter,
                     submitter_is_author=True
                 ),
-                SelectLicense(
+                SetLicense(
                     creator=submitter,
                     license_uri=license_uri,
                     license_name='CC0 1.0'
                 ),
-                AcceptPolicy(creator=submitter),
+                ConfirmPolicy(creator=submitter),
                 SetPrimaryClassification(
                     creator=submitter,
                     category='cs.DL'
@@ -149,7 +149,7 @@ class TestClassicUIWorkflow(TestCase):
             # service, and verified that they compile. Now they associate the
             # content package with the submission.
             submission, stack = save(
-                AttachSourceContent(
+                SetSourceContent(
                     creator=submitter,
                     location="https://submit.arxiv.org/upload/123",
                     checksum="a9s9k342900skks03330029k",
@@ -187,7 +187,7 @@ class TestClassicUIWorkflow(TestCase):
                 SetDOI(creator=self.submitter, doi=metadata['doi']),
                 SetReportNumber(creator=self.submitter,
                                 report_num=metadata['report_num']),
-                UpdateAuthors(creator=submitter, authors=authors),
+                SetAuthors(creator=submitter, authors=authors),
                 submission_id=submission.submission_id
             )
             db_submission = session.query(classic.models.Submission) \
@@ -329,22 +329,22 @@ class TestPublicationIntegration(TestCase):
             ])
             self.submission, _ = save(
                 CreateSubmission(creator=self.submitter),
-                VerifyContactInformation(creator=self.submitter),
-                AssertAuthorship(
+                ConfirmContactInformation(creator=self.submitter),
+                ConfirmAuthorship(
                     creator=self.submitter,
                     submitter_is_author=True
                 ),
-                SelectLicense(
+                SetLicense(
                     creator=self.submitter,
                     license_uri=cc0,
                     license_name='CC0 1.0'
                 ),
-                AcceptPolicy(creator=self.submitter),
+                ConfirmPolicy(creator=self.submitter),
                 SetPrimaryClassification(
                     creator=self.submitter,
                     category='cs.DL'
                 ),
-                AttachSourceContent(
+                SetSourceContent(
                     creator=self.submitter,
                     location="https://submit.arxiv.org/upload/123",
                     checksum="a9s9k342900skks03330029k",
@@ -366,7 +366,7 @@ class TestPublicationIntegration(TestCase):
                 SetDOI(creator=self.submitter, doi=metadata['doi']),
                 SetReportNumber(creator=self.submitter,
                                        report_num=metadata['report_num']),
-                UpdateAuthors(
+                SetAuthors(
                     creator=self.submitter,
                     authors=[Author(
                         order=0,

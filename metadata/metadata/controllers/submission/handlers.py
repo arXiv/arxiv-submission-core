@@ -69,12 +69,12 @@ def handle_submitter_is_author(data: bool, agents: dict) \
     tuple
         Zero or more uncommitted :class:`arxiv.submission.Event` instances.
     """
-    return events.AssertAuthorship(**agents, submitter_is_author=data),
+    return events.ConfirmAuthorship(**agents, submitter_is_author=data),
 
 
 def handle_license(data: dict, agents: dict) -> Tuple[events.Event]:
     """Handle the ``license`` field in submission payload."""
-    return events.SelectLicense(
+    return events.SetLicense(
         **agents,
         license_name=data.get('name', ''),
         license_uri=data['uri']
@@ -98,7 +98,7 @@ def handle_submitter_accepts_policy(data: dict, agents: dict) \
         Zero or more uncommitted :class:`arxiv.submission.Event` instances.
     """
     if data:
-        return events.AcceptPolicy(**agents),
+        return events.ConfirmPolicy(**agents),
     return tuple()
 
 
@@ -119,7 +119,7 @@ def handle_submitter_contact_verified(data: dict, agents: dict) \
         Zero or more uncommitted :class:`arxiv.submission.Event` instances.
     """
     if data:
-        return events.VerifyContactInformation(**agents),
+        return events.ConfirmContactInformation(**agents),
     return tuple()
 
 
@@ -228,7 +228,7 @@ def handle_authors(data: dict, agents: dict) -> Tuple[events.Event]:
         if 'order' not in au:
             au['order'] = i
         _authors.append(events.Author(**au))
-    return events.UpdateAuthors(**agents, authors=_authors),
+    return events.SetAuthors(**agents, authors=_authors),
 
 
 def handle_finalization(data: dict, agents: dict) -> Tuple[events.Event]:
@@ -269,7 +269,7 @@ def handle_source_content(data: dict, agents: dict) -> Tuple[events.Event]:
     """
     if not data:
         return tuple()
-    return events.AttachSourceContent(
+    return events.SetSourceContent(
         **agents,
         location=data.get('location'),
         format=data.get('format'),

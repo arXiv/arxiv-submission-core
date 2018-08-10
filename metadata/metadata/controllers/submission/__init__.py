@@ -5,7 +5,7 @@ from functools import wraps
 from datetime import datetime
 import copy
 from arxiv.base import logging
-from typing import Tuple, List, Callable, Optional
+from typing import Tuple, List, Callable, Optional, Dict
 
 from flask import url_for, current_app
 from werkzeug.exceptions import NotFound, BadRequest, InternalServerError
@@ -13,9 +13,11 @@ from werkzeug.exceptions import NotFound, BadRequest, InternalServerError
 from arxiv import status
 from arxiv.submission.domain.agent import Agent, agent_factory, System
 from arxiv.submission.domain import Event
-from arxiv.submission.domain.submission import Submission, Classification, License, \
-    SubmissionMetadata
+from arxiv.submission.domain.submission import Submission, Classification, \
+    License, SubmissionMetadata
 import arxiv.submission as ev
+
+import arxiv.users.domain as auth_domain
 
 from metadata.controllers import util
 from . import handlers
@@ -26,25 +28,9 @@ logger = logging.getLogger(__name__)
 Response = Tuple[dict, int, dict]
 
 
-def _get_agents(headers: dict, user_data: dict, client_data: dict) \
-        -> Tuple[Agent, Agent, Optional[Agent]]:
-    user = ev.User(
-        native_id=user_data['user_id'],
-        email=user_data['email']
-    )
-    client = ev.Client(native_id=client_data['client_id'])
-    on_behalf_of = headers.get('X-On-Behalf-Of')
-    if on_behalf_of is not None:
-        proxy = user
-        user = ev.User(on_behalf_of, '', '')
-    else:
-        proxy = None
-    return user, client, proxy
-
-
 @util.validate_request('schema/resources/submission.json')
-def create_submission(data: dict, headers: dict, user_data: dict,
-                      client_data: dict, token: str) -> Response:
+def create_submission(data: dict, headers: dict, agents: Dict[str, Agent],
+                      token: Optional[str]) -> Response:
     """
     Create a new submission.
 
@@ -66,11 +52,8 @@ def create_submission(data: dict, headers: dict, user_data: dict,
     dict
         Headers to add to the response.
     """
-    logger.debug('Received request to create submission')
-    user, client, proxy = _get_agents(headers, user_data, client_data)
-    logger.debug(f'User: {user}; client: {client}, proxy: {proxy}')
-    agents = dict(creator=user, client=client, proxy=proxy)
-    create = ev.CreateSubmission(creator=user, client=client, proxy=proxy)
+    logger.debug(f'Received request to create submission, {agents}')
+    create = ev.CreateSubmission(**agents)
     events = handlers.handle_submission(data, agents)
     try:
         submission, events = ev.save(create, *events)
@@ -88,8 +71,8 @@ def create_submission(data: dict, headers: dict, user_data: dict,
     return submission.to_dict(), status.HTTP_201_CREATED, response_headers
 
 
-def get_submission(submission_id: str, user: Optional[str] = None,
-                   client: Optional[str] = None,
+def get_submission(submission_id: str,
+                   agents: Optional[Dict[str, Agent]] = None,
                    token: Optional[str] = None) -> Response:
     """Retrieve the current state of a submission."""
     try:
@@ -103,12 +86,9 @@ def get_submission(submission_id: str, user: Optional[str] = None,
 
 
 @util.validate_request('schema/resources/submission.json')
-def update_submission(data: dict, headers: dict, user_data: dict,
-                      client_data: dict, token: str, submission_id: str) \
-        -> Response:
+def update_submission(data: dict, headers: dict, agents: Dict[str, Agent],
+                      token: str, submission_id: str) -> Response:
     """Update the submission."""
-    user, client, proxy = _get_agents(headers, user_data, client_data)
-    agents = dict(creator=user, client=client, proxy=proxy)
     events = handlers.handle_submission(data, agents)
     try:
         submission, events = ev.save(*events, submission_id=submission_id)
@@ -120,7 +100,8 @@ def update_submission(data: dict, headers: dict, user_data: dict,
         raise InternalServerError('Problem interacting with database') from e
 
     response_headers = {
-        'Location': url_for('submission.get_submission', creator=user,
+        'Location': url_for('submission.get_submission',
+                            creator=agents['creator'].native_id,
                             submission_id=submission.submission_id)
     }
     return submission.to_dict(), status.HTTP_200_OK, response_headers

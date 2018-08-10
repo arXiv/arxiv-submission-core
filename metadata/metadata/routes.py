@@ -3,16 +3,40 @@
 from arxiv.base import logging
 from typing import Callable, Union
 from functools import wraps
+from werkzeug.exceptions import Unauthorized, Forbidden
 from flask.json import jsonify
 from flask import Blueprint, current_app, redirect, request, g, Response
 
-from authorization.decorators import scoped
+from arxiv.users.auth.decorators import scoped
+from arxiv.users.auth import scopes
 from arxiv import status
+
+from arxiv.submission.domain import User, Client, Classification
 from metadata.controllers import submission
 
 logger = logging.getLogger(__name__)
 
 blueprint = Blueprint('submission', __name__, url_prefix='')
+
+
+@blueprint.before_request
+def get_agents() -> None:
+    """Determine submission roles from the active authenticated session."""
+    session = request.session
+    proxy: Optional[User] = None
+    if not session.client:
+        raise Unauthorized('No authenticated client found')
+
+    client = Client(session.client.client_id)
+    endorsements = [c.compound for c in session.authorizations.endorsements]
+    if request.session.user:
+        creator = User(session.user.user_id, session.user.email,
+                       endorsements=endorsements)
+
+    else:
+        creator = User(session.client.owner_id, '',
+                       endorsements=endorsements)
+    request.agents = {'proxy': proxy, 'creator': creator, 'client': client}
 
 
 def json_response(func):
@@ -29,28 +53,26 @@ def json_response(func):
 
 @blueprint.route('/', methods=['POST'])
 @json_response
-@scoped('submission:write')
+@scoped(scopes.CREATE_SUBMISSION)
 def create_submission() -> Union[str, Response]:
     """Accept new submissions."""
     return submission.create_submission(
         request.get_json(),
         dict(request.headers),
-        user_data=g.user,
-        client_data=g.client,
-        token=g.token
+        agents=request.agents,
+        token=request.environ.get('token')
     )
 
 
 @blueprint.route('/<string:submission_id>/', methods=['GET'])
 @json_response
-@scoped('submission:read')
+@scoped(scopes.VIEW_SUBMISSION)
 def get_submission(submission_id: str) -> tuple:
     """Get the current state of a submission."""
     return submission.get_submission(
         submission_id,
-        user=g.user,
-        client=g.client,
-        token=g.token
+        agents=request.agents,
+        token=request.environ.get('token')
     )
 
 #
@@ -72,14 +94,13 @@ def get_submission(submission_id: str) -> tuple:
 
 @blueprint.route('/<string:submission_id>/', methods=['POST'])
 @json_response
-@scoped('submission:write')
+@scoped(scopes.EDIT_SUBMISSION)
 def update_submission(submission_id: str) -> tuple:
     """Update the submission."""
     return submission.update_submission(
         request.get_json(),
         dict(request.headers),
-        user_data=g.user,
-        client_data=g.client,
-        token=g.token,
+        agents=request.agents,
+        token=request.environ.get('token'),
         submission_id=submission_id
     )

@@ -6,11 +6,10 @@ from flask import Flask, jsonify, make_response
 from werkzeug.exceptions import Forbidden, Unauthorized, NotFound, BadRequest
 
 from metadata import routes
+from arxiv.base import Base
 from arxiv.base.middleware import wrap
-
 from arxiv.submission.services import classic
-
-from authorization import middleware as auth
+from arxiv.users import auth
 
 
 def jsonify_exception(error):
@@ -27,11 +26,14 @@ def create_web_app() -> Flask:
     classic.init_app(app)
     app.config.from_pyfile('config.py')
 
+    Base(app)
+    auth.Auth(app)
+
     app.register_blueprint(routes.blueprint)
     app.errorhandler(Forbidden)(jsonify_exception)
     app.errorhandler(NotFound)(jsonify_exception)
     app.errorhandler(BadRequest)(jsonify_exception)
     app.errorhandler(Unauthorized)(jsonify_exception)
 
-    wrap(app, [auth.AuthMiddleware])
+    wrap(app, [auth.middleware.AuthMiddleware])
     return app

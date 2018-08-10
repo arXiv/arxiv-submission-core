@@ -21,10 +21,10 @@ from ...domain.agent import User
 from ...domain.submission import License, Submission, Author
 from ...domain.event import CreateSubmission, \
     FinalizeSubmission, SetPrimaryClassification, AddSecondaryClassification, \
-    SelectLicense, SetPrimaryClassification, AcceptPolicy, \
-    VerifyContactInformation, SetTitle, SetAbstract, SetDOI, \
+    SetLicense, SetPrimaryClassification, ConfirmPolicy, \
+    ConfirmContactInformation, SetTitle, SetAbstract, SetDOI, \
     SetMSCClassification, SetACMClassification, SetJournalReference, \
-    SetComments, UpdateAuthors
+    SetComments, SetAuthors
 from . import init_app, create_all, drop_all, models, store_events, DBEvent, \
     get_submission, current_session, get_licenses, exceptions
 
@@ -232,17 +232,17 @@ class TestGetSubmission(TestCase):
             CreateSubmission(creator=user),
             SetTitle(creator=user, title='Foo title'),
             SetAbstract(creator=user, abstract='Indeed'),
-            UpdateAuthors(creator=user, authors=[
+            SetAuthors(creator=user, authors=[
                 Author(order=0, forename='Joe', surname='Bloggs',
                        email='joe@blo.ggs'),
                 Author(order=1, forename='Jane', surname='Doe',
                        email='j@doe.com'),
             ]),
-            SelectLicense(creator=user, license_uri='http://foo.org/1.0/',
+            SetLicense(creator=user, license_uri='http://foo.org/1.0/',
                           license_name='Foo zero 1.0'),
             SetPrimaryClassification(creator=user, category='cs.DL'),
-            AcceptPolicy(creator=user),
-            VerifyContactInformation(creator=user),
+            ConfirmPolicy(creator=user),
+            ConfirmContactInformation(creator=user),
             FinalizeSubmission(creator=user)
         ]
         submission = None
@@ -283,17 +283,17 @@ class TestGetSubmission(TestCase):
             CreateSubmission(creator=user),
             SetTitle(creator=user, title='Foo title'),
             SetAbstract(creator=user, abstract='Indeed'),
-            UpdateAuthors(creator=user, authors=[
+            SetAuthors(creator=user, authors=[
                 Author(order=0, forename='Joe', surname='Bloggs',
                        email='joe@blo.ggs'),
                 Author(order=1, forename='Jane', surname='Doe',
                        email='j@doe.com'),
             ]),
-            SelectLicense(creator=user, license_uri='http://foo.org/1.0/',
+            SetLicense(creator=user, license_uri='http://foo.org/1.0/',
                           license_name='Foo zero 1.0'),
             SetPrimaryClassification(creator=user, category='cs.DL'),
-            AcceptPolicy(creator=user),
-            VerifyContactInformation(creator=user),
+            ConfirmPolicy(creator=user),
+            ConfirmContactInformation(creator=user),
             FinalizeSubmission(creator=user)
         ]
         submission = None
