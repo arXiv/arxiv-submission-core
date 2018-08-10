@@ -43,17 +43,20 @@ class TestClassicUIWorkflow(TestCase):
     def setUp(self):
         """An arXiv user is submitting a new paper."""
         self.submitter = domain.User(1234, email='j.user@somewhere.edu',
-                                            forename='Jane', surname='User')
-        self.unicode_submitter = domain.User(12345, email='j.user@somewhere.edu',
-                                            forename='大', surname='用户')
+                                     forename='Jane', surname='User',
+                                     endorsements=['cs.DL', 'cs.IR'])
+        self.unicode_submitter = domain.User(12345,
+                                             email='j.user@somewhere.edu',
+                                             forename='大', surname='用户',
+                                             endorsements=['cs.DL', 'cs.IR'])
 
-    def test_classic_workflow(self, submitter=None, metadata=None, authors=None):
+    def test_classic_workflow(self, submitter=None, metadata=None,
+                              authors=None):
         """Submitter proceeds through workflow in a linear fashion."""
 
         # Instantiate objects that have not yet been instantiated or use defaults.
         if submitter is None:
             submitter = self.submitter
-
         if metadata is None:
             metadata = [
                 ('title', 'Foo title'),
@@ -69,10 +72,10 @@ class TestClassicUIWorkflow(TestCase):
         # TODO: Process data in dictionary form to Author objects.
         if authors is None:
             authors = [Author(order=0,
-                                     forename='Bob',
-                                     surname='Paulson',
-                                     email='Robert.Paulson@nowhere.edu',
-                                     affiliation='Fight Club'
+                              forename='Bob',
+                              surname='Paulson',
+                              email='Robert.Paulson@nowhere.edu',
+                              affiliation='Fight Club'
                         )]
 
         with in_memory_db() as session:
@@ -174,26 +177,20 @@ class TestClassicUIWorkflow(TestCase):
             # in the classic system, but we should preserve the canonical
             # format in the db for legacy components' sake.
             submission, stack = save(
-                SetTitle(creator=self.submitter,
-                                title=metadata['title']),
+                SetTitle(creator=self.submitter, title=metadata['title']),
                 SetAbstract(creator=self.submitter,
-                                   abstract=metadata['abstract']),
+                            abstract=metadata['abstract']),
                 SetComments(creator=self.submitter,
-                                   comments=metadata['comments']),
-                SetJournalReference(
-                    creator=self.submitter,
-                    journal_ref=metadata['journal_ref']
-                ),
+                            comments=metadata['comments']),
+                SetJournalReference(creator=self.submitter,
+                                    journal_ref=metadata['journal_ref']),
                 SetDOI(creator=self.submitter, doi=metadata['doi']),
                 SetReportNumber(creator=self.submitter,
-                                       report_num=metadata['report_num']),
-                UpdateAuthors(
-                    creator=submitter,
-                    authors=authors
-                ),
+                                report_num=metadata['report_num']),
+                UpdateAuthors(creator=submitter, authors=authors),
                 submission_id=submission.submission_id
             )
-            db_submission = session.query(classic.models.Submission)\
+            db_submission = session.query(classic.models.Submission) \
                 .get(submission.submission_id)
             self.assertEqual(db_submission.title, dict(metadata)['title'],
                              "Title updated as expected in database")
@@ -212,8 +209,10 @@ class TestClassicUIWorkflow(TestCase):
                              dict(metadata)['journal_ref'],
                              "Journal ref updated as expected in database")
 
-            author_str = ';'.join([f"{author.forename} {author.surname} ({author.affiliation})"
-                                      for author in authors])
+            author_str = ';'.join(
+                [f"{author.forename} {author.surname} ({author.affiliation})"
+                for author in authors]
+            )
             self.assertEqual(db_submission.authors,
                              author_str,
                              "Authors updated in canonical format in database")
@@ -271,16 +270,11 @@ class TestClassicUIWorkflow(TestCase):
             ('doi', '10.01234/56789'),
             ('journal_ref', 'Foo Rev 1, 2 (1903)')
         ]
-        authors = [Author(
-                        order=0,
-                        forename='惊人',
-                        surname='用户',
-                        email='amazing.user@nowhere.edu',
-                        affiliation='Fight Club'
-                    )]
-
-        self.test_classic_workflow(
-            submitter=submitter, metadata=metadata, authors=authors)
+        authors = [Author(order=0, forename='惊人', surname='用户',
+                          email='amazing.user@nowhere.edu',
+                          affiliation='Fight Club')]
+        self.test_classic_workflow(submitter=submitter, metadata=metadata,
+                                   authors=authors)
 
     def test_texism_titles(self):
         """Submitter proceeds through workflow in a linear fashion."""
@@ -318,7 +312,8 @@ class TestPublicationIntegration(TestCase):
     def setUp(self):
         """An arXiv user is submitting a new paper."""
         self.submitter = domain.User(1234, email='j.user@somewhere.edu',
-                                            forename='Jane', surname='User')
+                                    forename='Jane', surname='User',
+                                    endorsements=['cs.DL'])
 
         # Create and finalize a new submission.
         cc0 = 'http://creativecommons.org/publicdomain/zero/1.0/'

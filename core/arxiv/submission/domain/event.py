@@ -246,6 +246,7 @@ class SetPrimaryClassification(Event):
         """Validate the primary classification category."""
         self._must_be_a_valid_category(submission)
         self._primary_cannot_be_secondary(submission)
+        self._creator_must_be_endorsed(submission)
         submission_is_not_finalized(self, submission)
 
     def _must_be_a_valid_category(self, submission: Submission) -> None:
@@ -260,6 +261,12 @@ class SetPrimaryClassification(Event):
             raise InvalidEvent(self,
                                "The same category cannot be used as both the"
                                " primary and a secondary category.")
+
+    def _creator_must_be_endorsed(self, submission: Submission) -> None:
+        """The creator of this event must be endorsed for the category."""
+        if self.category not in self.creator.endorsements:
+            raise InvalidEvent(self,
+                               f"Creator is not endorsed for {self.category}")
 
     def project(self, submission: Submission) -> Submission:
         """Set :prop:`.Submission.primary_classification`."""
