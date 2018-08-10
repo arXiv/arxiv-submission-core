@@ -21,18 +21,6 @@ services:
     networks:
       - arxiv-submission-local
 
-  # submission-localstack:
-  #   image: atlassianlabs/localstack
-  #   container_name: submission-localstack
-  #   networks:
-  #     - arxiv-submission-local
-  #   ports:
-  #     - "4568:4568"
-  #     - "4569:4569"
-  #   environment:
-  #     USE_SSL: 'true'
-  #     DEBUG: 'true'
-
   submission-metadata:
     build:
       context: ./
@@ -51,14 +39,36 @@ services:
       - submission-maria
       # - submission-localstack
 
-
   submission-authorization:
-    build:
-      context: ./authorization/
-      dockerfile: Dockerfile
-    container_name: submission-authorization
+    image: arxiv/authenticator:0.1
+    container_name: submission-auth
     environment:
       LOGLEVEL: 10
+    networks:
+      - arxiv-submission-local
+
+  submission-registry-maria:
+    image: mariadb:10.3
+    container_name: submission-registry-maria
+    networks:
+      - arxiv-submission-local
+    environment:
+      MYSQL_USER: foouser
+      MYSQL_PASSWORD: foopass
+      MYSQL_ROOT_PASSWORD: foorootpassword
+      MYSQL_DATABASE: clients
+    command: ["mysqld", "--character-set-server=utf8mb4", "--collation-server=utf8mb4_unicode_ci"]
+    ports:
+      - "3308:3306"
+
+  submission-registry:
+    image: arxiv/registry:0.1
+    container_name: submission-registry
+    environment:
+      LOGLEVEL: 10
+      REGISTRY_DATABASE_URI: "mysql+mysqldb://foouser:foopass@submission-registry-maria:3306/clients?charset=utf8"
+    depends_on:
+      - submission-registry-maria
     networks:
       - arxiv-submission-local
 
@@ -80,7 +90,7 @@ services:
       - submission-redis
       - submission-metadata
       - submission-authorization
-      # - submission-localstack
+      - submission-registry
 
 networks:
   arxiv-submission-local:

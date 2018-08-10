@@ -8,7 +8,8 @@ flask = "*"
 dataclasses = "*"
 pyjwt = "*"
 jsonschema = "*"
-arxiv-base = "==0.7.1"
+arxiv-base = "==0.10.1rc0"
+arxiv-auth = "==0.1.0rc2"
 sqlalchemy = "*"
 pyyaml = "*"
 pytz = "*"
@@ -16,7 +17,7 @@ uwsgi = "*"
 mysqlclient = "*"
 mimesis = "*"
 bleach = "*"
-"c6a1273" = {path = "./core"}
+
 
 [dev-packages]
 "nose2" = "*"

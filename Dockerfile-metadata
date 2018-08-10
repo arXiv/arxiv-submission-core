@@ -1,6 +1,6 @@
 # arxiv/submission-api
 
-FROM arxiv/base:0.7.1
+FROM arxiv/base
 
 WORKDIR /opt/arxiv
 
@@ -12,14 +12,11 @@ ENV LANG en_US.utf8
 RUN yum -y install mariadb-devel
 
 # Add Python consumer and configuration.
-ADD Pipfile /opt/arxiv/Pipfile
-ADD Pipfile.lock /opt/arxiv/Pipfile.lock
+ADD metadata/Pipfile /opt/arxiv/Pipfile
 RUN pip install pipenv
 RUN pipenv install
 
 ADD metadata/ /opt/arxiv/
-ADD authorization/authorization/ /opt/arxiv/authorization/
-ADD core/events/ /opt/arxiv/events/
 ADD metadata/bin/entrypoint.sh /opt/arxiv/entrypoint.sh
 
 ENV JWT_SECRET "foo"
