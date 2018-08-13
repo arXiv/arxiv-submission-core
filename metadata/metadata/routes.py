@@ -1,6 +1,5 @@
 """Provides External REST API."""
 
-from arxiv.base import logging
 from typing import Callable, Union
 from functools import wraps
 from werkzeug.exceptions import Unauthorized, Forbidden
@@ -10,6 +9,7 @@ from flask import Blueprint, current_app, redirect, request, g, Response
 from arxiv.users.auth.decorators import scoped
 from arxiv.users.auth import scopes
 from arxiv import status
+from arxiv.base import logging
 
 from arxiv.submission.domain import User, Client, Classification
 from metadata.controllers import submission
@@ -23,6 +23,7 @@ blueprint = Blueprint('submission', __name__, url_prefix='')
 def get_agents() -> None:
     """Determine submission roles from the active authenticated session."""
     session = request.session
+    logger.debug(f'Got session {session}')
     proxy: Optional[User] = None
     if not session.client:
         raise Unauthorized('No authenticated client found')

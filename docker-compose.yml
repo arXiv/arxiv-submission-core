@@ -32,6 +32,7 @@ services:
       AWS_SECRET_ACCESS_KEY: "bar"
       LOGLEVEL: 10
       CLASSIC_DATABASE_URI: "mysql+mysqldb://foouser:foopass@submission-maria:3306/submission?charset=utf8"
+      JWT_SECRET: foosecret
     networks:
       - arxiv-submission-local
     depends_on:
@@ -44,6 +45,9 @@ services:
     container_name: submission-auth
     environment:
       LOGLEVEL: 10
+      REDIS_HOST: "submission-redis"
+      REDIS_PORT: "6379"
+      JWT_SECRET: foosecret
     networks:
       - arxiv-submission-local
 
@@ -65,8 +69,12 @@ services:
     image: arxiv/registry:0.1
     container_name: submission-registry
     environment:
+      REDIS_HOST: "submission-redis"
+      REDIS_PORT: "6379"
       LOGLEVEL: 10
       REGISTRY_DATABASE_URI: "mysql+mysqldb://foouser:foopass@submission-registry-maria:3306/clients?charset=utf8"
+      AUTHLIB_INSECURE_TRANSPORT: "true"
+      JWT_SECRET: foosecret
     depends_on:
       - submission-registry-maria
     networks:
