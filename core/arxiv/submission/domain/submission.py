@@ -59,14 +59,22 @@ class Author:
 
 @dataclass
 class SubmissionContent:
-    """Metadata about the submission source package and compiled products."""
+    """Metadata about the submission source package."""
 
-    location: str
+    identifier: str
     format: str
-    mime_type: str
-    size: str
     checksum: str
-    identifier: int
+    size: int
+
+
+@dataclass
+class SubmissionCompiled:
+    """Metadata about a submission compilation product."""
+
+    identifier: str
+    format: str
+    checksum: str
+    size: int
 
 
 @dataclass
@@ -135,7 +143,7 @@ class Submission:
     updated: Optional[datetime] = field(default=None)
 
     source_content: Optional[SubmissionContent] = field(default=None)
-    compiled_content: List[SubmissionContent] = field(default_factory=list)
+    compiled_content: List[SubmissionCompiled] = field(default_factory=list)
 
     primary_classification: Optional[Classification] = field(default=None)
     delegations: Dict[str, Delegation] = field(default_factory=dict)
@@ -155,6 +163,7 @@ class Submission:
     submitter_contact_verified: bool = field(default=False)
     submitter_is_author: Optional[bool] = field(default=None)
     submitter_accepts_policy: Optional[bool] = field(default=None)
+    submitter_confirmed_preview: bool = field(default=False)
     license: Optional[License] = field(default=None)
     status: str = field(default=WORKING)
     arxiv_id: Optional[str] = field(default=None)

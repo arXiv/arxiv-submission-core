@@ -256,6 +256,7 @@ class Submission(Base):    # type: ignore
             submitter_is_author=bool(self.is_author),
             submitter_accepts_policy=bool(self.agree_policy),
             submitter_contact_verified=bool(self.userinfo),
+            submitter_confirmed_preview=bool(self.viewed),
             status=status,
             finalized=(status != domain.Submission.WORKING),
             active=(status not in [domain.Submission.DELETED,
@@ -293,6 +294,7 @@ class Submission(Base):    # type: ignore
         self.is_author = 1 if submission.submitter_is_author else 0
         self.agree_policy = 1 if submission.submitter_accepts_policy else 0
         self.userinfo = 1 if submission.submitter_contact_verified else 0
+        self.viewed = 1 if submission.submitter_confirmed_preview else 0
         self.created = submission.created
         self.updated = datetime.now()
         self.title = submission.metadata.title

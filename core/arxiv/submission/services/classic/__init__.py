@@ -182,6 +182,8 @@ def get_submission(submission_id: int) -> Tuple[Submission, List[Event]]:
     for ev in events:
         submission = ev.apply(submission) if submission else ev.apply()
 
+    submission.submission_id = submission_id
+    
     with transaction() as session:
         # Load the current db state of the submission, and patch. Once we have
         # retired legacy components that do not follow the event model, this
