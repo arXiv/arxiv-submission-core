@@ -80,15 +80,7 @@ from typing import Optional, List, Tuple
 from arxiv.base import logging
 from .domain.submission import Submission, SubmissionMetadata, Author
 from .domain.agent import Agent, User, System, Client
-from .domain.event import (
-    Event, CreateSubmission, RemoveSubmission, VerifyContactInformation,
-    AssertAuthorship, AcceptPolicy, SetPrimaryClassification,
-    AddSecondaryClassification, RemoveSecondaryClassification, SelectLicense,
-    SetUploadPackage, UpdateAuthors, CreateComment, DeleteComment,
-    AddDelegate, RemoveDelegate, FinalizeSubmission, UnFinalizeSubmission,
-    SetTitle, SetAbstract, SetDOI, SetComments, SetReportNumber,
-    SetMSCClassification, SetACMClassification, SetJournalReference
-)
+from .domain.event import *
 from .domain.rule import RuleCondition, RuleConsequence, EventRule
 from .services import classic
 from .exceptions import InvalidEvent, InvalidStack, NoSuchSubmission, SaveError
