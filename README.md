@@ -222,3 +222,41 @@ Connection: keep-alive
 
 {"active":true,"arxiv_id":null,"client":{"client_id":"2"},"compiled_content":[],"created":"2018-09-24T19:47:33.251494","creator":{"affiliation":"","agent_type":"User","email":"","endorsements":["*.*"],"forename":"","identifier":null,"name":"  ","native_id":null,"suffix":"","surname":"","user_id":null},"delegations":{},"finalized":false,"license":null,"metadata":{"abstract":null,"acm_class":null,"authors":[],"authors_display":"","comments":"","doi":null,"journal_ref":null,"msc_class":null,"report_num":null,"title":null},"owner":{"affiliation":"","agent_type":"User","email":"","endorsements":["*.*"],"forename":"","identifier":null,"name":"  ","native_id":null,"suffix":"","surname":"","user_id":null},"primary_classification":null,"proxy":null,"published":false,"secondary_classification":[],"source_content":null,"status":"working","submission_id":7,"submitter_accepts_policy":null,"submitter_confirmed_preview":false,"submitter_contact_verified":false,"submitter_is_author":null,"updated":"2018-09-24T19:47:33.251494"}
 ```
+
+You can update a submission by POSTing fields that you want to update.
+
+```bash
+$ curl -i -X POST -H "Content-Type: application/json" \
+    -H "Authorization: Bearer 4tkstLJauH65EwpewmpJ0IugdqFLMctHiIjl5IvWxK"  \
+    --data '{"metadata":{"title":"The theory of life and everything","doi":"10.00123/foo45678"}}' \
+    http://localhost:8000/submission/7/
+
+HTTP/1.1 200 OK
+Server: nginx/1.13.12
+Date: Mon, 24 Sep 2018 20:23:57 GMT
+Content-Type: application/json
+Content-Length: 1060
+Location: http://localhost:8000/submission/7/
+Connection: keep-alive
+
+{"active":true,"arxiv_id":null,"client":null,"compiled_content":[],"created":"2018-09-24T20:22:33.498688","creator":{"affiliation":"","agent_type":"User","email":"","endorsements":["*.*"],"forename":"","identifier":null,"name":"  ","native_id":null,"suffix":"","surname":"","user_id":null},"delegations":{},"finalized":false,"license":null,"metadata":{"abstract":null,"acm_class":null,"authors":[],"authors_display":"","comments":"","doi":"10.00123/foo45678","journal_ref":null,"msc_class":null,"report_num":null,"title":"The theory of life and everything"},"owner":{"affiliation":"","agent_type":"User","email":"","endorsements":["*.*"],"forename":"","identifier":null,"name":"  ","native_id":null,"suffix":"","surname":"","user_id":null},"primary_classification":null,"proxy":null,"published":false,"secondary_classification":[],"source_content":null,"status":"working","submission_id":7,"submitter_accepts_policy":null,"submitter_confirmed_preview":false,"submitter_contact_verified":false,"submitter_is_author":null,"updated":"2018-09-24T20:23:57.754003"}
+```
+
+You can finalize the submission by updating the ``finalize`` field to ``true``.
+But if fields are missing, you'll get an error.
+
+```
+$ curl -i -X POST -H "Content-Type: application/json" \
+    -H "Authorization: Bearer 4tkstLJauH65EwpewmpJ0IugdqFLMctHiIjl5IvWxK" \
+    --data '{"finalized": true}' \
+    http://localhost:8000/submission/7/
+
+HTTP/1.1 400 BAD REQUEST
+Server: nginx/1.13.12
+Date: Mon, 24 Sep 2018 20:25:32 GMT
+Content-Type: application/json
+Content-Length: 62
+Connection: keep-alive
+
+{"reason":"Invalid Stack:\n\tMissing primary_classification"}
+```
