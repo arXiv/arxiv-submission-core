@@ -71,7 +71,7 @@ def create_submission(data: dict, headers: dict, agents: Dict[str, Agent],
     return submission.to_dict(), status.HTTP_201_CREATED, response_headers
 
 
-def get_submission(submission_id: str,
+def get_submission(submission_id: int,
                    agents: Optional[Dict[str, Agent]] = None,
                    token: Optional[str] = None) -> Response:
     """Retrieve the current state of a submission."""
@@ -87,9 +87,12 @@ def get_submission(submission_id: str,
 
 @util.validate_request('schema/resources/submission.json')
 def update_submission(data: dict, headers: dict, agents: Dict[str, Agent],
-                      token: str, submission_id: str) -> Response:
+                      token: str, submission_id: int) -> Response:
     """Update the submission."""
     events = handlers.handle_submission(data, agents)
+    if not data:
+        raise BadRequest('No data in request body')
+
     try:
         submission, events = ev.save(*events, submission_id=submission_id)
     except ev.NoSuchSubmission as e:

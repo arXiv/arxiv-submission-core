@@ -139,9 +139,12 @@ class Event:
 
     def apply(self, submission: Optional[Submission] = None) -> Submission:
         """Apply the projection for this :class:`.Event` instance."""
-        if submission:
+        logger.debug('Apply event %s on submission %s', self, submission)
+        if submission is not None:
+            logger.debug('Project with submission')
             submission = self.project(submission)
         else:
+            logger.debug('Submission is None; project without submission.')
             submission = self.project()
         submission.updated = self.created
         return submission
@@ -264,7 +267,10 @@ class SetPrimaryClassification(Event):
 
     def _creator_must_be_endorsed(self, submission: Submission) -> None:
         """The creator of this event must be endorsed for the category."""
-        if self.category not in self.creator.endorsements:
+        archive, subject = self.category.split('.', 1)
+        if self.category not in self.creator.endorsements \
+                and f'{archive}.*' not in self.creator.endorsements \
+                and '*.*' not in self.creator.endorsements:
             raise InvalidEvent(self,
                                f"Creator is not endorsed for {self.category}")
 
@@ -843,6 +849,7 @@ class FinalizeSubmission(Event):
     def project(self, submission: Submission) -> Submission:
         """Set :prop:`Submission.finalized`."""
         submission.finalized = True
+        submission.status = Submission.SUBMITTED
         return submission
 
     def _required_fields_are_complete(self, submission: Submission) -> None:

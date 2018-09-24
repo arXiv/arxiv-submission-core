@@ -269,12 +269,10 @@ def handle_source_content(data: dict, agents: dict) -> Tuple[events.Event]:
     """
     if not data:
         return tuple()
-    return events.SetSourceContent(
+    return events.SetUploadPackage(
         **agents,
-        location=data.get('location'),
         format=data.get('format'),
         checksum=data.get('checksum'),
-        mime_type=data.get('mime_type'),
         identifier=data.get('identifier'),
         size=data.get('size'),
     ),

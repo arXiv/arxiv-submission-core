@@ -12,8 +12,6 @@ services:
       MYSQL_ROOT_PASSWORD: foorootpassword
       MYSQL_DATABASE: submission
     command: ["mysqld", "--character-set-server=utf8mb4", "--collation-server=utf8mb4_unicode_ci"]
-    ports:
-      - "3307:3306"
 
   submission-redis:
     image: redis
@@ -25,8 +23,10 @@ services:
     build:
       context: ./
       dockerfile: Dockerfile-metadata
-    container_name: submission-metadata
+    container_name: metadata
     environment:
+      BASE_SERVER: localhost:8000
+      EXTERNAL_URL_SCHEME: http
       REDIS_ENDPOINT: "submission-redis:6379"
       AWS_ACCESS_KEY_ID: "foo"
       AWS_SECRET_ACCESS_KEY: "bar"
@@ -40,65 +40,158 @@ services:
       - submission-maria
       # - submission-localstack
 
-  submission-authorization:
-    image: arxiv/authenticator:0.1
-    container_name: submission-auth
-    environment:
-      LOGLEVEL: 10
-      REDIS_HOST: "submission-redis"
-      REDIS_PORT: "6379"
-      JWT_SECRET: foosecret
+  # accounts-redis-sessions:
+  #   image: grokzen/redis-cluster:4.0.9
+  #   container_name: accounts-redis-sessions
+  #   networks:
+  #     - arxiv-submission-local
+  #   ports:
+  #     - '127.0.0.1:7000:7000'
+  #     - '127.0.0.1:7001:7001'
+  #     - '127.0.0.1:7002:7002'
+  #     - '127.0.0.1:7003:7003'
+  #     - '127.0.0.1:7004:7004'
+  #     - '127.0.0.1:7005:7005'
+  #     - '127.0.0.1:7006:7006'
+  #   environment:
+  #     IP: "0.0.0.0"
+
+  accounts-redis-sessions:
+    image: redis:4
+    container_name: accounts-redis-sessions
     networks:
       - arxiv-submission-local
 
-  submission-registry-maria:
+  accounts-maria:
     image: mariadb:10.3
-    container_name: submission-registry-maria
+    container_name: accounts-maria
     networks:
       - arxiv-submission-local
     environment:
       MYSQL_USER: foouser
       MYSQL_PASSWORD: foopass
       MYSQL_ROOT_PASSWORD: foorootpassword
-      MYSQL_DATABASE: clients
+      MYSQL_DATABASE: accounts
     command: ["mysqld", "--character-set-server=utf8mb4", "--collation-server=utf8mb4_unicode_ci"]
-    ports:
-      - "3308:3306"
 
-  submission-registry:
-    image: arxiv/registry:0.1
-    container_name: submission-registry
-    environment:
-      REDIS_HOST: "submission-redis"
-      REDIS_PORT: "6379"
-      LOGLEVEL: 10
-      REGISTRY_DATABASE_URI: "mysql+mysqldb://foouser:foopass@submission-registry-maria:3306/clients?charset=utf8"
-      AUTHLIB_INSECURE_TRANSPORT: "true"
-      JWT_SECRET: foosecret
-    depends_on:
-      - submission-registry-maria
+  registry-maria:
+    image: mariadb:10.3
+    container_name: registry-maria
     networks:
       - arxiv-submission-local
+    environment:
+      BASE_SERVER: localhost:8000
+      EXTERNAL_URL_SCHEME: http
+      MYSQL_USER: foouser
+      MYSQL_PASSWORD: foopass
+      MYSQL_ROOT_PASSWORD: foorootpassword
+      MYSQL_DATABASE: registry
+    command: ["mysqld", "--character-set-server=utf8mb4", "--collation-server=utf8mb4_unicode_ci"]
 
-  submission-gateway:
+  # filemanager-maria:
+  #   image: mariadb:10.3
+  #   container_name: filemanager-maria
+  #   networks:
+  #     - arxiv-submission-local
+  #   environment:
+  #     BASE_SERVER: localhost:8000
+  #     EXTERNAL_URL_SCHEME: http
+  #     MYSQL_USER: foouser
+  #     MYSQL_PASSWORD: foopass
+  #     MYSQL_ROOT_PASSWORD: foorootpassword
+  #     MYSQL_DATABASE: filemanager
+  #   command: ["mysqld", "--character-set-server=utf8mb4", "--collation-server=utf8mb4_unicode_ci"]
+
+  accounts:
+    image: arxiv/accounts:0.3
+    container_name: accounts
+    environment:
+      BASE_SERVER: localhost:8000
+      EXTERNAL_URL_SCHEME: http
+      REDIS_HOST: "accounts-redis-sessions"
+      REDIS_PORT: "6379"
+      REDIS_CLUSTER: 0
+      LOGLEVEL: 10
+      CLASSIC_DATABASE_URI: "mysql+mysqldb://foouser:foopass@accounts-maria:3306/accounts?charset=utf8"
+      JWT_SECRET: foosecret
+      CAPTCHA_SECRET: foocaptchasecret
+      CAPTCHA_FONT: /opt/arxiv/fonts/montserrat.ttf
+      CREATE_DB: 1
+    networks:
+      - arxiv-submission-local
+    depends_on:
+      - accounts-redis-sessions
+      - accounts-maria
+
+  registry:
+    image: arxiv/registry:0.1
+    container_name: registry
+    environment:
+      BASE_SERVER: localhost:8000
+      EXTERNAL_URL_SCHEME: http
+      REDIS_HOST: "accounts-redis-sessions"
+      REDIS_PORT: "6379"
+      REDIS_CLUSTER: "0"
+      LOGLEVEL: 10
+      REGISTRY_DATABASE_URI: "mysql+mysqldb://foouser:foopass@registry-maria:3306/registry?charset=utf8"
+      JWT_SECRET: foosecret
+      CREATE_DB: 1
+      AUTHLIB_INSECURE_TRANSPORT: 1
+    networks:
+      - arxiv-submission-local
+    depends_on:
+      - accounts-redis-sessions
+      - registry-maria
+
+  # filemanager:
+  #   image: arxiv/filemanager:0.1
+  #   container_name: filemanager
+  #   command: uwsgi --http-socket :8000 -M -t 3000 --manage-script-name --buffer-size 65535 --processes 8 --threads 1 --async 100 --ugreen --mount /=wsgi.py --logformat "%(addr) %(addr) - %(user_id)|%(session_id) [%(rtime)] [%(uagent)] \"%(method) %(uri) %(proto)\" %(status) %(size) %(micros) %(ttfb)"
+  #
+  #   environment:
+  #     BASE_SERVER: localhost:8000
+  #     EXTERNAL_URL_SCHEME: http
+  #     LOGLEVEL: 10
+  #     FILE_MANAGMENT_SQLALCHEMY_DATABASE_URI: "mysql+mysqldb://foouser:foopass@filemanager-maria:3306/filemanager?charset=utf8"
+  #     JWT_SECRET: foosecret
+  #     CREATE_DB: 1
+  #   networks:
+  #     - arxiv-submission-local
+  #   depends_on:
+  #     - filemanager-maria
+
+  authenticator:
+    image: arxiv/authenticator:0.1
+    container_name: authenticator
+    environment:
+      BASE_SERVER: localhost:8000
+      EXTERNAL_URL_SCHEME: http
+      LOGLEVEL: 10
+      REDIS_HOST: "accounts-redis-sessions"
+      REDIS_PORT: "6379"
+      REDIS_CLUSTER: "0"
+      JWT_SECRET: foosecret
+    networks:
+      - arxiv-submission-local
+    depends_on:
+      - accounts-redis-sessions
+
+  gateway:
     build:
       context: ./gateway/
       dockerfile: Dockerfile
-    container_name: submission-gateway
-    environment:
-      REDIS_ENDPOINT: "submission-redis:6379"
-      AWS_ACCESS_KEY_ID: "foo"
-      AWS_SECRET_ACCESS_KEY: "bar"
-      LOGLEVEL: 10
+    container_name: gateway
     ports:
       - "8000:8000"
     networks:
       - arxiv-submission-local
     depends_on:
-      - submission-redis
-      - submission-metadata
-      - submission-authorization
-      - submission-registry
+      - accounts-redis-sessions
+      - authenticator
+      - registry
+      - accounts
+
+
 
 networks:
   arxiv-submission-local:

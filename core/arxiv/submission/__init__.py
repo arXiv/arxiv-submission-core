@@ -88,7 +88,7 @@ from .exceptions import InvalidEvent, InvalidStack, NoSuchSubmission, SaveError
 logger = logging.getLogger(__name__)
 
 
-def load(submission_id: str) -> Tuple[Submission, List[Event]]:
+def load(submission_id: int) -> Tuple[Submission, List[Event]]:
     """
     Load a submission and its history.
 

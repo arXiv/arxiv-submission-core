@@ -2,7 +2,7 @@
 
 from typing import Callable, Union
 from functools import wraps
-from werkzeug.exceptions import Unauthorized, Forbidden
+from werkzeug.exceptions import Unauthorized, Forbidden, BadRequest
 from flask.json import jsonify
 from flask import Blueprint, current_app, redirect, request, g, Response
 
@@ -57,18 +57,21 @@ def json_response(func):
 @scoped(scopes.CREATE_SUBMISSION)
 def create_submission() -> Union[str, Response]:
     """Accept new submissions."""
+    data = request.get_json()
+    if data is None:
+        raise BadRequest('No data in request')
     return submission.create_submission(
-        request.get_json(),
+        data,
         dict(request.headers),
         agents=request.agents,
         token=request.environ.get('token')
     )
 
 
-@blueprint.route('/<string:submission_id>/', methods=['GET'])
+@blueprint.route('/<int:submission_id>/', methods=['GET'])
 @json_response
 @scoped(scopes.VIEW_SUBMISSION)
-def get_submission(submission_id: str) -> tuple:
+def get_submission(submission_id: int) -> tuple:
     """Get the current state of a submission."""
     return submission.get_submission(
         submission_id,
@@ -77,10 +80,10 @@ def get_submission(submission_id: str) -> tuple:
     )
 
 #
-# @blueprint.route('/<string:submission_id>/history/', methods=['GET'])
+# @blueprint.route('/<int:submission_id>/history/', methods=['GET'])
 # @authorization.scoped(authorization.READ)
 # @json_response
-# def get_submission_history(submission_id: str) -> tuple:
+# def get_submission_history(submission_id: int) -> tuple:
 #     """Get the event log for a submission."""
 #     return submission.get_submission_log(
 #         request.get_json(),
@@ -93,13 +96,16 @@ def get_submission(submission_id: str) -> tuple:
 #     )
 
 
-@blueprint.route('/<string:submission_id>/', methods=['POST'])
+@blueprint.route('/<int:submission_id>/', methods=['POST'])
 @json_response
 @scoped(scopes.EDIT_SUBMISSION)
-def update_submission(submission_id: str) -> tuple:
+def update_submission(submission_id: int) -> tuple:
     """Update the submission."""
+    data = request.get_json()
+    if data is None:
+        raise BadRequest('No data in request')
     return submission.update_submission(
-        request.get_json(),
+        data,
         dict(request.headers),
         agents=request.agents,
         token=request.environ.get('token'),

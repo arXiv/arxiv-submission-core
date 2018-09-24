@@ -178,6 +178,8 @@ class TestStoreEvents(TestCase):
 
         self.assertEqual(db_submission.submission_id, submission.submission_id,
                          "The submission should be updated with the PK id.")
+        self.assertEqual(db_submission.status, models.Submission.SUBMITTED,
+                         "Submission should be in submitted state.")
         self.assertEqual(len(db_events), 2, "Two events should be stored")
         for db_event in db_events:
             self.assertEqual(db_event.submission_id, submission.submission_id,

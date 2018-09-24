@@ -9,7 +9,7 @@ from arxiv import status
 from arxiv.submission.domain import User, Submission, Author, Client
 from arxiv.submission import CreateSubmission, SaveError, \
     InvalidEvent, NoSuchSubmission, SetPrimaryClassification, \
-    SetSourceContent, SetAuthors, InvalidStack, \
+    SetUploadPackage, SetAuthors, InvalidStack, \
     SetTitle, SetAbstract, SetDOI, \
     SetMSCClassification, SetACMClassification, SetJournalReference,  \
     SetComments
@@ -34,7 +34,7 @@ def preserve_exceptions_and_events(mock_events):
     mock_events.Author = Author
     mock_events.CreateSubmission = CreateSubmission
     mock_events.SetPrimaryClassification = SetPrimaryClassification
-    mock_events.SetSourceContent = SetSourceContent
+    mock_events.SetUploadPackage = SetUploadPackage
 
 
 class TestCreateSubmission(TestCase):

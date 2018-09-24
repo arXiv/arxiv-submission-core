@@ -13,11 +13,10 @@ pytz = "*"
 requests = "*"
 sqlalchemy = "*"
 uwsgi = "*"
-arxiv-base = "==0.10.1rc0"
-arxiv-submission-core = "==0.4.2rc2"
+arxiv-base = "==0.10.1rc2"
+arxiv-auth = "==0.2.0rc1"
 dataclasses = "*"
 bleach = "*"
-arxiv-auth = "==0.1.0rc2"
 mimesis = "*"
 
 [dev-packages]

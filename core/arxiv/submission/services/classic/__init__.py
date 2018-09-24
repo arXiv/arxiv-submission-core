@@ -26,14 +26,18 @@ from typing import List, Optional, Generator, Dict, Union, Tuple
 from contextlib import contextmanager
 
 from flask import Flask
-from sqlalchemy import Column, String, DateTime, ForeignKey, \
-    create_engine
+from sqlalchemy import Column, String, ForeignKey, create_engine
 from sqlalchemy.ext.indexable import index_property
 from sqlalchemy.orm import relationship
 from sqlalchemy.engine import Engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm.session import Session
+
+# Combining the base DateTime field with a MySQL backend does not support
+# fractional seconds. Since we may be creating events only milliseconds apart,
+# getting fractional resolution is essential.
+from sqlalchemy.dialects.mysql import DATETIME as DateTime
 
 from arxiv.base import logging
 from arxiv.base.globals import get_application_config, get_application_global
@@ -63,7 +67,7 @@ class DBEvent(Base):  # type: ignore
     creator = Column(util.FriendlyJSON)
     creator_id = index_property('creator', 'agent_identifier')
 
-    created = Column(DateTime)
+    created = Column(DateTime(fsp=6))
     data = Column(util.FriendlyJSON)
     submission_id = Column(
         ForeignKey('arXiv_submissions.submission_id'),
@@ -146,9 +150,10 @@ def get_events(submission_id: int) -> List[Event]:
         event_data = session.query(DBEvent) \
             .filter(DBEvent.submission_id == submission_id) \
             .order_by(DBEvent.created)
-        if not event_data:      # No events, no dice.
+        events = [datum.to_event() for datum in event_data]
+        if not events:      # No events, no dice.
             raise NoSuchSubmission(f'Submission {submission_id} not found')
-        return [datum.to_event() for datum in event_data]
+        return events
 
 
 def get_submission(submission_id: int) -> Tuple[Submission, List[Event]]:
@@ -183,7 +188,7 @@ def get_submission(submission_id: int) -> Tuple[Submission, List[Event]]:
         submission = ev.apply(submission) if submission else ev.apply()
 
     submission.submission_id = submission_id
-    
+
     with transaction() as session:
         # Load the current db state of the submission, and patch. Once we have
         # retired legacy components that do not follow the event model, this
