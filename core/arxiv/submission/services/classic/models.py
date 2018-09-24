@@ -316,7 +316,8 @@ class Submission(Base):    # type: ignore
             self.source_format = submission.source_content.format
 
         # Not submitted -> Submitted.
-        if submission.finalized and self.status is Submission.NOT_SUBMITTED:
+        if submission.finalized \
+                and self.status in [Submission.NOT_SUBMITTED, None]:
             self.status = Submission.SUBMITTED
             self.submit_time = submission.updated
         # Unsubmit.
