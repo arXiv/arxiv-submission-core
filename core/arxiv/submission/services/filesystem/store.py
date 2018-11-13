@@ -51,8 +51,6 @@ def store_source(submission_id: int, source_path: str, pdf_path: str,
     """
     Deposit a source package into the legacy filesystem.
 
-    Caution! Only call this with data that you trust!
-
     Parameters
     ----------
     submission_id : int
