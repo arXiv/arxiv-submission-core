@@ -71,3 +71,33 @@ class TestStoreSource(TestCase):
         with self.assertRaises(filesystem.ConfigurationError):
             filesystem.store_source(self.submission_id, self.source_path,
                                     self.pdf_path, self.log_path)
+
+
+class TestStoreSomethingMalicious(TestCase):
+    """Deposit source content that looks malicious."""
+
+    def setUp(self):
+        """We have a source package, PDF, and source log."""
+        self.submission_id = 12345678
+        self.source_path = os.path.join(data_path, 'relative_path.tar.gz')
+        self.pdf_path = os.path.join(data_path, '12345678.pdf')
+        self.log_path = os.path.join(data_path, 'source.log')
+        self.legacy_root = tempfile.mkdtemp()
+
+    @mock.patch(f'{filesystem.__name__}.store.current_app')
+    def test_deposit(self, mock_app):
+        """Deposit a source package, PDF, and source log file."""
+        dir_mode = 17917
+        file_mode = 33204
+        uid = os.geteuid()
+        gid = os.getegid()
+        mock_app.config = {
+            'LEGACY_FILESYSTEM_ROOT': self.legacy_root,
+            'LEGACY_FILESYSTEM_SOURCE_DIR_MODE': dir_mode,
+            'LEGACY_FILESYSTEM_SOURCE_MODE': file_mode,
+            'LEGACY_FILESYSTEM_SOURCE_UID': uid,
+            'LEGACY_FILESYSTEM_SOURCE_GID': gid
+        }
+        with self.assertRaises(filesystem.SecurityError):
+            filesystem.store_source(self.submission_id, self.source_path,
+                                    self.pdf_path, self.log_path)

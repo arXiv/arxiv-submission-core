@@ -13,4 +13,4 @@ places for those components to continue to function correctly.
    is provided by the file management service, via its API.
 
 """
-from .store import store_source, get_source, ConfigurationError
+from .store import store_source, get_source, ConfigurationError, SecurityError

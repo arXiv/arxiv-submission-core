@@ -1,5 +1,33 @@
 """
 Functions for storing and getting (not!) source packages from the filesystem.
+
+In the classic system we use a giant shared volume, which we'll call
+``LEGACY_FILESYSTEM_ROOT`` in this package. Inside of that, what we'll call a
+"shard id" (the first four digits of the submission ID) is used to create a
+directory that in turn holds a directory for each submission.
+
+For example, submission ``65393829`` would have a directory at
+``{LEGACY_FILESYSTEM_ROOT}/6539/65393829``.
+
+The submission directory contains a PDF that was compiled during the preview
+step of submission, a ``source.log`` file from the file management service
+(for the admins to look at), and a ``src`` directory that contains the actual
+submission content.
+
+We also require the ability to set permissions on files and directories, and
+set the owner user and group.
+
+To use this in a Flask application, the following config parameters must be
+set:
+
+- ``LEGACY_FILESYSTEM_ROOT``: (see above)
+- ``LEGACY_FILESYSTEM_SOURCE_DIR_MODE``: permissions for directories; see
+  :ref:`python:os.chmod`
+- ``LEGACY_FILESYSTEM_SOURCE_MODE``: permissions for files; see
+  :ref:`python:os.chmod`
+- ``LEGACY_FILESYSTEM_SOURCE_UID``: uid for owner user (must exist)
+- ``LEGACY_FILESYSTEM_SOURCE_GID``: gid for owner group (must exist)
+
 """
 import os
 import tarfile
@@ -14,10 +42,16 @@ class ConfigurationError(RuntimeError):
     """A required parameter is invalid/missing from the application config."""
 
 
+class SecurityError(RuntimeError):
+    """Something suspicious happened."""
+
+
 def store_source(submission_id: int, source_path: str, pdf_path: str,
                  log_path: str) -> None:
     """
     Deposit a source package into the legacy filesystem.
+
+    Caution! Only call this with data that you trust!
 
     Parameters
     ----------
@@ -55,9 +89,12 @@ def store_source(submission_id: int, source_path: str, pdf_path: str,
     # Deposit the source package. The classic system expects a directory called
     # "src".
     tf = tarfile.open(source_path, 'r:gz')
+    _check_for_malicious_paths(tf)
     tf.extractall(os.path.join(source_dir, 'src'), numeric_owner=True)
-    chmod_recurse(os.path.join(source_dir, 'src'), dir_mode, file_mode, source_uid, source_gid)
 
+    # Set permissions/owner.
+    chmod_recurse(os.path.join(source_dir, 'src'), dir_mode, file_mode,
+                  source_uid, source_gid)
     copy_with_mode(pdf_path, os.path.join(source_dir, f'{submission_id}.pdf'),
                    file_mode)
     copy_with_mode(log_path, os.path.join(source_dir, 'source.log'), file_mode)
@@ -68,3 +105,10 @@ def get_source(submission_id: int) -> None:
     raise RuntimeError("NG components MUST NOT use this module to access"
                        " submission content! Access is provided by the file"
                        " management service, via its API.")
+
+
+def _check_for_malicious_paths(tf: tarfile.TarFile) -> None:
+    """Look for inappropriate relative paths, and complain if found."""
+    for member in tf.getmembers():
+        if '..' in member.name or member.issym() or member.islnk():
+            raise SecurityError("Contains relative paths or links; abort!")

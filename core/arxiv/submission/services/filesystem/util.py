@@ -32,5 +32,6 @@ def chmod_recurse(parent: str, dir_mode: int, file_mode: int,
 
 
 def copy_with_mode(source_path: str, dest_path: str, mode: int) -> None:
+    """Copy a file from ``source_path`` to ``dest_path``, and set ``mode``."""
     shutil.copy(source_path, dest_path)
     os.chmod(dest_path, mode)
