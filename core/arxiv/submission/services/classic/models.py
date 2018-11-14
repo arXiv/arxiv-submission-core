@@ -320,6 +320,9 @@ class Submission(Base):    # type: ignore
                 and self.status in [Submission.NOT_SUBMITTED, None]:
             self.status = Submission.SUBMITTED
             self.submit_time = submission.updated
+        # Delete.
+        elif submission.deleted:
+            self.status = Submission.DELETED_USER
         # Unsubmit.
         elif self.status is None or self.status <= Submission.ON_HOLD:
             if not submission.finalized:
