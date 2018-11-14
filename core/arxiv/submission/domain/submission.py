@@ -179,6 +179,11 @@ class Submission:
         """Submitter has indicated submission is ready for publication."""
         return self.status not in [self.WORKING, self.DELETED]
 
+    @property
+    def deleted(self) -> bool:
+        """Submission is deleted (removed)."""
+        return self.status == self.DELETED
+
     def to_dict(self) -> dict:
         """Generate a dict representation of this :class:`.Submission`."""
         data = asdict(self)
