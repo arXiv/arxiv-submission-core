@@ -171,8 +171,8 @@ class Submission:
 
     @property
     def published(self) -> bool:
-        """The submission has been announced."""
-        return self.status == self.PUBLISHED
+        """The submission has been (or is about to be) announced."""
+        return self.status in [self.PUBLISHED, self.SCHEDULED]
 
     @property
     def finalized(self) -> bool:
@@ -181,7 +181,7 @@ class Submission:
 
     @property
     def deleted(self) -> bool:
-        """Submission is deleted (removed)."""
+        """Submission is removed."""
         return self.status == self.DELETED
 
     def to_dict(self) -> dict:
