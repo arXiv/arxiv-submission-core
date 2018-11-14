@@ -205,9 +205,9 @@ class Submission(Base):    # type: ignore
         """
         # Status changes.
         submission.status = self._get_status()
-        submission.active = (submission.status not in
-                             [submission.DELETED, submission.PUBLISHED])
-        submission.published = (submission.status == submission.PUBLISHED)
+        # submission.active = (submission.status not in
+        #                      [submission.DELETED, submission.PUBLISHED])
+        # submission.published = (submission.status == submission.PUBLISHED)
         submission.arxiv_id = self._get_arxiv_id()
 
         # Possible reclassification.
