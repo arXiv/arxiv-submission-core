@@ -204,6 +204,21 @@ class CreateSubmission(Event):
         submission.compiled_content.clear()
         return submission
 
+    def to_dict(self):
+        """Generate a dict of this :class:`.CreateSubmission`."""
+        data = super(CreateSubmission, self).to_dict()
+        if self.replaces is not None:
+            data.update({'replaces': self.replaces.to_dict()})
+        return data
+
+    @classmethod
+    def from_dict(cls, **data) -> 'CreateSubmission':
+        """Override the ``from_dict`` constructor to handle submission."""
+        if 'replaces' not in data or data['replaces'] is None:
+            return cls(**data)
+        data['replaces'] = Submission.from_dict(**data['replaces'])
+        return cls(**data)
+
 
 @dataclass(init=False)
 class RemoveSubmission(Event):
@@ -786,7 +801,7 @@ class SetAuthors(Event):
         return submission
 
     @classmethod
-    def from_dict(cls, **data) -> Submission:
+    def from_dict(cls, **data) -> 'SetAuthors':
         """Override the default ``from_dict`` constructor to handle authors."""
         if 'authors' not in data:
             raise ValueError('Missing authors')

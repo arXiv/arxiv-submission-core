@@ -3,11 +3,12 @@
 import hashlib
 from typing import Optional, Dict, TypeVar, List
 from datetime import datetime
+from dateparser import parse as parse_date
 
 from dataclasses import dataclass, field
 from dataclasses import asdict
 
-from .agent import Agent
+from .agent import Agent, agent_factory
 from .meta import License, Classification
 
 
@@ -197,6 +198,22 @@ class Submission:
             'client': self.client.to_dict() if self.client else None,
         })
         return data
+
+    @classmethod
+    def from_dict(cls, **data) -> 'Submission':
+        """Construct from a ``dict``."""
+        data['created'] = parse_date(data['created'])
+        if 'updated' in data and data['updated'] is not None:
+            data['updated'] = parse_date(data['updated'])
+        if 'metadata' in data and data['metadata'] is not None:
+            data['metadata'] = SubmissionMetadata(**data['metadata'])
+        data['creator'] = agent_factory(**data['creator'])
+        data['owner'] = agent_factory(**data['owner'])
+        if 'proxy' in data and data['proxy'] is not None:
+            data['proxy'] = agent_factory(**data['proxy'])
+        if 'client' in data and data['client'] is not None:
+            data['client'] = agent_factory(**data['client'])
+        return cls(**data)
 
 
 @dataclass

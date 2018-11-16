@@ -288,7 +288,8 @@ class Submission(Base):    # type: ignore
 
     def update_from_submission(self, submission: domain.Submission) -> None:
         """Update this database object from a :class:`.domain.Submission`."""
-        self.type = self.NEW if submission.version == 1 else self.REPLACEMENT
+        self.type = self.NEW_SUBMSSION if submission.version == 1 \
+            else self.REPLACEMENT
         self.submitter_id = submission.creator.native_id
         self.submitter_name = submission.creator.name
         self.submitter_email = submission.creator.email
@@ -320,7 +321,6 @@ class Submission(Base):    # type: ignore
 
         if submission.license:
             self.license = submission.license.uri
-        self.type = Submission.NEW   # We're not handling other types here.
 
         if submission.source_content is not None:
             self.must_process = 0
@@ -364,8 +364,8 @@ class Submission(Base):    # type: ignore
 
     def _get_status(self) -> str:
         """Map classic status codes to :class:`.domain.Submission` status."""
-        if self._get_arxiv_id() is not None:
-            return domain.Submission.PUBLISHED
+        # if self._get_arxiv_id() is not None:
+        #     return domain.Submission.PUBLISHED
         return self.STATUS_MAP.get(self.status)
 
     def _update_submitter(self, submission: domain.Submission) -> None:

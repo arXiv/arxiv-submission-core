@@ -16,7 +16,7 @@ uwsgi = "*"
 mysqlclient = "*"
 mimesis = "*"
 bleach = "*"
-
+dateparser = "*"
 
 [dev-packages]
 "nose2" = "*"

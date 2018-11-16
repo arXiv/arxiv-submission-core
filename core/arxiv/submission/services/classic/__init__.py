@@ -41,7 +41,7 @@ from ...domain.event import Event, event_factory
 from ...domain.submission import License, Submission
 from ...domain.agent import User, Client, Agent
 from .models import Base
-from .exceptions import NoSuchSubmission
+from .exceptions import ClassicBaseException, NoSuchSubmission, CommitFailed
 from . import models, util
 from .util import transaction, current_session
 

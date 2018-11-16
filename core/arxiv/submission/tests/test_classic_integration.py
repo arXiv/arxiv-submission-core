@@ -294,6 +294,157 @@ class TestClassicUIWorkflow(TestCase):
 # - create replacement using CreateSubmission event
 # - verify that the appropriate relations are established in the submission
 #   database, esp doc_paper_id and document_id.
+class TestReplacementIntegration(TestCase):
+    """Test integration with the classic database with replacements."""
+
+    @classmethod
+    def setUpClass(cls):
+        """Instantiate an app for use with a SQLite database."""
+        _, db = tempfile.mkstemp(suffix='.sqlite')
+        cls.app = Flask('foo')
+        cls.app.config['CLASSIC_DATABASE_URI'] = f'sqlite:///{db}'
+
+        with cls.app.app_context():
+            classic.init_app(cls.app)
+
+    def setUp(self):
+        """An arXiv user is submitting a new paper."""
+        self.submitter = domain.User(1234, email='j.user@somewhere.edu',
+                                    forename='Jane', surname='User',
+                                    endorsements=['cs.DL'])
+
+        # Create and finalize a new submission.
+        cc0 = 'http://creativecommons.org/publicdomain/zero/1.0/'
+        with self.app.app_context():
+            classic.create_all()
+            metadata=dict([
+                ('title', 'Foo title'),
+                ('abstract', "One morning, as Gregor Samsa was..."),
+                ('comments', '5 pages, 2 turtle doves'),
+                ('report_num', 'asdf1234'),
+                ('doi', '10.01234/56789'),
+                ('journal_ref', 'Foo Rev 1, 2 (1903)')
+            ])
+            self.submission, _ = save(
+                CreateSubmission(creator=self.submitter),
+                ConfirmContactInformation(creator=self.submitter),
+                ConfirmAuthorship(
+                    creator=self.submitter,
+                    submitter_is_author=True
+                ),
+                SetLicense(
+                    creator=self.submitter,
+                    license_uri=cc0,
+                    license_name='CC0 1.0'
+                ),
+                ConfirmPolicy(creator=self.submitter),
+                SetPrimaryClassification(
+                    creator=self.submitter,
+                    category='cs.DL'
+                ),
+                SetUploadPackage(
+                    creator=self.submitter,
+                    checksum="a9s9k342900skks03330029k",
+                    format='tex',
+                    identifier=123,
+                    size=593992
+                ),
+                SetTitle(creator=self.submitter,
+                                title=metadata['title']),
+                SetAbstract(creator=self.submitter,
+                            abstract=metadata['abstract']),
+                SetComments(creator=self.submitter,
+                            comments=metadata['comments']),
+                SetJournalReference(
+                    creator=self.submitter,
+                    journal_ref=metadata['journal_ref']
+                ),
+                SetDOI(creator=self.submitter, doi=metadata['doi']),
+                SetReportNumber(creator=self.submitter,
+                                       report_num=metadata['report_num']),
+                SetAuthors(
+                    creator=self.submitter,
+                    authors=[Author(
+                        order=0,
+                        forename='Bob',
+                        surname='Paulson',
+                        email='Robert.Paulson@nowhere.edu',
+                        affiliation='Fight Club'
+                    )]
+                ),
+                FinalizeSubmission(creator=self.submitter)
+            )
+
+        # Now publish.
+        with self.app.app_context():
+            session = classic.current_session()
+
+            # Publication agent publishes the paper.
+            db_submission = session.query(classic.models.Submission)\
+                .get(self.submission.submission_id)
+            db_submission.status = db_submission.PUBLISHED
+            dated = (datetime.now() - datetime.utcfromtimestamp(0))
+            primary = self.submission.primary_classification.category
+            db_submission.document = classic.models.Document(
+                document_id=1,
+                paper_id='1901.00123',
+                title=self.submission.metadata.title,
+                authors=self.submission.metadata.authors_display,
+                dated=dated.total_seconds(),
+                primary_subject_class=primary,
+                created=datetime.now(),
+                submitter_email=self.submission.creator.email,
+                submitter_id=self.submission.creator.native_id
+            )
+            session.add(db_submission)
+            session.commit()
+
+    def tearDown(self):
+        """Clear the database after each test."""
+        with self.app.app_context():
+            classic.drop_all()
+
+    def test_replacement(self):
+        """User has started a replacement submission."""
+        with self.app.app_context():
+            submission_to_replace, _ = load(self.submission.submission_id)
+            creation_event = CreateSubmission(creator=self.submitter,
+                                              replaces=submission_to_replace)
+            replacement, _ = save(creation_event)
+
+        with self.app.app_context():
+            replacement, _ = load(replacement.submission_id)
+
+            session = classic.current_session()
+            db_replacement = session.query(classic.models.Submission) \
+                .get(replacement.submission_id)
+
+        # Verify that the round-trip on the replacement submission worked as
+        # expected.
+        self.assertEqual(replacement.arxiv_id, submission_to_replace.arxiv_id)
+        self.assertEqual(replacement.version,
+                         submission_to_replace.version + 1)
+        self.assertEqual(replacement.status, Submission.WORKING)
+        self.assertTrue(submission_to_replace.published)
+        self.assertFalse(replacement.published)
+
+        self.assertEqual(len(replacement.compiled_content), 0)
+        self.assertIsNone(replacement.source_content)
+
+        self.assertFalse(replacement.submitter_contact_verified)
+        self.assertFalse(replacement.submitter_accepts_policy)
+        self.assertFalse(replacement.submitter_confirmed_preview)
+        self.assertFalse(replacement.submitter_contact_verified)
+
+        # Verify that the database is in the right state for downstream
+        # integrations.
+        self.assertEqual(db_replacement.status,
+                         classic.models.Submission.NEW)
+        self.assertEqual(db_replacement.type,
+                         classic.models.Submission.REPLACEMENT)
+        self.assertEqual(db_replacement.document.paper_id, '1901.00123')
+
+
 
 class TestPublicationIntegration(TestCase):
     """
