@@ -541,7 +541,7 @@ class TestPublicationIntegration(TestCase):
                              "Submission should have error status.")
 
     def test_deleted(self):
-        """The submission was deleted."""
+        """The submission was deleted by the classic system."""
         with self.app.app_context():
             session = classic.current_session()
 
@@ -557,3 +557,17 @@ class TestPublicationIntegration(TestCase):
                 submission, _ = load(self.submission.submission_id)
                 self.assertEqual(submission.status, submission.DELETED,
                                  "Submission should have deleted status.")
+
+    def test_deleted_in_ng(self):
+        """The submission was deleted in this package."""
+        with self.app.app_context():
+            session = classic.current_session()
+            self.submission, _ = save(
+                RemoveSubmission(creator=self.submitter),
+                submission_id=self.submission.submission_id
+            )
+
+            db_submission = session.query(classic.models.Submission)\
+                .get(self.submission.submission_id)
+            self.assertEqual(db_submission.status,
+                             classic.models.Submission.DELETED_USER)

@@ -169,7 +169,7 @@ class Event:
 
 @dataclass
 class CreateSubmission(Event):
-    """Creation of a new :class:`arxiv.submission.domain.submission.Submission`."""
+    """Creation of a new :class:`.Submission`."""
 
     replaces: Optional[Submission] = None
 
@@ -208,15 +208,18 @@ class CreateSubmission(Event):
 
 @dataclass(init=False)
 class RemoveSubmission(Event):
-    """Removal of a :class:`arxiv.submission.domain.submission.Submission`."""
+    """Removal of a :class:`.Submission`."""
 
     def validate(self, submission: Submission) -> None:
         """Validate removal of a submission."""
-        return
+        if submission.published:
+            raise InvalidEvent(self, "Cannot remove a published submission")
+        if not submission.active:
+            raise InvalidEvent(self, "Cannot remove an inactive submission")
 
     def project(self, submission: Submission) -> Submission:
         """Remove the :class:`.Submission` from the system (set inactive)."""
-        submission.active = False
+        submission.status = submission.DELETED
         return submission
 
 
@@ -876,7 +879,6 @@ class FinalizeSubmission(Event):
 
     def project(self, submission: Submission) -> Submission:
         """Set :prop:`Submission.finalized`."""
-        submission.finalized = True
         submission.status = Submission.SUBMITTED
         return submission
 
@@ -905,7 +907,6 @@ class UnFinalizeSubmission(Event):
 
     def project(self, submission: Submission) -> Submission:
         """Set :prop:`Submission.finalized`."""
-        submission.finalized = False
         submission.status = Submission.WORKING
         return submission
 

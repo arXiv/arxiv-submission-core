@@ -206,9 +206,6 @@ class Submission(Base):    # type: ignore
         """
         # Status changes.
         submission.status = self._get_status()
-        submission.active = (submission.status not in
-                             [submission.DELETED, submission.PUBLISHED])
-        submission.published = (submission.status == submission.PUBLISHED)
         submission.arxiv_id = self._get_arxiv_id()
 
         # Possible reclassification.
@@ -335,6 +332,9 @@ class Submission(Base):    # type: ignore
                 and self.status in [Submission.NOT_SUBMITTED, None]:
             self.status = Submission.SUBMITTED
             self.submit_time = submission.updated
+        # Delete.
+        elif submission.deleted:
+            self.status = Submission.DELETED_USER
         # Unsubmit.
         elif self.status is None or self.status <= Submission.ON_HOLD:
             if not submission.finalized:
