@@ -195,14 +195,13 @@ class CreateSubmission(Event):
         # Return these to default.
         submission.status = Submission.status
         submission.source_content = Submission.source_content
-        submission.published = Submission.published
         submission.submitter_contact_verified = \
             Submission.submitter_contact_verified
         submission.submitter_accepts_policy = \
             Submission.submitter_accepts_policy
         submission.submitter_confirmed_preview = \
             Submission.submitter_confirmed_preview
-        submission.compiled_content = Submission.compiled_content
+        submission.compiled_content.clear()
         return submission
 
 

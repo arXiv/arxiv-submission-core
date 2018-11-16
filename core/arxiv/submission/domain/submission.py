@@ -111,7 +111,7 @@ class Delegation:
 
     @property
     def delegation_id(self):
-        """Unique identifer for the delegation instance."""
+        """Unique identifier for the delegation instance."""
         h = hashlib.new('sha1')
         h.update(b'%s:%s:%s' % (self.delegate.agent_identifier,
                                 self.creator.agent_identifier,
