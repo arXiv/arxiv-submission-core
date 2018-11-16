@@ -165,6 +165,9 @@ class Submission:
     """The published arXiv paper ID."""
     version: int = field(default=1)
 
+    reason_for_withdrawal: Optional[str] = field(default=None)
+    """If an e-print is withdrawn, the submitter is asked to explain why."""
+
     classic_type: str = field(default='new')
     """
     The classic type slug for this submission.

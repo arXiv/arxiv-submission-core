@@ -223,7 +223,7 @@ class CreateSubmission(Event):
 
 
 @dataclass
-class AddJREFToExistingSubmission(CreateSubmission):
+class AddJREFToExistingSubmission(Event):
     """
     Create a new journal reference submission.
 
@@ -231,8 +231,9 @@ class AddJREFToExistingSubmission(CreateSubmission):
     replacement submission, but the paper version does not change.
     """
 
-    journal_ref: Optional[str] = None
-    doi: Optional[str] = None
+    related: Optional[Submission] = field(default=None)
+    journal_ref: Optional[str] = field(default=None)
+    doi: Optional[str] = field(default=None)
 
     def validate(self, *args, **kwargs) -> None:
         """Validate journal_ref and/or DOI."""
@@ -279,13 +280,15 @@ class AddJREFToExistingSubmission(CreateSubmission):
         return FinalizeSubmission(**base).project(submission)
 
 
-@dataclass(init=False)
+@dataclass
 class WithdrawSubmission(CreateSubmission):
     """Withdraw a submission."""
 
+    reason: str
+
     def validate(self, *args, **kwargs) -> None:
         """Make sure that a submission was provided."""
-        if self.replaces is None:
+        if self.related is None:
             raise InvalidEvent(self, "An existing submission is required")
         super(WithdrawSubmission, self).validate(*args, **kwargs)
 
@@ -293,6 +296,7 @@ class WithdrawSubmission(CreateSubmission):
         """Set the classic type."""
         submission = super(WithdrawSubmission, self).project()
         submission.classic_type = 'wdr'
+        if submission.
         return submission
 
 
