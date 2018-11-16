@@ -253,6 +253,23 @@ class CreateJREFSubmission(CreateSubmission):
 
 
 @dataclass(init=False)
+class WithdrawSubmission(CreateSubmission):
+    """Withdraw a submission."""
+
+    def validate(self, *args, **kwargs) -> None:
+        """Make sure that a submission was provided."""
+        if self.replaces is None:
+            raise InvalidEvent(self, "An existing submission is required")
+        super(WithdrawSubmission, self).validate(*args, **kwargs)
+
+    def project(self) -> Submission:
+        """Set the classic type."""
+        submission = super(WithdrawSubmission, self).project()
+        submission.classic_type = 'wdr'
+        return submission
+
+
+@dataclass(init=False)
 class RemoveSubmission(Event):
     """Removal of a :class:`.Submission`."""
 
