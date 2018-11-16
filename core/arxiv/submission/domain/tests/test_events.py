@@ -14,6 +14,33 @@ from ...exceptions import InvalidEvent
 class TestReplacementSubmission(TestCase):
     """Test :class:`event.CreateSubmission` with a replacement."""
 
+    # def setUp(self):
+    #     """Initialize auxiliary data for test cases."""
+    #     self.user = agent.User(
+    #         12345,
+    #         'uuser@cornell.edu',
+    #         endorsements=[meta.Classification('astro-ph.GA'),
+    #                       meta.Classification('astro-ph.CO')]
+    #     )
+    #     self.submission = submission.Submission(
+    #         submission_id=1,
+    #         status=submission.Submission.PUBLISHED,
+    #         creator=self.user,
+    #         owner=self.user,
+    #         created=datetime.now(),
+    #         source_content=submission.SubmissionContent(
+    #             identifer='6543',
+    #             format='pdf',
+    #             checksum='asdf2345',
+    #             size=594930
+    #         ),
+    #         primary_classification=meta.Classification('astro-ph.GA'),
+    #
+    #         arxiv_id='1901.001234',
+    #         version=1
+    #
+    #     )
+
     # TODO: check that
     # - arXiv is carried forward
     # - version is incremented
