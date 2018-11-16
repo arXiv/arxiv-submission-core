@@ -11,6 +11,16 @@ from .. import event, agent, submission, meta
 from ...exceptions import InvalidEvent
 
 
+class TestReplacementSubmission(TestCase):
+    """Test :class:`event.CreateSubmission` with a replacement."""
+
+    # TODO: check that
+    # - arXiv is carried forward
+    # - version is incremented
+    # - submission ID is cleared
+    # - appropriate fields are reset, others are carried forward
+
+
 class TestSetPrimaryClassification(TestCase):
     """Test :class:`event.SetPrimaryClassification`."""
 

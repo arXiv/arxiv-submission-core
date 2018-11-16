@@ -48,6 +48,7 @@ methods).
 
 import hashlib
 import re
+import copy
 from datetime import datetime
 from typing import Optional, TypeVar, List, Tuple, Any, Dict
 from urllib.parse import urlparse
@@ -166,9 +167,11 @@ class Event:
 # These are largely the domain of the metadata API, and the submission UI.
 
 
-@dataclass(init=False)
+@dataclass
 class CreateSubmission(Event):
     """Creation of a new :class:`arxiv.submission.domain.submission.Submission`."""
+
+    replaces: Optional[Submission] = None
 
     def validate(self, *args, **kwargs) -> None:
         """Validate creation of a submission."""
@@ -176,9 +179,31 @@ class CreateSubmission(Event):
 
     def project(self) -> Submission:
         """Create a new :class:`.Submission`."""
-        return Submission(creator=self.creator, created=self.created,
-                          owner=self.creator, proxy=self.proxy,
-                          client=self.client)
+        if self.replaces is None:
+            return Submission(creator=self.creator, created=self.created,
+                              owner=self.creator, proxy=self.proxy,
+                              client=self.client)
+        submission = copy.deepcopy(self.replaces)
+        submission.submission_id = None
+        submission.creator = self.creator
+        submission.created = self.created
+        submission.owner = self.creator
+        submission.proxy = self.proxy
+        submission.client = self.client
+        submission.version += 1
+
+        # Return these to default.
+        submission.status = Submission.status
+        submission.source_content = Submission.source_content
+        submission.published = Submission.published
+        submission.submitter_contact_verified = \
+            Submission.submitter_contact_verified
+        submission.submitter_accepts_policy = \
+            Submission.submitter_accepts_policy
+        submission.submitter_confirmed_preview = \
+            Submission.submitter_confirmed_preview
+        submission.compiled_content = Submission.compiled_content
+        return submission
 
 
 @dataclass(init=False)

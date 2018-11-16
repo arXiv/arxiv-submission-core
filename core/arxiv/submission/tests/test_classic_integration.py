@@ -288,6 +288,13 @@ class TestClassicUIWorkflow(TestCase):
         self.test_classic_workflow(metadata=metadata)
 
 
+# TODO: test this integration with a replacement
+# - run through submission & publication of the original version
+# - create Document in database reflecting published status
+# - create replacement using CreateSubmission event
+# - verify that the appropriate relations are established in the submission
+#   database, esp doc_paper_id and document_id.
+
 class TestPublicationIntegration(TestCase):
     """
     Test integration with the classic database concerning publication.
