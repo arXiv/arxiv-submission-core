@@ -267,7 +267,7 @@ class ConfirmAuthorship(Event):
         return submission
 
 
-@dataclass
+@dataclass(init=False)
 class ConfirmPolicy(Event):
     """The submitting user accepts the arXiv submission policy."""
 
@@ -873,7 +873,7 @@ class ConfirmPreview(Event):
         return submission
 
 
-@dataclass
+@dataclass(init=False)
 class FinalizeSubmission(Event):
     """Send the submission to the queue for announcement."""
 

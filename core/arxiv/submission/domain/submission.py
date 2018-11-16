@@ -3,7 +3,7 @@
 import hashlib
 from typing import Optional, Dict, TypeVar, List
 from datetime import datetime
-from dateparser import parse as parse_date
+from dateutil.parser import parse as parse_date
 
 from dataclasses import dataclass, field
 from dataclasses import asdict
