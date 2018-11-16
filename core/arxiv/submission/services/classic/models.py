@@ -288,8 +288,7 @@ class Submission(Base):    # type: ignore
 
     def update_from_submission(self, submission: domain.Submission) -> None:
         """Update this database object from a :class:`.domain.Submission`."""
-        self.type = self.NEW_SUBMSSION if submission.version == 1 \
-            else self.REPLACEMENT
+        self.type = submission.classic_type
         self.submitter_id = submission.creator.native_id
         self.submitter_name = submission.creator.name
         self.submitter_email = submission.creator.email

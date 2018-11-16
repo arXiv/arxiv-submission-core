@@ -217,8 +217,6 @@ def store_events(*events: Event, submission: Submission) -> Submission:
             if event.committed:   # Don't create duplicate event entries.
                 continue
 
-            if event.committed:
-                raise RuntimeError('Event is already committed')
             db_event = DBEvent(
                 event_type=event.event_type,
                 event_id=event.event_id,

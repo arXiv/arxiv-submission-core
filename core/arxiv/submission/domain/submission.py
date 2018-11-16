@@ -165,6 +165,14 @@ class Submission:
     """The published arXiv paper ID."""
     version: int = field(default=1)
 
+    classic_type: str = field(default='new')
+    """
+    The classic type slug for this submission.
+
+    It's a bummer that we need this, but it's the simplest way to make sure
+    that we update the legacy submission database correctly.
+    """
+
     @property
     def active(self) -> bool:
         """Actively moving through the submission workflow."""

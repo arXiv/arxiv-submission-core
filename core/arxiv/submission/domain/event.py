@@ -192,6 +192,7 @@ class CreateSubmission(Event):
         submission.proxy = self.proxy
         submission.client = self.client
         submission.version += 1
+        submission.classic_type = 'rep'
 
         # Return these to default.
         submission.status = Submission.status
@@ -219,6 +220,36 @@ class CreateSubmission(Event):
             return cls(**data)
         data['replaces'] = Submission.from_dict(**data['replaces'])
         return cls(**data)
+
+
+# I'm not thrilled that we need this event type. But it's the most
+# straightforward way to preserve the classic integration without going too
+# crazy with special cases in the event-handling logic.
+#
+# TODO: at a later point, we may separate the DOI/JREF mechanism from the
+# core submission system entirely. At that point we'd get rid of this
+# class altogether.
+@dataclass(init=False)
+class CreateJREFSubmission(CreateSubmission):
+    """
+    Create a new journal reference submission.
+
+    In the classic system, a journal reference submission is just like a
+    replacement submission, but the paper version does not change.
+    """
+
+    def validate(self, *args, **kwargs) -> None:
+        """Make sure that a submission was provided."""
+        if self.replaces is None:
+            raise InvalidEvent(self, "An existing submission is required")
+        super(CreateJREFSubmission, self).validate(*args, **kwargs)
+
+    def project(self) -> Submission:
+        """Keep the version the same as the replaced submission version."""
+        submission = super(CreateJREFSubmission, self).project()
+        submission.version = self.replaces.version
+        submission.classic_type = 'jref'
+        return submission
 
 
 @dataclass(init=False)
