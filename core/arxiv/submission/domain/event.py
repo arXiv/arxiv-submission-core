@@ -175,7 +175,8 @@ class CreateSubmission(Event):
 
     def validate(self, *args, **kwargs) -> None:
         """Validate creation of a submission."""
-        return
+        if self.replaces is not None and not self.replaces.published:
+            raise InvalidEvent(self, "Cannot replace an unpublished e-print")
 
     def project(self) -> Submission:
         """Create a new :class:`.Submission`."""
