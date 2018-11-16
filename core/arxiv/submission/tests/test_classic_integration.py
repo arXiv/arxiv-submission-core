@@ -403,7 +403,7 @@ class TestReplacementIntegration(TestCase):
         with self.app.app_context():
             submission_to_replace, _ = load(self.submission.submission_id)
             creation_event = CreateSubmission(creator=self.submitter,
-                                              replaces=submission_to_replace)
+                                              related=submission_to_replace)
             replacement, _ = save(creation_event)
 
         with self.app.app_context():
@@ -466,9 +466,7 @@ class TestJREFIntegration(TestCase):
                 ('title', 'Foo title'),
                 ('abstract', "One morning, as Gregor Samsa was..."),
                 ('comments', '5 pages, 2 turtle doves'),
-                ('report_num', 'asdf1234'),
-                ('doi', '10.01234/56789'),
-                ('journal_ref', 'Foo Rev 1, 2 (1903)')
+                ('report_num', 'asdf1234')
             ])
             self.submission, _ = save(
                 CreateSubmission(creator=self.submitter),
@@ -500,11 +498,6 @@ class TestJREFIntegration(TestCase):
                             abstract=metadata['abstract']),
                 SetComments(creator=self.submitter,
                             comments=metadata['comments']),
-                SetJournalReference(
-                    creator=self.submitter,
-                    journal_ref=metadata['journal_ref']
-                ),
-                SetDOI(creator=self.submitter, doi=metadata['doi']),
                 SetReportNumber(creator=self.submitter,
                                        report_num=metadata['report_num']),
                 SetAuthors(
@@ -517,6 +510,7 @@ class TestJREFIntegration(TestCase):
                         affiliation='Fight Club'
                     )]
                 ),
+                ConfirmPreview(creator=self.submitter),
                 FinalizeSubmission(creator=self.submitter)
             )
 
@@ -549,41 +543,45 @@ class TestJREFIntegration(TestCase):
         with self.app.app_context():
             classic.drop_all()
 
-    def test_replacement(self):
+    def test_jref(self):
         """User has started a JREF submission."""
         with self.app.app_context():
             submission_to_jref, _ = load(self.submission.submission_id)
-            creation_event = CreateJREFSubmission(creator=self.submitter,
-                                                  replaces=submission_to_jref)
-            replacement, _ = save(creation_event)
+            creation_event = AddJREFToExistingSubmission(
+                creator=self.submitter,
+                related=submission_to_jref,
+                doi='10.01234/56789',
+                journal_ref='Foo Rev 1, 2 (1903)'
+            )
+            jref_submission, _ = save(creation_event)
 
         with self.app.app_context():
-            replacement, _ = load(replacement.submission_id)
+            jref_submission, _ = load(jref_submission.submission_id)
 
             session = classic.current_session()
             db_jref = session.query(classic.models.Submission) \
-                .get(replacement.submission_id)
+                .get(jref_submission.submission_id)
 
         # Verify that the round-trip on the replacement submission worked as
         # expected.
-        self.assertEqual(replacement.arxiv_id, submission_to_jref.arxiv_id)
-        self.assertEqual(replacement.version, submission_to_jref.version,
+        self.assertEqual(jref_submission.arxiv_id, submission_to_jref.arxiv_id)
+        self.assertEqual(jref_submission.version, submission_to_jref.version,
                          "The paper version should not change")
-        self.assertEqual(replacement.status, Submission.WORKING)
+        self.assertEqual(jref_submission.status, Submission.SUBMITTED)
         self.assertTrue(submission_to_jref.published)
-        self.assertFalse(replacement.published)
+        self.assertFalse(jref_submission.published)
 
-        self.assertEqual(len(replacement.compiled_content), 0)
-        self.assertIsNone(replacement.source_content)
+        self.assertIsNotNone(jref_submission.source_content)
 
-        self.assertFalse(replacement.submitter_contact_verified)
-        self.assertFalse(replacement.submitter_accepts_policy)
-        self.assertFalse(replacement.submitter_confirmed_preview)
-        self.assertFalse(replacement.submitter_contact_verified)
+        self.assertTrue(jref_submission.submitter_contact_verified)
+        self.assertTrue(jref_submission.submitter_accepts_policy)
+        self.assertTrue(jref_submission.submitter_confirmed_preview)
+        self.assertTrue(jref_submission.submitter_contact_verified)
 
         # Verify that the database is in the right state for downstream
         # integrations.
-        self.assertEqual(db_jref.status, classic.models.Submission.NEW)
+        self.assertEqual(db_jref.status,
+                         classic.models.Submission.SUBMITTED)
         self.assertEqual(db_jref.type,
                          classic.models.Submission.JOURNAL_REFERENCE)
         self.assertEqual(db_jref.document.paper_id, '1901.00123')

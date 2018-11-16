@@ -171,20 +171,20 @@ class Event:
 class CreateSubmission(Event):
     """Creation of a new :class:`.Submission`."""
 
-    replaces: Optional[Submission] = None
+    related: Optional[Submission] = None
 
     def validate(self, *args, **kwargs) -> None:
         """Validate creation of a submission."""
-        if self.replaces is not None and not self.replaces.published:
+        if self.related is not None and not self.related.published:
             raise InvalidEvent(self, "Cannot replace an unpublished e-print")
 
     def project(self) -> Submission:
         """Create a new :class:`.Submission`."""
-        if self.replaces is None:
+        if self.related is None:
             return Submission(creator=self.creator, created=self.created,
                               owner=self.creator, proxy=self.proxy,
                               client=self.client)
-        submission = copy.deepcopy(self.replaces)
+        submission = copy.deepcopy(self.related)
         submission.submission_id = None
         submission.creator = self.creator
         submission.created = self.created
@@ -209,28 +209,21 @@ class CreateSubmission(Event):
     def to_dict(self):
         """Generate a dict of this :class:`.CreateSubmission`."""
         data = super(CreateSubmission, self).to_dict()
-        if self.replaces is not None:
-            data.update({'replaces': self.replaces.to_dict()})
+        if self.related is not None:
+            data.update({'related': self.related.to_dict()})
         return data
 
     @classmethod
     def from_dict(cls, **data) -> 'CreateSubmission':
         """Override the ``from_dict`` constructor to handle submission."""
-        if 'replaces' not in data or data['replaces'] is None:
+        if 'related' not in data or data['related'] is None:
             return cls(**data)
-        data['replaces'] = Submission.from_dict(**data['replaces'])
+        data['related'] = Submission.from_dict(**data['related'])
         return cls(**data)
 
 
-# I'm not thrilled that we need this event type. But it's the most
-# straightforward way to preserve the classic integration without going too
-# crazy with special cases in the event-handling logic.
-#
-# TODO: at a later point, we may separate the DOI/JREF mechanism from the
-# core submission system entirely. At that point we'd get rid of this
-# class altogether.
-@dataclass(init=False)
-class CreateJREFSubmission(CreateSubmission):
+@dataclass
+class AddJREFToExistingSubmission(CreateSubmission):
     """
     Create a new journal reference submission.
 
@@ -238,18 +231,52 @@ class CreateJREFSubmission(CreateSubmission):
     replacement submission, but the paper version does not change.
     """
 
+    journal_ref: Optional[str] = None
+    doi: Optional[str] = None
+
     def validate(self, *args, **kwargs) -> None:
-        """Make sure that a submission was provided."""
-        if self.replaces is None:
+        """Validate journal_ref and/or DOI."""
+        if self.related is None:
             raise InvalidEvent(self, "An existing submission is required")
-        super(CreateJREFSubmission, self).validate(*args, **kwargs)
+        if self.doi is None and self.journal_ref is None:
+            raise InvalidEvent(self, "DOI or journal reference must be set")
+        super(AddJREFToExistingSubmission, self).validate(*args, **kwargs)
+        base = dict(creator=self.creator, proxy=self.proxy, client=self.client)
+        trial_submission = self._project()
+        if self.journal_ref is not None:
+            e_jref = SetJournalReference(journal_ref=self.journal_ref, **base)
+            e_jref.validate(trial_submission)
+            trial_submission = e_jref.project(trial_submission)
+        if self.doi is not None:
+            e_doi = SetDOI(doi=self.doi, **base)
+            e_doi.validate(trial_submission)
+            trial_submission = e_doi.project(trial_submission)
+        FinalizeSubmission(**base).validate(trial_submission)
+
+    def _project(self) -> Submission:
+        """Keep the version the same as the replaced submission version."""
+        submission = copy.deepcopy(self.related)
+        submission.submission_id = None
+        submission.creator = self.creator
+        submission.created = self.created
+        submission.owner = self.creator
+        submission.proxy = self.proxy
+        submission.client = self.client
+        submission.classic_type = 'jref'
+        submission.status = Submission.status
+        return submission
 
     def project(self) -> Submission:
-        """Keep the version the same as the replaced submission version."""
-        submission = super(CreateJREFSubmission, self).project()
-        submission.version = self.replaces.version
-        submission.classic_type = 'jref'
-        return submission
+        """Perform the journal reference projection."""
+        submission = self._project()
+        base = dict(creator=self.creator, proxy=self.proxy, client=self.client)
+        if self.journal_ref is not None:
+            e_jref = SetJournalReference(journal_ref=self.journal_ref, **base)
+            submission = e_jref.project(submission)
+        if self.doi is not None:
+            e_doi = SetDOI(doi=self.doi, **base)
+            submission = e_doi.project(submission)
+        return FinalizeSubmission(**base).project(submission)
 
 
 @dataclass(init=False)
