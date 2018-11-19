@@ -223,7 +223,7 @@ class CreateSubmission(Event):
 
 
 @dataclass
-class AddJREFToExistingSubmission(CreateSubmission):
+class AddJREFToExistingSubmission(Event):
     """
     Create a new journal reference submission.
 
@@ -231,8 +231,9 @@ class AddJREFToExistingSubmission(CreateSubmission):
     replacement submission, but the paper version does not change.
     """
 
-    journal_ref: Optional[str] = None
-    doi: Optional[str] = None
+    submission: Optional[Submission] = field(default=None)
+    journal_ref: Optional[str] = field(default=None)
+    doi: Optional[str] = field(default=None)
 
     def validate(self, *args, **kwargs) -> None:
         """Validate journal_ref and/or DOI."""
@@ -240,7 +241,7 @@ class AddJREFToExistingSubmission(CreateSubmission):
             raise InvalidEvent(self, "An existing submission is required")
         if self.doi is None and self.journal_ref is None:
             raise InvalidEvent(self, "DOI or journal reference must be set")
-        super(AddJREFToExistingSubmission, self).validate(*args, **kwargs)
+
         base = dict(creator=self.creator, proxy=self.proxy, client=self.client)
         trial_submission = self._project()
         if self.journal_ref is not None:
