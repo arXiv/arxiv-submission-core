@@ -13,14 +13,11 @@ from ..exceptions import NoSuchSubmission, InvalidEvent
 from ..services import classic
 
 
-def mock_store_events(*events, submission):
-    """Mock for :func:`events.services.database.store_events`."""
-    if submission.submission_id is None:
-        submission.submission_id = 1
-    for event in events:
-        event.committed = True
-        event.submission_id = submission.submission_id
-    return submission
+def mock_store_event(event, before, after):
+    event.submission_id = 1
+    after.submission_id = 1
+    event.committed = True
+    return event, after
 
 
 class TestLoad(TestCase):
@@ -59,7 +56,7 @@ class TestSave(TestCase):
     @mock.patch('submission.classic')
     def test_save_creation_event(self, mock_database):
         """A :class:`.CreationEvent` is passed."""
-        mock_database.store_events = mock_store_events
+        mock_database.store_event = mock_store_event
         user = User(12345, 'joe@joe.joe')
         event = CreateSubmission(creator=user)
         submission, events = save(event)
@@ -75,7 +72,7 @@ class TestSave(TestCase):
     @mock.patch('submission.classic')
     def test_save_events_from_scratch(self, mock_database):
         """Save multiple events for a nonexistant submission."""
-        mock_database.store_events = mock_store_events
+        mock_database.store_event = mock_store_event
         user = User(12345, 'joe@joe.joe')
         e = CreateSubmission(creator=user)
         e2 = SetTitle(creator=user, title='footitle')
@@ -88,7 +85,7 @@ class TestSave(TestCase):
     @mock.patch('submission.classic')
     def test_create_and_update_authors(self, mock_database):
         """Save multiple events for a nonexistant submission."""
-        mock_database.store_events = mock_store_events
+        mock_database.store_event = mock_store_event
         user = User(12345, 'joe@joe.joe')
         e = CreateSubmission(creator=user)
         e2 = SetAuthors(creator=user, authors=[
@@ -100,7 +97,7 @@ class TestSave(TestCase):
     @mock.patch('submission.classic')
     def test_save_from_scratch_without_creation_event(self, mock_database):
         """An exception is raised when there is no creation event."""
-        mock_database.store_events = mock_store_events
+        mock_database.store_event = mock_store_event
         user = User(12345, 'joe@joe.joe')
         e2 = SetTitle(creator=user, title='foo')
         with self.assertRaises(NoSuchSubmission):
@@ -109,22 +106,28 @@ class TestSave(TestCase):
     @mock.patch('submission.classic')
     def test_save_events_on_existing_submission(self, mock_db):
         """Save multiple sets of events in separate calls to :func:`.save`."""
-        cache = defaultdict(list)
+        cache = {}
 
-        def mock_store_events_with_cache(*events, submission):
-            if submission.submission_id is None:
-                submission.submission_id = 1
-            for event in events:
-                event.committed = True
-                event.submission_id = submission.submission_id
-                cache[event.submission_id].append(event)
-            return submission
+        def mock_store_event_with_cache(event, before, after):
+            if after.submission_id is None:
+                if before is not None:
+                    before.submission_id = 1
+                after.submission_id = 1
+
+            event.committed = True
+            event.submission_id = after.submission_id
+            if event.submission_id not in cache:
+                cache[event.submission_id] = (None, [])
+            cache[event.submission_id] = (
+                after, cache[event.submission_id][1] + [event]
+            )
+            return event, after
 
         def mock_get_events(submission_id):
             return cache[submission_id]
 
-        mock_db.store_events = mock_store_events_with_cache
-        mock_db.get_events = mock_get_events
+        mock_db.store_event = mock_store_event_with_cache
+        mock_db.get_submission = mock_get_events
 
         # Here is the first set of events.
         user = User(12345, 'joe@joe.joe')
