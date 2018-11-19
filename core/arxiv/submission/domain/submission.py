@@ -168,6 +168,7 @@ class Submission:
     status: str = field(default=WORKING)
     arxiv_id: Optional[str] = field(default=None)
     """The published arXiv paper ID."""
+    version: int = field(default=1)
 
     def to_dict(self) -> dict:
         """Generate a dict representation of this :class:`.Submission`."""

@@ -308,7 +308,6 @@ class Submission(Base):    # type: ignore
         self.journal_ref = submission.metadata.journal_ref
         if submission.license:
             self.license = submission.license.uri
-        self.type = Submission.NEW   # We're not handling other types here.
 
         if submission.source_content is not None:
             self.must_process = 0
