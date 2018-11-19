@@ -37,7 +37,8 @@ from sqlalchemy.dialects.mysql import DATETIME as DateTime
 
 from arxiv.base import logging
 from arxiv.base.globals import get_application_config, get_application_global
-from ...domain.event import Event, event_factory
+from ...domain.event import Event, event_factory, RequestWithdrawal, SetDOI, \
+    SetJournalReference
 from ...domain.submission import License, Submission
 from ...domain.agent import User, Client, Agent
 from .models import Base
@@ -160,79 +161,200 @@ def get_submission(submission_id: int) -> Tuple[Submission, List[Event]]:
     -------
     :class:`.Submission`
     """
-    # Load and play events. Eventually, this is the only query we will make
-    # against the database.
     events = get_events(submission_id)
-    submission = None       # We assume that the first event is a creation.
-    for ev in events:
-        submission = ev.apply(submission) if submission else ev.apply()
 
-    submission.submission_id = submission_id
-
+    # Load submission data from the legacy submission table.
     with transaction() as session:
-        # Load the current db state of the submission, and patch. Once we have
-        # retired legacy components that do not follow the event model, this
-        # step should be removed.
-        data = session.query(models.Submission).get(submission_id)
-        if data is None:
+        # Load the root submission (v=1).
+        db_sub = session.query(models.Submission).get(submission_id)
+        if db_sub is None:
             raise NoSuchSubmission(f'Submission {submission_id} not found')
-        return data.patch(submission), events
+
+        # Load any subsequent submission rows (e.g. v=2, jref, withdrawal).
+        if db_sub.doc_paper_id is not None:
+            db_subs = session.query(models.Submission)\
+                .filter(models.Submission.doc_paper_id == db_sub.doc_paper_id)\
+                .order_by(models.Submission.submission_id.asc())
+        else:
+            db_subs = []
+
+    # Play the events forward.
+    submission = None
+    for event in events:
+        # As we go, look for moments where a new row in the legacy submission
+        # table was created.
+        if db_subs and db_subs[0].created < event.created:
+            # If we find one, patch the domain submission from the preceding
+            # row, and load the next row. We want to do this before projecting
+            # the event, since we are inferring that the event occurred after
+            # a change was made via the legacy system.
+            submission = db_sub.patch(submission)
+            db_sub = db_subs.pop(0)
+
+        # Now project the event.
+        submission = event.apply(submission)
+
+    # Finally, patch the submission with any remaining changes that may have
+    # occurred via the legacy system.
+    for db_sub in [db_sub] + list(db_subs):
+        submission = db_sub.patch(submission)
+    return submission, events
 
 
-def store_events(*events: Event, submission: Submission) -> Submission:
+def _load_submission(submission_id: Optional[int] = None,
+                     paper_id: Optional[str] = None,
+                     version: Optional[int] = 1) -> models.Submission:
+    session = current_session()
+    if submission_id is not None:
+        submission = session.query(models.Submission) \
+            .filter(models.Submission.submission_id == submission_id) \
+            .one()
+    elif submission_id is None and paper_id is not None:
+        submission = session.query(models.Submission) \
+            .filter(models.Submission.doc_paper_id == paper_id) \
+            .filter(models.Submission.version == version) \
+            .order_by(models.Submission.created.desc()) \
+            .first()
+    else:
+        submission = None
+    if submission is None:
+        raise NoSuchSubmission("No submission row matches those parameters")
+    return submission
+
+
+def _load_document_id(paper_id: str, version: int) -> int:
+    logger.debug('get document ID with %s and %s', paper_id, version)
+    session = current_session()
+    document_id = session.query(models.Submission.document_id) \
+        .filter(models.Submission.doc_paper_id == paper_id) \
+        .filter(models.Submission.version == version) \
+        .first()
+    if document_id is None:
+        raise NoSuchSubmission("No submission row matches those parameters")
+    return document_id[0]
+
+
+def store_event(event: Event, before: Optional[Submission],
+                after: Optional[Submission]) -> Event:
     """
-    Store events in the database.
+    Store an event, and update submission state.
+
+    This is where we map the NG event domain onto the classic database. The
+    main differences are that:
+
+    - In the event domain, a submission is a single stream of events, but
+      in the classic system we create new rows in the submission database
+      for things like replacements, adding DOIs, and withdrawing papers.
+    - In the event domain, the only concept of the published paper is the
+      paper ID. In the classic submission database, we also have to worry about
+      the row in the Document database.
+
+    We assume that the submission states passed to this function have the
+    correct paper ID and version number, if published. The submission ID on
+    the event and the before/after states refer to the original classic
+    submission only.
 
     Parameters
     ----------
-    events : list
-        A list of (presumably new) :class:`.Event` instances to be persisted.
-        Events that have already been committed will not be committed again,
-        so it's safe to include them here.
-    submission : :class:`.Submission`
-        Current state of the submission (after events have been applied).
+    event : :class:`Event`
+    before : :class:`Submission`
+        The state of the submission before the event occurred.
+    after : :class:`Submission`
+        The state of the submission after the event occurred.
 
-    Returns
-    -------
-    :class:`.Submission`
-        Stored submission, updated with current submission ID.
     """
-    # Commit new events for a single submission in a transaction.
-    with transaction() as session:
-        # We need a reference to this row for the event rows, so we add it
-        # first.
-        if submission.submission_id is None:
-            db_submission = models.Submission()
+    if event.committed:
+        raise CommitFailed('Event %s already committed', event.event_id)
+    session = current_session()
+    # This is the case that we have a new submission.
+    if before is None and isinstance(after, Submission):
+        logger.debug('create a new submission')
+        db_sb = models.Submission(type=models.Submission.NEW_SUBMSSION,
+                                  version=1)
+        this_is_a_new_submission = True
+
+    # Otherwise we're making an update for an existing submission.
+    else:
+        logger.debug('update existing submission')
+        this_is_a_new_submission = False
+
+        # After the original submission is published, a new Document row is
+        #  created. This Document is shared by all subsequent Submission rows.
+        if before.published:
+            document_id = _load_document_id(before.arxiv_id, before.version)
         else:
-            db_submission = session.query(models.Submission)\
-                .get(submission.submission_id)
-            if db_submission is None:
-                raise RuntimeError("Submission ID is set, but can't find data")
+            document_id = None
 
-        # Update the submission state from the Submission domain object.
-        db_submission.update_from_submission(submission)
-        session.add(db_submission)
+        # From the perspective of the database, a replacement is mainly an
+        # incremented version number. This requires a new row in the database.
+        if after.version > before.version:
+            db_sb = models.Submission(type=models.Submission.REPLACEMENT,
+                                      document_id=document_id,
+                                      doc_paper_id=before.arxiv_id,
+                                      version=after.version)
+        # Withdrawals also require a new row, and they use the most recent
+        # version number.
+        elif isinstance(event, RequestWithdrawal):
+            db_sb = models.Submission(type=models.Submission.WITHDRAWAL,
+                                      document_id=document_id,
+                                      status=models.Submission.SUBMITTED,
+                                      doc_paper_id=before.arxiv_id,
+                                      version=after.version)
+        # Adding DOIs and citation information (so-called "journal reference")
+        # also requires a new row. The version number is not incremented.
+        elif before.published and type(event) in [SetDOI, SetJournalReference]:
+            db_sb = models.Submission(type=models.Submission.JOURNAL_REFERENCE,
+                                      document_id=document_id,
+                                      doc_paper_id=after.arxiv_id,
+                                      status=models.Submission.SUBMITTED,
+                                      version=after.version)
 
-        for event in events:
-            if event.committed:   # Don't create duplicate event entries.
-                continue
+        elif isinstance(before, Submission) and before.published:
+            db_sb = _load_submission(paper_id=before.arxiv_id,
+                                     version=before.version)
 
-            if event.committed:
-                raise RuntimeError('Event is already committed')
-            db_event = DBEvent(
-                event_type=event.event_type,
-                event_id=event.event_id,
-                data=event.to_dict(),
-                created=event.created,
-                creator=event.creator.to_dict(),
-                proxy=event.proxy.to_dict() if event.proxy else None,
-                submission_id=event.submission_id
-            )
-            session.add(db_event)
-            db_event.submission = db_submission    # Will be updated on commit.
-            event.committed = True
-    submission.submission_id = db_submission.submission_id
-    return submission
+        elif isinstance(before, Submission) and before.submission_id:
+            db_sb = _load_submission(before.submission_id)
+        else:
+            print("before", before.published, before.submission_id)
+            print("event", event)
+            print("after", after.published, after.submission_id)
+            raise CommitFailed("Something is fishy")
+
+    db_sb.update_from_submission(after)
+    db_event = DBEvent(event_type=event.event_type,
+                       event_id=event.event_id,
+                       data=event.to_dict(),
+                       created=event.created,
+                       creator=event.creator.to_dict(),
+                       proxy=event.proxy.to_dict() if event.proxy else None)
+    session.add(db_sb)
+    session.add(db_event)
+
+    # Attach the database object for the event to the row for the submission.
+    if this_is_a_new_submission:    # Update in transaction.
+        db_event.submission = db_sb
+    else:                           # Just set the ID directly.
+        db_event.submission_id = before.submission_id
+
+    try:
+        session.commit()
+    except Exception as e:
+        session.rollback()
+        raise
+
+    event.committed = True
+
+    # Update the domain event and submission states with the submission ID.
+    # This should carry forward the original submission ID, even if the classic
+    # database has several rows for the submission (with different IDs).
+    if this_is_a_new_submission:
+        event.submission_id = db_sb.submission_id
+        after.submission_id = db_sb.submission_id
+    else:
+        event.submission_id = before.submission_id
+        after.submission_id = before.submission_id
+    return event, after
 
 
 def init_app(app: object = None) -> None:

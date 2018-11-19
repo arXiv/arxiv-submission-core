@@ -140,7 +140,6 @@ class Event:
 
     def apply(self, submission: Optional[Submission] = None) -> Submission:
         """Apply the projection for this :class:`.Event` instance."""
-        logger.debug('Apply event %s on submission %s', self, submission)
         if submission is not None:
             logger.debug('Project with submission')
             submission = self.project(submission)
@@ -148,6 +147,10 @@ class Event:
             logger.debug('Submission is None; project without submission.')
             submission = self.project()
         submission.updated = self.created
+
+        # Make sure that the submission has its own ID, if we know what it is.
+        if submission.submission_id is None and self.submission_id is not None:
+            submission.submission_id = self.submission_id
         return submission
 
     def to_dict(self):
@@ -236,6 +239,12 @@ class RemoveSubmission(Event):
         """Remove the :class:`.Submission` from the system (set inactive)."""
         submission.status = submission.DELETED
         return submission
+
+
+@dataclass(init=False)
+class RequestWithdrawal(Event):
+    """TODO: implement me!"""
+    pass
 
 
 @dataclass(init=False)
@@ -889,7 +898,7 @@ class FinalizeSubmission(Event):
         if submission.finalized:
             raise InvalidEvent(self, "Submission already finalized")
         if not submission.active:
-            raise InvalidEvent(self, "Submision must be active")
+            raise InvalidEvent(self, "Submission must be active")
         self._required_fields_are_complete(submission)
 
     def project(self, submission: Submission) -> Submission:

@@ -25,8 +25,8 @@ from ...domain.event import CreateSubmission, \
     ConfirmContactInformation, SetTitle, SetAbstract, SetDOI, \
     SetMSCClassification, SetACMClassification, SetJournalReference, \
     SetComments, SetAuthors
-from . import init_app, create_all, drop_all, models, store_events, DBEvent, \
-    get_submission, current_session, get_licenses, exceptions
+from . import init_app, create_all, drop_all, models, DBEvent, \
+    get_submission, current_session, get_licenses, exceptions, store_event
 
 
 @contextmanager
@@ -82,256 +82,302 @@ class TestGetLicenses(TestCase):
                          "Should use label column to populate License.name")
 
 
-class TestStoreEvents(TestCase):
-    """Test :func:`.store_events`."""
+class TestStoreEvent(TestCase):
+    """Tests for :func:`.store_event`."""
 
-    def test_store_event(self):
-        """Store a single event."""
+    def setUp(self):
+        """Instantiate a user."""
+        self.user = User(12345, 'joe@joe.joe')
+
+    # def test_store_creation(self):
+    #     """Store a :class:`CreateSubmission`."""
+    #     with in_memory_db() as session:
+    #         before = None
+    #         event = CreateSubmission(creator=self.user)
+    #         after = event.apply(before)
+    #
+    #         event = store_event(event, before, after)
+    #
+    #         db_sb = session.query(models.Submission).get(event.submission_id)
+    #
+    #         # Make sure that we get the right submission ID.
+    #         self.assertIsNotNone(event.submission_id)
+    #         self.assertEqual(event.submission_id, after.submission_id)
+    #         self.assertEqual(event.submission_id, db_sb.submission_id)
+    #
+    #         self.assertEqual(db_sb.status,  models.Submission.NOT_SUBMITTED)
+    #         self.assertEqual(db_sb.type, models.Submission.NEW_SUBMSSION)
+    #         self.assertEqual(db_sb.version, 1)
+    #
+    # def test_store_events_with_metadata(self):
+    #     """Store events and attendant submission with metadata."""
+    #     metadata = {
+    #         'title': 'foo title',
+    #         'abstract': 'very abstract',
+    #         'comments': 'indeed',
+    #         'msc_class': 'foo msc',
+    #         'acm_class': 'COMPUTER-Y',
+    #         'doi': '10.01234/5678',
+    #         'journal_ref': 'Nature 1: 1',
+    #         'authors': [Author(order=0, forename='Joe', surname='Bloggs')]
+    #     }
+    #     with in_memory_db() as session:
+    #         ev = CreateSubmission(creator=self.user)
+    #         ev2 = SetTitle(creator=self.user, title=metadata['title'])
+    #         ev3 = SetAbstract(creator=self.user, abstract=metadata['abstract'])
+    #         ev4 = SetComments(creator=self.user, comments=metadata['comments'])
+    #         ev5 = SetMSCClassification(creator=self.user,
+    #                                    msc_class=metadata['msc_class'])
+    #         ev6 = SetACMClassification(creator=self.user,
+    #                                    acm_class=metadata['acm_class'])
+    #         ev7 = SetJournalReference(creator=self.user,
+    #                                   journal_ref=metadata['journal_ref'])
+    #         ev8 = SetDOI(creator=self.user, doi=metadata['doi'])
+    #         events = [ev, ev2, ev3, ev4, ev5, ev6, ev7, ev8]
+    #
+    #         before = None
+    #         for i, event in enumerate(list(events)):
+    #             after = event.apply(before)
+    #             event = store_event(event, before, after)
+    #             events[i] = event
+    #             before = after
+    #
+    #         db_submission = session.query(models.Submission)\
+    #             .get(after.submission_id)
+    #         db_events = session.query(DBEvent).all()
+    #
+    #     for key, value in metadata.items():
+    #         if key == 'authors':
+    #             continue
+    #         self.assertEqual(getattr(db_submission, key), value,
+    #                          f"The value of {key} should be {value}")
+    #     self.assertEqual(db_submission.authors,
+    #                      after.metadata.authors_display,
+    #                      "The canonical author string should be used to"
+    #                      " update the submission in the database.")
+    #
+    #     self.assertEqual(len(db_events), 8, "Eight events should be stored")
+    #     for db_event in db_events:
+    #         self.assertEqual(db_event.submission_id, after.submission_id,
+    #                          "The submission id should be set")
+    #
+    # def test_store_events_with_finalized_submission(self):
+    #     """Store events and a finalized submission."""
+    #     with in_memory_db() as session:
+    #         ev = CreateSubmission(creator=self.user)
+    #         ev2 = FinalizeSubmission(creator=self.user)
+    #         events = [ev, ev2]
+    #
+    #         before = None
+    #         for i, event in enumerate(list(events)):
+    #             after = event.apply(before)
+    #             event = store_event(event, before, after)
+    #             events[i] = event
+    #             before = after
+    #
+    #         db_submission = session.query(models.Submission) \
+    #             .get(after.submission_id)
+    #         db_events = session.query(DBEvent).all()
+    #
+    #     self.assertEqual(db_submission.submission_id, after.submission_id,
+    #                      "The submission should be updated with the PK id.")
+    #     self.assertEqual(db_submission.status, models.Submission.SUBMITTED,
+    #                      "Submission should be in submitted state.")
+    #     self.assertEqual(len(db_events), 2, "Two events should be stored")
+    #     for db_event in db_events:
+    #         self.assertEqual(db_event.submission_id, after.submission_id,
+    #                          "The submission id should be set")
+
+    def test_store_doi_jref_with_publication(self):
+        """:class:`SetDOI` or :class:`SetJournalReference` after pub."""
         with in_memory_db() as session:
-            user = User(12345, 'joe@joe.joe')
-            ev = CreateSubmission(creator=user)
-            submission = ev.apply()
-            submission = store_events(ev, submission=submission)
+            ev = CreateSubmission(creator=self.user)
+            ev2 = FinalizeSubmission(creator=self.user)
+            events = [ev, ev2]
 
-            db_submission = session.query(models.Submission)\
-                .get(submission.submission_id)
-
-        self.assertEqual(db_submission.submission_id, submission.submission_id,
-                         "The submission should be updated with the PK id.")
-        self.assertEqual(db_submission.submitter_id,
-                         submission.creator.native_id,
-                         "The native ID of the creator should be used")
-        self.assertEqual(db_submission.status, db_submission.NOT_SUBMITTED,
-                         "Submission in database should be in status 0 (not"
-                         " submitted) by default.")
-
-    def test_store_events_with_metadata(self):
-        """Store events and attendant submission with metadata."""
-        metadata = {
-            'title': 'foo title',
-            'abstract': 'very abstract',
-            'comments': 'indeed',
-            'msc_class': 'foo msc',
-            'acm_class': 'COMPUTER-Y',
-            'doi': '10.01234/5678',
-            'journal_ref': 'Nature 1: 1',
-            'authors': [Author(order=0, forename='Joe', surname='Bloggs')]
-        }
-        with in_memory_db() as session:
-            user = User(12345, 'joe@joe.joe')
-            ev = CreateSubmission(creator=user)
-            ev2 = SetTitle(creator=user, title=metadata['title'])
-            ev3 = SetAbstract(creator=user, abstract=metadata['abstract'])
-            ev4 = SetComments(creator=user, comments=metadata['comments'])
-            ev5 = SetMSCClassification(creator=user,
-                                       msc_class=metadata['msc_class'])
-            ev6 = SetACMClassification(creator=user,
-                                       acm_class=metadata['acm_class'])
-            ev7 = SetJournalReference(creator=user,
-                                      journal_ref=metadata['journal_ref'])
-            ev8 = SetDOI(creator=user, doi=metadata['doi'])
-
-            submission = ev.apply()
-            submission = ev2.apply(submission)
-            submission = ev3.apply(submission)
-            submission = ev4.apply(submission)
-            submission = ev5.apply(submission)
-            submission = ev6.apply(submission)
-            submission = ev7.apply(submission)
-            submission = ev8.apply(submission)
-            submission = store_events(ev, ev2, ev3, ev4, ev5, ev6, ev7, ev8,
-                                      submission=submission)
-
-            db_submission = session.query(models.Submission)\
-                .get(submission.submission_id)
-
-            db_events = session.query(DBEvent).all()
-
-        for key, value in metadata.items():
-            if key == 'authors':
-                continue
-            self.assertEqual(getattr(db_submission, key), value,
-                             f"The value of {key} should be {value}")
-        self.assertEqual(db_submission.authors,
-                         submission.metadata.authors_display,
-                         "The canonical author string should be used to"
-                         " update the submission in the database.")
-
-        self.assertEqual(len(db_events), 8, "Eight events should be stored")
-        for db_event in db_events:
-            self.assertEqual(db_event.submission_id, submission.submission_id,
-                             "The submission id should be set")
-
-    def test_store_events_with_finalized_submission(self):
-        """Store events and a finalized submission."""
-        with in_memory_db() as session:
-            user = User(12345, 'joe@joe.joe')
-            ev = CreateSubmission(creator=user)
-            ev2 = FinalizeSubmission(creator=user)
-            submission = ev.apply()
-            submission = ev2.apply(submission)
-            submission = store_events(ev, ev2, submission=submission)
-
-            db_submission = session.query(models.Submission)\
-                .get(submission.submission_id)
-            db_events = session.query(DBEvent).all()
-
-        self.assertEqual(db_submission.submission_id, submission.submission_id,
-                         "The submission should be updated with the PK id.")
-        self.assertEqual(db_submission.status, models.Submission.SUBMITTED,
-                         "Submission should be in submitted state.")
-        self.assertEqual(len(db_events), 2, "Two events should be stored")
-        for db_event in db_events:
-            self.assertEqual(db_event.submission_id, submission.submission_id,
-                             "The submission id should be set")
-
-    def test_store_events_with_classification(self):
-        """Store events including classification."""
-        user = User(12345, 'joe@joe.joe')
-        ev = CreateSubmission(creator=user)
-        ev2 = SetPrimaryClassification(creator=user,
-                                       category='physics.soc-ph')
-        ev3 = AddSecondaryClassification(creator=user,
-                                         category='physics.acc-ph')
-        submission = ev.apply()
-        submission = ev2.apply(submission)
-        submission = ev3.apply(submission)
-
-        with in_memory_db() as session:
-            submission = store_events(ev, ev2, ev3, submission=submission)
-
-            db_submission = session.query(models.Submission)\
-                .get(submission.submission_id)
-            db_events = session.query(DBEvent).all()
-
-        self.assertEqual(db_submission.submission_id, submission.submission_id,
-                         "The submission should be updated with the PK id.")
-        self.assertEqual(len(db_events), 3, "Three events should be stored")
-        for db_event in db_events:
-            self.assertEqual(db_event.submission_id, submission.submission_id,
-                             "The submission id should be set")
-        self.assertEqual(len(db_submission.categories), 2,
-                         "Two category relations should be set")
-        self.assertEqual(db_submission.primary_classification.category,
-                         submission.primary_classification.category,
-                         "Primary classification should be set.")
-
-
-class TestGetSubmission(TestCase):
-    """Test :func:`.get_submission`."""
-
-    def test_get_submission_that_does_not_exist(self):
-        """Test that an exception is raised when submission doesn't exist."""
-        with in_memory_db():
-            with self.assertRaises(exceptions.NoSuchSubmission):
-                get_submission(1)
-
-    def test_get_submission_with_publish(self):
-        """Test that publication state is reflected in submission data."""
-        user = User(12345, 'joe@joe.joe')
-
-        events = [
-            CreateSubmission(creator=user),
-            SetTitle(creator=user, title='Foo title'),
-            SetAbstract(creator=user, abstract='Indeed'),
-            SetAuthors(creator=user, authors=[
-                Author(order=0, forename='Joe', surname='Bloggs',
-                       email='joe@blo.ggs'),
-                Author(order=1, forename='Jane', surname='Doe',
-                       email='j@doe.com'),
-            ]),
-            SetLicense(creator=user, license_uri='http://foo.org/1.0/',
-                          license_name='Foo zero 1.0'),
-            SetPrimaryClassification(creator=user, category='cs.DL'),
-            ConfirmPolicy(creator=user),
-            ConfirmContactInformation(creator=user),
-            FinalizeSubmission(creator=user)
-        ]
-        submission = None
-        for ev in events:
-            submission = ev.apply(submission) if submission else ev.apply()
-
-        with in_memory_db() as session:
-            # User creates and finalizes submission.
-            submission = store_events(*events, submission=submission)
-            ident = submission.submission_id
-
-            # Moderation happens, things change outside the event model.
-            db_submission = session.query(models.Submission).get(ident)
+            before = None
+            for i, event in enumerate(list(events)):
+                after = event.apply(before)
+                event = store_event(event, before, after)
+                events[i] = event
+                before = after
 
             # Published!
+            db_submission = session.query(models.Submission) \
+                .get(after.submission_id)
             db_submission.status = db_submission.PUBLISHED
             db_document = models.Document(paper_id='1234.5678')
+            db_submission.doc_paper_id = '1234.5678'
             db_submission.document = db_document
             session.add(db_submission)
             session.add(db_document)
             session.commit()
 
-            # Now get the submission.
-            submission_loaded, _ = get_submission(ident)
+            # This would normally happen during a load.
+            before = db_submission.patch(before)
 
-        self.assertEqual(submission.metadata.title,
-                         submission_loaded.metadata.title,
-                         "Event-derived metadata should be preserved.")
-        self.assertEqual(submission_loaded.arxiv_id, "1234.5678",
-                         "arXiv paper ID should be set")
-        self.assertEqual(submission_loaded.status, Submission.PUBLISHED,
-                         "Submission status should reflect publish action")
+            # Now set DOI.
+            e3 = SetDOI(creator=self.user, doi='10.01234/5678',
+                        submission_id=after.submission_id)
+            after = e3.apply(before)
+            store_event(e3, before, after)
 
-    def test_get_submission_with_hold_and_reclass(self):
-        """Test changes made externally are reflected in submission data."""
-        user = User(12345, 'joe@joe.joe')
-        events = [
-            CreateSubmission(creator=user),
-            SetTitle(creator=user, title='Foo title'),
-            SetAbstract(creator=user, abstract='Indeed'),
-            SetAuthors(creator=user, authors=[
-                Author(order=0, forename='Joe', surname='Bloggs',
-                       email='joe@blo.ggs'),
-                Author(order=1, forename='Jane', surname='Doe',
-                       email='j@doe.com'),
-            ]),
-            SetLicense(creator=user, license_uri='http://foo.org/1.0/',
-                          license_name='Foo zero 1.0'),
-            SetPrimaryClassification(creator=user, category='cs.DL'),
-            ConfirmPolicy(creator=user),
-            ConfirmContactInformation(creator=user),
-            FinalizeSubmission(creator=user)
-        ]
-        submission = None
-        for ev in events:
-            submission = ev.apply(submission) if submission else ev.apply()
+            # What happened.
+            db_submission = session.query(models.Submission) \
+                .filter(models.Submission.doc_paper_id == '1234.5678')
+            self.assertEqual(db_submission.count(), 2,
+                             "Creates a second row for the JREF")
 
-        with in_memory_db() as session:
-            # User creates and finalizes submission.
-            submission = store_events(*events, submission=submission)
-            ident = submission.submission_id
 
-            # Moderation happens, things change outside the event model.
-            db_submission = session.query(models.Submission).get(ident)
+    # def test_store_events_with_classification(self):
+    #     """Store events including classification."""
+    #     ev = CreateSubmission(creator=self.user)
+    #     ev2 = SetPrimaryClassification(creator=self.user,
+    #                                    category='physics.soc-ph')
+    #     ev3 = AddSecondaryClassification(creator=self.user,
+    #                                      category='physics.acc-ph')
+    #     events = [ev, ev2, ev3]
+    #
+    #     with in_memory_db() as session:
+    #         before = None
+    #         for i, event in enumerate(list(events)):
+    #             after = event.apply(before)
+    #             event = store_event(event, before, after)
+    #             events[i] = event
+    #             before = after
+    #
+    #         db_submission = session.query(models.Submission)\
+    #             .get(after.submission_id)
+    #         db_events = session.query(DBEvent).all()
+    #
+    #     self.assertEqual(db_submission.submission_id, after.submission_id,
+    #                      "The submission should be updated with the PK id.")
+    #     self.assertEqual(len(db_events), 3, "Three events should be stored")
+    #     for db_event in db_events:
+    #         self.assertEqual(db_event.submission_id, after.submission_id,
+    #                          "The submission id should be set")
+    #     self.assertEqual(len(db_submission.categories), 2,
+    #                      "Two category relations should be set")
+    #     self.assertEqual(db_submission.primary_classification.category,
+    #                      after.primary_classification.category,
+    #                      "Primary classification should be set.")
 
-            # Reclassification!
-            session.delete(db_submission.primary_classification)
-            session.add(models.SubmissionCategory(
-                submission_id=ident, category='cs.IR', is_primary=1
-            ))
 
-            # On hold!
-            db_submission.status = db_submission.ON_HOLD
-            session.add(db_submission)
-            session.commit()
-
-            # Now get the submission.
-            submission_loaded, _ = get_submission(ident)
-
-        self.assertEqual(submission.metadata.title,
-                         submission_loaded.metadata.title,
-                         "Event-derived metadata should be preserved.")
-        self.assertEqual(submission_loaded.primary_classification.category,
-                         "cs.IR",
-                         "Primary classification should reflect the"
-                         " reclassification that occurred outside the purview"
-                         " of the event model.")
-        self.assertEqual(submission_loaded.status, Submission.ON_HOLD,
-                         "Submission status should reflect hold action"
-                         " performed outside the purview of the event model.")
+# class TestGetSubmission(TestCase):
+#     """Test :func:`.get_submission`."""
+#
+#     def test_get_submission_that_does_not_exist(self):
+#         """Test that an exception is raised when submission doesn't exist."""
+#         with in_memory_db():
+#             with self.assertRaises(exceptions.NoSuchSubmission):
+#                 get_submission(1)
+#
+#     def test_get_submission_with_publish(self):
+#         """Test that publication state is reflected in submission data."""
+#         user = User(12345, 'joe@joe.joe')
+#
+#         events = [
+#             CreateSubmission(creator=user),
+#             SetTitle(creator=user, title='Foo title'),
+#             SetAbstract(creator=user, abstract='Indeed'),
+#             SetAuthors(creator=user, authors=[
+#                 Author(order=0, forename='Joe', surname='Bloggs',
+#                        email='joe@blo.ggs'),
+#                 Author(order=1, forename='Jane', surname='Doe',
+#                        email='j@doe.com'),
+#             ]),
+#             SetLicense(creator=user, license_uri='http://foo.org/1.0/',
+#                           license_name='Foo zero 1.0'),
+#             SetPrimaryClassification(creator=user, category='cs.DL'),
+#             ConfirmPolicy(creator=user),
+#             ConfirmContactInformation(creator=user),
+#             FinalizeSubmission(creator=user)
+#         ]
+#         submission = None
+#         for ev in events:
+#             submission = ev.apply(submission) if submission else ev.apply()
+#
+#         with in_memory_db() as session:
+#             # User creates and finalizes submission.
+#             submission = store_events(*events, submission=submission)
+#             ident = submission.submission_id
+#
+#             # Moderation happens, things change outside the event model.
+#             db_submission = session.query(models.Submission).get(ident)
+#
+#             # Published!
+#             db_submission.status = db_submission.PUBLISHED
+#             db_document = models.Document(paper_id='1234.5678')
+#             db_submission.document = db_document
+#             session.add(db_submission)
+#             session.add(db_document)
+#             session.commit()
+#
+#             # Now get the submission.
+#             submission_loaded, _ = get_submission(ident)
+#
+#         self.assertEqual(submission.metadata.title,
+#                          submission_loaded.metadata.title,
+#                          "Event-derived metadata should be preserved.")
+#         self.assertEqual(submission_loaded.arxiv_id, "1234.5678",
+#                          "arXiv paper ID should be set")
+#         self.assertEqual(submission_loaded.status, Submission.PUBLISHED,
+#                          "Submission status should reflect publish action")
+#
+#     def test_get_submission_with_hold_and_reclass(self):
+#         """Test changes made externally are reflected in submission data."""
+#         user = User(12345, 'joe@joe.joe')
+#         events = [
+#             CreateSubmission(creator=user),
+#             SetTitle(creator=user, title='Foo title'),
+#             SetAbstract(creator=user, abstract='Indeed'),
+#             SetAuthors(creator=user, authors=[
+#                 Author(order=0, forename='Joe', surname='Bloggs',
+#                        email='joe@blo.ggs'),
+#                 Author(order=1, forename='Jane', surname='Doe',
+#                        email='j@doe.com'),
+#             ]),
+#             SetLicense(creator=user, license_uri='http://foo.org/1.0/',
+#                           license_name='Foo zero 1.0'),
+#             SetPrimaryClassification(creator=user, category='cs.DL'),
+#             ConfirmPolicy(creator=user),
+#             ConfirmContactInformation(creator=user),
+#             FinalizeSubmission(creator=user)
+#         ]
+#         submission = None
+#         for ev in events:
+#             submission = ev.apply(submission) if submission else ev.apply()
+#
+#         with in_memory_db() as session:
+#             # User creates and finalizes submission.
+#             submission = store_events(*events, submission=submission)
+#             ident = submission.submission_id
+#
+#             # Moderation happens, things change outside the event model.
+#             db_submission = session.query(models.Submission).get(ident)
+#
+#             # Reclassification!
+#             session.delete(db_submission.primary_classification)
+#             session.add(models.SubmissionCategory(
+#                 submission_id=ident, category='cs.IR', is_primary=1
+#             ))
+#
+#             # On hold!
+#             db_submission.status = db_submission.ON_HOLD
+#             session.add(db_submission)
+#             session.commit()
+#
+#             # Now get the submission.
+#             submission_loaded, _ = get_submission(ident)
+#
+#         self.assertEqual(submission.metadata.title,
+#                          submission_loaded.metadata.title,
+#                          "Event-derived metadata should be preserved.")
+#         self.assertEqual(submission_loaded.primary_classification.category,
+#                          "cs.IR",
+#                          "Primary classification should reflect the"
+#                          " reclassification that occurred outside the purview"
+#                          " of the event model.")
+#         self.assertEqual(submission_loaded.status, Submission.ON_HOLD,
+#                          "Submission status should reflect hold action"
+#                          " performed outside the purview of the event model.")
