@@ -298,7 +298,7 @@ def _create_event(event: Event) -> DBEvent:
 
 
 def store_event(event: Event, before: Optional[Submission],
-                after: Optional[Submission]) -> Event:
+                after: Optional[Submission]) -> Tuple[Event, Submission]:
     """
     Store an event, and update submission state.
 
