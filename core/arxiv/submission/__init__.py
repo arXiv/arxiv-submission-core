@@ -173,30 +173,32 @@ def save(*events: Event, submission_id: Optional[str] = None) \
     """
     if len(events) == 0:
         raise ValueError('Must pass at least one event')
+    events = list(events)   # Coerce to list so that we can index.
+    prior: List[Event] = []
+    before: Optional[Submission] = None
 
-    # We want to play events from the beginning.
+    # Get the current state of the submission from past events.
     if submission_id is not None:
-        existing_events = classic.get_events(submission_id)
+        before, prior = classic.get_submission(submission_id)
+
+    # Either we need a submission ID, or the first event must be a creation.
     elif events[0].submission_id is None \
             and not isinstance(events[0], CreateSubmission):
         raise NoSuchSubmission('Unable to determine submission')
-    else:
-        existing_events = []
-    combined = existing_events + list(events)
 
-    before = None
-    for i, event in enumerate(list(combined)):
-        # Make sure that the submission ID is set.
+    # Apply the events from the end of the existing stream.
+    for i, event in enumerate(list(events)):
+        # Fill in event IDs, if they are missing.
         if event.submission_id is None and submission_id is not None:
             event.submission_id = submission_id
 
-        event.validate(before)
-        after = event.apply(before)
+        event.validate(before)  # Raises InvalidEvent.
+        after = event.apply(before)     # <-- Mutation happens here.
         if not event.committed:
             event, after = classic.store_event(event, before, after)
 
         # TODO: <-- emit event here.
         # TODO: <-- apply rules here.
-        combined[i] = event
+        events[i] = event
         before = after
-    return after, combined
+    return after, prior + events    # Return the whole stack.

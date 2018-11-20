@@ -390,6 +390,7 @@ class TestReplacementIntegration(TestCase):
                 submitter_email=self.submission.creator.email,
                 submitter_id=self.submission.creator.native_id
             )
+            db_submission.doc_paper_id = '1901.00123'
             session.add(db_submission)
             session.commit()
 
@@ -402,16 +403,17 @@ class TestReplacementIntegration(TestCase):
         """User has started a replacement submission."""
         with self.app.app_context():
             submission_to_replace, _ = load(self.submission.submission_id)
-            creation_event = CreateSubmission(creator=self.submitter,
-                                              related=submission_to_replace)
-            replacement, _ = save(creation_event)
+            creation_event = CreateSubmissionVersion(creator=self.submitter)
+            replacement, _ = save(creation_event, submission_id=self.submission.submission_id)
 
         with self.app.app_context():
             replacement, _ = load(replacement.submission_id)
 
             session = classic.current_session()
             db_replacement = session.query(classic.models.Submission) \
-                .get(replacement.submission_id)
+                .filter(classic.models.Submission.doc_paper_id == replacement.arxiv_id) \
+                .order_by(classic.models.Submission.submission_id.desc()) \
+                .first()
 
         # Verify that the round-trip on the replacement submission worked as
         # expected.
@@ -535,6 +537,7 @@ class TestJREFIntegration(TestCase):
                 submitter_email=self.submission.creator.email,
                 submitter_id=self.submission.creator.native_id
             )
+            db_submission.doc_paper_id = '1901.00123'
             session.add(db_submission)
             session.commit()
 
@@ -546,21 +549,22 @@ class TestJREFIntegration(TestCase):
     def test_jref(self):
         """User has started a JREF submission."""
         with self.app.app_context():
+            session = classic.current_session()
             submission_to_jref, _ = load(self.submission.submission_id)
-            creation_event = AddJREFToExistingSubmission(
+            event = SetJournalReference(
                 creator=self.submitter,
-                related=submission_to_jref,
-                doi='10.01234/56789',
                 journal_ref='Foo Rev 1, 2 (1903)'
             )
-            jref_submission, _ = save(creation_event)
+            jref_submission, _ = save(event,
+                                      submission_id=self.submission.submission_id)
 
         with self.app.app_context():
             jref_submission, _ = load(jref_submission.submission_id)
-
             session = classic.current_session()
             db_jref = session.query(classic.models.Submission) \
-                .get(jref_submission.submission_id)
+                .filter(classic.models.Submission.doc_paper_id == jref_submission.arxiv_id) \
+                .order_by(classic.models.Submission.submission_id.desc()) \
+                .first()
 
         # Verify that the round-trip on the replacement submission worked as
         # expected.

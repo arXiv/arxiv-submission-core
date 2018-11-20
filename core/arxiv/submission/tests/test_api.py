@@ -106,7 +106,7 @@ class TestSave(TestCase):
     @mock.patch('submission.classic')
     def test_save_events_on_existing_submission(self, mock_db):
         """Save multiple sets of events in separate calls to :func:`.save`."""
-        cache = defaultdict(list)
+        cache = {}
 
         def mock_store_event_with_cache(event, before, after):
             if after.submission_id is None:
@@ -116,14 +116,18 @@ class TestSave(TestCase):
 
             event.committed = True
             event.submission_id = after.submission_id
-            cache[event.submission_id].append(event)
+            if event.submission_id not in cache:
+                cache[event.submission_id] = (None, [])
+            cache[event.submission_id] = (
+                after, cache[event.submission_id][1] + [event]
+            )
             return event, after
 
         def mock_get_events(submission_id):
             return cache[submission_id]
 
         mock_db.store_event = mock_store_event_with_cache
-        mock_db.get_events = mock_get_events
+        mock_db.get_submission = mock_get_events
 
         # Here is the first set of events.
         user = User(12345, 'joe@joe.joe')

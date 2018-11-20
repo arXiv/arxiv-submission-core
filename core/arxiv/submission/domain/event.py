@@ -142,7 +142,7 @@ class Event:
         """Apply the projection for this :class:`.Event` instance."""
         if submission is not None:
             logger.debug('Project with submission')
-            submission = self.project(submission)
+            submission = self.project(copy.deepcopy(submission))
         else:
             logger.debug('Submission is None; project without submission.')
             submission = self.project()
@@ -151,6 +151,8 @@ class Event:
         # Make sure that the submission has its own ID, if we know what it is.
         if submission.submission_id is None and self.submission_id is not None:
             submission.submission_id = self.submission_id
+        if self.submission_id is None and submission.submission_id is not None:
+            self.submission_id = submission.submission_id
         return submission
 
     def to_dict(self):
@@ -174,29 +176,44 @@ class Event:
 class CreateSubmission(Event):
     """Creation of a new :class:`.Submission`."""
 
-    related: Optional[Submission] = None
-
     def validate(self, *args, **kwargs) -> None:
         """Validate creation of a submission."""
-        if self.related is not None and not self.related.published:
-            raise InvalidEvent(self, "Cannot replace an unpublished e-print")
+        return
 
     def project(self) -> Submission:
         """Create a new :class:`.Submission`."""
-        if self.related is None:
-            return Submission(creator=self.creator, created=self.created,
-                              owner=self.creator, proxy=self.proxy,
-                              client=self.client)
-        submission = copy.deepcopy(self.related)
-        submission.submission_id = None
-        submission.creator = self.creator
-        submission.created = self.created
-        submission.owner = self.creator
-        submission.proxy = self.proxy
-        submission.client = self.client
-        submission.version += 1
-        submission.classic_type = 'rep'
+        return Submission(creator=self.creator, created=self.created,
+                          owner=self.creator, proxy=self.proxy,
+                          client=self.client)
 
+    def to_dict(self):
+        """Generate a dict of this :class:`.CreateSubmission`."""
+        data = super(CreateSubmission, self).to_dict()
+        return data
+
+    @classmethod
+    def from_dict(cls, **data) -> 'CreateSubmission':
+        """Override the ``from_dict`` constructor to handle submission."""
+        return cls(**data)
+
+
+@dataclass(init=False)
+class CreateSubmissionVersion(Event):
+    """
+    Creates a new version of a submission.
+
+    Takes the submission back to "working" state; the user or client may make
+    additional changes before finalizing the submission.
+    """
+    def validate(self, submission: Submission) -> None:
+        """Only applies to published submissions."""
+        if not submission.published:
+            raise InvalidEvent(self, "Must already be published")
+
+    def project(self, submission: Submission) -> Submission:
+        """Increment the version number, and reset several fields."""
+        submission.version += 1
+        submission.status = Submission.WORKING
         # Return these to default.
         submission.status = Submission.status
         submission.source_content = Submission.source_content
@@ -208,79 +225,6 @@ class CreateSubmission(Event):
             Submission.submitter_confirmed_preview
         submission.compiled_content.clear()
         return submission
-
-    def to_dict(self):
-        """Generate a dict of this :class:`.CreateSubmission`."""
-        data = super(CreateSubmission, self).to_dict()
-        if self.related is not None:
-            data.update({'related': self.related.to_dict()})
-        return data
-
-    @classmethod
-    def from_dict(cls, **data) -> 'CreateSubmission':
-        """Override the ``from_dict`` constructor to handle submission."""
-        if 'related' not in data or data['related'] is None:
-            return cls(**data)
-        data['related'] = Submission.from_dict(**data['related'])
-        return cls(**data)
-
-
-@dataclass
-class AddJREFToExistingSubmission(Event):
-    """
-    Create a new journal reference submission.
-
-    In the classic system, a journal reference submission is just like a
-    replacement submission, but the paper version does not change.
-    """
-
-    related: Optional[Submission] = field(default=None)
-    journal_ref: Optional[str] = field(default=None)
-    doi: Optional[str] = field(default=None)
-
-    def validate(self, *args, **kwargs) -> None:
-        """Validate journal_ref and/or DOI."""
-        if self.related is None:
-            raise InvalidEvent(self, "An existing submission is required")
-        if self.doi is None and self.journal_ref is None:
-            raise InvalidEvent(self, "DOI or journal reference must be set")
-        super(AddJREFToExistingSubmission, self).validate(*args, **kwargs)
-        base = dict(creator=self.creator, proxy=self.proxy, client=self.client)
-        trial_submission = self._project()
-        if self.journal_ref is not None:
-            e_jref = SetJournalReference(journal_ref=self.journal_ref, **base)
-            e_jref.validate(trial_submission)
-            trial_submission = e_jref.project(trial_submission)
-        if self.doi is not None:
-            e_doi = SetDOI(doi=self.doi, **base)
-            e_doi.validate(trial_submission)
-            trial_submission = e_doi.project(trial_submission)
-        FinalizeSubmission(**base).validate(trial_submission)
-
-    def _project(self) -> Submission:
-        """Keep the version the same as the replaced submission version."""
-        submission = copy.deepcopy(self.related)
-        submission.submission_id = None
-        submission.creator = self.creator
-        submission.created = self.created
-        submission.owner = self.creator
-        submission.proxy = self.proxy
-        submission.client = self.client
-        submission.classic_type = 'jref'
-        submission.status = Submission.status
-        return submission
-
-    def project(self) -> Submission:
-        """Perform the journal reference projection."""
-        submission = self._project()
-        base = dict(creator=self.creator, proxy=self.proxy, client=self.client)
-        if self.journal_ref is not None:
-            e_jref = SetJournalReference(journal_ref=self.journal_ref, **base)
-            submission = e_jref.project(submission)
-        if self.doi is not None:
-            e_doi = SetDOI(doi=self.doi, **base)
-            submission = e_doi.project(submission)
-        return FinalizeSubmission(**base).project(submission)
 
 
 @dataclass
@@ -628,7 +572,6 @@ class SetDOI(Event):
 
     def validate(self, submission: Submission) -> None:
         """Validate the DOI value."""
-        submission_is_not_finalized(self, submission)
         if not self.doi:    # Can be blank.
             return
         for value in re.split('[;,]', self.doi):
@@ -745,7 +688,6 @@ class SetJournalReference(Event):
 
     def validate(self, submission: Submission) -> None:
         """Validate the journal reference value."""
-        submission_is_not_finalized(self, submission)
         if not self.journal_ref:    # Blank values are OK.
             return
         self._no_disallowed_words(submission)

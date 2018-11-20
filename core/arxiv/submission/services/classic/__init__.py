@@ -172,9 +172,11 @@ def get_submission(submission_id: int) -> Tuple[Submission, List[Event]]:
 
         # Load any subsequent submission rows (e.g. v=2, jref, withdrawal).
         if db_sub.doc_paper_id is not None:
-            db_subs = session.query(models.Submission)\
-                .filter(models.Submission.doc_paper_id == db_sub.doc_paper_id)\
+            db_subs = list(
+                session.query(models.Submission)
+                .filter(models.Submission.doc_paper_id == db_sub.doc_paper_id)
                 .order_by(models.Submission.submission_id.asc())
+            )
         else:
             db_subs = []
 
@@ -234,8 +236,69 @@ def _load_document_id(paper_id: str, version: int) -> int:
     return document_id[0]
 
 
+def _create_replacement(document_id: int, paper_id: str, version: int,
+                        submission: Submission) -> models.Submission:
+    """
+    Create a new replacement submission.
+
+    From the perspective of the database, a replacement is mainly an
+    incremented version number. This requires a new row in the database.
+    """
+    db_sb = models.Submission(type=models.Submission.REPLACEMENT,
+                              document_id=document_id,
+                              version=version)
+    db_sb.update_from_submission(submission)
+    db_sb.doc_paper_id = paper_id
+    db_sb.status = models.Submission.NOT_SUBMITTED
+    return db_sb
+
+
+def _create_withdrawal(document_id: int, paper_id: str, version: int,
+                       submission: Submission) -> models.Submission:
+    """
+    Create a new withdrawal request.
+
+    Withdrawals also require a new row, and they use the most recent version
+    number.
+    """
+    db_sb = models.Submission(type=models.Submission.WITHDRAWAL,
+                              document_id=document_id,
+                              version=version)
+    db_sb.update_from_submission(submission)
+    db_sb.doc_paper_id = paper_id
+    db_sb.status = models.Submission.SUBMITTED
+    return db_sb
+
+
+def _create_jref(document_id: int, paper_id: str, version: int,
+                 submission: Submission) -> models.Submission:
+    """
+    Create a JREF submission.
+
+    Adding DOIs and citation information (so-called "journal reference") also
+    requires a new row. The version number is not incremented.
+    """
+    db_sb = models.Submission(type=models.Submission.JOURNAL_REFERENCE,
+                              document_id=document_id,
+                              version=version)
+    db_sb.update_from_submission(submission)
+    db_sb.doc_paper_id = paper_id
+    db_sb.status = models.Submission.SUBMITTED
+    return db_sb
+
+
+def _create_event(event: Event) -> DBEvent:
+    """Create an event entry in the database."""
+    return DBEvent(event_type=event.event_type,
+                   event_id=event.event_id,
+                   data=event.to_dict(),
+                   created=event.created,
+                   creator=event.creator.to_dict(),
+                   proxy=event.proxy.to_dict() if event.proxy else None)
+
+
 def store_event(event: Event, before: Optional[Submission],
-                after: Optional[Submission]) -> Event:
+                after: Optional[Submission]) -> Tuple[Event, Submission]:
     """
     Store an event, and update submission state.
 
@@ -266,68 +329,52 @@ def store_event(event: Event, before: Optional[Submission],
     if event.committed:
         raise CommitFailed('Event %s already committed', event.event_id)
     session = current_session()
+    document_id: Optional[int] = None
+
     # This is the case that we have a new submission.
     if before is None and isinstance(after, Submission):
-        logger.debug('create a new submission')
-        db_sb = models.Submission(type=models.Submission.NEW_SUBMSSION,
-                                  version=1)
+        db_sb = models.Submission(type=models.Submission.NEW_SUBMSSION)
+        db_sb.update_from_submission(after)
         this_is_a_new_submission = True
 
-    # Otherwise we're making an update for an existing submission.
-    else:
-        logger.debug('update existing submission')
+    else:   # Otherwise we're making an update for an existing submission.
         this_is_a_new_submission = False
 
         # After the original submission is published, a new Document row is
         #  created. This Document is shared by all subsequent Submission rows.
         if before.published:
             document_id = _load_document_id(before.arxiv_id, before.version)
-        else:
-            document_id = None
 
         # From the perspective of the database, a replacement is mainly an
         # incremented version number. This requires a new row in the database.
         if after.version > before.version:
-            db_sb = models.Submission(type=models.Submission.REPLACEMENT,
-                                      document_id=document_id,
-                                      doc_paper_id=before.arxiv_id,
-                                      version=after.version)
+            db_sb = _create_replacement(document_id, before.arxiv_id,
+                                        after.version, after)
+
         # Withdrawals also require a new row, and they use the most recent
         # version number.
         elif isinstance(event, RequestWithdrawal):
-            db_sb = models.Submission(type=models.Submission.WITHDRAWAL,
-                                      document_id=document_id,
-                                      status=models.Submission.SUBMITTED,
-                                      doc_paper_id=before.arxiv_id,
-                                      version=after.version)
+            db_sb = _create_withdrawal(document_id, before.arxiv_id,
+                                       after.version, after)
+
         # Adding DOIs and citation information (so-called "journal reference")
         # also requires a new row. The version number is not incremented.
         elif before.published and type(event) in [SetDOI, SetJournalReference]:
-            db_sb = models.Submission(type=models.Submission.JOURNAL_REFERENCE,
-                                      document_id=document_id,
-                                      doc_paper_id=after.arxiv_id,
-                                      status=models.Submission.SUBMITTED,
-                                      version=after.version)
+            db_sb = _create_jref(document_id, before.arxiv_id,
+                                 after.version, after)
 
         elif isinstance(before, Submission) and before.published:
             db_sb = _load_submission(paper_id=before.arxiv_id,
                                      version=before.version)
-
+            db_sb.update_from_submission(after)
         elif isinstance(before, Submission) and before.submission_id:
             db_sb = _load_submission(before.submission_id)
+            db_sb.update_from_submission(after)
         else:
-            print("before", before.published, before.submission_id)
-            print("event", event)
-            print("after", after.published, after.submission_id)
             raise CommitFailed("Something is fishy")
 
-    db_sb.update_from_submission(after)
-    db_event = DBEvent(event_type=event.event_type,
-                       event_id=event.event_id,
-                       data=event.to_dict(),
-                       created=event.created,
-                       creator=event.creator.to_dict(),
-                       proxy=event.proxy.to_dict() if event.proxy else None)
+    db_event = _create_event(event)
+
     session.add(db_sb)
     session.add(db_event)
 
@@ -341,7 +388,7 @@ def store_event(event: Event, before: Optional[Submission],
         session.commit()
     except Exception as e:
         session.rollback()
-        raise
+        raise CommitFailed('Something went wrong: %s', e) from e
 
     event.committed = True
 

@@ -13,7 +13,7 @@ script:
   - pip install pipenv
   - pipenv install --dev
   - cd core && pipenv run nose2 -s arxiv/ --with-coverage && cd ..
-  - tests/lint.sh
-  - tests/docstyle.sh
 after_success:
   - coveralls
+  - tests/lint.sh
+  - tests/docstyle.sh

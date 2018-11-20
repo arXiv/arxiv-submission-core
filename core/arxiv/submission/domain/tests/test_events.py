@@ -55,8 +55,8 @@ class TestReplacementSubmission(TestCase):
 
     def test_create_submission_replacement(self):
         """A replacement is a new submission based on an old submission."""
-        e = event.CreateSubmission(creator=self.user, related=self.submission)
-        replacement = e.project()
+        e = event.CreateSubmissionVersion(creator=self.user)
+        replacement = e.apply(self.submission)
         self.assertEqual(replacement.arxiv_id, self.submission.arxiv_id)
         self.assertEqual(replacement.version, self.submission.version + 1)
         self.assertEqual(replacement.status, submission.Submission.WORKING)
@@ -65,7 +65,6 @@ class TestReplacementSubmission(TestCase):
 
         self.assertEqual(len(replacement.compiled_content), 0)
         self.assertIsNone(replacement.source_content)
-        self.assertIsNone(replacement.submission_id)
 
         # The user is asked to reaffirm these points.
         self.assertFalse(replacement.submitter_contact_verified)
@@ -92,8 +91,8 @@ class TestReplacementSubmission(TestCase):
                          self.submission.metadata.journal_ref)
 
 
-class TestJREFSubmission(TestCase):
-    """Test :class:`event.AddJREFToExistingSubmission`."""
+class TestDOIorJREFAfterPublish(TestCase):
+    """Test :class:`event.SetDOI` or :class:`event.SetJournalReference`."""
 
     def setUp(self):
         """Initialize auxiliary data for test cases."""
@@ -136,39 +135,39 @@ class TestJREFSubmission(TestCase):
 
     def test_create_submission_jref(self):
         """A JREF is just like a replacement, but different."""
-        e = event.AddJREFToExistingSubmission(creator=self.user,
-                                       related=self.submission)
-        jref = e.project()
-        self.assertEqual(jref.arxiv_id, self.submission.arxiv_id)
-        self.assertEqual(jref.version, self.submission.version)
-        self.assertEqual(jref.status, submission.Submission.SUBMITTED)
+        e = event.SetDOI(creator=self.user, doi='10.001234/567890')
+        after = e.apply(self.submission)
+        self.assertEqual(after.arxiv_id, self.submission.arxiv_id)
+        self.assertEqual(after.version, self.submission.version)
+        self.assertEqual(after.status, submission.Submission.PUBLISHED)
         self.assertTrue(self.submission.published)
-        self.assertFalse(jref.published)
+        self.assertTrue(after.published)
 
-        self.assertIsNone(jref.submission_id)
+        self.assertIsNotNone(after.submission_id)
+        self.assertEqual(self.submission.submission_id, after.submission_id)
 
         # The user is NOT asked to reaffirm these points.
-        self.assertTrue(jref.submitter_contact_verified)
-        self.assertTrue(jref.submitter_accepts_policy)
-        self.assertTrue(jref.submitter_confirmed_preview)
-        self.assertTrue(jref.submitter_contact_verified)
+        self.assertTrue(after.submitter_contact_verified)
+        self.assertTrue(after.submitter_accepts_policy)
+        self.assertTrue(after.submitter_confirmed_preview)
+        self.assertTrue(after.submitter_contact_verified)
 
         # These should all stay the same.
-        self.assertEqual(jref.metadata.title,
+        self.assertEqual(after.metadata.title,
                          self.submission.metadata.title)
-        self.assertEqual(jref.metadata.abstract,
+        self.assertEqual(after.metadata.abstract,
                          self.submission.metadata.abstract)
-        self.assertEqual(jref.metadata.authors,
+        self.assertEqual(after.metadata.authors,
                          self.submission.metadata.authors)
-        self.assertEqual(jref.metadata.authors_display,
+        self.assertEqual(after.metadata.authors_display,
                          self.submission.metadata.authors_display)
-        self.assertEqual(jref.metadata.msc_class,
+        self.assertEqual(after.metadata.msc_class,
                          self.submission.metadata.msc_class)
-        self.assertEqual(jref.metadata.acm_class,
+        self.assertEqual(after.metadata.acm_class,
                          self.submission.metadata.acm_class)
-        self.assertEqual(jref.metadata.doi,
+        self.assertEqual(after.metadata.doi,
                          self.submission.metadata.doi)
-        self.assertEqual(jref.metadata.journal_ref,
+        self.assertEqual(after.metadata.journal_ref,
                          self.submission.metadata.journal_ref)
 
 
