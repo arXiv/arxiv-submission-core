@@ -100,7 +100,8 @@ class TestClassicUIWorkflow(TestCase):
                              "Submitter email set on submission")
             self.assertEqual(db_submission.submitter_name, submitter.name,
                              "Submitter name set on submission")
-            self.assertEqual(db_submission.created, submission.created,
+            self.assertEqual(db_submission.created.replace(tzinfo=UTC),
+                             submission.created,
                              "Creation datetime set correctly")
 
             # TODO: What else to check here?
@@ -252,7 +253,8 @@ class TestClassicUIWorkflow(TestCase):
 
             self.assertEqual(db_submission.status, db_submission.SUBMITTED,
                              "Submission status set correctly in database")
-            self.assertEqual(db_submission.submit_time, finalize.created,
+            self.assertEqual(db_submission.submit_time.replace(tzinfo=UTC),
+                             finalize.created,
                              "Submit time is set.")
             self.assertEqual(len(stack), 16,
                              "Sixteen commands have been executed in total.")

@@ -185,7 +185,7 @@ def get_submission(submission_id: int) -> Tuple[Submission, List[Event]]:
     for event in events:
         # As we go, look for moments where a new row in the legacy submission
         # table was created.
-        if db_subs and db_subs[0].created < event.created:
+        if db_subs and db_subs[0].created.replace(tzinfo=UTC) < event.created:
             # If we find one, patch the domain submission from the preceding
             # row, and load the next row. We want to do this before projecting
             # the event, since we are inferring that the event occurred after
