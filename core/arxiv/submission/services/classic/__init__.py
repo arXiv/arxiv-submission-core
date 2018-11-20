@@ -22,17 +22,13 @@ are located in :mod:`.classic.models`. An additional model, :class:`.DBEvent`,
 is defined in the current module.
 """
 
-from typing import List, Optional, Generator, Dict, Union, Tuple
-from contextlib import contextmanager
+from typing import List, Optional, Dict, Union, Tuple
 
 from flask import Flask
-from sqlalchemy import Column, String, ForeignKey, create_engine
+from sqlalchemy import Column, String, ForeignKey
 from sqlalchemy.ext.indexable import index_property
 from sqlalchemy.orm import relationship
-from sqlalchemy.engine import Engine
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.orm.session import Session
 
 # Combining the base DateTime field with a MySQL backend does not support
 # fractional seconds. Since we may be creating events only milliseconds apart,
@@ -46,8 +42,9 @@ from ...domain.event import Event, event_factory, RequestWithdrawal, SetDOI, \
 from ...domain.submission import License, Submission
 from ...domain.agent import User, Client, Agent
 from .models import Base
-from .exceptions import NoSuchSubmission, CommitFailed, ClassicBaseException
+from .exceptions import ClassicBaseException, NoSuchSubmission, CommitFailed
 from . import models, util
+from .util import transaction, current_session
 
 
 logger = logging.getLogger(__name__)
@@ -104,26 +101,9 @@ class DBEvent(Base):  # type: ignore
         )
 
 
-@contextmanager
-def transaction() -> Generator:
-    """Context manager for database transaction."""
-    session = current_session()
-    try:
-        yield session
-        session.commit()
-    except ClassicBaseException as e:
-        logger.debug('Commit failed, rolling back: %s', str(e))
-        session.rollback()
-        raise   # Propagate exceptions raised from this module.
-    except Exception as e:
-        logger.debug('Commit failed, rolling back: %s', str(e))
-        session.rollback()
-        raise CommitFailed('Failed to commit transaction') from e
-
-
 def get_licenses() -> List[License]:
     """Get a list of :class:`.License`s available for new submissions."""
-    license_data = current_session().query(models.License) \
+    license_data = util.current_session().query(models.License) \
         .filter(models.License.active == '1')
     return [License(uri=row.name, name=row.label) for row in license_data]
 
@@ -216,7 +196,7 @@ def get_submission(submission_id: int) -> Tuple[Submission, List[Event]]:
 
     # Finally, patch the submission with any remaining changes that may have
     # occurred via the legacy system.
-    for db_sub in [db_sub] + db_subs:
+    for db_sub in [db_sub] + list(db_subs):
         submission = db_sub.patch(submission)
     return submission, events
 
@@ -383,48 +363,14 @@ def init_app(app: object = None) -> None:
     config.setdefault('CLASSIC_DATABASE_URI', 'sqlite://')
 
 
-def get_engine(app: object = None) -> Engine:
-    """Get a new :class:`.Engine` for the classic database."""
-    config = get_application_config(app)
-    database_uri = config.get('CLASSIC_DATABASE_URI', 'sqlite://')
-    return create_engine(database_uri)
-
-
-# TODO: consider making this private.
-def get_session(app: object = None) -> Session:
-    """Get a new :class:`.Session` for the classic database."""
-    engine = current_engine()
-    return sessionmaker(bind=engine)()
-
-
-def current_engine() -> Engine:
-    """Get/create :class:`.Engine` for this context."""
-    g = get_application_global()
-    if not g:
-        return get_engine()
-    if 'classic_engine' not in g:
-        g.classic_engine = get_engine()    # type: ignore
-    return g.classic_engine     # type: ignore
-
-
-def current_session() -> Session:
-    """Get/create :class:`.Session` for this context."""
-    g = get_application_global()
-    if not g:
-        return get_session()
-    if 'classic' not in g:
-        g.classic = get_session()    # type: ignore
-    return g.classic     # type: ignore
-
-
 def create_all() -> None:
     """Create all tables in the database."""
-    Base.metadata.create_all(current_engine())
+    Base.metadata.create_all(util.current_engine())
 
 
 def drop_all() -> None:
     """Drop all tables in the database."""
-    Base.metadata.drop_all(current_engine())
+    Base.metadata.drop_all(util.current_engine())
 
 
 # # TODO: find a better way!

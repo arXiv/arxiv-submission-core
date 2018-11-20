@@ -10,6 +10,7 @@ from sqlalchemy.orm import relationship, joinedload, backref
 from sqlalchemy.ext.declarative import declarative_base
 
 from ... import domain
+from .util import transaction
 
 Base = declarative_base()
 
@@ -280,11 +281,15 @@ class Submission(Base):    # type: ignore
                 domain.Classification(category=db_cat.category)
                 for db_cat in self.categories
                 if db_cat.is_primary == 0
-            ]
+            ],
+            arxiv_id=self.doc_paper_id,
+            version=self.version
         )
 
     def update_from_submission(self, submission: domain.Submission) -> None:
         """Update this database object from a :class:`.domain.Submission`."""
+        self.type = self.NEW_SUBMSSION if submission.version == 1 \
+            else self.REPLACEMENT
         self.submitter_id = submission.creator.native_id
         self.submitter_name = submission.creator.name
         self.submitter_email = submission.creator.email
@@ -303,6 +308,17 @@ class Submission(Base):    # type: ignore
         self.msc_class = submission.metadata.msc_class
         self.acm_class = submission.metadata.acm_class
         self.journal_ref = submission.metadata.journal_ref
+
+        self.version = submission.version   # Numeric version.
+        self.doc_paper_id = submission.arxiv_id     # arXiv canonical ID.
+
+        # The document ID is a legacy concept, and not replicated in the NG
+        #  data model. So we need to grab it from the arXiv_documents table
+        #  using the doc_paper_id.
+        if self.doc_paper_id and not self.document_id:
+            doc = _load_document(paper_id=self.doc_paper_id)
+            self.document_id = doc.document_id
+
         if submission.license:
             self.license = submission.license.uri
 
@@ -348,8 +364,8 @@ class Submission(Base):    # type: ignore
 
     def _get_status(self) -> str:
         """Map classic status codes to :class:`.domain.Submission` status."""
-        if self._get_arxiv_id() is not None:
-            return domain.Submission.PUBLISHED
+        # if self._get_arxiv_id() is not None:
+        #     return domain.Submission.PUBLISHED
         return self.STATUS_MAP.get(self.status)
 
     def _update_submitter(self, submission: domain.Submission) -> None:
@@ -736,3 +752,13 @@ class Category(Base):    # type: ignore
 
     papers_to_endorse = Column(SmallInteger, nullable=False,
                                server_default=text("'0'"))
+
+
+def _load_document(paper_id: str) -> Document:
+    with transaction() as session:
+        document = session.query(Document) \
+            .filter(Document.paper_id == paper_id) \
+            .one()
+        if document is None:
+            raise RuntimeError('No such document')
+        return document

@@ -3,11 +3,12 @@
 import hashlib
 from typing import Optional, Dict, TypeVar, List
 from datetime import datetime
+from dateutil.parser import parse as parse_date
 
 from dataclasses import dataclass, field
 from dataclasses import asdict
 
-from .agent import Agent
+from .agent import Agent, agent_factory
 from .meta import License, Classification
 
 
@@ -111,7 +112,7 @@ class Delegation:
 
     @property
     def delegation_id(self):
-        """Unique identifer for the delegation instance."""
+        """Unique identifier for the delegation instance."""
         h = hashlib.new('sha1')
         h.update(b'%s:%s:%s' % (self.delegate.agent_identifier,
                                 self.creator.agent_identifier,
@@ -197,6 +198,22 @@ class Submission:
             'client': self.client.to_dict() if self.client else None,
         })
         return data
+
+    @classmethod
+    def from_dict(cls, **data) -> 'Submission':
+        """Construct from a ``dict``."""
+        data['created'] = parse_date(data['created'])
+        if 'updated' in data and data['updated'] is not None:
+            data['updated'] = parse_date(data['updated'])
+        if 'metadata' in data and data['metadata'] is not None:
+            data['metadata'] = SubmissionMetadata(**data['metadata'])
+        data['creator'] = agent_factory(**data['creator'])
+        data['owner'] = agent_factory(**data['owner'])
+        if 'proxy' in data and data['proxy'] is not None:
+            data['proxy'] = agent_factory(**data['proxy'])
+        if 'client' in data and data['client'] is not None:
+            data['client'] = agent_factory(**data['client'])
+        return cls(**data)
 
 
 @dataclass

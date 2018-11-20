@@ -4,19 +4,19 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-flask = "*"
-dataclasses = "*"
-pyjwt = "*"
-jsonschema = "*"
+flask = "==1.0.2"
+dataclasses = "==0.6"
+pyjwt = "==1.6.4"
+jsonschema = "==2.6.0"
 arxiv-base = "==0.10.1rc0"
-sqlalchemy = "*"
-pyyaml = "*"
-pytz = "*"
-uwsgi = "*"
-mysqlclient = "*"
-mimesis = "*"
-bleach = "*"
-
+sqlalchemy = "==1.2.14"
+pyyaml = "==3.13"
+pytz = "==2018.7"
+uwsgi = "==2.0.17.1"
+mysqlclient = "==1.3.13"
+mimesis = "==2.1.0"
+bleach = "==3.0.2"
+python-dateutil = "*"
 
 [dev-packages]
 "nose2" = "*"

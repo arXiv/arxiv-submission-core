@@ -48,6 +48,7 @@ methods).
 
 import hashlib
 import re
+import copy
 from datetime import datetime
 from typing import Optional, TypeVar, List, Tuple, Any, Dict
 from urllib.parse import urlparse
@@ -169,19 +170,58 @@ class Event:
 # These are largely the domain of the metadata API, and the submission UI.
 
 
-@dataclass(init=False)
+@dataclass
 class CreateSubmission(Event):
     """Creation of a new :class:`.Submission`."""
 
+    replaces: Optional[Submission] = None
+
     def validate(self, *args, **kwargs) -> None:
         """Validate creation of a submission."""
-        return
+        if self.replaces is not None and not self.replaces.published:
+            raise InvalidEvent(self, "Cannot replace an unpublished e-print")
 
     def project(self) -> Submission:
         """Create a new :class:`.Submission`."""
-        return Submission(creator=self.creator, created=self.created,
-                          owner=self.creator, proxy=self.proxy,
-                          client=self.client)
+        if self.replaces is None:
+            return Submission(creator=self.creator, created=self.created,
+                              owner=self.creator, proxy=self.proxy,
+                              client=self.client)
+        submission = copy.deepcopy(self.replaces)
+        submission.submission_id = None
+        submission.creator = self.creator
+        submission.created = self.created
+        submission.owner = self.creator
+        submission.proxy = self.proxy
+        submission.client = self.client
+        submission.version += 1
+
+        # Return these to default.
+        submission.status = Submission.status
+        submission.source_content = Submission.source_content
+        submission.submitter_contact_verified = \
+            Submission.submitter_contact_verified
+        submission.submitter_accepts_policy = \
+            Submission.submitter_accepts_policy
+        submission.submitter_confirmed_preview = \
+            Submission.submitter_confirmed_preview
+        submission.compiled_content.clear()
+        return submission
+
+    def to_dict(self):
+        """Generate a dict of this :class:`.CreateSubmission`."""
+        data = super(CreateSubmission, self).to_dict()
+        if self.replaces is not None:
+            data.update({'replaces': self.replaces.to_dict()})
+        return data
+
+    @classmethod
+    def from_dict(cls, **data) -> 'CreateSubmission':
+        """Override the ``from_dict`` constructor to handle submission."""
+        if 'replaces' not in data or data['replaces'] is None:
+            return cls(**data)
+        data['replaces'] = Submission.from_dict(**data['replaces'])
+        return cls(**data)
 
 
 @dataclass(init=False)
@@ -237,7 +277,7 @@ class ConfirmAuthorship(Event):
         return submission
 
 
-@dataclass
+@dataclass(init=False)
 class ConfirmPolicy(Event):
     """The submitting user accepts the arXiv submission policy."""
 
@@ -771,7 +811,7 @@ class SetAuthors(Event):
         return submission
 
     @classmethod
-    def from_dict(cls, **data) -> Submission:
+    def from_dict(cls, **data) -> 'SetAuthors':
         """Override the default ``from_dict`` constructor to handle authors."""
         if 'authors' not in data:
             raise ValueError('Missing authors')
@@ -843,7 +883,7 @@ class ConfirmPreview(Event):
         return submission
 
 
-@dataclass
+@dataclass(init=False)
 class FinalizeSubmission(Event):
     """Send the submission to the queue for announcement."""
 

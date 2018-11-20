@@ -11,6 +11,75 @@ from .. import event, agent, submission, meta
 from ...exceptions import InvalidEvent
 
 
+class TestReplacementSubmission(TestCase):
+    """Test :class:`event.CreateSubmission` with a replacement."""
+
+    def setUp(self):
+        """Initialize auxiliary data for test cases."""
+        self.user = agent.User(
+            12345,
+            'uuser@cornell.edu',
+            endorsements=[meta.Classification('astro-ph.GA'),
+                          meta.Classification('astro-ph.CO')]
+        )
+        self.submission = submission.Submission(
+            submission_id=1,
+            status=submission.Submission.PUBLISHED,
+            creator=self.user,
+            owner=self.user,
+            created=datetime.now(),
+            source_content=submission.SubmissionContent(
+                identifier='6543',
+                format='pdf',
+                checksum='asdf2345',
+                size=594930
+            ),
+            compiled_content=[],
+            primary_classification=meta.Classification('astro-ph.GA'),
+            secondary_classification=[meta.Classification('astro-ph.CO')],
+            license=meta.License(uri='http://free', name='free'),
+            arxiv_id='1901.001234',
+            version=1,
+            submitter_contact_verified=True,
+            submitter_is_author=True,
+            submitter_accepts_policy=True,
+            submitter_confirmed_preview=True,
+            metadata=submission.SubmissionMetadata(
+                title='the best title',
+                abstract='very abstract',
+                authors_display='J K Jones, F W Englund',
+                doi='10.001234/567890',
+                comments='These are the comments'
+            )
+        )
+
+    def test_create_submission_replacement(self):
+        """A replacement is a new submission based on an old submission."""
+        e = event.CreateSubmission(creator=self.user, replaces=self.submission)
+        replacement = e.project()
+        self.assertEqual(replacement.arxiv_id, self.submission.arxiv_id)
+        self.assertEqual(replacement.version, self.submission.version + 1)
+        self.assertEqual(replacement.status, submission.Submission.WORKING)
+        self.assertTrue(self.submission.published)
+        self.assertFalse(replacement.published)
+
+        self.assertEqual(len(replacement.compiled_content), 0)
+        self.assertIsNone(replacement.source_content)
+
+        # The user is asked to reaffirm these points.
+        self.assertFalse(replacement.submitter_contact_verified)
+        self.assertFalse(replacement.submitter_accepts_policy)
+        self.assertFalse(replacement.submitter_confirmed_preview)
+        self.assertFalse(replacement.submitter_contact_verified)
+
+
+    # TODO: check that
+    # - arXiv is carried forward
+    # - version is incremented
+    # - submission ID is cleared
+    # - appropriate fields are reset, others are carried forward
+
+
 class TestSetPrimaryClassification(TestCase):
     """Test :class:`event.SetPrimaryClassification`."""
 
