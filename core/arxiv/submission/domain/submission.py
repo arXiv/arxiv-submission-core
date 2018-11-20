@@ -151,13 +151,7 @@ class Submission:
     client: Optional[Agent] = field(default=None)
     submission_id: Optional[int] = field(default=None)
     metadata: SubmissionMetadata = field(default_factory=SubmissionMetadata)
-    active: bool = field(default=True)
-    """Actively moving through the submission workflow."""
 
-    finalized: bool = field(default=False)
-    """Submitter has indicated submission is ready for publication."""
-
-    published: bool = field(default=False)
     secondary_classification: List[Classification] = \
         field(default_factory=list)
     submitter_contact_verified: bool = field(default=False)
@@ -169,6 +163,26 @@ class Submission:
     arxiv_id: Optional[str] = field(default=None)
     """The published arXiv paper ID."""
     version: int = field(default=1)
+
+    @property
+    def active(self) -> bool:
+        """Actively moving through the submission workflow."""
+        return self.status not in [self.DELETED, self.PUBLISHED]
+
+    @property
+    def published(self) -> bool:
+        """The submission has been (or is about to be) announced."""
+        return self.status in [self.PUBLISHED, self.SCHEDULED]
+
+    @property
+    def finalized(self) -> bool:
+        """Submitter has indicated submission is ready for publication."""
+        return self.status not in [self.WORKING, self.DELETED]
+
+    @property
+    def deleted(self) -> bool:
+        """Submission is removed."""
+        return self.status == self.DELETED
 
     def to_dict(self) -> dict:
         """Generate a dict representation of this :class:`.Submission`."""
