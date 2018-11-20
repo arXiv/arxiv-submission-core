@@ -255,8 +255,8 @@ class Submission(Base):    # type: ignore
         return domain.Submission(
             creator=submitter,
             owner=submitter,
-            created=self.created,
-            updated=self.updated,
+            created=self.created.replace(tzinfo=UTC),
+            updated=self.updated.replace(tzinfo=UTC),
             submitter_is_author=bool(self.is_author),
             submitter_accepts_policy=bool(self.agree_policy),
             submitter_contact_verified=bool(self.userinfo),

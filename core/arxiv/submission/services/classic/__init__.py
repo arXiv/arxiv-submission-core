@@ -23,7 +23,7 @@ is defined in the current module.
 """
 
 from typing import List, Optional, Dict, Union, Tuple
-
+from pytz import UTC
 from flask import Flask
 from sqlalchemy import Column, String, ForeignKey
 from sqlalchemy.ext.indexable import index_property
@@ -96,7 +96,7 @@ class DBEvent(Base):  # type: ignore
             proxy=Agent.from_dict(self.proxy) if self.proxy else None,
             client=Agent.from_dict(self.client) if self.client else None,
             submission_id=self.submission_id,
-            created=self.created,
+            created=self.created.replace(tzinfo=UTC),
             **data
         )
 

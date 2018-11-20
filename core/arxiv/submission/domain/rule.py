@@ -14,6 +14,7 @@ from dataclasses import asdict
 from .agent import Agent, System
 from .event import Event, event_factory
 from .submission import Submission
+from .util import get_tzaware_utc_now
 
 
 EventRuleType = TypeVar('EventRuleType', bound='EventRule')
@@ -79,6 +80,6 @@ class EventRule:
     consequence: RuleConsequence
     rule_id: Optional[int] = None
     proxy: Optional[Agent] = None
-    created: datetime = field(default_factory=datetime.now)
+    created: datetime = field(default_factory=get_tzaware_utc_now)
     applied: bool = False
     """Whether or not the rule has already been triggered and applied."""

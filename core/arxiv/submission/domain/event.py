@@ -67,6 +67,7 @@ from .submission import Submission, SubmissionMetadata, Author, \
     SubmissionContent
 
 from ..exceptions import InvalidEvent
+from .util import get_tzaware_utc_now
 
 logger = logging.getLogger(__name__)
 
@@ -82,7 +83,7 @@ class Event:
     This is **not** necessarily the creator of the submission.
     """
 
-    created: datetime = field(default_factory=datetime.now)
+    created: datetime = field(default_factory=get_tzaware_utc_now)
     """
     The timestamp when the event was originally committed.
 

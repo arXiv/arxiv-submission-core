@@ -10,6 +10,7 @@ from dataclasses import asdict
 
 from .agent import Agent, agent_factory
 from .meta import License, Classification
+from .util import get_tzaware_utc_now
 
 
 @dataclass
@@ -108,7 +109,7 @@ class Delegation:
 
     delegate: Agent
     creator: Agent
-    created: datetime = field(default_factory=datetime.now)
+    created: datetime = field(default_factory=get_tzaware_utc_now)
 
     @property
     def delegation_id(self):
