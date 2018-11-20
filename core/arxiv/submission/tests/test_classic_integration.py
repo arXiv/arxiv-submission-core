@@ -591,6 +591,152 @@ class TestJREFIntegration(TestCase):
         self.assertEqual(db_jref.document.paper_id, '1901.00123')
 
 
+class TestWithdrawalIntegration(TestCase):
+    """
+    Test integration with the classic database concerning withdrawals.
+
+    The :class:`.domain.submission.Submission` representation has only two
+    statuses: :attr:`.domain.submission.WITHDRAWAL_REQUESTED` and
+    :attr:`.domain.submission.WITHDRAWN`. Like other post-publish operations,
+    we are simply adding events to the single stream for the original
+    submission ID. This screens off details that are due to the underlying
+    implementation, and focuses on how humans are actually interacting with
+    withdrawals.
+
+    On the classic side, we create a new row in the submission table for a
+    withdrawal request, and it passes through the same states as a regular
+    submission.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        """Instantiate an app for use with a SQLite database."""
+        _, db = tempfile.mkstemp(suffix='.sqlite')
+        cls.app = Flask('foo')
+        cls.app.config['CLASSIC_DATABASE_URI'] = f'sqlite:///{db}'
+
+        with cls.app.app_context():
+            classic.init_app(cls.app)
+
+    def setUp(self):
+        """An arXiv user is submitting a new paper."""
+        self.submitter = domain.User(1234, email='j.user@somewhere.edu',
+                                    forename='Jane', surname='User',
+                                    endorsements=['cs.DL'])
+
+        # Create and finalize a new submission.
+        cc0 = 'http://creativecommons.org/publicdomain/zero/1.0/'
+        with self.app.app_context():
+            classic.create_all()
+            metadata=dict([
+                ('title', 'Foo title'),
+                ('abstract', "One morning, as Gregor Samsa was..."),
+                ('comments', '5 pages, 2 turtle doves'),
+                ('report_num', 'asdf1234'),
+                ('doi', '10.01234/56789'),
+                ('journal_ref', 'Foo Rev 1, 2 (1903)')
+            ])
+            self.submission, _ = save(
+                CreateSubmission(creator=self.submitter),
+                ConfirmContactInformation(creator=self.submitter),
+                ConfirmAuthorship(
+                    creator=self.submitter,
+                    submitter_is_author=True
+                ),
+                SetLicense(
+                    creator=self.submitter,
+                    license_uri=cc0,
+                    license_name='CC0 1.0'
+                ),
+                ConfirmPolicy(creator=self.submitter),
+                SetPrimaryClassification(
+                    creator=self.submitter,
+                    category='cs.DL'
+                ),
+                SetUploadPackage(
+                    creator=self.submitter,
+                    checksum="a9s9k342900skks03330029k",
+                    format='tex',
+                    identifier=123,
+                    size=593992
+                ),
+                SetTitle(creator=self.submitter,
+                                title=metadata['title']),
+                SetAbstract(creator=self.submitter,
+                            abstract=metadata['abstract']),
+                SetComments(creator=self.submitter,
+                            comments=metadata['comments']),
+                SetJournalReference(
+                    creator=self.submitter,
+                    journal_ref=metadata['journal_ref']
+                ),
+                SetDOI(creator=self.submitter, doi=metadata['doi']),
+                SetReportNumber(creator=self.submitter,
+                                       report_num=metadata['report_num']),
+                SetAuthors(
+                    creator=self.submitter,
+                    authors=[Author(
+                        order=0,
+                        forename='Bob',
+                        surname='Paulson',
+                        email='Robert.Paulson@nowhere.edu',
+                        affiliation='Fight Club'
+                    )]
+                ),
+                FinalizeSubmission(creator=self.submitter)
+            )
+        self.submission_id = self.submission.submission_id
+
+        # Publish.
+        with self.app.app_context():
+            session = classic.current_session()
+            db_submission = session.query(classic.models.Submission)\
+                .get(self.submission.submission_id)
+            db_submission.status = db_submission.PUBLISHED
+            dated = (datetime.now() - datetime.utcfromtimestamp(0))
+            primary = self.submission.primary_classification.category
+            db_submission.document = classic.models.Document(
+                document_id=1,
+                paper_id='1901.00123',
+                title=self.submission.metadata.title,
+                authors=self.submission.metadata.authors_display,
+                dated=dated.total_seconds(),
+                primary_subject_class=primary,
+                created=datetime.now(),
+                submitter_email=self.submission.creator.email,
+                submitter_id=self.submission.creator.native_id
+            )
+            db_submission.doc_paper_id = '1901.00123'
+            session.add(db_submission)
+            session.commit()
+
+    def tearDown(self):
+        """Clear the database after each test."""
+        with self.app.app_context():
+            classic.drop_all()
+
+    def test_request_withdrawal(self):
+        """Request a withdrawal."""
+        with self.app.app_context():
+            session = classic.current_session()
+            event = RequestWithdrawal(creator=self.submitter,
+                                      reason="short people got no reason")
+            submission, _ = save(event, submission_id=self.submission_id)
+
+            submission, _ = load(self.submission_id)
+            self.assertEqual(submission.status,
+                             domain.Submission.WITHDRAWAL_REQUESTED)
+            self.assertEqual(submission.reason_for_withdrawal, event.reason)
+
+            wdr = session.query(classic.models.Submission) \
+                .filter(classic.models.Submission.doc_paper_id == submission.arxiv_id) \
+                .order_by(classic.models.Submission.submission_id.desc()) \
+                .first()
+            self.assertEqual(wdr.status, classic.models.Submission.SUBMITTED)
+            self.assertEqual(wdr.type, classic.models.Submission.WITHDRAWAL)
+            self.assertIn(f"Withdrawn: {event.reason}", wdr.comments)
+
+
 class TestPublicationIntegration(TestCase):
     """
     Test integration with the classic database concerning publication.

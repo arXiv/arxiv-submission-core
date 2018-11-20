@@ -226,6 +226,11 @@ class Submission(Base):    # type: ignore
         # Apply sticky status.
         if submission.finalized and self.sticky_status is self.ON_HOLD:
             submission.status = submission.ON_HOLD
+
+        # The domain status glosses over some of the detail here.
+        if self.type == Submission.WITHDRAWAL and \
+                self.status < Submission.PUBLISHED:
+            submission.status = domain.Submission.WITHDRAWAL_REQUESTED
         return submission
 
     def to_submission(self) -> domain.Submission:

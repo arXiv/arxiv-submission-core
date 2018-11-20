@@ -267,6 +267,8 @@ def _create_withdrawal(document_id: int, paper_id: str, version: int,
     db_sb.update_from_submission(submission)
     db_sb.doc_paper_id = paper_id
     db_sb.status = models.Submission.SUBMITTED
+    db_sb.comments = db_sb.comments.rstrip('. ') + \
+        f". Withdrawn: {submission.reason_for_withdrawal}"
     return db_sb
 
 

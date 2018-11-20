@@ -250,10 +250,14 @@ class RequestWithdrawal(Event):
 
     reason: str = field(default_factory=str)
 
+    MAX_LENGTH = 400
+
     def validate(self, submission: Submission) -> None:
         """Make sure that a reason was provided."""
         if not self.reason:
             raise InvalidEvent(self, "Provide a reason for the withdrawal")
+        if len(self.reason) > self.MAX_LENGTH:
+            raise InvalidEvent(self, "Reason must be 400 characters or less")
         if not submission.published:
             raise InvalidEvent(self, "Submission must already be published")
 
