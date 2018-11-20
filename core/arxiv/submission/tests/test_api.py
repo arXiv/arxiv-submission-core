@@ -5,6 +5,7 @@ import os
 from collections import defaultdict
 from datetime import datetime, timedelta
 from flask import Flask
+from pytz import UTC
 from .. import save, load, Submission, User, Event, \
     EventRule, RuleCondition, RuleConsequence, CreateComment, \
     SubmissionMetadata, CreateSubmission, SetAuthors, Author, \
@@ -29,7 +30,7 @@ class TestLoad(TestCase):
         u = User(12345, 'joe@joe.joe')
         mock_classic.get_submission.return_value = (
             Submission(creator=u, submission_id=1, owner=u,
-                       created=datetime.now()),
+                       created=datetime.now(UTC)),
             [CreateSubmission(creator=u, submission_id=1, committed=True)]
         )
         submission, events = load(1)

@@ -2,7 +2,7 @@
 
 from unittest import TestCase, mock
 from datetime import datetime
-
+from pytz import UTC
 from mimesis import Text
 
 from arxiv import taxonomy
@@ -27,7 +27,7 @@ class TestWithdrawalSubmission(TestCase):
             status=submission.Submission.PUBLISHED,
             creator=self.user,
             owner=self.user,
-            created=datetime.now(),
+            created=datetime.now(UTC),
             source_content=submission.SubmissionContent(
                 identifier='6543',
                 format='pdf',
@@ -94,7 +94,7 @@ class TestReplacementSubmission(TestCase):
             status=submission.Submission.PUBLISHED,
             creator=self.user,
             owner=self.user,
-            created=datetime.now(),
+            created=datetime.now(UTC),
             source_content=submission.SubmissionContent(
                 identifier='6543',
                 format='pdf',
@@ -174,7 +174,7 @@ class TestDOIorJREFAfterPublish(TestCase):
             status=submission.Submission.PUBLISHED,
             creator=self.user,
             owner=self.user,
-            created=datetime.now(),
+            created=datetime.now(UTC),
             source_content=submission.SubmissionContent(
                 identifier='6543',
                 format='pdf',
@@ -254,7 +254,7 @@ class TestSetPrimaryClassification(TestCase):
             submission_id=1,
             creator=self.user,
             owner=self.user,
-            created=datetime.now()
+            created=datetime.now(UTC)
         )
 
     def test_set_primary_with_nonsense(self):
@@ -307,7 +307,7 @@ class TestAddSecondaryClassification(TestCase):
             submission_id=1,
             creator=self.user,
             owner=self.user,
-            created=datetime.now(),
+            created=datetime.now(UTC),
             secondary_classification=[]
         )
 
@@ -371,7 +371,7 @@ class TestRemoveSecondaryClassification(TestCase):
             submission_id=1,
             creator=self.user,
             owner=self.user,
-            created=datetime.now(),
+            created=datetime.now(UTC),
             secondary_classification=[]
         )
 
@@ -420,7 +420,7 @@ class TestSetAuthors(TestCase):
             submission_id=1,
             creator=self.user,
             owner=self.user,
-            created=datetime.now()
+            created=datetime.now(UTC)
         )
 
     def test_canonical_authors_provided(self):
@@ -480,7 +480,7 @@ class TestSetTitle(TestCase):
             submission_id=1,
             creator=self.user,
             owner=self.user,
-            created=datetime.now()
+            created=datetime.now(UTC)
         )
 
     def test_empty_value(self):
@@ -552,7 +552,7 @@ class TestSetAbstract(TestCase):
             submission_id=1,
             creator=self.user,
             owner=self.user,
-            created=datetime.now()
+            created=datetime.now(UTC)
         )
 
     def test_empty_value(self):
@@ -589,7 +589,7 @@ class TestSetDOI(TestCase):
             submission_id=1,
             creator=self.user,
             owner=self.user,
-            created=datetime.now()
+            created=datetime.now(UTC)
         )
 
     def test_empty_doi(self):
@@ -637,7 +637,7 @@ class TestSetReportNumber(TestCase):
             submission_id=1,
             creator=self.user,
             owner=self.user,
-            created=datetime.now()
+            created=datetime.now(UTC)
         )
 
     def test_valid_report_number(self):
@@ -693,7 +693,7 @@ class TestSetJournalReference(TestCase):
             submission_id=1,
             creator=self.user,
             owner=self.user,
-            created=datetime.now()
+            created=datetime.now(UTC)
         )
 
     def test_valid_journal_ref(self):
@@ -753,7 +753,7 @@ class TestSetACMClassification(TestCase):
             submission_id=1,
             creator=self.user,
             owner=self.user,
-            created=datetime.now()
+            created=datetime.now(UTC)
         )
 
     def test_valid_acm_class(self):
@@ -800,7 +800,7 @@ class TestSetMSCClassification(TestCase):
             submission_id=1,
             creator=self.user,
             owner=self.user,
-            created=datetime.now()
+            created=datetime.now(UTC)
         )
 
     def test_valid_msc_class(self):
@@ -846,7 +846,7 @@ class TestSetComments(TestCase):
             submission_id=1,
             creator=self.user,
             owner=self.user,
-            created=datetime.now()
+            created=datetime.now(UTC)
         )
 
     def test_empty_value(self):

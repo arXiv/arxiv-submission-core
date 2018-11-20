@@ -13,7 +13,7 @@ from unittest import TestCase, mock
 from datetime import datetime
 import tempfile
 from contextlib import contextmanager
-
+from pytz import UTC
 from flask import Flask
 
 from .. import *
@@ -386,7 +386,7 @@ class TestReplacementIntegration(TestCase):
                 authors=self.submission.metadata.authors_display,
                 dated=dated.total_seconds(),
                 primary_subject_class=primary,
-                created=datetime.now(),
+                created=datetime.now(UTC),
                 submitter_email=self.submission.creator.email,
                 submitter_id=self.submission.creator.native_id
             )
@@ -533,7 +533,7 @@ class TestJREFIntegration(TestCase):
                 authors=self.submission.metadata.authors_display,
                 dated=dated.total_seconds(),
                 primary_subject_class=primary,
-                created=datetime.now(),
+                created=datetime.now(UTC),
                 submitter_email=self.submission.creator.email,
                 submitter_id=self.submission.creator.native_id
             )
@@ -702,7 +702,7 @@ class TestWithdrawalIntegration(TestCase):
                 authors=self.submission.metadata.authors_display,
                 dated=dated.total_seconds(),
                 primary_subject_class=primary,
-                created=datetime.now(),
+                created=datetime.now(UTC),
                 submitter_email=self.submission.creator.email,
                 submitter_id=self.submission.creator.native_id
             )
@@ -847,7 +847,7 @@ class TestPublicationIntegration(TestCase):
                 authors=self.submission.metadata.authors_display,
                 dated=dated.total_seconds(),
                 primary_subject_class=primary,
-                created=datetime.now(),
+                created=datetime.now(UTC),
                 submitter_email=self.submission.creator.email,
                 submitter_id=self.submission.creator.native_id
             )
@@ -881,7 +881,7 @@ class TestPublicationIntegration(TestCase):
                 authors=self.submission.metadata.authors_display,
                 dated=dated.total_seconds(),
                 primary_subject_class=primary,
-                created=datetime.now(),
+                created=datetime.now(UTC),
                 submitter_email=self.submission.creator.email,
                 submitter_id=self.submission.creator.native_id
             )

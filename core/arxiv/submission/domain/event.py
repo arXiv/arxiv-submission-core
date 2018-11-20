@@ -50,6 +50,7 @@ import hashlib
 import re
 import copy
 from datetime import datetime
+from pytz import UTC
 from typing import Optional, TypeVar, List, Tuple, Any, Dict
 from urllib.parse import urlparse
 from dataclasses import dataclass, field
@@ -1175,7 +1176,7 @@ def event_factory(event_type: str, **data) -> Event:
         An instance of an :class:`.Event` subclass.
     """
     if 'created' not in data:
-        data['created'] = datetime.now()
+        data['created'] = datetime.now(UTC)
     if event_type in EVENT_TYPES:
         klass = EVENT_TYPES[event_type]
         if hasattr(klass, 'from_dict'):

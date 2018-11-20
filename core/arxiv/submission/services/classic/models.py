@@ -3,6 +3,7 @@
 import json
 from typing import Optional
 from datetime import datetime
+from pytz import UTC
 from sqlalchemy import Column, Date, DateTime, Enum, ForeignKey, Text, text, \
     ForeignKeyConstraint, Index, Integer, SmallInteger, String, Table
 from sqlalchemy.orm import relationship, joinedload, backref
@@ -301,7 +302,7 @@ class Submission(Base):    # type: ignore
         self.userinfo = 1 if submission.submitter_contact_verified else 0
         self.viewed = 1 if submission.submitter_confirmed_preview else 0
         self.created = submission.created
-        self.updated = datetime.now()
+        self.updated = datetime.now(UTC)
         self.title = submission.metadata.title
         self.abstract = submission.metadata.abstract
         self.authors = submission.metadata.authors_display

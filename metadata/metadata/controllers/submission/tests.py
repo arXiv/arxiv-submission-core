@@ -4,7 +4,7 @@ from unittest import TestCase, mock
 import json
 from datetime import datetime
 from werkzeug.exceptions import BadRequest, InternalServerError, NotFound
-
+from pytz import UTC
 from arxiv import status
 from arxiv.submission.domain import User, Submission, Author, Client
 from arxiv.submission import CreateSubmission, SaveError, \
@@ -59,7 +59,7 @@ class TestCreateSubmission(TestCase):
         url_for.return_value = '/foo/'
         user = User(1234, 'foo@bar.baz')
         mock_events.save.return_value = (
-            Submission(creator=user, owner=user, created=datetime.now()),
+            Submission(creator=user, owner=user, created=datetime.now(UTC)),
             [CreateSubmission(creator=user)]
         )
         data = {
@@ -156,7 +156,7 @@ class TestUpdateSubmission(TestCase):
         url_for.return_value = '/foo/'
         user = User(1234, 'foo@bar.baz')
         mock_events.save.return_value = (
-            Submission(creator=user, owner=user, created=datetime.now()),
+            Submission(creator=user, owner=user, created=datetime.now(UTC)),
             [CreateSubmission(creator=user),
              SetTitle(creator=user, title='foo title')]
         )
@@ -264,7 +264,7 @@ class TestGetSubmission(TestCase):
         preserve_exceptions_and_events(mock_events)
         user = User(1234, 'foo@bar.baz')
         mock_events.load.return_value = (
-            Submission(creator=user, owner=user, created=datetime.now()),
+            Submission(creator=user, owner=user, created=datetime.now(UTC)),
             [CreateSubmission(creator=user)]
         )
         content, status_code, headers = submission.get_submission(1)

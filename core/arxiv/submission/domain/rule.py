@@ -7,7 +7,7 @@ substantially in the short term.
 
 from datetime import datetime
 from typing import Callable, TypeVar, Optional
-
+from pytz import UTC
 from dataclasses import dataclass, field
 from dataclasses import asdict
 
@@ -60,7 +60,7 @@ class RuleConsequence:
             'submission_id': submission.submission_id
         }
         data.update(self.event_data)
-        data['created'] = datetime.now()
+        data['created'] = datetime.now(UTC)
         # new_event = event_factory(self.event_type, **data)
         new_event = self.event_type(**data)
         if new_event.submission_id is None:

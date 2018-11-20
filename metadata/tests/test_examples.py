@@ -7,7 +7,7 @@ import os
 import jsonschema
 import tempfile
 from datetime import datetime
-
+from pytz import UTC
 from arxiv import status
 from arxiv.submission.domain import Submission
 from metadata.factory import create_web_app
@@ -316,7 +316,7 @@ class TestPublicationIntegration(TestCase):
                 authors=self.submission['metadata']['authors_display'],
                 dated=dated.total_seconds(),
                 primary_subject_class=primary,
-                created=datetime.now(),
+                created=datetime.now(UTC),
                 submitter_email=self.submission['creator']['email'],
                 submitter_id=self.submission['creator']['user_id']
             )
@@ -353,7 +353,7 @@ class TestPublicationIntegration(TestCase):
                 authors=self.submission['metadata']['authors_display'],
                 dated=dated.total_seconds(),
                 primary_subject_class=primary,
-                created=datetime.now(),
+                created=datetime.now(UTC),
                 submitter_email=self.submission['creator']['email'],
                 submitter_id=self.submission['creator']['user_id']
             )
