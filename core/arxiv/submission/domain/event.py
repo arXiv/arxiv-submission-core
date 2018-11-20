@@ -199,11 +199,19 @@ class CreateSubmission(Event):
 
 @dataclass(init=False)
 class CreateSubmissionVersion(Event):
+    """
+    Creates a new version of a submission.
+
+    Takes the submission back to "working" state; the user or client may make
+    additional changes before finalizing the submission.
+    """
     def validate(self, submission: Submission) -> None:
+        """Only applies to published submissions."""
         if not submission.published:
             raise InvalidEvent(self, "Must already be published")
 
     def project(self, submission: Submission) -> Submission:
+        """Increment the version number, and reset several fields."""
         submission.version += 1
         submission.status = Submission.WORKING
         # Return these to default.
