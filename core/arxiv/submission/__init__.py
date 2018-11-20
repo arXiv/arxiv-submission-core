@@ -174,7 +174,7 @@ def save(*events: Event, submission_id: Optional[str] = None) \
     if len(events) == 0:
         raise ValueError('Must pass at least one event')
     events = list(events)
-    
+
     if submission_id is not None:
         before, prior = classic.get_submission(submission_id)
         for event in events:
