@@ -176,6 +176,9 @@ class Event:
 class CreateSubmission(Event):
     """Creation of a new :class:`.Submission`."""
 
+    NAME = "create submission"
+    NAMED = "submission created"
+
     def validate(self, *args, **kwargs) -> None:
         """Validate creation of a submission."""
         return
@@ -205,6 +208,10 @@ class CreateSubmissionVersion(Event):
     Takes the submission back to "working" state; the user or client may make
     additional changes before finalizing the submission.
     """
+
+    NAME = "create a new version"
+    NAMED = "new version created"
+
     def validate(self, submission: Submission) -> None:
         """Only applies to published submissions."""
         if not submission.published:
@@ -231,6 +238,9 @@ class CreateSubmissionVersion(Event):
 class RemoveSubmission(Event):
     """Removal of a :class:`.Submission`."""
 
+    NAME = "delete submission"
+    NAMED = "submission deleted"
+
     def validate(self, submission: Submission) -> None:
         """Validate removal of a submission."""
         if submission.published:
@@ -247,6 +257,9 @@ class RemoveSubmission(Event):
 @dataclass
 class RequestWithdrawal(Event):
     """Request that a paper be withdrawn."""
+
+    NAME = "request withdrawal"
+    NAMED = "withdrawal requested"
 
     reason: str = field(default_factory=str)
 
@@ -272,6 +285,9 @@ class RequestWithdrawal(Event):
 class ConfirmContactInformation(Event):
     """Submitter has verified their contact information."""
 
+    NAME = "confirm contact information"
+    NAMED = "contact information confirmed"
+
     def validate(self, submission: Submission) -> None:
         """Cannot apply to a finalized submission."""
         submission_is_not_finalized(self, submission)
@@ -285,6 +301,9 @@ class ConfirmContactInformation(Event):
 @dataclass
 class ConfirmAuthorship(Event):
     """The submitting user asserts whether they are an author of the paper."""
+
+    NAME = "confirm that submitter is an author"
+    NAMED = "submitter authorship status confirmed"
 
     submitter_is_author: bool = True
 
@@ -302,6 +321,9 @@ class ConfirmAuthorship(Event):
 class ConfirmPolicy(Event):
     """The submitting user accepts the arXiv submission policy."""
 
+    NAME = "confirm policy acceptance"
+    NAMED = "policy acceptance confirmed"
+
     def validate(self, submission: Submission) -> None:
         """Cannot apply to a finalized submission."""
         submission_is_not_finalized(self, submission)
@@ -315,6 +337,9 @@ class ConfirmPolicy(Event):
 @dataclass
 class SetPrimaryClassification(Event):
     """Update the primary classification of a submission."""
+
+    NAME = "set primary classification"
+    NAMED = "primary classification set"
 
     category: Optional[str] = None
 
@@ -361,6 +386,9 @@ class SetPrimaryClassification(Event):
 class AddSecondaryClassification(Event):
     """Add a secondary :class:`.Classification` to a submission."""
 
+    NAME = "add cross-list classification"
+    NAMED = "cross-list classification added"
+
     category: Optional[str] = field(default=None)
 
     def validate(self, submission: Submission) -> None:
@@ -403,6 +431,9 @@ class AddSecondaryClassification(Event):
 class RemoveSecondaryClassification(Event):
     """Remove secondary :class:`.Classification` from submission."""
 
+    NAME = "remove cross-list classification"
+    NAMED = "cross-list classification removed"
+
     category: Optional[str] = field(default=None)
 
     def validate(self, submission: Submission) -> None:
@@ -435,6 +466,9 @@ class RemoveSecondaryClassification(Event):
 class SetLicense(Event):
     """The submitter has selected a license for their submission."""
 
+    NAME = "select distribution license"
+    NAMED = "distribution license selected"
+
     license_name: Optional[str] = field(default=None)
     license_uri: Optional[str] = field(default=None)
 
@@ -454,6 +488,9 @@ class SetLicense(Event):
 @dataclass
 class SetTitle(Event):
     """Update the title of a submission."""
+
+    NAME = "update title"
+    NAMED = "title updated"
 
     title: str = field(default='')
 
@@ -511,6 +548,9 @@ class SetTitle(Event):
 class SetAbstract(Event):
     """Update the abstract of a submission."""
 
+    NAME = "update abstract"
+    NAMED = "abstract updated"
+
     abstract: str = field(default='')
 
     MIN_LENGTH = 20
@@ -562,6 +602,9 @@ class SetAbstract(Event):
 class SetDOI(Event):
     """Update the external DOI of a submission."""
 
+    NAME = "add a DOI"
+    NAMED = "DOI added"
+
     doi: str = field(default='')
 
     def __post_init__(self):
@@ -595,6 +638,9 @@ class SetDOI(Event):
 @dataclass
 class SetMSCClassification(Event):
     """Update the MSC classification codes of a submission."""
+
+    NAME = "update MSC classification"
+    NAMED = "MSC classification updated"
 
     msc_class: str = field(default='')
 
@@ -630,6 +676,9 @@ class SetMSCClassification(Event):
 @dataclass
 class SetACMClassification(Event):
     """Update the ACM classification codes of a submission."""
+
+    NAME = "update ACM classification"
+    NAMED = "ACM classification updated"
 
     acm_class: str = field(default='')
 
@@ -678,6 +727,9 @@ class SetACMClassification(Event):
 class SetJournalReference(Event):
     """Update the journal reference of a submission."""
 
+    NAME = "add a journal reference"
+    NAMED = "journal reference added"
+
     journal_ref: str = field(default='')
 
     def __post_init__(self):
@@ -722,6 +774,9 @@ class SetJournalReference(Event):
 class SetReportNumber(Event):
     """Update the report number of a submission."""
 
+    NAME = "update report number"
+    NAMED = "report number updated"
+
     report_num: str = field(default='')
 
     def __post_init__(self):
@@ -752,6 +807,9 @@ class SetReportNumber(Event):
 @dataclass
 class SetComments(Event):
     """Update the comments of a submission."""
+
+    NAME = "update comments"
+    NAMED = "comments updated"
 
     comments: str = field(default='')
 
@@ -785,6 +843,9 @@ class SetComments(Event):
 @dataclass
 class SetAuthors(Event):
     """Update the authors on a :class:`.Submission`."""
+
+    NAME = "update authors"
+    NAMED = "authors updated"
 
     authors: List[Author] = field(default_factory=list)
     authors_display: Optional[str] = field(default=None)
@@ -842,6 +903,9 @@ class SetAuthors(Event):
 class SetUploadPackage(Event):
     """Set the upload workspace for this submission."""
 
+    NAME = "set the upload package"
+    NAMED = "upload package set"
+
     identifier: str = field(default_factory=str)
     format: str = field(default_factory=str)
     checksum: str = field(default_factory=str)
@@ -892,6 +956,9 @@ class UnsetUploadPackage(Event):
 class ConfirmPreview(Event):
     """Confirm that the paper and abstract previews are acceptable."""
 
+    NAME = "approve submission preview"
+    NAMED = "submission preview approved"
+
     def validate(self, submission: Submission) -> None:
         """Validate data for :class:`.ConfirmPreview`."""
         submission_is_not_finalized(self, submission)
@@ -905,6 +972,9 @@ class ConfirmPreview(Event):
 @dataclass(init=False)
 class FinalizeSubmission(Event):
     """Send the submission to the queue for announcement."""
+
+    NAME = "finalize submission for announcement"
+    NAMED = "submission finalized"
 
     REQUIRED = [
         'creator', 'primary_classification', 'submitter_contact_verified',
@@ -938,6 +1008,9 @@ class FinalizeSubmission(Event):
 @dataclass
 class UnFinalizeSubmission(Event):
     """Withdraw the submission from the queue for announcement."""
+
+    NAME = "re-open submission for modification"
+    NAMED = "submission re-opened for modification"
 
     def validate(self, submission: Submission) -> None:
         """Validate the unfinalize action."""

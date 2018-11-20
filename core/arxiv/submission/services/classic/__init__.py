@@ -89,7 +89,7 @@ class DBEvent(Base):  # type: ignore
             key: value for key, value in self.data.items()
             if key not in _skip
         }
-        data['committed'] = True,     # Since we're loading from the DB.
+        data['committed'] = True     # Since we're loading from the DB.
         return event_factory(
             self.event_type,
             creator=Agent.from_dict(self.creator),
