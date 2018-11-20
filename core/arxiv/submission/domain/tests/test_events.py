@@ -11,6 +11,73 @@ from .. import event, agent, submission, meta
 from ...exceptions import InvalidEvent
 
 
+class TestWithdrawalSubmission(TestCase):
+    """Test :class:`event.RequestWithdrawal`."""
+
+    def setUp(self):
+        """Initialize auxiliary data for test cases."""
+        self.user = agent.User(
+            12345,
+            'uuser@cornell.edu',
+            endorsements=[meta.Classification('astro-ph.GA'),
+                          meta.Classification('astro-ph.CO')]
+        )
+        self.submission = submission.Submission(
+            submission_id=1,
+            status=submission.Submission.PUBLISHED,
+            creator=self.user,
+            owner=self.user,
+            created=datetime.now(),
+            source_content=submission.SubmissionContent(
+                identifier='6543',
+                format='pdf',
+                checksum='asdf2345',
+                size=594930
+            ),
+            compiled_content=[],
+            primary_classification=meta.Classification('astro-ph.GA'),
+            secondary_classification=[meta.Classification('astro-ph.CO')],
+            license=meta.License(uri='http://free', name='free'),
+            arxiv_id='1901.001234',
+            version=1,
+            submitter_contact_verified=True,
+            submitter_is_author=True,
+            submitter_accepts_policy=True,
+            submitter_confirmed_preview=True,
+            metadata=submission.SubmissionMetadata(
+                title='the best title',
+                abstract='very abstract',
+                authors_display='J K Jones, F W Englund',
+                doi='10.001234/567890',
+                comments='These are the comments'
+            )
+        )
+
+    def test_request_withdrawal(self):
+        """Request that a paper be withdrawn."""
+        e = event.RequestWithdrawal(creator=self.user, reason="no good")
+        e.validate(self.submission)
+        replacement = e.apply(self.submission)
+        self.assertEqual(replacement.arxiv_id, self.submission.arxiv_id)
+        self.assertEqual(replacement.version, self.submission.version)
+        self.assertEqual(replacement.status,
+                         submission.Submission.WITHDRAWAL_REQUESTED)
+        self.assertTrue(self.submission.published)
+        self.assertFalse(replacement.published)
+
+    def test_request_without_a_reason(self):
+        """A reason is required."""
+        e = event.RequestWithdrawal(creator=self.user)
+        with self.assertRaises(event.InvalidEvent):
+            e.validate(self.submission)
+
+    def test_request_without_published_submission(self):
+        """The submission must already be published."""
+        e = event.RequestWithdrawal(creator=self.user, reason="no good")
+        with self.assertRaises(event.InvalidEvent):
+            e.validate(mock.MagicMock(published=False))
+
+
 class TestReplacementSubmission(TestCase):
     """Test :class:`event.CreateSubmission` with a replacement."""
 

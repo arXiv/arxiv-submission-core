@@ -137,6 +137,8 @@ class Submission:
     PUBLISHED = 'published'
     ERROR = 'error'
     DELETED = 'deleted'
+    WITHDRAWAL_REQUESTED = 'withdrawal_requested'
+    WITHDRAWN = 'withdrawn'
 
     creator: Agent
     owner: Agent

@@ -227,26 +227,6 @@ class CreateSubmissionVersion(Event):
         return submission
 
 
-@dataclass
-class WithdrawSubmission(CreateSubmission):
-    """Withdraw a submission."""
-
-    reason: str
-
-    def validate(self, *args, **kwargs) -> None:
-        """Make sure that a submission was provided."""
-        if self.related is None:
-            raise InvalidEvent(self, "An existing submission is required")
-        super(WithdrawSubmission, self).validate(*args, **kwargs)
-
-    def project(self) -> Submission:
-        """Set the classic type."""
-        submission = super(WithdrawSubmission, self).project()
-        submission.classic_type = 'wdr'
-        if submission.
-        return submission
-
-
 @dataclass(init=False)
 class RemoveSubmission(Event):
     """Removal of a :class:`.Submission`."""
@@ -264,10 +244,24 @@ class RemoveSubmission(Event):
         return submission
 
 
-@dataclass(init=False)
+@dataclass
 class RequestWithdrawal(Event):
-    """TODO: implement me!"""
-    pass
+    """Request that a paper be withdrawn."""
+
+    reason: str = field(default_factory=str)
+
+    def validate(self, submission: Submission) -> None:
+        """Make sure that a reason was provided."""
+        if not self.reason:
+            raise InvalidEvent(self, "Provide a reason for the withdrawal")
+        if not submission.published:
+            raise InvalidEvent(self, "Submission must already be published")
+
+    def project(self, submission: Submission) -> Submission:
+        """Update the submission status and withdrawal reason."""
+        submission.status = Submission.WITHDRAWAL_REQUESTED
+        submission.reason_for_withdrawal = self.reason
+        return submission
 
 
 @dataclass(init=False)
