@@ -38,7 +38,7 @@ from sqlalchemy.dialects.mysql import DATETIME as DateTime
 from arxiv.base import logging
 from arxiv.base.globals import get_application_config, get_application_global
 from ...domain.event import Event, event_factory, RequestWithdrawal, SetDOI, \
-    SetJournalReference
+    SetJournalReference, SetReportNumber
 from ...domain.submission import License, Submission
 from ...domain.agent import User, Client, Agent
 from .models import Base
@@ -361,7 +361,8 @@ def store_event(event: Event, before: Optional[Submission],
 
         # Adding DOIs and citation information (so-called "journal reference")
         # also requires a new row. The version number is not incremented.
-        elif before.published and type(event) in [SetDOI, SetJournalReference]:
+        elif before.published and \
+                type(event) in [SetDOI, SetJournalReference, SetReportNumber]:
             db_sb = _create_jref(document_id, before.arxiv_id,
                                  after.version, after)
 
