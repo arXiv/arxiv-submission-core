@@ -223,8 +223,9 @@ def rollback():
 
     [x] Add a Publish event. This will be used to represent the fact that a
         submission was published.
-    [ ] In :func:`classic.get_submission` we should look for Document rows,
-        and use the ``created`` epoch timestamp as a stand-in for publish time.
+    [ ] In :func:`classic.get_submission` we should look at the last updated
+        timestamp on the submission row. We can treat this as the effective
+        publish time; not sure we have anything better than that.
         At that point, a Publish event (with committed=True) should be inserted
         into the stack. This may require some adjustments (good ones) to the
         models.Submission.patch method.
