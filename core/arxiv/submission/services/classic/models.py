@@ -512,7 +512,7 @@ class Document(Base):    # type: ignore
     @property
     def dated_datetime(self) -> datetime:
         """Return the created time as a datetime."""
-        return datetime.utcfromtimestamp(self.dated_datetime).replace(tzinfo=UTC)
+        return datetime.utcfromtimestamp(self.dated).replace(tzinfo=UTC)
 
 
 class DocumentCategory(Base):    # type: ignore
