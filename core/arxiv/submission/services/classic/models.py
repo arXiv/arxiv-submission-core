@@ -509,6 +509,11 @@ class Document(Base):    # type: ignore
     submitter_id = Column(ForeignKey('tapir_users.user_id'), index=True)
     submitter = relationship('User')
 
+    @property
+    def created(self) -> datetime:
+        """Return the created time as a datetime."""
+        return datetime.utcfromtimestamp(self.created).replace(tzinfo=UTC)
+
 
 class DocumentCategory(Base):    # type: ignore
     """Relation between published arXiv papers and their classifications."""

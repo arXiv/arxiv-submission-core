@@ -58,7 +58,7 @@ from dataclasses import asdict
 import bleach
 
 from arxiv.util import schema
-from arxiv import taxonomy
+from arxiv import taxonomy, identifier
 from arxiv.base import logging
 
 from .agent import Agent
@@ -1026,6 +1026,33 @@ class UnFinalizeSubmission(Event):
         """Set :prop:`Submission.finalized`."""
         submission.status = Submission.WORKING
         return submission
+
+
+@dataclass
+class Publish(Event):
+    """Publish the current version of the submission."""
+
+    NAME = "publish submission"
+    NAMED = "submission published"
+
+    arxiv_id: Optional[str] = None
+
+    def validate(self, submission: Submission) -> None:
+        """Make sure that we have a valid arXiv ID."""
+        if not submission.status == Submission.SUBMITTED:
+            raise InvalidEvent(self,
+                               "Can't publish in state %s" % submission.status)
+        if self.arxiv_id is None:
+            raise InvalidEvent(self, "Must provide an arXiv ID.")
+        try:
+            identifier.parse_arxiv_id(self.arxiv_id)
+        except ValueError:
+            raise InvalidEvent(self, "Not a valid arXiv ID.")
+
+    def project(self, submission: Submission) -> Submission:
+        """Set the arXiv ID on the submission."""
+        submission.arxiv_id = self.arxiv_id
+        submission.status = Submission.PUBLISHED
 
 
 # Moderation-related events.

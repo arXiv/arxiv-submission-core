@@ -215,7 +215,7 @@ def _load_submission(submission_id: Optional[int] = None,
         submission = session.query(models.Submission) \
             .filter(models.Submission.doc_paper_id == paper_id) \
             .filter(models.Submission.version == version) \
-            .order_by(models.Submission.created.desc()) \
+            .order_by(models.Submission.submission_id.desc()) \
             .first()
     else:
         submission = None
