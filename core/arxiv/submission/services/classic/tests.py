@@ -228,7 +228,6 @@ class TestStoreEvent(TestCase):
             self.assertEqual(db_submission.count(), 2,
                              "Creates a second row for the JREF")
 
-
     def test_store_events_with_classification(self):
         """Store events including classification."""
         ev = CreateSubmission(creator=self.user)

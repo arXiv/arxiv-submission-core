@@ -787,7 +787,6 @@ class SetReportNumber(Event):
 
     def validate(self, submission: Submission) -> None:
         """Validate the report number value."""
-        submission_is_not_finalized(self, submission)
         if not self.report_num:    # Blank values are OK.
             return
         if not re.search(r"\d\d", self.report_num):
