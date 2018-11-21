@@ -510,7 +510,7 @@ class Document(Base):    # type: ignore
     submitter = relationship('User')
 
     @property
-    def created(self) -> datetime:
+    def created_datetime(self) -> datetime:
         """Return the created time as a datetime."""
         return datetime.utcfromtimestamp(self.created).replace(tzinfo=UTC)
 
