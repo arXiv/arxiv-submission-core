@@ -38,13 +38,15 @@ from sqlalchemy.dialects.mysql import DATETIME as DateTime
 from arxiv.base import logging
 from arxiv.base.globals import get_application_config, get_application_global
 from ...domain.event import Event, event_factory, RequestWithdrawal, SetDOI, \
-    SetJournalReference, SetReportNumber
+    SetJournalReference, SetReportNumber, Publish
 from ...domain.submission import License, Submission
-from ...domain.agent import User, Client, Agent
+from ...domain.agent import User, Client, Agent, System
 from .models import Base
 from .exceptions import ClassicBaseException, NoSuchSubmission, CommitFailed
 from . import models, util
 from .util import transaction, current_session
+
+SYSTEM = System(__name__)
 
 
 logger = logging.getLogger(__name__)
@@ -182,6 +184,14 @@ def get_submission(submission_id: int) -> Tuple[Submission, List[Event]]:
 
     # Play the events forward.
     submission = None
+    applied_events: List[Event] = []
+
+    def insert_publish_event(db_sub, submission):
+        publist_event = _create_publish(db_sub, submission_id)
+        submission = publist_event.apply(submission)
+        applied_events.append(publist_event)
+        return submission
+
     for event in events:
         # As we go, look for moments where a new row in the legacy submission
         # table was created.
@@ -190,17 +200,28 @@ def get_submission(submission_id: int) -> Tuple[Submission, List[Event]]:
             # row, and load the next row. We want to do this before projecting
             # the event, since we are inferring that the event occurred after
             # a change was made via the legacy system.
+            if db_sub.is_published():
+                submission = insert_publish_event(db_sub, submission)
             submission = db_sub.patch(submission)
             db_sub = db_subs.pop(0)
 
         # Now project the event.
         submission = event.apply(submission)
+        applied_events.append(event)
 
     # Finally, patch the submission with any remaining changes that may have
     # occurred via the legacy system.
     for db_sub in [db_sub] + list(db_subs):
+        if db_sub.is_published():
+            submission = insert_publish_event(db_sub, submission)
         submission = db_sub.patch(submission)
-    return submission, events
+    return submission, applied_events
+
+
+def _create_publish(db_sub: models.Submission, submission_id: int) -> Publish:
+    return Publish(creator=SYSTEM, created=db_sub.updated.replace(tzinfo=UTC),
+                   committed=True, arxiv_id=db_sub.get_arxiv_id(),
+                   submission_id=submission_id)
 
 
 def _load_submission(submission_id: Optional[int] = None,
@@ -280,6 +301,14 @@ def _create_jref(document_id: int, paper_id: str, version: int,
     Adding DOIs and citation information (so-called "journal reference") also
     requires a new row. The version number is not incremented.
     """
+    # Try to piggy-back on an existing JREF row. In the classic system, all
+    # three fields can get updated on the same row.
+    most_recent_sb = _load_submission(paper_id=paper_id, version=version)
+    if most_recent_sb.is_jref() and not most_recent_sb.is_published():
+        most_recent_sb.update_from_submission(submission)
+        return most_recent_sb
+
+    # Otherwise, create a new JREF row.
     db_sb = models.Submission(type=models.Submission.JOURNAL_REFERENCE,
                               document_id=document_id,
                               version=version)

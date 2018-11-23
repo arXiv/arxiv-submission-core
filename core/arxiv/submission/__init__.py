@@ -202,36 +202,3 @@ def save(*events: Event, submission_id: Optional[str] = None) \
         events[i] = event
         before = after
     return after, prior + events    # Return the whole stack.
-
-
-# TODO: implement this.
-def rollback():
-    """
-    Roll back a submission to a particular moment.
-
-    The problem with rollbacks when we don't have full visibility on the
-    submission system is that we don't always know precisely when other things
-    have happened. The goal right now is to support a limited number of
-    rollbacks:
-
-    - Abandon a submission entirely. That's not too hard; we have an "active"
-      flag that we can set to False.
-    - Roll back to the most recent published version. In this case we're
-      abandoning changes after the more recent published version.
-
-    Here's the rough plan of campaign:
-
-    [x] Add a Publish event. This will be used to represent the fact that a
-        submission was published.
-    [ ] In :func:`classic.get_submission` we should look at the last updated
-        timestamp on the submission row. We can treat this as the effective
-        publish time; not sure we have anything better than that.
-        At that point, a Publish event (with committed=True) should be inserted
-        into the stack. This may require some adjustments (good ones) to the
-        models.Submission.patch method.
-    [ ] We can then do some reliable rollbacks to Publish events, which is the
-        main challenge.
-    [ ] Update classic.store_event to apply the rollback without breaking
-        anything.
-
-    """

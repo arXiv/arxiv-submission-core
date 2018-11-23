@@ -1053,6 +1053,7 @@ class Publish(Event):
         """Set the arXiv ID on the submission."""
         submission.arxiv_id = self.arxiv_id
         submission.status = Submission.PUBLISHED
+        return submission
 
 
 # Moderation-related events.

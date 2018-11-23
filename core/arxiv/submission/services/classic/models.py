@@ -207,7 +207,7 @@ class Submission(Base):    # type: ignore
         """
         # Status changes.
         submission.status = self._get_status()
-        submission.arxiv_id = self._get_arxiv_id()
+        # submission.arxiv_id = self.get_arxiv_id()
 
         # Possible reclassification.
         primary = self.primary_classification
@@ -263,8 +263,10 @@ class Submission(Base):    # type: ignore
             submitter_confirmed_preview=bool(self.viewed),
             status=status,
             finalized=(status != domain.Submission.WORKING),
-            active=(status not in [domain.Submission.DELETED,
-                                   domain.Submission.PUBLISHED]),
+            active=(status not in domain.Submission.DELETED + [
+                domain.Submission.PUBLISHED,
+                domain.Submission.DELETED_PUBLISHED
+            ]),
             published=(status == domain.Submission.PUBLISHED),
             metadata=domain.SubmissionMetadata(
                 title=self.title,
@@ -294,6 +296,8 @@ class Submission(Base):    # type: ignore
 
     def update_from_submission(self, submission: domain.Submission) -> None:
         """Update this database object from a :class:`.domain.Submission`."""
+        if self.is_published():     # Avoid doing anything. to be safe.
+            return
         self.submitter_id = submission.creator.native_id
         self.submitter_name = submission.creator.name
         self.submitter_email = submission.creator.email
@@ -361,14 +365,21 @@ class Submission(Base):    # type: ignore
         except IndexError:
             return
 
-    def _get_arxiv_id(self) -> Optional[str]:
+    def get_arxiv_id(self) -> Optional[str]:
+        """Get the arXiv identifier for this submission."""
         if not self.document:
             return
         return self.document.paper_id
 
+    def is_published(self) -> bool:
+        return self.status in [self.PUBLISHED, self.DELETED_PUBLISHED]
+
+    def is_jref(self) -> bool:
+        return self.type == self.JOURNAL_REFERENCE
+
     def _get_status(self) -> str:
         """Map classic status codes to :class:`.domain.Submission` status."""
-        # if self._get_arxiv_id() is not None:
+        # if self.get_arxiv_id() is not None:
         #     return domain.Submission.PUBLISHED
         return self.STATUS_MAP.get(self.status)
 

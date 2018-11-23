@@ -17,14 +17,14 @@ import json
 
 from flask import Flask
 
-from ...domain.agent import User
+from ...domain.agent import User, System
 from ...domain.submission import License, Submission, Author
 from ...domain.event import CreateSubmission, \
     FinalizeSubmission, SetPrimaryClassification, AddSecondaryClassification, \
     SetLicense, SetPrimaryClassification, ConfirmPolicy, \
     ConfirmContactInformation, SetTitle, SetAbstract, SetDOI, \
     SetMSCClassification, SetACMClassification, SetJournalReference, \
-    SetComments, SetAuthors
+    SetComments, SetAuthors, Publish
 from . import init_app, create_all, drop_all, models, DBEvent, \
     get_submission, current_session, get_licenses, exceptions, store_event
 
@@ -203,30 +203,48 @@ class TestStoreEvent(TestCase):
                 before = after
 
             # Published!
+            paper_id = '1234.5678'
             db_submission = session.query(models.Submission) \
                 .get(after.submission_id)
             db_submission.status = db_submission.PUBLISHED
-            db_document = models.Document(paper_id='1234.5678')
-            db_submission.doc_paper_id = '1234.5678'
+            db_document = models.Document(paper_id=paper_id)
+            db_submission.doc_paper_id = paper_id
             db_submission.document = db_document
             session.add(db_submission)
             session.add(db_document)
             session.commit()
 
             # This would normally happen during a load.
+            pub = Publish(creator=System(__name__), arxiv_id=paper_id,
+                          committed=True)
+            before = pub.apply(before)
             before = db_submission.patch(before)
 
-            # Now set DOI.
-            e3 = SetDOI(creator=self.user, doi='10.01234/5678',
+            # Now set DOI + journal ref
+            doi = '10.01234/5678'
+            journal_ref = 'foo journal 1994'
+            e3 = SetDOI(creator=self.user, doi=doi,
                         submission_id=after.submission_id)
             after = e3.apply(before)
             store_event(e3, before, after)
 
+            e4 = SetJournalReference(creator=self.user,
+                                     journal_ref=journal_ref,
+                                     submission_id=after.submission_id)
+            before = after
+            after = e4.apply(before)
+            store_event(e4, before, after)
+
             # What happened.
             db_submission = session.query(models.Submission) \
-                .filter(models.Submission.doc_paper_id == '1234.5678')
+                .filter(models.Submission.doc_paper_id == paper_id) \
+                .order_by(models.Submission.submission_id.desc())
             self.assertEqual(db_submission.count(), 2,
                              "Creates a second row for the JREF")
+            db_jref = db_submission.first()
+            self.assertTrue(db_jref.is_jref())
+            self.assertEqual(db_jref.doi, doi)
+            self.assertEqual(db_jref.journal_ref, journal_ref)
 
     def test_store_events_with_classification(self):
         """Store events including classification."""
