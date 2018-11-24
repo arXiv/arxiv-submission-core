@@ -3,23 +3,22 @@ Integration with the classic database to persist events and submission state.
 
 As part of the classic renewal strategy, development of new submission
 interfaces must maintain data interoperability with classic components. This
-service module must therefore do two main things:
+service module must therefore do three main things:
 
 1. Store and provide access to event data generated during the submission
-   process, and
+   process,
 2. Keep the classic database tables up to date so that "downstream" components
    can continue to operate. Since classic components work directly on
    submission tables, persisting events and resulting submission state must
    occur in the same transaction.
-
-An additional challenge is representing changes to submission state made by
-classic components, since those changes will be made directly to submission
-tables and not involve event-generation. See :func:`get_submission` for
-details.
+3. Patch NG submission data with state changes that occur in the classic
+   system. Those changes will be made directly to submission tables and not
+   involve event-generation. See :func:`get_submission` for details.
 
 ORM representations of the classic database tables involved in submission
 are located in :mod:`.classic.models`. An additional model, :class:`.DBEvent`,
-is defined in the current module.
+is defined in :mod:`.classic.event`.
+
 """
 
 from typing import List, Optional, Tuple

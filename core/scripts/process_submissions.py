@@ -25,13 +25,13 @@ from flask import Flask
 from arxiv.submission import save, domain, CreateSubmission, ConfirmAuthorship,\
     ConfirmContactInformation, ConfirmPolicy, SetTitle, SetAbstract, \
     SetComments, SetDOI, SetReportNumber, SetJournalReference, \
-    SetUploadPackage, SelectLicense, SetPrimaryClassification, \
-    AddSecondaryClassification, UpdateAuthors, FinalizeSubmission, load
+    SetUploadPackage, SetLicense, SetPrimaryClassification, \
+    AddSecondaryClassification, SetAuthors, FinalizeSubmission, load
 
 from arxiv.submission.domain.submission import Submission
 from arxiv.submission.services import classic
 
-from arxiv.submission.exceptions import InvalidStack
+from arxiv.submission.exceptions import InvalidStack, InvalidEvent
 
 INVALID_STATUSES = ['0', '20', '29', '30']
 
@@ -58,10 +58,13 @@ def process_csv(tsvfile, session):
     with open(tsvfile) as tsvfh:
         reader = DictReader(tsvfh, delimiter='\t')
         for submission in reader:
+            for key, value in submission.items():
+                if value == 'NULL':
+                    submission[key] = None
             try:
                 submission_id = process_submission(submission)
                 verify_submission(submission, submission_id)
-            except (AssertionError, InvalidStack) as e:
+            except (InvalidStack, InvalidEvent) as e:
                 logging.error('{}: {}'.format(submission['submission_id'], e))
 
 
@@ -74,16 +77,17 @@ def process_submission(s):
         forename = ''
         surname = s['submitter_name']
     submitter = domain.User(s['submitter_id'], email=s['submitter_email'],
-                            forename=forename, surname=surname)
+                            forename=forename, surname=surname,
+                            endorsements=[s['category']])
 
-    metadata = [
+    metadata = dict([
         ('title', s['title']),
         ('abstract', s['abstract']),
         ('comments', s['comments']),
         ('report_num', s['report_num']),
         ('doi', s['doi']),
         ('journal_ref', s['journal_ref'])
-    ]
+    ])
 
     submission, stack = save(
         CreateSubmission(creator=submitter)
@@ -123,16 +127,44 @@ def process_submission(s):
             authors_display=s['authors'],
             creator=submitter
         ),
-        SetTitle(creator=submitter, title=metadata['title']),
-        SetAbstract(creator=submitter, abstract=metadata['abstract']),
-        SetComments(creator=submitter, comments=metadata['comments']),
-        SetJournalReference(creator=submitter,
-                            journal_ref=metadata['journal_ref']),
-        SetDOI(creator=submitter, doi=metadata['doi']),
-        SetReportNumber(creator=submitter, report_num=metadata['report_num']),
         SetPrimaryClassification(creator=submitter, category=s['category']),
         submission_id=submission.submission_id
     )
+    if s['title']:
+        submission, stack = save(
+            SetTitle(creator=submitter, title=metadata['title']),
+            submission_id=submission.submission_id
+        )
+    if s['abstract']:
+        submission, stack = save(
+            SetAbstract(creator=submitter, abstract=metadata['abstract']),
+            submission_id=submission.submission_id
+        )
+    if metadata['comments']:
+        submission, stack = save(
+            SetComments(creator=submitter, comments=metadata['comments']),
+            submission_id=submission.submission_id
+        )
+
+    if metadata['journal_ref']:
+        submission, stack = save(
+            SetJournalReference(creator=submitter,
+                                journal_ref=metadata['journal_ref']),
+            submission_id=submission.submission_id
+        )
+
+    if metadata['doi']:
+        submission, stack = save(
+            SetDOI(creator=submitter, doi=metadata['doi']),
+            submission_id=submission.submission_id
+        )
+
+    if metadata['report_num']:
+        submission, stack = save(
+            SetReportNumber(creator=submitter,
+                            report_num=metadata['report_num']),
+            submission_id=submission.submission_id
+        )
 
     # Parse the license
     license_uri = s.get('license')
@@ -168,12 +200,18 @@ def verify_submission(s, submission_id):
     """Validate event database storage of classic db import data."""
     submission, stack = load(submission_id)
 
-    assert submission.metadata.title == s['title']
-    assert submission.metadata.abstract == s['abstract']
-    assert submission.metadata.comments == s['comments']
-    assert submission.metadata.report_num == s['report_num']
-    assert submission.metadata.doi == s['doi']
-    assert submission.metadata.journal_ref == s['journal_ref']
+    if s['title']:
+        assert submission.metadata.title == SetTitle.cleanup(s['title'])
+    if s['abstract']:
+        assert submission.metadata.abstract == SetAbstract.cleanup(s['abstract'])
+    if s['comments']:
+        assert submission.metadata.comments == SetComments.cleanup(s['comments'])
+    if s['report_num']:
+        assert submission.metadata.report_num == SetReportNumber.cleanup(s['report_num'])
+    if s['doi']:
+        assert submission.metadata.doi == SetDOI.cleanup(s['doi'])
+    if s['journal_ref']:
+        assert submission.metadata.journal_ref == SetJournalReference.cleanup(s['journal_ref'])
 
     if s.get('userinfo') == '1':
         assert submission.submitter_contact_verified, \

@@ -542,7 +542,7 @@ class SetTitle(Event):
 
     def __post_init__(self):
         """Perform some light cleanup on the provided value."""
-        self.title = self._cleanup(self.title)
+        self.title = self.cleanup(self.title)
 
     def validate(self, submission: Submission) -> None:
         """Validate the title value."""
@@ -580,7 +580,8 @@ class SetTitle(Event):
         if N > N_after:
             raise InvalidEvent(self, "Title contains unacceptable HTML tags")
 
-    def _cleanup(self, value: str) -> str:
+    @staticmethod
+    def cleanup(value: str) -> str:
         """Perform some light tidying on the title."""
         value = re.sub(r"\s+", " ", value).strip()       # Single spaces only.
         return value
@@ -603,7 +604,7 @@ class SetAbstract(Event):
 
     def __post_init__(self):
         """Perform some light cleanup on the provided value."""
-        self.abstract = self._cleanup(self.abstract)
+        self.abstract = self.cleanup(self.abstract)
 
     def validate(self, submission: Submission) -> None:
         """Validate the abstract value."""
@@ -622,7 +623,8 @@ class SetAbstract(Event):
                                f"Abstract must be between {self.MIN_LENGTH}"
                                f" and {self.MAX_LENGTH} characters")
 
-    def _cleanup(self, value: str) -> str:
+    @staticmethod
+    def cleanup(value: str) -> str:
         """Perform some light tidying on the abstract."""
         value = re.sub(r"\s+", " ", value)          # Single spaces only.
         value = value.strip()   # Remove leading or trailing spaces
@@ -657,7 +659,7 @@ class SetDOI(Event):
 
     def __post_init__(self):
         """Perform some light cleanup on the provided value."""
-        self.doi = self._cleanup(self.doi)
+        self.doi = self.cleanup(self.doi)
 
     def validate(self, submission: Submission) -> None:
         """Validate the DOI value."""
@@ -677,7 +679,8 @@ class SetDOI(Event):
             return True
         return False
 
-    def _cleanup(self, value: str) -> str:
+    @staticmethod
+    def cleanup(value: str) -> str:
         """Perform some light tidying on the title."""
         value = re.sub(r"\s+", " ", value).strip()        # Single spaces only.
         return value
@@ -699,7 +702,7 @@ class SetMSCClassification(Event):
 
     def __post_init__(self):
         """Perform some light cleanup on the provided value."""
-        self.msc_class = self._cleanup(self.msc_class)
+        self.msc_class = self.cleanup(self.msc_class)
 
     def validate(self, submission: Submission) -> None:
         """Validate the MSC classification value."""
@@ -712,7 +715,8 @@ class SetMSCClassification(Event):
         submission.metadata.msc_class = self.msc_class
         return submission
 
-    def _cleanup(self, value: str) -> str:
+    @staticmethod
+    def cleanup(value: str) -> str:
         """Perform some light fixes on the MSC classification value."""
         value = re.sub(r"\s+", " ", value).strip()
         value = re.sub(r"\s*\.[\s.]*$", "", value)
@@ -741,7 +745,7 @@ class SetACMClassification(Event):
 
     def __post_init__(self):
         """Perform some light cleanup on the provided value."""
-        self.acm_class = self._cleanup(self.acm_class)
+        self.acm_class = self.cleanup(self.acm_class)
 
     def validate(self, submission: Submission) -> None:
         """Validate the ACM classification value."""
@@ -762,7 +766,8 @@ class SetACMClassification(Event):
             if not re.match(ptn, acm_class.strip()):
                 raise InvalidEvent(self, f"Not a valid ACM class: {acm_class}")
 
-    def _cleanup(self, value: str) -> str:
+    @staticmethod
+    def cleanup(value: str) -> str:
         """Perform light cleanup."""
         value = re.sub(r"\s+", " ", value).strip()
         value = re.sub(r"\s*\.[\s.]*$", "", value)
@@ -792,7 +797,7 @@ class SetJournalReference(Event):
 
     def __post_init__(self):
         """Perform some light cleanup on the provided value."""
-        self.journal_ref = self._cleanup(self.journal_ref)
+        self.journal_ref = self.cleanup(self.journal_ref)
 
     def validate(self, submission: Submission) -> None:
         """Validate the journal reference value."""
@@ -819,7 +824,8 @@ class SetJournalReference(Event):
         if not re.search(r"(\A|\D)(19|20)\d\d(\D|\Z)", self.journal_ref):
             raise InvalidEvent(self, "Journal reference must include a year")
 
-    def _cleanup(self, value: str) -> str:
+    @staticmethod
+    def cleanup(value: str) -> str:
         """Perform light cleanup."""
         value = value.replace('PHYSICAL REVIEW LETTERS',
                               'Physical Review Letters')
@@ -842,7 +848,7 @@ class SetReportNumber(Event):
 
     def __post_init__(self):
         """Perform some light cleanup on the provided value."""
-        self.report_num = self._cleanup(self.report_num)
+        self.report_num = self.cleanup(self.report_num)
 
     def validate(self, submission: Submission) -> None:
         """Validate the report number value."""
@@ -857,7 +863,8 @@ class SetReportNumber(Event):
         submission.metadata.report_num = self.report_num
         return submission
 
-    def _cleanup(self, value: str) -> str:
+    @staticmethod
+    def cleanup(value: str) -> str:
         """Light cleanup on report number value."""
         value = re.sub(r"\s+", " ", value).strip()
         value = re.sub(r"\s*\.[\s.]*$", "", value)
@@ -880,7 +887,7 @@ class SetComments(Event):
 
     def __post_init__(self):
         """Perform some light cleanup on the provided value."""
-        self.comments = self._cleanup(self.comments)
+        self.comments = self.cleanup(self.comments)
 
     def validate(self, submission: Submission) -> None:
         """Validate the comments value."""
@@ -896,7 +903,8 @@ class SetComments(Event):
         submission.metadata.comments = self.comments
         return submission
 
-    def _cleanup(self, value: str) -> str:
+    @staticmethod
+    def cleanup(value: str) -> str:
         """Light cleanup on comment value."""
         value = re.sub(r"\s+", " ", value).strip()
         value = re.sub(r"\s*\.[\s.]*$", "", value)
@@ -921,7 +929,7 @@ class SetAuthors(Event):
         """Autogenerate and/or clean display names."""
         if not self.authors_display:
             self.authors_display = self._canonical_author_string()
-        self.authors_display = self._cleanup(self.authors_display)
+        self.authors_display = self.cleanup(self.authors_display)
 
     def validate(self, submission: Submission) -> None:
         """May not apply to a finalized submission."""
@@ -932,7 +940,8 @@ class SetAuthors(Event):
         """Canonical representation of authors, using display names."""
         return ", ".join([au.display for au in self.authors])
 
-    def _cleanup(self, s: str) -> str:
+    @staticmethod
+    def cleanup(s: str) -> str:
         """Perform some light tidying on the provided author string(s)."""
         s = re.sub(r"\s+", " ", s)          # Single spaces only.
         s = re.sub(r",(\s*,)+", ",", s)     # Remove double commas.
@@ -981,7 +990,7 @@ class SetUploadPackage(Event):
     size: int = field(default=0)
 
     ALLOWED_FORMATS = [
-        'pdftex', 'tex', 'pdf', 'ps', 'html', 'invalid'
+        'pdftex', 'tex', 'pdf', 'ps', 'html', 'invalid', 'withdrawn'
     ]
 
     def validate(self, submission: Submission) -> None:
