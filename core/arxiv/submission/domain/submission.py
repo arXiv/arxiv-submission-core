@@ -202,6 +202,10 @@ class Submission:
             'owner': self.owner.to_dict(),
             'proxy': self.proxy.to_dict() if self.proxy else None,
             'client': self.client.to_dict() if self.client else None,
+            'finalized': self.finalized,
+            'deleted': self.deleted,
+            'published': self.published,
+            'active': self.active
         })
         return data
 
@@ -219,7 +223,8 @@ class Submission:
             data['proxy'] = agent_factory(**data['proxy'])
         if 'client' in data and data['client'] is not None:
             data['client'] = agent_factory(**data['client'])
-        return cls(**data)
+        return cls(**{k: v for k, v in data.items()
+                      if k in cls.__dataclass_fields__})
 
 
 @dataclass

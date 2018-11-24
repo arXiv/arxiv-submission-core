@@ -3,7 +3,7 @@
   "description": "Describes content for a submission.",
   "additionalProperties": false,
   "type": "object",
-  "required": ["location", "checksum", "format", "identifier"],
+  "required": ["size", "checksum", "format", "identifier"],
   "properties": {
     "location": {
       "description": "Location of the content resource.",

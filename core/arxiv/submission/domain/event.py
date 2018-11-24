@@ -141,13 +141,12 @@ class Event:
         return h.hexdigest()
 
     def __hash__(self):
-          return hash(self.event_id)
+        return hash(self.event_id)
 
     def apply(self, submission: Optional[Submission] = None) -> Submission:
         """Apply the projection for this :class:`.Event` instance."""
         self.validate(submission)
         if submission is not None:
-            logger.debug('Project with submission')
             submission = self.project(copy.deepcopy(submission))
         else:
             logger.debug('Submission is None; project without submission.')
@@ -1095,6 +1094,9 @@ class UnFinalizeSubmission(Event):
 
     NAME = "re-open submission for modification"
     NAMED = "submission re-opened for modification"
+
+    def __hash__(self):
+        return hash(self.event_id)
 
     def validate(self, submission: Submission) -> None:
         """Validate the unfinalize action."""
