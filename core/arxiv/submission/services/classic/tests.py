@@ -24,7 +24,8 @@ from ...domain.event import CreateSubmission, \
     SetLicense, SetPrimaryClassification, ConfirmPolicy, \
     ConfirmContactInformation, SetTitle, SetAbstract, SetDOI, \
     SetMSCClassification, SetACMClassification, SetJournalReference, \
-    SetComments, SetAuthors, Publish
+    SetComments, SetAuthors, Publish, ConfirmAuthorship, ConfirmPolicy, \
+    SetUploadPackage
 from . import init_app, create_all, drop_all, models, DBEvent, \
     get_submission, current_session, get_licenses, exceptions, store_event
 
@@ -87,7 +88,8 @@ class TestStoreEvent(TestCase):
 
     def setUp(self):
         """Instantiate a user."""
-        self.user = User(12345, 'joe@joe.joe')
+        self.user = User(12345, 'joe@joe.joe',
+                         endorsements=['physics.soc-ph', 'cs.DL'])
 
     def test_store_creation(self):
         """Store a :class:`CreateSubmission`."""
@@ -113,12 +115,12 @@ class TestStoreEvent(TestCase):
         """Store events and attendant submission with metadata."""
         metadata = {
             'title': 'foo title',
-            'abstract': 'very abstract',
+            'abstract': 'very abstract' * 20,
             'comments': 'indeed',
             'msc_class': 'foo msc',
-            'acm_class': 'COMPUTER-Y',
-            'doi': '10.01234/5678',
-            'journal_ref': 'Nature 1: 1',
+            'acm_class': 'F.2.2; I.2.7',
+            'doi': '10.1000/182',
+            'journal_ref': 'Nature 1991 2: 1',
             'authors': [Author(order=0, forename='Joe', surname='Bloggs')]
         }
         with in_memory_db() as session:
@@ -163,10 +165,48 @@ class TestStoreEvent(TestCase):
 
     def test_store_events_with_finalized_submission(self):
         """Store events and a finalized submission."""
+        metadata = {
+            'title': 'foo title',
+            'abstract': 'very abstract' * 20,
+            'comments': 'indeed',
+            'msc_class': 'foo msc',
+            'acm_class': 'F.2.2; I.2.7',
+            'doi': '10.1000/182',
+            'journal_ref': 'Nature 1991 2: 1',
+            'authors': [Author(order=0, forename='Joe', surname='Bloggs')]
+        }
         with in_memory_db() as session:
-            ev = CreateSubmission(creator=self.user)
-            ev2 = FinalizeSubmission(creator=self.user)
-            events = [ev, ev2]
+
+            events = [
+                CreateSubmission(creator=self.user),
+                ConfirmContactInformation(creator=self.user),
+                ConfirmAuthorship(creator=self.user, submitter_is_author=True),
+                ConfirmContactInformation(creator=self.user),
+                ConfirmPolicy(creator=self.user),
+                SetTitle(creator=self.user, title=metadata['title']),
+                SetAuthors(creator=self.user, authors=[
+                    Author(order=0, forename='Joe', surname='Bloggs',
+                           email='joe@blo.ggs'),
+                    Author(order=1, forename='Jane', surname='Doe',
+                           email='j@doe.com'),
+                ]),
+                SetAbstract(creator=self.user, abstract=metadata['abstract']),
+                SetComments(creator=self.user, comments=metadata['comments']),
+                SetMSCClassification(creator=self.user,
+                                     msc_class=metadata['msc_class']),
+                SetACMClassification(creator=self.user,
+                                     acm_class=metadata['acm_class']),
+                SetJournalReference(creator=self.user,
+                                    journal_ref=metadata['journal_ref']),
+                SetDOI(creator=self.user, doi=metadata['doi']),
+                SetLicense(creator=self.user,
+                           license_uri='http://foo.org/1.0/',
+                           license_name='Foo zero 1.0'),
+                SetUploadPackage(creator=self.user, identifier='12345'),
+                SetPrimaryClassification(creator=self.user,
+                                         category='physics.soc-ph'),
+                FinalizeSubmission(creator=self.user)
+            ]
 
             before = None
             for i, event in enumerate(list(events)):
@@ -183,17 +223,56 @@ class TestStoreEvent(TestCase):
                          "The submission should be updated with the PK id.")
         self.assertEqual(db_submission.status, models.Submission.SUBMITTED,
                          "Submission should be in submitted state.")
-        self.assertEqual(len(db_events), 2, "Two events should be stored")
+        self.assertEqual(len(db_events), len(events),
+                         "%i events should be stored" % len(events))
         for db_event in db_events:
             self.assertEqual(db_event.submission_id, after.submission_id,
                              "The submission id should be set")
 
     def test_store_doi_jref_with_publication(self):
         """:class:`SetDOI` or :class:`SetJournalReference` after pub."""
+        metadata = {
+            'title': 'foo title',
+            'abstract': 'very abstract' * 20,
+            'comments': 'indeed',
+            'msc_class': 'foo msc',
+            'acm_class': 'F.2.2; I.2.7',
+            'doi': '10.1000/182',
+            'journal_ref': 'Nature 1991 2: 1',
+            'authors': [Author(order=0, forename='Joe', surname='Bloggs')]
+        }
+
         with in_memory_db() as session:
-            ev = CreateSubmission(creator=self.user)
-            ev2 = FinalizeSubmission(creator=self.user)
-            events = [ev, ev2]
+            events = [
+                CreateSubmission(creator=self.user),
+                ConfirmContactInformation(creator=self.user),
+                ConfirmAuthorship(creator=self.user, submitter_is_author=True),
+                ConfirmContactInformation(creator=self.user),
+                ConfirmPolicy(creator=self.user),
+                SetTitle(creator=self.user, title=metadata['title']),
+                SetAuthors(creator=self.user, authors=[
+                    Author(order=0, forename='Joe', surname='Bloggs',
+                           email='joe@blo.ggs'),
+                    Author(order=1, forename='Jane', surname='Doe',
+                           email='j@doe.com'),
+                ]),
+                SetAbstract(creator=self.user, abstract=metadata['abstract']),
+                SetComments(creator=self.user, comments=metadata['comments']),
+                SetMSCClassification(creator=self.user,
+                                     msc_class=metadata['msc_class']),
+                SetACMClassification(creator=self.user,
+                                     acm_class=metadata['acm_class']),
+                SetJournalReference(creator=self.user,
+                                    journal_ref=metadata['journal_ref']),
+                SetDOI(creator=self.user, doi=metadata['doi']),
+                SetLicense(creator=self.user,
+                           license_uri='http://foo.org/1.0/',
+                           license_name='Foo zero 1.0'),
+                SetUploadPackage(creator=self.user, identifier='12345'),
+                SetPrimaryClassification(creator=self.user,
+                                         category='physics.soc-ph'),
+                FinalizeSubmission(creator=self.user)
+            ]
 
             before = None
             for i, event in enumerate(list(events)):
@@ -203,7 +282,7 @@ class TestStoreEvent(TestCase):
                 before = after
 
             # Published!
-            paper_id = '1234.5678'
+            paper_id = '1901.00123'
             db_submission = session.query(models.Submission) \
                 .get(after.submission_id)
             db_submission.status = db_submission.PUBLISHED
@@ -221,7 +300,7 @@ class TestStoreEvent(TestCase):
             before = db_submission.patch(before)
 
             # Now set DOI + journal ref
-            doi = '10.01234/5678'
+            doi = '10.1000/182'
             journal_ref = 'foo journal 1994'
             e3 = SetDOI(creator=self.user, doi=doi,
                         submission_id=after.submission_id)
@@ -291,12 +370,13 @@ class TestGetSubmission(TestCase):
 
     def test_get_submission_with_publish(self):
         """Test that publication state is reflected in submission data."""
-        user = User(12345, 'joe@joe.joe')
+        user = User(12345, 'joe@joe.joe',
+                    endorsements=['physics.soc-ph', 'cs.DL'])
 
         events = [
             CreateSubmission(creator=user),
             SetTitle(creator=user, title='Foo title'),
-            SetAbstract(creator=user, abstract='Indeed'),
+            SetAbstract(creator=user, abstract='Indeed' * 10),
             SetAuthors(creator=user, authors=[
                 Author(order=0, forename='Joe', surname='Bloggs',
                        email='joe@blo.ggs'),
@@ -307,6 +387,7 @@ class TestGetSubmission(TestCase):
                        license_name='Foo zero 1.0'),
             SetPrimaryClassification(creator=user, category='cs.DL'),
             ConfirmPolicy(creator=user),
+            SetUploadPackage(creator=user, identifier='12345'),
             ConfirmContactInformation(creator=user),
             FinalizeSubmission(creator=user)
         ]
@@ -328,7 +409,7 @@ class TestGetSubmission(TestCase):
 
             # Published!
             db_submission.status = db_submission.PUBLISHED
-            db_document = models.Document(paper_id='1234.5678')
+            db_document = models.Document(paper_id='1901.00123')
             db_submission.document = db_document
             session.add(db_submission)
             session.add(db_document)
@@ -340,18 +421,19 @@ class TestGetSubmission(TestCase):
         self.assertEqual(submission.metadata.title,
                          submission_loaded.metadata.title,
                          "Event-derived metadata should be preserved.")
-        self.assertEqual(submission_loaded.arxiv_id, "1234.5678",
+        self.assertEqual(submission_loaded.arxiv_id, "1901.00123",
                          "arXiv paper ID should be set")
         self.assertEqual(submission_loaded.status, Submission.PUBLISHED,
                          "Submission status should reflect publish action")
 
     def test_get_submission_with_hold_and_reclass(self):
         """Test changes made externally are reflected in submission data."""
-        user = User(12345, 'joe@joe.joe')
+        user = User(12345, 'joe@joe.joe',
+                    endorsements=['physics.soc-ph', 'cs.DL'])
         events = [
             CreateSubmission(creator=user),
             SetTitle(creator=user, title='Foo title'),
-            SetAbstract(creator=user, abstract='Indeed'),
+            SetAbstract(creator=user, abstract='Indeed' * 20),
             SetAuthors(creator=user, authors=[
                 Author(order=0, forename='Joe', surname='Bloggs',
                        email='joe@blo.ggs'),
@@ -362,6 +444,7 @@ class TestGetSubmission(TestCase):
                        license_name='Foo zero 1.0'),
             SetPrimaryClassification(creator=user, category='cs.DL'),
             ConfirmPolicy(creator=user),
+            SetUploadPackage(creator=user, identifier='12345'),
             ConfirmContactInformation(creator=user),
             FinalizeSubmission(creator=user)
         ]

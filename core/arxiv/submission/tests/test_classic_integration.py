@@ -126,6 +126,7 @@ class TestClassicUIWorkflow(TestCase):
                 ),
                 submission_id=submission.submission_id
             )
+
             self.assertEqual(len(stack), 6,
                              "Six commands have been executed in total.")
 
@@ -565,6 +566,7 @@ class TestJREFIntegration(TestCase):
             session = classic.current_session()
             db_jref = session.query(classic.models.Submission) \
                 .filter(classic.models.Submission.doc_paper_id == jref_submission.arxiv_id) \
+                .filter(classic.models.Submission.type == classic.models.Submission.JOURNAL_REFERENCE) \
                 .order_by(classic.models.Submission.submission_id.desc()) \
                 .first()
 
@@ -662,8 +664,7 @@ class TestWithdrawalIntegration(TestCase):
                     identifier=123,
                     size=593992
                 ),
-                SetTitle(creator=self.submitter,
-                                title=metadata['title']),
+                SetTitle(creator=self.submitter, title=metadata['title']),
                 SetAbstract(creator=self.submitter,
                             abstract=metadata['abstract']),
                 SetComments(creator=self.submitter,

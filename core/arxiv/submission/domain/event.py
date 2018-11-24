@@ -140,8 +140,12 @@ class Event:
                                 self.creator.agent_identifier.encode('utf-8')))
         return h.hexdigest()
 
+    def __hash__(self):
+          return hash(self.event_id)
+
     def apply(self, submission: Optional[Submission] = None) -> Submission:
         """Apply the projection for this :class:`.Event` instance."""
+        self.validate(submission)
         if submission is not None:
             logger.debug('Project with submission')
             submission = self.project(copy.deepcopy(submission))
@@ -181,11 +185,14 @@ class CreateSubmission(Event):
     NAME = "create submission"
     NAMED = "submission created"
 
+    def __hash__(self):
+        return hash(self.event_id)
+
     def validate(self, *args, **kwargs) -> None:
         """Validate creation of a submission."""
         return
 
-    def project(self) -> Submission:
+    def project(self, submission: None = None) -> Submission:
         """Create a new :class:`.Submission`."""
         return Submission(creator=self.creator, created=self.created,
                           owner=self.creator, proxy=self.proxy,
@@ -213,6 +220,9 @@ class CreateSubmissionVersion(Event):
 
     NAME = "create a new version"
     NAMED = "new version created"
+
+    def __hash__(self):
+        return hash(self.event_id)
 
     def validate(self, submission: Submission) -> None:
         """Only applies to published submissions."""
@@ -243,6 +253,9 @@ class RemoveSubmission(Event):
     NAME = "delete submission"
     NAMED = "submission deleted"
 
+    def __hash__(self):
+        return hash(self.event_id)
+
     def validate(self, submission: Submission) -> None:
         """Validate removal of a submission."""
         if submission.published:
@@ -262,6 +275,9 @@ class RequestWithdrawal(Event):
 
     NAME = "request withdrawal"
     NAMED = "withdrawal requested"
+
+    def __hash__(self):
+        return hash(self.event_id)
 
     reason: str = field(default_factory=str)
 
@@ -290,6 +306,9 @@ class ConfirmContactInformation(Event):
     NAME = "confirm contact information"
     NAMED = "contact information confirmed"
 
+    def __hash__(self):
+        return hash(self.event_id)
+
     def validate(self, submission: Submission) -> None:
         """Cannot apply to a finalized submission."""
         submission_is_not_finalized(self, submission)
@@ -306,6 +325,9 @@ class ConfirmAuthorship(Event):
 
     NAME = "confirm that submitter is an author"
     NAMED = "submitter authorship status confirmed"
+
+    def __hash__(self):
+        return hash(self.event_id)
 
     submitter_is_author: bool = True
 
@@ -326,6 +348,9 @@ class ConfirmPolicy(Event):
     NAME = "confirm policy acceptance"
     NAMED = "policy acceptance confirmed"
 
+    def __hash__(self):
+        return hash(self.event_id)
+
     def validate(self, submission: Submission) -> None:
         """Cannot apply to a finalized submission."""
         submission_is_not_finalized(self, submission)
@@ -342,6 +367,9 @@ class SetPrimaryClassification(Event):
 
     NAME = "set primary classification"
     NAMED = "primary classification set"
+
+    def __hash__(self):
+        return hash(self.event_id)
 
     category: Optional[str] = None
 
@@ -391,6 +419,9 @@ class AddSecondaryClassification(Event):
     NAME = "add cross-list classification"
     NAMED = "cross-list classification added"
 
+    def __hash__(self):
+        return hash(self.event_id)
+
     category: Optional[str] = field(default=None)
 
     def validate(self, submission: Submission) -> None:
@@ -436,6 +467,9 @@ class RemoveSecondaryClassification(Event):
     NAME = "remove cross-list classification"
     NAMED = "cross-list classification removed"
 
+    def __hash__(self):
+        return hash(self.event_id)
+
     category: Optional[str] = field(default=None)
 
     def validate(self, submission: Submission) -> None:
@@ -471,6 +505,9 @@ class SetLicense(Event):
     NAME = "select distribution license"
     NAMED = "distribution license selected"
 
+    def __hash__(self):
+        return hash(self.event_id)
+
     license_name: Optional[str] = field(default=None)
     license_uri: Optional[str] = field(default=None)
 
@@ -493,6 +530,9 @@ class SetTitle(Event):
 
     NAME = "update title"
     NAMED = "title updated"
+
+    def __hash__(self):
+        return hash(self.event_id)
 
     title: str = field(default='')
 
@@ -553,6 +593,9 @@ class SetAbstract(Event):
     NAME = "update abstract"
     NAMED = "abstract updated"
 
+    def __hash__(self):
+        return hash(self.event_id)
+
     abstract: str = field(default='')
 
     MIN_LENGTH = 20
@@ -607,6 +650,9 @@ class SetDOI(Event):
     NAME = "add a DOI"
     NAMED = "DOI added"
 
+    def __hash__(self):
+        return hash(self.event_id)
+
     doi: str = field(default='')
 
     def __post_init__(self):
@@ -643,6 +689,9 @@ class SetMSCClassification(Event):
 
     NAME = "update MSC classification"
     NAMED = "MSC classification updated"
+
+    def __hash__(self):
+        return hash(self.event_id)
 
     msc_class: str = field(default='')
 
@@ -682,7 +731,11 @@ class SetACMClassification(Event):
     NAME = "update ACM classification"
     NAMED = "ACM classification updated"
 
+    def __hash__(self):
+        return hash(self.event_id)
+
     acm_class: str = field(default='')
+    """E.g. F.2.2; I.2.7"""
 
     MAX_LENGTH = 160
 
@@ -721,7 +774,7 @@ class SetACMClassification(Event):
             v = re.sub(r"^([A-K])(\d)", "\g<1>.\g<2>", v)
             v = re.sub(r"M$", "m", v)
             _value.append(v)
-        value = ";".join(_value)
+        value = "; ".join(_value)
         return value
 
 
@@ -731,6 +784,9 @@ class SetJournalReference(Event):
 
     NAME = "add a journal reference"
     NAMED = "journal reference added"
+
+    def __hash__(self):
+        return hash(self.event_id)
 
     journal_ref: str = field(default='')
 
@@ -779,6 +835,9 @@ class SetReportNumber(Event):
     NAME = "update report number"
     NAMED = "report number updated"
 
+    def __hash__(self):
+        return hash(self.event_id)
+
     report_num: str = field(default='')
 
     def __post_init__(self):
@@ -811,6 +870,9 @@ class SetComments(Event):
 
     NAME = "update comments"
     NAMED = "comments updated"
+
+    def __hash__(self):
+        return hash(self.event_id)
 
     comments: str = field(default='')
 
@@ -847,6 +909,9 @@ class SetAuthors(Event):
 
     NAME = "update authors"
     NAMED = "authors updated"
+
+    def __hash__(self):
+        return hash(self.event_id)
 
     authors: List[Author] = field(default_factory=list)
     authors_display: Optional[str] = field(default=None)
@@ -907,6 +972,9 @@ class SetUploadPackage(Event):
     NAME = "set the upload package"
     NAMED = "upload package set"
 
+    def __hash__(self):
+        return hash(self.event_id)
+
     identifier: str = field(default_factory=str)
     format: str = field(default_factory=str)
     checksum: str = field(default_factory=str)
@@ -960,6 +1028,9 @@ class ConfirmPreview(Event):
     NAME = "approve submission preview"
     NAMED = "submission preview approved"
 
+    def __hash__(self):
+        return hash(self.event_id)
+
     def validate(self, submission: Submission) -> None:
         """Validate data for :class:`.ConfirmPreview`."""
         submission_is_not_finalized(self, submission)
@@ -976,6 +1047,9 @@ class FinalizeSubmission(Event):
 
     NAME = "finalize submission for announcement"
     NAMED = "submission finalized"
+
+    def __hash__(self):
+        return hash(self.event_id)
 
     REQUIRED = [
         'creator', 'primary_classification', 'submitter_contact_verified',
@@ -1034,6 +1108,9 @@ class Publish(Event):
 
     NAME = "publish submission"
     NAMED = "submission published"
+
+    def __hash__(self):
+        return hash(self.event_id)
 
     arxiv_id: Optional[str] = None
 

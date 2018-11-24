@@ -71,7 +71,7 @@ class Submission(Base):    # type: ignore
     NEW_SUBMSSION = 'new'
     REPLACEMENT = 'rep'
     JOURNAL_REFERENCE = 'jref'
-    WITHDRAWAL = 'dr'
+    WITHDRAWAL = 'wdr'
 
     WITHDRAWN_FORMAT = 'withdrawn'
 
@@ -121,8 +121,8 @@ class Submission(Base):    # type: ignore
     )
     submitter_name = Column(String(64))
     submitter_email = Column(String(64))
-    created = Column(DateTime)
-    updated = Column(DateTime)
+    created = Column(DateTime, default=lambda: datetime.now(UTC))
+    updated = Column(DateTime, onupdate=lambda: datetime.now(UTC))
     status = Column(Integer, nullable=False, index=True,
                     server_default=text("'0'"))
     sticky_status = Column(Integer)
@@ -370,6 +370,14 @@ class Submission(Base):    # type: ignore
         if not self.document:
             return
         return self.document.paper_id
+
+    def get_created(self) -> datetime:
+        """Get the UTC-localized creation datetime."""
+        return self.created.replace(tzinfo=UTC)
+
+    def get_updated(self) -> datetime:
+        """Get the UTC-localized updated datetime."""
+        return self.updated.replace(tzinfo=UTC)
 
     def is_published(self) -> bool:
         return self.status in [self.PUBLISHED, self.DELETED_PUBLISHED]

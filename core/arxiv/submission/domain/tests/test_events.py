@@ -48,7 +48,7 @@ class TestWithdrawalSubmission(TestCase):
                 title='the best title',
                 abstract='very abstract',
                 authors_display='J K Jones, F W Englund',
-                doi='10.001234/567890',
+                doi='10.1000/182',
                 comments='These are the comments'
             )
         )
@@ -115,7 +115,7 @@ class TestReplacementSubmission(TestCase):
                 title='the best title',
                 abstract='very abstract',
                 authors_display='J K Jones, F W Englund',
-                doi='10.001234/567890',
+                doi='10.1000/182',
                 comments='These are the comments'
             )
         )
@@ -195,14 +195,14 @@ class TestDOIorJREFAfterPublish(TestCase):
                 title='the best title',
                 abstract='very abstract',
                 authors_display='J K Jones, F W Englund',
-                doi='10.001234/567890',
+                doi='10.1000/182',
                 comments='These are the comments'
             )
         )
 
     def test_create_submission_jref(self):
         """A JREF is just like a replacement, but different."""
-        e = event.SetDOI(creator=self.user, doi='10.001234/567890')
+        e = event.SetDOI(creator=self.user, doi='10.1000/182')
         after = e.apply(self.submission)
         self.assertEqual(after.arxiv_id, self.submission.arxiv_id)
         self.assertEqual(after.version, self.submission.version)

@@ -22,85 +22,26 @@ are located in :mod:`.classic.models`. An additional model, :class:`.DBEvent`,
 is defined in the current module.
 """
 
-from typing import List, Optional, Dict, Union, Tuple
+from typing import List, Optional, Tuple
+from datetime import datetime
 from pytz import UTC
-from flask import Flask
-from sqlalchemy import Column, String, ForeignKey
-from sqlalchemy.ext.indexable import index_property
-from sqlalchemy.orm import relationship
-from sqlalchemy.ext.declarative import declarative_base
-
-# Combining the base DateTime field with a MySQL backend does not support
-# fractional seconds. Since we may be creating events only milliseconds apart,
-# getting fractional resolution is essential.
-from sqlalchemy.dialects.mysql import DATETIME as DateTime
 
 from arxiv.base import logging
 from arxiv.base.globals import get_application_config, get_application_global
-from ...domain.event import Event, event_factory, RequestWithdrawal, SetDOI, \
-    SetJournalReference, SetReportNumber, Publish
+from ...domain.event import Event, Publish, RequestWithdrawal, SetDOI, \
+    SetJournalReference, SetReportNumber
 from ...domain.submission import License, Submission
-from ...domain.agent import User, Client, Agent, System
+from ...domain.agent import System
 from .models import Base
 from .exceptions import ClassicBaseException, NoSuchSubmission, CommitFailed
-from . import models, util
 from .util import transaction, current_session
+from .event import DBEvent
+from . import models, util
 
 SYSTEM = System(__name__)
 
 
 logger = logging.getLogger(__name__)
-
-
-class DBEvent(Base):  # type: ignore
-    """Database representation of an :class:`.Event`."""
-
-    __tablename__ = 'event'
-
-    event_id = Column(String(40), primary_key=True)
-    event_type = Column(String(255))
-    proxy = Column(util.FriendlyJSON)
-    proxy_id = index_property('proxy', 'agent_identifier')
-    client = Column(util.FriendlyJSON)
-    client_id = index_property('client', 'agent_identifier')
-
-    creator = Column(util.FriendlyJSON)
-    creator_id = index_property('creator', 'agent_identifier')
-
-    created = Column(DateTime(fsp=6))
-    data = Column(util.FriendlyJSON)
-    submission_id = Column(
-        ForeignKey('arXiv_submissions.submission_id'),
-        index=True
-    )
-
-    submission = relationship("Submission")
-
-    def to_event(self) -> Event:
-        """
-        Instantiate an :class:`.Event` using event data from this instance.
-
-        Returns
-        -------
-        :class:`.Event`
-
-        """
-        _skip = ['creator', 'proxy', 'client', 'submission_id', 'created',
-                 'event_type']
-        data = {
-            key: value for key, value in self.data.items()
-            if key not in _skip
-        }
-        data['committed'] = True     # Since we're loading from the DB.
-        return event_factory(
-            self.event_type,
-            creator=Agent.from_dict(self.creator),
-            proxy=Agent.from_dict(self.proxy) if self.proxy else None,
-            client=Agent.from_dict(self.client) if self.client else None,
-            submission_id=self.submission_id,
-            created=self.created.replace(tzinfo=UTC),
-            **data
-        )
 
 
 def get_licenses() -> List[License]:
@@ -150,8 +91,8 @@ def get_submission(submission_id: int) -> Tuple[Submission, List[Event]]:
     submission tables that must be reflected in our representation of the
     submission.
 
-    Until those legacy components are replaced, we will need to load both the
-    event stack and the current DB state of the submission, and use the DB
+    Until those legacy components are replaced, this function loads both the
+    event stack and the current DB state of the submission, and uses the DB
     state to patch fields that may have changed outside the purview of the
     event model.
 
@@ -162,48 +103,53 @@ def get_submission(submission_id: int) -> Tuple[Submission, List[Event]]:
     Returns
     -------
     :class:`.Submission`
+
     """
     events = get_events(submission_id)
+    dbss: List[models.Submission] = []
+    arxiv_id: Optional[str] = None
 
     # Load submission data from the legacy submission table.
     with transaction() as session:
         # Load the root submission (v=1).
-        db_sub = session.query(models.Submission).get(submission_id)
-        if db_sub is None:
+        dbs = session.query(models.Submission).get(submission_id)
+        if dbs is None:
             raise NoSuchSubmission(f'Submission {submission_id} not found')
+        arxiv_id = dbs.doc_paper_id
 
         # Load any subsequent submission rows (e.g. v=2, jref, withdrawal).
-        if db_sub.doc_paper_id is not None:
-            db_subs = list(
-                session.query(models.Submission)
-                .filter(models.Submission.doc_paper_id == db_sub.doc_paper_id)
-                .order_by(models.Submission.submission_id.asc())
-            )
-        else:
-            db_subs = []
+        # These do not have the same legacy submission ID as the original
+        # submission.
+        if arxiv_id is not None:
+            dbss = _load_subsequent_submissions(submission_id, arxiv_id)
 
     # Play the events forward.
-    submission = None
-    applied_events: List[Event] = []
+    submission = None   # We always start from the beginning (no submission).
+    applied_events: List[Event] = []    # This is what we'll return.
 
-    def insert_publish_event(db_sub, submission):
-        publist_event = _create_publish(db_sub, submission_id)
-        submission = publist_event.apply(submission)
-        applied_events.append(publist_event)
+    # Using a closure to cut down on redundant code.
+    def insert_publish_event(dbs, submission):
+        """Create and apply a Publish event, and add it to the stack."""
+        publish_event = _new_publish_event(dbs, submission_id)
+        submission = publish_event.apply(submission)
+        applied_events.append(publish_event)
         return submission
 
     for event in events:
+        # If the classic submission row is published, we want to insert a
+        # Publish event in the appropriate spot in the event stack.
+        if dbs and dbs.get_updated() < event.created and dbs.is_published():
+            submission = insert_publish_event(dbs, submission)
+
         # As we go, look for moments where a new row in the legacy submission
         # table was created.
-        if db_subs and db_subs[0].created.replace(tzinfo=UTC) < event.created:
+        if dbss and dbss[0].get_created() <= event.created:
             # If we find one, patch the domain submission from the preceding
             # row, and load the next row. We want to do this before projecting
             # the event, since we are inferring that the event occurred after
             # a change was made via the legacy system.
-            if db_sub.is_published():
-                submission = insert_publish_event(db_sub, submission)
-            submission = db_sub.patch(submission)
-            db_sub = db_subs.pop(0)
+            submission = dbs.patch(submission)
+            dbs = dbss.pop(0)
 
         # Now project the event.
         submission = event.apply(submission)
@@ -211,121 +157,11 @@ def get_submission(submission_id: int) -> Tuple[Submission, List[Event]]:
 
     # Finally, patch the submission with any remaining changes that may have
     # occurred via the legacy system.
-    for db_sub in [db_sub] + list(db_subs):
-        if db_sub.is_published():
-            submission = insert_publish_event(db_sub, submission)
-        submission = db_sub.patch(submission)
+    for dbs in [dbs] + list(dbss):
+        if dbs.is_published() and not submission.published:
+            submission = insert_publish_event(dbs, submission)
+        submission = dbs.patch(submission)
     return submission, applied_events
-
-
-def _create_publish(db_sub: models.Submission, submission_id: int) -> Publish:
-    return Publish(creator=SYSTEM, created=db_sub.updated.replace(tzinfo=UTC),
-                   committed=True, arxiv_id=db_sub.get_arxiv_id(),
-                   submission_id=submission_id)
-
-
-def _load_submission(submission_id: Optional[int] = None,
-                     paper_id: Optional[str] = None,
-                     version: Optional[int] = 1) -> models.Submission:
-    session = current_session()
-    if submission_id is not None:
-        submission = session.query(models.Submission) \
-            .filter(models.Submission.submission_id == submission_id) \
-            .one()
-    elif submission_id is None and paper_id is not None:
-        submission = session.query(models.Submission) \
-            .filter(models.Submission.doc_paper_id == paper_id) \
-            .filter(models.Submission.version == version) \
-            .order_by(models.Submission.submission_id.desc()) \
-            .first()
-    else:
-        submission = None
-    if submission is None:
-        raise NoSuchSubmission("No submission row matches those parameters")
-    return submission
-
-
-def _load_document_id(paper_id: str, version: int) -> int:
-    logger.debug('get document ID with %s and %s', paper_id, version)
-    session = current_session()
-    document_id = session.query(models.Submission.document_id) \
-        .filter(models.Submission.doc_paper_id == paper_id) \
-        .filter(models.Submission.version == version) \
-        .first()
-    if document_id is None:
-        raise NoSuchSubmission("No submission row matches those parameters")
-    return document_id[0]
-
-
-def _create_replacement(document_id: int, paper_id: str, version: int,
-                        submission: Submission) -> models.Submission:
-    """
-    Create a new replacement submission.
-
-    From the perspective of the database, a replacement is mainly an
-    incremented version number. This requires a new row in the database.
-    """
-    db_sb = models.Submission(type=models.Submission.REPLACEMENT,
-                              document_id=document_id,
-                              version=version)
-    db_sb.update_from_submission(submission)
-    db_sb.doc_paper_id = paper_id
-    db_sb.status = models.Submission.NOT_SUBMITTED
-    return db_sb
-
-
-def _create_withdrawal(document_id: int, paper_id: str, version: int,
-                       submission: Submission) -> models.Submission:
-    """
-    Create a new withdrawal request.
-
-    Withdrawals also require a new row, and they use the most recent version
-    number.
-    """
-    db_sb = models.Submission(type=models.Submission.WITHDRAWAL,
-                              document_id=document_id,
-                              version=version)
-    db_sb.update_from_submission(submission)
-    db_sb.doc_paper_id = paper_id
-    db_sb.status = models.Submission.SUBMITTED
-    db_sb.comments = db_sb.comments.rstrip('. ') + \
-        f". Withdrawn: {submission.reason_for_withdrawal}"
-    return db_sb
-
-
-def _create_jref(document_id: int, paper_id: str, version: int,
-                 submission: Submission) -> models.Submission:
-    """
-    Create a JREF submission.
-
-    Adding DOIs and citation information (so-called "journal reference") also
-    requires a new row. The version number is not incremented.
-    """
-    # Try to piggy-back on an existing JREF row. In the classic system, all
-    # three fields can get updated on the same row.
-    most_recent_sb = _load_submission(paper_id=paper_id, version=version)
-    if most_recent_sb.is_jref() and not most_recent_sb.is_published():
-        most_recent_sb.update_from_submission(submission)
-        return most_recent_sb
-
-    # Otherwise, create a new JREF row.
-    db_sb = models.Submission(type=models.Submission.JOURNAL_REFERENCE,
-                              document_id=document_id,
-                              version=version)
-    db_sb.update_from_submission(submission)
-    db_sb.doc_paper_id = paper_id
-    db_sb.status = models.Submission.SUBMITTED
-    return db_sb
-
-
-def _create_event(event: Event) -> DBEvent:
-    """Create an event entry in the database."""
-    return DBEvent(event_type=event.event_type,
-                   event_id=event.event_id,
-                   data=event.to_dict(),
-                   created=event.created,
-                   creator=event.creator.to_dict(),
-                   proxy=event.proxy.to_dict() if event.proxy else None)
 
 
 def store_event(event: Event, before: Optional[Submission],
@@ -364,8 +200,8 @@ def store_event(event: Event, before: Optional[Submission],
 
     # This is the case that we have a new submission.
     if before is None and isinstance(after, Submission):
-        db_sb = models.Submission(type=models.Submission.NEW_SUBMSSION)
-        db_sb.update_from_submission(after)
+        dbs = models.Submission(type=models.Submission.NEW_SUBMSSION)
+        dbs.update_from_submission(after)
         this_is_a_new_submission = True
 
     else:   # Otherwise we're making an update for an existing submission.
@@ -379,40 +215,40 @@ def store_event(event: Event, before: Optional[Submission],
         # From the perspective of the database, a replacement is mainly an
         # incremented version number. This requires a new row in the database.
         if after.version > before.version:
-            db_sb = _create_replacement(document_id, before.arxiv_id,
-                                        after.version, after)
+            dbs = _create_replacement(document_id, before.arxiv_id,
+                                      after.version, after, event.created)
 
         # Withdrawals also require a new row, and they use the most recent
         # version number.
         elif isinstance(event, RequestWithdrawal):
-            db_sb = _create_withdrawal(document_id, before.arxiv_id,
-                                       after.version, after)
+            dbs = _create_withdrawal(document_id, before.arxiv_id,
+                                     after.version, after, event.created)
 
         # Adding DOIs and citation information (so-called "journal reference")
         # also requires a new row. The version number is not incremented.
         elif before.published and \
                 type(event) in [SetDOI, SetJournalReference, SetReportNumber]:
-            db_sb = _create_jref(document_id, before.arxiv_id,
-                                 after.version, after)
+            dbs = _create_jref(document_id, before.arxiv_id, after.version,
+                               after, event.created)
 
         elif isinstance(before, Submission) and before.published:
-            db_sb = _load_submission(paper_id=before.arxiv_id,
-                                     version=before.version)
-            db_sb.update_from_submission(after)
+            dbs = _load_submission(paper_id=before.arxiv_id,
+                                   version=before.version)
+            dbs.update_from_submission(after)
         elif isinstance(before, Submission) and before.submission_id:
-            db_sb = _load_submission(before.submission_id)
-            db_sb.update_from_submission(after)
+            dbs = _load_submission(before.submission_id)
+            dbs.update_from_submission(after)
         else:
             raise CommitFailed("Something is fishy")
 
-    db_event = _create_event(event)
+    db_event = _new_dbevent(event)
 
-    session.add(db_sb)
+    session.add(dbs)
     session.add(db_event)
 
     # Attach the database object for the event to the row for the submission.
     if this_is_a_new_submission:    # Update in transaction.
-        db_event.submission = db_sb
+        db_event.submission = dbs
     else:                           # Just set the ID directly.
         db_event.submission_id = before.submission_id
 
@@ -428,8 +264,8 @@ def store_event(event: Event, before: Optional[Submission],
     # This should carry forward the original submission ID, even if the classic
     # database has several rows for the submission (with different IDs).
     if this_is_a_new_submission:
-        event.submission_id = db_sb.submission_id
-        after.submission_id = db_sb.submission_id
+        event.submission_id = dbs.submission_id
+        after.submission_id = dbs.submission_id
     else:
         event.submission_id = before.submission_id
         after.submission_id = before.submission_id
@@ -452,15 +288,130 @@ def drop_all() -> None:
     Base.metadata.drop_all(util.current_engine())
 
 
-# # TODO: find a better way!
-# def _declare_event() -> type:
-#     """
-#     Define DBEvent model.
-#
-#     This is deferred until runtime so that we can inject an alternate model
-#     for testing. This is less than ideal, but (so far) appears to be the only
-#     way to effectively replace column data types, which we need in order to
-#     use JSON columns with SQLite.
-#     """
-#
-#     return DBEvent
+def _load_subsequent_submissions(submission_id: int, paper_id: str) \
+        -> List[models.Submission]:
+    """Load submission rows for a given arXiv paper ID, except the original."""
+    with transaction() as session:
+        return list(
+            session.query(models.Submission)
+            .filter(models.Submission.doc_paper_id == paper_id)
+            .filter(models.Submission.submission_id != submission_id)
+            .order_by(models.Submission.submission_id.asc())
+        )
+
+
+def _new_publish_event(dbs: models.Submission, submission_id: int) -> Publish:
+    return Publish(creator=SYSTEM, created=dbs.get_updated(),
+                   committed=True, arxiv_id=dbs.get_arxiv_id(),
+                   submission_id=submission_id)
+
+
+def _load_submission(submission_id: Optional[int] = None,
+                     paper_id: Optional[str] = None,
+                     version: Optional[int] = 1) -> models.Submission:
+    session = current_session()
+    if submission_id is not None:
+        submission = session.query(models.Submission) \
+            .filter(models.Submission.submission_id == submission_id) \
+            .one()
+    elif submission_id is None and paper_id is not None:
+        submission = session.query(models.Submission) \
+            .filter(models.Submission.doc_paper_id == paper_id) \
+            .filter(models.Submission.version == version) \
+            .order_by(models.Submission.submission_id.desc()) \
+            .first()
+    else:
+        submission = None
+    if submission is None:
+        raise NoSuchSubmission("No submission row matches those parameters")
+    return submission
+
+
+def _load_document_id(paper_id: str, version: int) -> int:
+    logger.debug('get document ID with %s and %s', paper_id, version)
+    session = current_session()
+    document_id = session.query(models.Submission.document_id) \
+        .filter(models.Submission.doc_paper_id == paper_id) \
+        .filter(models.Submission.version == version) \
+        .first()
+    if document_id is None:
+        raise NoSuchSubmission("No submission row matches those parameters")
+    return document_id[0]
+
+
+def _create_replacement(document_id: int, paper_id: str, version: int,
+                        submission: Submission, created: datetime) \
+        -> models.Submission:
+    """
+    Create a new replacement submission.
+
+    From the perspective of the database, a replacement is mainly an
+    incremented version number. This requires a new row in the database.
+    """
+    dbs = models.Submission(type=models.Submission.REPLACEMENT,
+                            document_id=document_id, version=version)
+    dbs.update_from_submission(submission)
+    dbs.created = created
+    dbs.updated = created
+    dbs.doc_paper_id = paper_id
+    dbs.status = models.Submission.NOT_SUBMITTED
+    return dbs
+
+
+def _create_withdrawal(document_id: int, paper_id: str, version: int,
+                       submission: Submission, created: datetime) \
+        -> models.Submission:
+    """
+    Create a new withdrawal request.
+
+    Withdrawals also require a new row, and they use the most recent version
+    number.
+    """
+    dbs = models.Submission(type=models.Submission.WITHDRAWAL,
+                            document_id=document_id,
+                            version=version)
+    dbs.update_from_submission(submission)
+    dbs.created = created
+    dbs.updated = created
+    dbs.doc_paper_id = paper_id
+    dbs.status = models.Submission.SUBMITTED
+    dbs.comments = dbs.comments.rstrip('. ') + \
+        f". Withdrawn: {submission.reason_for_withdrawal}"
+    return dbs
+
+
+def _create_jref(document_id: int, paper_id: str, version: int,
+                 submission: Submission, created: datetime) \
+        -> models.Submission:
+    """
+    Create a JREF submission.
+
+    Adding DOIs and citation information (so-called "journal reference") also
+    requires a new row. The version number is not incremented.
+    """
+    # Try to piggy-back on an existing JREF row. In the classic system, all
+    # three fields can get updated on the same row.
+    most_recent_sb = _load_submission(paper_id=paper_id, version=version)
+    if most_recent_sb.is_jref() and not most_recent_sb.is_published():
+        most_recent_sb.update_from_submission(submission)
+        return most_recent_sb
+
+    # Otherwise, create a new JREF row.
+    dbs = models.Submission(type=models.Submission.JOURNAL_REFERENCE,
+                            document_id=document_id, version=version)
+    dbs.update_from_submission(submission)
+    dbs.created = created
+    dbs.updated = created
+    dbs.doc_paper_id = paper_id
+    dbs.status = models.Submission.SUBMITTED
+    return dbs
+
+
+def _new_dbevent(event: Event) -> DBEvent:
+    """Create an event entry in the database."""
+    return DBEvent(event_type=event.event_type,
+                   event_id=event.event_id,
+                   data=event.to_dict(),
+                   created=event.created,
+                   creator=event.creator.to_dict(),
+                   proxy=event.proxy.to_dict() if event.proxy else None)

@@ -186,14 +186,16 @@ def save(*events: Event, submission_id: Optional[str] = None) \
             and not isinstance(events[0], CreateSubmission):
         raise NoSuchSubmission('Unable to determine submission')
 
+    events = sorted(list(set(prior) | set(events)), key=lambda e: e.created)
+
     # Apply the events from the end of the existing stream.
     for i, event in enumerate(list(events)):
         # Fill in event IDs, if they are missing.
         if event.submission_id is None and submission_id is not None:
             event.submission_id = submission_id
 
-        event.validate(before)  # Raises InvalidEvent.
-        after = event.apply(before)     # <-- Mutation happens here.
+        # Mutation happens here; raises InvalidEvent.
+        after = event.apply(before)
         if not event.committed:
             event, after = classic.store_event(event, before, after)
 
@@ -201,4 +203,4 @@ def save(*events: Event, submission_id: Optional[str] = None) \
         # TODO: <-- apply rules here.
         events[i] = event
         before = after
-    return after, prior + events    # Return the whole stack.
+    return after, events    # Return the whole stack.
