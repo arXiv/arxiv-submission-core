@@ -1127,15 +1127,18 @@ class Publish(Event):
 
     def validate(self, submission: Submission) -> None:
         """Make sure that we have a valid arXiv ID."""
-        if not submission.status == Submission.SUBMITTED:
-            raise InvalidEvent(self,
-                               "Can't publish in state %s" % submission.status)
-        if self.arxiv_id is None:
-            raise InvalidEvent(self, "Must provide an arXiv ID.")
-        try:
-            identifier.parse_arxiv_id(self.arxiv_id)
-        except ValueError:
-            raise InvalidEvent(self, "Not a valid arXiv ID.")
+        # TODO: When we're using this to perform publish in NG, we will want to
+        # re-enable this step.
+        #
+        # if not submission.status == Submission.SUBMITTED:
+        #     raise InvalidEvent(self,
+        #                        "Can't publish in state %s" % submission.status)
+        # if self.arxiv_id is None:
+        #     raise InvalidEvent(self, "Must provide an arXiv ID.")
+        # try:
+        #     identifier.parse_arxiv_id(self.arxiv_id)
+        # except ValueError:
+        #     raise InvalidEvent(self, "Not a valid arXiv ID.")
 
     def project(self, submission: Submission) -> Submission:
         """Set the arXiv ID on the submission."""
