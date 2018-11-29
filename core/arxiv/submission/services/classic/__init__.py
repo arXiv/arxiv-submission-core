@@ -24,6 +24,8 @@ is defined in :mod:`.classic.event`.
 from typing import List, Optional, Tuple
 from datetime import datetime
 from pytz import UTC
+from itertools import groupby
+import copy
 
 from arxiv.base import logging
 from arxiv.base.globals import get_application_config, get_application_global
@@ -79,6 +81,34 @@ def get_events(submission_id: int) -> List[Event]:
         return events
 
 
+def get_user_submissions(user_id: int) -> List[Submission]:
+    with transaction() as session:
+        db_submissions = list(
+            session.query(models.Submission)
+            .filter(models.Submission.submitter_id == user_id)
+            .filter(models.Submission.type != models.Submission.JOURNAL_REFERENCE)
+            .order_by(models.Submission.doc_paper_id.desc())
+        )
+        grouped = groupby(db_submissions, key=lambda dbs: dbs.doc_paper_id)
+        submissions: List[Submission] = []
+        for arxiv_id, dbss in grouped:
+            if arxiv_id is None:
+                for dbs in dbss:
+                    submission = dbs.to_submission()
+                    submission.versions.append(submission)
+                    submissions.append(submission)
+            else:
+                dbss = sorted(dbss, key=lambda dbs: dbs.submission_id)[::-1]
+                submission = dbss[0].to_submission(dbss[-1].submission_id)
+                for dbs in dbss:
+                    if dbs.is_new_version():
+                        prior_ver = dbs.to_submission(submission.submission_id)
+                        submission.versions.append(prior_ver)
+                submissions.append(submission)
+
+        return submissions
+
+
 def get_submission(submission_id: int) -> Tuple[Submission, List[Event]]:
     """
     Get the current state of a :class:`.Submission` from the database.
@@ -127,12 +157,13 @@ def get_submission(submission_id: int) -> Tuple[Submission, List[Event]]:
     applied_events: List[Event] = []    # This is what we'll return.
 
     # Using a closure to cut down on redundant code.
-    def insert_publish_event(dbs, submission):
+    def insert_publish_event(this_dbs, this_submission):
         """Create and apply a Publish event, and add it to the stack."""
-        publish_event = _new_publish_event(dbs, submission_id)
-        submission = publish_event.apply(submission)
+        publish_event = _new_publish_event(this_dbs, submission_id)
+        this_submission = publish_event.apply(this_submission)
         applied_events.append(publish_event)
-        return submission
+        this_submission.versions.append(copy.deepcopy(this_submission))
+        return this_submission
 
     for event in events:
         # If the classic submission row is published, we want to insert a
@@ -156,10 +187,10 @@ def get_submission(submission_id: int) -> Tuple[Submission, List[Event]]:
 
     # Finally, patch the submission with any remaining changes that may have
     # occurred via the legacy system.
-    for dbs in [dbs] + list(dbss):
-        if dbs.is_published() and not submission.published:
-            submission = insert_publish_event(dbs, submission)
-        submission = dbs.patch(submission)
+    for d in [dbs] + list(dbss):
+        submission = d.patch(submission)
+        if d.is_published() and not submission.published:
+            submission = insert_publish_event(d, submission)
     return submission, applied_events
 
 
@@ -199,7 +230,7 @@ def store_event(event: Event, before: Optional[Submission],
 
     # This is the case that we have a new submission.
     if before is None and isinstance(after, Submission):
-        dbs = models.Submission(type=models.Submission.NEW_SUBMSSION)
+        dbs = models.Submission(type=models.Submission.NEW_SUBMISSION)
         dbs.update_from_submission(after)
         this_is_a_new_submission = True
 
@@ -230,12 +261,18 @@ def store_event(event: Event, before: Optional[Submission],
             dbs = _create_jref(document_id, before.arxiv_id, after.version,
                                after, event.created)
 
-        elif isinstance(before, Submission) and before.published:
+        # The submission has been announced.
+        elif isinstance(before, Submission) and before.arxiv_id is not None:
             dbs = _load_submission(paper_id=before.arxiv_id,
                                    version=before.version)
+            _preserve_sticky_hold(dbs, before, after, event)
             dbs.update_from_submission(after)
+
+        # The submission has not yet been announced; we're working with a
+        # single row.
         elif isinstance(before, Submission) and before.submission_id:
             dbs = _load_submission(before.submission_id)
+            _preserve_sticky_hold(dbs, before, after, event)
             dbs.update_from_submission(after)
         else:
             raise CommitFailed("Something is fishy")
@@ -373,7 +410,7 @@ def _create_withdrawal(document_id: int, paper_id: str, version: int,
     dbs.created = created
     dbs.updated = created
     dbs.doc_paper_id = paper_id
-    dbs.status = models.Submission.SUBMITTED
+    dbs.status = models.Submission.PROCESSING_SUBMISSION
     dbs.comments = dbs.comments.rstrip('. ') + \
         f". Withdrawn: {submission.reason_for_withdrawal}"
     return dbs
@@ -402,7 +439,7 @@ def _create_jref(document_id: int, paper_id: str, version: int,
     dbs.created = created
     dbs.updated = created
     dbs.doc_paper_id = paper_id
-    dbs.status = models.Submission.SUBMITTED
+    dbs.status = models.Submission.PROCESSING_SUBMISSION
     return dbs
 
 
@@ -414,3 +451,12 @@ def _new_dbevent(event: Event) -> DBEvent:
                    created=event.created,
                    creator=event.creator.to_dict(),
                    proxy=event.proxy.to_dict() if event.proxy else None)
+
+
+def _preserve_sticky_hold(dbs: models.Submission, before: Submission,
+                          after: Submission, event: Event) -> None:
+    if dbs.status != models.Submission.ON_HOLD:
+        return
+    if before.status == Submission.SUBMITTED and \
+            after.status == Submission.WORKING:
+        dbs.sticky_status = dbs.status

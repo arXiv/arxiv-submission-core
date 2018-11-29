@@ -9,7 +9,7 @@ from sqlalchemy import Column, Date, DateTime, Enum, ForeignKey, Text, text, \
 from sqlalchemy.orm import relationship, joinedload, backref
 
 from sqlalchemy.ext.declarative import declarative_base
-
+from arxiv.license import LICENSES
 from ... import domain
 from .util import transaction
 
@@ -68,7 +68,7 @@ class Submission(Base):    # type: ignore
         DELETED_REMOVED, DELETED_USER
     ]
 
-    NEW_SUBMSSION = 'new'
+    NEW_SUBMISSION = 'new'
     REPLACEMENT = 'rep'
     JOURNAL_REFERENCE = 'jref'
     WITHDRAWAL = 'wdr'
@@ -205,10 +205,6 @@ class Submission(Base):    # type: ignore
             the scope of the event model.
 
         """
-        # Status changes.
-        submission.status = self._get_status()
-        # submission.arxiv_id = self.get_arxiv_id()
-
         # Possible reclassification.
         primary = self.primary_classification
         if primary:
@@ -224,19 +220,37 @@ class Submission(Base):    # type: ignore
         # Comments (admins may modify).
         submission.metadata.comments = self.comments
 
-        # Apply sticky status.
-        if submission.finalized and self.sticky_status is self.ON_HOLD:
-            submission.status = submission.ON_HOLD
+        # We're phasing journal reference out as a submission
+        if self.type != Submission.JOURNAL_REFERENCE:
+            # Apply sticky status.
+            if self.sticky_status == self.ON_HOLD \
+                    or self.status == self.ON_HOLD:
+                submission.holds.append(
+                    domain.Hold(creator=domain.System(__name__),
+                                hold_type='patch')
+                )
 
-        # The domain status glosses over some of the detail here.
-        if self.type == Submission.WITHDRAWAL and \
-                self.status < Submission.PUBLISHED:
-            submission.status = domain.Submission.WITHDRAWAL_REQUESTED
+            # The domain status glosses over some of the detail here.
+            elif self.type == Submission.WITHDRAWAL \
+                    and not self.is_published():
+                submission.status = domain.Submission.WITHDRAWAL_REQUESTED
+            # We're going to use a Publish event instead of setting this
+            # here.
+            elif self.status != Submission.PUBLISHED:
+                # Status changes.
+                submission.status = self._get_status()
         return submission
 
-    def to_submission(self) -> domain.Submission:
+    def to_submission(self, submission_id: Optional[int] = None) \
+            -> domain.Submission:
         """
         Generate a representation of submission state from a DB instance.
+
+        Parameters
+        ----------
+        submission_id : int or None
+            If provided the database value is overridden when setting
+            :attr:`domain.Submission.submission_id`.
 
         Returns
         -------
@@ -245,14 +259,23 @@ class Submission(Base):    # type: ignore
         """
         status = self._get_status()
         primary = self.primary_classification
-        submitter = domain.User(
-            native_id=self.submitter.user_id,
-            email=self.submitter.email,
-            forename=self.submitter.first_name,
-            surname=self.submitter.last_name,
-            suffix=self.submitter.suffix_name
-        )
+        if self.submitter is None:
+            submitter = domain.User(
+                native_id=self.submitter_id,
+                email=self.submitter_email,
+            )
+        else:
+            submitter = domain.User(
+                native_id=self.submitter_id,
+                email=self.submitter.email,
+                forename=self.submitter.first_name,
+                surname=self.submitter.last_name,
+                suffix=self.submitter.suffix_name
+            )
+        if submission_id is None:
+            submission_id = self.submission_id
         return domain.Submission(
+            submission_id=submission_id,
             creator=submitter,
             owner=submitter,
             created=self.created.replace(tzinfo=UTC),
@@ -262,12 +285,6 @@ class Submission(Base):    # type: ignore
             submitter_contact_verified=bool(self.userinfo),
             submitter_confirmed_preview=bool(self.viewed),
             status=status,
-            finalized=(status != domain.Submission.WORKING),
-            active=(status not in domain.Submission.DELETED + [
-                domain.Submission.PUBLISHED,
-                domain.Submission.DELETED_PUBLISHED
-            ]),
-            published=(status == domain.Submission.PUBLISHED),
             metadata=domain.SubmissionMetadata(
                 title=self.title,
                 abstract=self.abstract,
@@ -279,9 +296,9 @@ class Submission(Base):    # type: ignore
                 journal_ref=self.journal_ref
             ),
             license=domain.License(
-                uri=self.arXiv_license.name,
-                name=self.arXiv_license.label
-            ) if self.arXiv_license else None,
+                uri=self.license,
+                name=LICENSES[self.license]['label']
+            ) if self.license else None,
             primary_classification=domain.Classification(
                 category=primary.category
             ) if primary else None,
@@ -305,7 +322,6 @@ class Submission(Base):    # type: ignore
         self.agree_policy = 1 if submission.submitter_accepts_policy else 0
         self.userinfo = 1 if submission.submitter_contact_verified else 0
         self.viewed = 1 if submission.submitter_confirmed_preview else 0
-        self.created = submission.created
         self.updated = datetime.now(UTC)
         self.title = submission.metadata.title
         self.abstract = submission.metadata.abstract
@@ -381,6 +397,10 @@ class Submission(Base):    # type: ignore
 
     def is_published(self) -> bool:
         return self.status in [self.PUBLISHED, self.DELETED_PUBLISHED]
+
+    def is_new_version(self) -> bool:
+        """Indicate whether this row represents a new version."""
+        return self.type in [self.NEW_SUBMISSION, self.REPLACEMENT]
 
     def is_jref(self) -> bool:
         return self.type == self.JOURNAL_REFERENCE

@@ -128,6 +128,16 @@ class Delegation:
 
 
 @dataclass
+class Hold:
+    """Represents a block on announcement, usually for QA/QC purposes."""
+
+    creator: Agent
+    created: datetime = field(default_factory=get_tzaware_utc_now)
+    hold_type: str = field(default_factory=str)
+    hold_reason: Optional[str] = field(default_factory=list)
+
+
+@dataclass
 class Submission:
     """Represents an arXiv submission object."""
 
@@ -171,6 +181,11 @@ class Submission:
     reason_for_withdrawal: Optional[str] = field(default=None)
     """If an e-print is withdrawn, the submitter is asked to explain why."""
 
+    versions: List['Submission'] = field(default_factory=list)
+    """States of this submission at publication time."""
+
+    holds: List[Hold] = field(default_factory=list)
+
     @property
     def active(self) -> bool:
         """Actively moving through the submission workflow."""
@@ -178,8 +193,8 @@ class Submission:
 
     @property
     def published(self) -> bool:
-        """The submission has been (or is about to be) announced."""
-        return self.status in [self.PUBLISHED, self.SCHEDULED]
+        """The submission has been announced."""
+        return self.status == self.PUBLISHED
 
     @property
     def finalized(self) -> bool:
@@ -190,6 +205,10 @@ class Submission:
     def deleted(self) -> bool:
         """Submission is removed."""
         return self.status == self.DELETED
+
+    @property
+    def is_on_hold(self) -> bool:
+        return len(self.holds) > 0
 
     def to_dict(self) -> dict:
         """Generate a dict representation of this :class:`.Submission`."""

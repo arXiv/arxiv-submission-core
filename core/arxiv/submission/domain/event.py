@@ -377,7 +377,14 @@ class SetPrimaryClassification(Event):
         self._must_be_a_valid_category(submission)
         self._primary_cannot_be_secondary(submission)
         self._creator_must_be_endorsed(submission)
+        self._must_be_unpublished(submission)
         submission_is_not_finalized(self, submission)
+
+    def _must_be_unpublished(self, submission: Submission) -> None:
+        """Can only be set on the first version before publication."""
+        if submission.arxiv_id is not None or submission.version > 1:
+            raise InvalidEvent(self, "Can only be set on the first version,"
+                                     " before publication.")
 
     def _must_be_a_valid_category(self, submission: Submission) -> None:
         """Valid arXiv categories are defined in :mod:`arxiv.taxonomy`."""
@@ -662,6 +669,9 @@ class SetDOI(Event):
 
     def validate(self, submission: Submission) -> None:
         """Validate the DOI value."""
+        if submission.status == Submission.SUBMITTED \
+                and not submission.published:
+            raise InvalidEvent(self, 'Cannot edit a finalized submission')
         if not self.doi:    # Can be blank.
             return
         for value in re.split('[;,]', self.doi):
@@ -1101,6 +1111,8 @@ class UnFinalizeSubmission(Event):
     def validate(self, submission: Submission) -> None:
         """Validate the unfinalize action."""
         self._must_be_finalized(submission)
+        if submission.published:
+            raise InvalidEvent(self, "Cannot unfinalize an announced paper")
 
     def _must_be_finalized(self, submission: Submission) -> None:
         """May only unfinalize a finalized submission."""

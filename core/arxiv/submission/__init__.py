@@ -180,7 +180,7 @@ def save(*events: Event, submission_id: Optional[str] = None) \
     # Get the current state of the submission from past events.
     if submission_id is not None:
         before, prior = classic.get_submission(submission_id)
-
+        
     # Either we need a submission ID, or the first event must be a creation.
     elif events[0].submission_id is None \
             and not isinstance(events[0], CreateSubmission):

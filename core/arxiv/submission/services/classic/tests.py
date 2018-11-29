@@ -108,7 +108,7 @@ class TestStoreEvent(TestCase):
             self.assertEqual(event.submission_id, db_sb.submission_id)
 
             self.assertEqual(db_sb.status,  models.Submission.NOT_SUBMITTED)
-            self.assertEqual(db_sb.type, models.Submission.NEW_SUBMSSION)
+            self.assertEqual(db_sb.type, models.Submission.NEW_SUBMISSION)
             self.assertEqual(db_sb.version, 1)
 
     def test_store_events_with_metadata(self):

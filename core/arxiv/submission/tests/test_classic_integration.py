@@ -12,29 +12,12 @@ should change to instantiate each object at runtime for database imports.
 from unittest import TestCase, mock
 from datetime import datetime
 import tempfile
-from contextlib import contextmanager
 from pytz import UTC
 from flask import Flask
 
+from .util import in_memory_db
 from .. import *
 from ..services import classic
-
-
-@contextmanager
-def in_memory_db():
-    """Provide an in-memory sqlite database for testing purposes."""
-    app = Flask('foo')
-    app.config['CLASSIC_DATABASE_URI'] = 'sqlite://'
-
-    with app.app_context():
-        classic.init_app(app)
-        classic.create_all()
-        try:
-            yield classic.current_session()
-        except Exception:
-            raise
-        finally:
-            classic.drop_all()
 
 
 class TestClassicUIWorkflow(TestCase):
@@ -593,6 +576,9 @@ class TestJREFIntegration(TestCase):
         self.assertEqual(db_jref.type,
                          classic.models.Submission.JOURNAL_REFERENCE)
         self.assertEqual(db_jref.document.paper_id, '1901.00123')
+        self.assertEqual(db_jref.submitter_id,
+                         jref_submission.creator.native_id)
+
 
 
 class TestWithdrawalIntegration(TestCase):
