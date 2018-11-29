@@ -30,7 +30,7 @@ import copy
 from arxiv.base import logging
 from arxiv.base.globals import get_application_config, get_application_global
 from ...domain.event import Event, Publish, RequestWithdrawal, SetDOI, \
-    SetJournalReference, SetReportNumber
+    SetJournalReference, SetReportNumber, RevertSubmissionVersion
 from ...domain.submission import License, Submission
 from ...domain.agent import System
 from .models import Base
@@ -162,7 +162,6 @@ def get_submission(submission_id: int) -> Tuple[Submission, List[Event]]:
         publish_event = _new_publish_event(this_dbs, submission_id)
         this_submission = publish_event.apply(this_submission)
         applied_events.append(publish_event)
-        this_submission.versions.append(copy.deepcopy(this_submission))
         return this_submission
 
     for event in events:
@@ -247,6 +246,9 @@ def store_event(event: Event, before: Optional[Submission],
         if after.version > before.version:
             dbs = _create_replacement(document_id, before.arxiv_id,
                                       after.version, after, event.created)
+        elif isinstance(event, RevertSubmissionVersion):
+            dbs = _delete_replacement(document_id, before.arxiv_id,
+                                      before.version)
 
         # Withdrawals also require a new row, and they use the most recent
         # version number.
@@ -391,6 +393,19 @@ def _create_replacement(document_id: int, paper_id: str, version: int,
     dbs.updated = created
     dbs.doc_paper_id = paper_id
     dbs.status = models.Submission.NOT_SUBMITTED
+    return dbs
+
+
+def _delete_replacement(document_id: int, paper_id: str, version: int) \
+        -> models.Submission:
+    session = current_session()
+    dbs = session.query(models.Submission) \
+        .filter(models.Submission.doc_paper_id == paper_id) \
+        .filter(models.Submission.version == version) \
+        .filter(models.Submission.type == models.Submission.REPLACEMENT) \
+        .order_by(models.Submission.submission_id.desc()) \
+        .first()
+    dbs.status = models.Submission.USER_DELETED
     return dbs
 
 

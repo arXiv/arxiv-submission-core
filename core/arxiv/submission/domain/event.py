@@ -246,6 +246,42 @@ class CreateSubmissionVersion(Event):
 
 
 @dataclass(init=False)
+class RevertSubmissionVersion(Event):
+    """Revert the submission to the most recent published version."""
+
+    NAME = "revert to most recent published version"
+    NAMED = "reverted to most recent published version"
+
+    def __hash__(self):
+        return hash(self.event_id)
+
+    def validate(self, submission: Submission) -> None:
+        """Only applies to submissions in an unpublished state."""
+        if submission.published:
+            raise InvalidEvent(self, "Cannot already be published")
+        if not submission.versions or submission.version == 1:
+            raise InvalidEvent(self, "No published version to which to revert")
+
+    def project(self, submission: Submission) -> Submission:
+        """Decrement the version number, and reset fields."""
+        submission.version -= 1
+        target = submission.versions[-1]
+        # Return these to last published state.
+        submission.status = target.status
+        submission.source_content = target.source_content
+        submission.compiled_content = target.compiled_content
+        submission.submitter_contact_verified = \
+            target.submitter_contact_verified
+        submission.submitter_accepts_policy = \
+            target.submitter_accepts_policy
+        submission.submitter_confirmed_preview = \
+            target.submitter_confirmed_preview
+        submission.license = target.license
+        submission.metadata = target.metadata
+        return submission
+
+
+@dataclass(init=False)
 class RemoveSubmission(Event):
     """Removal of a :class:`.Submission`."""
 
@@ -1156,6 +1192,7 @@ class Publish(Event):
         """Set the arXiv ID on the submission."""
         submission.arxiv_id = self.arxiv_id
         submission.status = Submission.PUBLISHED
+        submission.versions.append(copy.deepcopy(submission))
         return submission
 
 
