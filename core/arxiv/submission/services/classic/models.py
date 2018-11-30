@@ -236,9 +236,11 @@ class Submission(Base):    # type: ignore
                 submission.status = domain.Submission.WITHDRAWAL_REQUESTED
             # We're going to use a Publish event instead of setting this
             # here.
-            elif self.status != Submission.PUBLISHED:
+            elif not self.is_published():
                 # Status changes.
                 submission.status = self._get_status()
+        submission.created = self.get_created()
+        submission.updated = self.get_updated()
         return submission
 
     def to_submission(self, submission_id: Optional[int] = None) \
@@ -278,8 +280,8 @@ class Submission(Base):    # type: ignore
             submission_id=submission_id,
             creator=submitter,
             owner=submitter,
-            created=self.created.replace(tzinfo=UTC),
-            updated=self.updated.replace(tzinfo=UTC),
+            created=self.get_created(),
+            updated=self.get_updated(),
             submitter_is_author=bool(self.is_author),
             submitter_accepts_policy=bool(self.agree_policy),
             submitter_contact_verified=bool(self.userinfo),
@@ -315,6 +317,7 @@ class Submission(Base):    # type: ignore
         """Update this database object from a :class:`.domain.Submission`."""
         if self.is_published():     # Avoid doing anything. to be safe.
             return
+
         self.submitter_id = submission.creator.native_id
         self.submitter_name = submission.creator.name
         self.submitter_email = submission.creator.email
@@ -367,8 +370,11 @@ class Submission(Base):    # type: ignore
         if submission.primary_classification:
             self._update_primary(submission)
         self._update_secondaries(submission)
-
         self._update_submitter(submission)
+
+        # We only want to set the creation datetime on the initial row.
+        if self.version == 1 and self.type == Submission.NEW_SUBMISSION:
+            self.created = submission.created
 
     @property
     def primary_classification(self):

@@ -153,7 +153,7 @@ class Submission:
 
     creator: Agent
     owner: Agent
-    created: datetime
+    created: Optional[datetime] = field(default=None)
     updated: Optional[datetime] = field(default=None)
 
     source_content: Optional[SubmissionContent] = field(default=None)

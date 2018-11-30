@@ -284,29 +284,6 @@ class Rollback(Event):
         return submission
 
 
-@dataclass(init=False)
-class RemoveSubmission(Event):
-    """Removal of a :class:`.Submission`."""
-
-    NAME = "delete submission"
-    NAMED = "submission deleted"
-
-    def __hash__(self):
-        return hash(self.event_id)
-
-    def validate(self, submission: Submission) -> None:
-        """Validate removal of a submission."""
-        if submission.published:
-            raise InvalidEvent(self, "Cannot remove a published submission")
-        if not submission.active:
-            raise InvalidEvent(self, "Cannot remove an inactive submission")
-
-    def project(self, submission: Submission) -> Submission:
-        """Remove the :class:`.Submission` from the system (set inactive)."""
-        submission.status = submission.DELETED
-        return submission
-
-
 @dataclass
 class RequestWithdrawal(Event):
     """Request that a paper be withdrawn."""

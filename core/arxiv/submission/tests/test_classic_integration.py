@@ -558,9 +558,9 @@ class TestJREFIntegration(TestCase):
         self.assertEqual(jref_submission.arxiv_id, submission_to_jref.arxiv_id)
         self.assertEqual(jref_submission.version, submission_to_jref.version,
                          "The paper version should not change")
-        self.assertEqual(jref_submission.status, Submission.SUBMITTED)
+        self.assertEqual(jref_submission.status, Submission.PUBLISHED)
         self.assertTrue(submission_to_jref.published)
-        self.assertFalse(jref_submission.published)
+        self.assertTrue(jref_submission.published)
 
         self.assertIsNotNone(jref_submission.source_content)
 
@@ -572,7 +572,7 @@ class TestJREFIntegration(TestCase):
         # Verify that the database is in the right state for downstream
         # integrations.
         self.assertEqual(db_jref.status,
-                         classic.models.Submission.SUBMITTED)
+                         classic.models.Submission.PROCESSING_SUBMISSION)
         self.assertEqual(db_jref.type,
                          classic.models.Submission.JOURNAL_REFERENCE)
         self.assertEqual(db_jref.document.paper_id, '1901.00123')
@@ -721,7 +721,8 @@ class TestWithdrawalIntegration(TestCase):
                 .filter(classic.models.Submission.doc_paper_id == submission.arxiv_id) \
                 .order_by(classic.models.Submission.submission_id.desc()) \
                 .first()
-            self.assertEqual(wdr.status, classic.models.Submission.SUBMITTED)
+            self.assertEqual(wdr.status,
+                             classic.models.Submission.PROCESSING_SUBMISSION)
             self.assertEqual(wdr.type, classic.models.Submission.WITHDRAWAL)
             self.assertIn(f"Withdrawn: {event.reason}", wdr.comments)
 
@@ -854,6 +855,7 @@ class TestPublicationIntegration(TestCase):
 
     def test_publication_status_is_reflected_after_files_expire(self):
         """The submission has been published/announced, and files expired."""
+        paper_id = '1901.00123'
         with self.app.app_context():
             session = classic.current_session()
 
@@ -865,7 +867,7 @@ class TestPublicationIntegration(TestCase):
             primary = self.submission.primary_classification.category
             db_submission.document = classic.models.Document(
                 document_id=1,
-                paper_id='1901.00123',
+                paper_id=paper_id,
                 title=self.submission.metadata.title,
                 authors=self.submission.metadata.authors_display,
                 dated=dated.total_seconds(),
@@ -874,6 +876,7 @@ class TestPublicationIntegration(TestCase):
                 submitter_email=self.submission.creator.email,
                 submitter_id=self.submission.creator.native_id
             )
+            db_submission.doc_paper_id = paper_id
             session.add(db_submission)
             session.commit()
 
@@ -994,11 +997,11 @@ class TestPublicationIntegration(TestCase):
         with self.app.app_context():
             session = classic.current_session()
             self.submission, _ = save(
-                RemoveSubmission(creator=self.submitter),
+                Rollback(creator=self.submitter),
                 submission_id=self.submission.submission_id
             )
 
             db_submission = session.query(classic.models.Submission)\
                 .get(self.submission.submission_id)
             self.assertEqual(db_submission.status,
-                             classic.models.Submission.DELETED_USER)
+                             classic.models.Submission.USER_DELETED)
