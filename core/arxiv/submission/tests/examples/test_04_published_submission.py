@@ -217,34 +217,7 @@ class TestPublishedSubmission(TestCase):
                                            **self.defaults),
                      submission_id=self.submission.submission_id)
 
-        # Check the submission state.
-        with self.app.app_context():
-            submission, events = load(self.submission.submission_id)
-            self.assertEqual(self.submission.metadata.title, self.title,
-                             "The submission is unchanged")
-            self.assertEqual(self.submission.metadata.doi, self.doi,
-                             "The submission is unchanged")
-            self.assertEqual(submission.status,
-                             domain.submission.Submission.PUBLISHED,
-                             "The submission is in the submitted state")
-            self.assertEqual(len(self.events) + 1, len(events),
-                             "The same number of events were retrieved as"
-                             " were initially saved plus one for the publish"
-                             " event.")
-
-        # Check the database state.
-        with self.app.app_context():
-            session = classic.current_session()
-            db_rows = session.query(classic.models.Submission).all()
-
-            self.assertEqual(len(db_rows), 1,
-                             "There is one row in the submission table")
-            self.assertEqual(db_rows[0].type,
-                             classic.models.Submission.NEW_SUBMISSION,
-                             "The first row has type 'new'")
-            self.assertEqual(db_rows[0].status,
-                             classic.models.Submission.PUBLISHED,
-                             "The first row is published")
+        self.test_is_in_published_state()
 
     def test_changing_doi(self):
         """Submitter can set the DOI."""
@@ -327,29 +300,4 @@ class TestPublishedSubmission(TestCase):
                 save(domain.event.UnFinalizeSubmission(**self.defaults),
                      submission_id=self.submission.submission_id)
 
-        # Check the submission state.
-        with self.app.app_context():
-            submission, events = load(self.submission.submission_id)
-            self.assertEqual(submission.status,
-                             domain.submission.Submission.PUBLISHED,
-                             "The submission is in the submitted state")
-            self.assertTrue(submission.published, "Submission is published")
-            self.assertEqual(len(self.events) + 1, len(events),
-                             "The same number of events were retrieved as"
-                             " were initially saved, plus the publish event.")
-
-        # Check the database state.
-        with self.app.app_context():
-            session = classic.current_session()
-            db_rows = session.query(classic.models.Submission).all()
-
-            self.assertEqual(len(db_rows), 1,
-                             "There is one row in the submission table")
-            row = db_rows[0]
-            self.assertEqual(row.type,
-                             classic.models.Submission.NEW_SUBMISSION,
-                             "The classic submission has type 'new'")
-            self.assertEqual(row.status,
-                             classic.models.Submission.PUBLISHED,
-                             "The classic submission is in the PUBLISHED"
-                             " state")
+        self.test_is_in_published_state()

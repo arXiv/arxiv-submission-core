@@ -60,12 +60,12 @@ class Submission(Base):    # type: ignore
     DELETED_PROCESSING = 25
 
     DELETED_REMOVED = 29
-    DELETED_USER = 30
+    DELETED_USER_EXPIRED = 30
     """User deleted and files expired."""
 
     DELETED = [
         USER_DELETED, DELETED_ON_HOLD, DELETED_PROCESSING,
-        DELETED_REMOVED, DELETED_USER
+        DELETED_REMOVED, DELETED_USER_EXPIRED
     ]
 
     NEW_SUBMISSION = 'new'
@@ -91,7 +91,7 @@ class Submission(Base):    # type: ignore
         DELETED_ON_HOLD: domain.Submission.DELETED,
         DELETED_PROCESSING: domain.Submission.DELETED,
         DELETED_REMOVED: domain.Submission.DELETED,
-        DELETED_USER:  domain.Submission.DELETED,
+        DELETED_USER_EXPIRED:  domain.Submission.DELETED,
         ERROR_STATE: domain.Submission.ERROR
     }
 
@@ -358,7 +358,7 @@ class Submission(Base):    # type: ignore
             self.submit_time = submission.updated
         # Delete.
         elif submission.deleted:
-            self.status = Submission.DELETED_USER
+            self.status = Submission.USER_DELETED
         # Unsubmit.
         elif self.status is None or self.status <= Submission.ON_HOLD:
             if not submission.finalized:

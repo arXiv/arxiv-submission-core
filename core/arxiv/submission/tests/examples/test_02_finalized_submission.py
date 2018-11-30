@@ -112,31 +112,7 @@ class TestFinalizedSubmission(TestCase):
                 save(domain.event.CreateSubmissionVersion(**self.defaults),
                      submission_id=self.submission.submission_id)
 
-        # Check the submission state.
-        with self.app.app_context():
-            submission, events = load(self.submission.submission_id)
-            self.assertEqual(submission.status,
-                             domain.submission.Submission.SUBMITTED,
-                             "The submission is in the submitted state")
-            self.assertEqual(len(self.events), len(events),
-                             "The same number of events were retrieved as"
-                             " were initially saved.")
-
-        # Check the database state.
-        with self.app.app_context():
-            session = classic.current_session()
-            db_rows = session.query(classic.models.Submission).all()
-
-            self.assertEqual(len(db_rows), 1,
-                             "There is one row in the submission table")
-            row = db_rows[0]
-            self.assertEqual(row.type,
-                             classic.models.Submission.NEW_SUBMISSION,
-                             "The classic submission has type 'new'")
-            self.assertEqual(row.status,
-                             classic.models.Submission.SUBMITTED,
-                             "The classic submission is in the SUBMITTED"
-                             " state")
+        self.test_is_in_submitted_state()
 
     def test_cannot_withdraw_submission(self):
         """The submission cannot be withdrawn: it hasn't yet been announced."""
@@ -148,31 +124,7 @@ class TestFinalizedSubmission(TestCase):
                                                     **self.defaults),
                      submission_id=self.submission.submission_id)
 
-        # Check the submission state.
-        with self.app.app_context():
-            submission, events = load(self.submission.submission_id)
-            self.assertEqual(submission.status,
-                             domain.submission.Submission.SUBMITTED,
-                             "The submission is in the submitted state")
-            self.assertEqual(len(self.events), len(events),
-                             "The same number of events were retrieved as"
-                             " were initially saved.")
-
-        # Check the database state.
-        with self.app.app_context():
-            session = classic.current_session()
-            db_rows = session.query(classic.models.Submission).all()
-
-            self.assertEqual(len(db_rows), 1,
-                             "There is one row in the submission table")
-            row = db_rows[0]
-            self.assertEqual(row.type,
-                             classic.models.Submission.NEW_SUBMISSION,
-                             "The classic submission has type 'new'")
-            self.assertEqual(row.status,
-                             classic.models.Submission.SUBMITTED,
-                             "The classic submission is in the SUBMITTED"
-                             " state")
+        self.test_is_in_submitted_state()
 
     def test_cannot_edit_submission(self):
         """The submission cannot be changed: it hasn't yet been announced."""
@@ -188,35 +140,7 @@ class TestFinalizedSubmission(TestCase):
                 save(domain.event.SetDOI(doi="10.1000/182", **self.defaults),
                      submission_id=self.submission.submission_id)
 
-        # Check the submission state.
-        with self.app.app_context():
-            submission, events = load(self.submission.submission_id)
-            self.assertEqual(self.submission.metadata.title, self.title,
-                             "The submission is unchanged")
-            self.assertEqual(self.submission.metadata.doi, self.doi,
-                             "The submission is unchanged")
-            self.assertEqual(submission.status,
-                             domain.submission.Submission.SUBMITTED,
-                             "The submission is in the submitted state")
-            self.assertEqual(len(self.events), len(events),
-                             "The same number of events were retrieved as"
-                             " were initially saved.")
-
-        # Check the database state.
-        with self.app.app_context():
-            session = classic.current_session()
-            db_rows = session.query(classic.models.Submission).all()
-
-            self.assertEqual(len(db_rows), 1,
-                             "There is one row in the submission table")
-            row = db_rows[0]
-            self.assertEqual(row.type,
-                             classic.models.Submission.NEW_SUBMISSION,
-                             "The classic submission has type 'new'")
-            self.assertEqual(row.status,
-                             classic.models.Submission.SUBMITTED,
-                             "The classic submission is in the SUBMITTED"
-                             " state")
+        self.test_is_in_submitted_state()
 
     def test_can_be_unfinalized(self):
         """The submission can be unfinalized."""

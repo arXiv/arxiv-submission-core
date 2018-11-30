@@ -30,7 +30,7 @@ import copy
 from arxiv.base import logging
 from arxiv.base.globals import get_application_config, get_application_global
 from ...domain.event import Event, Publish, RequestWithdrawal, SetDOI, \
-    SetJournalReference, SetReportNumber, RevertSubmissionVersion
+    SetJournalReference, SetReportNumber, Rollback
 from ...domain.submission import License, Submission
 from ...domain.agent import System
 from .models import Base
@@ -246,7 +246,7 @@ def store_event(event: Event, before: Optional[Submission],
         if after.version > before.version:
             dbs = _create_replacement(document_id, before.arxiv_id,
                                       after.version, after, event.created)
-        elif isinstance(event, RevertSubmissionVersion):
+        elif isinstance(event, Rollback) and before.version > 1:
             dbs = _delete_replacement(document_id, before.arxiv_id,
                                       before.version)
 

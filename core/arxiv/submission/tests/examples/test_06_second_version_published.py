@@ -114,8 +114,8 @@ class TestSecondVersionIsPublished(TestCase):
         with self.app.app_context():
             classic.drop_all()
 
-    def assertDefaultExpectedState(self):
-        """The state that we expect if there are no further changes."""
+    def test_is_in_published_state(self):
+        """The submission is now in published state."""
         # Check the submission state.
         with self.app.app_context():
             submission, events = load(self.submission.submission_id)
@@ -150,10 +150,6 @@ class TestSecondVersionIsPublished(TestCase):
             self.assertEqual(db_rows[1].status,
                              classic.models.Submission.PUBLISHED,
                              "The second row is in published state")
-
-    def test_is_in_published_state(self):
-        """The submission is now in published state."""
-        self.assertDefaultExpectedState()
 
     def test_can_replace_submission(self):
         """The submission can be replaced, resulting in a new version."""
@@ -265,7 +261,7 @@ class TestSecondVersionIsPublished(TestCase):
                                            **self.defaults),
                      submission_id=self.submission.submission_id)
 
-        self.assertDefaultExpectedState()
+        self.test_is_in_published_state()
 
     def test_changing_doi(self):
         """Submitter can set the DOI."""
@@ -347,4 +343,4 @@ class TestSecondVersionIsPublished(TestCase):
                 save(domain.event.UnFinalizeSubmission(**self.defaults),
                      submission_id=self.submission.submission_id)
 
-        self.assertDefaultExpectedState()
+        self.test_is_in_published_state()

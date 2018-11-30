@@ -246,11 +246,11 @@ class CreateSubmissionVersion(Event):
 
 
 @dataclass(init=False)
-class RevertSubmissionVersion(Event):
-    """Revert the submission to the most recent published version."""
+class Rollback(Event):
+    """Roll back to the most recent published version, or delete."""
 
-    NAME = "revert to most recent published version"
-    NAMED = "reverted to most recent published version"
+    NAME = "roll back or delete"
+    NAMED = "rolled back or deleted"
 
     def __hash__(self):
         return hash(self.event_id)
@@ -259,11 +259,14 @@ class RevertSubmissionVersion(Event):
         """Only applies to submissions in an unpublished state."""
         if submission.published:
             raise InvalidEvent(self, "Cannot already be published")
-        if not submission.versions or submission.version == 1:
+        elif submission.version > 1 and not submission.versions:
             raise InvalidEvent(self, "No published version to which to revert")
 
     def project(self, submission: Submission) -> Submission:
         """Decrement the version number, and reset fields."""
+        if submission.version == 1:
+            submission.status = Submission.DELETED
+            return submission
         submission.version -= 1
         target = submission.versions[-1]
         # Return these to last published state.

@@ -96,8 +96,8 @@ class TestReplacementSubmissionInProgress(TestCase):
         with self.app.app_context():
             classic.drop_all()
 
-    def assertDefaultExpectedState(self):
-        """This is the state that we expect if there are no further changes."""
+    def test_is_in_working_state(self):
+        """The submission is now in working state."""
         # Check the submission state.
         with self.app.app_context():
             submission, events = load(self.submission.submission_id)
@@ -133,10 +133,6 @@ class TestReplacementSubmissionInProgress(TestCase):
                              classic.models.Submission.NOT_SUBMITTED,
                              "The second row is in not submitted state")
 
-    def test_is_in_working_state(self):
-        """The submission is now in working state."""
-        self.assertDefaultExpectedState()
-
     def test_cannot_replace_submission_again(self):
         """The submission cannot be replaced again while in working state."""
         with self.app.app_context():
@@ -146,7 +142,7 @@ class TestReplacementSubmissionInProgress(TestCase):
                     submission_id=self.submission.submission_id
                 )
 
-        self.assertDefaultExpectedState()
+        self.test_is_in_working_state()
 
     def test_cannot_withdraw_submission(self):
         """The submitter cannot request withdrawal of the submission."""
@@ -158,7 +154,7 @@ class TestReplacementSubmissionInProgress(TestCase):
                     submission_id=self.submission.submission_id
                 )
 
-        self.assertDefaultExpectedState()
+        self.test_is_in_working_state()
 
     def test_can_edit_submission_metadata(self):
         """The submission metadata can now be changed."""
@@ -302,7 +298,7 @@ class TestReplacementSubmissionInProgress(TestCase):
                 save(domain.event.UnFinalizeSubmission(**self.defaults),
                      submission_id=self.submission.submission_id)
 
-        self.assertDefaultExpectedState()
+        self.test_is_in_working_state()
 
     def test_can_revert_to_most_recent_published_version(self):
         """Submitter can abandon changes to their replacement."""
@@ -321,7 +317,7 @@ class TestReplacementSubmissionInProgress(TestCase):
 
         with self.app.app_context():
             submission, events = save(
-                domain.event.RevertSubmissionVersion(**self.defaults),
+                domain.event.Rollback(**self.defaults),
                 submission_id=self.submission.submission_id
             )
 
