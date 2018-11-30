@@ -485,7 +485,7 @@ class TestGetSubmission(TestCase):
                          "Primary classification should reflect the"
                          " reclassification that occurred outside the purview"
                          " of the event model.")
-        self.assertEqual(submission_loaded.status, Submission.SUBMITTED,
+        self.assertEqual(submission_loaded.status, Submission.ON_HOLD,
                          "Submission status should still be submitted.")
         self.assertTrue(submission_loaded.is_on_hold,
                         "Hold status should reflect hold action performed"

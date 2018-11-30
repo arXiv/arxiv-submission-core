@@ -208,7 +208,7 @@ class Submission:
 
     @property
     def is_on_hold(self) -> bool:
-        return len(self.holds) > 0
+        return len(self.holds) > 0 or self.status == self.ON_HOLD
 
     def to_dict(self) -> dict:
         """Generate a dict representation of this :class:`.Submission`."""

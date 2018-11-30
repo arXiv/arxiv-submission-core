@@ -6,7 +6,7 @@ import tempfile
 from flask import Flask
 
 from ...services import classic
-from ... import save, load, domain, exceptions
+from ... import save, load, load_fast, domain, exceptions
 
 CCO = 'http://creativecommons.org/publicdomain/zero/1.0/'
 
@@ -83,8 +83,18 @@ class TestOnHoldSubmission(TestCase):
         with self.app.app_context():
             submission, events = load(self.submission.submission_id)
             self.assertEqual(submission.status,
-                             domain.submission.Submission.SUBMITTED,
-                             "The submission is in the submitted state")
+                             domain.submission.Submission.ON_HOLD,
+                             "The submission is in the hold state")
+            self.assertTrue(submission.is_on_hold, "The submission is on hold")
+            self.assertEqual(len(self.events), len(events),
+                             "The same number of events were retrieved as"
+                             " were initially saved.")
+
+        with self.app.app_context():
+            submission = load_fast(self.submission.submission_id)
+            self.assertEqual(submission.status,
+                             domain.submission.Submission.ON_HOLD,
+                             "The submission is in the hold state")
             self.assertTrue(submission.is_on_hold, "The submission is on hold")
             self.assertEqual(len(self.events), len(events),
                              "The same number of events were retrieved as"
@@ -154,6 +164,15 @@ class TestOnHoldSubmission(TestCase):
         # Check the submission state.
         with self.app.app_context():
             submission, events = load(self.submission.submission_id)
+            self.assertEqual(submission.status,
+                             domain.submission.Submission.WORKING,
+                             "The submission is in the working state")
+            self.assertEqual(len(self.events) + 1, len(events),
+                             "The same number of events were retrieved as"
+                             " were saved.")
+
+        with self.app.app_context():
+            submission = load_fast(self.submission.submission_id)
             self.assertEqual(submission.status,
                              domain.submission.Submission.WORKING,
                              "The submission is in the working state")

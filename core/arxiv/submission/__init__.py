@@ -129,6 +129,13 @@ def load(submission_id: int) -> Tuple[Submission, List[Event]]:
         raise NoSuchSubmission(f'No submission with id {submission_id}') from e
 
 
+def load_fast(submission_id: int) -> Submission:
+    try:
+        return classic.get_submission_fast(submission_id)
+    except classic.NoSuchSubmission as e:
+        raise NoSuchSubmission(f'No submission with id {submission_id}') from e
+
+
 def save(*events: Event, submission_id: Optional[str] = None) \
         -> Tuple[Submission, List[Event]]:
     """
@@ -180,7 +187,7 @@ def save(*events: Event, submission_id: Optional[str] = None) \
     # Get the current state of the submission from past events.
     if submission_id is not None:
         before, prior = classic.get_submission(submission_id)
-        
+
     # Either we need a submission ID, or the first event must be a creation.
     elif events[0].submission_id is None \
             and not isinstance(events[0], CreateSubmission):

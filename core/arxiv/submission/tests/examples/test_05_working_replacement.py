@@ -8,7 +8,7 @@ from pytz import UTC
 from flask import Flask
 
 from ...services import classic
-from ... import save, load, domain, exceptions
+from ... import save, load, load_fast, domain, exceptions
 
 CCO = 'http://creativecommons.org/publicdomain/zero/1.0/'
 
@@ -111,6 +111,18 @@ class TestReplacementSubmissionInProgress(TestCase):
                                   "A CreateSubmissionVersion event is"
                                   " inserted.")
 
+        with self.app.app_context():
+            submission = load_fast(self.submission.submission_id)
+            self.assertEqual(submission.status,
+                             domain.submission.Submission.WORKING,
+                             "The submission is in the working state")
+            self.assertIsInstance(self.events[-2], domain.event.Publish,
+                                  "A Publish event is inserted.")
+            self.assertIsInstance(self.events[-1],
+                                  domain.event.CreateSubmissionVersion,
+                                  "A CreateSubmissionVersion event is"
+                                  " inserted.")
+
         # Check the database state.
         with self.app.app_context():
             session = classic.current_session()
@@ -168,6 +180,23 @@ class TestReplacementSubmissionInProgress(TestCase):
         # Check the submission state.
         with self.app.app_context():
             submission, events = load(self.submission.submission_id)
+            self.assertEqual(submission.metadata.title, new_title,
+                             "The submission is changed")
+            self.assertEqual(submission.status,
+                             domain.submission.Submission.WORKING,
+                             "The submission is in the working state")
+            self.assertIsInstance(events[-3], domain.event.Publish,
+                                  "A Publish event is inserted.")
+            self.assertIsInstance(events[-2],
+                                  domain.event.CreateSubmissionVersion,
+                                  "A CreateSubmissionVersion event is"
+                                  " inserted.")
+            self.assertIsInstance(events[-1],
+                                  domain.event.SetTitle,
+                                  "Metadata update events are reflected")
+
+        with self.app.app_context():
+            submission = load_fast(self.submission.submission_id)
             self.assertEqual(submission.metadata.title, new_title,
                              "The submission is changed")
             self.assertEqual(submission.status,
@@ -263,6 +292,18 @@ class TestReplacementSubmissionInProgress(TestCase):
                                   domain.event.SetReportNumber,
                                   "Metadata update events are reflected")
 
+        with self.app.app_context():
+            submission = load_fast(self.submission.submission_id)
+            self.assertEqual(submission.metadata.doi, new_doi,
+                             "The DOI is updated.")
+            self.assertEqual(submission.metadata.journal_ref, new_journal_ref,
+                             "The journal ref is updated.")
+            self.assertEqual(submission.metadata.report_num, new_report_num,
+                             "The report number is updated.")
+            self.assertEqual(submission.status,
+                             domain.submission.Submission.WORKING,
+                             "The submission is in the working state.")
+
         # Check the database state.
         with self.app.app_context():
             session = classic.current_session()
@@ -323,6 +364,20 @@ class TestReplacementSubmissionInProgress(TestCase):
 
         with self.app.app_context():
             submission, events = load(self.submission.submission_id)
+            self.assertEqual(submission.version, 1,
+                             "Version number is rolled back")
+            self.assertEqual(submission.metadata.doi,
+                             self.submission.metadata.doi,
+                             "The DOI is reverted.")
+            self.assertEqual(submission.metadata.journal_ref,
+                             self.submission.metadata.journal_ref,
+                             "The journal ref is reverted.")
+            self.assertEqual(submission.metadata.report_num,
+                             self.submission.metadata.report_num,
+                             "The report number is reverted.")
+
+        with self.app.app_context():
+            submission = load_fast(self.submission.submission_id)
             self.assertEqual(submission.version, 1,
                              "Version number is rolled back")
             self.assertEqual(submission.metadata.doi,

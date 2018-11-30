@@ -8,7 +8,7 @@ from pytz import UTC
 from flask import Flask
 
 from ...services import classic
-from ... import save, load, domain, exceptions
+from ... import save, load, load_fast, domain, exceptions
 
 CCO = 'http://creativecommons.org/publicdomain/zero/1.0/'
 
@@ -103,6 +103,16 @@ class TestPublishedSubmission(TestCase):
                              "The same number of events were retrieved as"
                              " were initially saved, plus the publish event.")
 
+        with self.app.app_context():
+            submission = load_fast(self.submission.submission_id)
+            self.assertEqual(submission.status,
+                             domain.submission.Submission.PUBLISHED,
+                             "The submission is in the submitted state")
+            self.assertTrue(submission.published, "Submission is published")
+            self.assertEqual(len(self.events) + 1, len(events),
+                             "The same number of events were retrieved as"
+                             " were initially saved, plus the publish event.")
+
         # Check the database state.
         with self.app.app_context():
             session = classic.current_session()
@@ -130,6 +140,20 @@ class TestPublishedSubmission(TestCase):
         # Check the submission state.
         with self.app.app_context():
             submission, events = load(self.submission.submission_id)
+            self.assertEqual(submission.status,
+                             domain.submission.Submission.WORKING,
+                             "The submission is in the working state")
+            self.assertEqual(len(self.events) + 2, len(events),
+                             "The same number of events were retrieved as"
+                             " were initially saved, plus the publish event"
+                             " and the create version event.")
+            self.assertEqual(submission.version, 2,
+                             "The version number is incremented by 1")
+            self.assertEqual(len(submission.versions), 1,
+                             "There is one past version")
+
+        with self.app.app_context():
+            submission = load_fast(self.submission.submission_id)
             self.assertEqual(submission.status,
                              domain.submission.Submission.WORKING,
                              "The submission is in the working state")
@@ -175,6 +199,18 @@ class TestPublishedSubmission(TestCase):
 
         # Check the submission state.
         with self.app.app_context():
+            submission, events = load(self.submission.submission_id)
+            self.assertEqual(submission.status,
+                             domain.submission.Submission.WITHDRAWAL_REQUESTED,
+                             "The submission is in the withdrawal requested"
+                             " state.")
+            self.assertEqual(len(self.events) + 2, len(events),
+                             "The same number of events were retrieved as"
+                             " were initially saved, plus one for publish"
+                             " and another for withdrawal request.")
+
+        with self.app.app_context():
+            submission = load_fast(self.submission.submission_id)
             submission, events = load(self.submission.submission_id)
             self.assertEqual(submission.status,
                              domain.submission.Submission.WITHDRAWAL_REQUESTED,
@@ -247,6 +283,25 @@ class TestPublishedSubmission(TestCase):
         # Check the submission state.
         with self.app.app_context():
             submission, events = load(self.submission.submission_id)
+            self.assertEqual(submission.metadata.doi, new_doi,
+                             "The DOI is updated.")
+            self.assertEqual(submission.metadata.journal_ref, new_journal_ref,
+                             "The journal ref is updated.")
+            self.assertEqual(submission.metadata.report_num, new_report_num,
+                             "The report number is updated.")
+            self.assertEqual(submission.status,
+                             domain.submission.Submission.PUBLISHED,
+                             "The submission is in the submitted state.")
+
+            self.assertEqual(len(self.events) + 4, len(events),
+                             "The same number of events were retrieved as"
+                             " were initially saved plus one for the publish"
+                             " event and another for setting DOI, another for"
+                             " setting journal ref, and another for setting"
+                             " report number.")
+
+        with self.app.app_context():
+            submission = load_fast(self.submission.submission_id)
             self.assertEqual(submission.metadata.doi, new_doi,
                              "The DOI is updated.")
             self.assertEqual(submission.metadata.journal_ref, new_journal_ref,

@@ -6,7 +6,7 @@ import tempfile
 from flask import Flask
 
 from ...services import classic
-from ... import save, load, domain, exceptions
+from ... import save, load, load_fast, domain, exceptions
 
 
 class TestWorkingSubmission(TestCase):
@@ -42,6 +42,7 @@ class TestWorkingSubmission(TestCase):
                 domain.event.ConfirmPolicy(**self.defaults),
                 domain.event.SetTitle(title='the best title', **self.defaults)
             )
+        self.submission_id = self.submission.submission_id
 
     def tearDown(self):
         """Clear the database after each test."""
@@ -59,6 +60,12 @@ class TestWorkingSubmission(TestCase):
             self.assertEqual(len(self.events), len(events),
                              "The same number of events were retrieved as"
                              " were initially saved.")
+
+        with self.app.app_context():
+            submission = load_fast(self.submission_id)
+            self.assertEqual(submission.status,
+                             domain.submission.Submission.WORKING,
+                             "The submission is in the working state")
 
         # Check the database state.
         with self.app.app_context():
@@ -92,6 +99,14 @@ class TestWorkingSubmission(TestCase):
                              "The submission is no longer considered active.")
 
         with self.app.app_context():
+            submission = load_fast(self.submission_id)
+            self.assertEqual(submission.status,
+                             domain.event.Submission.DELETED,
+                             "Submission is in the deleted state")
+            self.assertFalse(submission.active,
+                             "The submission is no longer considered active.")
+
+        with self.app.app_context():
             session = classic.current_session()
             db_rows = session.query(classic.models.Submission).all()
 
@@ -104,7 +119,6 @@ class TestWorkingSubmission(TestCase):
             self.assertEqual(row.status,
                              classic.models.Submission.USER_DELETED,
                              "The classic submission is in the DELETED state")
-
 
     def test_cannot_finalize_submission(self):
         """The submission cannot be finalized."""

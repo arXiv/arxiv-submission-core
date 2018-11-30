@@ -27,6 +27,8 @@ from pytz import UTC
 from itertools import groupby
 import copy
 
+from sqlalchemy import or_
+
 from arxiv.base import logging
 from arxiv.base.globals import get_application_config, get_application_global
 from ...domain.event import Event, Publish, RequestWithdrawal, SetDOI, \
@@ -86,7 +88,6 @@ def get_user_submissions(user_id: int) -> List[Submission]:
         db_submissions = list(
             session.query(models.Submission)
             .filter(models.Submission.submitter_id == user_id)
-            .filter(models.Submission.type != models.Submission.JOURNAL_REFERENCE)
             .order_by(models.Submission.doc_paper_id.desc())
         )
         grouped = groupby(db_submissions, key=lambda dbs: dbs.doc_paper_id)
@@ -99,14 +100,84 @@ def get_user_submissions(user_id: int) -> List[Submission]:
                     submissions.append(submission)
             else:
                 dbss = sorted(dbss, key=lambda dbs: dbs.submission_id)[::-1]
-                submission = dbss[0].to_submission(dbss[-1].submission_id)
-                for dbs in dbss:
-                    if dbs.is_new_version():
-                        prior_ver = dbs.to_submission(submission.submission_id)
-                        submission.versions.append(prior_ver)
-                submissions.append(submission)
+                submissions.append(_db_to_projection(dbss))
 
         return submissions
+
+
+def get_submission_fast(submission_id: int) -> List[Submission]:
+    """
+    Get the projection of the submission directly.
+
+    Instead of playing events forward, we grab the most recent snapshot of the
+    submission in the database. Since classic represents the submission using
+    several rows, we have to grab all of them and transform/patch as
+    appropriate.
+
+    Parameters
+    ----------
+    submission_id : int
+
+    Returns
+    -------
+    :class:`.Submission`
+
+    Raises
+    ------
+    :class:`.NoSuchSubmission`
+        Raised when there are is no submission for the provided submission ID.
+
+    """
+    return _db_to_projection(_get_db_submission_rows(submission_id))
+
+
+def _get_db_submission_rows(submission_id: int) -> List[models.Submission]:
+    with transaction() as session:
+        head = session.query(models.Submission.submission_id,
+                             models.Submission.doc_paper_id) \
+            .filter_by(submission_id=submission_id) \
+            .subquery()
+        dbss = list(
+            session.query(models.Submission)
+            .filter(or_(models.Submission.submission_id == submission_id,
+                        models.Submission.doc_paper_id == head.c.doc_paper_id))
+            .order_by(models.Submission.submission_id.desc())
+        )
+    if not dbss:
+        raise NoSuchSubmission('No submission found')
+    return dbss
+
+
+def _get_head_idx(dbss: List[models.Submission]) -> int:
+    """Find the most recent non-JREF row."""
+    i = 0
+    while i < len(dbss):
+        # Skip any "deleted" rows that aren't the first version.
+        if not dbss[i].is_jref() \
+                and not (dbss[i].is_deleted() and dbss[i].version > 1):
+            break
+        i += 1
+    return i
+
+
+def _db_to_projection(dbss: List[models.Submission]) -> Submission:
+    """Transform a set of classic rows to an NG :class:`Submission`."""
+    i = _get_head_idx(dbss)
+    submission = dbss[i].to_submission(dbss[-1].submission_id)
+    # Attach previous published versions.
+    for dbs in dbss:
+        if dbs.is_jref():
+            continue
+        if dbs.is_new_version() and dbs.is_published():
+            prior_ver = dbs.to_submission(submission.submission_id)
+            submission.versions.append(prior_ver)
+
+    # If there are JREF rows more recent than the latest non-JREF row, then
+    # we want to patch the JREF fields using those rows.
+    for j in range(0, i):
+        if dbss[j].is_jref() and not dbss[j].is_deleted():
+            submission = dbss[j].patch_jref(submission)
+    return submission
 
 
 def get_submission(submission_id: int) -> Tuple[Submission, List[Event]]:
@@ -132,6 +203,8 @@ def get_submission(submission_id: int) -> Tuple[Submission, List[Event]]:
     Returns
     -------
     :class:`.Submission`
+    list
+        Items are :class:`Event` instances.
 
     """
     events = get_events(submission_id)
@@ -472,6 +545,5 @@ def _preserve_sticky_hold(dbs: models.Submission, before: Submission,
                           after: Submission, event: Event) -> None:
     if dbs.status != models.Submission.ON_HOLD:
         return
-    if before.status == Submission.SUBMITTED and \
-            after.status == Submission.WORKING:
-        dbs.sticky_status = dbs.status
+    if dbs.is_on_hold() and after.status == Submission.WORKING:
+        dbs.sticky_status = models.Submission.ON_HOLD

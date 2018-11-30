@@ -63,10 +63,10 @@ class Submission(Base):    # type: ignore
     DELETED_USER_EXPIRED = 30
     """User deleted and files expired."""
 
-    DELETED = [
+    DELETED = (
         USER_DELETED, DELETED_ON_HOLD, DELETED_PROCESSING,
         DELETED_REMOVED, DELETED_USER_EXPIRED
-    ]
+    )
 
     NEW_SUBMISSION = 'new'
     REPLACEMENT = 'rep'
@@ -229,6 +229,8 @@ class Submission(Base):    # type: ignore
                     domain.Hold(creator=domain.System(__name__),
                                 hold_type='patch')
                 )
+                if self.status == self.ON_HOLD:
+                    submission.status = domain.Submission.ON_HOLD
 
             # The domain status glosses over some of the detail here.
             elif self.type == Submission.WITHDRAWAL \
@@ -241,6 +243,26 @@ class Submission(Base):    # type: ignore
                 submission.status = self._get_status()
         submission.created = self.get_created()
         submission.updated = self.get_updated()
+        return submission
+
+    def patch_jref(self, submission: domain.Submission) -> domain.Submission:
+        """
+        Patch a :class:`.Submission` with JREF data outside the event scope.
+
+        Parameters
+        ----------
+        submission : :class:`.domain.Submission`
+            The submission object to patch.
+
+        Returns
+        -------
+        :class:`.domain.Submission`
+            The same submission that was passed; now patched with JREF data
+            outside the scope of the event model.
+        """
+        submission.metadata.doi = self.doi
+        submission.metadata.journal_ref = self.journal_ref
+        submission.metadata.report_num = self.report_num
         return submission
 
     def to_submission(self, submission_id: Optional[int] = None) \
@@ -260,6 +282,15 @@ class Submission(Base):    # type: ignore
 
         """
         status = self._get_status()
+
+        # Apply (sticky) holds.
+        holds: List[domain.Hold] = []
+        if self.sticky_status == self.ON_HOLD or self.status == self.ON_HOLD:
+            holds.append(domain.Hold(creator=domain.System(__name__),
+                                     hold_type='patch'))
+            if self.status == self.ON_HOLD:
+                status = domain.Submission.ON_HOLD
+
         primary = self.primary_classification
         if self.submitter is None:
             submitter = domain.User(
@@ -286,6 +317,7 @@ class Submission(Base):    # type: ignore
             submitter_accepts_policy=bool(self.agree_policy),
             submitter_contact_verified=bool(self.userinfo),
             submitter_confirmed_preview=bool(self.viewed),
+            holds=holds,
             status=status,
             metadata=domain.SubmissionMetadata(
                 title=self.title,
@@ -403,6 +435,12 @@ class Submission(Base):    # type: ignore
 
     def is_published(self) -> bool:
         return self.status in [self.PUBLISHED, self.DELETED_PUBLISHED]
+
+    def is_deleted(self) -> bool:
+        return self.status in self.DELETED
+
+    def is_on_hold(self) -> bool:
+        return self.status == self.ON_HOLD
 
     def is_new_version(self) -> bool:
         """Indicate whether this row represents a new version."""

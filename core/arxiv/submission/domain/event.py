@@ -235,6 +235,8 @@ class CreateSubmissionVersion(Event):
         # Return these to default.
         submission.status = Submission.status
         submission.source_content = Submission.source_content
+        submission.license = Submission.license
+        submission.submitter_is_author = Submission.submitter_is_author
         submission.submitter_contact_verified = \
             Submission.submitter_contact_verified
         submission.submitter_accepts_policy = \

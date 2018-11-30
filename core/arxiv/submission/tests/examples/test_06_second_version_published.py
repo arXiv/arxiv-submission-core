@@ -33,6 +33,7 @@ class TestSecondVersionIsPublished(TestCase):
                                            endorsements=['cs.DL', 'cs.IR'])
         self.defaults = {'creator': self.submitter}
         with self.app.app_context():
+            classic.drop_all()
             classic.create_all()
             self.title = "the best title"
             self.doi = "10.01234/56789"
@@ -71,7 +72,6 @@ class TestSecondVersionIsPublished(TestCase):
             db_row.status = classic.models.Submission.PUBLISHED
             dated = (datetime.now() - datetime.utcfromtimestamp(0))
             db_row.document = classic.models.Document(
-                document_id=1,
                 paper_id=self.paper_id,
                 title=self.submission.metadata.title,
                 authors=self.submission.metadata.authors_display,
@@ -91,6 +91,9 @@ class TestSecondVersionIsPublished(TestCase):
                 domain.event.CreateSubmissionVersion(**self.defaults),
                 domain.event.ConfirmContactInformation(**self.defaults),
                 domain.event.ConfirmAuthorship(**self.defaults),
+                domain.event.SetLicense(license_uri=CCO,
+                                        license_name="CC0 1.0",
+                                        **self.defaults),
                 domain.event.ConfirmPolicy(**self.defaults),
                 domain.event.SetTitle(title=new_title, **self.defaults),
                 domain.event.SetUploadPackage(checksum="a9s9k342900ks03330029",
