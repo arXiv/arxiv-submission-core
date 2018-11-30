@@ -179,7 +179,6 @@ def _db_to_projection(dbss: List[models.Submission]) -> Submission:
     submission = dbss[i].to_submission(dbss[-1].submission_id)
     # Attach previous published versions.
     for dbs in dbss:
-        # print(dbs.type, dbs.status, dbs.is_jref(), len(submission.versions))
         if dbs.is_jref() and len(submission.versions) > 0:
             submission.versions[-1] = dbs.patch_jref(submission.versions[-1])
         elif dbs.is_new_version() and dbs.is_published():
@@ -264,10 +263,12 @@ def get_submission(submission_id: int) -> Tuple[Submission, List[Event]]:
             # row, and load the next row. We want to do this before projecting
             # the event, since we are inferring that the event occurred after
             # a change was made via the legacy system.
-            submission = dbs.patch(submission)
+            if not dbs.is_deleted() or dbs.version == 1:
+                submission = dbs.patch(submission)
             dbs = dbss.pop(0)
 
         # Now project the event.
+
         submission = event.apply(submission)
         applied_events.append(event)
 

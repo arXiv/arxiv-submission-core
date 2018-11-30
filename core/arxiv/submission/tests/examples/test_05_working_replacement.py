@@ -411,3 +411,25 @@ class TestReplacementSubmissionInProgress(TestCase):
             self.assertEqual(db_rows[1].status,
                              classic.models.Submission.USER_DELETED,
                              "The second row is in the user deleted state.")
+
+    def test_can_start_a_new_replacement_after_reverting(self):
+        """Submitter can start a new replacement after reverting."""
+        with self.app.app_context():
+            submission, events = save(
+                domain.event.Rollback(**self.defaults),
+                submission_id=self.submission.submission_id
+            )
+
+        with self.app.app_context():
+            submission, events = save(
+                domain.event.CreateSubmissionVersion(**self.defaults),
+                submission_id=self.submission.submission_id
+            )
+
+        with self.app.app_context():
+            submission, events = load(self.submission.submission_id)
+            self.assertEqual(submission.version, 2,
+                             "Version number is incremented.")
+            self.assertEqual(submission.status,
+                             domain.submission.Submission.WORKING,
+                             "Submission is in working state")

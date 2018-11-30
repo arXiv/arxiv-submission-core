@@ -362,7 +362,6 @@ class TestPublishedSubmission(TestCase):
         # These changes result in what we consider a "JREF submission" in
         # classic. But we're moving away from that way of thinking in NG, so
         # it should be somewhat opaque in a replacement/deletion scenario.
-        print('????')
         new_doi = "10.1000/182"
         new_journal_ref = "Baz 1993"
         new_report_num = "Report 82"
@@ -394,7 +393,6 @@ class TestPublishedSubmission(TestCase):
 
         # Check the submission state. The JREF changes shoulds stick.
         with self.app.app_context():
-            print('---')
             submission, events = load(self.submission.submission_id)
             self.assertEqual(submission.metadata.doi, new_doi,
                              "The DOI is still updated.")
