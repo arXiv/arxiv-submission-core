@@ -282,7 +282,7 @@ class Rollback(Event):
         submission.submitter_confirmed_preview = \
             target.submitter_confirmed_preview
         submission.license = target.license
-        submission.metadata = target.metadata
+        submission.metadata = copy.deepcopy(target.metadata)
         return submission
 
 

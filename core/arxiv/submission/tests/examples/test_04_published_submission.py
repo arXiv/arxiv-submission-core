@@ -356,3 +356,56 @@ class TestPublishedSubmission(TestCase):
                      submission_id=self.submission.submission_id)
 
         self.test_is_in_published_state()
+
+    def test_rolling_back_does_not_clobber_jref_changes(self):
+        """If user submits a JREF, rolling back does not clobber changes."""
+        # These changes result in what we consider a "JREF submission" in
+        # classic. But we're moving away from that way of thinking in NG, so
+        # it should be somewhat opaque in a replacement/deletion scenario.
+        print('????')
+        new_doi = "10.1000/182"
+        new_journal_ref = "Baz 1993"
+        new_report_num = "Report 82"
+        with self.app.app_context():
+            submission, events = save(
+                domain.event.SetDOI(doi=new_doi, **self.defaults),
+                domain.event.SetJournalReference(journal_ref=new_journal_ref,
+                                                 **self.defaults),
+                domain.event.SetReportNumber(report_num=new_report_num,
+                                             **self.defaults),
+                submission_id=self.submission.submission_id
+            )
+
+        # Now we get a replacement.
+        with self.app.app_context():
+            submission, events = save(
+                domain.event.CreateSubmissionVersion(**self.defaults),
+                domain.event.SetTitle(title='A new and better title',
+                                      **self.defaults),
+                submission_id=self.submission.submission_id
+            )
+
+        # Now the user rolls back the replacement.
+        with self.app.app_context():
+            submission, events = save(
+                domain.event.Rollback(**self.defaults),
+                submission_id=self.submission.submission_id
+            )
+
+        # Check the submission state. The JREF changes shoulds stick.
+        with self.app.app_context():
+            print('---')
+            submission, events = load(self.submission.submission_id)
+            self.assertEqual(submission.metadata.doi, new_doi,
+                             "The DOI is still updated.")
+            self.assertEqual(submission.metadata.journal_ref, new_journal_ref,
+                             "The journal ref is still updated.")
+            self.assertEqual(submission.metadata.report_num, new_report_num,
+                             "The report number is stil updated.")
+            self.assertEqual(submission.metadata.title,
+                             self.submission.metadata.title,
+                             "The title is reverted to the last published"
+                             " version.")
+            self.assertEqual(submission.status,
+                             domain.submission.Submission.PUBLISHED,
+                             "The submission is in the submitted state.")

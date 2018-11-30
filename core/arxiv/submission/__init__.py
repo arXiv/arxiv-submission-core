@@ -23,7 +23,7 @@ are defined, see :class:`arxiv.submission.domain.event.Event`.
    for all versions/mutations. In the legacy system, new rows are created in
    the submission table for things like creating a replacement, adding a DOI,
    or requesting a withdrawal. The :ref:`legacy-integration` handles the
-   interchange between these two domains.
+   interchange between these two models.
 
 
 Using commands/events
@@ -74,7 +74,7 @@ example:
    >>> user = User(123, "joe@bloggs.com")
    >>> creation = CreateSubmission(creator=user)
    >>> update = SetTitle(creator=user, title='A new theory of foo')
-   >>> submission = save(creation, update)
+   >>> submission, events = save(creation, update)
    >>> submission.submission_id
    40032
 
@@ -106,6 +106,9 @@ def load(submission_id: int) -> Tuple[Submission, List[Event]]:
     """
     Load a submission and its history.
 
+    This loads all events for the submission, and generates the most
+    up-to-date representation based on those events.
+
     Parameters
     ----------
     submission_id : str
@@ -113,7 +116,7 @@ def load(submission_id: int) -> Tuple[Submission, List[Event]]:
 
     Returns
     -------
-    :class:`arxiv.submission.domain.submission.Submission`
+    :class:`.Submission`
         The current state of the submission.
     list
         Items are :class:`.Event`s, in order of their occurrence.
@@ -129,7 +132,42 @@ def load(submission_id: int) -> Tuple[Submission, List[Event]]:
         raise NoSuchSubmission(f'No submission with id {submission_id}') from e
 
 
+def load_submissions_for_user(user_id: int) -> List[Submission]:
+    """
+    Load active :class:`.Submission`s for a specific user.
+
+    Parameters
+    ----------
+    user_id : int
+        Unique identifier for the user.
+
+    Returns
+    -------
+    list
+        Items are :class:`.Submission` instances.
+
+    """
+    return classic.get_user_submissions_fast(user_id)
+
+
 def load_fast(submission_id: int) -> Submission:
+    """
+    Load a :class:`.Submission` from its last projected state.
+
+    This does not load and apply past events. The most recent stored submission
+    state is loaded directly from the database.
+
+    Parameters
+    ----------
+    submission_id : str
+        Submission identifier.
+
+    Returns
+    -------
+    :class:`.Submission`
+        The current state of the submission.
+
+    """
     try:
         return classic.get_submission_fast(submission_id)
     except classic.NoSuchSubmission as e:

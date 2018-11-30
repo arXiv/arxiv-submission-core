@@ -83,7 +83,22 @@ def get_events(submission_id: int) -> List[Event]:
         return events
 
 
-def get_user_submissions(user_id: int) -> List[Submission]:
+def get_user_submissions_fast(user_id: int) -> List[Submission]:
+    """
+    Get all active submissions for a user.
+
+    Uses the same approach as :func:`get_submission_fast`.
+
+    Parameters
+    ----------
+    submission_id : int
+
+    Returns
+    -------
+    list
+        Items are the user's :class:`.Submission` instances.
+
+    """
     with transaction() as session:
         db_submissions = list(
             session.query(models.Submission)
@@ -95,9 +110,7 @@ def get_user_submissions(user_id: int) -> List[Submission]:
         for arxiv_id, dbss in grouped:
             if arxiv_id is None:
                 for dbs in dbss:
-                    submission = dbs.to_submission()
-                    submission.versions.append(submission)
-                    submissions.append(submission)
+                    submissions.append(dbs.to_submission())
             else:
                 dbss = sorted(dbss, key=lambda dbs: dbs.submission_id)[::-1]
                 submissions.append(_db_to_projection(dbss))
@@ -166,9 +179,10 @@ def _db_to_projection(dbss: List[models.Submission]) -> Submission:
     submission = dbss[i].to_submission(dbss[-1].submission_id)
     # Attach previous published versions.
     for dbs in dbss:
-        if dbs.is_jref():
-            continue
-        if dbs.is_new_version() and dbs.is_published():
+        # print(dbs.type, dbs.status, dbs.is_jref(), len(submission.versions))
+        if dbs.is_jref() and len(submission.versions) > 0:
+            submission.versions[-1] = dbs.patch_jref(submission.versions[-1])
+        elif dbs.is_new_version() and dbs.is_published():
             prior_ver = dbs.to_submission(submission.submission_id)
             submission.versions.append(prior_ver)
 
@@ -257,9 +271,17 @@ def get_submission(submission_id: int) -> Tuple[Submission, List[Event]]:
         submission = event.apply(submission)
         applied_events.append(event)
 
+        # Backport JREFs to the published version to which they apply.
+        if type(event) in [SetDOI, SetJournalReference, SetReportNumber]:
+            if submission.versions \
+                    and submission.version == submission.versions[-1].version:
+                submission.versions[-1] = event.apply(submission.versions[-1])
+
     # Finally, patch the submission with any remaining changes that may have
     # occurred via the legacy system.
     for d in [dbs] + list(dbss):
+        if d.is_deleted() and d.version > 1:
+            continue
         submission = d.patch(submission)
         if d.is_published() and not submission.published:
             submission = insert_publish_event(d, submission)
