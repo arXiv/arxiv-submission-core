@@ -115,7 +115,7 @@ def get_user_submissions_fast(user_id: int) -> List[Submission]:
                 dbss = sorted(dbss, key=lambda dbs: dbs.submission_id)[::-1]
                 submissions.append(_db_to_projection(dbss))
 
-        return submissions
+        return [s for s in submissions if not s.deleted]
 
 
 def get_submission_fast(submission_id: int) -> List[Submission]:
@@ -162,7 +162,11 @@ def _get_db_submission_rows(submission_id: int) -> List[models.Submission]:
 
 
 def _get_head_idx(dbss: List[models.Submission]) -> int:
-    """Find the most recent non-JREF row."""
+    """
+    Find the most recent non-JREF row.
+
+    Assume that the rows are passed in descending order.
+    """
     i = 0
     while i < len(dbss):
         # Skip any "deleted" rows that aren't the first version.
@@ -174,24 +178,31 @@ def _get_head_idx(dbss: List[models.Submission]) -> int:
 
 
 def _db_to_projection(dbss: List[models.Submission]) -> Submission:
-    """Transform a set of classic rows to an NG :class:`Submission`."""
+    """
+    Transform a set of classic rows to an NG :class:`Submission`.
+
+    Assume that the rows are passed in descending order.
+    """
     i = _get_head_idx(dbss)
     submission = dbss[i].to_submission(dbss[-1].submission_id)
     # Attach previous published versions.
-    for dbs in dbss:
-        if dbs.is_jref() and len(submission.versions) > 0:
-            submission.versions[-1] = dbs.patch_jref(submission.versions[-1])
-        elif dbs.is_new_version() and dbs.is_published():
+    for dbs in dbss[i+1:][::-1]:
+        if dbs.is_deleted():
+            continue
+        if dbs.is_new_version() and dbs.is_published():
             prior_ver = dbs.to_submission(submission.submission_id)
             submission.versions.append(prior_ver)
-
+        elif dbs.is_jref() and len(submission.versions) > 0:
+            submission.versions[-1] = dbs.patch_jref(submission.versions[-1])
+        elif len(submission.versions) > 0:
+            submission.versions[-1] = dbs.patch(submission.versions[-1])
     # If there are JREF rows more recent than the latest non-JREF row, then
     # we want to patch the JREF fields using those rows.
     for j in range(0, i):
         if dbss[j].is_jref() and not dbss[j].is_deleted():
             submission = dbss[j].patch_jref(submission)
+            submission = dbss[j].patch(submission)
     return submission
-
 
 def get_submission(submission_id: int) -> Tuple[Submission, List[Event]]:
     """

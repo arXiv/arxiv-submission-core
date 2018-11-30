@@ -211,7 +211,6 @@ class TestPublishedSubmission(TestCase):
 
         with self.app.app_context():
             submission = load_fast(self.submission.submission_id)
-            submission, events = load(self.submission.submission_id)
             self.assertEqual(submission.status,
                              domain.submission.Submission.WITHDRAWAL_REQUESTED,
                              "The submission is in the withdrawal requested"

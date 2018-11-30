@@ -220,17 +220,26 @@ class Submission(Base):    # type: ignore
         # Comments (admins may modify).
         submission.metadata.comments = self.comments
 
+        submission = self.patch_status(submission)
+        submission.created = self.get_created()
+        submission.updated = self.get_updated()
+        return submission
+
+    def patch_hold(self, submission: domain.Submission) -> domain.Submission:
+        submission.holds.append(
+            domain.Hold(creator=domain.System(__name__), hold_type='patch')
+        )
+        if self.status == self.ON_HOLD:
+            submission.status = domain.Submission.ON_HOLD
+        return submission
+
+    def patch_status(self, submission: domain.Submission) -> domain.Submission:
         # We're phasing journal reference out as a submission
         if self.type != Submission.JOURNAL_REFERENCE:
             # Apply sticky status.
             if self.sticky_status == self.ON_HOLD \
                     or self.status == self.ON_HOLD:
-                submission.holds.append(
-                    domain.Hold(creator=domain.System(__name__),
-                                hold_type='patch')
-                )
-                if self.status == self.ON_HOLD:
-                    submission.status = domain.Submission.ON_HOLD
+                submission = self.patch_hold(submission)
 
             # The domain status glosses over some of the detail here.
             elif self.type == Submission.WITHDRAWAL \
@@ -241,8 +250,6 @@ class Submission(Base):    # type: ignore
             elif not self.is_published():
                 # Status changes.
                 submission.status = self._get_status()
-        submission.created = self.get_created()
-        submission.updated = self.get_updated()
         return submission
 
     def patch_jref(self, submission: domain.Submission) -> domain.Submission:
@@ -282,15 +289,6 @@ class Submission(Base):    # type: ignore
 
         """
         status = self._get_status()
-
-        # Apply (sticky) holds.
-        holds: List[domain.Hold] = []
-        if self.sticky_status == self.ON_HOLD or self.status == self.ON_HOLD:
-            holds.append(domain.Hold(creator=domain.System(__name__),
-                                     hold_type='patch'))
-            if self.status == self.ON_HOLD:
-                status = domain.Submission.ON_HOLD
-
         primary = self.primary_classification
         if self.submitter is None:
             submitter = domain.User(
@@ -307,18 +305,17 @@ class Submission(Base):    # type: ignore
             )
         if submission_id is None:
             submission_id = self.submission_id
-        return domain.Submission(
+        submission = domain.Submission(
             submission_id=submission_id,
             creator=submitter,
             owner=submitter,
+            status=status,
             created=self.get_created(),
             updated=self.get_updated(),
             submitter_is_author=bool(self.is_author),
             submitter_accepts_policy=bool(self.agree_policy),
             submitter_contact_verified=bool(self.userinfo),
             submitter_confirmed_preview=bool(self.viewed),
-            holds=holds,
-            status=status,
             metadata=domain.SubmissionMetadata(
                 title=self.title,
                 abstract=self.abstract,
@@ -344,6 +341,12 @@ class Submission(Base):    # type: ignore
             arxiv_id=self.doc_paper_id,
             version=self.version
         )
+        if self.sticky_status == self.ON_HOLD or self.status == self.ON_HOLD:
+            submission = self.patch_hold(submission)
+        elif self.is_withdrawal() \
+                and self.status == Submission.PROCESSING_SUBMISSION:
+            submission.status = domain.Submission.WITHDRAWAL_REQUESTED
+        return submission
 
     def update_from_submission(self, submission: domain.Submission) -> None:
         """Update this database object from a :class:`.domain.Submission`."""
@@ -445,6 +448,9 @@ class Submission(Base):    # type: ignore
     def is_new_version(self) -> bool:
         """Indicate whether this row represents a new version."""
         return self.type in [self.NEW_SUBMISSION, self.REPLACEMENT]
+
+    def is_withdrawal(self) -> bool:
+        return self.type == self.WITHDRAWAL
 
     def is_jref(self) -> bool:
         return self.type == self.JOURNAL_REFERENCE
