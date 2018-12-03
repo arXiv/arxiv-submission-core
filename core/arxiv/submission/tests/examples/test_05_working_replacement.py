@@ -110,6 +110,8 @@ class TestReplacementSubmissionInProgress(TestCase):
                                   domain.event.CreateSubmissionVersion,
                                   "A CreateSubmissionVersion event is"
                                   " inserted.")
+            self.assertEqual(len(submission.versions), 1,
+                             "There is one published versions")
 
         with self.app.app_context():
             submission = load_fast(self.submission.submission_id)
@@ -122,6 +124,8 @@ class TestReplacementSubmissionInProgress(TestCase):
                                   domain.event.CreateSubmissionVersion,
                                   "A CreateSubmissionVersion event is"
                                   " inserted.")
+            self.assertEqual(len(submission.versions), 1,
+                             "There is one published versions")
 
         # Check the database state.
         with self.app.app_context():
@@ -194,6 +198,8 @@ class TestReplacementSubmissionInProgress(TestCase):
             self.assertIsInstance(events[-1],
                                   domain.event.SetTitle,
                                   "Metadata update events are reflected")
+            self.assertEqual(len(submission.versions), 1,
+                             "There is one published versions")
 
         with self.app.app_context():
             submission = load_fast(self.submission.submission_id)
@@ -211,6 +217,8 @@ class TestReplacementSubmissionInProgress(TestCase):
             self.assertIsInstance(events[-1],
                                   domain.event.SetTitle,
                                   "Metadata update events are reflected")
+            self.assertEqual(len(submission.versions), 1,
+                             "There is one published versions")
 
         # Check the database state.
         with self.app.app_context():
@@ -291,6 +299,8 @@ class TestReplacementSubmissionInProgress(TestCase):
             self.assertIsInstance(events[-1],
                                   domain.event.SetReportNumber,
                                   "Metadata update events are reflected")
+            self.assertEqual(len(submission.versions), 1,
+                             "There is one published versions")
 
         with self.app.app_context():
             submission = load_fast(self.submission.submission_id)
@@ -303,6 +313,8 @@ class TestReplacementSubmissionInProgress(TestCase):
             self.assertEqual(submission.status,
                              domain.submission.Submission.WORKING,
                              "The submission is in the working state.")
+            self.assertEqual(len(submission.versions), 1,
+                             "There is one published versions")
 
         # Check the database state.
         with self.app.app_context():
@@ -375,6 +387,8 @@ class TestReplacementSubmissionInProgress(TestCase):
             self.assertEqual(submission.metadata.report_num,
                              self.submission.metadata.report_num,
                              "The report number is reverted.")
+            self.assertEqual(len(submission.versions), 1,
+                             "There is one published versions")
 
         with self.app.app_context():
             submission = load_fast(self.submission.submission_id)
@@ -389,6 +403,8 @@ class TestReplacementSubmissionInProgress(TestCase):
             self.assertEqual(submission.metadata.report_num,
                              self.submission.metadata.report_num,
                              "The report number is reverted.")
+            self.assertEqual(len(submission.versions), 1,
+                             "There is one published versions")
 
         # Check the database state.
         with self.app.app_context():
@@ -433,3 +449,5 @@ class TestReplacementSubmissionInProgress(TestCase):
             self.assertEqual(submission.status,
                              domain.submission.Submission.WORKING,
                              "Submission is in working state")
+            self.assertEqual(len(submission.versions), 1,
+                             "There is one published versions")

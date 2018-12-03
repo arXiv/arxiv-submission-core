@@ -182,7 +182,7 @@ class Submission:
     """If an e-print is withdrawn, the submitter is asked to explain why."""
 
     versions: List['Submission'] = field(default_factory=list)
-    """States of this submission at publication time."""
+    """Published versions of this :class:`.Submission`."""
 
     holds: List[Hold] = field(default_factory=list)
 

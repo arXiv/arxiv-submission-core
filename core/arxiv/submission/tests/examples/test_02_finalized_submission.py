@@ -86,6 +86,8 @@ class TestFinalizedSubmission(TestCase):
             self.assertEqual(len(self.events), len(events),
                              "The same number of events were retrieved as"
                              " were initially saved.")
+            self.assertEqual(len(submission.versions), 0,
+                             "There are no published versions")
 
         with self.app.app_context():
             submission = load_fast(self.submission.submission_id)
@@ -95,6 +97,8 @@ class TestFinalizedSubmission(TestCase):
             self.assertEqual(len(self.events), len(events),
                              "The same number of events were retrieved as"
                              " were initially saved.")
+            self.assertEqual(len(submission.versions), 0,
+                             "There are no published versions")
 
         # Check the database state.
         with self.app.app_context():
@@ -166,6 +170,8 @@ class TestFinalizedSubmission(TestCase):
             self.assertEqual(len(self.events) + 1, len(events),
                              "The same number of events were retrieved as"
                              " were saved.")
+            self.assertEqual(len(submission.versions), 0,
+                             "There are no published versions")
 
         with self.app.app_context():
             submission = load_fast(self.submission.submission_id)
@@ -175,6 +181,8 @@ class TestFinalizedSubmission(TestCase):
             self.assertEqual(len(self.events) + 1, len(events),
                              "The same number of events were retrieved as"
                              " were saved.")
+            self.assertEqual(len(submission.versions), 0,
+                             "There are no published versions")
 
         # Check the database state.
         with self.app.app_context():

@@ -60,12 +60,16 @@ class TestWorkingSubmission(TestCase):
             self.assertEqual(len(self.events), len(events),
                              "The same number of events were retrieved as"
                              " were initially saved.")
+            self.assertEqual(len(submission.versions), 0,
+                             "There are no published versions")
 
         with self.app.app_context():
             submission = load_fast(self.submission_id)
             self.assertEqual(submission.status,
                              domain.submission.Submission.WORKING,
                              "The submission is in the working state")
+            self.assertEqual(len(submission.versions), 0,
+                             "There are no published versions")
 
         # Check the database state.
         with self.app.app_context():
@@ -97,6 +101,8 @@ class TestWorkingSubmission(TestCase):
                              "Submission is in the deleted state")
             self.assertFalse(submission.active,
                              "The submission is no longer considered active.")
+            self.assertEqual(len(submission.versions), 0,
+                             "There are no published versions")
 
         with self.app.app_context():
             submission = load_fast(self.submission_id)
@@ -105,6 +111,8 @@ class TestWorkingSubmission(TestCase):
                              "Submission is in the deleted state")
             self.assertFalse(submission.active,
                              "The submission is no longer considered active.")
+            self.assertEqual(len(submission.versions), 0,
+                             "There are no published versions")
 
         with self.app.app_context():
             session = classic.current_session()

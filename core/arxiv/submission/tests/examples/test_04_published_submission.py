@@ -102,6 +102,8 @@ class TestPublishedSubmission(TestCase):
             self.assertEqual(len(self.events) + 1, len(events),
                              "The same number of events were retrieved as"
                              " were initially saved, plus the publish event.")
+            self.assertEqual(len(submission.versions), 1,
+                             "There is one published versions")
 
         with self.app.app_context():
             submission = load_fast(self.submission.submission_id)
@@ -112,6 +114,8 @@ class TestPublishedSubmission(TestCase):
             self.assertEqual(len(self.events) + 1, len(events),
                              "The same number of events were retrieved as"
                              " were initially saved, plus the publish event.")
+            self.assertEqual(len(submission.versions), 1,
+                             "There is one published versions")
 
         # Check the database state.
         with self.app.app_context():
@@ -150,7 +154,7 @@ class TestPublishedSubmission(TestCase):
             self.assertEqual(submission.version, 2,
                              "The version number is incremented by 1")
             self.assertEqual(len(submission.versions), 1,
-                             "There is one past version")
+                             "There is one published versions")
 
         with self.app.app_context():
             submission = load_fast(self.submission.submission_id)
@@ -164,7 +168,7 @@ class TestPublishedSubmission(TestCase):
             self.assertEqual(submission.version, 2,
                              "The version number is incremented by 1")
             self.assertEqual(len(submission.versions), 1,
-                             "There is one past version")
+                             "There is one published versions")
 
         # Check the database state.
         with self.app.app_context():
@@ -208,6 +212,8 @@ class TestPublishedSubmission(TestCase):
                              "The same number of events were retrieved as"
                              " were initially saved, plus one for publish"
                              " and another for withdrawal request.")
+            self.assertEqual(len(submission.versions), 1,
+                             "There is one published versions")
 
         with self.app.app_context():
             submission = load_fast(self.submission.submission_id)
@@ -219,6 +225,8 @@ class TestPublishedSubmission(TestCase):
                              "The same number of events were retrieved as"
                              " were initially saved, plus one for publish"
                              " and another for withdrawal request.")
+            self.assertEqual(len(submission.versions), 1,
+                             "There is one published versions")
 
         # Check the database state.
         with self.app.app_context():
@@ -298,6 +306,8 @@ class TestPublishedSubmission(TestCase):
                              " event and another for setting DOI, another for"
                              " setting journal ref, and another for setting"
                              " report number.")
+            self.assertEqual(len(submission.versions), 1,
+                             "There is one published versions")
 
         with self.app.app_context():
             submission = load_fast(self.submission.submission_id)
@@ -317,6 +327,8 @@ class TestPublishedSubmission(TestCase):
                              " event and another for setting DOI, another for"
                              " setting journal ref, and another for setting"
                              " report number.")
+            self.assertEqual(len(submission.versions), 1,
+                             "There is one published versions")
 
         # Check the database state.
         with self.app.app_context():
@@ -406,3 +418,23 @@ class TestPublishedSubmission(TestCase):
             self.assertEqual(submission.status,
                              domain.submission.Submission.PUBLISHED,
                              "The submission is in the submitted state.")
+            self.assertEqual(len(submission.versions), 1,
+                             "There is one published versions")
+
+        with self.app.app_context():
+            submission = load_fast(self.submission.submission_id)
+            self.assertEqual(submission.metadata.doi, new_doi,
+                             "The DOI is still updated.")
+            self.assertEqual(submission.metadata.journal_ref, new_journal_ref,
+                             "The journal ref is still updated.")
+            self.assertEqual(submission.metadata.report_num, new_report_num,
+                             "The report number is stil updated.")
+            self.assertEqual(submission.metadata.title,
+                             self.submission.metadata.title,
+                             "The title is reverted to the last published"
+                             " version.")
+            self.assertEqual(submission.status,
+                             domain.submission.Submission.PUBLISHED,
+                             "The submission is in the submitted state.")
+            self.assertEqual(len(submission.versions), 1,
+                             "There is one published versions")

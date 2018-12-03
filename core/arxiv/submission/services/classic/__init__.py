@@ -181,11 +181,11 @@ def _db_to_projection(dbss: List[models.Submission]) -> Submission:
     """
     Transform a set of classic rows to an NG :class:`Submission`.
 
-    Assume that the rows are passed in descending order.
+    Here we assume that the rows are passed in descending order.
     """
-    i = _get_head_idx(dbss)
+    i = _get_head_idx(dbss)    # Get state of the most recent non-JREF row.
     submission = dbss[i].to_submission(dbss[-1].submission_id)
-    # Attach previous published versions.
+    # Attach and patch previous published versions.
     for dbs in dbss[i+1:][::-1]:
         if dbs.is_deleted():
             continue
@@ -202,7 +202,12 @@ def _db_to_projection(dbss: List[models.Submission]) -> Submission:
         if dbss[j].is_jref() and not dbss[j].is_deleted():
             submission = dbss[j].patch_jref(submission)
             submission = dbss[j].patch(submission)
+    # If the current submission state is published, prepend into published
+    # versions.
+    if submission.published:
+        submission.versions.insert(0, submission)
     return submission
+
 
 def get_submission(submission_id: int) -> Tuple[Submission, List[Event]]:
     """
