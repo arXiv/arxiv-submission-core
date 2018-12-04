@@ -342,7 +342,7 @@ class Submission(Base):    # type: ignore
             submission = self.patch_hold(submission)
         elif self.is_withdrawal():
             if self.status == Submission.PROCESSING_SUBMISSION:
-                submission.user_requests.append(
+                submission.add_user_request(
                     domain.WithdrawalRequest(
                         creator=domain.User(
                             native_id=self.submitter_id,
@@ -352,7 +352,7 @@ class Submission(Base):    # type: ignore
                     )
                 )
             elif self.is_published():
-                submission.user_requests.append(
+                submission.add_user_request(
                     domain.WithdrawalRequest(
                         creator=domain.User(
                             native_id=self.submitter_id,
@@ -388,7 +388,7 @@ class Submission(Base):    # type: ignore
         if self.is_published():
             status = domain.WithdrawalRequest.APPLIED
             submission.reason_for_withdrawal = reason
-        submission.user_requests.append(
+        submission.add_user_request(
             domain.WithdrawalRequest(
                 creator=domain.User(
                     native_id=self.submitter_id,

@@ -159,6 +159,20 @@ class UserRequest:
     created: datetime = field(default_factory=get_tzaware_utc_now)
     status: str = field(default=PENDING)
 
+    @property
+    def request_type(self):
+        """Name (str) of the type of user request."""
+        return type(self).__name__
+
+    @property
+    def request_id(self):
+        """The unique identifier for an :class:`.UserRequest` instance."""
+        h = hashlib.new('sha1')
+        h.update(b'%s:%s:%s' % (self.created.isoformat().encode('utf-8'),
+                                self.request_type.encode('utf-8'),
+                                self.creator.agent_identifier.encode('utf-8')))
+        return h.hexdigest()
+
     def is_pending(self):
         return self.status == UserRequest.PENDING
 
@@ -237,7 +251,7 @@ class Submission:
     """Published versions of this :class:`.Submission`."""
 
     holds: List[Hold] = field(default_factory=list)
-    user_requests: List[UserRequest] = field(default_factory=list)
+    user_requests: Dict[str, UserRequest] = field(default_factory=dict)
 
     @property
     def active(self) -> bool:
@@ -268,23 +282,35 @@ class Submission:
 
     @property
     def active_user_requests(self) -> List[UserRequest]:
-        return [r for r in self.user_requests if r.is_active()]
+        return [r for r in self.user_requests.values() if r.is_active()]
 
     @property
     def pending_user_requests(self) -> List[UserRequest]:
-        return [r for r in self.user_requests if r.is_pending()]
+        return [r for r in self.user_requests.values() if r.is_pending()]
 
     @property
     def rejected_user_requests(self) -> List[UserRequest]:
-        return [r for r in self.user_requests if r.is_rejected()]
+        return [r for r in self.user_requests.values() if r.is_rejected()]
 
     @property
     def approved_user_requests(self) -> List[UserRequest]:
-        return [r for r in self.user_requests if r.is_approved()]
+        return [r for r in self.user_requests.values() if r.is_approved()]
 
     @property
     def applied_user_requests(self) -> List[UserRequest]:
-        return [r for r in self.user_requests if r.is_applied()]
+        return [r for r in self.user_requests.values() if r.is_applied()]
+
+    def add_user_request(self, request: UserRequest) -> None:
+        """Add a :class:`.UserRequest`."""
+        self.user_requests[request.request_id] = request
+
+    def get_user_request(self, request_id: str) -> UserRequest:
+        """Retrieve a :class:`.UserRequest` by ID."""
+        return self.user_requests[request_id]
+
+    def remove_user_request(self, request_id: str) -> None:
+        """Remove a :class:`.UserRequest` by ID."""
+        del self.user_requests[request_id]
 
     def to_dict(self) -> dict:
         """Generate a dict representation of this :class:`.Submission`."""

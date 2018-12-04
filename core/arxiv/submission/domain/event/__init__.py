@@ -68,6 +68,8 @@ from ..submission import Submission, SubmissionMetadata, Author, \
 from ...exceptions import InvalidEvent
 from ..util import get_tzaware_utc_now
 from .event import Event
+from .request import RequestCrossList, RequestWithdrawal
+from . import validators
 
 logger = logging.getLogger(__name__)
 
@@ -202,7 +204,7 @@ class ConfirmContactInformation(Event):
 
     def validate(self, submission: Submission) -> None:
         """Cannot apply to a finalized submission."""
-        submission_is_not_finalized(self, submission)
+        validators.submission_is_not_finalized(self, submission)
 
     def project(self, submission: Submission) -> Submission:
         """Update :prop:`.Submission.submitter_contact_verified`."""
@@ -225,7 +227,7 @@ class ConfirmAuthorship(Event):
 
     def validate(self, submission: Submission) -> None:
         """Cannot apply to a finalized submission."""
-        submission_is_not_finalized(self, submission)
+        validators.submission_is_not_finalized(self, submission)
 
     def project(self, submission: Submission) -> Submission:
         """Update the authorship flag on the submission."""
@@ -246,7 +248,7 @@ class ConfirmPolicy(Event):
 
     def validate(self, submission: Submission) -> None:
         """Cannot apply to a finalized submission."""
-        submission_is_not_finalized(self, submission)
+        validators.submission_is_not_finalized(self, submission)
 
     def project(self, submission: Submission) -> Submission:
         """Set the policy flag on the submission."""
@@ -269,30 +271,17 @@ class SetPrimaryClassification(Event):
 
     def validate(self, submission: Submission) -> None:
         """Validate the primary classification category."""
-        self._must_be_a_valid_category(submission)
-        self._primary_cannot_be_secondary(submission)
+        validators.must_be_a_valid_category(self, self.category, submission)
         self._creator_must_be_endorsed(submission)
         self._must_be_unpublished(submission)
-        submission_is_not_finalized(self, submission)
+        validators.submission_is_not_finalized(self, submission)
+        validators.cannot_be_secondary(self, self.category, submission)
 
     def _must_be_unpublished(self, submission: Submission) -> None:
         """Can only be set on the first version before publication."""
         if submission.arxiv_id is not None or submission.version > 1:
             raise InvalidEvent(self, "Can only be set on the first version,"
                                      " before publication.")
-
-    def _must_be_a_valid_category(self, submission: Submission) -> None:
-        """Valid arXiv categories are defined in :mod:`arxiv.taxonomy`."""
-        if not self.category or self.category not in taxonomy.CATEGORIES:
-            raise InvalidEvent(self, f"Not a valid category: {self.category}")
-
-    def _primary_cannot_be_secondary(self, submission: Submission) -> None:
-        """The same category can't be used for both primary and secondary."""
-        secondaries = [c.category for c in submission.secondary_classification]
-        if self.category in secondaries:
-            raise InvalidEvent(self,
-                               "The same category cannot be used as both the"
-                               " primary and a secondary category.")
 
     def _creator_must_be_endorsed(self, submission: Submission) -> None:
         """The creator of this event must be endorsed for the category."""
@@ -303,8 +292,8 @@ class SetPrimaryClassification(Event):
         if self.category not in self.creator.endorsements \
                 and f'{archive}.*' not in self.creator.endorsements \
                 and '*.*' not in self.creator.endorsements:
-            raise InvalidEvent(self,
-                               f"Creator is not endorsed for {self.category}")
+            raise InvalidEvent(self, f"Creator is not endorsed for"
+                                     f" {self.category}.")
 
     def project(self, submission: Submission) -> Submission:
         """Set :prop:`.Submission.primary_classification`."""
@@ -328,10 +317,10 @@ class AddSecondaryClassification(Event):
 
     def validate(self, submission: Submission) -> None:
         """Validate the secondary classification category to add."""
-        must_be_a_valid_category(self, self.category, submission)
-        cannot_be_primary(self, self.category, submission)
-        cannot_be_secondary(self, self.category, submission)
-        submission_is_not_finalized(self, submission)
+        validators.must_be_a_valid_category(self, self.category, submission)
+        validators.cannot_be_primary(self, self.category, submission)
+        validators.cannot_be_secondary(self, self.category, submission)
+        validators.submission_is_not_finalized(self, submission)
 
     def project(self, submission: Submission) -> Submission:
         """Add a :class:`.Classification` as a secondary classification."""
@@ -355,9 +344,9 @@ class RemoveSecondaryClassification(Event):
 
     def validate(self, submission: Submission) -> None:
         """Validate the secondary classification category to remove."""
-        self._must_be_a_valid_category(submission)
+        validators.must_be_a_valid_category(self, self.category, submission)
         self._must_already_be_present(submission)
-        submission_is_not_finalized(self, submission)
+        validators.submission_is_not_finalized(self, submission)
 
     def project(self, submission: Submission) -> Submission:
         """Remove from :prop:`.Submission.secondary_classification`."""
@@ -366,11 +355,6 @@ class RemoveSecondaryClassification(Event):
             if not classn.category == self.category
         ]
         return submission
-
-    def _must_be_a_valid_category(self, submission: Submission) -> None:
-        """Valid arXiv categories are defined in :mod:`arxiv.taxonomy`."""
-        if not self.category or self.category not in taxonomy.CATEGORIES:
-            raise InvalidEvent(self, "Not a valid category")
 
     def _must_already_be_present(self, submission: Submission) -> None:
         """One cannot remove a secondary that is not actually set."""
@@ -395,7 +379,7 @@ class SetLicense(Event):
 
     def validate(self, submission: Submission) -> None:
         """Validate the selected license."""
-        submission_is_not_finalized(self, submission)
+        validators.submission_is_not_finalized(self, submission)
 
     def project(self, submission: Submission) -> Submission:
         """Set :prop:`.Submission.license`."""
@@ -429,10 +413,10 @@ class SetTitle(Event):
 
     def validate(self, submission: Submission) -> None:
         """Validate the title value."""
-        submission_is_not_finalized(self, submission)
+        validators.submission_is_not_finalized(self, submission)
         self._does_not_contain_html_escapes(submission)
         self._acceptable_length(submission)
-        no_trailing_period(self, submission, self.title)
+        validators.no_trailing_period(self, submission, self.title)
         if self.title.isupper():
             raise InvalidEvent(self, "Title must not be all-caps")
         self._check_for_html(submission)
@@ -492,7 +476,7 @@ class SetAbstract(Event):
 
     def validate(self, submission: Submission) -> None:
         """Validate the abstract value."""
-        submission_is_not_finalized(self, submission)
+        validators.submission_is_not_finalized(self, submission)
         self._acceptable_length(submission)
 
     def project(self, submission: Submission) -> Submission:
@@ -595,7 +579,7 @@ class SetMSCClassification(Event):
 
     def validate(self, submission: Submission) -> None:
         """Validate the MSC classification value."""
-        submission_is_not_finalized(self, submission)
+        validators.submission_is_not_finalized(self, submission)
         if not self.msc_class:    # Blank values are OK.
             return
 
@@ -639,7 +623,7 @@ class SetACMClassification(Event):
 
     def validate(self, submission: Submission) -> None:
         """Validate the ACM classification value."""
-        submission_is_not_finalized(self, submission)
+        validators.submission_is_not_finalized(self, submission)
         if not self.acm_class:    # Blank values are OK.
             return
         self._valid_acm_class(submission)
@@ -784,7 +768,7 @@ class SetComments(Event):
 
     def validate(self, submission: Submission) -> None:
         """Validate the comments value."""
-        submission_is_not_finalized(self, submission)
+        validators.submission_is_not_finalized(self, submission)
         if not self.comments:    # Blank values are OK.
             return
         if len(self.comments) > self.MAX_LENGTH:
@@ -827,7 +811,7 @@ class SetAuthors(Event):
 
     def validate(self, submission: Submission) -> None:
         """May not apply to a finalized submission."""
-        submission_is_not_finalized(self, submission)
+        validators.submission_is_not_finalized(self, submission)
         self._does_not_contain_et_al()
 
     def _canonical_author_string(self) -> str:
@@ -890,7 +874,7 @@ class SetUploadPackage(Event):
 
     def validate(self, submission: Submission) -> None:
         """Validate data for :class:`.SetUploadPackage`."""
-        submission_is_not_finalized(self, submission)
+        validators.submission_is_not_finalized(self, submission)
 
         if not self.identifier:
             raise InvalidEvent(self, 'Missing upload ID')
@@ -916,7 +900,7 @@ class UnsetUploadPackage(Event):
 
     def validate(self, submission: Submission) -> None:
         """Validate data for :class:`.UnsetUploadPackage`."""
-        submission_is_not_finalized(self, submission)
+        validators.submission_is_not_finalized(self, submission)
 
     def project(self, submission: Submission) -> Submission:
         """Set :prop:`Submission.source_content` to None."""
@@ -938,7 +922,7 @@ class ConfirmPreview(Event):
 
     def validate(self, submission: Submission) -> None:
         """Validate data for :class:`.ConfirmPreview`."""
-        submission_is_not_finalized(self, submission)
+        validators.submission_is_not_finalized(self, submission)
 
     def project(self, submission: Submission) -> Submission:
         """Set :prop:`Submission.return submission`."""
@@ -1047,74 +1031,6 @@ class Publish(Event):
         submission.arxiv_id = self.arxiv_id
         submission.status = Submission.PUBLISHED
         submission.versions.append(copy.deepcopy(submission))
-        return submission
-
-
-@dataclass
-class RequestCrossList(Event):
-    """Request that a secondary classification be added after announcement."""
-
-    NAME = "request cross-list classification"
-    NAMED = "cross-list classification requested"
-
-    def __hash__(self):
-        """Use event ID as object hash."""
-        return hash(self.event_id)
-
-    category: Optional[str] = field(default=None)
-
-    def validate(self, submission: Submission) -> None:
-        """Validate the cross-list request."""
-        if not submission.published:
-            raise InvalidEvent(self, "Submission must already be published")
-        must_be_a_valid_category(self, self.category, submission)
-        cannot_be_primary(self, self.category, submission)
-        cannot_be_secondary(self, self.category, submission)
-
-    def project(self, submission: Submission) -> Submission:
-        """Create a cross-list request."""
-        classification = Classification(category=self.category)
-        submission.user_requests.append(
-            CrossListClassificationRequest(creator=self.creator,
-                                           created=self.created,
-                                           status=WithdrawalRequest.PENDING,
-                                           classification=classification)
-        )
-        return submission
-
-
-@dataclass
-class RequestWithdrawal(Event):
-    """Request that a paper be withdrawn."""
-
-    NAME = "request withdrawal"
-    NAMED = "withdrawal requested"
-
-    def __hash__(self):
-        """Use event ID as object hash."""
-        return hash(self.event_id)
-
-    reason: str = field(default_factory=str)
-
-    MAX_LENGTH = 400
-
-    def validate(self, submission: Submission) -> None:
-        """Make sure that a reason was provided."""
-        if not self.reason:
-            raise InvalidEvent(self, "Provide a reason for the withdrawal")
-        if len(self.reason) > self.MAX_LENGTH:
-            raise InvalidEvent(self, "Reason must be 400 characters or less")
-        if not submission.published:
-            raise InvalidEvent(self, "Submission must already be published")
-
-    def project(self, submission: Submission) -> Submission:
-        """Update the submission status and withdrawal reason."""
-        submission.user_requests.append(
-            WithdrawalRequest(creator=self.creator,
-                              created=self.created,
-                              status=WithdrawalRequest.PENDING,
-                              reason_for_withdrawal=self.reason)
-        )
         return submission
 
 
@@ -1273,61 +1189,3 @@ def event_factory(event_type: str, **data) -> Event:
             return klass.from_dict(**data)
         return EVENT_TYPES[event_type](**data)
     raise RuntimeError('Unknown event type: %s' % event_type)
-
-
-# General-purpose validators go down here.
-# TODO: should these be in a sub-module? This file is getting big.
-
-def submission_is_not_finalized(event: Event, submission: Submission) -> None:
-    """
-    Verify that the submission is not finalized.
-
-    Parameters
-    ----------
-    event : :class:`.Event`
-    submission : :class:`.Submission`
-
-    Raises
-    ------
-    :class:`.InvalidEvent`
-        Raised if the submission is finalized.
-
-    """
-    if submission.finalized:
-        raise InvalidEvent(event, "Cannot apply to a finalized submission")
-
-
-def no_trailing_period(event: Event, submission: Submission,
-                       value: str) -> None:
-    """
-    Verify that there are no trailing periods in ``value`` except ellipses.
-    """
-    if re.search(r"(?<!\.\.)\.$", value):
-        raise InvalidEvent(event,
-                           "Must not contain trailing periods except ellipses")
-
-
-def must_be_a_valid_category(event: Event, category: str,
-                             submission: Submission) -> None:
-    """Valid arXiv categories are defined in :mod:`arxiv.taxonomy`."""
-    if not category or category not in taxonomy.CATEGORIES_ACTIVE:
-        raise InvalidEvent(event, "Not a valid category")
-
-
-def cannot_be_primary(event: Event, category: str, submission: Submission) \
-        -> None:
-    """The category can't already be set as a primary classification."""
-    if submission.primary_classification is None:
-        return
-    if category == submission.primary_classification.category:
-        raise InvalidEvent(event, "The same category cannot be used as both"
-                                  " the primary and a secondary category.")
-
-
-def cannot_be_secondary(event: Event, category: str, submission: Submission) \
-        -> None:
-    """The same category cannot be added as a secondary twice."""
-    secondaries = [c.category for c in submission.secondary_classification]
-    if category in secondaries:
-        raise InvalidEvent(event, f"Secondary {category} already set on this"
-                                  f" submission.")
