@@ -137,6 +137,8 @@ class Hold:
     hold_reason: Optional[str] = field(default_factory=list)
 
 
+# TODO: add identification mechanism; consider using mechanism similar to
+# comments, below.
 @dataclass
 class UserRequest:
     """Represents a user request related to a submission."""
