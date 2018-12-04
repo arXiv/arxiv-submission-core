@@ -1,7 +1,7 @@
 """Metadata objects in support of :class:`.Submission`s."""
 
 from typing import Optional, List
-from dataclasses import dataclass, asdict
+from dataclasses import dataclass, asdict, field
 
 
 @dataclass

@@ -714,8 +714,9 @@ class TestWithdrawalIntegration(TestCase):
 
             submission, _ = load(self.submission_id)
             self.assertEqual(submission.status,
-                             domain.Submission.WITHDRAWAL_REQUESTED)
-            self.assertEqual(submission.reason_for_withdrawal, event.reason)
+                             domain.Submission.PUBLISHED)
+            self.assertEqual(submission.user_requests[0].reason_for_withdrawal,
+                             event.reason)
 
             wdr = session.query(classic.models.Submission) \
                 .filter(classic.models.Submission.doc_paper_id == submission.arxiv_id) \

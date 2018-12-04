@@ -138,6 +138,57 @@ class Hold:
 
 
 @dataclass
+class UserRequest:
+    """Represents a user request related to a submission."""
+
+    PENDING = 'pending'
+    """Request is pending approval."""
+
+    REJECTED = 'rejected'
+    """Request has been rejected."""
+
+    APPROVED = 'approved'
+    """Request has been approved."""
+
+    APPLIED = 'applied'
+    """Submission has been updated on the basis of the approved request."""
+
+    creator: Agent
+    created: datetime = field(default_factory=get_tzaware_utc_now)
+    status: str = field(default=PENDING)
+
+    def is_pending(self):
+        return self.status == UserRequest.PENDING
+
+    def is_approved(self):
+        return self.status == UserRequest.APPROVED
+
+    def is_applied(self):
+        return self.status == UserRequest.APPLIED
+
+    def is_rejected(self):
+        return self.status == UserRequest.REJECTED
+
+    def is_active(self) -> bool:
+        return self.is_pending() or self.is_approved()
+
+
+@dataclass
+class WithdrawalRequest(UserRequest):
+    """Represents a request ot withdraw a submission."""
+
+    reason_for_withdrawal: Optional[str] = field(default=None)
+    """If an e-print is withdrawn, the submitter is asked to explain why."""
+
+
+@dataclass
+class CrossListClassificationRequest(UserRequest):
+    """Represents a request to add a secondary classification."""
+
+    classification: Optional[Classification] = field(default=None)
+
+
+@dataclass
 class Submission:
     """Represents an arXiv submission object."""
 
@@ -148,7 +199,6 @@ class Submission:
     PUBLISHED = 'published'
     ERROR = 'error'
     DELETED = 'deleted'
-    WITHDRAWAL_REQUESTED = 'withdrawal_requested'
     WITHDRAWN = 'withdrawn'
 
     creator: Agent
@@ -185,6 +235,7 @@ class Submission:
     """Published versions of this :class:`.Submission`."""
 
     holds: List[Hold] = field(default_factory=list)
+    user_requests: List[UserRequest] = field(default_factory=list)
 
     @property
     def active(self) -> bool:
@@ -209,6 +260,29 @@ class Submission:
     @property
     def is_on_hold(self) -> bool:
         return len(self.holds) > 0 or self.status == self.ON_HOLD
+
+    def has_active_requests(self) -> bool:
+        return len(self.active_user_requests) > 0
+
+    @property
+    def active_user_requests(self) -> List[UserRequest]:
+        return [r for r in self.user_requests if r.is_active()]
+
+    @property
+    def pending_user_requests(self) -> List[UserRequest]:
+        return [r for r in self.user_requests if r.is_pending()]
+
+    @property
+    def rejected_user_requests(self) -> List[UserRequest]:
+        return [r for r in self.user_requests if r.is_rejected()]
+
+    @property
+    def approved_user_requests(self) -> List[UserRequest]:
+        return [r for r in self.user_requests if r.is_approved()]
+
+    @property
+    def applied_user_requests(self) -> List[UserRequest]:
+        return [r for r in self.user_requests if r.is_applied()]
 
     def to_dict(self) -> dict:
         """Generate a dict representation of this :class:`.Submission`."""

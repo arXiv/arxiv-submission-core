@@ -72,7 +72,7 @@ class Submission(Base):    # type: ignore
     REPLACEMENT = 'rep'
     JOURNAL_REFERENCE = 'jref'
     WITHDRAWAL = 'wdr'
-
+    CROSS_LIST = 'cross'
     WITHDRAWN_FORMAT = 'withdrawn'
 
     # Map classic status to Submission domain status.
@@ -240,11 +240,8 @@ class Submission(Base):    # type: ignore
             if self.sticky_status == self.ON_HOLD \
                     or self.status == self.ON_HOLD:
                 submission = self.patch_hold(submission)
-
-            # The domain status glosses over some of the detail here.
-            elif self.type == Submission.WITHDRAWAL \
-                    and not self.is_published():
-                submission.status = domain.Submission.WITHDRAWAL_REQUESTED
+            elif self.is_withdrawal():
+                pass
             # We're going to use a Publish event instead of setting this
             # here.
             elif not self.is_published():
@@ -343,9 +340,65 @@ class Submission(Base):    # type: ignore
         )
         if self.sticky_status == self.ON_HOLD or self.status == self.ON_HOLD:
             submission = self.patch_hold(submission)
-        elif self.is_withdrawal() \
-                and self.status == Submission.PROCESSING_SUBMISSION:
-            submission.status = domain.Submission.WITHDRAWAL_REQUESTED
+        elif self.is_withdrawal():
+            if self.status == Submission.PROCESSING_SUBMISSION:
+                submission.user_requests.append(
+                    domain.WithdrawalRequest(
+                        creator=domain.User(
+                            native_id=self.submitter_id,
+                            email=self.submitter_email,
+                        ),
+                        created=self.get_created()
+                    )
+                )
+            elif self.is_published():
+                submission.user_requests.append(
+                    domain.WithdrawalRequest(
+                        creator=domain.User(
+                            native_id=self.submitter_id,
+                            email=self.submitter_email,
+                        ),
+                        created=self.get_created(),
+                        status=domain.WithdrawalRequest.APPLIED
+                    )
+                )
+        return submission
+
+    WDR_DELIMETER = '. Withdrawn: '
+
+    def update_withdrawal(self, submission: domain.Submission, reason: str,
+                          paper_id: str, version: int,
+                          created: datetime) -> None:
+        self.update_from_submission(submission)
+        self.created = created
+        self.updated = created
+        self.doc_paper_id = paper_id
+        self.status = Submission.PROCESSING_SUBMISSION
+        reason = f"{Submission.WDR_DELIMETER}{reason}"
+        self.comments = self.comments.rstrip('. ') + reason
+
+    def patch_withdrawal(self, submission: domain.Submission) \
+            -> domain.Submission:
+        if Submission.WDR_DELIMETER not in self.comments:
+            return submission
+
+        reason = self.comments.split(Submission.WDR_DELIMETER, 1)[1]
+        # TODO: what is rejected status?
+        status = domain.WithdrawalRequest.PENDING
+        if self.is_published():
+            status = domain.WithdrawalRequest.APPLIED
+            submission.reason_for_withdrawal = reason
+        submission.user_requests.append(
+            domain.WithdrawalRequest(
+                creator=domain.User(
+                    native_id=self.submitter_id,
+                    email=self.submitter_email,
+                ),
+                created=self.get_created(),
+                reason_for_withdrawal=reason,
+                status=status
+            )
+        )
         return submission
 
     def update_from_submission(self, submission: domain.Submission) -> None:

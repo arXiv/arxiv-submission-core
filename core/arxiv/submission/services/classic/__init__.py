@@ -170,7 +170,7 @@ def _get_head_idx(dbss: List[models.Submission]) -> int:
     i = 0
     while i < len(dbss):
         # Skip any "deleted" rows that aren't the first version.
-        if not dbss[i].is_jref() \
+        if not dbss[i].is_jref() and not dbss[i].is_withdrawal() \
                 and not (dbss[i].is_deleted() and dbss[i].version > 1):
             break
         i += 1
@@ -185,6 +185,7 @@ def _db_to_projection(dbss: List[models.Submission]) -> Submission:
     """
     i = _get_head_idx(dbss)    # Get state of the most recent non-JREF row.
     submission = dbss[i].to_submission(dbss[-1].submission_id)
+
     # Attach and patch previous published versions.
     for dbs in dbss[i+1:][::-1]:
         if dbs.is_deleted():
@@ -194,6 +195,8 @@ def _db_to_projection(dbss: List[models.Submission]) -> Submission:
             submission.versions.append(prior_ver)
         elif dbs.is_jref() and len(submission.versions) > 0:
             submission.versions[-1] = dbs.patch_jref(submission.versions[-1])
+        elif dbs.is_withdrawal() and len(submission.versions) > 0:
+            submission.versions[-1] = dbs.patch_withdrawal(submission.versions[-1])
         elif len(submission.versions) > 0:
             submission.versions[-1] = dbs.patch(submission.versions[-1])
     # If there are JREF rows more recent than the latest non-JREF row, then
@@ -202,6 +205,10 @@ def _db_to_projection(dbss: List[models.Submission]) -> Submission:
         if dbss[j].is_jref() and not dbss[j].is_deleted():
             submission = dbss[j].patch_jref(submission)
             submission = dbss[j].patch(submission)
+        elif dbss[j].is_withdrawal() and not dbss[j].is_deleted():
+            submission = dbss[j].patch_withdrawal(submission)
+            submission = dbss[j].patch(submission)
+
     # If the current submission state is published, prepend into published
     # versions.
     if submission.published:
@@ -365,8 +372,9 @@ def store_event(event: Event, before: Optional[Submission],
         # Withdrawals also require a new row, and they use the most recent
         # version number.
         elif isinstance(event, RequestWithdrawal):
-            dbs = _create_withdrawal(document_id, before.arxiv_id,
-                                     after.version, after, event.created)
+            dbs = _create_withdrawal(document_id, event.reason,
+                                     before.arxiv_id, after.version, after,
+                                     event.created)
 
         # Adding DOIs and citation information (so-called "journal reference")
         # also requires a new row. The version number is not incremented.
@@ -521,9 +529,9 @@ def _delete_replacement(document_id: int, paper_id: str, version: int) \
     return dbs
 
 
-def _create_withdrawal(document_id: int, paper_id: str, version: int,
-                       submission: Submission, created: datetime) \
-        -> models.Submission:
+def _create_withdrawal(document_id: int, reason: str, paper_id: str,
+                       version: int, submission: Submission,
+                       created: datetime) -> models.Submission:
     """
     Create a new withdrawal request.
 
@@ -533,13 +541,7 @@ def _create_withdrawal(document_id: int, paper_id: str, version: int,
     dbs = models.Submission(type=models.Submission.WITHDRAWAL,
                             document_id=document_id,
                             version=version)
-    dbs.update_from_submission(submission)
-    dbs.created = created
-    dbs.updated = created
-    dbs.doc_paper_id = paper_id
-    dbs.status = models.Submission.PROCESSING_SUBMISSION
-    dbs.comments = dbs.comments.rstrip('. ') + \
-        f". Withdrawn: {submission.reason_for_withdrawal}"
+    dbs.update_withdrawal(submission, reason, paper_id, version, created)
     return dbs
 
 
