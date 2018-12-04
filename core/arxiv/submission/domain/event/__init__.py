@@ -1072,33 +1072,14 @@ class RequestCrossList(Event):
         cannot_be_secondary(self, self.category, submission)
 
     def project(self, submission: Submission) -> Submission:
-        """Set the status of the submission."""
-        submission.status = Submission.CROSSLIST_REQUESTED
+        """Create a cross-list request."""
         classification = Classification(category=self.category)
-        submission.secondary_classification.append(classification)
-        return submission
-
-
-class RejectCrossListRequest(Event):
-    """Reject a request that a secondary classification be added."""
-
-    NAME = "reject request for cross-list classification"
-    NAMED = "request for cross-list classification rejected"
-
-    def __hash__(self):
-        """Use event ID as object hash."""
-        return hash(self.event_id)
-
-    request: Optional[Event] = field(default=None)
-    reason: str = field(default_factory=str)
-
-    def project(self, submission: Submission) -> Submission:
-        """Set the status of the submission."""
-        submission.status = Submission.PUBLISHED
-        submission.secondary_classification = [
-            classn for classn in submission.secondary_classification
-            if not classn.category == self.category
-        ]
+        submission.user_requests.append(
+            CrossListClassificationRequest(creator=self.creator,
+                                           created=self.created,
+                                           status=WithdrawalRequest.PENDING,
+                                           classification=classification)
+        )
         return submission
 
 
