@@ -193,15 +193,23 @@ class UserRequest:
 class WithdrawalRequest(UserRequest):
     """Represents a request ot withdraw a submission."""
 
+    NAME = "Withdrawal"
+
     reason_for_withdrawal: Optional[str] = field(default=None)
     """If an e-print is withdrawn, the submitter is asked to explain why."""
 
 
 @dataclass
 class CrossListClassificationRequest(UserRequest):
-    """Represents a request to add a secondary classification."""
+    """Represents a request to add secondary classifications."""
 
-    classification: Optional[Classification] = field(default=None)
+    NAME = "Cross-list"
+
+    classifications: List[Classification] = field(default_factory=list)
+
+    @property
+    def categories(self) -> List[str]:
+        return [c.category for c in self.classifications]
 
 
 @dataclass

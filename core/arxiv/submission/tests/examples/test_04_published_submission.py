@@ -284,7 +284,7 @@ class TestPublishedSubmission(TestCase):
         category = "cs.IR"
         with self.app.app_context():
             submission, events = save(
-                domain.event.RequestCrossList(category=category,
+                domain.event.RequestCrossList(categories=[category],
                                               **self.defaults),
                 submission_id=self.submission.submission_id
             )
@@ -303,11 +303,9 @@ class TestPublishedSubmission(TestCase):
                 submission.pending_user_requests[0],
                 domain.submission.CrossListClassificationRequest
             )
-            self.assertEqual(
-                submission.pending_user_requests[0].classification.category,
-                category,
-                "Requested category is set on request."
-            )
+            self.assertIn(category,
+                          submission.pending_user_requests[0].categories,
+                          "Requested category is set on request.")
             self.assertEqual(len(self.events) + 2, len(events),
                              "The same number of events were retrieved as"
                              " were initially saved, plus one for publish"
@@ -328,11 +326,9 @@ class TestPublishedSubmission(TestCase):
                 submission.pending_user_requests[0],
                 domain.submission.CrossListClassificationRequest
             )
-            self.assertEqual(
-                submission.pending_user_requests[0].classification.category,
-                category,
-                "Requested category is set on request."
-            )
+            self.assertIn(category,
+                          submission.pending_user_requests[0].categories,
+                          "Requested category is set on request.")
             self.assertEqual(len(self.events) + 2, len(events),
                              "The same number of events were retrieved as"
                              " were initially saved, plus one for publish"
@@ -366,7 +362,7 @@ class TestPublishedSubmission(TestCase):
         # Cannot submit another cross-list request while one is pending.
         with self.app.app_context():
             with self.assertRaises(exceptions.InvalidEvent):
-                save(domain.event.RequestCrossList(category="q-fin.CP",
+                save(domain.event.RequestCrossList(categories=["q-fin.CP"],
                                                    **self.defaults),
                      submission_id=self.submission.submission_id)
 

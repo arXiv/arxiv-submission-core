@@ -390,16 +390,18 @@ class Submission(Base):    # type: ignore
         reason = f"{Submission.WDR_DELIMETER}{reason}"
         self.comments = self.comments.rstrip('. ') + reason
 
-    def update_cross(self, submission: domain.Submission, category: str,
-                     paper_id: str, version: int, created: datetime) -> None:
+    def update_cross(self, submission: domain.Submission,
+                     categories: List[str], paper_id: str, version: int,
+                     created: datetime) -> None:
         self.update_from_submission(submission)
         self.created = created
         self.updated = created
         self.doc_paper_id = paper_id
         self.status = Submission.PROCESSING_SUBMISSION
-        self.categories.append(
-            SubmissionCategory(submission_id=self.submission_id,
-                               category=category, is_primary=0))
+        for category in categories:
+            self.categories.append(
+                SubmissionCategory(submission_id=self.submission_id,
+                                   category=category, is_primary=0))
 
     def patch_withdrawal(self, submission: domain.Submission) \
             -> domain.Submission:
@@ -426,23 +428,26 @@ class Submission(Base):    # type: ignore
         )
         return submission
 
-    def _get_crosslist_category(self, submission: domain.Submission) \
-            -> domain.Classification:
+    def _get_crosslist_categories(self, submission: domain.Submission) \
+            -> List[domain.Classification]:
+        cats: List[domain.Classification] = []
         for db_cat in self.categories:
-            if db_cat.is_primary == 0 \
-                    and db_cat.category not in submission.secondary_categories:
-                return domain.Classification(db_cat.category)
-        raise RuntimeError('No crosslist category')
+            if db_cat.is_primary != 0:
+                continue
+            if db_cat.category not in submission.secondary_categories:
+                cats.append(domain.Classification(db_cat.category))
+        return cats
 
     def _get_crosslist_request(self, submission: domain.Submission) \
             -> domain.CrossListClassificationRequest:
         # TODO: what is rejected status?
         status = domain.CrossListClassificationRequest.PENDING
-        clsn = self._get_crosslist_category(submission)
+        clsns = self._get_crosslist_categories(submission)
         if self.is_published():
             status = domain.CrossListClassificationRequest.APPLIED
-            if clsn.category not in submission.secondary_categories:
-                submission.secondary_classification.append(clsn)
+            for clsn in clsns:
+                if clsn.category not in submission.secondary_categories:
+                    submission.secondary_classification.append(clsn)
         elif self.is_rejected():
             status = domain.CrossListClassificationRequest.REJECTED
 
@@ -452,14 +457,15 @@ class Submission(Base):    # type: ignore
                 email=self.submitter_email,
             ),
             created=self.get_created(),
-            classification=clsn,
+            classifications=clsns,
             status=status
         )
 
     def patch_cross(self, submission: domain.Submission) -> domain.Submission:
         request = self._get_crosslist_request(submission)
         if self.is_published():
-            submission.secondary_classification.append(request.classification)
+            for classification in request.classifications:
+                submission.secondary_classification.append(classification)
         submission.add_user_request(request)
         return submission
 

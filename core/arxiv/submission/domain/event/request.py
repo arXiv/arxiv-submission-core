@@ -1,4 +1,6 @@
-from typing import Optional
+"""Commands/events related to user requests."""
+
+from typing import Optional, List
 
 from dataclasses import dataclass, field
 
@@ -20,25 +22,28 @@ class RequestCrossList(Event):
         """Use event ID as object hash."""
         return hash(self.event_id)
 
-    category: Optional[str] = field(default=None)
+    categories: List[str] = field(default_factory=list)
 
     def validate(self, submission: Submission) -> None:
         """Validate the cross-list request."""
         validators.no_active_requests(self, submission)
         if not submission.published:
             raise InvalidEvent(self, "Submission must already be published")
-        validators.must_be_a_valid_category(self, self.category, submission)
-        validators.cannot_be_primary(self, self.category, submission)
-        validators.cannot_be_secondary(self, self.category, submission)
+        for category in self.categories:
+            validators.must_be_a_valid_category(self, category, submission)
+            validators.cannot_be_primary(self, category, submission)
+            validators.cannot_be_secondary(self, category, submission)
 
     def project(self, submission: Submission) -> Submission:
         """Create a cross-list request."""
-        classification = Classification(category=self.category)
+        classifications = [
+            Classification(category=category) for category in self.categories
+        ]
         submission.add_user_request(
             CrossListClassificationRequest(creator=self.creator,
                                            created=self.created,
                                            status=WithdrawalRequest.PENDING,
-                                           classification=classification))
+                                           classifications=classifications))
         return submission
 
 

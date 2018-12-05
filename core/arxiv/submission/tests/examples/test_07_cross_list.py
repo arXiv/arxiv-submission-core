@@ -89,7 +89,7 @@ class TestCrossListRequest(TestCase):
         self.category = "cs.IR"
         with self.app.app_context():
             self.submission, self.events = save(
-                domain.event.RequestCrossList(category=self.category,
+                domain.event.RequestCrossList(categories=[self.category],
                                               **self.defaults),
                 submission_id=self.submission.submission_id
             )
@@ -114,11 +114,9 @@ class TestCrossListRequest(TestCase):
                 submission.pending_user_requests[0],
                 domain.submission.CrossListClassificationRequest
             )
-            self.assertEqual(
-                submission.pending_user_requests[0].classification.category,
-                self.category,
-                "Requested category is set on request."
-            )
+            self.assertIn(self.category,
+                          submission.pending_user_requests[0].categories,
+                          "Requested category is set on request.")
             self.assertEqual(len(submission.versions), 1,
                              "There is one published versions")
 
@@ -135,11 +133,9 @@ class TestCrossListRequest(TestCase):
                 submission.pending_user_requests[0],
                 domain.submission.CrossListClassificationRequest
             )
-            self.assertEqual(
-                submission.pending_user_requests[0].classification.category,
-                self.category,
-                "Requested category is set on request."
-            )
+            self.assertIn(self.category,
+                          submission.pending_user_requests[0].categories,
+                          "Requested category is set on request.")
             self.assertEqual(len(submission.versions), 1,
                              "There is one published versions")
 
@@ -187,7 +183,7 @@ class TestCrossListRequest(TestCase):
         # Cannot submit another cross-list request while one is pending.
         with self.app.app_context():
             with self.assertRaises(exceptions.InvalidEvent):
-                save(domain.event.RequestCrossList(category="q-fin.CP",
+                save(domain.event.RequestCrossList(categories=["q-fin.CP"],
                                                    **self.defaults),
                      submission_id=self.submission.submission_id)
 
@@ -217,11 +213,9 @@ class TestCrossListRequest(TestCase):
                 submission.rejected_user_requests[0],
                 domain.submission.CrossListClassificationRequest
             )
-            self.assertEqual(
-                submission.rejected_user_requests[0].classification.category,
-                self.category,
-                "Requested category is set on request."
-            )
+            self.assertIn(self.category,
+                          submission.rejected_user_requests[0].categories,
+                          "Requested category is set on request.")
             self.assertNotIn(self.category, submission.secondary_categories,
                              "Requested category is not added to submission")
 
@@ -240,11 +234,9 @@ class TestCrossListRequest(TestCase):
                 submission.rejected_user_requests[0],
                 domain.submission.CrossListClassificationRequest
             )
-            self.assertEqual(
-                submission.rejected_user_requests[0].classification.category,
-                self.category,
-                "Requested category is set on request."
-            )
+            self.assertIn(self.category,
+                          submission.rejected_user_requests[0].categories,
+                          "Requested category is set on request.")
             self.assertNotIn(self.category, submission.secondary_categories,
                              "Requested category is not added to submission")
 
@@ -274,11 +266,9 @@ class TestCrossListRequest(TestCase):
                 submission.applied_user_requests[0],
                 domain.submission.CrossListClassificationRequest
             )
-            self.assertEqual(
-                submission.applied_user_requests[0].classification.category,
-                self.category,
-                "Requested category is set on request."
-            )
+            self.assertIn(self.category,
+                          submission.applied_user_requests[0].categories,
+                          "Requested category is set on request.")
             self.assertIn(self.category, submission.secondary_categories,
                           "Requested category is added to submission")
 
@@ -297,10 +287,8 @@ class TestCrossListRequest(TestCase):
                 submission.applied_user_requests[0],
                 domain.submission.CrossListClassificationRequest
             )
-            self.assertEqual(
-                submission.applied_user_requests[0].classification.category,
-                self.category,
-                "Requested category is set on request."
-            )
+            self.assertIn(self.category,
+                          submission.applied_user_requests[0].categories,
+                          "Requested category is set on request.")
             self.assertIn(self.category, submission.secondary_categories,
                           "Requested category is added to submission")

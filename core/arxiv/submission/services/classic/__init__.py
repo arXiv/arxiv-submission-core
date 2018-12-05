@@ -370,7 +370,7 @@ def store_event(event: Event, before: Optional[Submission],
                                      before.arxiv_id, after.version, after,
                                      event.created)
         elif isinstance(event, RequestCrossList):
-            dbs = _create_crosslist(document_id, event.category,
+            dbs = _create_crosslist(document_id, event.categories,
                                     before.arxiv_id, after.version, after,
                                     event.created)
 
@@ -542,7 +542,7 @@ def _create_withdrawal(document_id: int, reason: str, paper_id: str,
     return dbs
 
 
-def _create_crosslist(document_id: int, category: str, paper_id: str,
+def _create_crosslist(document_id: int, categories: List[str], paper_id: str,
                       version: int, submission: Submission,
                       created: datetime) -> models.Submission:
     """
@@ -554,7 +554,7 @@ def _create_crosslist(document_id: int, category: str, paper_id: str,
     dbs = models.Submission(type=models.Submission.CROSS_LIST,
                             document_id=document_id,
                             version=version)
-    dbs.update_cross(submission, category, paper_id, version, created)
+    dbs.update_cross(submission, categories, paper_id, version, created)
     return dbs
 
 
