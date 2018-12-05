@@ -240,7 +240,7 @@ class TestSecondVersionIsPublished(TestCase):
             self.assertEqual(submission.status,
                              domain.submission.Submission.PUBLISHED,
                              "The submission is published.")
-            self.assertTrue(submission.has_active_requests(),
+            self.assertTrue(submission.has_active_requests,
                             "The submission has an active request.")
             self.assertEqual(len(submission.pending_user_requests), 1,
                              "There is one pending user request.")
@@ -263,7 +263,7 @@ class TestSecondVersionIsPublished(TestCase):
             self.assertEqual(submission.status,
                              domain.submission.Submission.PUBLISHED,
                              "The submission is published.")
-            self.assertTrue(submission.has_active_requests(),
+            self.assertTrue(submission.has_active_requests,
                             "The submission has an active request.")
             self.assertEqual(len(submission.pending_user_requests), 1,
                              "There is one pending user request.")

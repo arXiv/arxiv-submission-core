@@ -274,9 +274,15 @@ class Submission:
         return self.status == self.DELETED
 
     @property
+    def secondary_categories(self) -> List[str]:
+        """Category names from secondary classifications."""
+        return [c.category for c in self.secondary_classification]
+
+    @property
     def is_on_hold(self) -> bool:
         return len(self.holds) > 0 or self.status == self.ON_HOLD
 
+    @property
     def has_active_requests(self) -> bool:
         return len(self.active_user_requests) > 0
 

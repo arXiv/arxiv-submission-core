@@ -1,7 +1,7 @@
 """SQLAlchemy ORM classes for the classic database."""
 
 import json
-from typing import Optional
+from typing import Optional, List
 from datetime import datetime
 from pytz import UTC
 from sqlalchemy import Column, Date, DateTime, Enum, ForeignKey, Text, text, \
@@ -48,7 +48,7 @@ class Submission(Base):    # type: ignore
     """Published and files expired."""
 
     PROCESSING_SUBMISSION = 8
-    REMOVED = 9
+    REMOVED = 9     # This is "rejected".
 
     USER_DELETED = 10
     ERROR_STATE = 19
@@ -205,24 +205,31 @@ class Submission(Base):    # type: ignore
             the scope of the event model.
 
         """
-        # Possible reclassification.
-        primary = self.primary_classification
-        if primary:
-            submission.primary_classification = domain.Classification(
-                category=primary.category
-            )
-        submission.secondary_classification = [
-            domain.Classification(category=db_cat.category)
-            for db_cat in self.categories
-            if db_cat.is_primary == 0
-        ]
+        if self.is_crosslist():
+            submission = self.patch_cross(submission)
+        elif self.is_withdrawal():
+            submission = self.patch_withdrawal(submission)
+        elif self.is_jref():
+            submission = self.patch_jref(submission)
+        else:
+            # Possible reclassification.
+            primary = self.primary_classification
+            if primary:
+                submission.primary_classification = domain.Classification(
+                    category=primary.category
+                )
+            submission.secondary_classification = [
+                domain.Classification(category=db_cat.category)
+                for db_cat in self.categories
+                if db_cat.is_primary == 0
+            ]
 
-        # Comments (admins may modify).
-        submission.metadata.comments = self.comments
+            # Comments (admins may modify).
+            submission.metadata.comments = self.comments
 
-        submission = self.patch_status(submission)
-        submission.created = self.get_created()
-        submission.updated = self.get_updated()
+            submission = self.patch_status(submission)
+            submission.created = self.get_created()
+            submission.updated = self.get_updated()
         return submission
 
     def patch_hold(self, submission: domain.Submission) -> domain.Submission:
@@ -240,7 +247,7 @@ class Submission(Base):    # type: ignore
             if self.sticky_status == self.ON_HOLD \
                     or self.status == self.ON_HOLD:
                 submission = self.patch_hold(submission)
-            elif self.is_withdrawal():
+            elif self.is_withdrawal() or self.is_crosslist():
                 pass
             # We're going to use a Publish event instead of setting this
             # here.
@@ -342,29 +349,35 @@ class Submission(Base):    # type: ignore
             submission = self.patch_hold(submission)
         elif self.is_withdrawal():
             if self.status == Submission.PROCESSING_SUBMISSION:
-                submission.add_user_request(
-                    domain.WithdrawalRequest(
-                        creator=domain.User(
-                            native_id=self.submitter_id,
-                            email=self.submitter_email,
-                        ),
-                        created=self.get_created()
-                    )
-                )
+                wdr_status = domain.WithdrawalRequest.PENDING
+
             elif self.is_published():
-                submission.add_user_request(
-                    domain.WithdrawalRequest(
-                        creator=domain.User(
-                            native_id=self.submitter_id,
-                            email=self.submitter_email,
-                        ),
-                        created=self.get_created(),
-                        status=domain.WithdrawalRequest.APPLIED
-                    )
+                wdr_status = domain.WithdrawalRequest.APPLIED
+            else:
+                raise RuntimeError("Unhandled condition")
+            submission.add_user_request(
+                domain.WithdrawalRequest(
+                    creator=domain.User(
+                        native_id=self.submitter_id,
+                        email=self.submitter_email,
+                    ),
+                    reason_for_withdrawal=self._get_withdrawal_reason(),
+                    created=self.get_created(),
+                    status=wdr_status
                 )
+            )
+        elif self.is_crosslist():
+            submission.add_user_request(
+                self._get_crosslist_request(submission)
+            )
         return submission
 
     WDR_DELIMETER = '. Withdrawn: '
+
+    def _get_withdrawal_reason(self) -> Optional[str]:
+        if Submission.WDR_DELIMETER not in self.comments:
+            return
+        return self.comments.split(Submission.WDR_DELIMETER, 1)[1]
 
     def update_withdrawal(self, submission: domain.Submission, reason: str,
                           paper_id: str, version: int,
@@ -377,17 +390,29 @@ class Submission(Base):    # type: ignore
         reason = f"{Submission.WDR_DELIMETER}{reason}"
         self.comments = self.comments.rstrip('. ') + reason
 
+    def update_cross(self, submission: domain.Submission, category: str,
+                     paper_id: str, version: int, created: datetime) -> None:
+        self.update_from_submission(submission)
+        self.created = created
+        self.updated = created
+        self.doc_paper_id = paper_id
+        self.status = Submission.PROCESSING_SUBMISSION
+        self.categories.append(
+            SubmissionCategory(submission_id=self.submission_id,
+                               category=category, is_primary=0))
+
     def patch_withdrawal(self, submission: domain.Submission) \
             -> domain.Submission:
-        if Submission.WDR_DELIMETER not in self.comments:
-            return submission
-
-        reason = self.comments.split(Submission.WDR_DELIMETER, 1)[1]
+        reason = self._get_withdrawal_reason()
+        if reason is None:
+            return Submission
         # TODO: what is rejected status?
         status = domain.WithdrawalRequest.PENDING
         if self.is_published():
             status = domain.WithdrawalRequest.APPLIED
             submission.reason_for_withdrawal = reason
+        elif self.is_rejected():
+            status = domain.WithdrawalRequest.REJECTED
         submission.add_user_request(
             domain.WithdrawalRequest(
                 creator=domain.User(
@@ -399,6 +424,43 @@ class Submission(Base):    # type: ignore
                 status=status
             )
         )
+        return submission
+
+    def _get_crosslist_category(self, submission: domain.Submission) \
+            -> domain.Classification:
+        for db_cat in self.categories:
+            if db_cat.is_primary == 0 \
+                    and db_cat.category not in submission.secondary_categories:
+                return domain.Classification(db_cat.category)
+        raise RuntimeError('No crosslist category')
+
+    def _get_crosslist_request(self, submission: domain.Submission) \
+            -> domain.CrossListClassificationRequest:
+        # TODO: what is rejected status?
+        status = domain.CrossListClassificationRequest.PENDING
+        clsn = self._get_crosslist_category(submission)
+        if self.is_published():
+            status = domain.CrossListClassificationRequest.APPLIED
+            if clsn.category not in submission.secondary_categories:
+                submission.secondary_classification.append(clsn)
+        elif self.is_rejected():
+            status = domain.CrossListClassificationRequest.REJECTED
+
+        return domain.CrossListClassificationRequest(
+            creator=domain.User(
+                native_id=self.submitter_id,
+                email=self.submitter_email,
+            ),
+            created=self.get_created(),
+            classification=clsn,
+            status=status
+        )
+
+    def patch_cross(self, submission: domain.Submission) -> domain.Submission:
+        request = self._get_crosslist_request(submission)
+        if self.is_published():
+            submission.secondary_classification.append(request.classification)
+        submission.add_user_request(request)
         return submission
 
     def update_from_submission(self, submission: domain.Submission) -> None:
@@ -492,6 +554,9 @@ class Submission(Base):    # type: ignore
     def is_published(self) -> bool:
         return self.status in [self.PUBLISHED, self.DELETED_PUBLISHED]
 
+    def is_rejected(self) -> bool:
+        return self.status == self.REMOVED
+
     def is_deleted(self) -> bool:
         return self.status in self.DELETED
 
@@ -505,8 +570,16 @@ class Submission(Base):    # type: ignore
     def is_withdrawal(self) -> bool:
         return self.type == self.WITHDRAWAL
 
+    def is_crosslist(self) -> bool:
+        return self.type == self.CROSS_LIST
+
     def is_jref(self) -> bool:
         return self.type == self.JOURNAL_REFERENCE
+
+    @property
+    def secondary_categories(self) -> List[str]:
+        """Category names from this submission's secondary classifications."""
+        return [c.category for c in self.categories if c.is_primary == 0]
 
     def _get_status(self) -> str:
         """Map classic status codes to :class:`.domain.Submission` status."""
@@ -540,23 +613,16 @@ class Submission(Base):    # type: ignore
 
     def _update_secondaries(self, submission: domain.Submission) -> None:
         """Update secondary classifications."""
-        cur_secondaries = [
-            db_cat.category for db_cat
-            in self.categories if db_cat.is_primary == 0
-        ]
-        tgt_secondaries = [
-            cat.category for cat in submission.secondary_classification
-        ]
         # Remove any categories that have been removed from the Submission.
         for db_cat in self.categories:
             if db_cat.is_primary == 1:
                 continue
-            if db_cat.category not in tgt_secondaries:
+            if db_cat.category not in submission.secondary_categories:
                 self.categories.remove(db_cat)
 
         # Add any new secondaries
         for cat in submission.secondary_classification:
-            if cat.category not in cur_secondaries:
+            if cat.category not in self.secondary_categories:
                 self.categories.append(
                     SubmissionCategory(
                         submission_id=self.submission_id,

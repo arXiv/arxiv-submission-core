@@ -32,7 +32,7 @@ from sqlalchemy import or_
 from arxiv.base import logging
 from arxiv.base.globals import get_application_config, get_application_global
 from ...domain.event import Event, Publish, RequestWithdrawal, SetDOI, \
-    SetJournalReference, SetReportNumber, Rollback
+    SetJournalReference, SetReportNumber, Rollback, RequestCrossList
 from ...domain.submission import License, Submission
 from ...domain.agent import System
 from .models import Base
@@ -170,7 +170,9 @@ def _get_head_idx(dbss: List[models.Submission]) -> int:
     i = 0
     while i < len(dbss):
         # Skip any "deleted" rows that aren't the first version.
-        if not dbss[i].is_jref() and not dbss[i].is_withdrawal() \
+        if not dbss[i].is_jref() \
+                and not dbss[i].is_withdrawal() \
+                and not dbss[i].is_crosslist() \
                 and not (dbss[i].is_deleted() and dbss[i].version > 1):
             break
         i += 1
@@ -193,20 +195,12 @@ def _db_to_projection(dbss: List[models.Submission]) -> Submission:
         if dbs.is_new_version() and dbs.is_published():
             prior_ver = dbs.to_submission(submission.submission_id)
             submission.versions.append(prior_ver)
-        elif dbs.is_jref() and len(submission.versions) > 0:
-            submission.versions[-1] = dbs.patch_jref(submission.versions[-1])
-        elif dbs.is_withdrawal() and len(submission.versions) > 0:
-            submission.versions[-1] = dbs.patch_withdrawal(submission.versions[-1])
         elif len(submission.versions) > 0:
             submission.versions[-1] = dbs.patch(submission.versions[-1])
     # If there are JREF rows more recent than the latest non-JREF row, then
     # we want to patch the JREF fields using those rows.
     for j in range(0, i):
-        if dbss[j].is_jref() and not dbss[j].is_deleted():
-            submission = dbss[j].patch_jref(submission)
-            submission = dbss[j].patch(submission)
-        elif dbss[j].is_withdrawal() and not dbss[j].is_deleted():
-            submission = dbss[j].patch_withdrawal(submission)
+        if not dbss[j].is_deleted():
             submission = dbss[j].patch(submission)
 
     # If the current submission state is published, prepend into published
@@ -375,6 +369,10 @@ def store_event(event: Event, before: Optional[Submission],
             dbs = _create_withdrawal(document_id, event.reason,
                                      before.arxiv_id, after.version, after,
                                      event.created)
+        elif isinstance(event, RequestCrossList):
+            dbs = _create_crosslist(document_id, event.category,
+                                    before.arxiv_id, after.version, after,
+                                    event.created)
 
         # Adding DOIs and citation information (so-called "journal reference")
         # also requires a new row. The version number is not incremented.
@@ -400,7 +398,6 @@ def store_event(event: Event, before: Optional[Submission],
             raise CommitFailed("Something is fishy")
 
     db_event = _new_dbevent(event)
-
     session.add(dbs)
     session.add(db_event)
 
@@ -542,6 +539,22 @@ def _create_withdrawal(document_id: int, reason: str, paper_id: str,
                             document_id=document_id,
                             version=version)
     dbs.update_withdrawal(submission, reason, paper_id, version, created)
+    return dbs
+
+
+def _create_crosslist(document_id: int, category: str, paper_id: str,
+                      version: int, submission: Submission,
+                      created: datetime) -> models.Submission:
+    """
+    Create a new crosslist request.
+
+    Cross list requests also require a new row, and they use the most recent
+    version number.
+    """
+    dbs = models.Submission(type=models.Submission.CROSS_LIST,
+                            document_id=document_id,
+                            version=version)
+    dbs.update_cross(submission, category, paper_id, version, created)
     return dbs
 
 

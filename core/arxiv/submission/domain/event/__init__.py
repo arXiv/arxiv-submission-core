@@ -131,6 +131,7 @@ class CreateSubmissionVersion(Event):
         """Only applies to published submissions."""
         if not submission.published:
             raise InvalidEvent(self, "Must already be published")
+        validators.no_active_requests(self, submission)
 
     def project(self, submission: Submission) -> Submission:
         """Increment the version number, and reset several fields."""
@@ -358,8 +359,7 @@ class RemoveSecondaryClassification(Event):
 
     def _must_already_be_present(self, submission: Submission) -> None:
         """One cannot remove a secondary that is not actually set."""
-        current = [c.category for c in submission.secondary_classification]
-        if self.category not in current:
+        if self.category not in submission.secondary_categories:
             raise InvalidEvent(self, 'No such category on submission')
 
 

@@ -56,7 +56,11 @@ def cannot_be_primary(event: Event, category: str, submission: Submission) \
 def cannot_be_secondary(event: Event, category: str, submission: Submission) \
         -> None:
     """The same category cannot be added as a secondary twice."""
-    secondaries = [c.category for c in submission.secondary_classification]
-    if category in secondaries:
+    if category in submission.secondary_categories:
         raise InvalidEvent(event, f"Secondary {category} already set on this"
                                   f" submission.")
+
+
+def no_active_requests(event: Event, submission: Submission) -> None:
+    if submission.has_active_requests:
+        raise InvalidEvent(event, "Must not have active requests.")
