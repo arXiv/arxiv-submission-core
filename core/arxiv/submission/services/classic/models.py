@@ -363,6 +363,7 @@ class Submission(Base):    # type: ignore
                     ),
                     reason_for_withdrawal=self._get_withdrawal_reason(),
                     created=self.get_created(),
+                    updated=self.get_updated(),
                     status=wdr_status
                 )
             )
@@ -422,6 +423,7 @@ class Submission(Base):    # type: ignore
                     email=self.submitter_email,
                 ),
                 created=self.get_created(),
+                updated=self.get_updated(),
                 reason_for_withdrawal=reason,
                 status=status
             )
@@ -457,6 +459,7 @@ class Submission(Base):    # type: ignore
                 email=self.submitter_email,
             ),
             created=self.get_created(),
+            updated=self.get_updated(),
             classifications=clsns,
             status=status
         )

@@ -157,6 +157,7 @@ class UserRequest:
 
     creator: Agent
     created: datetime = field(default_factory=get_tzaware_utc_now)
+    updated: datetime = field(default_factory=get_tzaware_utc_now)
     status: str = field(default=PENDING)
 
     @property

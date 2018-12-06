@@ -77,6 +77,7 @@ class RequestWithdrawal(Event):
         submission.add_user_request(
             WithdrawalRequest(creator=self.creator,
                               created=self.created,
+                              updated=self.created,
                               status=WithdrawalRequest.PENDING,
                               reason_for_withdrawal=self.reason))
         return submission
