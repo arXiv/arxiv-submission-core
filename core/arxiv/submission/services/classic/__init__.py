@@ -21,7 +21,7 @@ is defined in :mod:`.classic.event`.
 
 """
 
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Set
 from datetime import datetime
 from pytz import UTC
 from itertools import groupby
@@ -142,6 +142,20 @@ def get_submission_fast(submission_id: int) -> List[Submission]:
 
     """
     return _db_to_projection(_get_db_submission_rows(submission_id))
+
+
+def get_titles(with_terms: Set[str] = set(), since: datetime) \
+        -> Tuple[int, str, Agent]
+    with transaction() as session:
+        print(session.query(models.Submission.submission_id,
+                      models.Submission.title,
+                      models.Submission.submitter_id,
+                      models.Submission.submitter_email) \
+            .filter(or_(*[models.Submission.title.ilike(f'%{term}%')
+                          for term in with_terms]))
+            .filter(models.Submission.created.gte(since)))
+
+
 
 
 def _get_db_submission_rows(submission_id: int) -> List[models.Submission]:

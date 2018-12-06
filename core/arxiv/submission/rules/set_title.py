@@ -6,8 +6,9 @@ from .bind import bind_event
 from ..domain.event import SetTitle, AddAnnotation
 from ..domain.submission import Submission
 from ..domain.annotation import PossibleDuplicate
-from ..domain.agent import User
+from ..domain.agent import Agent, User
 from ..services import classic
+
 
 STOPWORDS = set('a,an,and,as,at,by,for,from,in,of,on,s,the,to,with'.split(','))
 
@@ -52,17 +53,20 @@ def jaccard(phrase_a: str, phrase_b: str) -> float:
 
 @bind_event(SetTitle)
 def check_for_similar_titles(event: SetTitle, before: Submission,
-                             after: Submission) -> List[Event]:
+                             after: Submission, creator: Agent) -> List[Event]:
     """."""
     if not tokenized(event.title):
         return
     threshold = 0.7     # TODO: this needs to be configurable.
     time_window = datetime.now() - timedelta(months=3)
-    candidates: List[Tuple[int, str, User]] = classic.get_titles(
+    candidates: List[Tuple[int, str, Agent]] = classic.get_titles(
         with_terms=tokenized(event.title),
         since=time_window
     )
-    return (PossibleDuplicate(matching_id=ident, matching_title=title,
-                              matching_owner=submitter)
+    return (AddAnnotation(creator=creator,
+                          annotation=PossibleDuplicate(
+                            matching_id=ident,
+                            matching_title=title,
+                            matching_owner=submitter))
             for ident, title, submitter in candidates
             if jaccard(event.title, title) > threshold)

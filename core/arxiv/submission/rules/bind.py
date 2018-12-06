@@ -4,10 +4,11 @@ from collectionts import defaultdict
 
 from .domain.event import Event
 from .domain.submission import Submission
+from .domain.agent import Agent, User, System
 
 Events = Iterable[Event]
 Condition = Callable[[Event, Submission, Submission], bool]
-Callback = Callable[[Event, Submission, Submission], Events]
+Callback = Callable[[Event, Submission, Submission, Agent], Events]
 Decorator = Callable[[Callable], Callable]
 Rule = Tuple[Condition, Callback]
 
@@ -21,9 +22,11 @@ def true(event: Event, before: Submission, after: Submission) -> bool:
 
 def bind_event(event_type: type, condition: Condition = true) -> Decorator:
     def decorator(func: Callback) -> Callback:
+        system = System(f'{__name__}::{func.__module__}.{func.__name__}')
+
         @wraps(func)
         def do(event: Event, before: Submission, after: Submission) -> Events:
-            func(event, before, after)
+            func(event, before, after, system)
 
         BINDINGS[event_type].append((condition, do))
         return do
