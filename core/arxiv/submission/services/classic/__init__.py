@@ -525,6 +525,7 @@ def _db_to_projection(dbss: List[models.Submission]) -> Submission:
         if dbs.is_deleted():
             continue
         if dbs.is_new_version() and dbs.is_published():
+            logger.debug('is new published version')
             prior_ver = dbs.to_submission(submission.submission_id)
             submission.versions.append(prior_ver)
         elif len(submission.versions) > 0:

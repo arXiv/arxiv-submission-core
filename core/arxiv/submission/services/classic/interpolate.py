@@ -39,6 +39,9 @@ class ClassicEventInterpolator:
         self.applied_events: List[Event] = []
         self.current_row = current_row
         self.db_rows = subsequent_rows
+        logger.debug("start with current row: %s", self.current_row)
+        logger.debug("start with subsequent rows: %s",
+                     [(d.type, d.status) for d in self.db_rows])
         self.events = events
         self.submission_id = current_row.submission_id
         # We always start from the beginning (no submission).
@@ -92,7 +95,7 @@ class ClassicEventInterpolator:
             and self.next_row.get_created() <= event.created
 
     def _there_are_rows_remaining(self) -> bool:
-        logger.debug('are there rows remaining?')
+        logger.debug('are there rows remaining? %s', len(self.db_rows) > 0)
         return len(self.db_rows) > 0
 
     def _advance_to_next_row(self) -> None:
@@ -106,7 +109,9 @@ class ClassicEventInterpolator:
 
     def _apply_current_row(self) -> None:
         logger.debug('apply the current row')
-        if self.current_row.is_crosslist() or self.current_row.is_withdrawal():
+        if self.current_row.status != models.Submission.PROCESSING_SUBMISSION \
+                and (self.current_row.is_crosslist()
+                     or self.current_row.is_withdrawal()):
             self._insert_request_event(
                 (CrossListClassificationRequest
                  if self.current_row.is_crosslist()
@@ -115,7 +120,7 @@ class ClassicEventInterpolator:
                  if self.current_row.is_rejected()
                  else ApplyRequest)
             )
-        else:
+        elif self.current_row.is_new_version():
             self._insert_publish_event()
 
     def _should_backport_event(self, event: Event) -> bool:
@@ -125,9 +130,11 @@ class ClassicEventInterpolator:
             and self.submission.version == self.submission.versions[-1].version
 
     def _patch_from_current_row(self) -> None:
-        logger.debug('patch from the current row: %s, %s',
+        logger.debug('patch from the current row: %s, %s, %s',
+                     self.current_row.submission_id,
                      self.current_row.type, self.current_row.status)
         self.submission = self.current_row.patch(self.submission)
+        logger.debug('user requests: %s', self.submission.user_requests)
 
     def _apply_event(self, event: Event) -> None:
         logger.debug('apply event %s', event.NAME)
@@ -138,6 +145,13 @@ class ClassicEventInterpolator:
         logger.debug('backport event %s', event.NAME)
         self.submission.versions[-1] = \
             event.apply(self.submission.versions[-1])
+
+    def _should_apply_current_row_at_the_end(self) -> bool:
+        return (self.current_row.is_published()
+                or (self.current_row.is_withdrawal()
+                    and not self.current_row.is_deleted())
+                or (self.current_row.is_crosslist()
+                    and not self.current_row.is_deleted()))
 
     def get_submission_state(self) -> Tuple[Submission, List[Event]]:
         """
@@ -185,11 +199,10 @@ class ClassicEventInterpolator:
         while self.current_row is not None:
             if self._can_patch_from_current_row():
                 self._patch_from_current_row()
-                if self.current_row.is_published():
+                if self._should_apply_current_row_at_the_end():
                     self._apply_current_row()
             if self._there_are_rows_remaining():
                 self._advance_to_next_row()
             else:
                 self.current_row = None
-
         return self.submission, self.applied_events

@@ -452,7 +452,6 @@ class Submission(Base):    # type: ignore
 
     def _get_crosslist_request(self, submission: domain.Submission) \
             -> domain.CrossListClassificationRequest:
-        # TODO: what is rejected status?
         status = domain.CrossListClassificationRequest.PENDING
         clsns = self._get_crosslist_categories(submission)
         if self.is_published():
@@ -462,7 +461,6 @@ class Submission(Base):    # type: ignore
                     submission.secondary_classification.append(clsn)
         elif self.is_rejected():
             status = domain.CrossListClassificationRequest.REJECTED
-
         return domain.CrossListClassificationRequest(
             creator=domain.User(
                 native_id=self.submitter_id,
