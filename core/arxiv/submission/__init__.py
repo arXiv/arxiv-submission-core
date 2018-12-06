@@ -244,8 +244,8 @@ def save(*events: Event, submission_id: Optional[str] = None) \
         if not event.committed:
             event, after = classic.store_event(event, before, after)
 
-        # TODO: <-- emit event here.
-        # TODO: <-- apply rules here.
+            # TODO: <-- emit event here.
+            # TODO: <-- apply rules here.
         events[i] = event
         before = after
     return after, events    # Return the whole stack.

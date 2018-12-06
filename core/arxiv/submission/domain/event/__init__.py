@@ -64,6 +64,7 @@ from ..agent import Agent
 from ..submission import Submission, SubmissionMetadata, Author, \
     Classification, License, Delegation, Comment, Flag, Proposal, \
     SubmissionContent, WithdrawalRequest, CrossListClassificationRequest
+from ..annotation import Annotation
 
 from ...exceptions import InvalidEvent
 from ..util import get_tzaware_utc_now
@@ -1125,6 +1126,20 @@ class RemoveDelegate(Event):
             del submission.delegations[self.delegation_id]
         return submission
 
+
+@dataclass
+class AddAnnotation(Event):
+    """Add an annotation to a :class:`.Submission`."""
+
+    annotation: Annotation = field()
+
+    def validate(self, submission: Submission) -> None:
+        return
+
+    def project(self, submission: Submission) -> Submission:
+        """Add the annotation to the submission."""
+        submission.add_annotation(self.annotation)
+        return submission
 
 # class CreateSourcePackage(Event):
 #     pass
