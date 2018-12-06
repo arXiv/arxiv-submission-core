@@ -276,6 +276,22 @@ class Submission(Base):    # type: ignore
         submission.metadata.report_num = self.report_num
         return submission
 
+    def get_submitter(self) -> domain.User:
+        if self.submitter:
+            extra = dict(
+                forename=self.submitter.first_name,
+                surname=self.submitter.last_name,
+                suffix=self.submitter.suffix_name
+            )
+        else:
+            extra = {}
+
+        return domain.User(
+            native_id=self.submitter_id,
+            email=self.submitter_email,
+            **extra
+        )
+
     def to_submission(self, submission_id: Optional[int] = None) \
             -> domain.Submission:
         """
@@ -300,13 +316,7 @@ class Submission(Base):    # type: ignore
                 email=self.submitter_email,
             )
         else:
-            submitter = domain.User(
-                native_id=self.submitter_id,
-                email=self.submitter.email,
-                forename=self.submitter.first_name,
-                surname=self.submitter.last_name,
-                suffix=self.submitter.suffix_name
-            )
+            submitter = self.get_submitter()
         if submission_id is None:
             submission_id = self.submission_id
         submission = domain.Submission(

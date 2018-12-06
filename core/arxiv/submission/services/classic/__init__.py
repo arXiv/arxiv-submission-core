@@ -32,16 +32,16 @@ from sqlalchemy import or_
 from arxiv.base import logging
 from arxiv.base.globals import get_application_config, get_application_global
 from ...domain.event import Event, Publish, RequestWithdrawal, SetDOI, \
-    SetJournalReference, SetReportNumber, Rollback, RequestCrossList
-from ...domain.submission import License, Submission
-from ...domain.agent import System
+    SetJournalReference, SetReportNumber, Rollback, RequestCrossList, \
+    ApplyRequest, RejectRequest, ApproveRequest
+
+from ...domain.submission import License, Submission, WithdrawalRequest, \
+    CrossListClassificationRequest
 from .models import Base
 from .exceptions import ClassicBaseException, NoSuchSubmission, CommitFailed
 from .util import transaction, current_session
 from .event import DBEvent
-from . import models, util
-
-SYSTEM = System(__name__)
+from . import models, util, interpolate
 
 
 logger = logging.getLogger(__name__)
@@ -161,55 +161,6 @@ def _get_db_submission_rows(submission_id: int) -> List[models.Submission]:
     return dbss
 
 
-def _get_head_idx(dbss: List[models.Submission]) -> int:
-    """
-    Find the most recent non-JREF row.
-
-    Assume that the rows are passed in descending order.
-    """
-    i = 0
-    while i < len(dbss):
-        # Skip any "deleted" rows that aren't the first version.
-        if not dbss[i].is_jref() \
-                and not dbss[i].is_withdrawal() \
-                and not dbss[i].is_crosslist() \
-                and not (dbss[i].is_deleted() and dbss[i].version > 1):
-            break
-        i += 1
-    return i
-
-
-def _db_to_projection(dbss: List[models.Submission]) -> Submission:
-    """
-    Transform a set of classic rows to an NG :class:`Submission`.
-
-    Here we assume that the rows are passed in descending order.
-    """
-    i = _get_head_idx(dbss)    # Get state of the most recent non-JREF row.
-    submission = dbss[i].to_submission(dbss[-1].submission_id)
-
-    # Attach and patch previous published versions.
-    for dbs in dbss[i+1:][::-1]:
-        if dbs.is_deleted():
-            continue
-        if dbs.is_new_version() and dbs.is_published():
-            prior_ver = dbs.to_submission(submission.submission_id)
-            submission.versions.append(prior_ver)
-        elif len(submission.versions) > 0:
-            submission.versions[-1] = dbs.patch(submission.versions[-1])
-    # If there are JREF rows more recent than the latest non-JREF row, then
-    # we want to patch the JREF fields using those rows.
-    for j in range(0, i):
-        if not dbss[j].is_deleted():
-            submission = dbss[j].patch(submission)
-
-    # If the current submission state is published, prepend into published
-    # versions.
-    if submission.published:
-        submission.versions.insert(0, submission)
-    return submission
-
-
 def get_submission(submission_id: int) -> Tuple[Submission, List[Event]]:
     """
     Get the current state of a :class:`.Submission` from the database.
@@ -237,75 +188,32 @@ def get_submission(submission_id: int) -> Tuple[Submission, List[Event]]:
         Items are :class:`Event` instances.
 
     """
-    events = get_events(submission_id)
-    dbss: List[models.Submission] = []
-    arxiv_id: Optional[str] = None
-
-    # Load submission data from the legacy submission table.
     with transaction() as session:
-        # Load the root submission (v=1).
-        dbs = session.query(models.Submission).get(submission_id)
-        if dbs is None:
+        original_row = session.query(models.Submission).get(submission_id)
+        if original_row is None:
             raise NoSuchSubmission(f'Submission {submission_id} not found')
-        arxiv_id = dbs.doc_paper_id
 
         # Load any subsequent submission rows (e.g. v=2, jref, withdrawal).
         # These do not have the same legacy submission ID as the original
         # submission.
+        subsequent_rows: List[models.Submission] = []
+        arxiv_id = original_row.get_arxiv_id()
         if arxiv_id is not None:
-            dbss = _load_subsequent_submissions(submission_id, arxiv_id)
-
-    # Play the events forward.
-    submission = None   # We always start from the beginning (no submission).
-    applied_events: List[Event] = []    # This is what we'll return.
-
-    # Using a closure to cut down on redundant code.
-    def insert_publish_event(this_dbs, this_submission):
-        """Create and apply a Publish event, and add it to the stack."""
-        publish_event = _new_publish_event(this_dbs, submission_id)
-        this_submission = publish_event.apply(this_submission)
-        applied_events.append(publish_event)
-        return this_submission
-
-    for event in events:
-        # If the classic submission row is published, we want to insert a
-        # Publish event in the appropriate spot in the event stack.
-        if dbs and dbs.get_updated() < event.created and dbs.is_published():
-            submission = insert_publish_event(dbs, submission)
-
-        # As we go, look for moments where a new row in the legacy submission
-        # table was created.
-        if dbss and dbss[0].get_created() <= event.created:
-            # If we find one, patch the domain submission from the preceding
-            # row, and load the next row. We want to do this before projecting
-            # the event, since we are inferring that the event occurred after
-            # a change was made via the legacy system.
-            if not dbs.is_deleted() or dbs.version == 1:
-                submission = dbs.patch(submission)
-            dbs = dbss.pop(0)
-
-        # Now project the event.
-
-        submission = event.apply(submission)
-        applied_events.append(event)
-
-        # Backport JREFs to the published version to which they apply.
-        if type(event) in [SetDOI, SetJournalReference, SetReportNumber]:
-            if submission.versions \
-                    and submission.version == submission.versions[-1].version:
-                submission.versions[-1] = event.apply(submission.versions[-1])
-
-    # Finally, patch the submission with any remaining changes that may have
-    # occurred via the legacy system.
-    for d in [dbs] + list(dbss):
-        if d.is_deleted() and d.version > 1:
-            continue
-        submission = d.patch(submission)
-        if d.is_published() and not submission.published:
-            submission = insert_publish_event(d, submission)
-    return submission, applied_events
+            subsequent_rows = list(
+                session.query(models.Submission)
+                .filter(models.Submission.doc_paper_id == arxiv_id)
+                .filter(models.Submission.submission_id != submission_id)
+                .order_by(models.Submission.submission_id.asc())
+            )
+    interpolator = interpolate.ClassicEventInterpolator(
+        original_row,
+        subsequent_rows,
+        get_events(submission_id)
+    )
+    return interpolator.get_submission_state()
 
 
+# TODO: this needs some refactoring/decomposition for semantic clarity.
 def store_event(event: Event, before: Optional[Submission],
                 after: Optional[Submission]) -> Tuple[Event, Submission]:
     """
@@ -441,24 +349,6 @@ def create_all() -> None:
 def drop_all() -> None:
     """Drop all tables in the database."""
     Base.metadata.drop_all(util.current_engine())
-
-
-def _load_subsequent_submissions(submission_id: int, paper_id: str) \
-        -> List[models.Submission]:
-    """Load submission rows for a given arXiv paper ID, except the original."""
-    with transaction() as session:
-        return list(
-            session.query(models.Submission)
-            .filter(models.Submission.doc_paper_id == paper_id)
-            .filter(models.Submission.submission_id != submission_id)
-            .order_by(models.Submission.submission_id.asc())
-        )
-
-
-def _new_publish_event(dbs: models.Submission, submission_id: int) -> Publish:
-    return Publish(creator=SYSTEM, created=dbs.get_updated(),
-                   committed=True, arxiv_id=dbs.get_arxiv_id(),
-                   submission_id=submission_id)
 
 
 def _load_submission(submission_id: Optional[int] = None,
@@ -601,3 +491,52 @@ def _preserve_sticky_hold(dbs: models.Submission, before: Submission,
         return
     if dbs.is_on_hold() and after.status == Submission.WORKING:
         dbs.sticky_status = models.Submission.ON_HOLD
+
+
+def _get_head_idx(dbss: List[models.Submission]) -> int:
+    """
+    Find the most recent non-JREF row.
+
+    Assume that the rows are passed in descending order.
+    """
+    i = 0
+    while i < len(dbss):
+        # Skip any "deleted" rows that aren't the first version.
+        if not dbss[i].is_jref() \
+                and not dbss[i].is_withdrawal() \
+                and not dbss[i].is_crosslist() \
+                and not (dbss[i].is_deleted() and dbss[i].version > 1):
+            break
+        i += 1
+    return i
+
+
+def _db_to_projection(dbss: List[models.Submission]) -> Submission:
+    """
+    Transform a set of classic rows to an NG :class:`Submission`.
+
+    Here we assume that the rows are passed in descending order.
+    """
+    i = _get_head_idx(dbss)    # Get state of the most recent non-JREF row.
+    submission = dbss[i].to_submission(dbss[-1].submission_id)
+
+    # Attach and patch previous published versions.
+    for dbs in dbss[i+1:][::-1]:
+        if dbs.is_deleted():
+            continue
+        if dbs.is_new_version() and dbs.is_published():
+            prior_ver = dbs.to_submission(submission.submission_id)
+            submission.versions.append(prior_ver)
+        elif len(submission.versions) > 0:
+            submission.versions[-1] = dbs.patch(submission.versions[-1])
+    # If there are JREF rows more recent than the latest non-JREF row, then
+    # we want to patch the JREF fields using those rows.
+    for j in range(0, i):
+        if not dbss[j].is_deleted():
+            submission = dbss[j].patch(submission)
+
+    # If the current submission state is published, prepend into published
+    # versions.
+    if submission.published:
+        submission.versions.insert(0, submission)
+    return submission

@@ -68,7 +68,8 @@ from ..submission import Submission, SubmissionMetadata, Author, \
 from ...exceptions import InvalidEvent
 from ..util import get_tzaware_utc_now
 from .event import Event
-from .request import RequestCrossList, RequestWithdrawal
+from .request import RequestCrossList, RequestWithdrawal, ApplyRequest, \
+    RejectRequest, ApproveRequest
 from . import validators
 
 logger = logging.getLogger(__name__)

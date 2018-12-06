@@ -7,8 +7,70 @@ from dataclasses import dataclass, field
 from . import validators
 from .event import Event
 from ..submission import Submission, Classification, WithdrawalRequest, \
-    CrossListClassificationRequest
+    CrossListClassificationRequest, UserRequest
 from ...exceptions import InvalidEvent
+
+
+@dataclass
+class ApproveRequest(Event):
+    """Approve a user request."""
+
+    NAME = "approve user request"
+    NAMED = "user request approved"
+
+    def __hash__(self):
+        """Use event ID as object hash."""
+        return hash(self.event_id)
+
+    request_id: Optional[str] = field(default=None)
+
+    def validate(self, submission: Submission) -> None:
+        if self.request_id not in submission.user_requests:
+            raise InvalidEvent(self, "No such request")
+
+    def project(self, submission: Submission) -> Submission:
+        submission.user_requests[self.request_id].status = UserRequest.APPROVED
+        return submission
+
+
+@dataclass
+class RejectRequest(Event):
+    NAME = "reject user request"
+    NAMED = "user request rejected"
+
+    def __hash__(self):
+        """Use event ID as object hash."""
+        return hash(self.event_id)
+
+    request_id: Optional[str] = field(default=None)
+
+    def validate(self, submission: Submission) -> None:
+        if self.request_id not in submission.user_requests:
+            raise InvalidEvent(self, "No such request")
+
+    def project(self, submission: Submission) -> Submission:
+        submission.user_requests[self.request_id].status = UserRequest.REJECTED
+        return submission
+
+
+@dataclass
+class ApplyRequest(Event):
+    NAME = "apply user request"
+    NAMED = "user request applied"
+
+    def __hash__(self):
+        """Use event ID as object hash."""
+        return hash(self.event_id)
+
+    request_id: Optional[str] = field(default=None)
+
+    def validate(self, submission: Submission) -> None:
+        if self.request_id not in submission.user_requests:
+            raise InvalidEvent(self, "No such request")
+
+    def project(self, submission: Submission) -> Submission:
+        submission.user_requests[self.request_id].status = UserRequest.APPLIED
+        return submission
 
 
 @dataclass

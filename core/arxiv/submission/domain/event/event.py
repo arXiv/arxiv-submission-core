@@ -12,6 +12,7 @@ from ..util import get_tzaware_utc_now
 from ..submission import Submission
 
 logger = logging.getLogger(__name__)
+logger.propagate = False
 
 
 @dataclass

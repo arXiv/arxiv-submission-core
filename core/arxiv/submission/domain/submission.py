@@ -168,10 +168,17 @@ class UserRequest:
     @property
     def request_id(self):
         """The unique identifier for an :class:`.UserRequest` instance."""
+        return self.generate_request_id(self.created, self.request_type,
+                                        self.creator)
+
+    @staticmethod
+    def generate_request_id(created: datetime, request_type: str,
+                            creator: Agent) -> str:
+        """Generate a request ID."""
         h = hashlib.new('sha1')
-        h.update(b'%s:%s:%s' % (self.created.isoformat().encode('utf-8'),
-                                self.request_type.encode('utf-8'),
-                                self.creator.agent_identifier.encode('utf-8')))
+        h.update(b'%s:%s:%s' % (created.isoformat().encode('utf-8'),
+                                request_type.encode('utf-8'),
+                                creator.agent_identifier.encode('utf-8')))
         return h.hexdigest()
 
     def is_pending(self):
