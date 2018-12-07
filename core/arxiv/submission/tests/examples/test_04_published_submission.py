@@ -194,9 +194,10 @@ class TestPublishedSubmission(TestCase):
 
     def test_can_withdraw_submission(self):
         """The submitter can request withdrawal of the submission."""
+        withdrawal_reason = "the best reason"
         with self.app.app_context():
             submission, events = save(
-                domain.event.RequestWithdrawal(reason="the best reason",
+                domain.event.RequestWithdrawal(reason=withdrawal_reason,
                                                **self.defaults),
                 submission_id=self.submission.submission_id
             )
@@ -205,9 +206,19 @@ class TestPublishedSubmission(TestCase):
         with self.app.app_context():
             submission, events = load(self.submission.submission_id)
             self.assertEqual(submission.status,
-                             domain.submission.Submission.WITHDRAWAL_REQUESTED,
-                             "The submission is in the withdrawal requested"
-                             " state.")
+                             domain.submission.Submission.PUBLISHED,
+                             "The submission is published.")
+            self.assertTrue(submission.has_active_requests,
+                            "The submission has an active request.")
+            self.assertEqual(len(submission.pending_user_requests), 1,
+                             "There is one pending user request.")
+            self.assertIsInstance(submission.pending_user_requests[0],
+                                  domain.submission.WithdrawalRequest)
+            self.assertEqual(
+                submission.pending_user_requests[0].reason_for_withdrawal,
+                withdrawal_reason,
+                "Withdrawal reason is set on request."
+            )
             self.assertEqual(len(self.events) + 2, len(events),
                              "The same number of events were retrieved as"
                              " were initially saved, plus one for publish"
@@ -218,9 +229,19 @@ class TestPublishedSubmission(TestCase):
         with self.app.app_context():
             submission = load_fast(self.submission.submission_id)
             self.assertEqual(submission.status,
-                             domain.submission.Submission.WITHDRAWAL_REQUESTED,
-                             "The submission is in the withdrawal requested"
-                             " state.")
+                             domain.submission.Submission.PUBLISHED,
+                             "The submission is published.")
+            self.assertTrue(submission.has_active_requests,
+                            "The submission has an active request.")
+            self.assertEqual(len(submission.pending_user_requests), 1,
+                             "There is one pending user request.")
+            self.assertIsInstance(submission.pending_user_requests[0],
+                                  domain.submission.WithdrawalRequest)
+            self.assertEqual(
+                submission.pending_user_requests[0].reason_for_withdrawal,
+                withdrawal_reason,
+                "Withdrawal reason is set on request."
+            )
             self.assertEqual(len(self.events) + 2, len(events),
                              "The same number of events were retrieved as"
                              " were initially saved, plus one for publish"
@@ -250,6 +271,107 @@ class TestPublishedSubmission(TestCase):
                              classic.models.Submission.PROCESSING_SUBMISSION,
                              "The second row is in the processing submission"
                              " state.")
+
+        # Cannot submit another withdrawal request while one is pending.
+        with self.app.app_context():
+            with self.assertRaises(exceptions.InvalidEvent):
+                save(domain.event.RequestWithdrawal(reason="more reason",
+                                                    **self.defaults),
+                     submission_id=self.submission.submission_id)
+
+    def test_can_request_crosslist(self):
+        """The submitter can request cross-list classification."""
+        category = "cs.IR"
+        with self.app.app_context():
+            submission, events = save(
+                domain.event.RequestCrossList(categories=[category],
+                                              **self.defaults),
+                submission_id=self.submission.submission_id
+            )
+
+        # Check the submission state.
+        with self.app.app_context():
+            submission, events = load(self.submission.submission_id)
+            self.assertEqual(submission.status,
+                             domain.submission.Submission.PUBLISHED,
+                             "The submission is published.")
+            self.assertTrue(submission.has_active_requests,
+                            "The submission has an active request.")
+            self.assertEqual(len(submission.pending_user_requests), 1,
+                             "There is one pending user request.")
+            self.assertIsInstance(
+                submission.pending_user_requests[0],
+                domain.submission.CrossListClassificationRequest
+            )
+            self.assertIn(category,
+                          submission.pending_user_requests[0].categories,
+                          "Requested category is set on request.")
+            self.assertEqual(len(self.events) + 2, len(events),
+                             "The same number of events were retrieved as"
+                             " were initially saved, plus one for publish"
+                             " and another for cross-list request.")
+            self.assertEqual(len(submission.versions), 1,
+                             "There is one published versions")
+
+        with self.app.app_context():
+            submission = load_fast(self.submission.submission_id)
+            self.assertEqual(submission.status,
+                             domain.submission.Submission.PUBLISHED,
+                             "The submission is published.")
+            self.assertTrue(submission.has_active_requests,
+                            "The submission has an active request.")
+            self.assertEqual(len(submission.pending_user_requests), 1,
+                             "There is one pending user request.")
+            self.assertIsInstance(
+                submission.pending_user_requests[0],
+                domain.submission.CrossListClassificationRequest
+            )
+            self.assertIn(category,
+                          submission.pending_user_requests[0].categories,
+                          "Requested category is set on request.")
+            self.assertEqual(len(self.events) + 2, len(events),
+                             "The same number of events were retrieved as"
+                             " were initially saved, plus one for publish"
+                             " and another for cross-list request.")
+            self.assertEqual(len(submission.versions), 1,
+                             "There is one published versions")
+
+        # Check the database state.
+        with self.app.app_context():
+            session = classic.current_session()
+            db_rows = session.query(classic.models.Submission) \
+                .order_by(classic.models.Submission.submission_id.asc()) \
+                .all()
+
+            self.assertEqual(len(db_rows), 2,
+                             "There are two rows in the submission table")
+            self.assertEqual(db_rows[0].type,
+                             classic.models.Submission.NEW_SUBMISSION,
+                             "The first row has type 'new'")
+            self.assertEqual(db_rows[0].status,
+                             classic.models.Submission.PUBLISHED,
+                             "The first row is published")
+            self.assertEqual(db_rows[1].type,
+                             classic.models.Submission.CROSS_LIST,
+                             "The second row has type 'cross'")
+            self.assertEqual(db_rows[1].status,
+                             classic.models.Submission.PROCESSING_SUBMISSION,
+                             "The second row is in the processing submission"
+                             " state.")
+
+        # Cannot submit another cross-list request while one is pending.
+        with self.app.app_context():
+            with self.assertRaises(exceptions.InvalidEvent):
+                save(domain.event.RequestCrossList(categories=["q-fin.CP"],
+                                                   **self.defaults),
+                     submission_id=self.submission.submission_id)
+
+        # Cannot submit a withdrawal request while a cross-list is pending.
+        with self.app.app_context():
+            with self.assertRaises(exceptions.InvalidEvent):
+                save(domain.event.RequestWithdrawal(reason="more reason",
+                                                    **self.defaults),
+                     submission_id=self.submission.submission_id)
 
     def test_cannot_edit_submission_metadata(self):
         """The submission metadata cannot be changed without a new version."""

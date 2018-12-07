@@ -226,9 +226,10 @@ class TestSecondVersionIsPublished(TestCase):
 
     def test_can_withdraw_submission(self):
         """The submitter can request withdrawal of the submission."""
+        withdrawal_reason = "the best reason"
         with self.app.app_context():
             submission, events = save(
-                domain.event.RequestWithdrawal(reason="the best reason",
+                domain.event.RequestWithdrawal(reason=withdrawal_reason,
                                                **self.defaults),
                 submission_id=self.submission.submission_id
             )
@@ -237,9 +238,19 @@ class TestSecondVersionIsPublished(TestCase):
         with self.app.app_context():
             submission, events = load(self.submission.submission_id)
             self.assertEqual(submission.status,
-                             domain.submission.Submission.WITHDRAWAL_REQUESTED,
-                             "The submission is in the withdrawal requested"
-                             " state.")
+                             domain.submission.Submission.PUBLISHED,
+                             "The submission is published.")
+            self.assertTrue(submission.has_active_requests,
+                            "The submission has an active request.")
+            self.assertEqual(len(submission.pending_user_requests), 1,
+                             "There is one pending user request.")
+            self.assertIsInstance(submission.pending_user_requests[0],
+                                  domain.submission.WithdrawalRequest)
+            self.assertEqual(
+                submission.pending_user_requests[0].reason_for_withdrawal,
+                withdrawal_reason,
+                "Withdrawal reason is set on request."
+            )
             self.assertEqual(len(self.events) + 2, len(events),
                              "The same number of events were retrieved as"
                              " were initially saved, plus one for publish"
@@ -250,9 +261,19 @@ class TestSecondVersionIsPublished(TestCase):
         with self.app.app_context():
             submission = load_fast(self.submission.submission_id)
             self.assertEqual(submission.status,
-                             domain.submission.Submission.WITHDRAWAL_REQUESTED,
-                             "The submission is in the withdrawal requested"
-                             " state.")
+                             domain.submission.Submission.PUBLISHED,
+                             "The submission is published.")
+            self.assertTrue(submission.has_active_requests,
+                            "The submission has an active request.")
+            self.assertEqual(len(submission.pending_user_requests), 1,
+                             "There is one pending user request.")
+            self.assertIsInstance(submission.pending_user_requests[0],
+                                  domain.submission.WithdrawalRequest)
+            self.assertEqual(
+                submission.pending_user_requests[0].reason_for_withdrawal,
+                withdrawal_reason,
+                "Withdrawal reason is set on request."
+            )
             self.assertEqual(len(submission.versions), 2,
                              "There are two published versions")
 

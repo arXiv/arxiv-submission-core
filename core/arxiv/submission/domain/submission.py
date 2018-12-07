@@ -137,6 +137,89 @@ class Hold:
     hold_reason: Optional[str] = field(default_factory=list)
 
 
+# TODO: add identification mechanism; consider using mechanism similar to
+# comments, below.
+@dataclass
+class UserRequest:
+    """Represents a user request related to a submission."""
+
+    PENDING = 'pending'
+    """Request is pending approval."""
+
+    REJECTED = 'rejected'
+    """Request has been rejected."""
+
+    APPROVED = 'approved'
+    """Request has been approved."""
+
+    APPLIED = 'applied'
+    """Submission has been updated on the basis of the approved request."""
+
+    creator: Agent
+    created: datetime = field(default_factory=get_tzaware_utc_now)
+    updated: datetime = field(default_factory=get_tzaware_utc_now)
+    status: str = field(default=PENDING)
+
+    @property
+    def request_type(self):
+        """Name (str) of the type of user request."""
+        return type(self).__name__
+
+    @property
+    def request_id(self):
+        """The unique identifier for an :class:`.UserRequest` instance."""
+        return self.generate_request_id(self.created, self.request_type,
+                                        self.creator)
+
+    @staticmethod
+    def generate_request_id(created: datetime, request_type: str,
+                            creator: Agent) -> str:
+        """Generate a request ID."""
+        h = hashlib.new('sha1')
+        h.update(b'%s:%s:%s' % (created.isoformat().encode('utf-8'),
+                                request_type.encode('utf-8'),
+                                creator.agent_identifier.encode('utf-8')))
+        return h.hexdigest()
+
+    def is_pending(self):
+        return self.status == UserRequest.PENDING
+
+    def is_approved(self):
+        return self.status == UserRequest.APPROVED
+
+    def is_applied(self):
+        return self.status == UserRequest.APPLIED
+
+    def is_rejected(self):
+        return self.status == UserRequest.REJECTED
+
+    def is_active(self) -> bool:
+        return self.is_pending() or self.is_approved()
+
+
+@dataclass
+class WithdrawalRequest(UserRequest):
+    """Represents a request ot withdraw a submission."""
+
+    NAME = "Withdrawal"
+
+    reason_for_withdrawal: Optional[str] = field(default=None)
+    """If an e-print is withdrawn, the submitter is asked to explain why."""
+
+
+@dataclass
+class CrossListClassificationRequest(UserRequest):
+    """Represents a request to add secondary classifications."""
+
+    NAME = "Cross-list"
+
+    classifications: List[Classification] = field(default_factory=list)
+
+    @property
+    def categories(self) -> List[str]:
+        return [c.category for c in self.classifications]
+
+
 @dataclass
 class Submission:
     """Represents an arXiv submission object."""
@@ -148,7 +231,6 @@ class Submission:
     PUBLISHED = 'published'
     ERROR = 'error'
     DELETED = 'deleted'
-    WITHDRAWAL_REQUESTED = 'withdrawal_requested'
     WITHDRAWN = 'withdrawn'
 
     creator: Agent
@@ -185,6 +267,7 @@ class Submission:
     """Published versions of this :class:`.Submission`."""
 
     holds: List[Hold] = field(default_factory=list)
+    user_requests: Dict[str, UserRequest] = field(default_factory=dict)
 
     @property
     def active(self) -> bool:
@@ -207,8 +290,49 @@ class Submission:
         return self.status == self.DELETED
 
     @property
+    def secondary_categories(self) -> List[str]:
+        """Category names from secondary classifications."""
+        return [c.category for c in self.secondary_classification]
+
+    @property
     def is_on_hold(self) -> bool:
         return len(self.holds) > 0 or self.status == self.ON_HOLD
+
+    @property
+    def has_active_requests(self) -> bool:
+        return len(self.active_user_requests) > 0
+
+    @property
+    def active_user_requests(self) -> List[UserRequest]:
+        return [r for r in self.user_requests.values() if r.is_active()]
+
+    @property
+    def pending_user_requests(self) -> List[UserRequest]:
+        return [r for r in self.user_requests.values() if r.is_pending()]
+
+    @property
+    def rejected_user_requests(self) -> List[UserRequest]:
+        return [r for r in self.user_requests.values() if r.is_rejected()]
+
+    @property
+    def approved_user_requests(self) -> List[UserRequest]:
+        return [r for r in self.user_requests.values() if r.is_approved()]
+
+    @property
+    def applied_user_requests(self) -> List[UserRequest]:
+        return [r for r in self.user_requests.values() if r.is_applied()]
+
+    def add_user_request(self, request: UserRequest) -> None:
+        """Add a :class:`.UserRequest`."""
+        self.user_requests[request.request_id] = request
+
+    def get_user_request(self, request_id: str) -> UserRequest:
+        """Retrieve a :class:`.UserRequest` by ID."""
+        return self.user_requests[request_id]
+
+    def remove_user_request(self, request_id: str) -> None:
+        """Remove a :class:`.UserRequest` by ID."""
+        del self.user_requests[request_id]
 
     def to_dict(self) -> dict:
         """Generate a dict representation of this :class:`.Submission`."""

@@ -61,9 +61,10 @@ class TestWithdrawalSubmission(TestCase):
         self.assertEqual(replacement.arxiv_id, self.submission.arxiv_id)
         self.assertEqual(replacement.version, self.submission.version)
         self.assertEqual(replacement.status,
-                         submission.Submission.WITHDRAWAL_REQUESTED)
+                         submission.Submission.PUBLISHED)
+        self.assertTrue(replacement.has_active_requests)
         self.assertTrue(self.submission.published)
-        self.assertFalse(replacement.published)
+        self.assertTrue(replacement.published)
 
     def test_request_without_a_reason(self):
         """A reason is required."""
@@ -323,7 +324,7 @@ class TestAddSecondaryClassification(TestCase):
 
     def test_add_secondary_with_valid_category(self):
         """Category is from the arXiv taxonomy."""
-        for category in taxonomy.CATEGORIES.keys():
+        for category in taxonomy.CATEGORIES_ACTIVE.keys():
             e = event.AddSecondaryClassification(
                 creator=self.user,
                 submission_id=1,

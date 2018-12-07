@@ -53,123 +53,26 @@ from datetime import datetime
 from pytz import UTC
 from typing import Optional, TypeVar, List, Tuple, Any, Dict
 from urllib.parse import urlparse
-from dataclasses import dataclass, field
-from dataclasses import asdict
+from dataclasses import dataclass, field, asdict
 import bleach
 
 from arxiv.util import schema
 from arxiv import taxonomy, identifier
 from arxiv.base import logging
 
-from .agent import Agent
-from .submission import Submission, SubmissionMetadata, Author, \
+from ..agent import Agent
+from ..submission import Submission, SubmissionMetadata, Author, \
     Classification, License, Delegation, Comment, Flag, Proposal, \
-    SubmissionContent
+    SubmissionContent, WithdrawalRequest, CrossListClassificationRequest
 
-from ..exceptions import InvalidEvent
-from .util import get_tzaware_utc_now
+from ...exceptions import InvalidEvent
+from ..util import get_tzaware_utc_now
+from .event import Event
+from .request import RequestCrossList, RequestWithdrawal, ApplyRequest, \
+    RejectRequest, ApproveRequest
+from . import validators
 
 logger = logging.getLogger(__name__)
-
-
-@dataclass
-class Event:
-    """Base class for submission-related events."""
-
-    creator: Agent
-    """
-    The agent responsible for the operation represented by this event.
-
-    This is **not** necessarily the creator of the submission.
-    """
-
-    created: datetime = field(default_factory=get_tzaware_utc_now)
-    """
-    The timestamp when the event was originally committed.
-
-    This should generally not be set from outside this package.
-    """
-
-    proxy: Optional[Agent] = field(default=None)
-    """
-    The agent who facilitated the operation on behalf of the :prop:`.creator`.
-
-    This may be an API client, or another user who has been designated as a
-    proxy. Note that proxy implies that the creator was not directly involved.
-    """
-
-    client: Optional[Agent] = field(default=None)
-    """
-    The client through which the :prop:`.creator` performed the operation.
-
-    If the creator was directly involved in the operation, this property should
-    be the client that facilitated the operation.
-    """
-
-    submission_id: Optional[int] = field(default=None)
-    """
-    The primary identifier of the submission being operated upon.
-
-    This is defined as optional to support creation events, and to facilitate
-    chaining of events with creation events in the same transaction.
-    """
-
-    committed: bool = field(default=False)
-    """
-    Indicates whether the event has been committed to the database.
-
-    This should generally not be set from outside this package.
-    """
-
-    @property
-    def event_type(self) -> str:
-        """The name (str) of the event type."""
-        return self.get_event_type()
-
-    @classmethod
-    def get_event_type(cls) -> str:
-        """Get the name (str) of the event type."""
-        return cls.__name__
-
-    @property
-    def event_id(self) -> str:
-        """The unique ID for this event."""
-        h = hashlib.new('sha1')
-        h.update(b'%s:%s:%s' % (self.created.isoformat().encode('utf-8'),
-                                self.event_type.encode('utf-8'),
-                                self.creator.agent_identifier.encode('utf-8')))
-        return h.hexdigest()
-
-    def __hash__(self):
-        return hash(self.event_id)
-
-    def apply(self, submission: Optional[Submission] = None) -> Submission:
-        """Apply the projection for this :class:`.Event` instance."""
-        self.validate(submission)
-        if submission is not None:
-            submission = self.project(copy.deepcopy(submission))
-        else:
-            logger.debug('Submission is None; project without submission.')
-            submission = self.project()
-        submission.updated = self.created
-
-        # Make sure that the submission has its own ID, if we know what it is.
-        if submission.submission_id is None and self.submission_id is not None:
-            submission.submission_id = self.submission_id
-        if self.submission_id is None and submission.submission_id is not None:
-            self.submission_id = submission.submission_id
-        return submission
-
-    def to_dict(self):
-        """Generate a dict representation of this :class:`.Event`."""
-        data = asdict(self)
-        data.update({
-            'creator': self.creator.to_dict(),
-            'proxy': self.proxy.to_dict() if self.proxy else None,
-            'client': self.client.to_dict() if self.client else None,
-            'created': self.created.isoformat(),
-        })
-        return data
 
 
 # Events related to the creation of a new submission.
@@ -185,6 +88,7 @@ class CreateSubmission(Event):
     NAMED = "submission created"
 
     def __hash__(self):
+        """Use event ID as object hash."""
         return hash(self.event_id)
 
     def validate(self, *args, **kwargs) -> None:
@@ -221,12 +125,14 @@ class CreateSubmissionVersion(Event):
     NAMED = "new version created"
 
     def __hash__(self):
+        """Use event ID as object hash."""
         return hash(self.event_id)
 
     def validate(self, submission: Submission) -> None:
         """Only applies to published submissions."""
         if not submission.published:
             raise InvalidEvent(self, "Must already be published")
+        validators.no_active_requests(self, submission)
 
     def project(self, submission: Submission) -> Submission:
         """Increment the version number, and reset several fields."""
@@ -255,6 +161,7 @@ class Rollback(Event):
     NAMED = "rolled back or deleted"
 
     def __hash__(self):
+        """Use event ID as object hash."""
         return hash(self.event_id)
 
     def validate(self, submission: Submission) -> None:
@@ -286,36 +193,6 @@ class Rollback(Event):
         return submission
 
 
-@dataclass
-class RequestWithdrawal(Event):
-    """Request that a paper be withdrawn."""
-
-    NAME = "request withdrawal"
-    NAMED = "withdrawal requested"
-
-    def __hash__(self):
-        return hash(self.event_id)
-
-    reason: str = field(default_factory=str)
-
-    MAX_LENGTH = 400
-
-    def validate(self, submission: Submission) -> None:
-        """Make sure that a reason was provided."""
-        if not self.reason:
-            raise InvalidEvent(self, "Provide a reason for the withdrawal")
-        if len(self.reason) > self.MAX_LENGTH:
-            raise InvalidEvent(self, "Reason must be 400 characters or less")
-        if not submission.published:
-            raise InvalidEvent(self, "Submission must already be published")
-
-    def project(self, submission: Submission) -> Submission:
-        """Update the submission status and withdrawal reason."""
-        submission.status = Submission.WITHDRAWAL_REQUESTED
-        submission.reason_for_withdrawal = self.reason
-        return submission
-
-
 @dataclass(init=False)
 class ConfirmContactInformation(Event):
     """Submitter has verified their contact information."""
@@ -324,11 +201,12 @@ class ConfirmContactInformation(Event):
     NAMED = "contact information confirmed"
 
     def __hash__(self):
+        """Use event ID as object hash."""
         return hash(self.event_id)
 
     def validate(self, submission: Submission) -> None:
         """Cannot apply to a finalized submission."""
-        submission_is_not_finalized(self, submission)
+        validators.submission_is_not_finalized(self, submission)
 
     def project(self, submission: Submission) -> Submission:
         """Update :prop:`.Submission.submitter_contact_verified`."""
@@ -344,13 +222,14 @@ class ConfirmAuthorship(Event):
     NAMED = "submitter authorship status confirmed"
 
     def __hash__(self):
+        """Use event ID as object hash."""
         return hash(self.event_id)
 
     submitter_is_author: bool = True
 
     def validate(self, submission: Submission) -> None:
         """Cannot apply to a finalized submission."""
-        submission_is_not_finalized(self, submission)
+        validators.submission_is_not_finalized(self, submission)
 
     def project(self, submission: Submission) -> Submission:
         """Update the authorship flag on the submission."""
@@ -366,11 +245,12 @@ class ConfirmPolicy(Event):
     NAMED = "policy acceptance confirmed"
 
     def __hash__(self):
+        """Use event ID as object hash."""
         return hash(self.event_id)
 
     def validate(self, submission: Submission) -> None:
         """Cannot apply to a finalized submission."""
-        submission_is_not_finalized(self, submission)
+        validators.submission_is_not_finalized(self, submission)
 
     def project(self, submission: Submission) -> Submission:
         """Set the policy flag on the submission."""
@@ -386,36 +266,24 @@ class SetPrimaryClassification(Event):
     NAMED = "primary classification set"
 
     def __hash__(self):
+        """Use event ID as object hash."""
         return hash(self.event_id)
 
     category: Optional[str] = None
 
     def validate(self, submission: Submission) -> None:
         """Validate the primary classification category."""
-        self._must_be_a_valid_category(submission)
-        self._primary_cannot_be_secondary(submission)
+        validators.must_be_a_valid_category(self, self.category, submission)
         self._creator_must_be_endorsed(submission)
         self._must_be_unpublished(submission)
-        submission_is_not_finalized(self, submission)
+        validators.submission_is_not_finalized(self, submission)
+        validators.cannot_be_secondary(self, self.category, submission)
 
     def _must_be_unpublished(self, submission: Submission) -> None:
         """Can only be set on the first version before publication."""
         if submission.arxiv_id is not None or submission.version > 1:
             raise InvalidEvent(self, "Can only be set on the first version,"
                                      " before publication.")
-
-    def _must_be_a_valid_category(self, submission: Submission) -> None:
-        """Valid arXiv categories are defined in :mod:`arxiv.taxonomy`."""
-        if not self.category or self.category not in taxonomy.CATEGORIES:
-            raise InvalidEvent(self, f"Not a valid category: {self.category}")
-
-    def _primary_cannot_be_secondary(self, submission: Submission) -> None:
-        """The same category can't be used for both primary and secondary."""
-        secondaries = [c.category for c in submission.secondary_classification]
-        if self.category in secondaries:
-            raise InvalidEvent(self,
-                               "The same category cannot be used as both the"
-                               " primary and a secondary category.")
 
     def _creator_must_be_endorsed(self, submission: Submission) -> None:
         """The creator of this event must be endorsed for the category."""
@@ -426,8 +294,8 @@ class SetPrimaryClassification(Event):
         if self.category not in self.creator.endorsements \
                 and f'{archive}.*' not in self.creator.endorsements \
                 and '*.*' not in self.creator.endorsements:
-            raise InvalidEvent(self,
-                               f"Creator is not endorsed for {self.category}")
+            raise InvalidEvent(self, f"Creator is not endorsed for"
+                                     f" {self.category}.")
 
     def project(self, submission: Submission) -> Submission:
         """Set :prop:`.Submission.primary_classification`."""
@@ -444,44 +312,23 @@ class AddSecondaryClassification(Event):
     NAMED = "cross-list classification added"
 
     def __hash__(self):
+        """Use event ID as object hash."""
         return hash(self.event_id)
 
     category: Optional[str] = field(default=None)
 
     def validate(self, submission: Submission) -> None:
         """Validate the secondary classification category to add."""
-        self._must_be_a_valid_category(submission)
-        self._primary_cannot_be_secondary(submission)
-        self._must_not_already_be_present(submission)
-        submission_is_not_finalized(self, submission)
+        validators.must_be_a_valid_category(self, self.category, submission)
+        validators.cannot_be_primary(self, self.category, submission)
+        validators.cannot_be_secondary(self, self.category, submission)
+        validators.submission_is_not_finalized(self, submission)
 
     def project(self, submission: Submission) -> Submission:
         """Add a :class:`.Classification` as a secondary classification."""
         classification = Classification(category=self.category)
         submission.secondary_classification.append(classification)
         return submission
-
-    def _must_be_a_valid_category(self, submission: Submission) -> None:
-        """Valid arXiv categories are defined in :mod:`arxiv.taxonomy`."""
-        if not self.category or self.category not in taxonomy.CATEGORIES:
-            raise InvalidEvent(self, "Not a valid category")
-
-    def _primary_cannot_be_secondary(self, submission: Submission) -> None:
-        """The same category can't be used for both primary and secondary."""
-        if submission.primary_classification is None:
-            return
-        if self.category == submission.primary_classification.category:
-            raise InvalidEvent(self,
-                               "The same category cannot be used as both the"
-                               " primary and a secondary category.")
-
-    def _must_not_already_be_present(self, submission: Submission) -> None:
-        """The same category cannot be added as a secondary twice."""
-        secondaries = [c.category for c in submission.secondary_classification]
-        if self.category in secondaries:
-            raise InvalidEvent(self,
-                               f"Secondary {self.category} already set"
-                               f" on this submission.")
 
 
 @dataclass
@@ -492,15 +339,16 @@ class RemoveSecondaryClassification(Event):
     NAMED = "cross-list classification removed"
 
     def __hash__(self):
+        """Use event ID as object hash."""
         return hash(self.event_id)
 
     category: Optional[str] = field(default=None)
 
     def validate(self, submission: Submission) -> None:
         """Validate the secondary classification category to remove."""
-        self._must_be_a_valid_category(submission)
+        validators.must_be_a_valid_category(self, self.category, submission)
         self._must_already_be_present(submission)
-        submission_is_not_finalized(self, submission)
+        validators.submission_is_not_finalized(self, submission)
 
     def project(self, submission: Submission) -> Submission:
         """Remove from :prop:`.Submission.secondary_classification`."""
@@ -510,15 +358,9 @@ class RemoveSecondaryClassification(Event):
         ]
         return submission
 
-    def _must_be_a_valid_category(self, submission: Submission) -> None:
-        """Valid arXiv categories are defined in :mod:`arxiv.taxonomy`."""
-        if not self.category or self.category not in taxonomy.CATEGORIES:
-            raise InvalidEvent(self, "Not a valid category")
-
     def _must_already_be_present(self, submission: Submission) -> None:
         """One cannot remove a secondary that is not actually set."""
-        current = [c.category for c in submission.secondary_classification]
-        if self.category not in current:
+        if self.category not in submission.secondary_categories:
             raise InvalidEvent(self, 'No such category on submission')
 
 
@@ -530,6 +372,7 @@ class SetLicense(Event):
     NAMED = "distribution license selected"
 
     def __hash__(self):
+        """Use event ID as object hash."""
         return hash(self.event_id)
 
     license_name: Optional[str] = field(default=None)
@@ -537,7 +380,7 @@ class SetLicense(Event):
 
     def validate(self, submission: Submission) -> None:
         """Validate the selected license."""
-        submission_is_not_finalized(self, submission)
+        validators.submission_is_not_finalized(self, submission)
 
     def project(self, submission: Submission) -> Submission:
         """Set :prop:`.Submission.license`."""
@@ -556,6 +399,7 @@ class SetTitle(Event):
     NAMED = "title updated"
 
     def __hash__(self):
+        """Use event ID as object hash."""
         return hash(self.event_id)
 
     title: str = field(default='')
@@ -570,10 +414,10 @@ class SetTitle(Event):
 
     def validate(self, submission: Submission) -> None:
         """Validate the title value."""
-        submission_is_not_finalized(self, submission)
+        validators.submission_is_not_finalized(self, submission)
         self._does_not_contain_html_escapes(submission)
         self._acceptable_length(submission)
-        no_trailing_period(self, submission, self.title)
+        validators.no_trailing_period(self, submission, self.title)
         if self.title.isupper():
             raise InvalidEvent(self, "Title must not be all-caps")
         self._check_for_html(submission)
@@ -619,6 +463,7 @@ class SetAbstract(Event):
     NAMED = "abstract updated"
 
     def __hash__(self):
+        """Use event ID as object hash."""
         return hash(self.event_id)
 
     abstract: str = field(default='')
@@ -632,7 +477,7 @@ class SetAbstract(Event):
 
     def validate(self, submission: Submission) -> None:
         """Validate the abstract value."""
-        submission_is_not_finalized(self, submission)
+        validators.submission_is_not_finalized(self, submission)
         self._acceptable_length(submission)
 
     def project(self, submission: Submission) -> Submission:
@@ -677,6 +522,7 @@ class SetDOI(Event):
     NAMED = "DOI added"
 
     def __hash__(self):
+        """Use event ID as object hash."""
         return hash(self.event_id)
 
     doi: str = field(default='')
@@ -721,6 +567,7 @@ class SetMSCClassification(Event):
     NAMED = "MSC classification updated"
 
     def __hash__(self):
+        """Use event ID as object hash."""
         return hash(self.event_id)
 
     msc_class: str = field(default='')
@@ -733,7 +580,7 @@ class SetMSCClassification(Event):
 
     def validate(self, submission: Submission) -> None:
         """Validate the MSC classification value."""
-        submission_is_not_finalized(self, submission)
+        validators.submission_is_not_finalized(self, submission)
         if not self.msc_class:    # Blank values are OK.
             return
 
@@ -763,6 +610,7 @@ class SetACMClassification(Event):
     NAMED = "ACM classification updated"
 
     def __hash__(self):
+        """Use event ID as object hash."""
         return hash(self.event_id)
 
     acm_class: str = field(default='')
@@ -776,7 +624,7 @@ class SetACMClassification(Event):
 
     def validate(self, submission: Submission) -> None:
         """Validate the ACM classification value."""
-        submission_is_not_finalized(self, submission)
+        validators.submission_is_not_finalized(self, submission)
         if not self.acm_class:    # Blank values are OK.
             return
         self._valid_acm_class(submission)
@@ -818,6 +666,7 @@ class SetJournalReference(Event):
     NAMED = "journal reference added"
 
     def __hash__(self):
+        """Use event ID as object hash."""
         return hash(self.event_id)
 
     journal_ref: str = field(default='')
@@ -869,6 +718,7 @@ class SetReportNumber(Event):
     NAMED = "report number updated"
 
     def __hash__(self):
+        """Use event ID as object hash."""
         return hash(self.event_id)
 
     report_num: str = field(default='')
@@ -906,6 +756,7 @@ class SetComments(Event):
     NAMED = "comments updated"
 
     def __hash__(self):
+        """Use event ID as object hash."""
         return hash(self.event_id)
 
     comments: str = field(default='')
@@ -918,7 +769,7 @@ class SetComments(Event):
 
     def validate(self, submission: Submission) -> None:
         """Validate the comments value."""
-        submission_is_not_finalized(self, submission)
+        validators.submission_is_not_finalized(self, submission)
         if not self.comments:    # Blank values are OK.
             return
         if len(self.comments) > self.MAX_LENGTH:
@@ -946,6 +797,7 @@ class SetAuthors(Event):
     NAMED = "authors updated"
 
     def __hash__(self):
+        """Use event ID as object hash."""
         return hash(self.event_id)
 
     authors: List[Author] = field(default_factory=list)
@@ -960,7 +812,7 @@ class SetAuthors(Event):
 
     def validate(self, submission: Submission) -> None:
         """May not apply to a finalized submission."""
-        submission_is_not_finalized(self, submission)
+        validators.submission_is_not_finalized(self, submission)
         self._does_not_contain_et_al()
 
     def _canonical_author_string(self) -> str:
@@ -1009,6 +861,7 @@ class SetUploadPackage(Event):
     NAMED = "upload package set"
 
     def __hash__(self):
+        """Use event ID as object hash."""
         return hash(self.event_id)
 
     identifier: str = field(default_factory=str)
@@ -1022,7 +875,7 @@ class SetUploadPackage(Event):
 
     def validate(self, submission: Submission) -> None:
         """Validate data for :class:`.SetUploadPackage`."""
-        submission_is_not_finalized(self, submission)
+        validators.submission_is_not_finalized(self, submission)
 
         if not self.identifier:
             raise InvalidEvent(self, 'Missing upload ID')
@@ -1048,7 +901,7 @@ class UnsetUploadPackage(Event):
 
     def validate(self, submission: Submission) -> None:
         """Validate data for :class:`.UnsetUploadPackage`."""
-        submission_is_not_finalized(self, submission)
+        validators.submission_is_not_finalized(self, submission)
 
     def project(self, submission: Submission) -> Submission:
         """Set :prop:`Submission.source_content` to None."""
@@ -1065,11 +918,12 @@ class ConfirmPreview(Event):
     NAMED = "submission preview approved"
 
     def __hash__(self):
+        """Use event ID as object hash."""
         return hash(self.event_id)
 
     def validate(self, submission: Submission) -> None:
         """Validate data for :class:`.ConfirmPreview`."""
-        submission_is_not_finalized(self, submission)
+        validators.submission_is_not_finalized(self, submission)
 
     def project(self, submission: Submission) -> Submission:
         """Set :prop:`Submission.return submission`."""
@@ -1085,6 +939,7 @@ class FinalizeSubmission(Event):
     NAMED = "submission finalized"
 
     def __hash__(self):
+        """Use event ID as object hash."""
         return hash(self.event_id)
 
     REQUIRED = [
@@ -1124,6 +979,7 @@ class UnFinalizeSubmission(Event):
     NAMED = "submission re-opened for modification"
 
     def __hash__(self):
+        """Use event ID as object hash."""
         return hash(self.event_id)
 
     def validate(self, submission: Submission) -> None:
@@ -1151,6 +1007,7 @@ class Publish(Event):
     NAMED = "submission published"
 
     def __hash__(self):
+        """Use event ID as object hash."""
         return hash(self.event_id)
 
     arxiv_id: Optional[str] = None
@@ -1333,35 +1190,3 @@ def event_factory(event_type: str, **data) -> Event:
             return klass.from_dict(**data)
         return EVENT_TYPES[event_type](**data)
     raise RuntimeError('Unknown event type: %s' % event_type)
-
-
-# General-purpose validators go down here.
-# TODO: should these be in a sub-module? This file is getting big.
-
-def submission_is_not_finalized(event: Event, submission: Submission) -> None:
-    """
-    Verify that the submission is not finalized.
-
-    Parameters
-    ----------
-    event : :class:`.Event`
-    submission : :class:`.Submission`
-
-    Raises
-    ------
-    :class:`.InvalidEvent`
-        Raised if the submission is finalized.
-
-    """
-    if submission.finalized:
-        raise InvalidEvent(event, "Cannot apply to a finalized submission")
-
-
-def no_trailing_period(event: Event, submission: Submission,
-                       value: str) -> None:
-    """
-    Verify that there are no trailing periods in ``value`` except ellipses.
-    """
-    if re.search(r"(?<!\.\.)\.$", value):
-        raise InvalidEvent(event,
-                           "Must not contain trailing periods except ellipses")

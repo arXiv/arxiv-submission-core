@@ -9,10 +9,34 @@ events\.services\.classic package
 Submodules
 ----------
 
+events\.services\.classic\.bootstrap module
+----------------------------------------
+
+.. automodule:: events.services.classic.bootstrap
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+events\.services\.classic\.event module
+----------------------------------------
+
+.. automodule:: events.services.classic.event
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
 events\.services\.classic\.exceptions module
 --------------------------------------------
 
 .. automodule:: events.services.classic.exceptions
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+events\.services\.classic\.interpolate module
+----------------------------------------
+
+.. automodule:: events.services.classic.interpolate
     :members:
     :undoc-members:
     :show-inheritance:
@@ -40,5 +64,3 @@ events\.services\.classic\.util module
     :members:
     :undoc-members:
     :show-inheritance:
-
-
