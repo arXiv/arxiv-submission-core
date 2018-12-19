@@ -147,6 +147,37 @@ def get_submission_fast(submission_id: int) -> List[Submission]:
     return _db_to_projection(_get_db_submission_rows(submission_id))
 
 
+def get_titles(with_terms: Set[str] = set(), since: datetime) \
+        -> Tuple[int, str, Agent]
+    with transaction() as session:
+        print(session.query(models.Submission.submission_id,
+                      models.Submission.title,
+                      models.Submission.submitter_id,
+                      models.Submission.submitter_email) \
+            .filter(or_(*[models.Submission.title.ilike(f'%{term}%')
+                          for term in with_terms]))
+            .filter(models.Submission.created.gte(since)))
+
+
+
+
+def _get_db_submission_rows(submission_id: int) -> List[models.Submission]:
+    with transaction() as session:
+        head = session.query(models.Submission.submission_id,
+                             models.Submission.doc_paper_id) \
+            .filter_by(submission_id=submission_id) \
+            .subquery()
+        dbss = list(
+            session.query(models.Submission)
+            .filter(or_(models.Submission.submission_id == submission_id,
+                        models.Submission.doc_paper_id == head.c.doc_paper_id))
+            .order_by(models.Submission.submission_id.desc())
+        )
+    if not dbss:
+        raise NoSuchSubmission('No submission found')
+    return dbss
+
+
 def get_submission(submission_id: int) -> Tuple[Submission, List[Event]]:
     """
     Get the current state of a :class:`.Submission` from the database.
