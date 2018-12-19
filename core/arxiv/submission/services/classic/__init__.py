@@ -21,11 +21,13 @@ is defined in :mod:`.classic.event`.
 
 """
 
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Set
 from datetime import datetime
 from pytz import UTC
 from itertools import groupby
 import copy
+from functools import reduce
+from operator import ior
 
 from sqlalchemy import or_
 
@@ -37,6 +39,7 @@ from ...domain.event import Event, Publish, RequestWithdrawal, SetDOI, \
 
 from ...domain.submission import License, Submission, WithdrawalRequest, \
     CrossListClassificationRequest
+from ...domain.agent import Agent, User
 from .models import Base
 from .exceptions import ClassicBaseException, NoSuchSubmission, CommitFailed
 from .util import transaction, current_session
@@ -142,23 +145,6 @@ def get_submission_fast(submission_id: int) -> List[Submission]:
 
     """
     return _db_to_projection(_get_db_submission_rows(submission_id))
-
-
-def _get_db_submission_rows(submission_id: int) -> List[models.Submission]:
-    with transaction() as session:
-        head = session.query(models.Submission.submission_id,
-                             models.Submission.doc_paper_id) \
-            .filter_by(submission_id=submission_id) \
-            .subquery()
-        dbss = list(
-            session.query(models.Submission)
-            .filter(or_(models.Submission.submission_id == submission_id,
-                        models.Submission.doc_paper_id == head.c.doc_paper_id))
-            .order_by(models.Submission.submission_id.desc())
-        )
-    if not dbss:
-        raise NoSuchSubmission('No submission found')
-    return dbss
 
 
 def get_submission(submission_id: int) -> Tuple[Submission, List[Event]]:
@@ -335,6 +321,41 @@ def store_event(event: Event, before: Optional[Submission],
     return event, after
 
 
+def get_titles(with_terms: Set[str] = set(),
+               since: Optional[datetime] = None) \
+        -> List[Tuple[int, str, Agent]]:
+    STATUSES_TO_CHECK = [
+        models.Submission.SUBMITTED,
+        models.Submission.ON_HOLD,
+        models.Submission.NEXT_PUBLISH_DAY,
+        models.Submission.REMOVED,
+        models.Submission.USER_DELETED,
+        models.Submission.DELETED_ON_HOLD,
+        models.Submission.DELETED_PROCESSING,
+        models.Submission.DELETED_REMOVED,
+        models.Submission.DELETED_USER_EXPIRED
+    ]
+    with transaction() as session:
+        q = session.query(
+            models.Submission.submission_id,
+            models.Submission.title,
+            models.Submission.submitter_id,
+            models.Submission.submitter_email
+        ).filter(models.Submission.status.in_(STATUSES_TO_CHECK))
+        if with_terms:
+            q = q.filter(
+                reduce(ior, [models.Submission.title.ilike(f'%{token}%')
+                             for token in with_terms])
+            )
+        if since is not None:
+            q = q.filter(models.Submission.created >= since)
+        return [
+            (submission_id, title, User(native_id=user_id, email=user_email))
+            for submission_id, title, user_id, user_email in q.all()
+        ]
+
+
+
 def init_app(app: object = None) -> None:
     """Set default configuration parameters for an application instance."""
     config = get_application_config(app)
@@ -349,6 +370,9 @@ def create_all() -> None:
 def drop_all() -> None:
     """Drop all tables in the database."""
     Base.metadata.drop_all(util.current_engine())
+
+
+# Private functions down here.
 
 
 def _load_submission(submission_id: Optional[int] = None,
@@ -541,3 +565,20 @@ def _db_to_projection(dbss: List[models.Submission]) -> Submission:
     if submission.published:
         submission.versions.insert(0, copy.deepcopy(submission))
     return submission
+
+
+def _get_db_submission_rows(submission_id: int) -> List[models.Submission]:
+    with transaction() as session:
+        head = session.query(models.Submission.submission_id,
+                             models.Submission.doc_paper_id) \
+            .filter_by(submission_id=submission_id) \
+            .subquery()
+        dbss = list(
+            session.query(models.Submission)
+            .filter(or_(models.Submission.submission_id == submission_id,
+                        models.Submission.doc_paper_id == head.c.doc_paper_id))
+            .order_by(models.Submission.submission_id.desc())
+        )
+    if not dbss:
+        raise NoSuchSubmission('No submission found')
+    return dbss
