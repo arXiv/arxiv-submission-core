@@ -185,6 +185,9 @@ class Submission(Base):    # type: ignore
                               back_populates='submission', lazy='joined',
                               cascade="all, delete-orphan")
 
+    PATCHABLE = ['title', 'abstract', 'comments', 'doi', 'journal_ref',
+                 'msc_class', 'acm_class']
+
     def patch(self, submission: domain.Submission) -> domain.Submission:
         """
         Patch a :class:`.Submission` with data outside the event scope.
@@ -224,8 +227,14 @@ class Submission(Base):    # type: ignore
                 if db_cat.is_primary == 0
             ]
 
-            # Comments (admins may modify).
-            submission.metadata.comments = self.comments
+            for field in self.PATCHABLE:
+                value = getattr(self, field)
+                if getattr(submission.metadata, field) != value:
+                    setattr(submission.metadata, field, value)
+            if self.authors != submission.metadata.authors_display:
+                submission.metadata.authors_display = self.authors
+            # # Comments (admins may modify).
+            # submission.metadata.comments = self.comments
 
             submission = self.patch_status(submission)
             submission.created = self.get_created()

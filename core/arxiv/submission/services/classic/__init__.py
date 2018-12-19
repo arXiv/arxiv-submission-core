@@ -539,5 +539,5 @@ def _db_to_projection(dbss: List[models.Submission]) -> Submission:
     # If the current submission state is published, prepend into published
     # versions.
     if submission.published:
-        submission.versions.insert(0, submission)
+        submission.versions.insert(0, copy.deepcopy(submission))
     return submission
