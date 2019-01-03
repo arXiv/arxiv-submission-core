@@ -70,7 +70,7 @@ class SubmissionContent:
 
 
 @dataclass
-class SubmissionCompiled:
+class SubmissionProduct:
     """Metadata about a submission compilation product."""
 
     identifier: str
@@ -250,7 +250,7 @@ class Submission:
     updated: Optional[datetime] = field(default=None)
 
     source_content: Optional[SubmissionContent] = field(default=None)
-    compiled_content: List[SubmissionCompiled] = field(default_factory=list)
+    compiled_content: List[SubmissionProduct] = field(default_factory=list)
     compilations: List[Compilation] = field(default_factory=list)
 
     primary_classification: Optional[Classification] = field(default=None)
