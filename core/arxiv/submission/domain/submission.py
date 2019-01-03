@@ -80,6 +80,17 @@ class SubmissionCompiled:
 
 
 @dataclass
+class Compilation:
+    """Represents a submission compilation."""
+
+    task_id: str
+    source_etag: str
+    format: str
+    start_time: datetime = field(default_factory=get_tzaware_utc_now)
+    status: str
+
+
+@dataclass
 class SubmissionMetadata:
     """Metadata about a :class:`.Submission` instance."""
 
@@ -240,6 +251,7 @@ class Submission:
 
     source_content: Optional[SubmissionContent] = field(default=None)
     compiled_content: List[SubmissionCompiled] = field(default_factory=list)
+    compilations: List[Compilation] = field(default_factory=list)
 
     primary_classification: Optional[Classification] = field(default=None)
     delegations: Dict[str, Delegation] = field(default_factory=dict)
