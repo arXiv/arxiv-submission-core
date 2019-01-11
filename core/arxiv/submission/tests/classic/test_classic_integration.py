@@ -15,9 +15,9 @@ import tempfile
 from pytz import UTC
 from flask import Flask
 
-from .util import in_memory_db
-from .. import *
-from ..services import classic
+from ..util import in_memory_db
+from ... import *
+from ...services import classic
 
 
 class TestClassicUIWorkflow(TestCase):
@@ -25,6 +25,8 @@ class TestClassicUIWorkflow(TestCase):
 
     def setUp(self):
         """An arXiv user is submitting a new paper."""
+        self.app = Flask(__name__)
+        init_app(self.app)
         self.submitter = domain.User(1234, email='j.user@somewhere.edu',
                                      forename='Jane', surname='User',
                                      endorsements=['cs.DL', 'cs.IR'])
@@ -36,212 +38,212 @@ class TestClassicUIWorkflow(TestCase):
     def test_classic_workflow(self, submitter=None, metadata=None,
                               authors=None):
         """Submitter proceeds through workflow in a linear fashion."""
+        with self.app.app_context():
+            # Instantiate objects that have not yet been instantiated or use defaults.
+            if submitter is None:
+                submitter = self.submitter
+            if metadata is None:
+                metadata = [
+                    ('title', 'Foo title'),
+                    ('abstract', "One morning, as Gregor Samsa was waking up..."),
+                    ('comments', '5 pages, 2 turtle doves'),
+                    ('report_num', 'asdf1234'),
+                    ('doi', '10.01234/56789'),
+                    ('journal_ref', 'Foo Rev 1, 2 (1903)')
+                ]
+            metadata = dict(metadata)
 
-        # Instantiate objects that have not yet been instantiated or use defaults.
-        if submitter is None:
-            submitter = self.submitter
-        if metadata is None:
-            metadata = [
-                ('title', 'Foo title'),
-                ('abstract', "One morning, as Gregor Samsa was waking up..."),
-                ('comments', '5 pages, 2 turtle doves'),
-                ('report_num', 'asdf1234'),
-                ('doi', '10.01234/56789'),
-                ('journal_ref', 'Foo Rev 1, 2 (1903)')
-            ]
-        metadata = dict(metadata)
 
+            # TODO: Process data in dictionary form to Author objects.
+            if authors is None:
+                authors = [Author(order=0,
+                                  forename='Bob',
+                                  surname='Paulson',
+                                  email='Robert.Paulson@nowhere.edu',
+                                  affiliation='Fight Club'
+                            )]
 
-        # TODO: Process data in dictionary form to Author objects.
-        if authors is None:
-            authors = [Author(order=0,
-                              forename='Bob',
-                              surname='Paulson',
-                              email='Robert.Paulson@nowhere.edu',
-                              affiliation='Fight Club'
-                        )]
+            with in_memory_db() as session:
+                # Submitter clicks on 'Start new submission' in the user dashboard.
+                submission, stack = save(
+                    CreateSubmission(creator=submitter)
+                )
+                self.assertIsNotNone(submission.submission_id,
+                                     "A submission ID is assigned")
+                self.assertEqual(len(stack), 1, "A single command is executed.")
 
-        with in_memory_db() as session:
-            # Submitter clicks on 'Start new submission' in the user dashboard.
-            submission, stack = save(
-                CreateSubmission(creator=submitter)
-            )
-            self.assertIsNotNone(submission.submission_id,
-                                 "A submission ID is assigned")
-            self.assertEqual(len(stack), 1, "A single command is executed.")
+                db_submission = session.query(classic.models.Submission)\
+                    .get(submission.submission_id)
+                self.assertEqual(db_submission.submission_id,
+                                 submission.submission_id,
+                                 "A row is added to the submission table")
+                self.assertEqual(db_submission.submitter_id,
+                                 submitter.native_id,
+                                 "Submitter ID set on submission")
+                self.assertEqual(db_submission.submitter_email,
+                                 submitter.email,
+                                 "Submitter email set on submission")
+                self.assertEqual(db_submission.submitter_name, submitter.name,
+                                 "Submitter name set on submission")
+                self.assertEqual(db_submission.created.replace(tzinfo=UTC),
+                                 submission.created,
+                                 "Creation datetime set correctly")
 
-            db_submission = session.query(classic.models.Submission)\
-                .get(submission.submission_id)
-            self.assertEqual(db_submission.submission_id,
-                             submission.submission_id,
-                             "A row is added to the submission table")
-            self.assertEqual(db_submission.submitter_id,
-                             submitter.native_id,
-                             "Submitter ID set on submission")
-            self.assertEqual(db_submission.submitter_email,
-                             submitter.email,
-                             "Submitter email set on submission")
-            self.assertEqual(db_submission.submitter_name, submitter.name,
-                             "Submitter name set on submission")
-            self.assertEqual(db_submission.created.replace(tzinfo=UTC),
-                             submission.created,
-                             "Creation datetime set correctly")
+                # TODO: What else to check here?
 
-            # TODO: What else to check here?
+                # /start: Submitter completes the start submission page.
+                license_uri = 'http://creativecommons.org/publicdomain/zero/1.0/'
+                submission, stack = save(
+                    ConfirmContactInformation(creator=submitter),
+                    ConfirmAuthorship(
+                        creator=submitter,
+                        submitter_is_author=True
+                    ),
+                    SetLicense(
+                        creator=submitter,
+                        license_uri=license_uri,
+                        license_name='CC0 1.0'
+                    ),
+                    ConfirmPolicy(creator=submitter),
+                    SetPrimaryClassification(
+                        creator=submitter,
+                        category='cs.DL'
+                    ),
+                    submission_id=submission.submission_id
+                )
 
-            # /start: Submitter completes the start submission page.
-            license_uri = 'http://creativecommons.org/publicdomain/zero/1.0/'
-            submission, stack = save(
-                ConfirmContactInformation(creator=submitter),
-                ConfirmAuthorship(
-                    creator=submitter,
-                    submitter_is_author=True
-                ),
-                SetLicense(
-                    creator=submitter,
-                    license_uri=license_uri,
-                    license_name='CC0 1.0'
-                ),
-                ConfirmPolicy(creator=submitter),
-                SetPrimaryClassification(
-                    creator=submitter,
-                    category='cs.DL'
-                ),
-                submission_id=submission.submission_id
-            )
+                self.assertEqual(len(stack), 6,
+                                 "Six commands have been executed in total.")
 
-            self.assertEqual(len(stack), 6,
-                             "Six commands have been executed in total.")
+                db_submission = session.query(classic.models.Submission)\
+                    .get(submission.submission_id)
+                self.assertEqual(db_submission.userinfo, 1,
+                                 "Contact verification set correctly in database.")
+                self.assertEqual(db_submission.is_author, 1,
+                                 "Authorship status set correctly in database.")
+                self.assertEqual(db_submission.license, license_uri,
+                                 "License set correctly in database.")
+                self.assertEqual(db_submission.agree_policy, 1,
+                                 "Policy acceptance set correctly in database.")
+                self.assertEqual(len(db_submission.categories), 1,
+                                 "A single category is associated in the database")
+                self.assertEqual(db_submission.categories[0].is_primary, 1,
+                                 "Primary category is set correct in the database")
+                self.assertEqual(db_submission.categories[0].category, 'cs.DL',
+                                 "Primary category is set correct in the database")
 
-            db_submission = session.query(classic.models.Submission)\
-                .get(submission.submission_id)
-            self.assertEqual(db_submission.userinfo, 1,
-                             "Contact verification set correctly in database.")
-            self.assertEqual(db_submission.is_author, 1,
-                             "Authorship status set correctly in database.")
-            self.assertEqual(db_submission.license, license_uri,
-                             "License set correctly in database.")
-            self.assertEqual(db_submission.agree_policy, 1,
-                             "Policy acceptance set correctly in database.")
-            self.assertEqual(len(db_submission.categories), 1,
-                             "A single category is associated in the database")
-            self.assertEqual(db_submission.categories[0].is_primary, 1,
-                             "Primary category is set correct in the database")
-            self.assertEqual(db_submission.categories[0].category, 'cs.DL',
-                             "Primary category is set correct in the database")
+                # /addfiles: Submitter has uploaded files to the file management
+                # service, and verified that they compile. Now they associate the
+                # content package with the submission.
+                submission, stack = save(
+                    SetUploadPackage(
+                        creator=submitter,
+                        checksum="a9s9k342900skks03330029k",
+                        format='tex',
+                        identifier=123,
+                        size=593992
+                    ),
+                    submission_id=submission.submission_id
+                )
 
-            # /addfiles: Submitter has uploaded files to the file management
-            # service, and verified that they compile. Now they associate the
-            # content package with the submission.
-            submission, stack = save(
-                SetUploadPackage(
-                    creator=submitter,
-                    checksum="a9s9k342900skks03330029k",
-                    format='tex',
-                    identifier=123,
-                    size=593992
-                ),
-                submission_id=submission.submission_id
-            )
+                self.assertEqual(len(stack), 7,
+                                 "Seven commands have been executed in total.")
+                db_submission = session.query(classic.models.Submission)\
+                    .get(submission.submission_id)
+                self.assertEqual(db_submission.must_process, 0,
+                                 "Processing status is set correctly in database")
+                self.assertEqual(db_submission.source_size, 593992,
+                                 "Source package size set correctly in database")
+                self.assertEqual(db_submission.source_format, 'tex',
+                                 "Source format set correctly in database")
 
-            self.assertEqual(len(stack), 7,
-                             "Seven commands have been executed in total.")
-            db_submission = session.query(classic.models.Submission)\
-                .get(submission.submission_id)
-            self.assertEqual(db_submission.must_process, 0,
-                             "Processing status is set correctly in database")
-            self.assertEqual(db_submission.source_size, 593992,
-                             "Source package size set correctly in database")
-            self.assertEqual(db_submission.source_format, 'tex',
-                             "Source format set correctly in database")
+                # /metadata: Submitter adds metadata to their submission, including
+                # authors. In this package, we model authors in more detail than
+                # in the classic system, but we should preserve the canonical
+                # format in the db for legacy components' sake.
+                submission, stack = save(
+                    SetTitle(creator=self.submitter, title=metadata['title']),
+                    SetAbstract(creator=self.submitter,
+                                abstract=metadata['abstract']),
+                    SetComments(creator=self.submitter,
+                                comments=metadata['comments']),
+                    SetJournalReference(creator=self.submitter,
+                                        journal_ref=metadata['journal_ref']),
+                    SetDOI(creator=self.submitter, doi=metadata['doi']),
+                    SetReportNumber(creator=self.submitter,
+                                    report_num=metadata['report_num']),
+                    SetAuthors(creator=submitter, authors=authors),
+                    submission_id=submission.submission_id
+                )
+                db_submission = session.query(classic.models.Submission) \
+                    .get(submission.submission_id)
+                self.assertEqual(db_submission.title, dict(metadata)['title'],
+                                 "Title updated as expected in database")
+                self.assertEqual(db_submission.abstract,
+                                 dict(metadata)['abstract'],
+                                 "Abstract updated as expected in database")
+                self.assertEqual(db_submission.comments,
+                                 dict(metadata)['comments'],
+                                 "Comments updated as expected in database")
+                self.assertEqual(db_submission.report_num,
+                                 dict(metadata)['report_num'],
+                                 "Report number updated as expected in database")
+                self.assertEqual(db_submission.doi, dict(metadata)['doi'],
+                                 "DOI updated as expected in database")
+                self.assertEqual(db_submission.journal_ref,
+                                 dict(metadata)['journal_ref'],
+                                 "Journal ref updated as expected in database")
 
-            # /metadata: Submitter adds metadata to their submission, including
-            # authors. In this package, we model authors in more detail than
-            # in the classic system, but we should preserve the canonical
-            # format in the db for legacy components' sake.
-            submission, stack = save(
-                SetTitle(creator=self.submitter, title=metadata['title']),
-                SetAbstract(creator=self.submitter,
-                            abstract=metadata['abstract']),
-                SetComments(creator=self.submitter,
-                            comments=metadata['comments']),
-                SetJournalReference(creator=self.submitter,
-                                    journal_ref=metadata['journal_ref']),
-                SetDOI(creator=self.submitter, doi=metadata['doi']),
-                SetReportNumber(creator=self.submitter,
-                                report_num=metadata['report_num']),
-                SetAuthors(creator=submitter, authors=authors),
-                submission_id=submission.submission_id
-            )
-            db_submission = session.query(classic.models.Submission) \
-                .get(submission.submission_id)
-            self.assertEqual(db_submission.title, dict(metadata)['title'],
-                             "Title updated as expected in database")
-            self.assertEqual(db_submission.abstract,
-                             dict(metadata)['abstract'],
-                             "Abstract updated as expected in database")
-            self.assertEqual(db_submission.comments,
-                             dict(metadata)['comments'],
-                             "Comments updated as expected in database")
-            self.assertEqual(db_submission.report_num,
-                             dict(metadata)['report_num'],
-                             "Report number updated as expected in database")
-            self.assertEqual(db_submission.doi, dict(metadata)['doi'],
-                             "DOI updated as expected in database")
-            self.assertEqual(db_submission.journal_ref,
-                             dict(metadata)['journal_ref'],
-                             "Journal ref updated as expected in database")
+                author_str = ';'.join(
+                    [f"{author.forename} {author.surname} ({author.affiliation})"
+                    for author in authors]
+                )
+                self.assertEqual(db_submission.authors,
+                                 author_str,
+                                 "Authors updated in canonical format in database")
 
-            author_str = ';'.join(
-                [f"{author.forename} {author.surname} ({author.affiliation})"
-                for author in authors]
-            )
-            self.assertEqual(db_submission.authors,
-                             author_str,
-                             "Authors updated in canonical format in database")
+                self.assertEqual(len(stack), 14,
+                                 "Fourteen commands have been executed in total.")
 
-            self.assertEqual(len(stack), 14,
-                             "Fourteen commands have been executed in total.")
+                # /preview: Submitter adds a secondary classification.
+                submission, stack = save(
+                    AddSecondaryClassification(
+                        creator=submitter,
+                        category='cs.IR'
+                    ),
+                    submission_id=submission.submission_id
+                )
+                db_submission = session.query(classic.models.Submission)\
+                    .get(submission.submission_id)
 
-            # /preview: Submitter adds a secondary classification.
-            submission, stack = save(
-                AddSecondaryClassification(
-                    creator=submitter,
-                    category='cs.IR'
-                ),
-                submission_id=submission.submission_id
-            )
-            db_submission = session.query(classic.models.Submission)\
-                .get(submission.submission_id)
+                self.assertEqual(len(db_submission.categories), 2,
+                                 "A secondary category is added in the database")
+                secondaries = [
+                    db_cat for db_cat in db_submission.categories
+                    if db_cat.is_primary == 0
+                ]
+                self.assertEqual(len(secondaries), 1,
+                                 "A secondary category is added in the database")
+                self.assertEqual(secondaries[0].category, 'cs.IR',
+                                 "A secondary category is added in the database")
+                self.assertEqual(len(stack), 15,
+                                 "Fifteen commands have been executed in total.")
 
-            self.assertEqual(len(db_submission.categories), 2,
-                             "A secondary category is added in the database")
-            secondaries = [
-                db_cat for db_cat in db_submission.categories
-                if db_cat.is_primary == 0
-            ]
-            self.assertEqual(len(secondaries), 1,
-                             "A secondary category is added in the database")
-            self.assertEqual(secondaries[0].category, 'cs.IR',
-                             "A secondary category is added in the database")
-            self.assertEqual(len(stack), 15,
-                             "Fifteen commands have been executed in total.")
+                # /preview: Submitter finalizes submission.
+                finalize = FinalizeSubmission(creator=submitter)
+                submission, stack = save(
+                    finalize, submission_id=submission.submission_id
+                )
+                db_submission = session.query(classic.models.Submission)\
+                    .get(submission.submission_id)
 
-            # /preview: Submitter finalizes submission.
-            finalize = FinalizeSubmission(creator=submitter)
-            submission, stack = save(
-                finalize, submission_id=submission.submission_id
-            )
-            db_submission = session.query(classic.models.Submission)\
-                .get(submission.submission_id)
-
-            self.assertEqual(db_submission.status, db_submission.SUBMITTED,
-                             "Submission status set correctly in database")
-            self.assertEqual(db_submission.submit_time.replace(tzinfo=UTC),
-                             finalize.created,
-                             "Submit time is set.")
-            self.assertEqual(len(stack), 16,
-                             "Sixteen commands have been executed in total.")
+                self.assertEqual(db_submission.status, db_submission.SUBMITTED,
+                                 "Submission status set correctly in database")
+                self.assertEqual(db_submission.submit_time.replace(tzinfo=UTC),
+                                 finalize.created,
+                                 "Submit time is set.")
+                self.assertEqual(len(stack), 16,
+                                 "Sixteen commands have been executed in total.")
 
     def test_unicode_submitter(self):
         """Submitter proceeds through workflow in a linear fashion."""

@@ -5,3 +5,4 @@ from .submission import Submission, License, SubmissionMetadata, \
     CrossListClassificationRequest
 from .agent import User, System, Client, Agent
 from .event import event_factory, Event
+from .annotation import Comment

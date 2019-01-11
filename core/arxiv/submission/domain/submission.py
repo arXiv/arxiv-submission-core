@@ -268,7 +268,7 @@ class Submission:
     """Published versions of this :class:`.Submission`."""
 
     holds: List[Hold] = field(default_factory=list)
-    annotations: Dict[str, Annotation] = field(defaultfactory=dict)
+    annotations: Dict[str, Annotation] = field(default_factory=dict)
     user_requests: Dict[str, UserRequest] = field(default_factory=dict)
 
     @property

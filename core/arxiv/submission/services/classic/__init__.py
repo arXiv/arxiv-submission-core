@@ -147,20 +147,6 @@ def get_submission_fast(submission_id: int) -> List[Submission]:
     return _db_to_projection(_get_db_submission_rows(submission_id))
 
 
-def get_titles(with_terms: Set[str] = set(), since: datetime) \
-        -> Tuple[int, str, Agent]
-    with transaction() as session:
-        print(session.query(models.Submission.submission_id,
-                      models.Submission.title,
-                      models.Submission.submitter_id,
-                      models.Submission.submitter_email) \
-            .filter(or_(*[models.Submission.title.ilike(f'%{term}%')
-                          for term in with_terms]))
-            .filter(models.Submission.created.gte(since)))
-
-
-
-
 def _get_db_submission_rows(submission_id: int) -> List[models.Submission]:
     with transaction() as session:
         head = session.query(models.Submission.submission_id,
@@ -352,9 +338,10 @@ def store_event(event: Event, before: Optional[Submission],
     return event, after
 
 
-def get_titles(with_terms: Set[str] = set(),
-               since: Optional[datetime] = None) \
-        -> List[Tuple[int, str, Agent]]:
+def get_titles(since: datetime) -> List[Tuple[int, str, Agent]]:
+    """Get titles from submissions created on or after a particular date."""
+    # TODO: consider making this a param, if we need this function for anything
+    # else.
     STATUSES_TO_CHECK = [
         models.Submission.SUBMITTED,
         models.Submission.ON_HOLD,
@@ -372,19 +359,13 @@ def get_titles(with_terms: Set[str] = set(),
             models.Submission.title,
             models.Submission.submitter_id,
             models.Submission.submitter_email
-        ).filter(models.Submission.status.in_(STATUSES_TO_CHECK))
-        if with_terms:
-            q = q.filter(
-                reduce(ior, [models.Submission.title.ilike(f'%{token}%')
-                             for token in with_terms])
-            )
-        if since is not None:
-            q = q.filter(models.Submission.created >= since)
+        )
+        q = q.filter(models.Submission.status.in_(STATUSES_TO_CHECK))
+        q = q.filter(models.Submission.created >= since)
         return [
             (submission_id, title, User(native_id=user_id, email=user_email))
             for submission_id, title, user_id, user_email in q.all()
         ]
-
 
 
 def init_app(app: object = None) -> None:
@@ -532,6 +513,7 @@ def _create_jref(document_id: int, paper_id: str, version: int,
 
 def _new_dbevent(event: Event) -> DBEvent:
     """Create an event entry in the database."""
+    # print(event.to_dict())
     return DBEvent(event_type=event.event_type,
                    event_id=event.event_id,
                    data=event.to_dict(),

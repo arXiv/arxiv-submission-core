@@ -1,4 +1,4 @@
-from arxiv.submission.domain.agent import User
+from ....domain.agent import User
 
 TITLES = [
     (2344371, 'Maximally Rotating Supermassive Stars at the Onset of Collapse: The Perturbative Effects of Gas Pressure, Magnetic Fields, Dark Matter and Dark Energy', User(native_id=12345, email='foo@baz.com', forename='', surname='', suffix='', identifier=None, affiliation='', endorsements=[])),
