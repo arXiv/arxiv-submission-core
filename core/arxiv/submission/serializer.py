@@ -2,7 +2,7 @@ from typing import Any
 import json
 from datetime import datetime
 
-from .domain import Event, event_factory, Submission
+from .domain import Event, event_factory, Submission, Agent, agent_factory
 
 
 class EventJSONEncoder(json.JSONEncoder):
@@ -13,6 +13,9 @@ class EventJSONEncoder(json.JSONEncoder):
         elif isinstance(obj, Submission):
             data = obj.to_dict()
             data['__type__'] = 'submission'
+        elif isinstance(obj, Agent):
+            data = obj.to_dict()
+            data['__type__'] = 'agent'
         else:
             return json.JSONEncoder.default(self, obj)
 
@@ -23,6 +26,8 @@ def event_decoder(obj: dict) -> Any:
             return event_factory(obj['event_type'], **obj)
         elif obj['__type__'] == 'submission':
             return Submission.from_dict(**obj)
+        elif obj['__type__'] == 'agent':
+            return agent_factory(obj['agent_type'], **obj)
     return obj
 
 

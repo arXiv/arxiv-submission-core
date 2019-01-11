@@ -16,7 +16,7 @@ from ..domain.annotation import PossibleDuplicate, PossibleMetadataProblem
 from ..domain.agent import Agent, User
 from ..services import classic
 
-from .base import bind_event
+from .tasks import is_async
 from .generic import system_event
 
 STOPWORDS = set('a,an,and,as,at,by,for,from,in,of,on,s,the,to,with,is,was,if,'
@@ -27,7 +27,8 @@ REMOVE_PUNCTUATION = str.maketrans(string.punctuation,
 """Translator that converts punctuation characters into single spaces."""
 
 
-@bind_event(SetTitle, condition=lambda *a: not system_event(*a), is_async=True)
+@SetTitle.bind(condition=lambda *a: not system_event(*a))
+@is_async
 def check_for_similar_titles(event: SetTitle, before: Submission,
                              after: Submission, creator: Agent) \
         -> Iterable[Event]:
@@ -70,7 +71,7 @@ def check_for_similar_titles(event: SetTitle, before: Submission,
     return chain(remove, add)
 
 
-@bind_event(SetTitle, condition=lambda *a: not system_event(*a))
+@SetTitle.bind(condition=lambda *a: not system_event(*a))
 def check_for_excessive_unicode(event: SetTitle, before: Submission,
                                 after: Submission, creator: Agent) \
         -> Iterable[Event]:

@@ -14,7 +14,6 @@ from .domain.agent import Agent, User, System, Client
 from .domain.event import *
 from .services import classic
 from .exceptions import InvalidEvent, InvalidStack, NoSuchSubmission, SaveError
-from . import rules
 
 
 logger = logging.getLogger(__name__)
@@ -161,16 +160,10 @@ def save(*events: Event, submission_id: Optional[str] = None) \
         after = event.apply(before)
         applied.append(event)
         if not event.committed:
-            event, after = classic.store_event(event, before, after)
-
             # TODO: <-- emit event here.
-            # Apply rules. Any callbacks that are executed immediately will
-            # return events that can be added to the stack.
-            if rules.should_apply_rules():
-                after, consequent = rules.apply(event, before, after)
-                for consequent_event in consequent:
-                    applied.append(consequent_event)
-        # events[i] = event
+            after, consequent_events = event.commit(classic.store_event)
+            applied += consequent_events
+
         before = after
     return after, list(sorted(set(applied), key=lambda e: e.created))
 
@@ -178,6 +171,3 @@ def save(*events: Event, submission_id: Optional[str] = None) \
 def init_app(app: Flask) -> None:
     """Set default configuration parameters for an application instance."""
     classic.init_app(app)
-
-
-rules.set_save_func(save)
