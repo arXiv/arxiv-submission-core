@@ -81,7 +81,7 @@ class Event:
     before: Optional[Submission] = None
     after: Optional[Submission] = None
 
-    _hooks: ClassVar[Tuple[Rule]] = tuple()
+    _hooks: ClassVar[Mapping[type, List[Rule]]] = defaultdict(list)
 
     @property
     def event_type(self) -> str:
@@ -180,11 +180,11 @@ class Event:
     @classmethod
     def _add_callback(cls: type, condition: Condition,
                       callback: Callback) -> None:
-        cls._hooks = tuple([r for r in cls._hooks] + [(condition, callback)])
+        cls._hooks[cls].append((condition, callback))
 
     def _get_callbacks(self) -> List[Tuple[Condition, Callback]]:
         return ((condition, callback) for cls in type(self).__mro__[::-1]
-                for condition, callback in getattr(cls, '_hooks', []))
+                for condition, callback in self._hooks[cls])
 
     def _should_apply_callbacks(self) -> bool:
         config = get_application_config()

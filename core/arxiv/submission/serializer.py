@@ -1,3 +1,5 @@
+"""JSON serialization for submission core."""
+
 from typing import Any, Union, List
 import json
 from datetime import datetime, date
@@ -5,6 +7,7 @@ from datetime import datetime, date
 from .domain import Event, event_factory, Submission, Agent, agent_factory
 
 
+# TODO: get rid of this when base-0.13 is available.
 class ISO8601JSONEncoder(json.JSONEncoder):
     """Renders date and datetime objects as ISO8601 datetime strings."""
 
@@ -43,12 +46,13 @@ class EventJSONEncoder(ISO8601JSONEncoder):
 def event_decoder(obj: dict) -> Any:
     """Decode domain objects in this package."""
     if '__type__' in obj:
-        if obj['__type__'] == 'event':
-            return event_factory(obj['event_type'], **obj)
-        elif obj['__type__'] == 'submission':
+        type_name = obj.pop('__type__')
+        if type_name == 'event':
+            return event_factory(obj.pop('event_type'), **obj)
+        elif type_name == 'submission':
             return Submission.from_dict(**obj)
-        elif obj['__type__'] == 'agent':
-            return agent_factory(obj['agent_type'], **obj)
+        elif type_name == 'agent':
+            return agent_factory(obj.pop('agent_type'), **obj)
     return obj
 
 

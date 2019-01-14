@@ -7,23 +7,53 @@ from ...agent import System
 
 
 class TestCommitEvent(TestCase):
-    def test_commit_event(self):
+    """Tests for :func:`Event.bind` and :class:`Event.commit`."""
 
+    def test_commit_event(self):
+        """Test a simple commit hook."""
         @dataclass
         class ChildEvent(Event):
-            _should_apply_callbacks = lambda *a, **k: True
+            def _should_apply_callbacks(self):
+                return True
 
         @dataclass
         class OtherChildEvent(Event):
-            _should_apply_callbacks = lambda *a, **k: True
+            def _should_apply_callbacks(self):
+                return True
 
         callback = mock.MagicMock(return_value=[], __name__='test')
-        ChildEvent.bind()(callback)
+        ChildEvent.bind()(callback)     # Register callback.
 
         save = mock.MagicMock(
             return_value=(mock.MagicMock(), mock.MagicMock())
         )
         event = ChildEvent(creator=System('system'))
-        other_event = OtherChildEvent(creator=System('system'))
+        OtherChildEvent(creator=System('system'))
         event.commit(save)
-        self.assertEqual(callback.call_count, 1)
+        self.assertEqual(callback.call_count, 1,
+                         "Callback is only executed on the class to which it"
+                         " is bound")
+
+    def test_callback_inheritance(self):
+        """Callback is inherited by subclasses."""
+        @dataclass
+        class ParentEvent(Event):
+            def _should_apply_callbacks(self):
+                return True
+
+        @dataclass
+        class ChildEvent(ParentEvent):
+            def _should_apply_callbacks(self):
+                return True
+
+        callback = mock.MagicMock(return_value=[], __name__='test')
+        ParentEvent.bind()(callback)     # Register callback.
+
+        save = mock.MagicMock(
+            return_value=(mock.MagicMock(), mock.MagicMock())
+        )
+        event = ChildEvent(creator=System('system'))
+        event.commit(save)
+        self.assertEqual(callback.call_count, 1,
+                         "Callback bound to parent class is called when child"
+                         " is committed")
