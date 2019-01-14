@@ -70,6 +70,19 @@ The callback should not concern itself with persistence; that is handled by
 :func:`Event.commit`. Any mutations of submission should be made by returning
 the appropriate command/event instances.
 
+The circumstances under which the callback is executed can be controlled by
+passing a condition callable to the decorator. This should have the signature
+``(event: Event, before: Submission, after: Submission, creator: Agent) ->
+bool``; if it returns ``True``, the  callback will be executed. For example:
+
+.. code-block:: python
+
+   @SetTitle.bind(condition=lambda e, b, a, c: e.title == 'foo')
+   def do_this_when_a_title_is_set_to_foo(event, before, after, agent):
+       ...
+       return []
+
+
 """
 
 import hashlib

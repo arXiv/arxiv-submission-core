@@ -138,8 +138,10 @@ class Event:
         data.pop('after')
         return data
 
+
+
     @classmethod
-    def bind(cls, condition: Condition = lambda *a: True) -> Decorator:
+    def bind(cls, condition: Optional[Condition] = None) -> Decorator:
         """
         Generate a decorator to bind a callback to an event type.
 
@@ -151,7 +153,8 @@ class Event:
             A callable with the signature ``(event: Event, before: Submission,
             after: Submission) -> bool``. If this callable returns ``True``,
             the callback will be triggered when the event to which it is bound
-            is saved.
+            is saved. The default condition is that the event was not created
+            by :class:`System`
 
         Returns
         -------
@@ -161,6 +164,11 @@ class Event:
             System(...)) -> Iterable[Event]``.
 
         """
+        if condition is None:
+            def _creator_is_not_system(e: Event, *args, **kwargs) -> bool:
+                return type(e.creator) is not System
+            condition = _creator_is_not_system
+
         def decorator(func: Callback) -> Callback:
             """Register a callback for an event type and condition."""
             name = f'{cls.__name__}::{func.__module__}.{func.__name__}'
