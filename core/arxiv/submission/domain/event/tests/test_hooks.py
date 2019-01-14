@@ -22,7 +22,7 @@ class TestCommitEvent(TestCase):
                 return True
 
         callback = mock.MagicMock(return_value=[], __name__='test')
-        ChildEvent.bind()(callback)     # Register callback.
+        ChildEvent.bind(lambda *a: True)(callback)     # Register callback.
 
         save = mock.MagicMock(
             return_value=(mock.MagicMock(), mock.MagicMock())
@@ -47,7 +47,7 @@ class TestCommitEvent(TestCase):
                 return True
 
         callback = mock.MagicMock(return_value=[], __name__='test')
-        ParentEvent.bind()(callback)     # Register callback.
+        ParentEvent.bind(lambda *a: True)(callback)     # Register callback.
 
         save = mock.MagicMock(
             return_value=(mock.MagicMock(), mock.MagicMock())
