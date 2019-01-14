@@ -27,7 +27,7 @@ class TestAddRemovePossibleDuplicateAnnotations(TestCase):
         _, db = tempfile.mkstemp(suffix='.sqlite')
         cls.app = Flask('foo')
         cls.app.config['CLASSIC_DATABASE_URI'] = f'sqlite:///{db}'
-        cls.app.config['NO_ASYNC'] = 1
+        cls.app.config['ENABLE_ASYNC'] = 0
 
         with cls.app.app_context():
             classic.init_app(cls.app)

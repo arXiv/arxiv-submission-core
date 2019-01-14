@@ -1,11 +1,27 @@
-from typing import Any
+from typing import Any, Union, List
 import json
-from datetime import datetime
+from datetime import datetime, date
 
 from .domain import Event, event_factory, Submission, Agent, agent_factory
 
 
-class EventJSONEncoder(json.JSONEncoder):
+class ISO8601JSONEncoder(json.JSONEncoder):
+    """Renders date and datetime objects as ISO8601 datetime strings."""
+
+    def default(self, obj: Any) -> Union[str, List[Any]]:
+        """Overriden to render date(time)s in isoformat."""
+        try:
+            if isinstance(obj, (date, datetime)):
+                return obj.isoformat()
+            iterable = iter(obj)
+        except TypeError:
+            pass
+        else:
+            return list(iterable)
+        return json.JSONEncoder.default(self, obj)  # type: ignore
+
+
+class EventJSONEncoder(ISO8601JSONEncoder):
     """Encodes domain objects in this package for serialization."""
 
     def default(self, obj):
@@ -20,7 +36,8 @@ class EventJSONEncoder(json.JSONEncoder):
             data = obj.to_dict()
             data['__type__'] = 'agent'
         else:
-            return json.JSONEncoder.default(self, obj)
+            data = json.JSONEncoder.default(self, obj)
+        return data
 
 
 def event_decoder(obj: dict) -> Any:

@@ -132,6 +132,7 @@ class Event:
             'proxy': self.proxy.to_dict() if self.proxy else None,
             'client': self.client.to_dict() if self.client else None,
             'created': self.created.isoformat(),
+            'event_type': self.event_type
         })
         data.pop('before')
         data.pop('after')
@@ -187,7 +188,7 @@ class Event:
 
     def _should_apply_callbacks(self) -> bool:
         config = get_application_config()
-        return not bool(int(config.get('NO_CALLBACKS', '0')))
+        return bool(int(config.get('ENABLE_CALLBACKS', '0')))
 
     def commit(self, store: Store) -> Tuple[Submission, Events]:
         """

@@ -3,6 +3,7 @@
 from flask import Flask
 from .tasks import get_or_create_worker_app
 from . import init_app
+from . import rules
 
 app = Flask(__name__)
 app.app_context().push()

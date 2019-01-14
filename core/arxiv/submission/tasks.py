@@ -56,7 +56,7 @@ def is_async(func: Callable) -> Callable:
     Registers the function with the worker application, and decorates the
     function with logic to dispatch the function to the worker when called.
     When the decorated function is called, a task is added to the worker queue
-    and an empty iterable is returned. If ``NO_ASYNC=0`` on the app config,
+    and an empty iterable is returned. If ``ENABLE_ASYNC=0`` on the app config,
     calls to the decorated function will execute in-thread and return normally.
     """
     worker_app = get_or_create_worker_app()
@@ -76,7 +76,7 @@ def is_async(func: Callable) -> Callable:
                          after: Submission, creator: Agent) -> Iterable[Event]:
         """Execute the callback asynchronously."""
         config = get_application_config()
-        if not bool(int(config.get('NO_ASYNC', '0'))):
+        if bool(int(config.get('ENABLE_ASYNC', '0'))):
             worker_app = get_or_create_worker_app()
             worker_app.send_task(name, (event, before, after, creator))
             return []

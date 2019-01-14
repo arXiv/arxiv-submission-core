@@ -15,7 +15,7 @@ class TestCheckForSimilarTitles(TestCase):
     """Tests for :func:`.set_title.check_for_similar_titles`."""
 
     @mock.patch(f'{tasks.__name__}.get_application_config',
-                mock.MagicMock(return_value={'NO_ASYNC': 1}))
+                mock.MagicMock(return_value={'ENABLE_ASYNC': 0}))
     @mock.patch(f'{set_title.__name__}.classic.get_titles',
                 mock.MagicMock(return_value=titles.TITLES))
     def test_check_for_similar_titles(self):

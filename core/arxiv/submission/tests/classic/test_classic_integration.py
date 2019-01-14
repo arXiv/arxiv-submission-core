@@ -259,7 +259,7 @@ class TestClassicUIWorkflow(TestCase):
                           email='amazing.user@nowhere.edu',
                           affiliation='Fight Club')]
         with self.app.app_context():
-            self.app.config['NO_CALLBACKS'] = 1
+            self.app.config['ENABLE_CALLBACKS'] = 0
             self.test_classic_workflow(submitter=submitter, metadata=metadata,
                                        authors=authors)
 
@@ -274,7 +274,7 @@ class TestClassicUIWorkflow(TestCase):
             ('journal_ref', 'Foo Rev 1, 2 (1903)')
         ]
         with self.app.app_context():
-            self.app.config['NO_CALLBACKS'] = 1
+            self.app.config['ENABLE_CALLBACKS'] = 1
             self.test_classic_workflow(metadata=metadata)
 
 

@@ -171,3 +171,5 @@ def save(*events: Event, submission_id: Optional[str] = None) \
 def init_app(app: Flask) -> None:
     """Set default configuration parameters for an application instance."""
     classic.init_app(app)
+    app.config.setdefault('ENABLE_CALLBACKS', 0)
+    app.config.setdefault('ENABLE_ASYNC', 0)
