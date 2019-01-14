@@ -44,6 +44,32 @@ We could consider standalone validation functions for validation checks that
 are performed on several event types (instead of just private instance
 methods).
 
+Registering event callbacks
+===========================
+
+The base :class:`Event` provides support for callbacks that are executed when
+an event instance is committed. To attach a callback to an event type, use the
+:func:`Event.bind` decorator. For example:
+
+.. code-block:: python
+
+   @SetTitle.bind()
+   def do_this_when_a_title_is_set(event, before, after, agent):
+       ...
+       return []
+
+
+Callbacks must have the signature ``(event: Event, before: Submission,
+after: Submission, creator: Agent) -> Iterable[Event]``. ``event`` is the
+event instance being committed that triggered the callback. ``before`` and
+``after`` are the states of the submission before and after the event was
+applied, respectively. ``agent`` is the agent responsible for any subsequent
+events created by the callback, and should be used for that purpose.
+
+The callback should not concern itself with persistence; that is handled by
+:func:`Event.commit`. Any mutations of submission should be made by returning
+the appropriate command/event instances.
+
 """
 
 import hashlib

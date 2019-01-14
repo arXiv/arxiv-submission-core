@@ -1,7 +1,7 @@
 """Initialize the worker application."""
 
 from flask import Flask
-from .rules import get_or_create_worker_app
+from .tasks import get_or_create_worker_app
 from . import init_app
 
 app = Flask(__name__)

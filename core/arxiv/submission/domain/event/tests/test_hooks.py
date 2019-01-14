@@ -11,11 +11,11 @@ class TestCommitEvent(TestCase):
 
         @dataclass
         class ChildEvent(Event):
-            pass
+            _should_apply_callbacks = lambda *a, **k: True
 
         @dataclass
         class OtherChildEvent(Event):
-            pass
+            _should_apply_callbacks = lambda *a, **k: True
 
         callback = mock.MagicMock(return_value=[], __name__='test')
         ChildEvent.bind()(callback)
@@ -23,7 +23,7 @@ class TestCommitEvent(TestCase):
         save = mock.MagicMock(
             return_value=(mock.MagicMock(), mock.MagicMock())
         )
-        event = ChildEvent(creator=System('system'))        
+        event = ChildEvent(creator=System('system'))
         other_event = OtherChildEvent(creator=System('system'))
-
+        event.commit(save)
         self.assertEqual(callback.call_count, 1)

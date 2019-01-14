@@ -1,4 +1,4 @@
-
+"""Core persistence methods for submissions and submission events."""
 
 from typing import Callable, List, Dict, Mapping, Tuple, Iterable, Optional
 from functools import wraps

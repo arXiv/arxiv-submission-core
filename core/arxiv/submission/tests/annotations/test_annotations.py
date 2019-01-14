@@ -27,6 +27,7 @@ class TestAddRemovePossibleDuplicateAnnotations(TestCase):
         _, db = tempfile.mkstemp(suffix='.sqlite')
         cls.app = Flask('foo')
         cls.app.config['CLASSIC_DATABASE_URI'] = f'sqlite:///{db}'
+        cls.app.config['NO_ASYNC'] = 1
 
         with cls.app.app_context():
             classic.init_app(cls.app)
@@ -47,7 +48,8 @@ class TestAddRemovePossibleDuplicateAnnotations(TestCase):
                 classic.models.Submission.DELETED_USER_EXPIRED
             ]
             with classic.transaction() as session:
-                for status, (submission_id, title, user) in zip(cycle(STATUSES_TO_CHECK), titles.TITLES):
+                for status, (submission_id, title, user) \
+                        in zip(cycle(STATUSES_TO_CHECK), titles.TITLES):
                     session.add(
                         classic.models.Submission(
                             submission_id=submission_id,
@@ -78,7 +80,9 @@ class TestAddRemovePossibleDuplicateAnnotations(TestCase):
         after = copy.deepcopy(before)
         before.metadata.title = title
         with self.app.app_context():
-            events = list(set_title.check_for_similar_titles(event_t, before, after, creator))
+            events = list(set_title.check_for_similar_titles(
+                event_t, before, after, creator)
+            )
 
         self.assertEqual(len(events), 2, "Generates two events")
         for event in events:
@@ -93,7 +97,9 @@ class TestAddRemovePossibleDuplicateAnnotations(TestCase):
         # Checking a second time removes the previous annotations.
         with self.app.app_context():
             events = list(
-                set_title.check_for_similar_titles(event_t, before, after, creator)
+                set_title.check_for_similar_titles(
+                    event_t, before, after, creator
+                )
             )
         self.assertEqual(len(events), 4, "Generates four events")
         for event in events[:2]:

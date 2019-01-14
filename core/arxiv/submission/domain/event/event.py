@@ -1,13 +1,16 @@
-from typing import Optional, Callable, Tuple, Iterable, List, ClassVar
+"""Provides the base command/event class, :class:`Event`."""
 
+from typing import Optional, Callable, Tuple, Iterable, List, ClassVar, Mapping
+from collections import defaultdict
 from datetime import datetime
 import hashlib
 import copy
 from functools import wraps
-
+from flask import current_app
 from dataclasses import dataclass, field, asdict
 
 from arxiv.base import logging
+from arxiv.base.globals import get_application_config
 
 from ..agent import Agent, System
 from ...exceptions import InvalidEvent
@@ -75,9 +78,10 @@ class Event:
     This should generally not be set from outside this package.
     """
 
-    HOOKS: ClassVar[List[Callback]] = []
     before: Optional[Submission] = None
     after: Optional[Submission] = None
+
+    _hooks: ClassVar[Tuple[Rule]] = tuple()
 
     @property
     def event_type(self) -> str:
@@ -164,14 +168,26 @@ class Event:
 
             @wraps(func)
             def do(event: Event, before: Submission, after: Submission,
-                   creator: Agent = sys) -> Iterable['Event']:
+                   creator: Agent = sys, **kwargs) -> Iterable['Event']:
                 """Perform the callback. Here in case we need to hook in."""
-                return func(event, before, after, creator)
+                return func(event, before, after, creator, **kwargs)
 
-            # We need a new list, to avoid clobbering everyone else.
-            cls.HOOKS = [hook for hook in cls.HOOKS] + [(condition, do)]
+            cls._add_callback(condition, do)
             return do
         return decorator
+
+    @classmethod
+    def _add_callback(cls: type, condition: Condition,
+                      callback: Callback) -> None:
+        cls._hooks = tuple([r for r in cls._hooks] + [(condition, callback)])
+
+    def _get_callbacks(self) -> List[Tuple[Condition, Callback]]:
+        return ((condition, callback) for cls in type(self).__mro__[::-1]
+                for condition, callback in getattr(cls, '_hooks', []))
+
+    def _should_apply_callbacks(self) -> bool:
+        config = get_application_config()
+        return not bool(int(config.get('NO_CALLBACKS', '0')))
 
     def commit(self, store: Store) -> Tuple[Submission, Events]:
         """
@@ -194,8 +210,10 @@ class Event:
         """
         _, after = store(self, self.before, self.after)
         self.committed = True
+        if not self._should_apply_callbacks():
+            return self.after, []
         consequences: List[Event] = []
-        for condition, callback in self.HOOKS:
+        for condition, callback in self._get_callbacks():
             if condition(self, self.before, self.after):
                 for consequence in callback(self, self.before, self.after):
                     self.after = consequence.apply(self.after)

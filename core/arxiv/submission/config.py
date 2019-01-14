@@ -2,7 +2,7 @@
 
 import os
 from kombu.serialization import register
-from ..serializer import dumps, loads
+from .serializer import dumps, loads
 
 register('ejson', dumps, loads,
          content_type='application/x-ejson',
