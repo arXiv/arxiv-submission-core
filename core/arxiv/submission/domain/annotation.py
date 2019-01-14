@@ -4,6 +4,8 @@ import hashlib
 
 from dataclasses import dataclass, asdict, field
 
+from arxiv.taxonomy import Category
+
 from .util import get_tzaware_utc_now
 from .agent import Agent
 
@@ -93,3 +95,26 @@ class PossibleMetadataProblem(Annotation):
     """If ``None``, applies to metadata generally."""
 
     description: str = field(default_factory=str)
+
+
+@dataclass
+class ClassifierSuggestion(Annotation):
+    """Represents a suggested classification from an auto-classifier."""
+
+    CLASSIC = "classic"
+
+    classifier: str = field(default=CLASSIC)
+    category: Optional[Category] = field(default=None)
+    probability: float = field(default=0.0)
+
+
+@dataclass
+class PlainTextResult(Annotation):
+    """Represents the result of plain text extraction."""
+
+    SUCCEEDED = "succeeded"
+    FAILED = "failed"
+
+    status: str = field(default=SUCCEEDED)
+    identifier: Optional[str] = field(default=None)
+    """Task ID for the extraction."""

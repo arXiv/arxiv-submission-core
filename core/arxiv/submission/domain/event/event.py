@@ -138,8 +138,6 @@ class Event:
         data.pop('after')
         return data
 
-
-
     @classmethod
     def bind(cls, condition: Optional[Condition] = None) -> Decorator:
         """

@@ -337,7 +337,7 @@ class SetPrimaryClassification(Event):
         """Compare this event to another event."""
         return hash(self) == hash(other)
 
-    category: Optional[str] = None
+    category: Optional[taxonomy.Category] = None
 
     def validate(self, submission: Submission) -> None:
         """Validate the primary classification category."""
@@ -387,7 +387,7 @@ class AddSecondaryClassification(Event):
         """Compare this event to another event."""
         return hash(self) == hash(other)
 
-    category: Optional[str] = field(default=None)
+    category: Optional[taxonomy.Category] = field(default=None)
 
     def validate(self, submission: Submission) -> None:
         """Validate the secondary classification category to add."""

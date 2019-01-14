@@ -4,6 +4,8 @@ from typing import Optional, List
 
 from dataclasses import dataclass, field
 
+from arxiv import taxonomy
+
 from . import validators
 from .event import Event
 from ..submission import Submission, Classification, WithdrawalRequest, \
@@ -92,7 +94,7 @@ class RequestCrossList(Event):
     NAME = "request cross-list classification"
     NAMED = "cross-list classification requested"
 
-    categories: List[str] = field(default_factory=list)
+    categories: List[taxonomy.Category] = field(default_factory=list)
 
     def __hash__(self) -> int:
         """Use event ID as object hash."""
