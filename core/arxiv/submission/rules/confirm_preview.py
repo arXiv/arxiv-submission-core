@@ -1,4 +1,4 @@
-from typing import List
+from typing import Iterable
 
 from ..domain.event import Event, AddAnnotation, RemoveAnnotation, \
     ConfirmPreview
@@ -13,6 +13,8 @@ from ..tasks import is_async
 @ConfirmPreview.bind()
 @is_async
 def extract_plain_text(event: ConfirmPreview, before: Submission,
-                       after: Submission, creator: Agent) -> List[Event]:
+                       after: Submission, creator: Agent) -> Iterable[Event]:
     """Use the plain text extraction service to extract text from the PDF."""
-    return []
+    # TODO: yield AddAnnotation(PlainTextExtraction) as we go along; one at the
+    # start, and then commemorate the result at the end.
+    return ()

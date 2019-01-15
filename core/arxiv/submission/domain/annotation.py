@@ -1,4 +1,14 @@
-from typing import Optional
+"""
+Provides quality-assurance annotations for the submission & moderation system.
+
+Annotations encode more ephemeral moderation-related information, and are
+therefore not represented as events/commands in themselves. To work with
+annotations on submissions, use
+:class:`arxiv.submission.domain.event.AddAnnotation` and
+:class:`arxiv.submission.domain.event.RemoveAnnotation`.
+"""
+
+from typing import Optional, Union
 from datetime import datetime
 import hashlib
 
@@ -98,7 +108,7 @@ class PossibleMetadataProblem(Annotation):
 
 
 @dataclass
-class ClassifierSuggestion(Annotation):
+class ClassifierResult(Annotation):
     """Represents a suggested classification from an auto-classifier."""
 
     CLASSIC = "classic"
@@ -109,12 +119,35 @@ class ClassifierSuggestion(Annotation):
 
 
 @dataclass
-class PlainTextResult(Annotation):
-    """Represents the result of plain text extraction."""
+class FeatureCount(Annotation):
+    """Represents feature counts drawn from the content of the submission."""
 
+    CHARACTERS = "chars"
+    PAGES = "pages"
+    STOPWORDS = "stops"
+    WORDS = "words"
+
+    feature_type: str = field(default=WORDS)
+    feature_count: int = field(default=0)
+
+
+@dataclass
+class ContentFlag(Annotation):
+    """Represents a QA flag based on the content of the submission."""
+
+    flag_type: Optional[str] = field(default=None)
+    flag_value: Optional[Union[int, str, float, dict, list]]
+
+
+@dataclass
+class PlainTextExtraction(Annotation):
+    """Represents the status/result of plain text extraction."""
+
+    REQUESTED = "requested"
     SUCCEEDED = "succeeded"
     FAILED = "failed"
 
     status: str = field(default=SUCCEEDED)
     identifier: Optional[str] = field(default=None)
     """Task ID for the extraction."""
+    extractor_version: str = field(default="0.0")
