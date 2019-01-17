@@ -10,6 +10,7 @@ from dataclasses import asdict
 
 from .agent import Agent, agent_factory
 from .meta import License, Classification
+from .annotation import Annotation
 from .util import get_tzaware_utc_now
 
 
@@ -267,6 +268,7 @@ class Submission:
     """Published versions of this :class:`.Submission`."""
 
     holds: List[Hold] = field(default_factory=list)
+    annotations: Dict[str, Annotation] = field(default_factory=dict)
     user_requests: Dict[str, UserRequest] = field(default_factory=dict)
 
     @property
@@ -334,6 +336,18 @@ class Submission:
         """Remove a :class:`.UserRequest` by ID."""
         del self.user_requests[request_id]
 
+    def add_annotation(self, annotation: Annotation) -> None:
+        """Add an :class:`.Annotation`."""
+        self.annotations[annotation.annotation_id] = annotation
+
+    def get_annotation(self, annotation_id: str) -> Annotation:
+        """Retrieve an :class:`.Annotation` by ID."""
+        return self.annotations[annotation_id]
+
+    def remove_annotation(self, annotation_id: str) -> None:
+        """Remove an :class:`.Annotation` by ID."""
+        del self.annotations[annotation_id]
+
     def to_dict(self) -> dict:
         """Generate a dict representation of this :class:`.Submission`."""
         data = asdict(self)
@@ -368,72 +382,3 @@ class Submission:
             data['client'] = agent_factory(**data['client'])
         return cls(**{k: v for k, v in data.items()
                       if k in cls.__dataclass_fields__})
-
-
-@dataclass
-class Annotation:
-    """Auxilliary metadata used by the submission and moderation process."""
-
-    creator: Agent
-    submission: Submission
-    created: datetime
-    scope: str      # TODO: document this.
-    proxy: Optional[Agent]
-
-    @property
-    def annotation_type(self):
-        """Name (str) of the type of annotation."""
-        return type(self).__name__
-
-    @property
-    def annotation_id(self):
-        """The unique identifier for an :class:`.Annotation` instance."""
-        h = hashlib.new('sha1')
-        h.update(b'%s:%s:%s' % (self.created.isoformat().encode('utf-8'),
-                                self.annotation_type.encode('utf-8'),
-                                self.creator.agent_identifier.encode('utf-8')))
-        return h.hexdigest()
-
-    def to_dict(self) -> dict:
-        """Generate a dict representation of this :class:`.Annotation`."""
-        data = asdict(self)
-        data['annotation_type'] = self.annotation_type
-        data['annotation_id'] = self.annotation_id
-        return data
-
-
-@dataclass
-class Proposal(Annotation):
-    """Represents a proposal to apply an event to a submission."""
-
-    event_type: type
-    event_data: dict
-
-    def to_dict(self) -> dict:
-        """Generate a dict representation of this :class:`.Proposal`."""
-        return asdict(self)
-
-
-@dataclass
-class Comment(Annotation):
-    """A freeform textual annotation."""
-
-    body: str
-
-    @property
-    def comment_id(self):
-        """The unique identifier for a :class:`.Comment` instance."""
-        return self.annotation_id
-
-    def to_dict(self) -> dict:
-        """Generate a dict representation of this :class:`.Comment`."""
-        data = asdict(self)
-        data['comment_id'] = self.comment_id
-        return data
-
-
-@dataclass
-class Flag(Annotation):
-    """Tags used to route submissions based on moderation policies."""
-
-    pass

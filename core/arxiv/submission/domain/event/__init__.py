@@ -44,6 +44,45 @@ We could consider standalone validation functions for validation checks that
 are performed on several event types (instead of just private instance
 methods).
 
+Registering event callbacks
+===========================
+
+The base :class:`Event` provides support for callbacks that are executed when
+an event instance is committed. To attach a callback to an event type, use the
+:func:`Event.bind` decorator. For example:
+
+.. code-block:: python
+
+   @SetTitle.bind()
+   def do_this_when_a_title_is_set(event, before, after, agent):
+       ...
+       return []
+
+
+Callbacks must have the signature ``(event: Event, before: Submission,
+after: Submission, creator: Agent) -> Iterable[Event]``. ``event`` is the
+event instance being committed that triggered the callback. ``before`` and
+``after`` are the states of the submission before and after the event was
+applied, respectively. ``agent`` is the agent responsible for any subsequent
+events created by the callback, and should be used for that purpose.
+
+The callback should not concern itself with persistence; that is handled by
+:func:`Event.commit`. Any mutations of submission should be made by returning
+the appropriate command/event instances.
+
+The circumstances under which the callback is executed can be controlled by
+passing a condition callable to the decorator. This should have the signature
+``(event: Event, before: Submission, after: Submission, creator: Agent) ->
+bool``; if it returns ``True``, the  callback will be executed. For example:
+
+.. code-block:: python
+
+   @SetTitle.bind(condition=lambda e, b, a, c: e.title == 'foo')
+   def do_this_when_a_title_is_set_to_foo(event, before, after, agent):
+       ...
+       return []
+
+
 """
 
 import hashlib
@@ -62,8 +101,9 @@ from arxiv.base import logging
 
 from ..agent import Agent
 from ..submission import Submission, SubmissionMetadata, Author, \
-    Classification, License, Delegation, Comment, Flag, Proposal, \
+    Classification, License, Delegation,  \
     SubmissionContent, WithdrawalRequest, CrossListClassificationRequest
+from ..annotation import Annotation, Comment, Proposal
 
 from ...exceptions import InvalidEvent
 from ..util import get_tzaware_utc_now
@@ -87,9 +127,13 @@ class CreateSubmission(Event):
     NAME = "create submission"
     NAMED = "submission created"
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         """Use event ID as object hash."""
         return hash(self.event_id)
+
+    def __eq__(self, other: Event) -> bool:
+        """Compare this event to another event."""
+        return hash(self) == hash(other)
 
     def validate(self, *args, **kwargs) -> None:
         """Validate creation of a submission."""
@@ -124,9 +168,13 @@ class CreateSubmissionVersion(Event):
     NAME = "create a new version"
     NAMED = "new version created"
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         """Use event ID as object hash."""
         return hash(self.event_id)
+
+    def __eq__(self, other: Event) -> bool:
+        """Compare this event to another event."""
+        return hash(self) == hash(other)
 
     def validate(self, submission: Submission) -> None:
         """Only applies to published submissions."""
@@ -160,9 +208,13 @@ class Rollback(Event):
     NAME = "roll back or delete"
     NAMED = "rolled back or deleted"
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         """Use event ID as object hash."""
         return hash(self.event_id)
+
+    def __eq__(self, other: Event) -> bool:
+        """Compare this event to another event."""
+        return hash(self) == hash(other)
 
     def validate(self, submission: Submission) -> None:
         """Only applies to submissions in an unpublished state."""
@@ -200,9 +252,13 @@ class ConfirmContactInformation(Event):
     NAME = "confirm contact information"
     NAMED = "contact information confirmed"
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         """Use event ID as object hash."""
         return hash(self.event_id)
+
+    def __eq__(self, other: Event) -> bool:
+        """Compare this event to another event."""
+        return hash(self) == hash(other)
 
     def validate(self, submission: Submission) -> None:
         """Cannot apply to a finalized submission."""
@@ -221,9 +277,13 @@ class ConfirmAuthorship(Event):
     NAME = "confirm that submitter is an author"
     NAMED = "submitter authorship status confirmed"
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         """Use event ID as object hash."""
         return hash(self.event_id)
+
+    def __eq__(self, other: Event) -> bool:
+        """Compare this event to another event."""
+        return hash(self) == hash(other)
 
     submitter_is_author: bool = True
 
@@ -244,9 +304,13 @@ class ConfirmPolicy(Event):
     NAME = "confirm policy acceptance"
     NAMED = "policy acceptance confirmed"
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         """Use event ID as object hash."""
         return hash(self.event_id)
+
+    def __eq__(self, other: Event) -> bool:
+        """Compare this event to another event."""
+        return hash(self) == hash(other)
 
     def validate(self, submission: Submission) -> None:
         """Cannot apply to a finalized submission."""
@@ -265,9 +329,13 @@ class SetPrimaryClassification(Event):
     NAME = "set primary classification"
     NAMED = "primary classification set"
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         """Use event ID as object hash."""
         return hash(self.event_id)
+
+    def __eq__(self, other: Event) -> bool:
+        """Compare this event to another event."""
+        return hash(self) == hash(other)
 
     category: Optional[str] = None
 
@@ -311,9 +379,13 @@ class AddSecondaryClassification(Event):
     NAME = "add cross-list classification"
     NAMED = "cross-list classification added"
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         """Use event ID as object hash."""
         return hash(self.event_id)
+
+    def __eq__(self, other: Event) -> bool:
+        """Compare this event to another event."""
+        return hash(self) == hash(other)
 
     category: Optional[str] = field(default=None)
 
@@ -338,9 +410,13 @@ class RemoveSecondaryClassification(Event):
     NAME = "remove cross-list classification"
     NAMED = "cross-list classification removed"
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         """Use event ID as object hash."""
         return hash(self.event_id)
+
+    def __eq__(self, other: Event) -> bool:
+        """Compare this event to another event."""
+        return hash(self) == hash(other)
 
     category: Optional[str] = field(default=None)
 
@@ -371,9 +447,13 @@ class SetLicense(Event):
     NAME = "select distribution license"
     NAMED = "distribution license selected"
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         """Use event ID as object hash."""
         return hash(self.event_id)
+
+    def __eq__(self, other: Event) -> bool:
+        """Compare this event to another event."""
+        return hash(self) == hash(other)
 
     license_name: Optional[str] = field(default=None)
     license_uri: Optional[str] = field(default=None)
@@ -398,9 +478,13 @@ class SetTitle(Event):
     NAME = "update title"
     NAMED = "title updated"
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         """Use event ID as object hash."""
         return hash(self.event_id)
+
+    def __eq__(self, other: Event) -> bool:
+        """Compare this event to another event."""
+        return hash(self) == hash(other)
 
     title: str = field(default='')
 
@@ -462,9 +546,13 @@ class SetAbstract(Event):
     NAME = "update abstract"
     NAMED = "abstract updated"
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         """Use event ID as object hash."""
         return hash(self.event_id)
+
+    def __eq__(self, other: Event) -> bool:
+        """Compare this event to another event."""
+        return hash(self) == hash(other)
 
     abstract: str = field(default='')
 
@@ -521,9 +609,13 @@ class SetDOI(Event):
     NAME = "add a DOI"
     NAMED = "DOI added"
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         """Use event ID as object hash."""
         return hash(self.event_id)
+
+    def __eq__(self, other: Event) -> bool:
+        """Compare this event to another event."""
+        return hash(self) == hash(other)
 
     doi: str = field(default='')
 
@@ -566,9 +658,13 @@ class SetMSCClassification(Event):
     NAME = "update MSC classification"
     NAMED = "MSC classification updated"
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         """Use event ID as object hash."""
         return hash(self.event_id)
+
+    def __eq__(self, other: Event) -> bool:
+        """Compare this event to another event."""
+        return hash(self) == hash(other)
 
     msc_class: str = field(default='')
 
@@ -609,9 +705,13 @@ class SetACMClassification(Event):
     NAME = "update ACM classification"
     NAMED = "ACM classification updated"
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         """Use event ID as object hash."""
         return hash(self.event_id)
+
+    def __eq__(self, other: Event) -> bool:
+        """Compare this event to another event."""
+        return hash(self) == hash(other)
 
     acm_class: str = field(default='')
     """E.g. F.2.2; I.2.7"""
@@ -665,9 +765,13 @@ class SetJournalReference(Event):
     NAME = "add a journal reference"
     NAMED = "journal reference added"
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         """Use event ID as object hash."""
         return hash(self.event_id)
+
+    def __eq__(self, other: Event) -> bool:
+        """Compare this event to another event."""
+        return hash(self) == hash(other)
 
     journal_ref: str = field(default='')
 
@@ -717,9 +821,13 @@ class SetReportNumber(Event):
     NAME = "update report number"
     NAMED = "report number updated"
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         """Use event ID as object hash."""
         return hash(self.event_id)
+
+    def __eq__(self, other: Event) -> bool:
+        """Compare this event to another event."""
+        return hash(self) == hash(other)
 
     report_num: str = field(default='')
 
@@ -755,9 +863,13 @@ class SetComments(Event):
     NAME = "update comments"
     NAMED = "comments updated"
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         """Use event ID as object hash."""
         return hash(self.event_id)
+
+    def __eq__(self, other: Event) -> bool:
+        """Compare this event to another event."""
+        return hash(self) == hash(other)
 
     comments: str = field(default='')
 
@@ -796,9 +908,13 @@ class SetAuthors(Event):
     NAME = "update authors"
     NAMED = "authors updated"
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         """Use event ID as object hash."""
         return hash(self.event_id)
+
+    def __eq__(self, other: Event) -> bool:
+        """Compare this event to another event."""
+        return hash(self) == hash(other)
 
     authors: List[Author] = field(default_factory=list)
     authors_display: Optional[str] = field(default=None)
@@ -860,9 +976,13 @@ class SetUploadPackage(Event):
     NAME = "set the upload package"
     NAMED = "upload package set"
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         """Use event ID as object hash."""
         return hash(self.event_id)
+
+    def __eq__(self, other: Event) -> bool:
+        """Compare this event to another event."""
+        return hash(self) == hash(other)
 
     identifier: str = field(default_factory=str)
     format: str = field(default_factory=str)
@@ -917,9 +1037,13 @@ class ConfirmPreview(Event):
     NAME = "approve submission preview"
     NAMED = "submission preview approved"
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         """Use event ID as object hash."""
         return hash(self.event_id)
+
+    def __eq__(self, other: Event) -> bool:
+        """Compare this event to another event."""
+        return hash(self) == hash(other)
 
     def validate(self, submission: Submission) -> None:
         """Validate data for :class:`.ConfirmPreview`."""
@@ -938,9 +1062,13 @@ class FinalizeSubmission(Event):
     NAME = "finalize submission for announcement"
     NAMED = "submission finalized"
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         """Use event ID as object hash."""
         return hash(self.event_id)
+
+    def __eq__(self, other: Event) -> bool:
+        """Compare this event to another event."""
+        return hash(self) == hash(other)
 
     REQUIRED = [
         'creator', 'primary_classification', 'submitter_contact_verified',
@@ -978,9 +1106,13 @@ class UnFinalizeSubmission(Event):
     NAME = "re-open submission for modification"
     NAMED = "submission re-opened for modification"
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         """Use event ID as object hash."""
         return hash(self.event_id)
+
+    def __eq__(self, other: Event) -> bool:
+        """Compare this event to another event."""
+        return hash(self) == hash(other)
 
     def validate(self, submission: Submission) -> None:
         """Validate the unfinalize action."""
@@ -1006,9 +1138,13 @@ class Publish(Event):
     NAME = "publish submission"
     NAMED = "submission published"
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         """Use event ID as object hash."""
         return hash(self.event_id)
+
+    def __eq__(self, other: Event) -> bool:
+        """Compare this event to another event."""
+        return hash(self) == hash(other)
 
     arxiv_id: Optional[str] = None
 
@@ -1048,6 +1184,14 @@ class CreateComment(Event):
     body: str = field(default_factory=str)
     scope: str = 'private'
 
+    def __hash__(self) -> int:
+        """Use event ID as object hash."""
+        return hash(self.event_id)
+
+    def __eq__(self, other: Event) -> bool:
+        """Compare this event to another event."""
+        return hash(self) == hash(other)
+
     def validate(self, submission: Submission) -> None:
         """The :prop:`.body` should be set."""
         if not self.body:
@@ -1071,6 +1215,14 @@ class DeleteComment(Event):
 
     comment_id: str = field(default_factory=str)
 
+    def __hash__(self) -> int:
+        """Use event ID as object hash."""
+        return hash(self.event_id)
+
+    def __eq__(self, other: Event) -> bool:
+        """Compare this event to another event."""
+        return hash(self) == hash(other)
+
     def validate(self, submission: Submission) -> None:
         """The :prop:`.comment_id` must present on the submission."""
         if self.comment_id is None:
@@ -1091,6 +1243,14 @@ class AddDelegate(Event):
     """Owner delegates authority to another agent."""
 
     delegate: Optional[Agent] = None
+
+    def __hash__(self) -> int:
+        """Use event ID as object hash."""
+        return hash(self.event_id)
+
+    def __eq__(self, other: Event) -> bool:
+        """Compare this event to another event."""
+        return hash(self) == hash(other)
 
     def validate(self, submission: Submission) -> None:
         """The event creator must be the owner of the submission."""
@@ -1114,6 +1274,14 @@ class RemoveDelegate(Event):
 
     delegation_id: str = field(default_factory=str)
 
+    def __hash__(self) -> int:
+        """Use event ID as object hash."""
+        return hash(self.event_id)
+
+    def __eq__(self, other: Event) -> bool:
+        """Compare this event to another event."""
+        return hash(self) == hash(other)
+
     def validate(self, submission: Submission) -> None:
         """The event creator must be the owner of the submission."""
         if not self.creator == submission.owner:
@@ -1125,6 +1293,56 @@ class RemoveDelegate(Event):
             del submission.delegations[self.delegation_id]
         return submission
 
+
+@dataclass
+class AddAnnotation(Event):
+    """Add an annotation to a :class:`.Submission`."""
+
+    annotation: Optional[Annotation] = field(default=None)
+
+    def __hash__(self) -> int:
+        """Use event ID as object hash."""
+        return hash(self.event_id)
+
+    def __eq__(self, other: Event) -> bool:
+        """Compare this event to another event."""
+        return hash(self) == hash(other)
+
+    def validate(self, submission: Submission) -> None:
+        return
+
+    def project(self, submission: Submission) -> Submission:
+        """Add the annotation to the submission."""
+        submission.add_annotation(self.annotation)
+        return submission
+
+    def to_dict(self) -> dict:
+        data = super(AddAnnotation, self).to_dict()
+        data['annotation'] = self.annotation.to_dict()
+        return data
+
+
+@dataclass
+class RemoveAnnotation(Event):
+    """Remove an annotation from a :class:`.Submission`."""
+
+    annotation_id: Optional[str] = field(default=None)
+
+    def __hash__(self) -> int:
+        """Use event ID as object hash."""
+        return hash(self.event_id)
+
+    def __eq__(self, other: Event) -> bool:
+        """Compare this event to another event."""
+        return hash(self) == hash(other)
+
+    def validate(self, submission: Submission) -> None:
+        if self.annotation_id not in submission.annotations:
+            raise InvalidEvent(self, "No such annotation {self.annotation_id}")
+
+    def project(self, submission: Submission) -> Submission:
+        submission.remove_annotation(self.annotation_id)
+        return submission
 
 # class CreateSourcePackage(Event):
 #     pass

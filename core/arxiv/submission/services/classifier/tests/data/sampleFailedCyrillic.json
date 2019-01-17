@@ -1,0 +1,21 @@
+{
+  "classifier":[
+
+  ],
+  "counts":{
+    "chars":50475,
+    "pages":8,
+    "stops":9,
+    "words":4799
+  },
+  "flags":{
+    "%stop":0.0,
+    "charset":{
+      "cyrillic":2458
+    },
+    "language":{
+      "ru":732
+    },
+    "stops":9
+  }
+}
