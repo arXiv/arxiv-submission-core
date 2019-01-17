@@ -1,3 +1,4 @@
+from typing import Optional
 from contextlib import contextmanager
 
 from flask import Flask
@@ -6,9 +7,10 @@ from ..services import classic
 
 
 @contextmanager
-def in_memory_db():
+def in_memory_db(app: Optional[Flask] = None):
     """Provide an in-memory sqlite database for testing purposes."""
-    app = Flask('foo')
+    if app is None:
+        app = Flask('foo')
     app.config['CLASSIC_DATABASE_URI'] = 'sqlite://'
 
     with app.app_context():

@@ -18,11 +18,15 @@ class ApproveRequest(Event):
     NAME = "approve user request"
     NAMED = "user request approved"
 
-    def __hash__(self):
+    request_id: Optional[str] = field(default=None)
+
+    def __hash__(self) -> int:
         """Use event ID as object hash."""
         return hash(self.event_id)
 
-    request_id: Optional[str] = field(default=None)
+    def __eq__(self, other: Event) -> bool:
+        """Compare this event to another event."""
+        return hash(self) == hash(other)
 
     def validate(self, submission: Submission) -> None:
         if self.request_id not in submission.user_requests:
@@ -38,11 +42,15 @@ class RejectRequest(Event):
     NAME = "reject user request"
     NAMED = "user request rejected"
 
-    def __hash__(self):
+    request_id: Optional[str] = field(default=None)
+
+    def __hash__(self) -> int:
         """Use event ID as object hash."""
         return hash(self.event_id)
 
-    request_id: Optional[str] = field(default=None)
+    def __eq__(self, other: Event) -> bool:
+        """Compare this event to another event."""
+        return hash(self) == hash(other)
 
     def validate(self, submission: Submission) -> None:
         if self.request_id not in submission.user_requests:
@@ -58,11 +66,15 @@ class ApplyRequest(Event):
     NAME = "apply user request"
     NAMED = "user request applied"
 
-    def __hash__(self):
+    request_id: Optional[str] = field(default=None)
+
+    def __hash__(self) -> int:
         """Use event ID as object hash."""
         return hash(self.event_id)
 
-    request_id: Optional[str] = field(default=None)
+    def __eq__(self, other: Event) -> bool:
+        """Compare this event to another event."""
+        return hash(self) == hash(other)
 
     def validate(self, submission: Submission) -> None:
         if self.request_id not in submission.user_requests:
@@ -80,11 +92,15 @@ class RequestCrossList(Event):
     NAME = "request cross-list classification"
     NAMED = "cross-list classification requested"
 
-    def __hash__(self):
+    categories: List[str] = field(default_factory=list)
+
+    def __hash__(self) -> int:
         """Use event ID as object hash."""
         return hash(self.event_id)
 
-    categories: List[str] = field(default_factory=list)
+    def __eq__(self, other: Event) -> bool:
+        """Compare this event to another event."""
+        return hash(self) == hash(other)
 
     def validate(self, submission: Submission) -> None:
         """Validate the cross-list request."""
@@ -116,13 +132,17 @@ class RequestWithdrawal(Event):
     NAME = "request withdrawal"
     NAMED = "withdrawal requested"
 
-    def __hash__(self):
-        """Use event ID as object hash."""
-        return hash(self.event_id)
-
     reason: str = field(default_factory=str)
 
     MAX_LENGTH = 400
+
+    def __hash__(self) -> int:
+        """Use event ID as object hash."""
+        return hash(self.event_id)
+
+    def __eq__(self, other: Event) -> bool:
+        """Compare this event to another event."""
+        return hash(self) == hash(other)
 
     def validate(self, submission: Submission) -> None:
         """Make sure that a reason was provided."""

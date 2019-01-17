@@ -15,9 +15,9 @@ import tempfile
 from pytz import UTC
 from flask import Flask
 
-from .util import in_memory_db
-from .. import *
-from ..services import classic
+from ..util import in_memory_db
+from ... import *
+from ...services import classic
 
 
 class TestClassicUIWorkflow(TestCase):
@@ -25,6 +25,8 @@ class TestClassicUIWorkflow(TestCase):
 
     def setUp(self):
         """An arXiv user is submitting a new paper."""
+        self.app = Flask(__name__)
+        init_app(self.app)
         self.submitter = domain.User(1234, email='j.user@somewhere.edu',
                                      forename='Jane', surname='User',
                                      endorsements=['cs.DL', 'cs.IR'])
@@ -61,7 +63,7 @@ class TestClassicUIWorkflow(TestCase):
                               affiliation='Fight Club'
                         )]
 
-        with in_memory_db() as session:
+        with in_memory_db(self.app) as session:
             # Submitter clicks on 'Start new submission' in the user dashboard.
             submission, stack = save(
                 CreateSubmission(creator=submitter)
@@ -199,7 +201,6 @@ class TestClassicUIWorkflow(TestCase):
             self.assertEqual(db_submission.authors,
                              author_str,
                              "Authors updated in canonical format in database")
-
             self.assertEqual(len(stack), 14,
                              "Fourteen commands have been executed in total.")
 
@@ -257,8 +258,10 @@ class TestClassicUIWorkflow(TestCase):
         authors = [Author(order=0, forename='惊人', surname='用户',
                           email='amazing.user@nowhere.edu',
                           affiliation='Fight Club')]
-        self.test_classic_workflow(submitter=submitter, metadata=metadata,
-                                   authors=authors)
+        with self.app.app_context():
+            self.app.config['ENABLE_CALLBACKS'] = 0
+            self.test_classic_workflow(submitter=submitter, metadata=metadata,
+                                       authors=authors)
 
     def test_texism_titles(self):
         """Submitter proceeds through workflow in a linear fashion."""
@@ -270,8 +273,9 @@ class TestClassicUIWorkflow(TestCase):
             ('doi', '10.01234/56789'),
             ('journal_ref', 'Foo Rev 1, 2 (1903)')
         ]
-
-        self.test_classic_workflow(metadata=metadata)
+        with self.app.app_context():
+            self.app.config['ENABLE_CALLBACKS'] = 1
+            self.test_classic_workflow(metadata=metadata)
 
 
 class TestReplacementIntegration(TestCase):

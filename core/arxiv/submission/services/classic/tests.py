@@ -31,9 +31,10 @@ from . import init_app, create_all, drop_all, models, DBEvent, \
 
 
 @contextmanager
-def in_memory_db():
+def in_memory_db(app=None):
     """Provide an in-memory sqlite database for testing purposes."""
-    app = Flask('foo')
+    if app is None:
+        app = Flask('foo')
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite://'
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
