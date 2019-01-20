@@ -997,6 +997,43 @@ class Category(Base):    # type: ignore
                                server_default=text("'0'"))
 
 
+class AdminLogEntry(Base):    # type: ignore
+    """
+
+    +---------------+-----------------------+------+-----+-------------------+
+    | Field         | Type                  | Null | Key | Default           |
+    +---------------+-----------------------+------+-----+-------------------+
+    | id            | int(11)               | NO   | PRI | NULL              |
+    | logtime       | varchar(24)           | YES  |     | NULL              |
+    | created       | timestamp             | NO   |     | CURRENT_TIMESTAMP |  # on update CURRENT_TIMESTAMP
+    | paper_id      | varchar(20)           | YES  | MUL | NULL              |
+    | username      | varchar(20)           | YES  |     | NULL              |
+    | host          | varchar(64)           | YES  |     | NULL              |
+    | program       | varchar(20)           | YES  |     | NULL              |
+    | command       | varchar(20)           | YES  | MUL | NULL              |
+    | logtext       | text                  | YES  |     | NULL              |
+    | document_id   | mediumint(8) unsigned | YES  |     | NULL              |
+    | submission_id | int(11)               | YES  | MUL | NULL              |
+    | notify        | tinyint(1)            | YES  |     | 0                 |
+    +---------------+-----------------------+------+-----+-------------------+
+    """
+
+    __tablename__ = 'arXiv_admin_log'
+
+    id = Column(Integer, primary_key=True)
+    logtime = Column(String(24), nullable=True)
+    created = Column(DateTime, default=lambda: datetime.now(UTC))
+    paper_id = Column(String(20), nullable=True)
+    username = Column(String(20), nullable=True)
+    host = Column(String(64), nullable=True)
+    program = Column(String(20), nullable=True)
+    command = Column(String(20), nullable=True)
+    logtext = Column(Text, nullable=True)
+    document_id = Column(Integer, nullable=True)
+    submission_id = Column(Integer, nullable=True)
+    notify = Column(Integer, nullable=True, default=0)
+
+
 def _load_document(paper_id: str) -> Document:
     with transaction() as session:
         document = session.query(Document) \
