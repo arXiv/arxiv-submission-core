@@ -12,3 +12,5 @@ Unlike the original arXiv::Classifier module, this module contains no real
 business-logic: the objective is simply to provide a user-friendly calling
 API.
 """
+
+from .classifier import classify

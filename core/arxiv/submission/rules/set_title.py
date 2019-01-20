@@ -27,6 +27,23 @@ REMOVE_PUNCTUATION = str.maketrans(string.punctuation,
 """Translator that converts punctuation characters into single spaces."""
 
 
+# Original procedure from classic:
+#
+# Query Submission (``arXiv_submissions`` table) for submissions with titles
+# that were created within the last 3 months.
+#
+# Select previous matches for this submission id, and delete them -- from
+# SubmissionNearDuplicates (``arXiv_submission_near_duplicates`` table)
+#
+# Get a Jaccard similarity indexer function
+# (arXiv::Submit::Jaccard::JaccardIndex->make_jaccard_indexer)
+#
+# Among the results of the arXiv_submissions query, find submissions that are
+# more similar than some threshold, skipping any user-deleted submissions.
+#
+# For each match > threshold, add a new duplicate record to the
+# ``arXiv_submission_near_duplicates`` table with its score, and create
+# corresponding entries in the admin log (``arXiv_admin_log`` table).
 @SetTitle.bind(condition=lambda *a: not system_event(*a))
 @is_async
 def check_for_similar_titles(event: SetTitle, before: Submission,
@@ -35,21 +52,9 @@ def check_for_similar_titles(event: SetTitle, before: Submission,
     """
     Check for other submissions with very similar titles.
 
-    Query Submission (``arXiv_submissions`` table) for submissions with titles
-    that were created within the last 3 months.
-
-    Select previous matches for this submission id, and delete them -- from
-    SubmissionNearDuplicates (``arXiv_submission_near_duplicates`` table)
-
-    Get a Jaccard similarity indexer function
-    (arXiv::Submit::Jaccard::JaccardIndex->make_jaccard_indexer)
-
-    Among the results of the arXiv_submissions query, find submissions that are
-    more similar than some threshold, skipping any user-deleted submissions.
-
-    For each match > threshold, add a new duplicate record to the
-    ``arXiv_submission_near_duplicates`` table with its score, and create
-    corresponding entries in the admin log (``arXiv_admin_log`` table).
+    Ask classic for titles of papers submitted within the last several months.
+    Add an annotation to the submission if a title is more similar to the
+    current submission's title than a configurable threshold.
     """
     # If the title has no tokens, there is nothing to do.
     if not tokenized(event.title):
