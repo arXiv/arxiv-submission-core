@@ -312,7 +312,7 @@ def store_event(event: Event, before: Optional[Submission],
     session.add(dbs)
     session.add(db_event)
 
-    log.log(event, before, after)   # Generate admin log entry, if applicable.
+    log.handle(event, before, after)   # Create admin log entry, if applicable.
 
     # Attach the database object for the event to the row for the submission.
     if this_is_a_new_submission:    # Update in transaction.

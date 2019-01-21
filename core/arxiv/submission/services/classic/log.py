@@ -1,6 +1,6 @@
 """Interface to the classic admin log."""
 
-from typing import Optional, Iterable
+from typing import Optional, Iterable, Dict, Callable
 
 from . import models, util
 from ...domain import event
@@ -9,23 +9,40 @@ from ...domain.agent import Agent
 
 
 def log_unfinalize(event: event.UnFinalizeSubmission, before: Submission,
-                   after: Submission,) -> None:
+                   after: Submission) -> None:
     """Create a log entry when a user pulls their submission for changes."""
     admin_log(__name__, "unfinalize", "user has pulled submission for editing",
               username=event.creator.username,
+              hostname=event.creator.hostname,
               submission_id=after.submission_id,
               paper_id=after.arxiv_id)
 
 
-LOG_EVENTS = {
+ON_EVENT: Dict[type, Callable[[event.Event, Submission, Submission], None]] = {
     event.UnFinalizeSubmission: log_unfinalize,
 }
+"""Logging functions to call when an event is comitted."""
 
 
-def log(event: event.Event, before: Submission, after: Submission) -> None:
-    """Generate an admin log entry for an event."""
-    if type(event) in LOG_EVENTS:
-        LOG_EVENTS[type(event)](event, before, after)
+def handle(event: event.Event, before: Submission, after: Submission) -> None:
+    """
+    Generate an admin log entry for an event that is being committed.
+
+    Looks for a logging function in :ref:`.ON_EVENT` and, if found, calls it
+    with the passed parameters.
+
+    Parameters
+    ----------
+    event : :class:`event.Event`
+        The event being committed.
+    before : :class:`.Submission`
+        State of the submission before the event.
+    after : :class:`.Submission`
+        State of the submission after the event.
+
+    """
+    if type(event) in ON_EVENT:
+        ON_EVENT[type(event)](event, before, after)
 
 
 def admin_log(program: str, command: str, text: str, notify: bool = False,
