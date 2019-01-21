@@ -3,12 +3,14 @@
 from typing import Optional, Iterable, Dict, Callable
 
 from . import models, util
-from ...domain import event
+from ...domain.event import Event, UnFinalizeSubmission, AcceptProposal, \
+    AddSecondaryClassification, AddAnnotation
+from ...domain.annotation import PossibleContentProblem, ClassifierResults
 from ...domain.submission import Submission
-from ...domain.agent import Agent
+from ...domain.agent import Agent, System
 
 
-def log_unfinalize(event: event.UnFinalizeSubmission, before: Submission,
+def log_unfinalize(event: UnFinalizeSubmission, before: Submission,
                    after: Submission) -> None:
     """Create a log entry when a user pulls their submission for changes."""
     admin_log(__name__, "unfinalize", "user has pulled submission for editing",
@@ -18,13 +20,58 @@ def log_unfinalize(event: event.UnFinalizeSubmission, before: Submission,
               paper_id=after.arxiv_id)
 
 
-ON_EVENT: Dict[type, Callable[[event.Event, Submission, Submission], None]] = {
-    event.UnFinalizeSubmission: log_unfinalize,
+def log_accept_system_cross(event: AcceptProposal, before: Submission,
+                            after: Submission) -> None:
+    """Create a log entry when a system cross is accepted."""
+    proposal = after.proposals[event.proposal_id]
+    if type(event.creator) is System:
+        if proposal.proposed_event_type is AddSecondaryClassification:
+            category = proposal.proposed_event_data["category"]
+            admin_log(__name__, "admin comment",
+                      f"Added {category} as secondary: {event.comment}",
+                      username="system",
+                      submission_id=after.submission_id,
+                      paper_id=after.arxiv_id)
+
+
+def log_stopwords(event: AddAnnotation, before: Submission,
+                  after: Submission) -> None:
+    """Create a log entry when there is a problem with stopword content."""
+    if type(event.annotation) is not PossibleContentProblem:
+        return
+    if event.annotation.problem_type == PossibleContentProblem.STOPWORDS:
+        admin_log(__name__, "admin comment",
+                  event.annotation.comment,
+                  username="system",
+                  submission_id=after.submission_id,
+                  paper_id=after.arxiv_id)
+
+
+
+def log_classifier_failed(event: AddAnnotation, before: Submission,
+                          after: Submission) -> None:
+    """Create a log entry when the classifier returns no suggestions."""
+    if type(event.annotation) is not ClassifierResults:
+        return
+    if not event.annotation.results:
+        admin_log(__name__, "admin comment",
+                  "Classifier failed to return results for submission",
+                  username="system",
+                  submission_id=after.submission_id,
+                  paper_id=after.arxiv_id)
+
+
+
+ON_EVENT: Dict[type, Callable[[Event, Submission, Submission], None]] = {
+    UnFinalizeSubmission: [log_unfinalize],
+    AcceptProposal: [log_accept_system_cross],
+    AddAnnotation: [log_stopwords]
+
 }
 """Logging functions to call when an event is comitted."""
 
 
-def handle(event: event.Event, before: Submission, after: Submission) -> None:
+def handle(event: Event, before: Submission, after: Submission) -> None:
     """
     Generate an admin log entry for an event that is being committed.
 
@@ -42,7 +89,8 @@ def handle(event: event.Event, before: Submission, after: Submission) -> None:
 
     """
     if type(event) in ON_EVENT:
-        ON_EVENT[type(event)](event, before, after)
+        for callback in ON_EVENT[type(event)]:
+            callback(event, before, after)
 
 
 def admin_log(program: str, command: str, text: str, notify: bool = False,

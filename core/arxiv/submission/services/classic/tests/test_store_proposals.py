@@ -5,6 +5,7 @@ from pytz import UTC
 from ....domain.event import CreateSubmission, SetPrimaryClassification, \
     AddSecondaryClassification, SetTitle, AddProposal
 from ....domain.agent import User
+from ....domain.annotation import Comment
 from ....domain.submission import Submission
 from ....domain.proposal import Proposal
 from .. import store_event, models, get_events
@@ -26,11 +27,14 @@ class TestSaveProposal(TestCase):
         """A submission has a new reclassification proposal."""
         event = AddProposal(
             creator=self.user,
-            proposed_event_type=SetPrimaryClassification,
-            proposed_event_data={
-                'category': taxonomy.Category('cs.DL'),
-            },
-            comment='foo'
+            proposal=Proposal(
+                creator=self.user,
+                proposed_event_type=SetPrimaryClassification,
+                proposed_event_data={
+                    'category': taxonomy.Category('cs.DL'),
+                },
+                comments=[Comment(creator=self.user, body='foo')]
+            )
         )
         with in_memory_db() as session:
             create = CreateSubmission(creator=self.user)
@@ -57,17 +61,20 @@ class TestSaveProposal(TestCase):
                              models.CategoryProposal.UNRESOLVED)
 
             self.assertEqual(db_props[0].proposal_comment.logtext,
-                             event.comment)
+                             event.proposal.comments[0].body)
 
     def test_save_secondary_proposal(self):
         """A submission has a new cross-list proposal."""
         event = AddProposal(
             creator=self.user,
-            proposed_event_type=AddSecondaryClassification,
-            proposed_event_data={
-                'category': taxonomy.Category('cs.DL'),
-            },
-            comment='foo'
+            proposal=Proposal(
+                creator=self.user,
+                proposed_event_type=AddSecondaryClassification,
+                proposed_event_data={
+                    'category': taxonomy.Category('cs.DL'),
+                },
+                comments=[Comment(creator=self.user, body='foo')]
+            )
         )
         with in_memory_db() as session:
             create = CreateSubmission(creator=self.user)
@@ -94,15 +101,18 @@ class TestSaveProposal(TestCase):
                              models.CategoryProposal.UNRESOLVED)
 
             self.assertEqual(db_props[0].proposal_comment.logtext,
-                             event.comment)
+                             event.proposal.comments[0].body)
 
     def test_save_title_proposal(self):
         """A submission has a new SetTitle proposal."""
         event = AddProposal(
             creator=self.user,
-            proposed_event_type=SetTitle,
-            proposed_event_data={'title': 'the foo title'},
-            comment='foo'
+            proposal=Proposal(
+                creator=self.user,
+                proposed_event_type=SetTitle,
+                proposed_event_data={'title': 'the foo title'},
+                comments=[Comment(creator=self.user, body='foo')]
+            )
         )
         with in_memory_db() as session:
             create = CreateSubmission(creator=self.user)

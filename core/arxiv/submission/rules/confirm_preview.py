@@ -1,20 +1,35 @@
+"""Things that should happen upon the :class:`.ConfirmPreview` command."""
+
 from typing import Iterable
 
 from ..domain.event import Event, AddAnnotation, RemoveAnnotation, \
     ConfirmPreview
-from ..domain.annotation import ClassifierSuggestion
+from ..domain.annotation import PlainTextExtraction
 from ..domain.submission import Submission
 from ..domain.agent import Agent, User
-from ..services import classic
+from ..services import plaintext
 from ..tasks import is_async
 
 
-# TODO: here is where we hook into plaintext service.
 @ConfirmPreview.bind()
 @is_async
 def extract_plain_text(event: ConfirmPreview, before: Submission,
                        after: Submission, creator: Agent) -> Iterable[Event]:
     """Use the plain text extraction service to extract text from the PDF."""
-    # TODO: yield AddAnnotation(PlainTextExtraction) as we go along; one at the
-    # start, and then commemorate the result at the end.
-    return ()
+    identifier = after.source_content.identifier
+    try:
+        plaintext.request_extraction(after.source_content.identifier)
+        yield AddAnnotation(creator=creator,
+                            annotation=PlainTextExtraction(
+                                status=PlainTextExtraction.REQUESTED,
+                                identifier=identifier))
+        while True:
+            if plaintext.extraction_is_complete(identifier):
+                yield AddAnnotation(
+                    creator=creator,
+                    annotation=PlainTextExtraction(identifier=identifier))
+    except plaintext.RequestFailed as e:
+        yield AddAnnotation(
+            creator=creator,
+            annotation=PlainTextExtraction(status=PlainTextExtraction.FAILED,
+                                           identifier=identifier))

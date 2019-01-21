@@ -36,43 +36,32 @@ logger = logging.getLogger(__name__)
 class AddProposal(Event):
     """Add a new proposal to a :class:`Submission`."""
 
-    proposed_event_type: Optional[type] = field(default=None)
-    proposed_event_data: dict = field(default_factory=dict)
-    comment: str = field(default_factory=str)
+    proposal: Optional[Proposal] = field(default=None)
+    # proposed_event_type: Optional[type] = field(default=None)
+    # proposed_event_data: dict = field(default_factory=dict)
+    # comment: str = field(default_factory=str)
 
     def validate(self, submission: Submission) -> None:
         """Simulate applying the proposal to check for validity."""
-        if self.proposed_event_type is None:
+        if self.proposal is None:
+            raise InvalidEvent(self, f"Proposal is required")
+        if self.proposal.proposed_event_type is None:
             raise InvalidEvent(self, f"Event type is required")
-        proposal = Proposal(
-            creator=self.creator,
-            proposed_event_type=self.proposed_event_type,
-            proposed_event_data=self.proposed_event_data,
-            comments=[
-                Comment(creator=self.creator, proxy=self.proxy,
-                        body=self.comment)
-            ]
-        )
-        proposed_event_data = copy.deepcopy(proposal.proposed_event_data)
+        proposed_event_data = copy.deepcopy(self.proposal.proposed_event_data)
         proposed_event_data.update({'creator': self.creator})
-        event = proposal.proposed_event_type(**proposed_event_data)
+        event = self.proposal.proposed_event_type(**proposed_event_data)
         event.validate(submission)
 
     def project(self, submission: Submission) -> Submission:
         """Add the proposal to the submission."""
-        proposal = Proposal(
-            creator=self.creator,
-            proposed_event_type=self.proposed_event_type,
-            proposed_event_data=self.proposed_event_data
-        )
-        submission.proposals[proposal.proposal_id] = proposal
+        submission.proposals[self.proposal.proposal_id] = self.proposal
         return submission
 
 
 @dataclass()
 class RejectProposal(Event):
     """Reject a :class:`.Proposal` on a submission."""
-    
+
     proposal_id: Optional[str] = field(default=None)
     comment: Optional[str] = field(default=None)
 

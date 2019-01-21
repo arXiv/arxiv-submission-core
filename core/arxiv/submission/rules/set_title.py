@@ -1,4 +1,4 @@
-"""Rules for the :class:`.SetTitle` command."""
+"""Things that should happen upon the :class:`.SetTitle` command."""
 
 from datetime import datetime, timedelta
 from typing import Set, List, Tuple, Iterable

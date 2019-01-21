@@ -8,7 +8,7 @@ annotations on submissions, use
 :class:`arxiv.submission.domain.event.RemoveAnnotation`.
 """
 
-from typing import Optional, Union
+from typing import Optional, Union, List
 from datetime import datetime
 import hashlib
 
@@ -86,6 +86,18 @@ class PossibleDuplicate(Annotation):
 
 
 @dataclass
+class PossibleContentProblem(Annotation):
+    """Represents a possible problem with the content of the submission."""
+
+    GENERAL = 'general'
+    STOPWORDS = 'stopwords'
+    LANGUAGE = 'language'
+
+    problem_type: str = field(default=GENERAL)
+    description: str = field(default_factory=str)
+
+
+@dataclass
 class PossibleMetadataProblem(Annotation):
     """Represents a possible issue with the content of a metadata field."""
 
@@ -96,14 +108,19 @@ class PossibleMetadataProblem(Annotation):
 
 
 @dataclass
-class ClassifierResult(Annotation):
-    """Represents a suggested classification from an auto-classifier."""
+class ClassifierResult:
+    category: Optional[Category] = field(default=None)
+    probability: float = field(default=0.0)
+
+
+@dataclass
+class ClassifierResults(Annotation):
+    """Represents suggested classifications from an auto-classifier."""
 
     CLASSIC = "classic"
 
     classifier: str = field(default=CLASSIC)
-    category: Optional[Category] = field(default=None)
-    probability: float = field(default=0.0)
+    results: List[ClassifierResult] = field(default_factory=list)
 
 
 @dataclass
@@ -114,6 +131,7 @@ class FeatureCount(Annotation):
     PAGES = "pages"
     STOPWORDS = "stops"
     WORDS = "words"
+    TYPES = [CHARACTERS, PAGES, STOPWORDS, WORDS]
 
     feature_type: str = field(default=WORDS)
     feature_count: int = field(default=0)
