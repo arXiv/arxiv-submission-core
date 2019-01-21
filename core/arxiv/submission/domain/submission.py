@@ -11,6 +11,7 @@ from dataclasses import asdict
 from .agent import Agent, agent_factory
 from .meta import License, Classification
 from .annotation import Annotation
+from .proposal import Proposal
 from .util import get_tzaware_utc_now
 
 
@@ -270,6 +271,7 @@ class Submission:
     holds: List[Hold] = field(default_factory=list)
     annotations: Dict[str, Annotation] = field(default_factory=dict)
     user_requests: Dict[str, UserRequest] = field(default_factory=dict)
+    proposals: Dict[str, Proposal] = field(default_factory=dict)
 
     @property
     def active(self) -> bool:
@@ -324,29 +326,13 @@ class Submission:
     def applied_user_requests(self) -> List[UserRequest]:
         return [r for r in self.user_requests.values() if r.is_applied()]
 
-    def add_user_request(self, request: UserRequest) -> None:
-        """Add a :class:`.UserRequest`."""
-        self.user_requests[request.request_id] = request
-
     def get_user_request(self, request_id: str) -> UserRequest:
         """Retrieve a :class:`.UserRequest` by ID."""
         return self.user_requests[request_id]
 
-    def remove_user_request(self, request_id: str) -> None:
-        """Remove a :class:`.UserRequest` by ID."""
-        del self.user_requests[request_id]
-
-    def add_annotation(self, annotation: Annotation) -> None:
-        """Add an :class:`.Annotation`."""
-        self.annotations[annotation.annotation_id] = annotation
-
     def get_annotation(self, annotation_id: str) -> Annotation:
         """Retrieve an :class:`.Annotation` by ID."""
         return self.annotations[annotation_id]
-
-    def remove_annotation(self, annotation_id: str) -> None:
-        """Remove an :class:`.Annotation` by ID."""
-        del self.annotations[annotation_id]
 
     def to_dict(self) -> dict:
         """Generate a dict representation of this :class:`.Submission`."""

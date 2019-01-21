@@ -6,3 +6,4 @@ from .submission import Submission, License, SubmissionMetadata, \
 from .agent import User, System, Client, Agent, agent_factory
 from .event import event_factory, Event
 from .annotation import Comment
+from .proposal import Proposal

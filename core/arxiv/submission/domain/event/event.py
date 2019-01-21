@@ -7,7 +7,8 @@ import hashlib
 import copy
 from functools import wraps
 from flask import current_app
-from dataclasses import dataclass, field, asdict
+from dataclasses import field, asdict
+from .util import dataclass
 
 from arxiv.base import logging
 from arxiv.base.globals import get_application_config
@@ -29,7 +30,7 @@ Rule = Tuple[Condition, Callback]
 Store = Callable[['Event', Submission, Submission], Tuple['Event', Submission]]
 
 
-@dataclass
+@dataclass()
 class Event:
     """Base class for submission-related events."""
 
@@ -102,10 +103,6 @@ class Event:
                                 self.creator.agent_identifier.encode('utf-8')))
         return h.hexdigest()
 
-    def __hash__(self):
-        """Use event ID as object hash."""
-        return hash(self.event_id)
-
     def apply(self, submission: Optional[Submission] = None) -> Submission:
         """Apply the projection for this :class:`.Event` instance."""
         self.before = copy.deepcopy(submission)
@@ -127,13 +124,7 @@ class Event:
     def to_dict(self):
         """Generate a dict representation of this :class:`.Event`."""
         data = asdict(self)
-        data.update({
-            'creator': self.creator.to_dict(),
-            'proxy': self.proxy.to_dict() if self.proxy else None,
-            'client': self.client.to_dict() if self.client else None,
-            'created': self.created.isoformat(),
-            'event_type': self.event_type
-        })
+        data.update({'event_type': self.event_type})
         data.pop('before')
         data.pop('after')
         return data

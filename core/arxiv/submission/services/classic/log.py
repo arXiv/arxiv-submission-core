@@ -50,7 +50,7 @@ def admin_log(program: str, command: str, text: str, notify: bool = False,
               hostname: Optional[str] = None,
               submission_id: Optional[int] = None,
               paper_id: Optional[str] = None,
-              document_id: Optional[int] = None) -> None:
+              document_id: Optional[int] = None) -> models.AdminLogEntry:
     """
     Add an entry to the admin log.
 
@@ -71,17 +71,19 @@ def admin_log(program: str, command: str, text: str, notify: bool = False,
     document_id : int
 
     """
+    if paper_id is None and submission_id is not None:
+        paper_id = f'submit/{submission_id}'
     with util.transaction() as session:
-        session.add(
-            models.AdminLogEntry(
-                paper_id=paper_id,
-                username=username,
-                host=hostname,
-                program=program,
-                command=command,
-                logtext=text,
-                document_id=document_id,
-                submission_id=submission_id,
-                notify=notify
-            )
+        entry = models.AdminLogEntry(
+            paper_id=paper_id,
+            username=username,
+            host=hostname,
+            program=program,
+            command=command,
+            logtext=text,
+            document_id=document_id,
+            submission_id=submission_id,
+            notify=notify
         )
+        session.add(entry)
+        return entry

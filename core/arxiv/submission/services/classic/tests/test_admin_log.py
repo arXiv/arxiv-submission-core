@@ -40,9 +40,9 @@ class TestAdminLog(TestCase):
             self.assertEqual(logs[0].username, "foouser")
             self.assertEqual(logs[0].host, "127.0.0.1")
             self.assertEqual(logs[0].submission_id, 5)
+            self.assertEqual(logs[0].paper_id, "submit/5")
             self.assertFalse(logs[0].notify)
             self.assertIsNone(logs[0].document_id)
-            self.assertIsNone(logs[0].paper_id)
 
 
 class TestOnEvent(TestCase):

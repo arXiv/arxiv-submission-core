@@ -35,7 +35,7 @@ from arxiv.base import logging
 from arxiv.base.globals import get_application_config, get_application_global
 from ...domain.event import Event, Publish, RequestWithdrawal, SetDOI, \
     SetJournalReference, SetReportNumber, Rollback, RequestCrossList, \
-    ApplyRequest, RejectRequest, ApproveRequest
+    ApplyRequest, RejectRequest, ApproveRequest, AddProposal
 
 from ...domain.submission import License, Submission, WithdrawalRequest, \
     CrossListClassificationRequest
@@ -44,7 +44,7 @@ from .models import Base
 from .exceptions import ClassicBaseException, NoSuchSubmission, CommitFailed
 from .util import transaction, current_session
 from .event import DBEvent
-from . import models, util, interpolate, log
+from . import models, util, interpolate, log, proposal
 
 
 logger = logging.getLogger(__name__)
@@ -313,6 +313,8 @@ def store_event(event: Event, before: Optional[Submission],
     session.add(db_event)
 
     log.handle(event, before, after)   # Create admin log entry, if applicable.
+    if isinstance(event, AddProposal):
+        proposal.add(event, before, after)
 
     # Attach the database object for the event to the row for the submission.
     if this_is_a_new_submission:    # Update in transaction.

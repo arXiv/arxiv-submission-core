@@ -2,7 +2,8 @@
 
 from typing import Optional, List
 
-from dataclasses import dataclass, field
+from dataclasses import field
+from .util import dataclass
 
 from arxiv import taxonomy
 
@@ -13,7 +14,7 @@ from ..submission import Submission, Classification, WithdrawalRequest, \
 from ...exceptions import InvalidEvent
 
 
-@dataclass
+@dataclass()
 class ApproveRequest(Event):
     """Approve a user request."""
 
@@ -39,7 +40,7 @@ class ApproveRequest(Event):
         return submission
 
 
-@dataclass
+@dataclass()
 class RejectRequest(Event):
     NAME = "reject user request"
     NAMED = "user request rejected"
@@ -63,7 +64,7 @@ class RejectRequest(Event):
         return submission
 
 
-@dataclass
+@dataclass()
 class ApplyRequest(Event):
     NAME = "apply user request"
     NAMED = "user request applied"
@@ -87,7 +88,7 @@ class ApplyRequest(Event):
         return submission
 
 
-@dataclass
+@dataclass()
 class RequestCrossList(Event):
     """Request that a secondary classification be added after announcement."""
 
@@ -119,15 +120,17 @@ class RequestCrossList(Event):
         classifications = [
             Classification(category=category) for category in self.categories
         ]
-        submission.add_user_request(
-            CrossListClassificationRequest(creator=self.creator,
-                                           created=self.created,
-                                           status=WithdrawalRequest.PENDING,
-                                           classifications=classifications))
+        request = CrossListClassificationRequest(
+            creator=self.creator,
+            created=self.created,
+            status=WithdrawalRequest.PENDING,
+            classifications=classifications
+        )
+        submission.user_requests[request.request_id] = request
         return submission
 
 
-@dataclass
+@dataclass()
 class RequestWithdrawal(Event):
     """Request that a paper be withdrawn."""
 
@@ -158,10 +161,12 @@ class RequestWithdrawal(Event):
 
     def project(self, submission: Submission) -> Submission:
         """Update the submission status and withdrawal reason."""
-        submission.add_user_request(
-            WithdrawalRequest(creator=self.creator,
-                              created=self.created,
-                              updated=self.created,
-                              status=WithdrawalRequest.PENDING,
-                              reason_for_withdrawal=self.reason))
+        request = WithdrawalRequest(
+            creator=self.creator,
+            created=self.created,
+            updated=self.created,
+            status=WithdrawalRequest.PENDING,
+            reason_for_withdrawal=self.reason
+        )
+        submission.user_requests[request.request_id] = request
         return submission

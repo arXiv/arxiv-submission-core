@@ -53,18 +53,6 @@ class Annotation:
 
 
 @dataclass
-class Proposal(Annotation):
-    """Represents a proposal to apply an event to a submission."""
-
-    event_type: Optional[type] = field(default=None)
-    event_data: dict = field(default_factory=dict)
-
-    def to_dict(self) -> dict:
-        """Generate a dict representation of this :class:`.Proposal`."""
-        return asdict(self)
-
-
-@dataclass
 class Comment(Annotation):
     """A freeform textual annotation."""
 
@@ -136,7 +124,8 @@ class ContentFlag(Annotation):
     """Represents a QA flag based on the content of the submission."""
 
     flag_type: Optional[str] = field(default=None)
-    flag_value: Optional[Union[int, str, float, dict, list]]
+    flag_value: Optional[Union[int, str, float, dict, list]] = \
+        field(default=None)
 
 
 @dataclass
