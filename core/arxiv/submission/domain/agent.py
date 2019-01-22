@@ -72,11 +72,14 @@ class User(Agent):
     """An (human) end user."""
 
     email: str
+    username: str = field(default_factory=str)
     forename: str = field(default_factory=str)
     surname: str = field(default_factory=str)
     suffix: str = field(default_factory=str)
     identifier: Optional[str] = field(default=None)
     affiliation: str = field(default_factory=str)
+    hostname: Optional[str] = field(default=None)
+    """Hostname or IP address from which user requests are originating."""
 
     endorsements: List[str] = field(default_factory=list)
 
@@ -89,6 +92,7 @@ class User(Agent):
         """Generate a dict representation of this :class:`.User`."""
         data = super(User, self).to_dict()
         data['name'] = self.name
+        data['username'] = self.username
         data['forename'] = self.forename
         data['surname'] = self.surname
         data['suffix'] = self.suffix
@@ -109,6 +113,9 @@ class System(Agent):
 @dataclass
 class Client(Agent):
     """A non-human third party, usually an API client."""
+
+    hostname: Optional[str] = field(default_factory=None)
+    """Hostname or IP address from which client requests are originating."""
 
     def to_dict(self):
         """Generate a dict representation of this :class:`.Client` instance."""

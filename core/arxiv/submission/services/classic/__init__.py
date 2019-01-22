@@ -44,7 +44,7 @@ from .models import Base
 from .exceptions import ClassicBaseException, NoSuchSubmission, CommitFailed
 from .util import transaction, current_session
 from .event import DBEvent
-from . import models, util, interpolate
+from . import models, util, interpolate, log
 
 
 logger = logging.getLogger(__name__)
@@ -311,6 +311,8 @@ def store_event(event: Event, before: Optional[Submission],
     db_event = _new_dbevent(event)
     session.add(dbs)
     session.add(db_event)
+
+    log.handle(event, before, after)   # Create admin log entry, if applicable.
 
     # Attach the database object for the event to the row for the submission.
     if this_is_a_new_submission:    # Update in transaction.
