@@ -1,4 +1,4 @@
-"""Things that should happen upon the :class:`.AddProcessStatus` command."""
+"""Reclassification policies."""
 
 from typing import List, Iterable, Optional
 
