@@ -1,10 +1,10 @@
 from unittest import TestCase, mock
 from datetime import datetime
 import copy
-from ...domain.event import SetTitle, AddAnnotation, RemoveAnnotation
+from ...domain.event import SetTitle, AddMetadataFlag, RemoveFlag
 from ...domain.submission import Submission
 from ...domain.agent import Agent, User
-from ...domain.annotation import PossibleDuplicate
+from ...domain.flag import Flag, MetadataFlag
 
 from .. import set_title
 from ... import tasks
@@ -39,10 +39,13 @@ class TestCheckForSimilarTitles(TestCase):
         )
         self.assertEqual(len(events), 2, "Generates two events")
         for event in events:
-            self.assertIsInstance(event, AddAnnotation,
-                                  "Generates AddAnnotation events")
-            self.assertIsInstance(event.annotation, PossibleDuplicate,
-                                  "Annotations are PossibleDuplicates")
+            self.assertIsInstance(event, AddMetadataFlag,
+                                  "Generates AddMetadataFlag events")
+            self.assertEqual(
+                event.flag_type,
+                MetadataFlag.FlagTypes.POSSIBLE_DUPLICATE_TITLE,
+                "Flag has type POSSIBLE_DUPLICATE_TITLE"
+            )
 
         for event in events:      # Apply the generated events.
             after = event.apply(after)
@@ -53,11 +56,14 @@ class TestCheckForSimilarTitles(TestCase):
         )
         self.assertEqual(len(events), 4, "Generates four events")
         for event in events[:2]:
-            self.assertIsInstance(event, RemoveAnnotation,
-                                  "Generates RemoveAnnotation events")
+            self.assertIsInstance(event, RemoveFlag,
+                                  "Generates RemoveFlag events")
 
         for event in events[2:]:
-            self.assertIsInstance(event, AddAnnotation,
-                                  "Generates AddAnnotation events")
-            self.assertIsInstance(event.annotation, PossibleDuplicate,
-                                  "Annotations are PossibleDuplicates")
+            self.assertIsInstance(event, AddMetadataFlag,
+                                  "Generates AddMetadataFlag events")
+            self.assertEqual(
+                event.flag_type,
+                MetadataFlag.FlagTypes.POSSIBLE_DUPLICATE_TITLE,
+                "Flag has type POSSIBLE_DUPLICATE_TITLE"
+            )

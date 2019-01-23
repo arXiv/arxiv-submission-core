@@ -243,9 +243,6 @@ class Submission(Base):    # type: ignore
         return submission
 
     def patch_hold(self, submission: domain.Submission) -> domain.Submission:
-        submission.holds.append(
-            domain.Hold(creator=domain.System(__name__), hold_type='patch')
-        )
         if self.status == self.ON_HOLD:
             submission.status = domain.Submission.ON_HOLD
         return submission
@@ -1102,10 +1099,10 @@ class CategoryProposal(Base):   # type: ignore
     ACCEPTED_AS_SECONDARY = 2
     REJECTED = 3
     DOMAIN_STATUS = {
-        UNRESOLVED: domain.proposal.Proposal.PENDING,
-        ACCEPTED_AS_PRIMARY: domain.proposal.Proposal.ACCEPTED,
-        ACCEPTED_AS_SECONDARY: domain.proposal.Proposal.ACCEPTED,
-        REJECTED: domain.proposal.Proposal.REJECTED
+        UNRESOLVED: domain.proposal.Proposal.Status.PENDING,
+        ACCEPTED_AS_PRIMARY: domain.proposal.Proposal.Status.ACCEPTED,
+        ACCEPTED_AS_SECONDARY: domain.proposal.Proposal.Status.ACCEPTED,
+        REJECTED: domain.proposal.Proposal.Status.REJECTED
     }
 
     proposal_id = Column(Integer, primary_key=True)
@@ -1127,11 +1124,11 @@ class CategoryProposal(Base):   # type: ignore
                                     foreign_keys=[response_comment_id])
 
     def status_from_domain(self, proposal: domain.proposal.Proposal) -> int:
-        if proposal.status == domain.proposal.Proposal.PENDING:
+        if proposal.status == domain.proposal.Proposal.Status.PENDING:
             return self.UNRESOLVED
-        elif proposal.status == domain.proposal.Proposal.REJECTED:
+        elif proposal.status == domain.proposal.Proposal.Status.REJECTED:
             return self.REJECTED
-        elif proposal.status == domain.proposal.Proposal.ACCEPTED:
+        elif proposal.status == domain.proposal.Proposal.Status.ACCEPTED:
             if proposal.proposed_event_type \
                     is domain.event.SetPrimaryClassification:
                 return self.ACCEPTED_AS_PRIMARY

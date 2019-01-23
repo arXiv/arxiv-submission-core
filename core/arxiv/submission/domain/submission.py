@@ -10,7 +10,7 @@ from dataclasses import asdict
 
 from .agent import Agent, agent_factory
 from .meta import License, Classification
-from .annotation import Annotation, Comment
+from .annotation import Comment
 from .proposal import Proposal
 from .process import ProcessStatus
 from .flag import Flag
@@ -134,6 +134,9 @@ class Delegation:
 @dataclass
 class Hold:
     """Represents a block on announcement, usually for QA/QC purposes."""
+
+    event_id: str
+    """The event that created the hold."""
 
     creator: Agent
     created: datetime = field(default_factory=get_tzaware_utc_now)
@@ -345,10 +348,6 @@ class Submission:
     def get_user_request(self, request_id: str) -> UserRequest:
         """Retrieve a :class:`.UserRequest` by ID."""
         return self.user_requests[request_id]
-
-    def get_annotation(self, annotation_id: str) -> Annotation:
-        """Retrieve an :class:`.Annotation` by ID."""
-        return self.annotations[annotation_id]
 
     def to_dict(self) -> dict:
         """Generate a dict representation of this :class:`.Submission`."""

@@ -2,11 +2,12 @@
 
 from typing import List, Iterable
 
-from ..domain.event import Event, AddAnnotation, RemoveAnnotation, \
-    AddProposal, AddSecondaryClassification, FinalizeSubmission
+from ..domain.event import Event, AddProposal, AddSecondaryClassification, \
+    FinalizeSubmission
 from ..domain.event.event import Condition
-from ..domain.annotation import ClassifierResult, PlainTextExtraction, \
-    ContentFlag, Feature, ClassifierResults, Comment
+from ..domain.annotation import ClassifierResult, Feature, ClassifierResults, \
+    Comment
+from ..domain.flag import ContentFlag
 from ..domain.proposal import Proposal
 from ..domain.submission import Submission
 from ..domain.agent import Agent, User
@@ -25,7 +26,7 @@ PRIMARY_TO_SECONDARY = {
 
 
 @FinalizeSubmission.bind()
-def propose_cross_from_primary(event: AddAnnotation, before: Submission,
+def propose_cross_from_primary(event: FinalizeSubmission, before: Submission,
                                after: Submission, creator: Agent) \
         -> Iterable[Event]:
     """Propose a cross-list classification based on primary classification."""

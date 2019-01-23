@@ -4,10 +4,11 @@ from typing import Optional, Iterable, Dict, Callable
 
 from . import models, util
 from ...domain.event import Event, UnFinalizeSubmission, AcceptProposal, \
-    AddSecondaryClassification, AddAnnotation
-from ...domain.annotation import PossibleContentProblem, ClassifierResults
+    AddSecondaryClassification, AddMetadataFlag
+from ...domain.annotation import ClassifierResults
 from ...domain.submission import Submission
 from ...domain.agent import Agent, System
+from ...domain.flag import MetadataFlag
 
 
 def log_unfinalize(event: UnFinalizeSubmission, before: Submission,
@@ -34,20 +35,18 @@ def log_accept_system_cross(event: AcceptProposal, before: Submission,
                       paper_id=after.arxiv_id)
 
 
-def log_stopwords(event: AddAnnotation, before: Submission,
+def log_stopwords(event: AddMetadataFlag, before: Submission,
                   after: Submission) -> None:
     """Create a log entry when there is a problem with stopword content."""
-    if type(event.annotation) is not PossibleContentProblem:
-        return
-    if event.annotation.problem_type == PossibleContentProblem.STOPWORDS:
+    if event.flag_type is MetadataFlag.FlagTypes.LOW_STOP:
         admin_log(__name__, "admin comment",
-                  event.annotation.comment,
+                  event.comment,
                   username="system",
                   submission_id=after.submission_id,
                   paper_id=after.arxiv_id)
 
 
-def log_classifier_failed(event: AddAnnotation, before: Submission,
+def log_classifier_failed(event: AddMetadataFlag, before: Submission,
                           after: Submission) -> None:
     """Create a log entry when the classifier returns no suggestions."""
     if type(event.annotation) is not ClassifierResults:
@@ -63,7 +62,7 @@ def log_classifier_failed(event: AddAnnotation, before: Submission,
 ON_EVENT: Dict[type, Callable[[Event, Submission, Submission], None]] = {
     UnFinalizeSubmission: [log_unfinalize],
     AcceptProposal: [log_accept_system_cross],
-    AddAnnotation: [log_stopwords]
+    AddMetadataFlag: [log_stopwords]
 
 }
 """Logging functions to call when an event is comitted."""

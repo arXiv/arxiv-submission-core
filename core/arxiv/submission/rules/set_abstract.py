@@ -12,9 +12,8 @@ from arxiv.base.globals import get_application_config
 
 from ..domain.event import Event, SetAbstract, RemoveFlag, AddMetadataFlag
 from ..domain.submission import Submission
-from ..domain.annotation import PossibleDuplicate, PossibleMetadataProblem
 from ..domain.agent import Agent, User
-from ..domain.flag import MetadataFlag, ContentFlag
+from ..domain.flag import MetadataFlag, ContentFlag, PossibleDuplicate
 from ..services import classic
 from ..tasks import is_async
 

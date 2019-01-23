@@ -11,9 +11,8 @@ from arxiv.base.globals import get_application_config
 
 from ..domain.event import Event, SetTitle, RemoveFlag, AddMetadataFlag
 from ..domain.submission import Submission
-from ..domain.annotation import PossibleDuplicate, PossibleMetadataProblem
 from ..domain.agent import Agent, User
-from ..domain.flag import MetadataFlag, ContentFlag
+from ..domain.flag import MetadataFlag, ContentFlag, PossibleDuplicate
 from ..services import classic
 from ..tasks import is_async
 from .util import is_ascii, below_ascii_threshold, proportion_ascii
@@ -77,7 +76,7 @@ def check_similar_titles(event: SetTitle, before: Submission,
                                     'similarity': jaccard(event.title, title)
                                   },
                                   field='title',
-                                  description='possible duplicate title')
+                                  comment='possible duplicate title')
 
 
 @SetTitle.bind(condition=lambda *a: not system_event(*a))
@@ -96,7 +95,7 @@ def check_title_ascii(event: SetTitle, before: Submission,
             flag_type=MetadataFlag.FlagTypes.CHARACTER_SET,
             flag_data={'ascii': proportion_ascii(event.title)},
             field='title',
-            description='Possible excessive use of non-ASCII characters.'
+            comment='Possible excessive use of non-ASCII characters.'
         )
 
 

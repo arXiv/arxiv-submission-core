@@ -3,7 +3,6 @@
 from typing import Iterable
 
 from ..domain.event import Event, AddProcessStatus, ConfirmPreview
-from ..domain.annotation import PlainTextExtraction
 from ..domain.submission import Submission
 from ..domain.agent import Agent, User
 from ..domain.process import ProcessStatus
@@ -21,19 +20,19 @@ def extract_plain_text(event: ConfirmPreview, before: Submission,
     try:
         plaintext.request_extraction(after.source_content.identifier)
         yield AddProcessStatus(creator=creator, process=process,
-                               status=ProcessStatus.Statuses.REQUESTED,
+                               status=ProcessStatus.Status.REQUESTED,
                                service='plaintext', version=plaintext.VERSION,
                                identifier=identifier)
         while True:
             if plaintext.extraction_is_complete(identifier):
                 yield AddProcessStatus(creator=creator, process=process,
-                                       status=ProcessStatus.Statuses.SUCCEEDED,
+                                       status=ProcessStatus.Status.SUCCEEDED,
                                        service='plaintext',
                                        version=plaintext.VERSION,
                                        identifier=identifier)
     except plaintext.RequestFailed as e:
         reason = 'request failed (%s): %s' % (type(e), e)
         yield AddProcessStatus(creator=creator, process=process,
-                               status=ProcessStatus.Statuses.FAILED,
+                               status=ProcessStatus.Status.FAILED,
                                service='plaintext', version=plaintext.VERSION,
                                identifier=identifier, reason=reason)

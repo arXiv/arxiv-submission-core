@@ -2,12 +2,11 @@
 
 from typing import List, Iterable
 
-from ..domain.event import Event, AddAnnotation, RemoveAnnotation, \
-    AddProposal, SetPrimaryClassification, AddSecondaryClassification, \
-    AcceptProposal
+from ..domain.event import Event, AddProposal, SetPrimaryClassification, \
+    AddSecondaryClassification, AcceptProposal
 from ..domain.event.event import Condition
-from ..domain.annotation import ClassifierResult, PlainTextExtraction, \
-    ContentFlag, Feature, ClassifierResults
+from ..domain.annotation import ClassifierResult, Feature, ClassifierResults
+from ..domain.flag import ContentFlag
 from ..domain.submission import Submission
 from ..domain.agent import Agent, User, System
 from ..domain.proposal import Proposal

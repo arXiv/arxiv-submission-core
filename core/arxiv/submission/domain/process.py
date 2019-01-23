@@ -14,7 +14,7 @@ from .util import get_tzaware_utc_now
 class ProcessStatus:
     """Base class for process status information."""
 
-    class Statuses(Enum):
+    class Status(Enum):
         """Supported statuses."""
 
         REQUESTED = "requested"
@@ -33,7 +33,7 @@ class ProcessStatus:
     created: datetime
     """Time when the process status was created (not the process itself)."""
     process: Processes
-    status: Statuses = field(default=Statuses.REQUESTED)
+    status: Status = field(default=Status.REQUESTED)
     process_service: Optional[str] = field(default=None)
     process_version: Optional[str] = field(default=None)
     reason: Optional[str] = field(default=None)

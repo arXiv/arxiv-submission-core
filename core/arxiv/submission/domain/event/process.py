@@ -15,10 +15,10 @@ from .util import dataclass
 class AddProcessStatus(Event):
     """Add the status of an external/long-running process to a submission."""
 
-    Statuses = ProcessStatus.Statuses
+    Status = ProcessStatus.Status
     Processes = ProcessStatus.Processes
 
-    status: Statuses = field(default=Statuses.REQUESTED)
+    status: Status = field(default=Status.REQUESTED)
     process: Processes = field(default=Processes.NONE)
     service: Optional[str] = field(default=None)
     version: Optional[str] = field(default=None)

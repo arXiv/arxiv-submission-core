@@ -86,7 +86,7 @@ class TestOnHoldSubmission(TestCase):
                              domain.submission.Submission.ON_HOLD,
                              "The submission is in the hold state")
             self.assertTrue(submission.is_on_hold, "The submission is on hold")
-            self.assertEqual(len(self.events), len(events),
+            self.assertEqual(len(self.events) + 1, len(events),
                              "The same number of events were retrieved as"
                              " were initially saved.")
             self.assertEqual(len(submission.versions), 0,
@@ -98,7 +98,7 @@ class TestOnHoldSubmission(TestCase):
                              domain.submission.Submission.ON_HOLD,
                              "The submission is in the hold state")
             self.assertTrue(submission.is_on_hold, "The submission is on hold")
-            self.assertEqual(len(self.events), len(events),
+            self.assertEqual(len(self.events) + 1, len(events),
                              "The same number of events were retrieved as"
                              " were initially saved.")
             self.assertEqual(len(submission.versions), 0,
@@ -171,7 +171,7 @@ class TestOnHoldSubmission(TestCase):
             self.assertEqual(submission.status,
                              domain.submission.Submission.WORKING,
                              "The submission is in the working state")
-            self.assertEqual(len(self.events) + 1, len(events),
+            self.assertEqual(len(self.events) + 2, len(events),
                              "The same number of events were retrieved as"
                              " were saved.")
             self.assertEqual(len(submission.versions), 0,
@@ -182,7 +182,7 @@ class TestOnHoldSubmission(TestCase):
             self.assertEqual(submission.status,
                              domain.submission.Submission.WORKING,
                              "The submission is in the working state")
-            self.assertEqual(len(self.events) + 1, len(events),
+            self.assertEqual(len(self.events) + 2, len(events),
                              "The same number of events were retrieved as"
                              " were saved.")
             self.assertEqual(len(submission.versions), 0,

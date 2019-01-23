@@ -25,7 +25,7 @@ from .agent import Agent
 class Proposal:
     """Represents a proposal to apply an event to a submission."""
 
-    class ProposalStatus(Enum):
+    class Status(Enum):
         PENDING = 'pending'
         REJECTED = 'rejected'
         ACCEPTED = 'accepted'
@@ -39,7 +39,7 @@ class Proposal:
     proposed_event_type: Optional[type] = field(default=None)
     proposed_event_data: dict = field(default_factory=dict)
     comments: List[Comment] = field(default_factory=list)
-    status: ProposalStatus = field(default=ProposalStatus.PENDING)
+    status: Status = field(default=Status.PENDING)
 
     @property
     def proposal_type(self) -> str:
@@ -53,10 +53,10 @@ class Proposal:
         return data
 
     def is_rejected(self):
-        return self.status == self.REJECTED
+        return self.status == self.Status.REJECTED
 
     def is_accepted(self):
-        return self.status == self.ACCEPTED
+        return self.status == self.Status.ACCEPTED
 
     def is_pending(self):
-        return self.status == self.PENDING
+        return self.status == self.Status.PENDING

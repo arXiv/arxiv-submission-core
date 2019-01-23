@@ -58,9 +58,10 @@ class AddProposal(Event):
             proxy=self.proxy,
             proposed_event_type=self.proposed_event_type,
             proposed_event_data=self.proposed_event_data,
-            comments=[Comment(creator=self.creator, created=self.created,
+            comments=[Comment(event_id=self.event_id, creator=self.creator,
+                              created=self.created, proxy=self.proxy,
                               body=self.comment)],
-            status=Proposal.ProposalStatus.PENDING
+            status=Proposal.Status.PENDING
         )
         return submission
 
@@ -86,9 +87,9 @@ class RejectProposal(Event):
         submission.proposals[self.proposal_id].status = Proposal.REJECTED
         if self.comment:
             submission.proposals[self.proposal_id].comments.append(
-                Comment(creator=self.creator, proxy=self.proxy,
-                        body=self.comment)
-            )
+                Comment(event_id=self.event_id, creator=self.creator,
+                        created=self.created, proxy=self.proxy,
+                        body=self.comment))
         return submission
 
 
@@ -113,9 +114,9 @@ class AcceptProposal(Event):
         submission.proposals[self.proposal_id].status = Proposal.ACCEPTED
         if self.comment:
             submission.proposals[self.proposal_id].comments.append(
-                Comment(creator=self.creator, proxy=self.proxy,
-                        body=self.comment)
-            )
+                Comment(event_id=self.event_id, creator=self.creator,
+                        created=self.created, proxy=self.proxy,
+                        body=self.comment))
         return submission
 
 

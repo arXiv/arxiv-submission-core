@@ -25,17 +25,16 @@ def add(event: AddProposal, before: Submission, after: Submission) -> None:
 
     """
     supported = [SetPrimaryClassification, AddSecondaryClassification]
-    proposal = event.proposal
-    if proposal.proposed_event_type not in supported:
+    if event.proposed_event_type not in supported:
         return
 
-    category = proposal.proposed_event_data['category']
-    is_primary = proposal.proposed_event_type is SetPrimaryClassification
+    category = event.proposed_event_data['category']
+    is_primary = event.proposed_event_type is SetPrimaryClassification
     with util.transaction() as session:
         comment = None
-        if proposal.comments:
+        if event.comment:
             comment = log.admin_log(__name__, 'admin comment',
-                                    proposal.comments[0].body,
+                                    event.comment,
                                     username=event.creator.username,
                                     hostname=event.creator.hostname,
                                     submission_id=after.submission_id)

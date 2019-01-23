@@ -11,8 +11,8 @@ from flask import Flask
 from ...rules.tests.data import titles
 from ...domain.submission import Submission
 from ...domain.agent import Agent, User
-from ...domain.event import AddAnnotation, RemoveAnnotation, SetTitle
-from ...domain.annotation import PossibleDuplicate
+from ...domain.event import AddMetadataFlag, RemoveFlag, SetTitle
+from ...domain.flag import PossibleDuplicate, MetadataFlag
 from ...services import classic
 from ...rules import set_title
 from ... import save, load, load_fast, domain, exceptions
@@ -86,10 +86,13 @@ class TestAddRemovePossibleDuplicateAnnotations(TestCase):
 
         self.assertEqual(len(events), 2, "Generates two events")
         for event in events:
-            self.assertIsInstance(event, AddAnnotation,
-                                  "Generates AddAnnotation events")
-            self.assertIsInstance(event.annotation, PossibleDuplicate,
-                                  "Annotations are PossibleDuplicates")
+            self.assertIsInstance(event, AddMetadataFlag,
+                                  "Generates AddMetadataFlag events")
+            self.assertEqual(
+                event.flag_type,
+                MetadataFlag.FlagTypes.POSSIBLE_DUPLICATE_TITLE,
+                "Flag has type POSSIBLE_DUPLICATE_TITLE"
+            )
 
         for event in events:      # Apply the generated events.
             after = event.apply(after)
@@ -103,14 +106,17 @@ class TestAddRemovePossibleDuplicateAnnotations(TestCase):
             )
         self.assertEqual(len(events), 4, "Generates four events")
         for event in events[:2]:
-            self.assertIsInstance(event, RemoveAnnotation,
-                                  "Generates RemoveAnnotation events")
+            self.assertIsInstance(event, RemoveFlag,
+                                  "Generates RemoveFlag events")
 
         for event in events[2:]:
-            self.assertIsInstance(event, AddAnnotation,
-                                  "Generates AddAnnotation events")
-            self.assertIsInstance(event.annotation, PossibleDuplicate,
-                                  "Annotations are PossibleDuplicates")
+            self.assertIsInstance(event, AddMetadataFlag,
+                                  "Generates AddMetadataFlag events")
+            self.assertEqual(
+                event.flag_type,
+                MetadataFlag.FlagTypes.POSSIBLE_DUPLICATE_TITLE,
+                "Flag has type POSSIBLE_DUPLICATE_TITLE"
+            )
 
         # annotation = PossibleDuplicate(
         #    creator=creator,

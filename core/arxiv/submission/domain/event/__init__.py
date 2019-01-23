@@ -104,7 +104,7 @@ from ..agent import Agent
 from ..submission import Submission, SubmissionMetadata, Author, \
     Classification, License, Delegation,  \
     SubmissionContent, WithdrawalRequest, CrossListClassificationRequest
-from ..annotation import Annotation, Comment, Feature, ClassifierResults, \
+from ..annotation import Comment, Feature, ClassifierResults, \
     ClassifierResult
 
 from ...exceptions import InvalidEvent
@@ -114,6 +114,9 @@ from .request import RequestCrossList, RequestWithdrawal, ApplyRequest, \
     RejectRequest, ApproveRequest
 from . import validators
 from .proposal import AddProposal, RejectProposal, AcceptProposal
+from .flag import AddMetadataFlag, AddUserFlag, AddContentFlag, RemoveFlag, \
+    AddHold
+from .process import AddProcessStatus
 
 logger = logging.getLogger(__name__)
 
@@ -1002,10 +1005,14 @@ class CreateComment(Event):
 
     def project(self, submission: Submission) -> Submission:
         """Create a new :class:`.Comment` and attach it to the submission."""
-        comment = Comment(creator=self.creator, created=self.created,
-                          proxy=self.proxy, submission=submission,
-                          body=self.body, scope=self.scope)
-        submission.comments[comment.comment_id] = comment
+        submission.comments[self.event_id] = Comment(
+            event_id=self.event_id,
+            creator=self.creator,
+            created=self.created,
+            proxy=self.proxy,
+            submission=submission,
+            body=self.body
+        )
         return submission
 
 
@@ -1075,6 +1082,11 @@ class RemoveDelegate(Event):
 
 @dataclass()
 class AddFeature(Event):
+    """Add feature metadata to a submission."""
+
+    NAME = "add feature metadata"
+    NAMED = "feature metadata added"
+
     feature_type: Feature.FeatureTypes = \
         field(default=Feature.FeatureTypes.WORD_COUNT)
     feature_value: Union[float, int] = field(default=0)
@@ -1087,20 +1099,23 @@ class AddFeature(Event):
 
     def project(self, submission: Submission) -> Submission:
         """Add the annotation to the submission."""
-        feature = Feature(
+        submission.annotations[self.event_id] = Feature(
+            event_id=self.event_id,
             creator=self.creator,
             created=self.created,
             proxy=self.proxy,
             feature_type=self.feature_type,
             feature_value=self.feature_value
         )
-        submission.annotations[feature.annotation_id] = feature
         return submission
 
 
 @dataclass()
 class AddClassifierResults(Event):
     """Add the results of a classifier to a submission."""
+
+    NAME = "add classifer results"
+    NAMED = "classifier results added"
 
     classifier: ClassifierResults.Classifiers \
         = field(default=ClassifierResults.Classifiers.CLASSIC)
@@ -1114,50 +1129,16 @@ class AddClassifierResults(Event):
 
     def project(self, submission: Submission) -> Submission:
         """Add the annotation to the submission."""
-        results = ClassifierResults(
+        submission.annotations[self.event_id] = ClassifierResults(
+            event_id=self.event_id,
             creator=self.creator,
             created=self.created,
             proxy=self.proxy,
             classifier=self.classifier,
             results=self.results
         )
-        submission.annotations[results.annotation_id] = results
         return submission
 
-
-# class CreateSourcePackage(Event):
-#     pass
-#
-# class UpdateSourcePackage(Event):
-#     pass
-#
-#
-# class DeleteSourcePackage(Event):
-#     pass
-#
-#
-# class Annotation(Event):
-#     pass
-#
-#
-# class CreateFlagEvent(AnnotationEvent):
-#     pass
-#
-#
-# class DeleteFlagEvent(AnnotationEvent):
-#     pass
-#
-#
-# class DeleteCommentEvent(AnnotationEvent):
-#     pass
-#
-#
-# class CreateProposalEvent(AnnotationEvent):
-#     pass
-#
-#
-# class DeleteProposalEvent(AnnotationEvent):
-#     pass
 
 EVENT_TYPES = {
     obj.get_event_type(): obj for obj in locals().values()

@@ -2,13 +2,13 @@
 
 from typing import List, Iterable
 
-from ..domain.event import Event, AddContentFlag, RemoveAnnotation, \
-    AddProposal, SetPrimaryClassification, AddFeature
+from ..domain.event import Event, AddContentFlag, AddProposal, \
+    SetPrimaryClassification, AddFeature
 from ..domain.event.event import Condition
-from ..domain.annotation import ClassifierResult, PlainTextExtraction, \
-    ContentFlag, Feature, ClassifierResults, PossibleContentProblem
+from ..domain.annotation import ClassifierResult, Feature, ClassifierResults
 from ..domain.submission import Submission
 from ..domain.agent import Agent, User
+from ..domain.flag import ContentFlag
 from ..services import classifier, plaintext
 from ..tasks import is_async
 

@@ -2,12 +2,12 @@
 
 from typing import List, Iterable, Optional
 
-from ..domain.event import Event, AddContentFlag, RemoveAnnotation, \
-    AddProposal, SetPrimaryClassification, AddProcessStatus, \
-    AddClassifierResults, AddFeature
+from ..domain.event import Event, AddContentFlag, AddProposal, \
+    SetPrimaryClassification, AddProcessStatus, AddClassifierResults, \
+    AddFeature
 from ..domain.event.event import Condition
-from ..domain.annotation import ClassifierResult, \
-    ContentFlag, Feature, ClassifierResults
+from ..domain.annotation import ClassifierResult, Feature, ClassifierResults
+from ..domain.flag import ContentFlag
 from ..domain.submission import Submission
 from ..domain.agent import Agent, User
 from ..domain.process import ProcessStatus
@@ -21,10 +21,10 @@ PROPOSAL_THRESHOLD = 0.57   # Equiv. to logodds of 0.3.
 """This is the threshold for generating a proposal from a classifier result."""
 
 Processes = ProcessStatus.Processes
-Statuses = ProcessStatus.Statuses
+Status = ProcessStatus.Status
 
 
-def get_condition(process: Processes, status: Statuses) -> Condition:
+def get_condition(process: Processes, status: Status) -> Condition:
     """Generate a condition for a process type and status."""
     def condition(event: AddProcessStatus, before: Submission,
                   after: Submission, creator: Agent) -> bool:
@@ -32,8 +32,8 @@ def get_condition(process: Processes, status: Statuses) -> Condition:
     return condition
 
 
-on_text = get_condition(Processes.PLAIN_TEXT_EXTRACTION, Statuses.SUCCEEDED)
-on_classification = get_condition(Processes.CLASSIFICATION, Statuses.SUCCEEDED)
+on_text = get_condition(Processes.PLAIN_TEXT_EXTRACTION, Status.SUCCEEDED)
+on_classification = get_condition(Processes.CLASSIFICATION, Status.SUCCEEDED)
 
 
 def in_the_same_archive(cat_a: Category, cat_b: Category) -> bool:
@@ -48,7 +48,7 @@ def call_classifier(event: AddProcessStatus, before: Submission,
     """Request the opinion of the auto-classifier."""
     identifier = after.source_content.identifier
     yield AddProcessStatus(creator=creator, process=Processes.CLASSIFICATION,
-                           status=ProcessStatus.Statuses.REQUESTED,
+                           status=ProcessStatus.Status.REQUESTED,
                            service=classifier.SERVICE,
                            version=classifier.VERSION,
                            identifier=identifier)
@@ -59,14 +59,14 @@ def call_classifier(event: AddProcessStatus, before: Submission,
         reason = 'request failed (%s): %s' % (type(e), e)
         yield AddProcessStatus(creator=creator,
                                process=Processes.CLASSIFICATION,
-                               status=ProcessStatus.Statuses.FAILED,
+                               status=ProcessStatus.Status.FAILED,
                                service=classifier.SERVICE,
                                version=classifier.VERSION,
                                identifier=identifier, reason=reason)
 
     success = AddProcessStatus(creator=creator,
                                process=Processes.CLASSIFICATION,
-                               status=ProcessStatus.Statuses.SUCCEEDED,
+                               status=ProcessStatus.Status.SUCCEEDED,
                                service=classifier.SERVICE,
                                version=classifier.VERSION,
                                identifier=identifier)
