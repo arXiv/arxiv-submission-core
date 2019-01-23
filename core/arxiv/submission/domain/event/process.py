@@ -16,10 +16,10 @@ class AddProcessStatus(Event):
     """Add the status of an external/long-running process to a submission."""
 
     Status = ProcessStatus.Status
-    Processes = ProcessStatus.Processes
+    Process = ProcessStatus.Process
 
     status: Status = field(default=Status.REQUESTED)
-    process: Processes = field(default=Processes.NONE)
+    process: Process = field(default=Process.NONE)
     service: Optional[str] = field(default=None)
     version: Optional[str] = field(default=None)
     identifier: Optional[str] = field(default=None)

@@ -4,12 +4,12 @@ from typing import List, Iterable, Optional
 
 from ..domain.event import Event, AddContentFlag, AddProposal, \
     SetPrimaryClassification, AddProcessStatus, AddClassifierResults, \
-    AddFeature
+    AddFeature, AddSecondaryClassification, AcceptProposal, FinalizeSubmission
 from ..domain.event.event import Condition
 from ..domain.annotation import ClassifierResult, Feature, ClassifierResults
 from ..domain.flag import ContentFlag
 from ..domain.submission import Submission
-from ..domain.agent import Agent, User
+from ..domain.agent import Agent, User, System
 from ..domain.process import ProcessStatus
 from ..services import classifier, plaintext
 from ..tasks import is_async
@@ -41,61 +41,12 @@ def in_the_same_archive(cat_a: Category, cat_b: Category) -> bool:
     return CATEGORIES[cat_a]['in_archive'] == CATEGORIES[cat_b]['in_archive']
 
 
-@AddProcessStatus.bind(on_text)
+@AddClassifierResults.bind()
 @is_async
-def call_classifier(event: AddProcessStatus, before: Submission,
-                    after: Submission, creator: Agent) -> Iterable[Event]:
-    """Request the opinion of the auto-classifier."""
-    identifier = after.source_content.identifier
-    yield AddProcessStatus(creator=creator, process=Processes.CLASSIFICATION,
-                           status=ProcessStatus.Status.REQUESTED,
-                           service=classifier.SERVICE,
-                           version=classifier.VERSION,
-                           identifier=identifier)
-    try:
-        suggestions, flags, counts = \
-            classifier.classify(plaintext.retrieve_content(identifier))
-    except plaintext.RequestFailed as e:
-        reason = 'request failed (%s): %s' % (type(e), e)
-        yield AddProcessStatus(creator=creator,
-                               process=Processes.CLASSIFICATION,
-                               status=ProcessStatus.Status.FAILED,
-                               service=classifier.SERVICE,
-                               version=classifier.VERSION,
-                               identifier=identifier, reason=reason)
-
-    success = AddProcessStatus(creator=creator,
-                               process=Processes.CLASSIFICATION,
-                               status=ProcessStatus.Status.SUCCEEDED,
-                               service=classifier.SERVICE,
-                               version=classifier.VERSION,
-                               identifier=identifier)
-    yield success
-    yield AddClassifierResults(creator=creator,
-                               results=[{'category': suggestion.category,
-                                         'probability': suggestion.probability}
-                                        for suggestion in suggestions])
-
-    for flag in flags:
-        comment = "flag from classification succeeded at %s" \
-            % success.created.iso_format()
-        yield AddContentFlag(creator=creator,
-                             flag_type=ContentFlag.FlagTypes(flag.key),
-                             flag_value=flag.value,
-                             comment=comment)
-
-    for feature_type in Feature.FeatureTypes:
-        yield AddFeature(creator=creator,
-                         feature_type=feature_type,
-                         feature_value=getattr(counts, feature_type))
-
-
-@AddProcessStatus.bind(on_classification)
-@is_async
-def propose(event: AddProcessStatus, before: Submission, after: Submission,
+def propose(event: AddClassifierResults, before: Submission, after: Submission,
             creator: Agent) -> Iterable[Event]:
     """Generate system classification proposals based on classifier results."""
-    if not event.annotation.results:    # Nothing to do.
+    if len(event.results) == 0:    # Nothing to do.
         return
     user_primary = after.primary_classification.category
 
@@ -106,7 +57,7 @@ def propose(event: AddProcessStatus, before: Submission, after: Submission,
     within: Optional[ClassifierResult] = None
     without: Optional[ClassifierResult] = None
     probabilities = {result['category']: result['probability']
-                     for result in event.annotation.results}
+                     for result in event.results}
 
     # if the primary is not in the suggestions, or the primary has probability
     # < 0.5 (logodds < 0) and there is an alternative,  propose the
@@ -114,7 +65,7 @@ def propose(event: AddProcessStatus, before: Submission, after: Submission,
     if user_primary in probabilities and probabilities[user_primary] >= 0.5:
         return
 
-    for result in event.annotation.results:
+    for result in event.results:
         if in_the_same_archive(result['category'], user_primary):
             if result['probability'] > within['probability']:
                 within = result
@@ -136,3 +87,44 @@ def propose(event: AddProcessStatus, before: Submission, after: Submission,
                       proposed_event_type=SetPrimaryClassification,
                       proposed_event_data={'category': suggested_category},
                       comment=comment)
+
+
+# (ARXIVOPS-500)
+# When the following categories are the primary, a corresponding category
+# should be suggested as secondary
+PRIMARY_TO_SECONDARY = {
+    'cs.LG': 'stat.ML',
+    'stat.ML': 'cs.LG'
+}
+
+
+@FinalizeSubmission.bind()
+def propose_cross_from_primary(event: FinalizeSubmission, before: Submission,
+                               after: Submission, creator: Agent) \
+        -> Iterable[Event]:
+    """Propose a cross-list classification based on primary classification."""
+    user_primary = after.primary_classification.category
+    suggested = PRIMARY_TO_SECONDARY.get(user_primary)
+    if suggested and suggested not in after.secondary_categories:
+        yield AddProposal(
+            creator=creator,
+            proposed_event_type=AddSecondaryClassification,
+            proposed_event_data={'category': suggested},
+            comment=f"{user_primary} is primary"
+        )
+
+
+@AddProposal.bind()
+def accept_system_cross_proposal(event: AddProposal, before: Submission,
+                                 after: Submission, creator: Agent) \
+        -> Iterable[Event]:
+    """
+    Accept any cross-list proposals generated by the system.
+
+    This is a bit odd, since we likely generated the proposal in this very
+    thread...but this seems to be an explicit feature of the classic system.
+    """
+    if event.proposed_event_type is AddSecondaryClassification \
+            and type(event.creator) is System:
+        yield AcceptProposal(creator=creator, proposal_id=event.event_id,
+                             comment="accept cross-list proposal from system")

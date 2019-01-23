@@ -1,4 +1,4 @@
-"""Things that should happen upon the :class:`.SetTitle` command."""
+"""Automated metadata checks."""
 
 from datetime import datetime, timedelta
 from typing import Set, List, Tuple, Iterable
@@ -8,8 +8,8 @@ from functools import lru_cache as memoize
 
 from arxiv.base.globals import get_application_config
 
-
-from ..domain.event import Event, SetTitle, RemoveFlag, AddMetadataFlag
+from ..domain.event import Event, SetTitle, SetAbstract, RemoveFlag, \
+    AddMetadataFlag
 from ..domain.submission import Submission
 from ..domain.agent import Agent, User
 from ..domain.flag import MetadataFlag, ContentFlag, PossibleDuplicate
@@ -96,6 +96,26 @@ def check_title_ascii(event: SetTitle, before: Submission,
             flag_data={'ascii': proportion_ascii(event.title)},
             field='title',
             comment='Possible excessive use of non-ASCII characters.'
+        )
+
+
+@SetAbstract.bind(condition=lambda *a: not system_event(*a))
+def check_abstract_ascii(event: SetAbstract, before: Submission,
+                         after: Submission, creator: Agent) -> Iterable[Event]:
+    """
+    Screen for possible abuse of unicode in abstracts.
+
+    We support unicode characters in abstracts, but this can get out of hand.
+    This rule adds a flag if the ratio of non-ASCII to ASCII characters
+    is too high.
+    """
+    if below_ascii_threshold(proportion_ascii(event.abstract)):
+        yield AddMetadataFlag(
+            creator=creator,
+            flag_type=MetadataFlag.FlagTypes.CHARACTER_SET,
+            flag_data={'ascii': proportion_ascii(event.abstract)},
+            field='abstract',
+            description='Possible excessive use of non-ASCII characters.'
         )
 
 

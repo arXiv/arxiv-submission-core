@@ -9,6 +9,7 @@ from .. import classifier
 
 DATA_PATH = os.path.join(os.path.split(os.path.abspath(__file__))[0], "data")
 SAMPLE_PATH = os.path.join(DATA_PATH, "sampleResponse.json")
+LINENOS_PATH = os.path.join(DATA_PATH, "linenos.json")
 SAMPLE_FAILED_PATH = os.path.join(DATA_PATH, 'sampleFailedCyrillic.json')
 
 
@@ -77,6 +78,45 @@ class TestClassifier(TestCase):
         self.assertEqual(counts.pages, 12)
         self.assertEqual(counts.stops, 804)
         self.assertEqual(counts.words, 2860)
+
+    @mock.patch(f'{classifier.__name__}.requests.Session')
+    def test_classifier_withlinenos(self, mock_Session):
+        """The classifier returns classification suggestions."""
+        with open(LINENOS_PATH) as f:
+            data = json.load(f)
+        mock_Session.return_value = mock.MagicMock(
+            post=mock.MagicMock(
+                return_value=mock.MagicMock(
+                    status_code=status.HTTP_200_OK,
+                    json=mock.MagicMock(return_value=data)
+                )
+            )
+        )
+        expected = {
+            'astro-ph.SR': 0.77,
+            'astro-ph.GA': 0.7,
+            'astro-ph.EP': 0.69,
+            'astro-ph.HE': 0.57,
+            'astro-ph.IM': 0.57
+
+        }
+
+        suggestions, flags, counts = classifier.Classifier('foo', 9000)(b'foo')
+        self.assertEqual(len(suggestions), 5, "There are five suggestions")
+        for suggestion in suggestions:
+            self.assertEqual(
+                suggestion.probability,
+                expected[suggestion.category],
+                "Expected probability of %s for %s" %
+                (expected[suggestion.category], suggestion.category)
+            )
+        self.assertEqual(len(flags), 2, "There are two flags")
+        self.assertIn("%stop", [flag.key for flag in flags])
+        self.assertIn("linenos", [flag.key for flag in flags])
+        self.assertEqual(counts.chars, 125436)
+        self.assertEqual(counts.pages, 30)
+        self.assertEqual(counts.stops, 3774)
+        self.assertEqual(counts.words, 34211)
 
 
 class TestClassifierModule(TestCase):

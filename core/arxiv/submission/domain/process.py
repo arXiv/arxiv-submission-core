@@ -21,7 +21,7 @@ class ProcessStatus:
         SUCCEEDED = "succeeded"
         FAILED = "failed"
 
-    class Processes(Enum):
+    class Process(Enum):
         """Supported processes."""
 
         NONE = None
@@ -32,7 +32,7 @@ class ProcessStatus:
     creator: Agent
     created: datetime
     """Time when the process status was created (not the process itself)."""
-    process: Processes
+    process: Process
     status: Status = field(default=Status.REQUESTED)
     process_service: Optional[str] = field(default=None)
     process_version: Optional[str] = field(default=None)

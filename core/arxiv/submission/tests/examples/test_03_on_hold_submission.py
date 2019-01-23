@@ -91,6 +91,9 @@ class TestOnHoldSubmission(TestCase):
                              " were initially saved.")
             self.assertEqual(len(submission.versions), 0,
                              "There are no published versions")
+            self.assertIn(domain.event.AddHold,
+                          [type(event) for event in events],
+                          "An AddHold event is interpolated")
 
         with self.app.app_context():
             submission = load_fast(self.submission.submission_id)
@@ -103,6 +106,9 @@ class TestOnHoldSubmission(TestCase):
                              " were initially saved.")
             self.assertEqual(len(submission.versions), 0,
                              "There are no published versions")
+            self.assertIn(domain.event.AddHold,
+                          [type(event) for event in events],
+                          "An AddHold event is interpolated")
 
         # Check the database state.
         with self.app.app_context():

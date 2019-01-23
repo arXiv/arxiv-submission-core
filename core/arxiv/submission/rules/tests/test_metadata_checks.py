@@ -6,17 +6,17 @@ from ...domain.submission import Submission
 from ...domain.agent import Agent, User
 from ...domain.flag import Flag, MetadataFlag
 
-from .. import set_title
+from .. import metadata_checks
 from ... import tasks
 from .data import titles
 
 
 class TestCheckForSimilarTitles(TestCase):
-    """Tests for :func:`.set_title.check_similar_titles`."""
+    """Tests for :func:`.metadata_checks.check_similar_titles`."""
 
     @mock.patch(f'{tasks.__name__}.get_application_config',
                 mock.MagicMock(return_value={'ENABLE_ASYNC': 0}))
-    @mock.patch(f'{set_title.__name__}.classic.get_titles',
+    @mock.patch(f'{metadata_checks.__name__}.classic.get_titles',
                 mock.MagicMock(return_value=titles.TITLES))
     def test_check_similar_titles(self):
         """Check for similar titles."""
@@ -35,7 +35,8 @@ class TestCheckForSimilarTitles(TestCase):
         before.metadata.title = title
 
         events = list(
-            set_title.check_similar_titles(event_t, before, after, creator)
+            metadata_checks.check_similar_titles(event_t, before, after,
+                                                 creator)
         )
         self.assertEqual(len(events), 2, "Generates two events")
         for event in events:
@@ -52,7 +53,7 @@ class TestCheckForSimilarTitles(TestCase):
 
         # Checking a second time removes the previous annotations.
         events = list(
-            set_title.check_similar_titles(event_t, before, after, creator)
+            metadata_checks.check_similar_titles(event_t, before, after, creator)
         )
         self.assertEqual(len(events), 4, "Generates four events")
         for event in events[:2]:
