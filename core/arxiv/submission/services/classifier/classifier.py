@@ -11,6 +11,9 @@ from arxiv.base.globals import get_application_config, get_application_global
 import requests
 from requests.packages.urllib3.util.retry import Retry
 
+VERSION = '0.0'
+SERVICE = 'classic'
+
 
 class Flag(NamedTuple):
     """General-purpose QA flag."""

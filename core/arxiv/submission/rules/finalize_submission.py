@@ -6,7 +6,7 @@ from ..domain.event import Event, AddAnnotation, RemoveAnnotation, \
     AddProposal, AddSecondaryClassification, FinalizeSubmission
 from ..domain.event.event import Condition
 from ..domain.annotation import ClassifierResult, PlainTextExtraction, \
-    ContentFlag, FeatureCount, ClassifierResults, Comment
+    ContentFlag, Feature, ClassifierResults, Comment
 from ..domain.proposal import Proposal
 from ..domain.submission import Submission
 from ..domain.agent import Agent, User
@@ -34,13 +34,7 @@ def propose_cross_from_primary(event: AddAnnotation, before: Submission,
     if suggested and suggested not in after.secondary_categories:
         yield AddProposal(
             creator=creator,
-            proposal=Proposal(
-                creator=creator,
-                proposed_event_type=AddSecondaryClassification,
-                proposed_event_data={'category': suggested},
-                comments=[Comment(
-                    creator=creator,
-                    body=f"{user_primary} is primary"
-                )]
-            )
+            proposed_event_type=AddSecondaryClassification,
+            proposed_event_data={'category': suggested},
+            comment=f"{user_primary} is primary"
         )

@@ -90,7 +90,7 @@ import re
 import copy
 from datetime import datetime
 from pytz import UTC
-from typing import Optional, TypeVar, List, Tuple, Any, Dict
+from typing import Optional, TypeVar, List, Tuple, Any, Dict, Union
 from urllib.parse import urlparse
 from dataclasses import field, asdict
 from .util import dataclass
@@ -104,7 +104,8 @@ from ..agent import Agent
 from ..submission import Submission, SubmissionMetadata, Author, \
     Classification, License, Delegation,  \
     SubmissionContent, WithdrawalRequest, CrossListClassificationRequest
-from ..annotation import Annotation, Comment
+from ..annotation import Annotation, Comment, Feature, ClassifierResults, \
+    ClassifierResult
 
 from ...exceptions import InvalidEvent
 from ..util import get_tzaware_utc_now
@@ -1022,9 +1023,9 @@ class DeleteComment(Event):
         if self.comment_id is None:
             raise InvalidEvent(self, 'comment_id is required')
         if not hasattr(submission, 'comments') or not submission.comments:
-            raise InvalidEvent(self, 'Cannot delete comment that does not exist')
+            raise InvalidEvent(self, 'Cannot delete nonexistant comment')
         if self.comment_id not in submission.comments:
-            raise InvalidEvent(self, 'Cannot delete comment that does not exist')
+            raise InvalidEvent(self, 'Cannot delete nonexistant comment')
 
     def project(self, submission: Submission) -> Submission:
         """Remove the comment from the submission."""
@@ -1073,37 +1074,54 @@ class RemoveDelegate(Event):
 
 
 @dataclass()
-class AddAnnotation(Event):
-    """Add an annotation to a :class:`.Submission`."""
-
-    annotation: Optional[Annotation] = field(default=None)
+class AddFeature(Event):
+    feature_type: Feature.FeatureTypes = \
+        field(default=Feature.FeatureTypes.WORD_COUNT)
+    feature_value: Union[float, int] = field(default=0)
 
     def validate(self, submission: Submission) -> None:
-        return
+        """Verify that the feature type is a known value."""
+        if self.feature_type not in Feature.FeatureTypes:
+            valid_types = ", ".join([ft.value for ft in Feature.FeatureTypes])
+            raise InvalidEvent(self, "Must be one of %s" % valid_types)
 
     def project(self, submission: Submission) -> Submission:
         """Add the annotation to the submission."""
-        submission.annotations[self.annotation.annotation_id] = self.annotation
+        feature = Feature(
+            creator=self.creator,
+            created=self.created,
+            proxy=self.proxy,
+            feature_type=self.feature_type,
+            feature_value=self.feature_value
+        )
+        submission.annotations[feature.annotation_id] = feature
         return submission
-
-    def to_dict(self) -> dict:
-        data = super(AddAnnotation, self).to_dict()
-        data['annotation'] = self.annotation.to_dict()
-        return data
 
 
 @dataclass()
-class RemoveAnnotation(Event):
-    """Remove an annotation from a :class:`.Submission`."""
+class AddClassifierResults(Event):
+    """Add the results of a classifier to a submission."""
 
-    annotation_id: Optional[str] = field(default=None)
+    classifier: ClassifierResults.Classifiers \
+        = field(default=ClassifierResults.Classifiers.CLASSIC)
+    results: List[ClassifierResult] = field(default_factory=list)
 
     def validate(self, submission: Submission) -> None:
-        if self.annotation_id not in submission.annotations:
-            raise InvalidEvent(self, "No such annotation {self.annotation_id}")
+        """Verify that the classifier is a known value."""
+        if self.classifier not in ClassifierResults.Classifiers:
+            valid = ", ".join([c.value for c in ClassifierResults.Classifiers])
+            raise InvalidEvent(self, "Must be one of %s" % valid)
 
     def project(self, submission: Submission) -> Submission:
-        del submission.annotations[self.annotation_id]
+        """Add the annotation to the submission."""
+        results = ClassifierResults(
+            creator=self.creator,
+            created=self.created,
+            proxy=self.proxy,
+            classifier=self.classifier,
+            results=self.results
+        )
+        submission.annotations[results.annotation_id] = results
         return submission
 
 

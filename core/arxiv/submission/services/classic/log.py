@@ -47,7 +47,6 @@ def log_stopwords(event: AddAnnotation, before: Submission,
                   paper_id=after.arxiv_id)
 
 
-
 def log_classifier_failed(event: AddAnnotation, before: Submission,
                           after: Submission) -> None:
     """Create a log entry when the classifier returns no suggestions."""
@@ -59,7 +58,6 @@ def log_classifier_failed(event: AddAnnotation, before: Submission,
                   username="system",
                   submission_id=after.submission_id,
                   paper_id=after.arxiv_id)
-
 
 
 ON_EVENT: Dict[type, Callable[[Event, Submission, Submission], None]] = {

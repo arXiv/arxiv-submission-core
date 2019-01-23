@@ -80,7 +80,7 @@ class TestAddRemovePossibleDuplicateAnnotations(TestCase):
         after = copy.deepcopy(before)
         before.metadata.title = title
         with self.app.app_context():
-            events = list(set_title.check_for_similar_titles(
+            events = list(set_title.check_similar_titles(
                 event_t, before, after, creator)
             )
 
@@ -97,7 +97,7 @@ class TestAddRemovePossibleDuplicateAnnotations(TestCase):
         # Checking a second time removes the previous annotations.
         with self.app.app_context():
             events = list(
-                set_title.check_for_similar_titles(
+                set_title.check_similar_titles(
                     event_t, before, after, creator
                 )
             )

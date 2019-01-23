@@ -10,8 +10,10 @@ from dataclasses import asdict
 
 from .agent import Agent, agent_factory
 from .meta import License, Classification
-from .annotation import Annotation
+from .annotation import Annotation, Comment
 from .proposal import Proposal
+from .process import ProcessStatus
+from .flag import Flag
 from .util import get_tzaware_utc_now
 
 
@@ -268,10 +270,24 @@ class Submission:
     versions: List['Submission'] = field(default_factory=list)
     """Published versions of this :class:`.Submission`."""
 
-    holds: List[Hold] = field(default_factory=list)
-    annotations: Dict[str, Annotation] = field(default_factory=dict)
+    # These fields are related to moderation/quality control.
     user_requests: Dict[str, UserRequest] = field(default_factory=dict)
+    """Requests from the owner for changes that require approval."""
+
     proposals: Dict[str, Proposal] = field(default_factory=dict)
+    """Proposed changes to the submission, e.g. reclassification."""
+
+    processes: List[ProcessStatus] = field(default_factory=list)
+    """Information about automated processes."""
+
+    flags: Dict[str, Flag] = field(default_factory=dict)
+    """Quality control flags."""
+
+    comments: Dict[str, Comment] = field(default_factory=dict)
+    """Moderation/administrative comments."""
+
+    holds: Dict[str, Hold] = field(default_factory=dict)
+    """Quality control holds."""
 
     @property
     def active(self) -> bool:

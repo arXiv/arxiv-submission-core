@@ -46,9 +46,9 @@ Key requirements
 4. The system must support future development of potentially many alternative
    interfaces for submission and moderation, including interfaces developed
    and operated by trusted third-parties.
-5. The system must be able to support a high volume of activity, potentially
-   two orders of magnitude greater than current levels (~11k submissions per
-   month in early 2018).
+5. The system must be able to support a high volume of activity. We currently
+   process around 11,000 submissions per month (early 2018), and expect that
+   to grow at least 10% per year.
 6. The system must make it easier to support future operational and policy
    changes around submission content, quality assurance, metadata, and other
    areas of concern.
@@ -144,8 +144,9 @@ kept up-to-date for the sake of the classic moderation system. In the longer
 term, projections of event data can be used to support efficient queries, but
 do not constrain the evolution of the submission system in other areas.
 
-Overview
---------
+
+High-level plan
+---------------
 - We will decouple most functional components of the classic submission system
   into independent services that are agnostic about submissions. This includes
   classification, overlap detection, compilation (TeX, PS), and upload/file
@@ -205,7 +206,7 @@ The submission system provides a RESTful API for programmatic use. Clients may
 deposit submissions in bulk (e.g. conference proceedings), or on an individual
 basis on behalf of arXiv users. Authenticated arXiv users must explicitly
 authorize external API clients to deposit on their behalf. The submission
-system offers a webhook notification service that pushes updates in
+system offers a web-hook notification service that pushes updates in
 submission state to authorized API clients.
 
 A variety of backend services are exposed via the API gateway, including
@@ -224,10 +225,10 @@ processes via the notification broker.
 Some processes in the submission system require information about past
 arXiv papers. For example, classification, overlap detection, and other
 QA/QC services will keep themselves up to date by consuming metadata and
-content from published papers.
+content from announced e-prints in the canonical record.
 
-Containers (Services & Building Blocks)
-=======================================
+Services & Building Blocks
+==========================
 The submission & moderation subsystem is comprised of the following parts:
 
 1. The :ref:`sumission-core-database`, which houses a detailed record of
@@ -275,6 +276,27 @@ submission data will be migrated to a standalone MariaDB or PostgresQL cluster
 in AWS RDS.
 
 
+.. _submission-core-events-package:
+
+Submission core package
+-----------------------
+This package provides an event-based Python API for mutating submissions, and
+is the *only* mechanism for writing submission data to the
+:ref:`submission-database`. This package is used by both the
+:ref:`interface-services` and the :ref:`submission-worker`.
+
+- Provides a set of commands (events) that canonicalize operations on
+  submissions, and are used as the basis for composing rule-based processing
+  tasks for quality control.
+- Provides integration with a task queue (Redis) for dispatching those
+  processing tasks to the :ref:`submission-worker` for asynchronous execution,
+  using `Celery <http://www.celeryproject.org/>`_.
+- Provides service integration modules for working with utility services (e.g.
+  :ref:`utility-services`)
+- Provides integration with a notification broker (Kinesis) for disseminating
+  events to other parts of the system (e.g. :ref:`web-hook-service`).
+
+
 .. _interface-services:
 
 Core interface services
@@ -294,33 +316,6 @@ These core interface services integrate with other services in the submission
 system (e.g. :ref:`file-management-service`, :ref:`compilation-service`) via
 their HTTP APIs.
 
-
-.. _submission-core-events-package:
-
-Submission core events package
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-This package provides an event-based Python API for CRUD operations on
-submissions and submission-related (meta)data. Services (below) that operate
-on submission data do so via this abstraction, which integrates with the
-:ref:`submission-database`.
-
-Rather than perform CRUD operations directly on submission objects, all
-operations that modify submission data are performed through the creation of
-submission events. This ensures that we have a precise and complete record of
-activities concerning submissions, an explicit definition of
-operations that can be performed within the arXiv submission system, and a
-starting-point for building rule-based workflows to support moderation and
-administrative tasks.
-
-This package also provides integration with a Kinesis notification broker,
-which propagates notifications about events in real time to other services
-in the arXiv system (e.g. the :ref:`web-hook-service`).
-
-To support automated processes, this package also implements a set of
-asynchronous tasks using `Celery <http://www.celeryproject.org/>`_. Provides
-integration with a task queue (Redis) for message passing.
-
-See :ref:`submission-core-events-package-containers`.
 
 Submission UI service
 ^^^^^^^^^^^^^^^^^^^^^

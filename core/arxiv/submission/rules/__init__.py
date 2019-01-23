@@ -9,4 +9,5 @@ Callbacks are organized into submodules based on the events to which they
 are bound. This is purely for convenience.
 """
 
-from . import set_title, add_annotation, confirm_preview, finalize_submission
+from . import set_title, add_feature, add_process_status, add_proposal, \
+    confirm_preview, finalize_submission, set_abstract

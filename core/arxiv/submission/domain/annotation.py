@@ -11,6 +11,8 @@ annotations on submissions, use
 from typing import Optional, Union, List
 from datetime import datetime
 import hashlib
+from enum import Enum
+from mypy_extensions import TypedDict
 
 from dataclasses import dataclass, asdict, field
 
@@ -36,7 +38,7 @@ class Annotation:
 
     @property
     def annotation_id(self) -> str:
-        """The unique identifier for an :class:`.Annotation` instance."""
+        """Get the unique identifier for an :class:`.Annotation` instance."""
         h = hashlib.new('sha1')
         h.update(b'%s:%s:%s' % (self.created.isoformat().encode('utf-8'),
                                 self.annotation_type.encode('utf-8'),
@@ -60,7 +62,7 @@ class Comment(Annotation):
 
     @property
     def comment_id(self) -> str:
-        """The unique identifier for a :class:`.Comment` instance."""
+        """Get the unique identifier for a :class:`.Comment` instance."""
         return self.annotation_id
 
     def to_dict(self) -> dict:
@@ -70,91 +72,35 @@ class Comment(Annotation):
         return data
 
 
-@dataclass
-class PossibleDuplicate(Annotation):
-    """Represents a possible duplicate submission."""
-
-    matching_id: int = field(default=-1)
-    matching_title: str = field(default_factory=str)
-    matching_owner: Optional[Agent] = field(default=None)
-
-    def to_dict(self) -> dict:
-        """Generate a dict from of this :class:`.PossibleDuplicate`."""
-        data = super(PossibleDuplicate, self).to_dict()
-        data['matching_owner'] = self.matching_owner.to_dict()
-        return data
-
-
-@dataclass
-class PossibleContentProblem(Annotation):
-    """Represents a possible problem with the content of the submission."""
-
-    GENERAL = 'general'
-    STOPWORDS = 'stopwords'
-    LANGUAGE = 'language'
-
-    problem_type: str = field(default=GENERAL)
-    description: str = field(default_factory=str)
-
-
-@dataclass
-class PossibleMetadataProblem(Annotation):
-    """Represents a possible issue with the content of a metadata field."""
-
-    field_name: Optional[str] = field(default=None)
-    """If ``None``, applies to metadata generally."""
-
-    description: str = field(default_factory=str)
-
-
-@dataclass
-class ClassifierResult:
-    category: Optional[Category] = field(default=None)
-    probability: float = field(default=0.0)
+ClassifierResult = TypedDict('ClassifierResult',
+                             {'category': Category, 'probability': float})
 
 
 @dataclass
 class ClassifierResults(Annotation):
     """Represents suggested classifications from an auto-classifier."""
 
-    CLASSIC = "classic"
+    class Classifiers(Enum):
+        """Supported classifiers."""
 
-    classifier: str = field(default=CLASSIC)
+        CLASSIC = "classic"
+
+    classifier: Classifiers = field(default=Classifiers.CLASSIC)
     results: List[ClassifierResult] = field(default_factory=list)
 
 
 @dataclass
-class FeatureCount(Annotation):
+class Feature(Annotation):
     """Represents feature counts drawn from the content of the submission."""
 
-    CHARACTERS = "chars"
-    PAGES = "pages"
-    STOPWORDS = "stops"
-    WORDS = "words"
-    TYPES = [CHARACTERS, PAGES, STOPWORDS, WORDS]
+    class FeatureTypes(Enum):
+        """Supported features."""
 
-    feature_type: str = field(default=WORDS)
-    feature_count: int = field(default=0)
+        CHARACTER_COUNT = "chars"
+        PAGE_COUNT = "pages"
+        STOPWORD_COUNT = "stops"
+        STOPWORD_PERCENT = "%stop"
+        WORD_COUNT = "words"
 
-
-@dataclass
-class ContentFlag(Annotation):
-    """Represents a QA flag based on the content of the submission."""
-
-    flag_type: Optional[str] = field(default=None)
-    flag_value: Optional[Union[int, str, float, dict, list]] = \
-        field(default=None)
-
-
-@dataclass
-class PlainTextExtraction(Annotation):
-    """Represents the status/result of plain text extraction."""
-
-    REQUESTED = "requested"
-    SUCCEEDED = "succeeded"
-    FAILED = "failed"
-
-    status: str = field(default=SUCCEEDED)
-    identifier: Optional[str] = field(default=None)
-    """Task ID for the extraction."""
-    extractor_version: str = field(default="0.0")
+    feature_type: FeatureTypes = field(default=FeatureTypes.WORDS)
+    feature_value: Union[int, float] = field(default=0)

@@ -4,18 +4,19 @@ from datetime import datetime, timedelta
 from typing import Set, List, Tuple, Iterable
 from unidecode import unidecode
 import string
-from functools import lru_cache
-from itertools import chain
+from functools import lru_cache as memoize
 
 from arxiv.base.globals import get_application_config
 
 
-from ..domain.event import Event, SetTitle, AddAnnotation, RemoveAnnotation
+from ..domain.event import Event, SetTitle, RemoveFlag, AddMetadataFlag
 from ..domain.submission import Submission
 from ..domain.annotation import PossibleDuplicate, PossibleMetadataProblem
 from ..domain.agent import Agent, User
+from ..domain.flag import MetadataFlag, ContentFlag
 from ..services import classic
 from ..tasks import is_async
+from .util import is_ascii, below_ascii_threshold, proportion_ascii
 
 from .generic import system_event
 
@@ -46,9 +47,8 @@ REMOVE_PUNCTUATION = str.maketrans(string.punctuation,
 # corresponding entries in the admin log (``arXiv_admin_log`` table).
 @SetTitle.bind(condition=lambda *a: not system_event(*a))
 @is_async
-def check_for_similar_titles(event: SetTitle, before: Submission,
-                             after: Submission, creator: Agent) \
-        -> Iterable[Event]:
+def check_similar_titles(event: SetTitle, before: Submission,
+                         after: Submission, creator: Agent) -> Iterable[Event]:
     """
     Check for other submissions with very similar titles.
 
@@ -60,74 +60,70 @@ def check_for_similar_titles(event: SetTitle, before: Submission,
     if not tokenized(event.title):
         return
 
+    flag_type = MetadataFlag.FlagTypes.POSSIBLE_DUPLICATE_TITLE
     candidates: List[Tuple[int, str, Agent]] = classic.get_titles(window())
-    remove = (RemoveAnnotation(creator=creator, annotation_id=annotation_id)
-              for annotation_id, annotation in after.annotations.items()
-              if isinstance(annotation, PossibleDuplicate))
+    for flag_id, flag in after.flags.items():
+        if isinstance(flag, MetadataFlag) and flag.flag_type is flag_type:
+            yield RemoveFlag(creator=creator, flag_id=flag_id)
 
-    add = (AddAnnotation(creator=creator,
-                         annotation=PossibleDuplicate(
-                            creator=creator,
-                            matching_id=ident,
-                            matching_title=title,
-                            matching_owner=submitter))
-           for ident, title, submitter in candidates
-           if above_similarity_threshold(jaccard(event.title, title)))
-    return chain(remove, add)
+    for ident, title, submitter in candidates:
+        if above_similarity_threshold(jaccard(event.title, title)):
+            yield AddMetadataFlag(creator=creator,
+                                  flag_type=flag_type,
+                                  flag_data={
+                                    'submission_id': ident,
+                                    'title': title,
+                                    'owner': submitter,
+                                    'similarity': jaccard(event.title, title)
+                                  },
+                                  field='title',
+                                  description='possible duplicate title')
 
 
 @SetTitle.bind(condition=lambda *a: not system_event(*a))
-def check_for_excessive_unicode(event: SetTitle, before: Submission,
-                                after: Submission, creator: Agent) \
-        -> Iterable[Event]:
+def check_title_ascii(event: SetTitle, before: Submission,
+                      after: Submission, creator: Agent) -> Iterable[Event]:
     """
     Screen for possible abuse of unicode in titles.
 
     We support unicode characters in titles, but this can get out of hand.
-    This rule adds an annotation if the ratio of non-ASCII to ASCII characters
+    This rule adds a flag if the ratio of non-ASCII to ASCII characters
     is too high.
     """
     if below_ascii_threshold(proportion_ascii(event.title)):
-        return [AddAnnotation(
+        yield AddMetadataFlag(
             creator=creator,
-            annotation=PossibleMetadataProblem(
-                creator=creator,
-                field_name='title',
-                description='Possible excessive use of non-ASCII characters.'
-            )
-        )]
-    return []
+            flag_type=MetadataFlag.FlagTypes.CHARACTER_SET,
+            flag_data={'ascii': proportion_ascii(event.title)},
+            field='title',
+            description='Possible excessive use of non-ASCII characters.'
+        )
 
 
-def proportion_ascii(phrase: str) -> float:
-    """Calculate the proportion of a string comprised of ASCII characters."""
-    return len([c for c in phrase if is_ascii(c)])/len(phrase)
-
-
-@lru_cache(maxsize=1028)    # Memoized
+@memoize(maxsize=1028)
 def normalize(phrase: str) -> str:
     """Prepare a phrase for tokenization."""
     return unidecode(phrase.lower()).translate(REMOVE_PUNCTUATION)
 
 
-@lru_cache(maxsize=2056)    # Memoized
+@memoize(maxsize=2056)
 def tokenized(phrase: str) -> Set[str]:
     """Split a phrase into tokens and remove stopwords."""
     return set(normalize(phrase).split()) - STOPWORDS
 
 
 def intersection(phrase_a: str, phrase_b: str) -> int:
-    """The number tokens shared by two phrases."""
+    """Calculate the number tokens shared by two phrases."""
     return len(tokenized(phrase_a) & tokenized(phrase_b))
 
 
 def union(phrase_a: str, phrase_b: str) -> int:
-    """The total number tokens in two phrases."""
+    """Calculate the  total number tokens in two phrases."""
     return len(tokenized(phrase_a) | tokenized(phrase_b))
 
 
 def jaccard(phrase_a: str, phrase_b: str) -> float:
-    """The Jaccard similarity of two phrases."""
+    """Calculate the Jaccard similarity of two phrases."""
     return intersection(phrase_a, phrase_b) / union(phrase_a, phrase_b)
 
 
@@ -137,23 +133,7 @@ def above_similarity_threshold(similarity: float) -> bool:
     return similarity > threshold
 
 
-def below_ascii_threshold(proportion: float) -> bool:
-    """Whether or not the proportion of ASCII characters is too low."""
-    threshold = get_application_config().get('TITLE_ASCII_THRESHOLD', 0.5)
-    return proportion < threshold
-
-
 def window() -> datetime:
     """Get the time window for possible duplicate submissions."""
     days = get_application_config().get('TITLE_SIMILARITY_WINDOW', 3*365/12)
     return datetime.now() - timedelta(days)
-
-
-@lru_cache(maxsize=1028)
-def is_ascii(string: str) -> bool:
-    """Determine whether or not a string is ASCII."""
-    try:
-        bytes(string, encoding='ascii')
-        return True
-    except UnicodeEncodeError:
-        return False

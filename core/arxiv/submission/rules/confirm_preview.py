@@ -2,11 +2,11 @@
 
 from typing import Iterable
 
-from ..domain.event import Event, AddAnnotation, RemoveAnnotation, \
-    ConfirmPreview
+from ..domain.event import Event, AddProcessStatus, ConfirmPreview
 from ..domain.annotation import PlainTextExtraction
 from ..domain.submission import Submission
 from ..domain.agent import Agent, User
+from ..domain.process import ProcessStatus
 from ..services import plaintext
 from ..tasks import is_async
 
@@ -17,19 +17,23 @@ def extract_plain_text(event: ConfirmPreview, before: Submission,
                        after: Submission, creator: Agent) -> Iterable[Event]:
     """Use the plain text extraction service to extract text from the PDF."""
     identifier = after.source_content.identifier
+    process = ProcessStatus.Processes.PLAIN_TEXT_EXTRACTION
     try:
         plaintext.request_extraction(after.source_content.identifier)
-        yield AddAnnotation(creator=creator,
-                            annotation=PlainTextExtraction(
-                                status=PlainTextExtraction.REQUESTED,
-                                identifier=identifier))
+        yield AddProcessStatus(creator=creator, process=process,
+                               status=ProcessStatus.Statuses.REQUESTED,
+                               service='plaintext', version=plaintext.VERSION,
+                               identifier=identifier)
         while True:
             if plaintext.extraction_is_complete(identifier):
-                yield AddAnnotation(
-                    creator=creator,
-                    annotation=PlainTextExtraction(identifier=identifier))
+                yield AddProcessStatus(creator=creator, process=process,
+                                       status=ProcessStatus.Statuses.SUCCEEDED,
+                                       service='plaintext',
+                                       version=plaintext.VERSION,
+                                       identifier=identifier)
     except plaintext.RequestFailed as e:
-        yield AddAnnotation(
-            creator=creator,
-            annotation=PlainTextExtraction(status=PlainTextExtraction.FAILED,
-                                           identifier=identifier))
+        reason = 'request failed (%s): %s' % (type(e), e)
+        yield AddProcessStatus(creator=creator, process=process,
+                               status=ProcessStatus.Statuses.FAILED,
+                               service='plaintext', version=plaintext.VERSION,
+                               identifier=identifier, reason=reason)

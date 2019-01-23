@@ -5,7 +5,7 @@ import re
 import copy
 from datetime import datetime
 from pytz import UTC
-from typing import Optional, TypeVar, List, Tuple, Any, Dict
+from typing import Optional, TypeVar, List, Tuple, Any, Dict, Iterable
 from urllib.parse import urlparse
 from dataclasses import field, asdict
 from .util import dataclass
@@ -36,25 +36,32 @@ logger = logging.getLogger(__name__)
 class AddProposal(Event):
     """Add a new proposal to a :class:`Submission`."""
 
-    proposal: Optional[Proposal] = field(default=None)
-    # proposed_event_type: Optional[type] = field(default=None)
-    # proposed_event_data: dict = field(default_factory=dict)
-    # comment: str = field(default_factory=str)
+    proposed_event_type: Optional[type] = field(default=None)
+    proposed_event_data: dict = field(default_factory=dict)
+    comment: Optional[str] = field(default=None)
 
     def validate(self, submission: Submission) -> None:
         """Simulate applying the proposal to check for validity."""
-        if self.proposal is None:
-            raise InvalidEvent(self, f"Proposal is required")
-        if self.proposal.proposed_event_type is None:
-            raise InvalidEvent(self, f"Event type is required")
-        proposed_event_data = copy.deepcopy(self.proposal.proposed_event_data)
+        if self.proposed_event_type is None:
+            raise InvalidEvent(self, f"Proposed event type is required")
+        proposed_event_data = copy.deepcopy(self.proposed_event_data)
         proposed_event_data.update({'creator': self.creator})
-        event = self.proposal.proposed_event_type(**proposed_event_data)
+        event = self.proposed_event_type(**proposed_event_data)
         event.validate(submission)
 
     def project(self, submission: Submission) -> Submission:
         """Add the proposal to the submission."""
-        submission.proposals[self.proposal.proposal_id] = self.proposal
+        submission.proposals[self.event_id] = Proposal(
+            event_id=self.event_id,
+            creator=self.creator,
+            created=self.created,
+            proxy=self.proxy,
+            proposed_event_type=self.proposed_event_type,
+            proposed_event_data=self.proposed_event_data,
+            comments=[Comment(creator=self.creator, created=self.created,
+                              body=self.comment)],
+            status=Proposal.ProposalStatus.PENDING
+        )
         return submission
 
 
@@ -102,11 +109,7 @@ class AcceptProposal(Event):
             raise InvalidEvent(self, f"{self.proposal_id} is already accepted")
 
     def project(self, submission: Submission) -> Submission:
-        """Apply the proposed event to the submission."""
-        proposal = submission.proposals[self.proposal_id]
-        proposed_event_data = copy.deepcopy(proposal.proposed_event_data)
-        proposed_event_data.update({'creator': self.creator})
-        event = proposal.proposed_event_type(**proposed_event_data)
+        """Mark the proposal as accepted."""
         submission.proposals[self.proposal_id].status = Proposal.ACCEPTED
         if self.comment:
             submission.proposals[self.proposal_id].comments.append(
@@ -114,3 +117,14 @@ class AcceptProposal(Event):
                         body=self.comment)
             )
         return submission
+
+
+@AcceptProposal.bind()
+def apply_proposal(event: AcceptProposal, before: Submission,
+                   after: Submission, creator: Agent) -> Iterable[Event]:
+    """Apply an accepted proposal."""
+    proposal = after.proposals[event.proposal_id]
+    proposed_event_data = copy.deepcopy(proposal.proposed_event_data)
+    proposed_event_data.update({'creator': creator})
+    event = proposal.proposed_event_type(**proposed_event_data)
+    yield event
