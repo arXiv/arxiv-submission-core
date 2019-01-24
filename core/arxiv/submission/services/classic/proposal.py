@@ -1,5 +1,7 @@
 """Integration with classic proposals."""
 
+from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
+
 from . import models, util, log
 from ... import domain
 from ...domain.event import Event, SetPrimaryClassification, \
@@ -31,9 +33,19 @@ def add(event: AddProposal, before: Submission, after: Submission) -> None:
     category = event.proposed_event_data['category']
     is_primary = event.proposed_event_type is SetPrimaryClassification
     with util.transaction() as session:
+        try:
+            existing_proposal = session.query(models.CategoryProposal) \
+                .filter(models.CategoryProposal.submission_id == after.submission_id) \
+                .filter(models.CategoryProposal.category == category) \
+                .one()
+            return   # Proposal already exists.
+        except MultipleResultsFound:
+            return   # Proposal already exists (in spades!).
+        except NoResultFound:
+            pass
         comment = None
         if event.comment:
-            comment = log.admin_log(__name__, 'admin comment',
+            comment = log.admin_log(event.creator.username, 'admin comment',
                                     event.comment,
                                     username=event.creator.username,
                                     hostname=event.creator.hostname,

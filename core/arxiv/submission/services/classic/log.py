@@ -14,7 +14,8 @@ from ...domain.flag import MetadataFlag, ContentFlag
 def log_unfinalize(event: UnFinalizeSubmission, before: Submission,
                    after: Submission) -> None:
     """Create a log entry when a user pulls their submission for changes."""
-    admin_log(__name__, "unfinalize", "user has pulled submission for editing",
+    admin_log(event.creator.username, "unfinalize",
+              "user has pulled submission for editing",
               username=event.creator.username,
               hostname=event.creator.hostname,
               submission_id=after.submission_id,
@@ -28,7 +29,7 @@ def log_accept_system_cross(event: AcceptProposal, before: Submission,
     if type(event.creator) is System:
         if proposal.proposed_event_type is AddSecondaryClassification:
             category = proposal.proposed_event_data["category"]
-            admin_log(__name__, "admin comment",
+            admin_log(event.creator.username, "admin comment",
                       f"Added {category} as secondary: {event.comment}",
                       username="system",
                       submission_id=after.submission_id,
@@ -39,7 +40,7 @@ def log_stopwords(event: AddContentFlag, before: Submission,
                   after: Submission) -> None:
     """Create a log entry when there is a problem with stopword content."""
     if event.flag_type is ContentFlag.FlagTypes.LOW_STOP:
-        admin_log(__name__, "admin comment",
+        admin_log(event.creator.username, "admin comment",
                   event.comment,
                   username="system",
                   submission_id=after.submission_id,
@@ -52,7 +53,7 @@ def log_classifier_failed(event: AddMetadataFlag, before: Submission,
     if type(event.annotation) is not ClassifierResults:
         return
     if not event.annotation.results:
-        admin_log(__name__, "admin comment",
+        admin_log(event.creator.username, "admin comment",
                   "Classifier failed to return results for submission",
                   username="system",
                   submission_id=after.submission_id,

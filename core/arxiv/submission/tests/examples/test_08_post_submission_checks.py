@@ -135,6 +135,27 @@ class TestPostSubmissionChecks(TestCase):
         self.assertIn(domain.annotation.Feature.FeatureTypes.PAGE_COUNT,
                       feature_types)
 
+        # Check the classic database.
+        with self.app.app_context():
+            session = classic.current_session()
+
+            # Verify that the reclassification proposal is created.
+            proposals = session.query(classic.models.CategoryProposal).all()
+            self.assertEqual(len(proposals), 1)
+
+            # Verify that the admin log is updated.
+            logs = session.query(classic.models.AdminLogEntry).all()
+            messages = [log.logtext for log in logs]
+            self.assertIn('Classifier reports low stops or %stops',
+                          messages)
+            self.assertIn('selected primary cs.AI has probability 0.4',
+                          messages)
+            programs = [log.program for log in logs]
+            self.assertIn(f'AddClassifierResults::{rules.__name__}.reclassification.propose', programs)
+            self.assertIn(f'AddFeature::{rules.__name__}.classification_and_content.check_stop_count', programs)
+            commands = [log.command for log in logs]
+            self.assertIn('admin comment', commands)
+
     def tearDown(self):
         """Clear the database after each test."""
         with self.app.app_context():
