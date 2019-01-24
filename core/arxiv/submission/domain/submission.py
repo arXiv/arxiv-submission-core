@@ -86,8 +86,8 @@ class Compilation:
     task_id: str
     source_etag: str
     format: str
-    start_time: datetime = field(default_factory=get_tzaware_utc_now)
     status: str
+    start_time: datetime = field(default_factory=get_tzaware_utc_now)
 
 
 @dataclass
