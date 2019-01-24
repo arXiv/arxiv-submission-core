@@ -14,7 +14,7 @@ from ...domain.agent import Agent, User
 from ...domain.event import AddMetadataFlag, RemoveFlag, SetTitle
 from ...domain.flag import PossibleDuplicate, MetadataFlag
 from ...services import classic
-from ...rules import set_title
+from ...rules import metadata_checks
 from ... import save, load, load_fast, domain, exceptions
 
 
@@ -80,7 +80,7 @@ class TestAddRemovePossibleDuplicateAnnotations(TestCase):
         after = copy.deepcopy(before)
         before.metadata.title = title
         with self.app.app_context():
-            events = list(set_title.check_similar_titles(
+            events = list(metadata_checks.check_similar_titles(
                 event_t, before, after, creator)
             )
 
@@ -100,7 +100,7 @@ class TestAddRemovePossibleDuplicateAnnotations(TestCase):
         # Checking a second time removes the previous annotations.
         with self.app.app_context():
             events = list(
-                set_title.check_similar_titles(
+                metadata_checks.check_similar_titles(
                     event_t, before, after, creator
                 )
             )

@@ -20,11 +20,11 @@ from arxiv.taxonomy import CATEGORIES, Category
 PROPOSAL_THRESHOLD = 0.57   # Equiv. to logodds of 0.3.
 """This is the threshold for generating a proposal from a classifier result."""
 
-Processes = ProcessStatus.Processes
+Process = ProcessStatus.Process
 Status = ProcessStatus.Status
 
 
-def get_condition(process: Processes, status: Status) -> Condition:
+def get_condition(process: Process, status: Status) -> Condition:
     """Generate a condition for a process type and status."""
     def condition(event: AddProcessStatus, before: Submission,
                   after: Submission, creator: Agent) -> bool:
@@ -32,8 +32,8 @@ def get_condition(process: Processes, status: Status) -> Condition:
     return condition
 
 
-on_text = get_condition(Processes.PLAIN_TEXT_EXTRACTION, Status.SUCCEEDED)
-on_classification = get_condition(Processes.CLASSIFICATION, Status.SUCCEEDED)
+on_text = get_condition(Process.PLAIN_TEXT_EXTRACTION, Status.SUCCEEDED)
+on_classification = get_condition(Process.CLASSIFICATION, Status.SUCCEEDED)
 
 
 def in_the_same_archive(cat_a: Category, cat_b: Category) -> bool:
