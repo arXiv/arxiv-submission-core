@@ -59,6 +59,15 @@ class Author:
         """Generate a dict representation of this :class:`.Author`."""
         return asdict(self)
 
+@dataclass
+class SubmissionContent:
+    """Metadata about the submission source package."""
+
+    identifier: str
+    format: str
+    checksum: str
+    size: int
+
 class CompilationStatus(Enum):      # type: ignore
     """Represents the status of a requested compilation."""
 
@@ -241,6 +250,7 @@ class Submission:
     created: Optional[datetime] = field(default=None)
     updated: Optional[datetime] = field(default=None)
 
+    source_content: Optional[SubmissionContent] = field(default=None)
     compilations: List[Compilation] = field(default_factory=list)
 
     primary_classification: Optional[Classification] = field(default=None)
