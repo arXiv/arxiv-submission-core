@@ -241,8 +241,6 @@ class Submission:
     created: Optional[datetime] = field(default=None)
     updated: Optional[datetime] = field(default=None)
 
-    source_content: Optional[SubmissionContent] = field(default=None)
-    compiled_content: List[SubmissionProduct] = field(default_factory=list)
     compilations: List[Compilation] = field(default_factory=list)
 
     primary_classification: Optional[Classification] = field(default=None)
