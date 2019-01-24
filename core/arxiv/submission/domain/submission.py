@@ -1,7 +1,7 @@
 """Data structures for submissions."""
 
 import hashlib
-from typing import Optional, Dict, TypeVar, List
+from typing import Optional, Dict, TypeVar, List, Enum
 from datetime import datetime
 from dateutil.parser import parse as parse_date
 
@@ -79,6 +79,18 @@ class SubmissionProduct:
     size: int
 
 
+class CompilationStatus(Enum):      # type: ignore
+    """Represents the status of a requested compilation."""
+
+    IN_PROGRESS = "in_progress"
+    """Compilation is in progress."""
+
+    COMPLETED = "completed"
+    """Compilation successfully completed."""
+
+    FAILED = "failed"
+    """Compilation failed."""
+
 @dataclass
 class Compilation:
     """Represents a submission compilation."""
@@ -86,8 +98,8 @@ class Compilation:
     task_id: str
     source_etag: str
     format: str
-    status: str
     start_time: datetime = field(default_factory=get_tzaware_utc_now)
+    status: CompilationStatus = field(default=Status.IN_PROGRESS)
 
 
 @dataclass
