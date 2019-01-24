@@ -1,4 +1,4 @@
-language: python
+]language: python
 sudo: required
 services:
   - docker
@@ -12,8 +12,7 @@ python:
 script:
   - pip install pipenv
   - pipenv install --dev
-  - cd core && pipenv run nose2 -s arxiv/ --with-coverage && cd ..
+  - cd core && pipenv run nose2 -s arxiv/ --with-coverage && coveralls && cd ..
 after_success:
-  - coveralls
   - tests/lint.sh
   - tests/docstyle.sh
