@@ -79,7 +79,7 @@ class Compilation:
     source_etag: str
     format: str
     start_time: datetime = field(default_factory=get_tzaware_utc_now)
-    status: CompilationStatus = field(default=Status.IN_PROGRESS)
+    status: CompilationStatus = field(default=CompilationStatus.IN_PROGRESS)
 
 
 @dataclass
