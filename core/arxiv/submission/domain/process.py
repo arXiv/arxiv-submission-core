@@ -36,4 +36,5 @@ class ProcessStatus:
     status: Status = field(default=Status.REQUESTED)
     process_service: Optional[str] = field(default=None)
     process_version: Optional[str] = field(default=None)
+    process_identifier: Optional[str] = field(default=None)
     reason: Optional[str] = field(default=None)

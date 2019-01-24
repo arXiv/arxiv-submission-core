@@ -1099,7 +1099,7 @@ class AddFeature(Event):
 
     def project(self, submission: Submission) -> Submission:
         """Add the annotation to the submission."""
-        submission.annotations[self.event_id] = Feature(
+        submission.features[self.event_id] = Feature(
             event_id=self.event_id,
             creator=self.creator,
             created=self.created,

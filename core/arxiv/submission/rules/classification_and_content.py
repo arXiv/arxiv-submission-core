@@ -1,6 +1,8 @@
 """Extract text, and get suggestions, features, and flags from classifier."""
 
 from typing import Iterable
+from itertools import count
+import time
 
 from ..domain.event import Event, AddProcessStatus, ConfirmPreview, \
     AddClassifierResults, AddContentFlag, AddFeature
@@ -49,15 +51,17 @@ def extract_plain_text(event: ConfirmPreview, before: Submission,
                                status=ProcessStatus.Status.REQUESTED,
                                service='plaintext', version=plaintext.VERSION,
                                identifier=identifier)
-        while True:
+        for tries in count(1):
             if plaintext.extraction_is_complete(identifier):
                 yield AddProcessStatus(creator=creator, process=process,
                                        status=ProcessStatus.Status.SUCCEEDED,
                                        service='plaintext',
                                        version=plaintext.VERSION,
                                        identifier=identifier)
-    except plaintext.RequestFailed as e:
-        reason = 'request failed (%s): %s' % (type(e), e)
+                break
+            time.sleep(tries ** 2)  # Exponential back-off.
+    except (plaintext.RequestFailed, plaintext.ExtractionFailed) as e:
+        reason = 'request failed (%s): %s' % (type(e).__name__, e)
         yield AddProcessStatus(creator=creator, process=process,
                                status=ProcessStatus.Status.FAILED,
                                service='plaintext', version=plaintext.VERSION,
@@ -67,9 +71,21 @@ def extract_plain_text(event: ConfirmPreview, before: Submission,
 def when(process: Process, status: Status) -> Condition:
     """Generate a condition for a :class:`Process` and :class:`Status`."""
     def inner(event: AddProcessStatus, before: Submission,
-              after: Submission, creator: Agent) -> bool:
+              after: Submission) -> bool:
         return event.process is process and event.status is status
     return inner
+
+
+CLASSIFIER_FLAGS = {
+    '%stop': None,  # We will handle this ourselves.
+    'stops': None,  # We will handle this ourselves.
+    'language': ContentFlag.FlagTypes.LANGUAGE,
+    'charset': ContentFlag.FlagTypes.CHARACTER_SET,
+    'linenos': ContentFlag.FlagTypes.LINE_NUMBERS
+}
+FEATURE_TYPES = {
+
+}
 
 
 @AddProcessStatus.bind(when(Process.PLAIN_TEXT_EXTRACTION, Status.SUCCEEDED))
@@ -86,7 +102,7 @@ def call_classifier(event: AddProcessStatus, before: Submission,
     try:
         suggestions, flags, counts = \
             classifier.classify(plaintext.retrieve_content(identifier))
-    except plaintext.RequestFailed as e:
+    except (plaintext.RequestFailed, classifier.RequestFailed) as e:
         reason = 'request failed (%s): %s' % (type(e), e)
         yield AddProcessStatus(creator=creator,
                                process=Process.CLASSIFICATION,
@@ -94,6 +110,7 @@ def call_classifier(event: AddProcessStatus, before: Submission,
                                service=classifier.SERVICE,
                                version=classifier.VERSION,
                                identifier=identifier, reason=reason)
+        return
 
     success = AddProcessStatus(creator=creator,
                                process=Process.CLASSIFICATION,
@@ -109,16 +126,28 @@ def call_classifier(event: AddProcessStatus, before: Submission,
 
     for flag in flags:
         comment = "flag from classification succeeded at %s" \
-            % success.created.iso_format()
-        yield AddContentFlag(creator=creator,
-                             flag_type=ContentFlag.FlagTypes(flag.key),
-                             flag_value=flag.value,
-                             comment=comment)
+            % success.created.isoformat()
+        flag_type = CLASSIFIER_FLAGS.get(flag.key)
+        if flag_type is None:
+            continue
+        yield AddContentFlag(creator=creator, flag_type=flag_type,
+                             flag_data=flag.value, comment=comment)
 
-    for feature_type in Feature.FeatureTypes:
-        yield AddFeature(creator=creator,
-                         feature_type=feature_type,
-                         feature_value=getattr(counts, feature_type))
+    yield AddFeature(creator=creator,
+                     feature_type=Feature.FeatureTypes.CHARACTER_COUNT,
+                     feature_value=counts.chars)
+    yield AddFeature(creator=creator,
+                     feature_type=Feature.FeatureTypes.PAGE_COUNT,
+                     feature_value=counts.pages)
+    yield AddFeature(creator=creator,
+                     feature_type=Feature.FeatureTypes.STOPWORD_COUNT,
+                     feature_value=counts.stops)
+    yield AddFeature(creator=creator,
+                     feature_type=Feature.FeatureTypes.WORD_COUNT,
+                     feature_value=counts.words)
+    yield AddFeature(creator=creator,
+                     feature_type=Feature.FeatureTypes.STOPWORD_PERCENT,
+                     feature_value=counts.stops/counts.words)
 
 
 def feature_type_is(feature_type: Feature.FeatureTypes) -> Condition:

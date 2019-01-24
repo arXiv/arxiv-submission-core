@@ -35,9 +35,15 @@ class ContentFlag(Flag):
         """Supported content flags."""
 
         LOW_STOP = 'low stopwords'
+        """Number of stopwords is abnormally low."""
         LOW_STOP_PERCENT = 'low stopword percentage'
+        """Frequency of stopwords is abnormally low."""
         LANGUAGE = 'language'
-        CHARACTER_SET = 'character_set'
+        """Possibly not English language."""
+        CHARACTER_SET = 'character set'
+        """Possibly excessive use of non-ASCII characters."""
+        LINE_NUMBERS = 'line numbers'
+        """Content has line numbers."""
 
 
 @dataclass

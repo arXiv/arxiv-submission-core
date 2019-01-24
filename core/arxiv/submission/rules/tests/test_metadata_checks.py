@@ -1,3 +1,5 @@
+"""Tests for automated metadata checks."""
+
 from unittest import TestCase, mock
 from datetime import datetime
 import copy
@@ -53,7 +55,8 @@ class TestCheckForSimilarTitles(TestCase):
 
         # Checking a second time removes the previous annotations.
         events = list(
-            metadata_checks.check_similar_titles(event_t, before, after, creator)
+            metadata_checks.check_similar_titles(event_t, before, after,
+                                                 creator)
         )
         self.assertEqual(len(events), 4, "Generates four events")
         for event in events[:2]:
