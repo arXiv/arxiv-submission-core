@@ -10,7 +10,7 @@ from dataclasses import asdict
 
 from .agent import Agent, agent_factory
 from .meta import License, Classification
-from .annotation import Comment, Feature
+from .annotation import Comment, Feature, Annotation
 from .proposal import Proposal
 from .process import ProcessStatus
 from .flag import Flag
@@ -283,8 +283,8 @@ class Submission:
     processes: List[ProcessStatus] = field(default_factory=list)
     """Information about automated processes."""
 
-    features: Dict[str, Feature] = field(default_factory=dict)
-    """Procedural metadata about the content of the submission."""
+    annotations: Dict[str, Annotation] = field(default_factory=dict)
+    """Quality control annotations."""
 
     flags: Dict[str, Flag] = field(default_factory=dict)
     """Quality control flags."""

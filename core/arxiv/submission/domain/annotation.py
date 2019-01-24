@@ -67,3 +67,6 @@ class Feature:
     feature_type: FeatureTypes
     proxy: Optional[Agent] = field(default=None)
     feature_value: Union[int, float] = field(default=0)
+
+
+Annotation = Union[ClassifierResults, Feature]

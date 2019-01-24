@@ -36,9 +36,24 @@ on_text = get_condition(Process.PLAIN_TEXT_EXTRACTION, Status.SUCCEEDED)
 on_classification = get_condition(Process.CLASSIFICATION, Status.SUCCEEDED)
 
 
-def in_the_same_archive(cat_a: Category, cat_b: Category) -> bool:
+def _get_archive(category: Category) -> Optional[str]:
+    return CATEGORIES[category]['in_archive']
+
+
+def _in_the_same_archive(cat_a: Category, cat_b: Category) -> bool:
     """Evaluate whether two categories are in the same archive."""
-    return CATEGORIES[cat_a]['in_archive'] == CATEGORIES[cat_b]['in_archive']
+    return _get_archive(cat_a) == _get_archive(cat_b)
+
+
+# Don't make auto-proposals for the following user-supplied primaries.
+# These categories may not be known to the classifier, or the
+# classifier-suggested alternatives may be consistently innaccurate.
+SKIPPED_CATEGORIES = (
+    'cs.CE',   # Interdisciplinary category (see ARXIVOPS-466).
+)
+SKIPPED_ARCHIVES = (
+    'econ',  # New September 2017.
+)
 
 
 @AddClassifierResults.bind()
@@ -49,6 +64,10 @@ def propose(event: AddClassifierResults, before: Submission, after: Submission,
     if len(event.results) == 0:    # Nothing to do.
         return
     user_primary = after.primary_classification.category
+
+    if user_primary in SKIPPED_CATEGORIES \
+            or _get_archive(user_primary) in SKIPPED_ARCHIVES:
+        return
 
     # the best alternative is the suggestion with the highest probability above
     # 0.57 (logodds = 0.3); there may be a best alternative inside or outside
@@ -66,15 +85,15 @@ def propose(event: AddClassifierResults, before: Submission, after: Submission,
         return
 
     for result in event.results:
-        if in_the_same_archive(result['category'], user_primary):
-            if result['probability'] > within['probability']:
+        if _in_the_same_archive(result['category'], user_primary):
+            if within is None or result['probability'] > within['probability']:
                 within = result
-        elif result['probability'] > without['probability']:
+        elif without is None or result['probability'] > without['probability']:
             without = result
     if within and within['probability'] >= PROPOSAL_THRESHOLD:
         suggested_category = within['category']
     elif without and without['probability'] >= PROPOSAL_THRESHOLD:
-        suggested_category = without
+        suggested_category = without['category']
     else:
         return
 
@@ -82,7 +101,7 @@ def propose(event: AddClassifierResults, before: Submission, after: Submission,
     if user_primary not in probabilities:
         comment += " not found in classifier scores"
     else:
-        comment += f" has probability {probabilities[user_primary]}"
+        comment += f" has probability {round(probabilities[user_primary], 3)}"
     yield AddProposal(creator=creator,
                       proposed_event_type=SetPrimaryClassification,
                       proposed_event_data={'category': suggested_category},

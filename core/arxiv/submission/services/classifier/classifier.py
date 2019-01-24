@@ -67,9 +67,10 @@ class Classifier(object):
         """Get the URL of the classifier endpoint."""
         return f'http://{self._host}:{self._port}/ctxt'
 
-    def _probability(self, logodds: float) -> float:
+    @staticmethod
+    def probability(logodds: float) -> float:
         """Convert log odds to a probability."""
-        return round(exp(logodds)/(1 + exp(logodds)), 2)
+        return exp(logodds)/(1 + exp(logodds))
 
     def _counts(self, data: dict) -> Optional[Counts]:
         """Parse counts from the response data."""
@@ -87,7 +88,7 @@ class Classifier(object):
     def _suggestions(self, data: dict) -> List[Suggestion]:
         """Parse classification suggestions from the response data."""
         return [Suggestion(category=Category(datum['category']),
-                           probability=self._probability(datum['logodds']))
+                           probability=self.probability(datum['logodds']))
                 for datum in data['classifier']]
 
     def __call__(self, content: bytes) -> ClassifierResponse:
