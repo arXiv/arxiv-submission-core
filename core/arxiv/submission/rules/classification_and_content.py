@@ -153,7 +153,7 @@ def call_classifier(event: AddProcessStatus, before: Submission,
 def feature_type_is(feature_type: Feature.FeatureTypes) -> Condition:
     """Generate a condition based on feature type."""
     def condition(event: AddFeature, before: Submission,
-                  after: Submission, creator: Agent) -> bool:
+                  after: Submission) -> bool:
         return event.feature_type is feature_type
     return condition
 

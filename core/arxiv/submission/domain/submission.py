@@ -296,6 +296,11 @@ class Submission:
     """Quality control holds."""
 
     @property
+    def features(self) -> Dict[str, Feature]:
+        return {k: v for k, v in self.annotations.items()
+                if isinstance(v, Feature)}
+
+    @property
     def active(self) -> bool:
         """Actively moving through the submission workflow."""
         return self.status not in [self.DELETED, self.PUBLISHED]

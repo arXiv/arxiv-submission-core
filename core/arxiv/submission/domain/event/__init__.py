@@ -100,7 +100,7 @@ from arxiv.util import schema
 from arxiv import taxonomy, identifier
 from arxiv.base import logging
 
-from ..agent import Agent
+from ..agent import Agent, System
 from ..submission import Submission, SubmissionMetadata, Author, \
     Classification, License, Delegation,  \
     SubmissionContent, WithdrawalRequest, CrossListClassificationRequest
@@ -305,6 +305,8 @@ class SetPrimaryClassification(Event):
 
     def _creator_must_be_endorsed(self, submission: Submission) -> None:
         """The creator of this event must be endorsed for the category."""
+        if isinstance(self.creator, System):
+            return
         try:
             archive,  = self.category.split('.', 1)
         except ValueError:

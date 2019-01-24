@@ -36,6 +36,9 @@ logger = logging.getLogger(__name__)
 class AddProposal(Event):
     """Add a new proposal to a :class:`Submission`."""
 
+    NAME = 'add proposal'
+    NAMED = 'proposal added'
+
     proposed_event_type: Optional[type] = field(default=None)
     proposed_event_data: dict = field(default_factory=dict)
     comment: Optional[str] = field(default=None)

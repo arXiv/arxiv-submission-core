@@ -3,8 +3,10 @@
 from typing import Any, Union, List
 import json
 from datetime import datetime, date
+from enum import Enum
 from importlib import import_module
 from .domain import Event, event_factory, Submission, Agent, agent_factory
+
 
 
 # TODO: get rid of this when base-0.13 is available.
@@ -43,6 +45,8 @@ class EventJSONEncoder(ISO8601JSONEncoder):
             data['__module__'] = obj.__module__
             data['__name__'] = obj.__name__
             data['__type__'] = 'type'
+        elif isinstance(obj, Enum):
+            data = obj.value
         else:
             data = super(EventJSONEncoder, self).default(obj)
         return data

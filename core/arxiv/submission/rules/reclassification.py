@@ -56,7 +56,7 @@ SKIPPED_ARCHIVES = (
 )
 
 
-@AddClassifierResults.bind()
+@AddClassifierResults.bind(lambda *a, **k: True)
 @is_async
 def propose(event: AddClassifierResults, before: Submission, after: Submission,
             creator: Agent) -> Iterable[Event]:
@@ -77,7 +77,6 @@ def propose(event: AddClassifierResults, before: Submission, after: Submission,
     without: Optional[ClassifierResult] = None
     probabilities = {result['category']: result['probability']
                      for result in event.results}
-
     # if the primary is not in the suggestions, or the primary has probability
     # < 0.5 (logodds < 0) and there is an alternative,  propose the
     # alternatve (preference for within-archive). otherwise make no proposal
@@ -90,6 +89,7 @@ def propose(event: AddClassifierResults, before: Submission, after: Submission,
                 within = result
         elif without is None or result['probability'] > without['probability']:
             without = result
+
     if within and within['probability'] >= PROPOSAL_THRESHOLD:
         suggested_category = within['category']
     elif without and without['probability'] >= PROPOSAL_THRESHOLD:

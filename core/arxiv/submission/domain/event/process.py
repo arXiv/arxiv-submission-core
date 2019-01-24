@@ -15,6 +15,9 @@ from .util import dataclass
 class AddProcessStatus(Event):
     """Add the status of an external/long-running process to a submission."""
 
+    NAME = "add status of a process"
+    NAMED = "added status of a process"
+
     Status = ProcessStatus.Status
     Process = ProcessStatus.Process
 

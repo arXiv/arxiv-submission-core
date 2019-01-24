@@ -4,11 +4,11 @@ from typing import Optional, Iterable, Dict, Callable
 
 from . import models, util
 from ...domain.event import Event, UnFinalizeSubmission, AcceptProposal, \
-    AddSecondaryClassification, AddMetadataFlag
+    AddSecondaryClassification, AddMetadataFlag, AddContentFlag
 from ...domain.annotation import ClassifierResults
 from ...domain.submission import Submission
 from ...domain.agent import Agent, System
-from ...domain.flag import MetadataFlag
+from ...domain.flag import MetadataFlag, ContentFlag
 
 
 def log_unfinalize(event: UnFinalizeSubmission, before: Submission,
@@ -35,10 +35,10 @@ def log_accept_system_cross(event: AcceptProposal, before: Submission,
                       paper_id=after.arxiv_id)
 
 
-def log_stopwords(event: AddMetadataFlag, before: Submission,
+def log_stopwords(event: AddContentFlag, before: Submission,
                   after: Submission) -> None:
     """Create a log entry when there is a problem with stopword content."""
-    if event.flag_type is MetadataFlag.FlagTypes.LOW_STOP:
+    if event.flag_type is ContentFlag.FlagTypes.LOW_STOP:
         admin_log(__name__, "admin comment",
                   event.comment,
                   username="system",
@@ -62,7 +62,7 @@ def log_classifier_failed(event: AddMetadataFlag, before: Submission,
 ON_EVENT: Dict[type, Callable[[Event, Submission, Submission], None]] = {
     UnFinalizeSubmission: [log_unfinalize],
     AcceptProposal: [log_accept_system_cross],
-    AddMetadataFlag: [log_stopwords]
+    AddContentFlag: [log_stopwords]
 
 }
 """Logging functions to call when an event is comitted."""
