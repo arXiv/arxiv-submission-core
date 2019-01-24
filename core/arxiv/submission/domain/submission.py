@@ -1,9 +1,10 @@
 """Data structures for submissions."""
 
-import hashlib
-from typing import Optional, Dict, TypeVar, List, Enum
+from typing import Optional, Dict, TypeVar, List
 from datetime import datetime
 from dateutil.parser import parse as parse_date
+from enum import Enum
+import hashlib
 
 from dataclasses import dataclass, field
 from dataclasses import asdict
