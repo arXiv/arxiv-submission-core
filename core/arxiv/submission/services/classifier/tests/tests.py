@@ -71,7 +71,7 @@ class TestClassifier(TestCase):
         suggestions, flags, counts = classifier.Classifier('foo', 9000)(b'foo')
         self.assertEqual(len(suggestions), 3, "There are three suggestions")
         for suggestion in suggestions:
-            self.assertEqual(suggestion.probability,
+            self.assertEqual(round(suggestion.probability, 2),
                              expected[suggestion.category])
         self.assertEqual(len(flags), 0, "There are no flags")
         self.assertEqual(counts.chars, 15107)
@@ -105,7 +105,7 @@ class TestClassifier(TestCase):
         self.assertEqual(len(suggestions), 5, "There are five suggestions")
         for suggestion in suggestions:
             self.assertEqual(
-                suggestion.probability,
+                round(suggestion.probability, 2),
                 expected[suggestion.category],
                 "Expected probability of %s for %s" %
                 (expected[suggestion.category], suggestion.category)
@@ -193,7 +193,7 @@ class TestClassifierModule(TestCase):
         suggestions, flags, counts = classifier.classify(b'foo')
         self.assertEqual(len(suggestions), 3, "There are three suggestions")
         for suggestion in suggestions:
-            self.assertEqual(suggestion.probability,
+            self.assertEqual(round(suggestion.probability, 2),
                              expected[suggestion.category])
         self.assertEqual(len(flags), 0, "There are no flags")
         self.assertEqual(counts.chars, 15107)
