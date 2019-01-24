@@ -28,6 +28,9 @@ from arxiv.base.globals import get_application_config, get_application_global
 import requests
 from requests.packages.urllib3.util.retry import Retry
 
+VERSION = 0.3
+"""Version of the plain text service for which this module is implemented."""
+
 
 class RequestFailed(IOError):
     """The plain text extraction service returned an unexpected status code."""

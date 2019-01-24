@@ -1,6 +1,7 @@
 """Metadata objects in support of :class:`.Submission`s."""
 
 from typing import Optional, List
+from arxiv.taxonomy import Category
 from dataclasses import dataclass, asdict, field
 
 
@@ -8,7 +9,7 @@ from dataclasses import dataclass, asdict, field
 class Classification:
     """An archive/category classification for a :class:`.Submission`."""
 
-    category: str
+    category: Category
 
     def to_dict(self) -> dict:
         """Generate a dict representation of this :class:`.Classification`."""

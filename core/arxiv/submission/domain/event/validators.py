@@ -1,3 +1,5 @@
+"""Reusable validators for events."""
+
 import re
 
 from arxiv import taxonomy, identifier

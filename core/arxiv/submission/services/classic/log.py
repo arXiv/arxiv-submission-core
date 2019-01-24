@@ -3,28 +3,73 @@
 from typing import Optional, Iterable, Dict, Callable
 
 from . import models, util
-from ...domain import event
+from ...domain.event import Event, UnFinalizeSubmission, AcceptProposal, \
+    AddSecondaryClassification, AddMetadataFlag, AddContentFlag
+from ...domain.annotation import ClassifierResults
 from ...domain.submission import Submission
-from ...domain.agent import Agent
+from ...domain.agent import Agent, System
+from ...domain.flag import MetadataFlag, ContentFlag
 
 
-def log_unfinalize(event: event.UnFinalizeSubmission, before: Submission,
+def log_unfinalize(event: UnFinalizeSubmission, before: Submission,
                    after: Submission) -> None:
     """Create a log entry when a user pulls their submission for changes."""
-    admin_log(__name__, "unfinalize", "user has pulled submission for editing",
+    admin_log(event.creator.username, "unfinalize",
+              "user has pulled submission for editing",
               username=event.creator.username,
               hostname=event.creator.hostname,
               submission_id=after.submission_id,
               paper_id=after.arxiv_id)
 
 
-ON_EVENT: Dict[type, Callable[[event.Event, Submission, Submission], None]] = {
-    event.UnFinalizeSubmission: log_unfinalize,
+def log_accept_system_cross(event: AcceptProposal, before: Submission,
+                            after: Submission) -> None:
+    """Create a log entry when a system cross is accepted."""
+    proposal = after.proposals[event.proposal_id]
+    if type(event.creator) is System:
+        if proposal.proposed_event_type is AddSecondaryClassification:
+            category = proposal.proposed_event_data["category"]
+            admin_log(event.creator.username, "admin comment",
+                      f"Added {category} as secondary: {event.comment}",
+                      username="system",
+                      submission_id=after.submission_id,
+                      paper_id=after.arxiv_id)
+
+
+def log_stopwords(event: AddContentFlag, before: Submission,
+                  after: Submission) -> None:
+    """Create a log entry when there is a problem with stopword content."""
+    if event.flag_type is ContentFlag.FlagTypes.LOW_STOP:
+        admin_log(event.creator.username, "admin comment",
+                  event.comment,
+                  username="system",
+                  submission_id=after.submission_id,
+                  paper_id=after.arxiv_id)
+
+
+def log_classifier_failed(event: AddMetadataFlag, before: Submission,
+                          after: Submission) -> None:
+    """Create a log entry when the classifier returns no suggestions."""
+    if type(event.annotation) is not ClassifierResults:
+        return
+    if not event.annotation.results:
+        admin_log(event.creator.username, "admin comment",
+                  "Classifier failed to return results for submission",
+                  username="system",
+                  submission_id=after.submission_id,
+                  paper_id=after.arxiv_id)
+
+
+ON_EVENT: Dict[type, Callable[[Event, Submission, Submission], None]] = {
+    UnFinalizeSubmission: [log_unfinalize],
+    AcceptProposal: [log_accept_system_cross],
+    AddContentFlag: [log_stopwords]
+
 }
 """Logging functions to call when an event is comitted."""
 
 
-def handle(event: event.Event, before: Submission, after: Submission) -> None:
+def handle(event: Event, before: Submission, after: Submission) -> None:
     """
     Generate an admin log entry for an event that is being committed.
 
@@ -42,7 +87,8 @@ def handle(event: event.Event, before: Submission, after: Submission) -> None:
 
     """
     if type(event) in ON_EVENT:
-        ON_EVENT[type(event)](event, before, after)
+        for callback in ON_EVENT[type(event)]:
+            callback(event, before, after)
 
 
 def admin_log(program: str, command: str, text: str, notify: bool = False,
@@ -50,7 +96,7 @@ def admin_log(program: str, command: str, text: str, notify: bool = False,
               hostname: Optional[str] = None,
               submission_id: Optional[int] = None,
               paper_id: Optional[str] = None,
-              document_id: Optional[int] = None) -> None:
+              document_id: Optional[int] = None) -> models.AdminLogEntry:
     """
     Add an entry to the admin log.
 
@@ -71,17 +117,19 @@ def admin_log(program: str, command: str, text: str, notify: bool = False,
     document_id : int
 
     """
+    if paper_id is None and submission_id is not None:
+        paper_id = f'submit/{submission_id}'
     with util.transaction() as session:
-        session.add(
-            models.AdminLogEntry(
-                paper_id=paper_id,
-                username=username,
-                host=hostname,
-                program=program,
-                command=command,
-                logtext=text,
-                document_id=document_id,
-                submission_id=submission_id,
-                notify=notify
-            )
+        entry = models.AdminLogEntry(
+            paper_id=paper_id,
+            username=username,
+            host=hostname,
+            program=program,
+            command=command,
+            logtext=text,
+            document_id=document_id,
+            submission_id=submission_id,
+            notify=notify
         )
+        session.add(entry)
+        return entry

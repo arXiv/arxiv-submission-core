@@ -10,7 +10,10 @@ from dataclasses import asdict
 
 from .agent import Agent, agent_factory
 from .meta import License, Classification
-from .annotation import Annotation
+from .annotation import Comment, Feature, Annotation
+from .proposal import Proposal
+from .process import ProcessStatus
+from .flag import Flag
 from .util import get_tzaware_utc_now
 
 
@@ -131,6 +134,9 @@ class Delegation:
 @dataclass
 class Hold:
     """Represents a block on announcement, usually for QA/QC purposes."""
+
+    event_id: str
+    """The event that created the hold."""
 
     creator: Agent
     created: datetime = field(default_factory=get_tzaware_utc_now)
@@ -267,9 +273,32 @@ class Submission:
     versions: List['Submission'] = field(default_factory=list)
     """Published versions of this :class:`.Submission`."""
 
-    holds: List[Hold] = field(default_factory=list)
-    annotations: Dict[str, Annotation] = field(default_factory=dict)
+    # These fields are related to moderation/quality control.
     user_requests: Dict[str, UserRequest] = field(default_factory=dict)
+    """Requests from the owner for changes that require approval."""
+
+    proposals: Dict[str, Proposal] = field(default_factory=dict)
+    """Proposed changes to the submission, e.g. reclassification."""
+
+    processes: List[ProcessStatus] = field(default_factory=list)
+    """Information about automated processes."""
+
+    annotations: Dict[str, Annotation] = field(default_factory=dict)
+    """Quality control annotations."""
+
+    flags: Dict[str, Flag] = field(default_factory=dict)
+    """Quality control flags."""
+
+    comments: Dict[str, Comment] = field(default_factory=dict)
+    """Moderation/administrative comments."""
+
+    holds: Dict[str, Hold] = field(default_factory=dict)
+    """Quality control holds."""
+
+    @property
+    def features(self) -> Dict[str, Feature]:
+        return {k: v for k, v in self.annotations.items()
+                if isinstance(v, Feature)}
 
     @property
     def active(self) -> bool:
@@ -324,29 +353,9 @@ class Submission:
     def applied_user_requests(self) -> List[UserRequest]:
         return [r for r in self.user_requests.values() if r.is_applied()]
 
-    def add_user_request(self, request: UserRequest) -> None:
-        """Add a :class:`.UserRequest`."""
-        self.user_requests[request.request_id] = request
-
     def get_user_request(self, request_id: str) -> UserRequest:
         """Retrieve a :class:`.UserRequest` by ID."""
         return self.user_requests[request_id]
-
-    def remove_user_request(self, request_id: str) -> None:
-        """Remove a :class:`.UserRequest` by ID."""
-        del self.user_requests[request_id]
-
-    def add_annotation(self, annotation: Annotation) -> None:
-        """Add an :class:`.Annotation`."""
-        self.annotations[annotation.annotation_id] = annotation
-
-    def get_annotation(self, annotation_id: str) -> Annotation:
-        """Retrieve an :class:`.Annotation` by ID."""
-        return self.annotations[annotation_id]
-
-    def remove_annotation(self, annotation_id: str) -> None:
-        """Remove an :class:`.Annotation` by ID."""
-        del self.annotations[annotation_id]
 
     def to_dict(self) -> dict:
         """Generate a dict representation of this :class:`.Submission`."""

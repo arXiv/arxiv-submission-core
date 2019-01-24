@@ -109,6 +109,14 @@ class User(Agent):
 class System(Agent):
     """The submission application (this application)."""
 
+    @property
+    def username(self) -> str:
+        return self.native_id
+
+    @property
+    def hostname(self) -> str:
+        return self.native_id
+
 
 @dataclass
 class Client(Agent):
