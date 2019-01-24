@@ -58,27 +58,6 @@ class Author:
         """Generate a dict representation of this :class:`.Author`."""
         return asdict(self)
 
-
-@dataclass
-class SubmissionContent:
-    """Metadata about the submission source package."""
-
-    identifier: str
-    format: str
-    checksum: str
-    size: int
-
-
-@dataclass
-class SubmissionProduct:
-    """Metadata about a submission compilation product."""
-
-    identifier: str
-    format: str
-    checksum: str
-    size: int
-
-
 class CompilationStatus(Enum):      # type: ignore
     """Represents the status of a requested compilation."""
 
