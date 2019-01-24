@@ -12,7 +12,9 @@ python:
 script:
   - pip install pipenv
   - pipenv install --dev
-  - cd core && pipenv run nose2 -s arxiv/ --with-coverage && coveralls && cd ..
+  - pipenv install ./core
+  - pipenv run nose2 -s core/arxiv --with-coverage
 after_success:
+  - coveralls
   - tests/lint.sh
   - tests/docstyle.sh
