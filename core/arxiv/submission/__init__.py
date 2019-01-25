@@ -77,6 +77,11 @@ running the callback in the current thread. See also :mod:`.worker`.
        yield SetTitle(creator=creator, title=f"(╯°□°）╯︵ ┻━┻ {event.title}")
 
 
+Finally, :mod:`.services.classic` provides integration with the classic
+submission database. We use the classic database to store events (new table),
+and also keep its legacy tables up to date so that other legacy components
+continue to work as expected.
+
 
 Using commands/events
 =====================
