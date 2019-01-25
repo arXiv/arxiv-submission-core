@@ -22,3 +22,14 @@ TASK_ACKS_LATE = bool(int(os.environ.get('SUBMISSION_TASK_ACKS_LATE', '1')))
 CELERY_ACCEPT_CONTENT = ['ejson']
 CELERY_TASK_SERIALIZER = 'ejson'
 CELERY_RESULT_SERIALIZER = 'ejson'
+
+
+ENABLE_ASYNC = os.environ.get('ENABLE_ASYNC', '0')
+"""
+If ``1``, asynchronous callbacks will be dispatched to the worker.
+
+Otherwise they will be executed in the thread in which they are called.
+"""
+
+ENABLE_CALLBACKS = os.environ.get('ENABLE_CALLBACKS', '0')
+"""If ``0``, callbacks bound to events will not be executed."""

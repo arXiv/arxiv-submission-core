@@ -168,8 +168,8 @@ class Event:
         state of the submission before and after the triggering event was
         applied, and a :class:`.System` agent that can be used as the creator
         of subsequent events. It should return an iterable of other
-        :class:`.Event` instances, either by ``yield``\ing them, or by returning
-        an iterable object of some kind.
+        :class:`.Event` instances, either by ``yield``\ing them, or by
+        returning an iterable object of some kind.
 
         By default, callbacks will only be called if the creator of the
         trigger event is not a :class:`.System` instance. This makes it less

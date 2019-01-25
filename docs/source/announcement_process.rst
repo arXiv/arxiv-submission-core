@@ -1,8 +1,8 @@
-Submission & Publication Process
-********************************
+Submission & announcement Process
+*********************************
 
-This section describes the classic arXiv submission and publication process at
-a high level. 
+This section describes the classic arXiv submission and announcement process at
+a high level.
 
 Submissions & States
 --------------------
@@ -18,10 +18,10 @@ are processed on a daily basis, see `this recent blog post
 <https://blogs.cornell.edu/arxiv/2018/01/19/a-day-in-the-life-of-the-arxiv-admin-team/>`_.
 
 In support of rapid dissemination, a core requirement for the submission
-system is that the daily publication/announcement process should continue
+system is that the daily announcement process should continue
 even in the absence of human intervention. In other words, if the moderation
 and operations teams were disbanded tomorrow, arXiv would continue to accept
-and disseminate publications as usual.
+and disseminate e-prints as usual.
 
 At any given time, a submission will be in one of the states described below.
 
@@ -41,16 +41,16 @@ At any given time, a submission will be in one of the states described below.
 
 Working
     When the submission process is initiated, it generally lacks some of the
-    (meta)data and/or content required for publication. For example, the
+    (meta)data and/or content required for announcement. For example, the
     submission process may be initiated by sending preliminary information for
     only a few metadata fields, leaving the submission source package to be
     uploaded separately. Several users and/or API clients may be involved in
     contributing information about the submission. The source package must
-    compile to a publishable PDF before a submission can leave the working
+    compile to a usable PDF before a submission can leave the working
     state.
 
 Processing
-    Once a submission is finalized (ready for publication), it is subject to
+    Once a submission is finalized (ready for announcement), it is subject to
     a handful of automated QA/QC checks. For example, we need to be able to
     extract plain text content from the compiled paper for subsequent checks.
     Depending on the results of those checks, the submission may be bounced
@@ -78,15 +78,15 @@ On Hold
     the submission will return to the **Submitted** state.
 
 Scheduled
-    Any submissions in the **Submitted** state at the publication cut-off time
-    (currently 2PM ET) will be automatically scheduled for publication on the
+    Any submissions in the **Submitted** state at the announcement cut-off time
+    (currently 2PM ET) will be automatically scheduled for announcement on the
     same day (currently 8PM ET). Any remaining submissions in the **Submitted**
     state at the next-day cutoff (currently 8PM ET) will be scheduled for
-    publication on the following day.
+    announcement on the following day.
 
-Published
-    The automated publication process runs daily, currently at 8PM ET. Any
+Announced
+    The automated announcement process runs daily, currently at 8PM ET. Any
     submissions scheduled for the current day will be updated with their
-    arXiv ID and version, and a publication timestamp. At that time, the
-    submission is considered **Published**. No further changes
+    arXiv ID and version, and an announcement timestamp. At that time, the
+    submission is considered **Announced**. No further changes
     may be made to a submission in this state.

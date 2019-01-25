@@ -83,6 +83,21 @@ bool``; if it returns ``True``, the  callback will be executed. For example:
        return []
 
 
+When do things actually happen?
+-------------------------------
+Callbacks are triggered when the :func:`.commit` method is called,
+usually by :func:`.core.save`. Normally, any event instances returned
+by the callback are applied and committed right away, in order. If the
+callback is asynchronous (see :func:`.tasks.is_async`), it will be
+executed whenever the :mod:`.worker` gets around to it, and any events
+it returns will be applied and stored in order at that time.
+
+Note that setting :mod:`.config.ENABLE_ASYNC=0` will cause async tasks
+to be executed in the current thread.
+
+Setting :mod:`.config.ENABLE_CALLBACKS=0` will disable callbacks
+entirely.
+
 """
 
 import hashlib
