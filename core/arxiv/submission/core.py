@@ -33,14 +33,14 @@ def load(submission_id: int) -> Tuple[Submission, List[Event]]:
 
     Returns
     -------
-    :class:`.Submission`
+    :class:`.domain.Submission`
         The current state of the submission.
     list
-        Items are :class:`.Event`s, in order of their occurrence.
+        Items are :class:`.Event` instances, in order of their occurrence.
 
     Raises
     ------
-    :class:`.NoSuchSubmission`
+    :class:`arxiv.submission.exceptions.NoSuchSubmission`
         Raised when a submission with the passed ID cannot be found.
     """
     try:
@@ -51,7 +51,7 @@ def load(submission_id: int) -> Tuple[Submission, List[Event]]:
 
 def load_submissions_for_user(user_id: int) -> List[Submission]:
     """
-    Load active :class:`.Submission`s for a specific user.
+    Load active :class:`.domain.Submission` instances for a specific user.
 
     Parameters
     ----------
@@ -61,7 +61,7 @@ def load_submissions_for_user(user_id: int) -> List[Submission]:
     Returns
     -------
     list
-        Items are :class:`.Submission` instances.
+        Items are :class:`.domain.Submission` instances.
 
     """
     return classic.get_user_submissions_fast(user_id)
@@ -69,7 +69,7 @@ def load_submissions_for_user(user_id: int) -> List[Submission]:
 
 def load_fast(submission_id: int) -> Submission:
     """
-    Load a :class:`.Submission` from its last projected state.
+    Load a :class:`.domain.Submission` from its last projected state.
 
     This does not load and apply past events. The most recent stored submission
     state is loaded directly from the database.
@@ -81,7 +81,7 @@ def load_fast(submission_id: int) -> Submission:
 
     Returns
     -------
-    :class:`.Submission`
+    :class:`.domain.Submission`
         The current state of the submission.
 
     """
@@ -94,7 +94,7 @@ def load_fast(submission_id: int) -> Submission:
 def save(*events: Event, submission_id: Optional[str] = None) \
         -> Tuple[Submission, List[Event]]:
     """
-    Commit a set of new :class:`.Event`s for a submission.
+    Commit a set of new :class:`.Event` instances for a submission.
 
     This will persist the events to the database, along with the final
     state of the submission, and generate external notification(s) on the
@@ -121,7 +121,7 @@ def save(*events: Event, submission_id: Optional[str] = None) \
 
     Raises
     ------
-    :class:`.NoSuchSubmission`
+    :class:`arxiv.submission.exceptions.NoSuchSubmission`
         Raised if ``submission_id`` is not provided and the first event is not
         a :class:`.CreateSubmission`, or ``submission_id`` is provided but
         no such submission exists.

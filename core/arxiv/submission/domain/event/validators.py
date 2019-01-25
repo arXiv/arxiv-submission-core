@@ -16,7 +16,7 @@ def submission_is_not_finalized(event: Event, submission: Submission) -> None:
     Parameters
     ----------
     event : :class:`.Event`
-    submission : :class:`.Submission`
+    submission : :class:`.domain.Submission`
 
     Raises
     ------

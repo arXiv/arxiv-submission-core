@@ -33,7 +33,7 @@ class AddFlag(Event):
 
 @dataclass()
 class RemoveFlag(Event):
-    """Remove a :class:`.Flag` from a submission."""
+    """Remove a :class:`.domain.Flag` from a submission."""
 
     NAME = "remove flag"
     NAMED = "flag removed"
@@ -54,7 +54,7 @@ class RemoveFlag(Event):
 
 @dataclass()
 class AddContentFlag(AddFlag):
-    """Add a flag related to the content of the submission."""
+    """Add a :class:`.domain.ContentFlag` related to content."""
 
     NAME = "add content flag"
     NAMED = "content flag added"
@@ -82,7 +82,7 @@ class AddContentFlag(AddFlag):
 
 @dataclass()
 class AddMetadataFlag(AddFlag):
-    """Add a flag related to the submission metadata."""
+    """Add a :class:`.domain.MetadataFlag` related to the metadata."""
 
     NAME = "add metadata flag"
     NAMED = "metadata flag added"
@@ -114,7 +114,7 @@ class AddMetadataFlag(AddFlag):
 
 @dataclass()
 class AddUserFlag(AddFlag):
-    """Add a flag related to the submitter."""
+    """Add a :class:`.domain.UserFlag` related to the submitter."""
 
     NAME = "add user flag"
     NAMED = "user flag added"

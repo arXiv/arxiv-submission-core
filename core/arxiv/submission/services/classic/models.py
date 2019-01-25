@@ -191,7 +191,7 @@ class Submission(Base):    # type: ignore
 
     def patch(self, submission: domain.Submission) -> domain.Submission:
         """
-        Patch a :class:`.Submission` with data outside the event scope.
+        Patch a :class:`.domain.Submission` with data outside the event scope.
 
         There are several fields that may change after a submission enters the
         classic moderation and publication system, that cannot be inferred
@@ -265,7 +265,7 @@ class Submission(Base):    # type: ignore
 
     def patch_jref(self, submission: domain.Submission) -> domain.Submission:
         """
-        Patch a :class:`.Submission` with JREF data outside the event scope.
+        Patch a :class:`.domain.Submission` with JREF data outside the event scope.
 
         Parameters
         ----------
@@ -1044,7 +1044,7 @@ class AdminLogEntry(Base):    # type: ignore
     +---------------+-----------------------+------+-----+-------------------+
     | id            | int(11)               | NO   | PRI | NULL              |
     | logtime       | varchar(24)           | YES  |     | NULL              |
-    | created       | timestamp             | NO   |     | CURRENT_TIMESTAMP |  # on update CURRENT_TIMESTAMP
+    | created       | timestamp             | NO   |     | CURRENT_TIMESTAMP |
     | paper_id      | varchar(20)           | YES  | MUL | NULL              |
     | username      | varchar(20)           | YES  |     | NULL              |
     | host          | varchar(64)           | YES  |     | NULL              |

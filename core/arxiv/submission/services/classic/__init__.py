@@ -51,7 +51,7 @@ logger = logging.getLogger(__name__)
 
 
 def get_licenses() -> List[License]:
-    """Get a list of :class:`.License`s available for new submissions."""
+    """Get a list of :class:`.domain.License` instances available."""
     license_data = util.current_session().query(models.License) \
         .filter(models.License.active == '1')
     return [License(uri=row.name, name=row.label) for row in license_data]
@@ -72,7 +72,7 @@ def get_events(submission_id: int) -> List[Event]:
 
     Raises
     ------
-    :class:`.NoSuchSubmission`
+    :class:`.classic.exceptions.NoSuchSubmission`
         Raised when there are no events for the provided submission ID.
 
     """
@@ -99,7 +99,7 @@ def get_user_submissions_fast(user_id: int) -> List[Submission]:
     Returns
     -------
     list
-        Items are the user's :class:`.Submission` instances.
+        Items are the user's :class:`.domain.Submission` instances.
 
     """
     with transaction() as session:
@@ -136,11 +136,11 @@ def get_submission_fast(submission_id: int) -> List[Submission]:
 
     Returns
     -------
-    :class:`.Submission`
+    :class:`.domain.Submission`
 
     Raises
     ------
-    :class:`.NoSuchSubmission`
+    :class:`.classic.exceptions.NoSuchSubmission`
         Raised when there are is no submission for the provided submission ID.
 
     """
@@ -166,7 +166,7 @@ def _get_db_submission_rows(submission_id: int) -> List[models.Submission]:
 
 def get_submission(submission_id: int) -> Tuple[Submission, List[Event]]:
     """
-    Get the current state of a :class:`.Submission` from the database.
+    Get the current state of a :class:`.domain.Submission` from the database.
 
     In the medium term, services that use this package will need to
     play well with legacy services that integrate with the classic
@@ -186,7 +186,7 @@ def get_submission(submission_id: int) -> Tuple[Submission, List[Event]]:
 
     Returns
     -------
-    :class:`.Submission`
+    :class:`.domain.Submission`
     list
         Items are :class:`Event` instances.
 

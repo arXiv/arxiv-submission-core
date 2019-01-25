@@ -85,7 +85,7 @@ class SubmissionCompiled:
 
 @dataclass
 class SubmissionMetadata:
-    """Metadata about a :class:`.Submission` instance."""
+    """Metadata about a :class:`.domain.Submission` instance."""
 
     title: Optional[str] = None
     abstract: Optional[str] = None
@@ -271,7 +271,7 @@ class Submission:
     """If an e-print is withdrawn, the submitter is asked to explain why."""
 
     versions: List['Submission'] = field(default_factory=list)
-    """Published versions of this :class:`.Submission`."""
+    """Published versions of this :class:`.domain.Submission`."""
 
     # These fields are related to moderation/quality control.
     user_requests: Dict[str, UserRequest] = field(default_factory=dict)
@@ -358,7 +358,7 @@ class Submission:
         return self.user_requests[request_id]
 
     def to_dict(self) -> dict:
-        """Generate a dict representation of this :class:`.Submission`."""
+        """Generate a dict representation of this :class:`.domain.Submission`."""
         data = asdict(self)
         data.update({
             'created': self.created.isoformat(),

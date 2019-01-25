@@ -1,4 +1,4 @@
-"""Utility classes and functions for :mod:`.classic`."""
+"""Utility classes and functions for :mod:`.services.classic`."""
 
 import json
 from contextlib import contextmanager

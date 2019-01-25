@@ -46,10 +46,10 @@ class TestAdminLog(TestCase):
 
 
 class TestOnEvent(TestCase):
-    """Functions in :ref:`.log.ON_EVENT` are called."""
+    """Functions in :const:`.log.ON_EVENT` are called."""
 
     def test_on_event(self):
-        """Function in :ref:`.log.ON_EVENT` is called."""
+        """Function in :const:`.log.ON_EVENT` is called."""
         mock_handler = mock.MagicMock()
         log.ON_EVENT[ConfirmPolicy] = [mock_handler]
         user = User(12345, 'joe@joe.joe', username="joeuser",
@@ -62,7 +62,7 @@ class TestOnEvent(TestCase):
                          "Handler registered for ConfirmPolicy is called")
 
     def test_on_event_is_specific(self):
-        """Function in :ref:`.log.ON_EVENT` are specific."""
+        """Function in :const:`.log.ON_EVENT` are specific."""
         mock_handler = mock.MagicMock()
         log.ON_EVENT[ConfirmPolicy] = [mock_handler]
         user = User(12345, 'joe@joe.joe', username="joeuser",

@@ -13,7 +13,7 @@ class TestGetLicenses(TestCase):
     """Test :func:`.get_licenses`."""
 
     def test_get_all_active_licenses(self):
-        """Return a :class:`.License` for each active license in the db."""
+        """Return a :class:`.domain.License` for each active license."""
         # mock_util.json_factory.return_value = SQLiteJSON
 
         with in_memory_db() as session:
