@@ -296,7 +296,7 @@ class TestPlainTextService(TestCase):
 
 
 class TestPlainTextServiceModule(TestCase):
-    """Tests for :mod:`.plaintext`."""
+    """Tests for :mod:`.services.plaintext`."""
 
     @mock.patch(f'{plaintext.__name__}.get_application_config')
     @mock.patch(f'{plaintext.__name__}.requests.Session')

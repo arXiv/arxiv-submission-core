@@ -73,16 +73,16 @@ def handle(event: Event, before: Submission, after: Submission) -> None:
     """
     Generate an admin log entry for an event that is being committed.
 
-    Looks for a logging function in :ref:`.ON_EVENT` and, if found, calls it
+    Looks for a logging function in :const:`.ON_EVENT` and, if found, calls it
     with the passed parameters.
 
     Parameters
     ----------
     event : :class:`event.Event`
         The event being committed.
-    before : :class:`.Submission`
+    before : :class:`.domain.Submission`
         State of the submission before the event.
-    after : :class:`.Submission`
+    after : :class:`.domain.Submission`
         State of the submission after the event.
 
     """

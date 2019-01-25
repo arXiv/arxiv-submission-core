@@ -10,5 +10,5 @@ subsystem.
    architecture
    publication_process
    submission_api_context
-   containers/core/events
+   containers/core/arxiv.submission
    containers/metadata/metadata

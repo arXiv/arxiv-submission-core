@@ -20,7 +20,7 @@ from .util import in_memory_db
 
 
 class TestGetSubmission(TestCase):
-    """Test :func:`.get_submission`."""
+    """Test :func:`.classic.get_submission`."""
 
     def test_get_submission_that_does_not_exist(self):
         """Test that an exception is raised when submission doesn't exist."""

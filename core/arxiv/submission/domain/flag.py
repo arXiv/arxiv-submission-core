@@ -48,7 +48,7 @@ class ContentFlag(Flag):
 
 @dataclass
 class MetadataFlag(Flag):
-    """A flag related to the submittion metadata."""
+    """A flag related to the submission metadata."""
 
     class FlagTypes(Enum):
         """Supported metadata flags."""

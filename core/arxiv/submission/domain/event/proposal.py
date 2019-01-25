@@ -1,4 +1,4 @@
-"""Commands for working with :class:`.Proposal`s on submissions."""
+"""Commands for working with :class:`.Proposal` instances on submissions."""
 
 import hashlib
 import re

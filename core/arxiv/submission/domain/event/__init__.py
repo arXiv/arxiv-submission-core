@@ -18,7 +18,7 @@ It should:
   ``validate(self, submission: Submission) -> None`` (see below).
 - Implement a projection method with the signature
   ``project(self, submission: Submission) -> Submission:`` that mutates
-  the passed :class:`.Submission` instance.
+  the passed :class:`.domain.Submission` instance.
 - Be fully documented. Be sure that the class docstring fully describes the
   meaning of the event/command, and that both public and private methods have
   at least a summary docstring.
@@ -128,7 +128,7 @@ logger = logging.getLogger(__name__)
 
 @dataclass()
 class CreateSubmission(Event):
-    """Creation of a new :class:`.Submission`."""
+    """Creation of a new :class:`.domain.Submission`."""
 
     NAME = "create submission"
     NAMED = "submission created"
@@ -138,7 +138,7 @@ class CreateSubmission(Event):
         return
 
     def project(self, submission: None = None) -> Submission:
-        """Create a new :class:`.Submission`."""
+        """Create a new :class:`.domain.Submission`."""
         return Submission(creator=self.creator, created=self.created,
                           owner=self.creator, proxy=self.proxy,
                           client=self.client)
@@ -239,7 +239,7 @@ class ConfirmContactInformation(Event):
         validators.submission_is_not_finalized(self, submission)
 
     def project(self, submission: Submission) -> Submission:
-        """Update :prop:`.Submission.submitter_contact_verified`."""
+        """Update :attr:`.Submission.submitter_contact_verified`."""
         submission.submitter_contact_verified = True
         return submission
 
@@ -318,7 +318,7 @@ class SetPrimaryClassification(Event):
                                      f" {self.category}.")
 
     def project(self, submission: Submission) -> Submission:
-        """Set :prop:`.Submission.primary_classification`."""
+        """Set :attr:`.domain.Submission.primary_classification`."""
         clsn = Classification(category=self.category)
         submission.primary_classification = clsn
         return submission
@@ -363,7 +363,7 @@ class RemoveSecondaryClassification(Event):
         validators.submission_is_not_finalized(self, submission)
 
     def project(self, submission: Submission) -> Submission:
-        """Remove from :prop:`.Submission.secondary_classification`."""
+        """Remove from :attr:`.Submission.secondary_classification`."""
         submission.secondary_classification = [
             classn for classn in submission.secondary_classification
             if not classn.category == self.category
@@ -391,7 +391,7 @@ class SetLicense(Event):
         validators.submission_is_not_finalized(self, submission)
 
     def project(self, submission: Submission) -> Submission:
-        """Set :prop:`.Submission.license`."""
+        """Set :attr:`.domain.Submission.license`."""
         submission.license = License(
             name=self.license_name,
             uri=self.license_uri
@@ -427,7 +427,7 @@ class SetTitle(Event):
         self._check_for_html(submission)
 
     def project(self, submission: Submission) -> Submission:
-        """Update the title on a :class:`.Submission`."""
+        """Update the title on a :class:`.domain.Submission`."""
         submission.metadata.title = self.title
         return submission
 
@@ -481,7 +481,7 @@ class SetAbstract(Event):
         self._acceptable_length(submission)
 
     def project(self, submission: Submission) -> Submission:
-        """Update the abstract on a :class:`.Submission`."""
+        """Update the abstract on a :class:`.domain.Submission`."""
         submission.metadata.abstract = self.abstract
         return submission
 
@@ -539,7 +539,7 @@ class SetDOI(Event):
                 raise InvalidEvent(self, f"Invalid DOI: {value}")
 
     def project(self, submission: Submission) -> Submission:
-        """Update the doi on a :class:`.Submission`."""
+        """Update the doi on a :class:`.domain.Submission`."""
         submission.metadata.doi = self.doi
         return submission
 
@@ -577,7 +577,7 @@ class SetMSCClassification(Event):
             return
 
     def project(self, submission: Submission) -> Submission:
-        """Update the MSC classification on a :class:`.Submission`."""
+        """Update the MSC classification on a :class:`.domain.Submission`."""
         submission.metadata.msc_class = self.msc_class
         return submission
 
@@ -618,7 +618,7 @@ class SetACMClassification(Event):
         self._valid_acm_class(submission)
 
     def project(self, submission: Submission) -> Submission:
-        """Update the ACM classification on a :class:`.Submission`."""
+        """Update the ACM classification on a :class:`.domain.Submission`."""
         submission.metadata.acm_class = self.acm_class
         return submission
 
@@ -667,7 +667,7 @@ class SetJournalReference(Event):
         self._contains_valid_year(submission)
 
     def project(self, submission: Submission) -> Submission:
-        """Update the journal reference on a :class:`.Submission`."""
+        """Update the journal reference on a :class:`.domain.Submission`."""
         submission.metadata.journal_ref = self.journal_ref
         return submission
 
@@ -716,7 +716,7 @@ class SetReportNumber(Event):
                                      " consecutive digits")
 
     def project(self, submission: Submission) -> Submission:
-        """Update the report number on a :class:`.Submission`."""
+        """Update the report number on a :class:`.domain.Submission`."""
         submission.metadata.report_num = self.report_num
         return submission
 
@@ -753,7 +753,7 @@ class SetComments(Event):
                                      f" {self.MAX_LENGTH} characters long")
 
     def project(self, submission: Submission) -> Submission:
-        """Update the comments on a :class:`.Submission`."""
+        """Update the comments on a :class:`.domain.Submission`."""
         submission.metadata.comments = self.comments
         return submission
 
@@ -767,7 +767,7 @@ class SetComments(Event):
 
 @dataclass()
 class SetAuthors(Event):
-    """Update the authors on a :class:`.Submission`."""
+    """Update the authors on a :class:`.domain.Submission`."""
 
     NAME = "update authors"
     NAMED = "authors updated"
@@ -811,7 +811,7 @@ class SetAuthors(Event):
             raise InvalidEvent(self, "Authors should not contain et al.")
 
     def project(self, submission: Submission) -> Submission:
-        """Replace :prop:`.Submission.metadata.authors`."""
+        """Replace :attr:`.Submission.metadata.authors`."""
         submission.metadata.authors = self.authors
         submission.metadata.authors_display = self.authors_display
         return submission
@@ -872,7 +872,7 @@ class UnsetUploadPackage(Event):
         validators.submission_is_not_finalized(self, submission)
 
     def project(self, submission: Submission) -> Submission:
-        """Set :prop:`Submission.source_content` to None."""
+        """Set :attr:`Submission.source_content` to None."""
         submission.source_content = None
         submission.submitter_confirmed_preview = False
         return submission
@@ -890,7 +890,7 @@ class ConfirmPreview(Event):
         validators.submission_is_not_finalized(self, submission)
 
     def project(self, submission: Submission) -> Submission:
-        """Set :prop:`Submission.return submission`."""
+        """Set :attr:`Submission.return submission`."""
         submission.submitter_confirmed_preview = True
         return submission
 
@@ -917,7 +917,7 @@ class FinalizeSubmission(Event):
         self._required_fields_are_complete(submission)
 
     def project(self, submission: Submission) -> Submission:
-        """Set :prop:`Submission.finalized`."""
+        """Set :attr:`Submission.finalized`."""
         submission.status = Submission.SUBMITTED
         return submission
 
@@ -950,7 +950,7 @@ class UnFinalizeSubmission(Event):
             raise InvalidEvent(self, "Submission is not finalized")
 
     def project(self, submission: Submission) -> Submission:
-        """Set :prop:`Submission.finalized`."""
+        """Set :attr:`Submission.finalized`."""
         submission.status = Submission.WORKING
         return submission
 
@@ -992,7 +992,7 @@ class Publish(Event):
 
 @dataclass()
 class CreateComment(Event):
-    """Creation of a :class:`.Comment` on a :class:`.Submission`."""
+    """Creation of a :class:`.Comment` on a :class:`.domain.Submission`."""
 
     read_scope = 'submission:moderate'
     write_scope = 'submission:moderate'
@@ -1001,7 +1001,7 @@ class CreateComment(Event):
     scope: str = 'private'
 
     def validate(self, submission: Submission) -> None:
-        """The :prop:`.body` should be set."""
+        """The :attr:`.body` should be set."""
         if not self.body:
             raise ValueError('Comment body not set')
 
@@ -1020,7 +1020,7 @@ class CreateComment(Event):
 
 @dataclass()
 class DeleteComment(Event):
-    """Deletion of a :class:`.Comment` on a :class:`.Submission`."""
+    """Deletion of a :class:`.Comment` on a :class:`.domain.Submission`."""
 
     read_scope = 'submission:moderate'
     write_scope = 'submission:moderate'
@@ -1028,7 +1028,7 @@ class DeleteComment(Event):
     comment_id: str = field(default_factory=str)
 
     def validate(self, submission: Submission) -> None:
-        """The :prop:`.comment_id` must present on the submission."""
+        """The :attr:`.comment_id` must present on the submission."""
         if self.comment_id is None:
             raise InvalidEvent(self, 'comment_id is required')
         if not hasattr(submission, 'comments') or not submission.comments:
@@ -1150,7 +1150,7 @@ EVENT_TYPES = {
 
 def event_factory(event_type: str, **data) -> Event:
     """
-    Convenience factory for generating :class:`.Event`s.
+    Convenience factory for generating :class:`.Event` instances.
 
     Parameters
     ----------

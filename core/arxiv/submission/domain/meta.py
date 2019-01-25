@@ -1,4 +1,4 @@
-"""Metadata objects in support of :class:`.Submission`s."""
+"""Metadata objects in support of submissions."""
 
 from typing import Optional, List
 from arxiv.taxonomy import Category
@@ -7,7 +7,7 @@ from dataclasses import dataclass, asdict, field
 
 @dataclass
 class Classification:
-    """An archive/category classification for a :class:`.Submission`."""
+    """An archive/category classification for a :class:`.domain.Submission`."""
 
     category: Category
 

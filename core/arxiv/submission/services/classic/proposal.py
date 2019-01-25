@@ -20,9 +20,9 @@ def add(event: AddProposal, before: Submission, after: Submission) -> None:
     ----------
     event : :class:`event.Event`
         The event being committed.
-    before : :class:`.Submission`
+    before : :class:`.domain.Submission`
         State of the submission before the event.
-    after : :class:`.Submission`
+    after : :class:`.domain.Submission`
         State of the submission after the event.
 
     """

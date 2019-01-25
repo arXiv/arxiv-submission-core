@@ -147,27 +147,23 @@ do not constrain the evolution of the submission system in other areas.
 
 High-level plan
 ---------------
-- We will decouple most functional components of the classic submission system
-  into independent services that are agnostic about submissions. This includes
-  classification, overlap detection, compilation (TeX, PS), and upload/file
-  management.
-- We will implement a :ref:`Python package <submission-core-events-package>`
-  that is responsible for all commands in the scope of the submission system.
-  That package should:
+- Major functional components of the classic submission system are decomposed
+  into independent :ref:`utility-services` that are agnostic about the
+  submissions themselves. This includes classification, overlap detection,
+  compilation (TeX, PS), and upload/file management.
+- The :ref:`core submission package <submission-core-events-package>`
+  provides the foundational logic of the submission system.
 
-  - Define the commands that are available in the submission system, and
+  - Defines the commands that are available in the submission system, and
     provide a Python API for executing those commands.
-  - Provide an API for defining rules and conditional operations based on those
-    commands.
-  - Be responsible for updating the core submission database. It should persist
-    command execution instances/events in the core database, and also generate
-    projections of submission state that support query/read operations and
-    that are compatible with legacy components.
+  - Provides a framework for defining rules and conditional operations based
+    on those commands.
+  - Provides integration with the :ref:`submission-database`.
 
 - A set of :ref:`core submission interface services <interface-services>`
-  will provide UIs and APIs to support various submission and moderation
-  workflows. Those services will utilize the the core command/event package
-  (above).
+  built on top of the :ref:`core submission package
+  <submission-core-events-package>` provide UIs and APIs to support submission
+  and moderation workflows.
 
 
 Context
@@ -296,6 +292,7 @@ is the *only* mechanism for writing submission data to the
 - Provides integration with a notification broker (Kinesis) for disseminating
   events to other parts of the system (e.g. :ref:`web-hook-service`).
 
+Detailed package documentation can be found in :mod:`arxiv.submission`.
 
 .. _interface-services:
 

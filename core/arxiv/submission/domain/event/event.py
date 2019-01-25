@@ -32,7 +32,24 @@ Store = Callable[['Event', Submission, Submission], Tuple['Event', Submission]]
 
 @dataclass()
 class Event:
-    """Base class for submission-related events."""
+    """
+    Base class for submission-related events/commands.
+
+    An event represents a change to a :class:`.domain.Submission`. Rather than
+    changing submissions directly, an application should create (and store)
+    events. Each event class must inherit from this base class, extend it with
+    whatever data is needed for the event, and define methods for validation
+    and projection (changing a submission):
+
+    - ``validate(self, submission: Submission) -> None`` should raise
+      :class:`.InvalidEvent` if the event instance has invalid data.
+    - ``project(self, submission: Submission) -> Submission`` should perform
+      changes to the :class:`.domain.Submission` and return it.
+
+    An event class also provides a hook for doing things automatically when the
+    submission changes. To register a function that gets called when an event
+    is committed, use the :func:`bind` method.
+    """
 
     creator: Agent
     """
@@ -50,7 +67,7 @@ class Event:
 
     proxy: Optional[Agent] = field(default=None)
     """
-    The agent who facilitated the operation on behalf of the :prop:`.creator`.
+    The agent who facilitated the operation on behalf of the :attr:`.creator`.
 
     This may be an API client, or another user who has been designated as a
     proxy. Note that proxy implies that the creator was not directly involved.
@@ -58,7 +75,7 @@ class Event:
 
     client: Optional[Agent] = field(default=None)
     """
-    The client through which the :prop:`.creator` performed the operation.
+    The client through which the :attr:`.creator` performed the operation.
 
     If the creator was directly involved in the operation, this property should
     be the client that facilitated the operation.
@@ -80,23 +97,26 @@ class Event:
     """
 
     before: Optional[Submission] = None
+    """The state of the submission prior to the event."""
+
     after: Optional[Submission] = None
+    """The state of the submission after the event."""
 
     _hooks: ClassVar[Mapping[type, List[Rule]]] = defaultdict(list)
 
     @property
     def event_type(self) -> str:
-        """The name (str) of the event type."""
+        """Name of the event type."""
         return self.get_event_type()
 
     @classmethod
     def get_event_type(cls) -> str:
-        """Get the name (str) of the event type."""
+        """Get the name of the event type."""
         return cls.__name__
 
     @property
     def event_id(self) -> str:
-        """The unique ID for this event."""
+        """Unique ID for this event."""
         h = hashlib.new('sha1')
         h.update(b'%s:%s:%s' % (self.created.isoformat().encode('utf-8'),
                                 self.event_type.encode('utf-8'),
@@ -134,10 +154,45 @@ class Event:
         """
         Generate a decorator to bind a callback to an event type.
 
+        To register a function that will be called whenever an event is
+        committed, decorate it like so:
+
+        .. code-block:: python
+
+           @MyEvent.bind()
+           def say_hello(event: MyEvent, before: Submission,
+                         after: Submission, creator: Agent) -> Iterable[Event]:
+               yield SomeOtherEvent(...)
+
+        The callback function will be passed the event that triggered it, the
+        state of the submission before and after the triggering event was
+        applied, and a :class:`.System` agent that can be used as the creator
+        of subsequent events. It should return an iterable of other
+        :class:`.Event` instances, either by ``yield``\ing them, or by returning
+        an iterable object of some kind.
+
+        By default, callbacks will only be called if the creator of the
+        trigger event is not a :class:`.System` instance. This makes it less
+        easy to define infinite chains of callbacks. You can pass a custom
+        condition to the decorator, for example:
+
+        .. code-block:: python
+
+           def jill_created_an_event(event: MyEvent, before: Submission,
+                                     after: Submission) -> bool:
+               return event.creator.username == 'jill'
+
+
+           @MyEvent.bind(jill_created_an_event)
+           def say_hi(event: MyEvent, before: Submission,
+                      after: Submission, creator: Agent) -> Iterable[Event]:
+               yield SomeOtherEvent(...)
+
+        Note that the condition signature is ``(event: MyEvent, before:
+        Submission, after: Submission) -> bool``\.
+
         Parameters
         ----------
-        cls : :class:`type`
-            The event class to which the callback should be bound.
         condition : Callable
             A callable with the signature ``(event: Event, before: Submission,
             after: Submission) -> bool``. If this callable returns ``True``,

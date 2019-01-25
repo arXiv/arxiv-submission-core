@@ -6,7 +6,7 @@ setup(
     name='arxiv-submission-core',
     version='0.5.3rc4',
     packages=[f'arxiv.{package}' for package
-              in find_packages('arxiv', exclude=['*test*'])],
+              in find_packages('arxiv')],
     zip_safe=False,
     install_requires=[
         'arxiv-base',

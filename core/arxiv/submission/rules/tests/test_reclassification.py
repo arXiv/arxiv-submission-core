@@ -78,7 +78,7 @@ class TestProposeFromClassifierResults(TestCase):
         )
 
     def test_suggestions(self):
-        """Test suggestions using :ref:`.CASES`."""
+        """Test suggestions using :const:`.CASES`."""
         for case in self.CASES:
             self.submission.primary_classification \
                 = Classification(category=case['primary_category'])
