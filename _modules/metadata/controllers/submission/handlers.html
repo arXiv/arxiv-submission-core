@@ -9,10 +9,12 @@
     <title>metadata.controllers.submission.handlers &#8212; arXiv submission &amp; moderation 0.1 documentation</title>
     <link rel="stylesheet" href="../../../../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/graphviz.css" />
     <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
     <script type="text/javascript" src="../../../../_static/jquery.js"></script>
     <script type="text/javascript" src="../../../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../../_static/language_data.js"></script>
     <link rel="index" title="Index" href="../../../../genindex.html" />
     <link rel="search" title="Search" href="../../../../search.html" />
    
@@ -103,12 +105,12 @@
 <span class="sd">    tuple</span>
 <span class="sd">        Zero or more uncommitted :class:`arxiv.submission.Event` instances.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="n">events</span><span class="o">.</span><span class="n">AssertAuthorship</span><span class="p">(</span><span class="o">**</span><span class="n">agents</span><span class="p">,</span> <span class="n">submitter_is_author</span><span class="o">=</span><span class="n">data</span><span class="p">),</span></div>
+    <span class="k">return</span> <span class="n">events</span><span class="o">.</span><span class="n">ConfirmAuthorship</span><span class="p">(</span><span class="o">**</span><span class="n">agents</span><span class="p">,</span> <span class="n">submitter_is_author</span><span class="o">=</span><span class="n">data</span><span class="p">),</span></div>
 
 
 <div class="viewcode-block" id="handle_license"><a class="viewcode-back" href="../../../../containers/metadata/metadata.controllers.submission.html#metadata.controllers.submission.handlers.handle_license">[docs]</a><span class="k">def</span> <span class="nf">handle_license</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">agents</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">events</span><span class="o">.</span><span class="n">Event</span><span class="p">]:</span>
     <span class="sd">&quot;&quot;&quot;Handle the ``license`` field in submission payload.&quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="n">events</span><span class="o">.</span><span class="n">SelectLicense</span><span class="p">(</span>
+    <span class="k">return</span> <span class="n">events</span><span class="o">.</span><span class="n">SetLicense</span><span class="p">(</span>
         <span class="o">**</span><span class="n">agents</span><span class="p">,</span>
         <span class="n">license_name</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">),</span>
         <span class="n">license_uri</span><span class="o">=</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;uri&#39;</span><span class="p">]</span>
@@ -132,7 +134,7 @@
 <span class="sd">        Zero or more uncommitted :class:`arxiv.submission.Event` instances.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">data</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">events</span><span class="o">.</span><span class="n">AcceptPolicy</span><span class="p">(</span><span class="o">**</span><span class="n">agents</span><span class="p">),</span>
+        <span class="k">return</span> <span class="n">events</span><span class="o">.</span><span class="n">ConfirmPolicy</span><span class="p">(</span><span class="o">**</span><span class="n">agents</span><span class="p">),</span>
     <span class="k">return</span> <span class="nb">tuple</span><span class="p">()</span></div>
 
 
@@ -153,7 +155,7 @@
 <span class="sd">        Zero or more uncommitted :class:`arxiv.submission.Event` instances.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">data</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">events</span><span class="o">.</span><span class="n">VerifyContactInformation</span><span class="p">(</span><span class="o">**</span><span class="n">agents</span><span class="p">),</span>
+        <span class="k">return</span> <span class="n">events</span><span class="o">.</span><span class="n">ConfirmContactInformation</span><span class="p">(</span><span class="o">**</span><span class="n">agents</span><span class="p">),</span>
     <span class="k">return</span> <span class="nb">tuple</span><span class="p">()</span></div>
 
 
@@ -262,7 +264,7 @@
         <span class="k">if</span> <span class="s1">&#39;order&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">au</span><span class="p">:</span>
             <span class="n">au</span><span class="p">[</span><span class="s1">&#39;order&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">i</span>
         <span class="n">_authors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">events</span><span class="o">.</span><span class="n">Author</span><span class="p">(</span><span class="o">**</span><span class="n">au</span><span class="p">))</span>
-    <span class="k">return</span> <span class="n">events</span><span class="o">.</span><span class="n">UpdateAuthors</span><span class="p">(</span><span class="o">**</span><span class="n">agents</span><span class="p">,</span> <span class="n">authors</span><span class="o">=</span><span class="n">_authors</span><span class="p">),</span></div>
+    <span class="k">return</span> <span class="n">events</span><span class="o">.</span><span class="n">SetAuthors</span><span class="p">(</span><span class="o">**</span><span class="n">agents</span><span class="p">,</span> <span class="n">authors</span><span class="o">=</span><span class="n">_authors</span><span class="p">),</span></div>
 
 
 <div class="viewcode-block" id="handle_finalization"><a class="viewcode-back" href="../../../../containers/metadata/metadata.controllers.submission.html#metadata.controllers.submission.handlers.handle_finalization">[docs]</a><span class="k">def</span> <span class="nf">handle_finalization</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">agents</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">events</span><span class="o">.</span><span class="n">Event</span><span class="p">]:</span>
@@ -303,12 +305,10 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">data</span><span class="p">:</span>
         <span class="k">return</span> <span class="nb">tuple</span><span class="p">()</span>
-    <span class="k">return</span> <span class="n">events</span><span class="o">.</span><span class="n">AttachSourceContent</span><span class="p">(</span>
+    <span class="k">return</span> <span class="n">events</span><span class="o">.</span><span class="n">SetUploadPackage</span><span class="p">(</span>
         <span class="o">**</span><span class="n">agents</span><span class="p">,</span>
-        <span class="n">location</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;location&#39;</span><span class="p">),</span>
         <span class="nb">format</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;format&#39;</span><span class="p">),</span>
         <span class="n">checksum</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;checksum&#39;</span><span class="p">),</span>
-        <span class="n">mime_type</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;mime_type&#39;</span><span class="p">),</span>
         <span class="n">identifier</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;identifier&#39;</span><span class="p">),</span>
         <span class="n">size</span><span class="o">=</span><span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;size&#39;</span><span class="p">),</span>
     <span class="p">),</span></div>
@@ -359,10 +359,11 @@
 <h3>Navigation</h3>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../../architecture.html">Submission &amp; moderation subsystem architecture</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../publication_process.html">Submission &amp; Publication Process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../announcement_process.html">Submission &amp; announcement Process</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../submission_api_context.html">Submission API: Context</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../containers/core/events.html">events package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../containers/core/arxiv.submission.html">arxiv.submission package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../containers/metadata/metadata.html">metadata package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../background.html">Background</a></li>
 </ul>
 
 <div class="relations">
@@ -388,6 +389,14 @@
     </div>
 </div>
 <script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
         </div>
       </div>
       <div class="clearer"></div>
@@ -396,8 +405,8 @@
       &copy;2017, arXiv.org.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.6</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.11</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.3</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
     </div>
 

@@ -1,0 +1,264 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>arxiv.submission.tests.api.test_api &#8212; arXiv submission &amp; moderation 0.1 documentation</title>
+    <link rel="stylesheet" href="../../../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/graphviz.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../../../../" src="../../../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for arxiv.submission.tests.api.test_api</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Tests for :mod:`events` public API.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">unittest</span> <span class="k">import</span> <span class="n">TestCase</span><span class="p">,</span> <span class="n">mock</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">defaultdict</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="k">import</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">timedelta</span>
+<span class="kn">from</span> <span class="nn">flask</span> <span class="k">import</span> <span class="n">Flask</span>
+<span class="kn">from</span> <span class="nn">pytz</span> <span class="k">import</span> <span class="n">UTC</span>
+<span class="kn">from</span> <span class="nn">...</span> <span class="k">import</span> <span class="n">save</span><span class="p">,</span> <span class="n">load</span><span class="p">,</span> <span class="n">Submission</span><span class="p">,</span> <span class="n">User</span><span class="p">,</span> <span class="n">Event</span><span class="p">,</span> \
+    <span class="n">CreateComment</span><span class="p">,</span> <span class="n">SubmissionMetadata</span><span class="p">,</span> <span class="n">CreateSubmission</span><span class="p">,</span> <span class="n">SetAuthors</span><span class="p">,</span> <span class="n">Author</span><span class="p">,</span> \
+    <span class="n">SetTitle</span><span class="p">,</span> <span class="n">SetAbstract</span>
+<span class="kn">from</span> <span class="nn">...exceptions</span> <span class="k">import</span> <span class="n">NoSuchSubmission</span><span class="p">,</span> <span class="n">InvalidEvent</span>
+<span class="kn">from</span> <span class="nn">...services</span> <span class="k">import</span> <span class="n">classic</span>
+
+
+<div class="viewcode-block" id="mock_store_event"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.tests.api.test_api.html#arxiv.submission.tests.api.test_api.mock_store_event">[docs]</a><span class="k">def</span> <span class="nf">mock_store_event</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">before</span><span class="p">,</span> <span class="n">after</span><span class="p">):</span>
+    <span class="n">event</span><span class="o">.</span><span class="n">submission_id</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">after</span><span class="o">.</span><span class="n">submission_id</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">event</span><span class="o">.</span><span class="n">committed</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="k">return</span> <span class="n">event</span><span class="p">,</span> <span class="n">after</span></div>
+
+
+<div class="viewcode-block" id="TestLoad"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.tests.api.test_api.html#arxiv.submission.tests.api.test_api.TestLoad">[docs]</a><span class="k">class</span> <span class="nc">TestLoad</span><span class="p">(</span><span class="n">TestCase</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Test :func:`.load`.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="TestLoad.test_load_existant_submission"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.tests.api.test_api.html#arxiv.submission.tests.api.test_api.TestLoad.test_load_existant_submission">[docs]</a>    <span class="nd">@mock</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="s1">&#39;submission.core.classic&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">test_load_existant_submission</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mock_classic</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;When the submission exists, submission and events are returned.&quot;&quot;&quot;</span>
+        <span class="n">u</span> <span class="o">=</span> <span class="n">User</span><span class="p">(</span><span class="mi">12345</span><span class="p">,</span> <span class="s1">&#39;joe@joe.joe&#39;</span><span class="p">)</span>
+        <span class="n">mock_classic</span><span class="o">.</span><span class="n">get_submission</span><span class="o">.</span><span class="n">return_value</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">Submission</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">u</span><span class="p">,</span> <span class="n">submission_id</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">owner</span><span class="o">=</span><span class="n">u</span><span class="p">,</span>
+                       <span class="n">created</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">UTC</span><span class="p">)),</span>
+            <span class="p">[</span><span class="n">CreateSubmission</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">u</span><span class="p">,</span> <span class="n">submission_id</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">committed</span><span class="o">=</span><span class="kc">True</span><span class="p">)]</span>
+        <span class="p">)</span>
+        <span class="n">submission</span><span class="p">,</span> <span class="n">events</span> <span class="o">=</span> <span class="n">load</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">mock_classic</span><span class="o">.</span><span class="n">get_submission</span><span class="o">.</span><span class="n">call_count</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertIsInstance</span><span class="p">(</span><span class="n">submission</span><span class="p">,</span> <span class="n">Submission</span><span class="p">,</span>
+                              <span class="s2">&quot;A submission should be returned&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertIsInstance</span><span class="p">(</span><span class="n">events</span><span class="p">,</span> <span class="nb">list</span><span class="p">,</span>
+                              <span class="s2">&quot;A list of events should be returned&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertIsInstance</span><span class="p">(</span><span class="n">events</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">Event</span><span class="p">,</span>
+                              <span class="s2">&quot;A list of events should be returned&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestLoad.test_load_nonexistant_submission"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.tests.api.test_api.html#arxiv.submission.tests.api.test_api.TestLoad.test_load_nonexistant_submission">[docs]</a>    <span class="nd">@mock</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="s1">&#39;submission.core.classic&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">test_load_nonexistant_submission</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mock_classic</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;When the submission does not exist, an exception is raised.&quot;&quot;&quot;</span>
+        <span class="n">mock_classic</span><span class="o">.</span><span class="n">get_submission</span><span class="o">.</span><span class="n">side_effect</span> <span class="o">=</span> <span class="n">classic</span><span class="o">.</span><span class="n">NoSuchSubmission</span>
+        <span class="n">mock_classic</span><span class="o">.</span><span class="n">NoSuchSubmission</span> <span class="o">=</span> <span class="n">classic</span><span class="o">.</span><span class="n">NoSuchSubmission</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="n">NoSuchSubmission</span><span class="p">):</span>
+            <span class="n">load</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="TestSave"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.tests.api.test_api.html#arxiv.submission.tests.api.test_api.TestSave">[docs]</a><span class="k">class</span> <span class="nc">TestSave</span><span class="p">(</span><span class="n">TestCase</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Test :func:`.save`.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="TestSave.test_save_creation_event"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.tests.api.test_api.html#arxiv.submission.tests.api.test_api.TestSave.test_save_creation_event">[docs]</a>    <span class="nd">@mock</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="s1">&#39;submission.core.classic&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">test_save_creation_event</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mock_database</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;A :class:`.CreationEvent` is passed.&quot;&quot;&quot;</span>
+        <span class="n">mock_database</span><span class="o">.</span><span class="n">store_event</span> <span class="o">=</span> <span class="n">mock_store_event</span>
+        <span class="n">user</span> <span class="o">=</span> <span class="n">User</span><span class="p">(</span><span class="mi">12345</span><span class="p">,</span> <span class="s1">&#39;joe@joe.joe&#39;</span><span class="p">)</span>
+        <span class="n">event</span> <span class="o">=</span> <span class="n">CreateSubmission</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">user</span><span class="p">)</span>
+        <span class="n">submission</span><span class="p">,</span> <span class="n">events</span> <span class="o">=</span> <span class="n">save</span><span class="p">(</span><span class="n">event</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertIsInstance</span><span class="p">(</span><span class="n">submission</span><span class="p">,</span> <span class="n">Submission</span><span class="p">,</span>
+                              <span class="s2">&quot;A submission instance should be returned&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertIsInstance</span><span class="p">(</span><span class="n">events</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">Event</span><span class="p">,</span>
+                              <span class="s2">&quot;Should return a list of events&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">events</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">event</span><span class="p">,</span>
+                         <span class="s2">&quot;The first event should be the event that was passed&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertIsNotNone</span><span class="p">(</span><span class="n">submission</span><span class="o">.</span><span class="n">submission_id</span><span class="p">,</span>
+                             <span class="s2">&quot;Submission ID should be set.&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestSave.test_save_events_from_scratch"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.tests.api.test_api.html#arxiv.submission.tests.api.test_api.TestSave.test_save_events_from_scratch">[docs]</a>    <span class="nd">@mock</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="s1">&#39;submission.core.classic&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">test_save_events_from_scratch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mock_database</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Save multiple events for a nonexistant submission.&quot;&quot;&quot;</span>
+        <span class="n">mock_database</span><span class="o">.</span><span class="n">store_event</span> <span class="o">=</span> <span class="n">mock_store_event</span>
+        <span class="n">user</span> <span class="o">=</span> <span class="n">User</span><span class="p">(</span><span class="mi">12345</span><span class="p">,</span> <span class="s1">&#39;joe@joe.joe&#39;</span><span class="p">)</span>
+        <span class="n">e</span> <span class="o">=</span> <span class="n">CreateSubmission</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">user</span><span class="p">)</span>
+        <span class="n">e2</span> <span class="o">=</span> <span class="n">SetTitle</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">user</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s1">&#39;footitle&#39;</span><span class="p">)</span>
+        <span class="n">submission</span><span class="p">,</span> <span class="n">events</span> <span class="o">=</span> <span class="n">save</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">e2</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">submission</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">title</span><span class="p">,</span> <span class="s1">&#39;footitle&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertIsInstance</span><span class="p">(</span><span class="n">submission</span><span class="o">.</span><span class="n">submission_id</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">submission</span><span class="o">.</span><span class="n">created</span><span class="p">,</span> <span class="n">e</span><span class="o">.</span><span class="n">created</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestSave.test_create_and_update_authors"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.tests.api.test_api.html#arxiv.submission.tests.api.test_api.TestSave.test_create_and_update_authors">[docs]</a>    <span class="nd">@mock</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="s1">&#39;submission.core.classic&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">test_create_and_update_authors</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mock_database</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Save multiple events for a nonexistant submission.&quot;&quot;&quot;</span>
+        <span class="n">mock_database</span><span class="o">.</span><span class="n">store_event</span> <span class="o">=</span> <span class="n">mock_store_event</span>
+        <span class="n">user</span> <span class="o">=</span> <span class="n">User</span><span class="p">(</span><span class="mi">12345</span><span class="p">,</span> <span class="s1">&#39;joe@joe.joe&#39;</span><span class="p">)</span>
+        <span class="n">e</span> <span class="o">=</span> <span class="n">CreateSubmission</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">user</span><span class="p">)</span>
+        <span class="n">e2</span> <span class="o">=</span> <span class="n">SetAuthors</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">user</span><span class="p">,</span> <span class="n">authors</span><span class="o">=</span><span class="p">[</span>
+            <span class="n">Author</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">forename</span><span class="o">=</span><span class="s1">&#39;Joe&#39;</span><span class="p">,</span> <span class="n">surname</span><span class="o">=</span><span class="s2">&quot;Bloggs&quot;</span><span class="p">,</span> <span class="n">email</span><span class="o">=</span><span class="s2">&quot;joe@blog.gs&quot;</span><span class="p">)</span>
+        <span class="p">])</span>
+        <span class="n">submission</span><span class="p">,</span> <span class="n">events</span> <span class="o">=</span> <span class="n">save</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">e2</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertIsInstance</span><span class="p">(</span><span class="n">submission</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">authors</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">Author</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestSave.test_save_from_scratch_without_creation_event"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.tests.api.test_api.html#arxiv.submission.tests.api.test_api.TestSave.test_save_from_scratch_without_creation_event">[docs]</a>    <span class="nd">@mock</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="s1">&#39;submission.core.classic&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">test_save_from_scratch_without_creation_event</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mock_database</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;An exception is raised when there is no creation event.&quot;&quot;&quot;</span>
+        <span class="n">mock_database</span><span class="o">.</span><span class="n">store_event</span> <span class="o">=</span> <span class="n">mock_store_event</span>
+        <span class="n">user</span> <span class="o">=</span> <span class="n">User</span><span class="p">(</span><span class="mi">12345</span><span class="p">,</span> <span class="s1">&#39;joe@joe.joe&#39;</span><span class="p">)</span>
+        <span class="n">e2</span> <span class="o">=</span> <span class="n">SetTitle</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">user</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s1">&#39;foo&#39;</span><span class="p">)</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="n">NoSuchSubmission</span><span class="p">):</span>
+            <span class="n">save</span><span class="p">(</span><span class="n">e2</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestSave.test_save_events_on_existing_submission"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.tests.api.test_api.html#arxiv.submission.tests.api.test_api.TestSave.test_save_events_on_existing_submission">[docs]</a>    <span class="nd">@mock</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="s1">&#39;submission.core.classic&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">test_save_events_on_existing_submission</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mock_db</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Save multiple sets of events in separate calls to :func:`.save`.&quot;&quot;&quot;</span>
+        <span class="n">cache</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="k">def</span> <span class="nf">mock_store_event_with_cache</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">before</span><span class="p">,</span> <span class="n">after</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">after</span><span class="o">.</span><span class="n">submission_id</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">before</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">before</span><span class="o">.</span><span class="n">submission_id</span> <span class="o">=</span> <span class="mi">1</span>
+                <span class="n">after</span><span class="o">.</span><span class="n">submission_id</span> <span class="o">=</span> <span class="mi">1</span>
+
+            <span class="n">event</span><span class="o">.</span><span class="n">committed</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="n">event</span><span class="o">.</span><span class="n">submission_id</span> <span class="o">=</span> <span class="n">after</span><span class="o">.</span><span class="n">submission_id</span>
+            <span class="k">if</span> <span class="n">event</span><span class="o">.</span><span class="n">submission_id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">cache</span><span class="p">:</span>
+                <span class="n">cache</span><span class="p">[</span><span class="n">event</span><span class="o">.</span><span class="n">submission_id</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="p">[])</span>
+            <span class="n">cache</span><span class="p">[</span><span class="n">event</span><span class="o">.</span><span class="n">submission_id</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">after</span><span class="p">,</span> <span class="n">cache</span><span class="p">[</span><span class="n">event</span><span class="o">.</span><span class="n">submission_id</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="n">event</span><span class="p">]</span>
+            <span class="p">)</span>
+            <span class="k">return</span> <span class="n">event</span><span class="p">,</span> <span class="n">after</span>
+
+        <span class="k">def</span> <span class="nf">mock_get_events</span><span class="p">(</span><span class="n">submission_id</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">cache</span><span class="p">[</span><span class="n">submission_id</span><span class="p">]</span>
+
+        <span class="n">mock_db</span><span class="o">.</span><span class="n">store_event</span> <span class="o">=</span> <span class="n">mock_store_event_with_cache</span>
+        <span class="n">mock_db</span><span class="o">.</span><span class="n">get_submission</span> <span class="o">=</span> <span class="n">mock_get_events</span>
+
+        <span class="c1"># Here is the first set of events.</span>
+        <span class="n">user</span> <span class="o">=</span> <span class="n">User</span><span class="p">(</span><span class="mi">12345</span><span class="p">,</span> <span class="s1">&#39;joe@joe.joe&#39;</span><span class="p">)</span>
+        <span class="n">e</span> <span class="o">=</span> <span class="n">CreateSubmission</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">user</span><span class="p">)</span>
+        <span class="n">e2</span> <span class="o">=</span> <span class="n">SetTitle</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">user</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s1">&#39;footitle&#39;</span><span class="p">)</span>
+        <span class="n">submission</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">save</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">e2</span><span class="p">)</span>
+        <span class="n">submission_id</span> <span class="o">=</span> <span class="n">submission</span><span class="o">.</span><span class="n">submission_id</span>
+
+        <span class="c1"># Now we apply a second set of events.</span>
+        <span class="n">e3</span> <span class="o">=</span> <span class="n">SetAbstract</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">user</span><span class="p">,</span> <span class="n">abstract</span><span class="o">=</span><span class="s1">&#39;bar&#39;</span><span class="o">*</span><span class="mi">10</span><span class="p">)</span>
+        <span class="n">submission2</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">save</span><span class="p">(</span><span class="n">e3</span><span class="p">,</span> <span class="n">submission_id</span><span class="o">=</span><span class="n">submission_id</span><span class="p">)</span>
+
+        <span class="c1"># The submission state reflects all three events.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">submission2</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">abstract</span><span class="p">,</span> <span class="s1">&#39;bar&#39;</span><span class="o">*</span><span class="mi">10</span><span class="p">,</span>
+                         <span class="s2">&quot;State of the submission should reflect both sets&quot;</span>
+                         <span class="s2">&quot; of events.&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">submission2</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">title</span><span class="p">,</span> <span class="s1">&#39;footitle&#39;</span><span class="p">,</span>
+                         <span class="s2">&quot;State of the submission should reflect both sets&quot;</span>
+                         <span class="s2">&quot; of events.&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">submission2</span><span class="o">.</span><span class="n">created</span><span class="p">,</span> <span class="n">e</span><span class="o">.</span><span class="n">created</span><span class="p">,</span>
+                         <span class="s2">&quot;The creation date of the submission should be the&quot;</span>
+                         <span class="s2">&quot; original creation date.&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">submission2</span><span class="o">.</span><span class="n">submission_id</span><span class="p">,</span> <span class="n">submission_id</span><span class="p">,</span>
+                         <span class="s2">&quot;The submission ID should remain the same.&quot;</span><span class="p">)</span></div></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../../index.html">arXiv submission & moderation</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../architecture.html">Submission &amp; moderation subsystem architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../announcement_process.html">Submission &amp; announcement Process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../submission_api_context.html">Submission API: Context</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../containers/core/arxiv.submission.html">arxiv.submission package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../containers/metadata/metadata.html">metadata package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../background.html">Background</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, arXiv.org.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.3</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

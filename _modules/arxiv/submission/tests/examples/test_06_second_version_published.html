@@ -1,0 +1,526 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>arxiv.submission.tests.examples.test_06_second_version_published &#8212; arXiv submission &amp; moderation 0.1 documentation</title>
+    <link rel="stylesheet" href="../../../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/graphviz.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../../../../" src="../../../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for arxiv.submission.tests.examples.test_06_second_version_published</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Example 6: second version of a submission is published.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">unittest</span> <span class="k">import</span> <span class="n">TestCase</span>
+<span class="kn">import</span> <span class="nn">tempfile</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="k">import</span> <span class="n">datetime</span>
+<span class="kn">from</span> <span class="nn">pytz</span> <span class="k">import</span> <span class="n">UTC</span>
+
+<span class="kn">from</span> <span class="nn">flask</span> <span class="k">import</span> <span class="n">Flask</span>
+
+<span class="kn">from</span> <span class="nn">...services</span> <span class="k">import</span> <span class="n">classic</span>
+<span class="kn">from</span> <span class="nn">...</span> <span class="k">import</span> <span class="n">save</span><span class="p">,</span> <span class="n">load</span><span class="p">,</span> <span class="n">load_fast</span><span class="p">,</span> <span class="n">domain</span><span class="p">,</span> <span class="n">exceptions</span>
+
+<span class="n">CCO</span> <span class="o">=</span> <span class="s1">&#39;http://creativecommons.org/publicdomain/zero/1.0/&#39;</span>
+
+
+<div class="viewcode-block" id="TestSecondVersionIsPublished"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.tests.examples.test_06_second_version_published.html#arxiv.submission.tests.examples.test_06_second_version_published.TestSecondVersionIsPublished">[docs]</a><span class="k">class</span> <span class="nc">TestSecondVersionIsPublished</span><span class="p">(</span><span class="n">TestCase</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Submitter creates a replacement, and it is published.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="TestSecondVersionIsPublished.setUpClass"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.tests.examples.test_06_second_version_published.html#arxiv.submission.tests.examples.test_06_second_version_published.TestSecondVersionIsPublished.setUpClass">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">setUpClass</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Instantiate an app for use with a SQLite database.&quot;&quot;&quot;</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">db</span> <span class="o">=</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">mkstemp</span><span class="p">(</span><span class="n">suffix</span><span class="o">=</span><span class="s1">&#39;.sqlite&#39;</span><span class="p">)</span>
+        <span class="bp">cls</span><span class="o">.</span><span class="n">app</span> <span class="o">=</span> <span class="n">Flask</span><span class="p">(</span><span class="s1">&#39;foo&#39;</span><span class="p">)</span>
+        <span class="bp">cls</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;CLASSIC_DATABASE_URI&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;sqlite:///</span><span class="si">{db}</span><span class="s1">&#39;</span>
+
+        <span class="k">with</span> <span class="bp">cls</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">app_context</span><span class="p">():</span>
+            <span class="n">classic</span><span class="o">.</span><span class="n">init_app</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">app</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestSecondVersionIsPublished.setUp"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.tests.examples.test_06_second_version_published.html#arxiv.submission.tests.examples.test_06_second_version_published.TestSecondVersionIsPublished.setUp">[docs]</a>    <span class="k">def</span> <span class="nf">setUp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Create and publish two versions.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">submitter</span> <span class="o">=</span> <span class="n">domain</span><span class="o">.</span><span class="n">agent</span><span class="o">.</span><span class="n">User</span><span class="p">(</span><span class="mi">1234</span><span class="p">,</span> <span class="n">email</span><span class="o">=</span><span class="s1">&#39;j.user@somewhere.edu&#39;</span><span class="p">,</span>
+                                           <span class="n">forename</span><span class="o">=</span><span class="s1">&#39;Jane&#39;</span><span class="p">,</span> <span class="n">surname</span><span class="o">=</span><span class="s1">&#39;User&#39;</span><span class="p">,</span>
+                                           <span class="n">endorsements</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;cs.DL&#39;</span><span class="p">,</span> <span class="s1">&#39;cs.IR&#39;</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">defaults</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;creator&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">submitter</span><span class="p">}</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">app_context</span><span class="p">():</span>
+            <span class="n">classic</span><span class="o">.</span><span class="n">drop_all</span><span class="p">()</span>
+            <span class="n">classic</span><span class="o">.</span><span class="n">create_all</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">title</span> <span class="o">=</span> <span class="s2">&quot;the best title&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">doi</span> <span class="o">=</span> <span class="s2">&quot;10.01234/56789&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">category</span> <span class="o">=</span> <span class="s2">&quot;cs.DL&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">events</span> <span class="o">=</span> <span class="n">save</span><span class="p">(</span>
+                <span class="n">domain</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">CreateSubmission</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">defaults</span><span class="p">),</span>
+                <span class="n">domain</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">ConfirmContactInformation</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">defaults</span><span class="p">),</span>
+                <span class="n">domain</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">ConfirmAuthorship</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">defaults</span><span class="p">),</span>
+                <span class="n">domain</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">ConfirmPolicy</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">defaults</span><span class="p">),</span>
+                <span class="n">domain</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">SetTitle</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">title</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">defaults</span><span class="p">),</span>
+                <span class="n">domain</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">SetLicense</span><span class="p">(</span><span class="n">license_uri</span><span class="o">=</span><span class="n">CCO</span><span class="p">,</span>
+                                        <span class="n">license_name</span><span class="o">=</span><span class="s2">&quot;CC0 1.0&quot;</span><span class="p">,</span>
+                                        <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">defaults</span><span class="p">),</span>
+                <span class="n">domain</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">SetPrimaryClassification</span><span class="p">(</span><span class="n">category</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">category</span><span class="p">,</span>
+                                                      <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">defaults</span><span class="p">),</span>
+                <span class="n">domain</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">SetUploadPackage</span><span class="p">(</span><span class="n">checksum</span><span class="o">=</span><span class="s2">&quot;a9s9k342900ks03330029&quot;</span><span class="p">,</span>
+                                              <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;tex&#39;</span><span class="p">,</span> <span class="n">identifier</span><span class="o">=</span><span class="mi">123</span><span class="p">,</span>
+                                              <span class="n">size</span><span class="o">=</span><span class="mi">593992</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">defaults</span><span class="p">),</span>
+                <span class="n">domain</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">SetAbstract</span><span class="p">(</span><span class="n">abstract</span><span class="o">=</span><span class="s2">&quot;Very abstract &quot;</span> <span class="o">*</span> <span class="mi">20</span><span class="p">,</span>
+                                         <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">defaults</span><span class="p">),</span>
+                <span class="n">domain</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">SetComments</span><span class="p">(</span><span class="n">comments</span><span class="o">=</span><span class="s2">&quot;Fine indeed &quot;</span> <span class="o">*</span> <span class="mi">10</span><span class="p">,</span>
+                                         <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">defaults</span><span class="p">),</span>
+                <span class="n">domain</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">SetJournalReference</span><span class="p">(</span><span class="n">journal_ref</span><span class="o">=</span><span class="s2">&quot;Foo 1992&quot;</span><span class="p">,</span>
+                                                 <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">defaults</span><span class="p">),</span>
+                <span class="n">domain</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">SetDOI</span><span class="p">(</span><span class="n">doi</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">doi</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">defaults</span><span class="p">),</span>
+                <span class="n">domain</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">SetAuthors</span><span class="p">(</span><span class="n">authors_display</span><span class="o">=</span><span class="s1">&#39;Robert Paulson (FC)&#39;</span><span class="p">,</span>
+                                        <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">defaults</span><span class="p">),</span>
+                <span class="n">domain</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">FinalizeSubmission</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">defaults</span><span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Publish the submission.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">paper_id</span> <span class="o">=</span> <span class="s1">&#39;1901.00123&#39;</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">app_context</span><span class="p">():</span>
+            <span class="n">session</span> <span class="o">=</span> <span class="n">classic</span><span class="o">.</span><span class="n">current_session</span><span class="p">()</span>
+            <span class="n">db_row</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">classic</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+            <span class="n">db_row</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="n">classic</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">PUBLISHED</span>
+            <span class="n">dated</span> <span class="o">=</span> <span class="p">(</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span> <span class="o">-</span> <span class="n">datetime</span><span class="o">.</span><span class="n">utcfromtimestamp</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
+            <span class="n">db_row</span><span class="o">.</span><span class="n">document</span> <span class="o">=</span> <span class="n">classic</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Document</span><span class="p">(</span>
+                <span class="n">paper_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">paper_id</span><span class="p">,</span>
+                <span class="n">title</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">title</span><span class="p">,</span>
+                <span class="n">authors</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">authors_display</span><span class="p">,</span>
+                <span class="n">dated</span><span class="o">=</span><span class="n">dated</span><span class="o">.</span><span class="n">total_seconds</span><span class="p">(),</span>
+                <span class="n">primary_subject_class</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">category</span><span class="p">,</span>
+                <span class="n">created</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">UTC</span><span class="p">),</span>
+                <span class="n">submitter_email</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">creator</span><span class="o">.</span><span class="n">email</span><span class="p">,</span>
+                <span class="n">submitter_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">creator</span><span class="o">.</span><span class="n">native_id</span>
+            <span class="p">)</span>
+            <span class="n">db_row</span><span class="o">.</span><span class="n">doc_paper_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">paper_id</span>
+            <span class="n">session</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">db_row</span><span class="p">)</span>
+            <span class="n">session</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">app_context</span><span class="p">():</span>
+            <span class="n">new_title</span> <span class="o">=</span> <span class="s2">&quot;A better title&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">events</span> <span class="o">=</span> <span class="n">save</span><span class="p">(</span>
+                <span class="n">domain</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">CreateSubmissionVersion</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">defaults</span><span class="p">),</span>
+                <span class="n">domain</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">ConfirmContactInformation</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">defaults</span><span class="p">),</span>
+                <span class="n">domain</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">ConfirmAuthorship</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">defaults</span><span class="p">),</span>
+                <span class="n">domain</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">SetLicense</span><span class="p">(</span><span class="n">license_uri</span><span class="o">=</span><span class="n">CCO</span><span class="p">,</span>
+                                        <span class="n">license_name</span><span class="o">=</span><span class="s2">&quot;CC0 1.0&quot;</span><span class="p">,</span>
+                                        <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">defaults</span><span class="p">),</span>
+                <span class="n">domain</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">ConfirmPolicy</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">defaults</span><span class="p">),</span>
+                <span class="n">domain</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">SetTitle</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="n">new_title</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">defaults</span><span class="p">),</span>
+                <span class="n">domain</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">SetUploadPackage</span><span class="p">(</span><span class="n">checksum</span><span class="o">=</span><span class="s2">&quot;a9s9k342900ks03330029&quot;</span><span class="p">,</span>
+                                              <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;tex&#39;</span><span class="p">,</span> <span class="n">identifier</span><span class="o">=</span><span class="mi">123</span><span class="p">,</span>
+                                              <span class="n">size</span><span class="o">=</span><span class="mi">593992</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">defaults</span><span class="p">),</span>
+                <span class="n">domain</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">FinalizeSubmission</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">defaults</span><span class="p">),</span>
+                <span class="n">submission_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">submission_id</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Publish second version.</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">app_context</span><span class="p">():</span>
+            <span class="n">session</span> <span class="o">=</span> <span class="n">classic</span><span class="o">.</span><span class="n">current_session</span><span class="p">()</span>
+            <span class="n">db_rows</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">classic</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="p">)</span> \
+                <span class="o">.</span><span class="n">order_by</span><span class="p">(</span><span class="n">classic</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">submission_id</span><span class="o">.</span><span class="n">asc</span><span class="p">())</span> \
+                <span class="o">.</span><span class="n">all</span><span class="p">()</span>
+            <span class="n">db_rows</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="n">classic</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">PUBLISHED</span>
+            <span class="n">session</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">db_rows</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+            <span class="n">session</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="TestSecondVersionIsPublished.tearDown"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.tests.examples.test_06_second_version_published.html#arxiv.submission.tests.examples.test_06_second_version_published.TestSecondVersionIsPublished.tearDown">[docs]</a>    <span class="k">def</span> <span class="nf">tearDown</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Clear the database after each test.&quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">app_context</span><span class="p">():</span>
+            <span class="n">classic</span><span class="o">.</span><span class="n">drop_all</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="TestSecondVersionIsPublished.test_is_in_published_state"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.tests.examples.test_06_second_version_published.html#arxiv.submission.tests.examples.test_06_second_version_published.TestSecondVersionIsPublished.test_is_in_published_state">[docs]</a>    <span class="k">def</span> <span class="nf">test_is_in_published_state</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The submission is now in published state.&quot;&quot;&quot;</span>
+        <span class="c1"># Check the submission state.</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">app_context</span><span class="p">():</span>
+            <span class="n">submission</span><span class="p">,</span> <span class="n">events</span> <span class="o">=</span> <span class="n">load</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">submission_id</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">submission</span><span class="o">.</span><span class="n">status</span><span class="p">,</span>
+                             <span class="n">domain</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">PUBLISHED</span><span class="p">,</span>
+                             <span class="s2">&quot;The submission is in the publushed state&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertIsInstance</span><span class="p">(</span><span class="n">events</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">domain</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">Publish</span><span class="p">,</span>
+                                  <span class="s2">&quot;A Publish event is inserted.&quot;</span><span class="p">)</span>
+            <span class="n">p_evts</span> <span class="o">=</span> <span class="p">[</span><span class="n">e</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">events</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">domain</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">Publish</span><span class="p">)]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">p_evts</span><span class="p">),</span> <span class="mi">2</span><span class="p">,</span> <span class="s2">&quot;There are two publish events.&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">submission</span><span class="o">.</span><span class="n">versions</span><span class="p">),</span> <span class="mi">2</span><span class="p">,</span>
+                             <span class="s2">&quot;There are two published versions&quot;</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">app_context</span><span class="p">():</span>
+            <span class="n">submission</span> <span class="o">=</span> <span class="n">load_fast</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">submission_id</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">submission</span><span class="o">.</span><span class="n">status</span><span class="p">,</span>
+                             <span class="n">domain</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">PUBLISHED</span><span class="p">,</span>
+                             <span class="s2">&quot;The submission is in the publushed state&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">submission</span><span class="o">.</span><span class="n">versions</span><span class="p">),</span> <span class="mi">2</span><span class="p">,</span>
+                             <span class="s2">&quot;There are two published versions&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Check the database state.</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">app_context</span><span class="p">():</span>
+            <span class="n">session</span> <span class="o">=</span> <span class="n">classic</span><span class="o">.</span><span class="n">current_session</span><span class="p">()</span>
+            <span class="n">db_rows</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">classic</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="p">)</span> \
+                <span class="o">.</span><span class="n">order_by</span><span class="p">(</span><span class="n">classic</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">submission_id</span><span class="o">.</span><span class="n">asc</span><span class="p">())</span> \
+                <span class="o">.</span><span class="n">all</span><span class="p">()</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">db_rows</span><span class="p">),</span> <span class="mi">2</span><span class="p">,</span>
+                             <span class="s2">&quot;There are two rows in the submission table&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">db_rows</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">type</span><span class="p">,</span>
+                             <span class="n">classic</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">NEW_SUBMISSION</span><span class="p">,</span>
+                             <span class="s2">&quot;The first row has type &#39;new&#39;&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">db_rows</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">status</span><span class="p">,</span>
+                             <span class="n">classic</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">PUBLISHED</span><span class="p">,</span>
+                             <span class="s2">&quot;The first row is published&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">db_rows</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">type</span><span class="p">,</span>
+                             <span class="n">classic</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">REPLACEMENT</span><span class="p">,</span>
+                             <span class="s2">&quot;The second row has type &#39;replacement&#39;&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">db_rows</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">status</span><span class="p">,</span>
+                             <span class="n">classic</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">PUBLISHED</span><span class="p">,</span>
+                             <span class="s2">&quot;The second row is in published state&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestSecondVersionIsPublished.test_can_replace_submission"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.tests.examples.test_06_second_version_published.html#arxiv.submission.tests.examples.test_06_second_version_published.TestSecondVersionIsPublished.test_can_replace_submission">[docs]</a>    <span class="k">def</span> <span class="nf">test_can_replace_submission</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The submission can be replaced, resulting in a new version.&quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">app_context</span><span class="p">():</span>
+            <span class="n">submission</span><span class="p">,</span> <span class="n">events</span> <span class="o">=</span> <span class="n">save</span><span class="p">(</span>
+                <span class="n">domain</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">CreateSubmissionVersion</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">defaults</span><span class="p">),</span>
+                <span class="n">submission_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">submission_id</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Check the submission state.</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">app_context</span><span class="p">():</span>
+            <span class="n">submission</span><span class="p">,</span> <span class="n">events</span> <span class="o">=</span> <span class="n">load</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">submission_id</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">submission</span><span class="o">.</span><span class="n">status</span><span class="p">,</span>
+                             <span class="n">domain</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">WORKING</span><span class="p">,</span>
+                             <span class="s2">&quot;The submission is in the working state&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">events</span><span class="p">)</span> <span class="o">+</span> <span class="mi">2</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">events</span><span class="p">),</span>
+                             <span class="s2">&quot;The same number of events were retrieved as&quot;</span>
+                             <span class="s2">&quot; were initially saved, plus the publish event&quot;</span>
+                             <span class="s2">&quot; and the create version event.&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">submission</span><span class="o">.</span><span class="n">version</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span>
+                             <span class="s2">&quot;The version number is incremented by 1&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">submission</span><span class="o">.</span><span class="n">versions</span><span class="p">),</span> <span class="mi">2</span><span class="p">,</span>
+                             <span class="s2">&quot;There are two published versions&quot;</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">app_context</span><span class="p">():</span>
+            <span class="n">submission</span> <span class="o">=</span> <span class="n">load_fast</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">submission_id</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">submission</span><span class="o">.</span><span class="n">status</span><span class="p">,</span>
+                             <span class="n">domain</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">WORKING</span><span class="p">,</span>
+                             <span class="s2">&quot;The submission is in the working state&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">submission</span><span class="o">.</span><span class="n">version</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span>
+                             <span class="s2">&quot;The version number is incremented by 1&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">submission</span><span class="o">.</span><span class="n">versions</span><span class="p">),</span> <span class="mi">2</span><span class="p">,</span>
+                             <span class="s2">&quot;There are two published versions&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Check the database state.</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">app_context</span><span class="p">():</span>
+            <span class="n">session</span> <span class="o">=</span> <span class="n">classic</span><span class="o">.</span><span class="n">current_session</span><span class="p">()</span>
+            <span class="n">db_rows</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">classic</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="p">)</span> \
+                <span class="o">.</span><span class="n">order_by</span><span class="p">(</span><span class="n">classic</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">submission_id</span><span class="o">.</span><span class="n">asc</span><span class="p">())</span> \
+                <span class="o">.</span><span class="n">all</span><span class="p">()</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">db_rows</span><span class="p">),</span> <span class="mi">3</span><span class="p">,</span>
+                             <span class="s2">&quot;There are three rows in the submission table&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">db_rows</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">type</span><span class="p">,</span>
+                             <span class="n">classic</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">NEW_SUBMISSION</span><span class="p">,</span>
+                             <span class="s2">&quot;The first row has type &#39;new&#39;&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">db_rows</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">status</span><span class="p">,</span>
+                             <span class="n">classic</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">PUBLISHED</span><span class="p">,</span>
+                             <span class="s2">&quot;The first row is published&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">db_rows</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">type</span><span class="p">,</span>
+                             <span class="n">classic</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">REPLACEMENT</span><span class="p">,</span>
+                             <span class="s2">&quot;The second row has type &#39;replacement&#39;&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">db_rows</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">status</span><span class="p">,</span>
+                             <span class="n">classic</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">PUBLISHED</span><span class="p">,</span>
+                             <span class="s2">&quot;The second row is in published state&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">db_rows</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">type</span><span class="p">,</span>
+                             <span class="n">classic</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">REPLACEMENT</span><span class="p">,</span>
+                             <span class="s2">&quot;The third row has type &#39;replacement&#39;&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">db_rows</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">status</span><span class="p">,</span>
+                             <span class="n">classic</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">NOT_SUBMITTED</span><span class="p">,</span>
+                             <span class="s2">&quot;The third row is in not submitted state&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestSecondVersionIsPublished.test_can_withdraw_submission"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.tests.examples.test_06_second_version_published.html#arxiv.submission.tests.examples.test_06_second_version_published.TestSecondVersionIsPublished.test_can_withdraw_submission">[docs]</a>    <span class="k">def</span> <span class="nf">test_can_withdraw_submission</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The submitter can request withdrawal of the submission.&quot;&quot;&quot;</span>
+        <span class="n">withdrawal_reason</span> <span class="o">=</span> <span class="s2">&quot;the best reason&quot;</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">app_context</span><span class="p">():</span>
+            <span class="n">submission</span><span class="p">,</span> <span class="n">events</span> <span class="o">=</span> <span class="n">save</span><span class="p">(</span>
+                <span class="n">domain</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">RequestWithdrawal</span><span class="p">(</span><span class="n">reason</span><span class="o">=</span><span class="n">withdrawal_reason</span><span class="p">,</span>
+                                               <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">defaults</span><span class="p">),</span>
+                <span class="n">submission_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">submission_id</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Check the submission state.</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">app_context</span><span class="p">():</span>
+            <span class="n">submission</span><span class="p">,</span> <span class="n">events</span> <span class="o">=</span> <span class="n">load</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">submission_id</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">submission</span><span class="o">.</span><span class="n">status</span><span class="p">,</span>
+                             <span class="n">domain</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">PUBLISHED</span><span class="p">,</span>
+                             <span class="s2">&quot;The submission is published.&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">submission</span><span class="o">.</span><span class="n">has_active_requests</span><span class="p">,</span>
+                            <span class="s2">&quot;The submission has an active request.&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">submission</span><span class="o">.</span><span class="n">pending_user_requests</span><span class="p">),</span> <span class="mi">1</span><span class="p">,</span>
+                             <span class="s2">&quot;There is one pending user request.&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertIsInstance</span><span class="p">(</span><span class="n">submission</span><span class="o">.</span><span class="n">pending_user_requests</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                                  <span class="n">domain</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">WithdrawalRequest</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span>
+                <span class="n">submission</span><span class="o">.</span><span class="n">pending_user_requests</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">reason_for_withdrawal</span><span class="p">,</span>
+                <span class="n">withdrawal_reason</span><span class="p">,</span>
+                <span class="s2">&quot;Withdrawal reason is set on request.&quot;</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">events</span><span class="p">)</span> <span class="o">+</span> <span class="mi">2</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">events</span><span class="p">),</span>
+                             <span class="s2">&quot;The same number of events were retrieved as&quot;</span>
+                             <span class="s2">&quot; were initially saved, plus one for publish&quot;</span>
+                             <span class="s2">&quot; and another for withdrawal request.&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">submission</span><span class="o">.</span><span class="n">versions</span><span class="p">),</span> <span class="mi">2</span><span class="p">,</span>
+                             <span class="s2">&quot;There are two published versions&quot;</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">app_context</span><span class="p">():</span>
+            <span class="n">submission</span> <span class="o">=</span> <span class="n">load_fast</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">submission_id</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">submission</span><span class="o">.</span><span class="n">status</span><span class="p">,</span>
+                             <span class="n">domain</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">PUBLISHED</span><span class="p">,</span>
+                             <span class="s2">&quot;The submission is published.&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">submission</span><span class="o">.</span><span class="n">has_active_requests</span><span class="p">,</span>
+                            <span class="s2">&quot;The submission has an active request.&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">submission</span><span class="o">.</span><span class="n">pending_user_requests</span><span class="p">),</span> <span class="mi">1</span><span class="p">,</span>
+                             <span class="s2">&quot;There is one pending user request.&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertIsInstance</span><span class="p">(</span><span class="n">submission</span><span class="o">.</span><span class="n">pending_user_requests</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                                  <span class="n">domain</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">WithdrawalRequest</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span>
+                <span class="n">submission</span><span class="o">.</span><span class="n">pending_user_requests</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">reason_for_withdrawal</span><span class="p">,</span>
+                <span class="n">withdrawal_reason</span><span class="p">,</span>
+                <span class="s2">&quot;Withdrawal reason is set on request.&quot;</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">submission</span><span class="o">.</span><span class="n">versions</span><span class="p">),</span> <span class="mi">2</span><span class="p">,</span>
+                             <span class="s2">&quot;There are two published versions&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Check the database state.</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">app_context</span><span class="p">():</span>
+            <span class="n">session</span> <span class="o">=</span> <span class="n">classic</span><span class="o">.</span><span class="n">current_session</span><span class="p">()</span>
+            <span class="n">db_rows</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">classic</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="p">)</span> \
+                <span class="o">.</span><span class="n">order_by</span><span class="p">(</span><span class="n">classic</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">submission_id</span><span class="o">.</span><span class="n">asc</span><span class="p">())</span> \
+                <span class="o">.</span><span class="n">all</span><span class="p">()</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">db_rows</span><span class="p">),</span> <span class="mi">3</span><span class="p">,</span>
+                             <span class="s2">&quot;There are three rows in the submission table&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">db_rows</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">type</span><span class="p">,</span>
+                             <span class="n">classic</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">NEW_SUBMISSION</span><span class="p">,</span>
+                             <span class="s2">&quot;The first row has type &#39;new&#39;&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">db_rows</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">status</span><span class="p">,</span>
+                             <span class="n">classic</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">PUBLISHED</span><span class="p">,</span>
+                             <span class="s2">&quot;The first row is published&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">db_rows</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">type</span><span class="p">,</span>
+                             <span class="n">classic</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">REPLACEMENT</span><span class="p">,</span>
+                             <span class="s2">&quot;The second row has type &#39;replacement&#39;&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">db_rows</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">status</span><span class="p">,</span>
+                             <span class="n">classic</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">PUBLISHED</span><span class="p">,</span>
+                             <span class="s2">&quot;The second row is in published state&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">db_rows</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">type</span><span class="p">,</span>
+                             <span class="n">classic</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">WITHDRAWAL</span><span class="p">,</span>
+                             <span class="s2">&quot;The third row has type &#39;withdrawal&#39;&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">db_rows</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">status</span><span class="p">,</span>
+                             <span class="n">classic</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">PROCESSING_SUBMISSION</span><span class="p">,</span>
+                             <span class="s2">&quot;The third row is in the processing submission&quot;</span>
+                             <span class="s2">&quot; state.&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestSecondVersionIsPublished.test_cannot_edit_submission_metadata"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.tests.examples.test_06_second_version_published.html#arxiv.submission.tests.examples.test_06_second_version_published.TestSecondVersionIsPublished.test_cannot_edit_submission_metadata">[docs]</a>    <span class="k">def</span> <span class="nf">test_cannot_edit_submission_metadata</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The submission metadata cannot be changed without a new version.&quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">app_context</span><span class="p">():</span>
+            <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="n">exceptions</span><span class="o">.</span><span class="n">InvalidEvent</span><span class="p">,</span> <span class="n">msg</span><span class="o">=</span><span class="p">(</span>
+                    <span class="s2">&quot;Creating a SetTitle command results in an exception.&quot;</span><span class="p">)):</span>
+                <span class="n">save</span><span class="p">(</span><span class="n">domain</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">SetTitle</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="s2">&quot;A better title&quot;</span><span class="p">,</span>
+                                           <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">defaults</span><span class="p">),</span>
+                     <span class="n">submission_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">submission_id</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">test_is_in_published_state</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="TestSecondVersionIsPublished.test_changing_doi"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.tests.examples.test_06_second_version_published.html#arxiv.submission.tests.examples.test_06_second_version_published.TestSecondVersionIsPublished.test_changing_doi">[docs]</a>    <span class="k">def</span> <span class="nf">test_changing_doi</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Submitter can set the DOI.&quot;&quot;&quot;</span>
+        <span class="n">new_doi</span> <span class="o">=</span> <span class="s2">&quot;10.1000/182&quot;</span>
+        <span class="n">new_journal_ref</span> <span class="o">=</span> <span class="s2">&quot;Baz 1993&quot;</span>
+        <span class="n">new_report_num</span> <span class="o">=</span> <span class="s2">&quot;Report 82&quot;</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">app_context</span><span class="p">():</span>
+            <span class="n">submission</span><span class="p">,</span> <span class="n">events</span> <span class="o">=</span> <span class="n">save</span><span class="p">(</span>
+                <span class="n">domain</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">SetDOI</span><span class="p">(</span><span class="n">doi</span><span class="o">=</span><span class="n">new_doi</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">defaults</span><span class="p">),</span>
+                <span class="n">submission_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">submission_id</span>
+            <span class="p">)</span>
+
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">app_context</span><span class="p">():</span>
+            <span class="n">submission</span><span class="p">,</span> <span class="n">events</span> <span class="o">=</span> <span class="n">save</span><span class="p">(</span>
+                <span class="n">domain</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">SetJournalReference</span><span class="p">(</span><span class="n">journal_ref</span><span class="o">=</span><span class="n">new_journal_ref</span><span class="p">,</span>
+                                                 <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">defaults</span><span class="p">),</span>
+                <span class="n">submission_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">submission_id</span>
+            <span class="p">)</span>
+
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">app_context</span><span class="p">():</span>
+            <span class="n">submission</span><span class="p">,</span> <span class="n">events</span> <span class="o">=</span> <span class="n">save</span><span class="p">(</span>
+                <span class="n">domain</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">SetReportNumber</span><span class="p">(</span><span class="n">report_num</span><span class="o">=</span><span class="n">new_report_num</span><span class="p">,</span>
+                                             <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">defaults</span><span class="p">),</span>
+                <span class="n">submission_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">submission_id</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Check the submission state.</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">app_context</span><span class="p">():</span>
+            <span class="n">submission</span><span class="p">,</span> <span class="n">events</span> <span class="o">=</span> <span class="n">load</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">submission_id</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">submission</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">doi</span><span class="p">,</span> <span class="n">new_doi</span><span class="p">,</span>
+                             <span class="s2">&quot;The DOI is updated.&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">submission</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">journal_ref</span><span class="p">,</span> <span class="n">new_journal_ref</span><span class="p">,</span>
+                             <span class="s2">&quot;The journal ref is updated.&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">submission</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">report_num</span><span class="p">,</span> <span class="n">new_report_num</span><span class="p">,</span>
+                             <span class="s2">&quot;The report number is updated.&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">submission</span><span class="o">.</span><span class="n">status</span><span class="p">,</span>
+                             <span class="n">domain</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">PUBLISHED</span><span class="p">,</span>
+                             <span class="s2">&quot;The submission is in the submitted state.&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">submission</span><span class="o">.</span><span class="n">versions</span><span class="p">),</span> <span class="mi">2</span><span class="p">,</span>
+                             <span class="s2">&quot;There are two published versions&quot;</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">app_context</span><span class="p">():</span>
+            <span class="n">submission</span> <span class="o">=</span> <span class="n">load_fast</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">submission_id</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">submission</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">doi</span><span class="p">,</span> <span class="n">new_doi</span><span class="p">,</span>
+                             <span class="s2">&quot;The DOI is updated.&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">submission</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">journal_ref</span><span class="p">,</span> <span class="n">new_journal_ref</span><span class="p">,</span>
+                             <span class="s2">&quot;The journal ref is updated.&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">submission</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">report_num</span><span class="p">,</span> <span class="n">new_report_num</span><span class="p">,</span>
+                             <span class="s2">&quot;The report number is updated.&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">submission</span><span class="o">.</span><span class="n">status</span><span class="p">,</span>
+                             <span class="n">domain</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">PUBLISHED</span><span class="p">,</span>
+                             <span class="s2">&quot;The submission is in the submitted state.&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">submission</span><span class="o">.</span><span class="n">versions</span><span class="p">),</span> <span class="mi">2</span><span class="p">,</span>
+                             <span class="s2">&quot;There are two published versions&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Check the database state.</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">app_context</span><span class="p">():</span>
+            <span class="n">session</span> <span class="o">=</span> <span class="n">classic</span><span class="o">.</span><span class="n">current_session</span><span class="p">()</span>
+            <span class="n">db_rows</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">classic</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="p">)</span> \
+                <span class="o">.</span><span class="n">order_by</span><span class="p">(</span><span class="n">classic</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">submission_id</span><span class="o">.</span><span class="n">asc</span><span class="p">())</span> \
+                <span class="o">.</span><span class="n">all</span><span class="p">()</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">db_rows</span><span class="p">),</span> <span class="mi">3</span><span class="p">,</span>
+                             <span class="s2">&quot;There are three rows in the submission table&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">db_rows</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">type</span><span class="p">,</span>
+                             <span class="n">classic</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">NEW_SUBMISSION</span><span class="p">,</span>
+                             <span class="s2">&quot;The first row has type &#39;new&#39;&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">db_rows</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">status</span><span class="p">,</span>
+                             <span class="n">classic</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">PUBLISHED</span><span class="p">,</span>
+                             <span class="s2">&quot;The first row is published&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">db_rows</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">type</span><span class="p">,</span>
+                             <span class="n">classic</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">REPLACEMENT</span><span class="p">,</span>
+                             <span class="s2">&quot;The second row has type &#39;replacement&#39;&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">db_rows</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">status</span><span class="p">,</span>
+                             <span class="n">classic</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">PUBLISHED</span><span class="p">,</span>
+                             <span class="s2">&quot;The second row is in published state&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">db_rows</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">type</span><span class="p">,</span>
+                             <span class="n">classic</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">JOURNAL_REFERENCE</span><span class="p">,</span>
+                             <span class="s2">&quot;The third row has type journal ref&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">db_rows</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">status</span><span class="p">,</span>
+                             <span class="n">classic</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">PROCESSING_SUBMISSION</span><span class="p">,</span>
+                             <span class="s2">&quot;The third row is in the processing submission&quot;</span>
+                             <span class="s2">&quot; state.&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">db_rows</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">doi</span><span class="p">,</span> <span class="n">new_doi</span><span class="p">,</span>
+                             <span class="s2">&quot;The DOI is updated in the database.&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">db_rows</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">journal_ref</span><span class="p">,</span> <span class="n">new_journal_ref</span><span class="p">,</span>
+                             <span class="s2">&quot;The journal ref is updated in the database.&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">db_rows</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">report_num</span><span class="p">,</span> <span class="n">new_report_num</span><span class="p">,</span>
+                             <span class="s2">&quot;The report number is updated in the database.&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestSecondVersionIsPublished.test_cannot_be_unfinalized"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.tests.examples.test_06_second_version_published.html#arxiv.submission.tests.examples.test_06_second_version_published.TestSecondVersionIsPublished.test_cannot_be_unfinalized">[docs]</a>    <span class="k">def</span> <span class="nf">test_cannot_be_unfinalized</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The submission cannot be unfinalized, because it is published.&quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">app_context</span><span class="p">():</span>
+            <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="n">exceptions</span><span class="o">.</span><span class="n">InvalidEvent</span><span class="p">):</span>
+                <span class="n">save</span><span class="p">(</span><span class="n">domain</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">UnFinalizeSubmission</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">defaults</span><span class="p">),</span>
+                     <span class="n">submission_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">submission_id</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">test_is_in_published_state</span><span class="p">()</span></div></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../../index.html">arXiv submission & moderation</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../architecture.html">Submission &amp; moderation subsystem architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../announcement_process.html">Submission &amp; announcement Process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../submission_api_context.html">Submission API: Context</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../containers/core/arxiv.submission.html">arxiv.submission package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../containers/metadata/metadata.html">metadata package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../background.html">Background</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, arXiv.org.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.3</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -1,0 +1,259 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>arxiv.submission.rules.reclassification &#8212; arXiv submission &amp; moderation 0.1 documentation</title>
+    <link rel="stylesheet" href="../../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/graphviz.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for arxiv.submission.rules.reclassification</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Reclassification policies.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Optional</span>
+
+<span class="kn">from</span> <span class="nn">..domain.event</span> <span class="k">import</span> <span class="n">Event</span><span class="p">,</span> <span class="n">AddContentFlag</span><span class="p">,</span> <span class="n">AddProposal</span><span class="p">,</span> \
+    <span class="n">SetPrimaryClassification</span><span class="p">,</span> <span class="n">AddProcessStatus</span><span class="p">,</span> <span class="n">AddClassifierResults</span><span class="p">,</span> \
+    <span class="n">AddFeature</span><span class="p">,</span> <span class="n">AddSecondaryClassification</span><span class="p">,</span> <span class="n">AcceptProposal</span><span class="p">,</span> <span class="n">FinalizeSubmission</span>
+<span class="kn">from</span> <span class="nn">..domain.event.event</span> <span class="k">import</span> <span class="n">Condition</span>
+<span class="kn">from</span> <span class="nn">..domain.annotation</span> <span class="k">import</span> <span class="n">ClassifierResult</span><span class="p">,</span> <span class="n">Feature</span><span class="p">,</span> <span class="n">ClassifierResults</span>
+<span class="kn">from</span> <span class="nn">..domain.flag</span> <span class="k">import</span> <span class="n">ContentFlag</span>
+<span class="kn">from</span> <span class="nn">..domain.submission</span> <span class="k">import</span> <span class="n">Submission</span>
+<span class="kn">from</span> <span class="nn">..domain.agent</span> <span class="k">import</span> <span class="n">Agent</span><span class="p">,</span> <span class="n">User</span><span class="p">,</span> <span class="n">System</span>
+<span class="kn">from</span> <span class="nn">..domain.process</span> <span class="k">import</span> <span class="n">ProcessStatus</span>
+<span class="kn">from</span> <span class="nn">..services</span> <span class="k">import</span> <span class="n">classifier</span><span class="p">,</span> <span class="n">plaintext</span>
+<span class="kn">from</span> <span class="nn">..tasks</span> <span class="k">import</span> <span class="n">is_async</span>
+
+<span class="kn">from</span> <span class="nn">arxiv.taxonomy</span> <span class="k">import</span> <span class="n">CATEGORIES</span><span class="p">,</span> <span class="n">Category</span>
+
+<span class="c1"># TODO: make this configurable</span>
+<span class="n">PROPOSAL_THRESHOLD</span> <span class="o">=</span> <span class="mf">0.57</span>   <span class="c1"># Equiv. to logodds of 0.3.</span>
+<span class="sd">&quot;&quot;&quot;This is the threshold for generating a proposal from a classifier result.&quot;&quot;&quot;</span>
+
+<span class="n">Process</span> <span class="o">=</span> <span class="n">ProcessStatus</span><span class="o">.</span><span class="n">Process</span>
+<span class="n">Status</span> <span class="o">=</span> <span class="n">ProcessStatus</span><span class="o">.</span><span class="n">Status</span>
+
+
+<div class="viewcode-block" id="get_condition"><a class="viewcode-back" href="../../../../containers/core/arxiv.submission.rules.reclassification.html#arxiv.submission.rules.reclassification.get_condition">[docs]</a><span class="k">def</span> <span class="nf">get_condition</span><span class="p">(</span><span class="n">process</span><span class="p">:</span> <span class="n">Process</span><span class="p">,</span> <span class="n">status</span><span class="p">:</span> <span class="n">Status</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Condition</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Generate a condition for a process type and status.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">condition</span><span class="p">(</span><span class="n">event</span><span class="p">:</span> <span class="n">AddProcessStatus</span><span class="p">,</span> <span class="n">before</span><span class="p">:</span> <span class="n">Submission</span><span class="p">,</span>
+                  <span class="n">after</span><span class="p">:</span> <span class="n">Submission</span><span class="p">,</span> <span class="n">creator</span><span class="p">:</span> <span class="n">Agent</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">event</span><span class="o">.</span><span class="n">process</span> <span class="ow">is</span> <span class="n">process</span> <span class="ow">and</span> <span class="n">event</span><span class="o">.</span><span class="n">status</span> <span class="ow">is</span> <span class="n">status</span>
+    <span class="k">return</span> <span class="n">condition</span></div>
+
+
+<span class="n">on_text</span> <span class="o">=</span> <span class="n">get_condition</span><span class="p">(</span><span class="n">Process</span><span class="o">.</span><span class="n">PLAIN_TEXT_EXTRACTION</span><span class="p">,</span> <span class="n">Status</span><span class="o">.</span><span class="n">SUCCEEDED</span><span class="p">)</span>
+<span class="n">on_classification</span> <span class="o">=</span> <span class="n">get_condition</span><span class="p">(</span><span class="n">Process</span><span class="o">.</span><span class="n">CLASSIFICATION</span><span class="p">,</span> <span class="n">Status</span><span class="o">.</span><span class="n">SUCCEEDED</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_get_archive</span><span class="p">(</span><span class="n">category</span><span class="p">:</span> <span class="n">Category</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+    <span class="k">return</span> <span class="n">CATEGORIES</span><span class="p">[</span><span class="n">category</span><span class="p">][</span><span class="s1">&#39;in_archive&#39;</span><span class="p">]</span>
+
+
+<span class="k">def</span> <span class="nf">_in_the_same_archive</span><span class="p">(</span><span class="n">cat_a</span><span class="p">:</span> <span class="n">Category</span><span class="p">,</span> <span class="n">cat_b</span><span class="p">:</span> <span class="n">Category</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Evaluate whether two categories are in the same archive.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">_get_archive</span><span class="p">(</span><span class="n">cat_a</span><span class="p">)</span> <span class="o">==</span> <span class="n">_get_archive</span><span class="p">(</span><span class="n">cat_b</span><span class="p">)</span>
+
+
+<span class="c1"># Don&#39;t make auto-proposals for the following user-supplied primaries.</span>
+<span class="c1"># These categories may not be known to the classifier, or the</span>
+<span class="c1"># classifier-suggested alternatives may be consistently innaccurate.</span>
+<span class="n">SKIPPED_CATEGORIES</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="s1">&#39;cs.CE&#39;</span><span class="p">,</span>   <span class="c1"># Interdisciplinary category (see ARXIVOPS-466).</span>
+<span class="p">)</span>
+<span class="n">SKIPPED_ARCHIVES</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="s1">&#39;econ&#39;</span><span class="p">,</span>  <span class="c1"># New September 2017.</span>
+<span class="p">)</span>
+
+
+<div class="viewcode-block" id="propose"><a class="viewcode-back" href="../../../../containers/core/arxiv.submission.rules.reclassification.html#arxiv.submission.rules.reclassification.propose">[docs]</a><span class="nd">@AddClassifierResults</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="k">lambda</span> <span class="o">*</span><span class="n">a</span><span class="p">,</span> <span class="o">**</span><span class="n">k</span><span class="p">:</span> <span class="kc">True</span><span class="p">)</span>
+<span class="nd">@is_async</span>
+<span class="k">def</span> <span class="nf">propose</span><span class="p">(</span><span class="n">event</span><span class="p">:</span> <span class="n">AddClassifierResults</span><span class="p">,</span> <span class="n">before</span><span class="p">:</span> <span class="n">Submission</span><span class="p">,</span> <span class="n">after</span><span class="p">:</span> <span class="n">Submission</span><span class="p">,</span>
+            <span class="n">creator</span><span class="p">:</span> <span class="n">Agent</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Event</span><span class="p">]:</span>
+    <span class="sd">&quot;&quot;&quot;Generate system classification proposals based on classifier results.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">results</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>    <span class="c1"># Nothing to do.</span>
+        <span class="k">return</span>
+    <span class="n">user_primary</span> <span class="o">=</span> <span class="n">after</span><span class="o">.</span><span class="n">primary_classification</span><span class="o">.</span><span class="n">category</span>
+
+    <span class="k">if</span> <span class="n">user_primary</span> <span class="ow">in</span> <span class="n">SKIPPED_CATEGORIES</span> \
+            <span class="ow">or</span> <span class="n">_get_archive</span><span class="p">(</span><span class="n">user_primary</span><span class="p">)</span> <span class="ow">in</span> <span class="n">SKIPPED_ARCHIVES</span><span class="p">:</span>
+        <span class="k">return</span>
+
+    <span class="c1"># the best alternative is the suggestion with the highest probability above</span>
+    <span class="c1"># 0.57 (logodds = 0.3); there may be a best alternative inside or outside</span>
+    <span class="c1"># of the selected primary archive, or both.</span>
+    <span class="n">suggested_category</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Category</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">within</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ClassifierResult</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">without</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ClassifierResult</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">probabilities</span> <span class="o">=</span> <span class="p">{</span><span class="n">result</span><span class="p">[</span><span class="s1">&#39;category&#39;</span><span class="p">]:</span> <span class="n">result</span><span class="p">[</span><span class="s1">&#39;probability&#39;</span><span class="p">]</span>
+                     <span class="k">for</span> <span class="n">result</span> <span class="ow">in</span> <span class="n">event</span><span class="o">.</span><span class="n">results</span><span class="p">}</span>
+    <span class="c1"># if the primary is not in the suggestions, or the primary has probability</span>
+    <span class="c1"># &lt; 0.5 (logodds &lt; 0) and there is an alternative,  propose the</span>
+    <span class="c1"># alternatve (preference for within-archive). otherwise make no proposal</span>
+    <span class="k">if</span> <span class="n">user_primary</span> <span class="ow">in</span> <span class="n">probabilities</span> <span class="ow">and</span> <span class="n">probabilities</span><span class="p">[</span><span class="n">user_primary</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="mf">0.5</span><span class="p">:</span>
+        <span class="k">return</span>
+
+    <span class="k">for</span> <span class="n">result</span> <span class="ow">in</span> <span class="n">event</span><span class="o">.</span><span class="n">results</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">_in_the_same_archive</span><span class="p">(</span><span class="n">result</span><span class="p">[</span><span class="s1">&#39;category&#39;</span><span class="p">],</span> <span class="n">user_primary</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">within</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">result</span><span class="p">[</span><span class="s1">&#39;probability&#39;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">within</span><span class="p">[</span><span class="s1">&#39;probability&#39;</span><span class="p">]:</span>
+                <span class="n">within</span> <span class="o">=</span> <span class="n">result</span>
+        <span class="k">elif</span> <span class="n">without</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">result</span><span class="p">[</span><span class="s1">&#39;probability&#39;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">without</span><span class="p">[</span><span class="s1">&#39;probability&#39;</span><span class="p">]:</span>
+            <span class="n">without</span> <span class="o">=</span> <span class="n">result</span>
+
+    <span class="k">if</span> <span class="n">within</span> <span class="ow">and</span> <span class="n">within</span><span class="p">[</span><span class="s1">&#39;probability&#39;</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">PROPOSAL_THRESHOLD</span><span class="p">:</span>
+        <span class="n">suggested_category</span> <span class="o">=</span> <span class="n">within</span><span class="p">[</span><span class="s1">&#39;category&#39;</span><span class="p">]</span>
+    <span class="k">elif</span> <span class="n">without</span> <span class="ow">and</span> <span class="n">without</span><span class="p">[</span><span class="s1">&#39;probability&#39;</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">PROPOSAL_THRESHOLD</span><span class="p">:</span>
+        <span class="n">suggested_category</span> <span class="o">=</span> <span class="n">without</span><span class="p">[</span><span class="s1">&#39;category&#39;</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span>
+
+    <span class="n">comment</span> <span class="o">=</span> <span class="n">f</span><span class="s2">&quot;selected primary </span><span class="si">{user_primary}</span><span class="s2">&quot;</span>
+    <span class="k">if</span> <span class="n">user_primary</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">probabilities</span><span class="p">:</span>
+        <span class="n">comment</span> <span class="o">+=</span> <span class="s2">&quot; not found in classifier scores&quot;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">comment</span> <span class="o">+=</span> <span class="n">f</span><span class="s2">&quot; has probability {round(probabilities[user_primary], 3)}&quot;</span>
+    <span class="k">yield</span> <span class="n">AddProposal</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">creator</span><span class="p">,</span>
+                      <span class="n">proposed_event_type</span><span class="o">=</span><span class="n">SetPrimaryClassification</span><span class="p">,</span>
+                      <span class="n">proposed_event_data</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;category&#39;</span><span class="p">:</span> <span class="n">suggested_category</span><span class="p">},</span>
+                      <span class="n">comment</span><span class="o">=</span><span class="n">comment</span><span class="p">)</span></div>
+
+
+<span class="c1"># (ARXIVOPS-500)</span>
+<span class="c1"># When the following categories are the primary, a corresponding category</span>
+<span class="c1"># should be suggested as secondary</span>
+<span class="n">PRIMARY_TO_SECONDARY</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;cs.LG&#39;</span><span class="p">:</span> <span class="s1">&#39;stat.ML&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;stat.ML&#39;</span><span class="p">:</span> <span class="s1">&#39;cs.LG&#39;</span>
+<span class="p">}</span>
+
+
+<div class="viewcode-block" id="propose_cross_from_primary"><a class="viewcode-back" href="../../../../containers/core/arxiv.submission.rules.reclassification.html#arxiv.submission.rules.reclassification.propose_cross_from_primary">[docs]</a><span class="nd">@FinalizeSubmission</span><span class="o">.</span><span class="n">bind</span><span class="p">()</span>
+<span class="k">def</span> <span class="nf">propose_cross_from_primary</span><span class="p">(</span><span class="n">event</span><span class="p">:</span> <span class="n">FinalizeSubmission</span><span class="p">,</span> <span class="n">before</span><span class="p">:</span> <span class="n">Submission</span><span class="p">,</span>
+                               <span class="n">after</span><span class="p">:</span> <span class="n">Submission</span><span class="p">,</span> <span class="n">creator</span><span class="p">:</span> <span class="n">Agent</span><span class="p">)</span> \
+        <span class="o">-&gt;</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Event</span><span class="p">]:</span>
+    <span class="sd">&quot;&quot;&quot;Propose a cross-list classification based on primary classification.&quot;&quot;&quot;</span>
+    <span class="n">user_primary</span> <span class="o">=</span> <span class="n">after</span><span class="o">.</span><span class="n">primary_classification</span><span class="o">.</span><span class="n">category</span>
+    <span class="n">suggested</span> <span class="o">=</span> <span class="n">PRIMARY_TO_SECONDARY</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">user_primary</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">suggested</span> <span class="ow">and</span> <span class="n">suggested</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">after</span><span class="o">.</span><span class="n">secondary_categories</span><span class="p">:</span>
+        <span class="k">yield</span> <span class="n">AddProposal</span><span class="p">(</span>
+            <span class="n">creator</span><span class="o">=</span><span class="n">creator</span><span class="p">,</span>
+            <span class="n">proposed_event_type</span><span class="o">=</span><span class="n">AddSecondaryClassification</span><span class="p">,</span>
+            <span class="n">proposed_event_data</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;category&#39;</span><span class="p">:</span> <span class="n">suggested</span><span class="p">},</span>
+            <span class="n">comment</span><span class="o">=</span><span class="n">f</span><span class="s2">&quot;</span><span class="si">{user_primary}</span><span class="s2"> is primary&quot;</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="accept_system_cross_proposal"><a class="viewcode-back" href="../../../../containers/core/arxiv.submission.rules.reclassification.html#arxiv.submission.rules.reclassification.accept_system_cross_proposal">[docs]</a><span class="nd">@AddProposal</span><span class="o">.</span><span class="n">bind</span><span class="p">()</span>
+<span class="k">def</span> <span class="nf">accept_system_cross_proposal</span><span class="p">(</span><span class="n">event</span><span class="p">:</span> <span class="n">AddProposal</span><span class="p">,</span> <span class="n">before</span><span class="p">:</span> <span class="n">Submission</span><span class="p">,</span>
+                                 <span class="n">after</span><span class="p">:</span> <span class="n">Submission</span><span class="p">,</span> <span class="n">creator</span><span class="p">:</span> <span class="n">Agent</span><span class="p">)</span> \
+        <span class="o">-&gt;</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Event</span><span class="p">]:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Accept any cross-list proposals generated by the system.</span>
+
+<span class="sd">    This is a bit odd, since we likely generated the proposal in this very</span>
+<span class="sd">    thread...but this seems to be an explicit feature of the classic system.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">event</span><span class="o">.</span><span class="n">proposed_event_type</span> <span class="ow">is</span> <span class="n">AddSecondaryClassification</span> \
+            <span class="ow">and</span> <span class="nb">type</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">creator</span><span class="p">)</span> <span class="ow">is</span> <span class="n">System</span><span class="p">:</span>
+        <span class="k">yield</span> <span class="n">AcceptProposal</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">creator</span><span class="p">,</span> <span class="n">proposal_id</span><span class="o">=</span><span class="n">event</span><span class="o">.</span><span class="n">event_id</span><span class="p">,</span>
+                             <span class="n">comment</span><span class="o">=</span><span class="s2">&quot;accept cross-list proposal from system&quot;</span><span class="p">)</span></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../index.html">arXiv submission & moderation</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../architecture.html">Submission &amp; moderation subsystem architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../announcement_process.html">Submission &amp; announcement Process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../submission_api_context.html">Submission API: Context</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../containers/core/arxiv.submission.html">arxiv.submission package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../containers/metadata/metadata.html">metadata package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../background.html">Background</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, arXiv.org.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.3</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -1,0 +1,220 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>arxiv.submission.domain.proposal module &#8212; arXiv submission &amp; moderation 0.1 documentation</title>
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="arxiv.submission.domain.submission module" href="arxiv.submission.domain.submission.html" />
+    <link rel="prev" title="arxiv.submission.domain.process module" href="arxiv.submission.domain.process.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="module-arxiv.submission.domain.proposal">
+<span id="arxiv-submission-domain-proposal-module"></span><h1>arxiv.submission.domain.proposal module<a class="headerlink" href="#module-arxiv.submission.domain.proposal" title="Permalink to this headline">¶</a></h1>
+<p>Proposals provide a mechanism for suggesting changes to submissions.</p>
+<p>The primary use-case in the classic submission &amp; moderation system is for
+suggesting changes to the primary or cross-list classification. Such proposals
+are generated both automatically based on the results of the classifier and
+manually by moderators.</p>
+<dl class="class">
+<dt id="arxiv.submission.domain.proposal.Proposal">
+<em class="property">class </em><code class="descclassname">arxiv.submission.domain.proposal.</code><code class="descname">Proposal</code><span class="sig-paren">(</span><em>event_id</em>, <em>creator</em>, <em>created=&lt;factory&gt;</em>, <em>proxy=None</em>, <em>proposed_event_type=None</em>, <em>proposed_event_data=&lt;factory&gt;</em>, <em>comments=&lt;factory&gt;</em>, <em>status=&lt;Status.PENDING: 'pending'&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/domain/proposal.html#Proposal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.proposal.Proposal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.6/library/functions.html#object" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Represents a proposal to apply an event to a submission.</p>
+<dl class="class">
+<dt id="arxiv.submission.domain.proposal.Proposal.Status">
+<em class="property">class </em><code class="descname">Status</code><a class="reference internal" href="../../_modules/arxiv/submission/domain/proposal.html#Proposal.Status"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.proposal.Proposal.Status" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.6/library/enum.html#enum.Enum" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">enum.Enum</span></code></a></p>
+<p>An enumeration.</p>
+<dl class="attribute">
+<dt id="arxiv.submission.domain.proposal.Proposal.Status.ACCEPTED">
+<code class="descname">ACCEPTED</code><em class="property"> = 'accepted'</em><a class="headerlink" href="#arxiv.submission.domain.proposal.Proposal.Status.ACCEPTED" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.proposal.Proposal.Status.PENDING">
+<code class="descname">PENDING</code><em class="property"> = 'pending'</em><a class="headerlink" href="#arxiv.submission.domain.proposal.Proposal.Status.PENDING" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.proposal.Proposal.Status.REJECTED">
+<code class="descname">REJECTED</code><em class="property"> = 'rejected'</em><a class="headerlink" href="#arxiv.submission.domain.proposal.Proposal.Status.REJECTED" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.proposal.Proposal.is_accepted">
+<code class="descname">is_accepted</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/domain/proposal.html#Proposal.is_accepted"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.proposal.Proposal.is_accepted" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.proposal.Proposal.is_pending">
+<code class="descname">is_pending</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/domain/proposal.html#Proposal.is_pending"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.proposal.Proposal.is_pending" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.proposal.Proposal.is_rejected">
+<code class="descname">is_rejected</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/domain/proposal.html#Proposal.is_rejected"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.proposal.Proposal.is_rejected" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.proposal.Proposal.proposal_type">
+<code class="descname">proposal_type</code><a class="headerlink" href="#arxiv.submission.domain.proposal.Proposal.proposal_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>Name (str) of the type of annotation.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.proposal.Proposal.proposed_event_type">
+<code class="descname">proposed_event_type</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.submission.domain.proposal.Proposal.proposed_event_type" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.proposal.Proposal.proxy">
+<code class="descname">proxy</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.submission.domain.proposal.Proposal.proxy" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.proposal.Proposal.status">
+<code class="descname">status</code><em class="property"> = 'pending'</em><a class="headerlink" href="#arxiv.submission.domain.proposal.Proposal.status" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.proposal.Proposal.to_dict">
+<code class="descname">to_dict</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/domain/proposal.html#Proposal.to_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.proposal.Proposal.to_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate a dict representation of this <a class="reference internal" href="#arxiv.submission.domain.proposal.Proposal" title="arxiv.submission.domain.proposal.Proposal"><code class="xref py py-class docutils literal notranslate"><span class="pre">Proposal</span></code></a>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#dict" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">arXiv submission & moderation</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../architecture.html">Submission &amp; moderation subsystem architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../announcement_process.html">Submission &amp; announcement Process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../submission_api_context.html">Submission API: Context</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="arxiv.submission.html">arxiv.submission package</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="arxiv.submission.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.submission.html#using-commands-events">Using commands/events</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.submission.html#integration-with-the-legacy-system">Integration with the legacy system</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="arxiv.submission.html#subpackages">Subpackages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.submission.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../metadata/metadata.html">metadata package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../background.html">Background</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="arxiv.submission.html">arxiv.submission package</a><ul>
+  <li><a href="arxiv.submission.domain.html">arxiv.submission.domain package</a><ul>
+      <li>Previous: <a href="arxiv.submission.domain.process.html" title="previous chapter">arxiv.submission.domain.process module</a></li>
+      <li>Next: <a href="arxiv.submission.domain.submission.html" title="next chapter">arxiv.submission.domain.submission module</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, arXiv.org.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.3</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../../_sources/containers/core/arxiv.submission.domain.proposal.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

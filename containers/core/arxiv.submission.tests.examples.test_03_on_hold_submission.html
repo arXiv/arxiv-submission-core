@@ -1,0 +1,187 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>arxiv.submission.tests.examples.test_03_on_hold_submission module &#8212; arXiv submission &amp; moderation 0.1 documentation</title>
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="arxiv.submission.tests.examples.test_04_published_submission module" href="arxiv.submission.tests.examples.test_04_published_submission.html" />
+    <link rel="prev" title="arxiv.submission.tests.examples.test_02_finalized_submission module" href="arxiv.submission.tests.examples.test_02_finalized_submission.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="module-arxiv.submission.tests.examples.test_03_on_hold_submission">
+<span id="arxiv-submission-tests-examples-test-03-on-hold-submission-module"></span><h1>arxiv.submission.tests.examples.test_03_on_hold_submission module<a class="headerlink" href="#module-arxiv.submission.tests.examples.test_03_on_hold_submission" title="Permalink to this headline">¶</a></h1>
+<p>Example 3: submission on hold.</p>
+<dl class="class">
+<dt id="arxiv.submission.tests.examples.test_03_on_hold_submission.TestOnHoldSubmission">
+<em class="property">class </em><code class="descclassname">arxiv.submission.tests.examples.test_03_on_hold_submission.</code><code class="descname">TestOnHoldSubmission</code><span class="sig-paren">(</span><em>methodName='runTest'</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/tests/examples/test_03_on_hold_submission.html#TestOnHoldSubmission"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.tests.examples.test_03_on_hold_submission.TestOnHoldSubmission" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">unittest.case.TestCase</span></code></p>
+<p>Submitter finalizes a new submission; the system places it on hold.</p>
+<p>This can be due to a variety of reasons.</p>
+<dl class="method">
+<dt id="arxiv.submission.tests.examples.test_03_on_hold_submission.TestOnHoldSubmission.setUp">
+<code class="descname">setUp</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/tests/examples/test_03_on_hold_submission.html#TestOnHoldSubmission.setUp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.tests.examples.test_03_on_hold_submission.TestOnHoldSubmission.setUp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create, and complete the submission.</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="arxiv.submission.tests.examples.test_03_on_hold_submission.TestOnHoldSubmission.setUpClass">
+<em class="property">classmethod </em><code class="descname">setUpClass</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/tests/examples/test_03_on_hold_submission.html#TestOnHoldSubmission.setUpClass"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.tests.examples.test_03_on_hold_submission.TestOnHoldSubmission.setUpClass" title="Permalink to this definition">¶</a></dt>
+<dd><p>Instantiate an app for use with a SQLite database.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.tests.examples.test_03_on_hold_submission.TestOnHoldSubmission.tearDown">
+<code class="descname">tearDown</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/tests/examples/test_03_on_hold_submission.html#TestOnHoldSubmission.tearDown"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.tests.examples.test_03_on_hold_submission.TestOnHoldSubmission.tearDown" title="Permalink to this definition">¶</a></dt>
+<dd><p>Clear the database after each test.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.tests.examples.test_03_on_hold_submission.TestOnHoldSubmission.test_can_be_unfinalized">
+<code class="descname">test_can_be_unfinalized</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/tests/examples/test_03_on_hold_submission.html#TestOnHoldSubmission.test_can_be_unfinalized"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.tests.examples.test_03_on_hold_submission.TestOnHoldSubmission.test_can_be_unfinalized" title="Permalink to this definition">¶</a></dt>
+<dd><p>The submission can be unfinalized.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.tests.examples.test_03_on_hold_submission.TestOnHoldSubmission.test_cannot_edit_submission">
+<code class="descname">test_cannot_edit_submission</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/tests/examples/test_03_on_hold_submission.html#TestOnHoldSubmission.test_cannot_edit_submission"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.tests.examples.test_03_on_hold_submission.TestOnHoldSubmission.test_cannot_edit_submission" title="Permalink to this definition">¶</a></dt>
+<dd><p>The submission cannot be changed: it hasn’t yet been announced.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.tests.examples.test_03_on_hold_submission.TestOnHoldSubmission.test_cannot_replace_submission">
+<code class="descname">test_cannot_replace_submission</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/tests/examples/test_03_on_hold_submission.html#TestOnHoldSubmission.test_cannot_replace_submission"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.tests.examples.test_03_on_hold_submission.TestOnHoldSubmission.test_cannot_replace_submission" title="Permalink to this definition">¶</a></dt>
+<dd><p>The submission cannot be replaced: it hasn’t yet been announced.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.tests.examples.test_03_on_hold_submission.TestOnHoldSubmission.test_cannot_withdraw_submission">
+<code class="descname">test_cannot_withdraw_submission</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/tests/examples/test_03_on_hold_submission.html#TestOnHoldSubmission.test_cannot_withdraw_submission"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.tests.examples.test_03_on_hold_submission.TestOnHoldSubmission.test_cannot_withdraw_submission" title="Permalink to this definition">¶</a></dt>
+<dd><p>The submission cannot be withdrawn: it hasn’t yet been announced.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.tests.examples.test_03_on_hold_submission.TestOnHoldSubmission.test_is_in_submitted_state">
+<code class="descname">test_is_in_submitted_state</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/tests/examples/test_03_on_hold_submission.html#TestOnHoldSubmission.test_is_in_submitted_state"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.tests.examples.test_03_on_hold_submission.TestOnHoldSubmission.test_is_in_submitted_state" title="Permalink to this definition">¶</a></dt>
+<dd><p>The submission is now on hold.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">arXiv submission & moderation</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../architecture.html">Submission &amp; moderation subsystem architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../announcement_process.html">Submission &amp; announcement Process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../submission_api_context.html">Submission API: Context</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="arxiv.submission.html">arxiv.submission package</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="arxiv.submission.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.submission.html#using-commands-events">Using commands/events</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.submission.html#integration-with-the-legacy-system">Integration with the legacy system</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="arxiv.submission.html#subpackages">Subpackages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.submission.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../metadata/metadata.html">metadata package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../background.html">Background</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="arxiv.submission.html">arxiv.submission package</a><ul>
+  <li><a href="arxiv.submission.tests.html">arxiv.submission.tests package</a><ul>
+  <li><a href="arxiv.submission.tests.examples.html">arxiv.submission.tests.examples package</a><ul>
+      <li>Previous: <a href="arxiv.submission.tests.examples.test_02_finalized_submission.html" title="previous chapter">arxiv.submission.tests.examples.test_02_finalized_submission module</a></li>
+      <li>Next: <a href="arxiv.submission.tests.examples.test_04_published_submission.html" title="next chapter">arxiv.submission.tests.examples.test_04_published_submission module</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, arXiv.org.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.3</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../../_sources/containers/core/arxiv.submission.tests.examples.test_03_on_hold_submission.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

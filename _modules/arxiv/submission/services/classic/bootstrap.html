@@ -1,0 +1,263 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>arxiv.submission.services.classic.bootstrap &#8212; arXiv submission &amp; moderation 0.1 documentation</title>
+    <link rel="stylesheet" href="../../../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/graphviz.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../../../../" src="../../../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for arxiv.submission.services.classic.bootstrap</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Generate synthetic data for testing and development purposes.&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">List</span>
+<span class="kn">import</span> <span class="nn">random</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="k">import</span> <span class="n">datetime</span>
+<span class="kn">from</span> <span class="nn">mimesis</span> <span class="k">import</span> <span class="n">Person</span><span class="p">,</span> <span class="n">Internet</span><span class="p">,</span> <span class="n">Datetime</span>
+<span class="kn">from</span> <span class="nn">mimesis</span> <span class="k">import</span> <span class="n">config</span> <span class="k">as</span> <span class="n">mimesis_config</span>
+
+<span class="kn">from</span> <span class="nn">arxiv</span> <span class="k">import</span> <span class="n">taxonomy</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">models</span>
+
+<span class="n">LOCALES</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">mimesis_config</span><span class="o">.</span><span class="n">SUPPORTED_LOCALES</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+
+<span class="k">def</span> <span class="nf">_get_locale</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">LOCALES</span><span class="p">[</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">LOCALES</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)]</span>
+
+
+<span class="k">def</span> <span class="nf">_epoch</span><span class="p">(</span><span class="n">t</span><span class="p">:</span> <span class="n">datetime</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+    <span class="k">return</span> <span class="nb">int</span><span class="p">((</span><span class="n">t</span> <span class="o">-</span> <span class="n">datetime</span><span class="o">.</span><span class="n">utcfromtimestamp</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span><span class="o">.</span><span class="n">total_seconds</span><span class="p">())</span>
+
+
+<span class="n">LICENSES</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="p">{</span>
+        <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;note&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="s2">&quot;None of the above licenses apply&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;active&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="s2">&quot;sequence&quot;</span><span class="p">:</span> <span class="mi">99</span>
+    <span class="p">},</span>
+    <span class="p">{</span>
+        <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;http://arxiv.org/licenses/assumed-1991-2003/&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;note&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="s2">&quot;Assumed arXiv.org perpetual, non-exclusive license to&quot;</span> <span class="o">+</span>
+                 <span class="s2">&quot; distribute this article for submissions made before&quot;</span> <span class="o">+</span>
+                 <span class="s2">&quot; January 2004&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;active&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="s2">&quot;sequence&quot;</span><span class="p">:</span> <span class="mi">9</span>
+    <span class="p">},</span>
+    <span class="p">{</span>
+        <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;http://arxiv.org/licenses/nonexclusive-distrib/1.0/&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;note&quot;</span><span class="p">:</span> <span class="s2">&quot;(Minimal rights required by arXiv.org. Select this unless&quot;</span> <span class="o">+</span>
+                <span class="s2">&quot; you understand the implications of other licenses.)&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="s2">&quot;arXiv.org perpetual, non-exclusive license to distribute&quot;</span> <span class="o">+</span>
+                 <span class="s2">&quot; this article&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;active&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="s2">&quot;sequence&quot;</span><span class="p">:</span> <span class="mi">1</span>
+    <span class="p">},</span>
+    <span class="p">{</span>
+        <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;http://creativecommons.org/licenses/by-nc-sa/3.0/&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;note&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="s2">&quot;Creative Commons Attribution-Noncommercial-ShareAlike&quot;</span> <span class="o">+</span>
+                 <span class="s2">&quot; license&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;active&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="s2">&quot;sequence&quot;</span><span class="p">:</span> <span class="mi">3</span>
+    <span class="p">},</span>
+    <span class="p">{</span>
+        <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;http://creativecommons.org/licenses/by-nc-sa/4.0/&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;note&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="s2">&quot;Creative Commons Attribution-Noncommercial-ShareAlike&quot;</span> <span class="o">+</span>
+                 <span class="s2">&quot; license (CC BY-NC-SA 4.0)&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;active&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="s2">&quot;sequence&quot;</span><span class="p">:</span> <span class="mi">7</span>
+    <span class="p">},</span>
+    <span class="p">{</span>
+        <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;http://creativecommons.org/licenses/by-sa/4.0/&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;note&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="s2">&quot;Creative Commons Attribution-ShareAlike license&quot;</span> <span class="o">+</span>
+                 <span class="s2">&quot; (CC BY-SA 4.0)&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;active&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="s2">&quot;sequence&quot;</span><span class="p">:</span> <span class="mi">6</span>
+    <span class="p">},</span>
+    <span class="p">{</span>
+        <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;http://creativecommons.org/licenses/by/3.0/&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;note&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="s2">&quot;Creative Commons Attribution license&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;active&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="s2">&quot;sequence&quot;</span><span class="p">:</span> <span class="mi">2</span>
+    <span class="p">},</span>
+    <span class="p">{</span>
+        <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;http://creativecommons.org/licenses/by/4.0/&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;note&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="s2">&quot;Creative Commons Attribution license (CC BY 4.0)&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;active&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="s2">&quot;sequence&quot;</span><span class="p">:</span> <span class="mi">5</span>
+    <span class="p">},</span>
+    <span class="p">{</span>
+        <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;http://creativecommons.org/licenses/publicdomain/&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;note&quot;</span><span class="p">:</span> <span class="s2">&quot;(Suitable for US government employees, for example)&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="s2">&quot;Creative Commons Public Domain Declaration&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;active&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="s2">&quot;sequence&quot;</span><span class="p">:</span> <span class="mi">4</span>
+    <span class="p">},</span>
+    <span class="p">{</span>
+        <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;http://creativecommons.org/publicdomain/zero/1.0/&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;note&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="s2">&quot;Creative Commons Public Domain Declaration (CC0 1.0)&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;active&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="s2">&quot;sequence&quot;</span><span class="p">:</span> <span class="mi">8</span>
+    <span class="p">}</span>
+<span class="p">]</span>
+
+<span class="n">POLICY_CLASSES</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;Administrator&quot;</span><span class="p">,</span> <span class="s2">&quot;class_id&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">},</span>
+    <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;Public user&quot;</span><span class="p">,</span> <span class="s2">&quot;class_id&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">},</span>
+    <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;Legacy user&quot;</span><span class="p">,</span> <span class="s2">&quot;class_id&quot;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span> <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;&quot;</span><span class="p">}</span>
+<span class="p">]</span>
+
+
+<div class="viewcode-block" id="categories"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.services.classic.bootstrap.html#arxiv.submission.services.classic.bootstrap.categories">[docs]</a><span class="k">def</span> <span class="nf">categories</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">models</span><span class="o">.</span><span class="n">CategoryDef</span><span class="p">]:</span>
+    <span class="sd">&quot;&quot;&quot;Generate data for current arXiv categories.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="p">[</span>
+        <span class="n">models</span><span class="o">.</span><span class="n">CategoryDef</span><span class="p">(</span>
+            <span class="n">category</span><span class="o">=</span><span class="n">category</span><span class="p">,</span>
+            <span class="n">name</span><span class="o">=</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;name&#39;</span><span class="p">],</span>
+            <span class="n">active</span><span class="o">=</span><span class="mi">1</span>
+        <span class="p">)</span> <span class="k">for</span> <span class="n">category</span><span class="p">,</span> <span class="n">data</span> <span class="ow">in</span> <span class="n">taxonomy</span><span class="o">.</span><span class="n">CATEGORIES</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+    <span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="policy_classes"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.services.classic.bootstrap.html#arxiv.submission.services.classic.bootstrap.policy_classes">[docs]</a><span class="k">def</span> <span class="nf">policy_classes</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">models</span><span class="o">.</span><span class="n">PolicyClass</span><span class="p">]:</span>
+    <span class="sd">&quot;&quot;&quot;Generate policy classes.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">models</span><span class="o">.</span><span class="n">PolicyClass</span><span class="p">(</span><span class="o">**</span><span class="n">datum</span><span class="p">)</span> <span class="k">for</span> <span class="n">datum</span> <span class="ow">in</span> <span class="n">POLICY_CLASSES</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="users"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.services.classic.bootstrap.html#arxiv.submission.services.classic.bootstrap.users">[docs]</a><span class="k">def</span> <span class="nf">users</span><span class="p">(</span><span class="n">count</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">500</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">models</span><span class="o">.</span><span class="n">User</span><span class="p">]:</span>
+    <span class="sd">&quot;&quot;&quot;Generate a bunch of random users.&quot;&quot;&quot;</span>
+    <span class="n">_users</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">count</span><span class="p">):</span>
+        <span class="n">locale</span> <span class="o">=</span> <span class="n">_get_locale</span><span class="p">()</span>
+        <span class="n">person</span> <span class="o">=</span> <span class="n">Person</span><span class="p">(</span><span class="n">locale</span><span class="p">)</span>
+        <span class="n">net</span> <span class="o">=</span> <span class="n">Internet</span><span class="p">(</span><span class="n">locale</span><span class="p">)</span>
+        <span class="n">ip_addr</span> <span class="o">=</span> <span class="n">net</span><span class="o">.</span><span class="n">ip_v4</span><span class="p">()</span>
+        <span class="n">_users</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">User</span><span class="p">(</span>
+            <span class="n">first_name</span><span class="o">=</span><span class="n">person</span><span class="o">.</span><span class="n">name</span><span class="p">(),</span>
+            <span class="n">last_name</span><span class="o">=</span><span class="n">person</span><span class="o">.</span><span class="n">surname</span><span class="p">(),</span>
+            <span class="n">suffix_name</span><span class="o">=</span><span class="n">person</span><span class="o">.</span><span class="n">title</span><span class="p">(),</span>
+            <span class="n">share_first_name</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+            <span class="n">share_last_name</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+            <span class="n">email</span><span class="o">=</span><span class="n">person</span><span class="o">.</span><span class="n">email</span><span class="p">(),</span>
+            <span class="n">share_email</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span>
+            <span class="n">email_bouncing</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+            <span class="n">policy_class</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>  <span class="c1"># Public user.</span>
+            <span class="n">joined_date</span><span class="o">=</span><span class="n">_epoch</span><span class="p">(</span><span class="n">Datetime</span><span class="p">(</span><span class="n">locale</span><span class="p">)</span><span class="o">.</span><span class="n">datetime</span><span class="p">()),</span>
+            <span class="n">joined_ip_num</span><span class="o">=</span><span class="n">ip_addr</span><span class="p">,</span>
+            <span class="n">joined_remote_host</span><span class="o">=</span><span class="n">ip_addr</span>
+        <span class="p">))</span>
+    <span class="k">return</span> <span class="n">_users</span></div>
+
+
+<div class="viewcode-block" id="licenses"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.services.classic.bootstrap.html#arxiv.submission.services.classic.bootstrap.licenses">[docs]</a><span class="k">def</span> <span class="nf">licenses</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">models</span><span class="o">.</span><span class="n">License</span><span class="p">]:</span>
+    <span class="sd">&quot;&quot;&quot;Generate licenses.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">models</span><span class="o">.</span><span class="n">License</span><span class="p">(</span><span class="o">**</span><span class="n">datum</span><span class="p">)</span> <span class="k">for</span> <span class="n">datum</span> <span class="ow">in</span> <span class="n">LICENSES</span><span class="p">]</span></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../../index.html">arXiv submission & moderation</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../architecture.html">Submission &amp; moderation subsystem architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../announcement_process.html">Submission &amp; announcement Process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../submission_api_context.html">Submission API: Context</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../containers/core/arxiv.submission.html">arxiv.submission package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../containers/metadata/metadata.html">metadata package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../background.html">Background</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../../index.html">Module code</a><ul>
+  <li><a href="../classic.html">arxiv.submission.services.classic</a><ul>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, arXiv.org.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.3</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

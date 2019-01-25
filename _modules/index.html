@@ -9,10 +9,12 @@
     <title>Overview: module code &#8212; arXiv submission &amp; moderation 0.1 documentation</title>
     <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
     <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
     <script type="text/javascript" src="../_static/jquery.js"></script>
     <script type="text/javascript" src="../_static/underscore.js"></script>
     <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
    
@@ -32,26 +34,76 @@
           <div class="body" role="main">
             
   <h1>All modules for which code is available</h1>
-<ul><li><a href="events.html">events</a></li>
-<ul><li><a href="events/domain/agent.html">events.domain.agent</a></li>
-<li><a href="events/domain/event.html">events.domain.event</a></li>
-<li><a href="events/domain/rule.html">events.domain.rule</a></li>
-<li><a href="events/domain/submission.html">events.domain.submission</a></li>
-<li><a href="events/exceptions.html">events.exceptions</a></li>
-<li><a href="events/services/classic.html">events.services.classic</a></li>
-<ul><li><a href="events/services/classic/exceptions.html">events.services.classic.exceptions</a></li>
-<li><a href="events/services/classic/models.html">events.services.classic.models</a></li>
-<li><a href="events/services/classic/tests.html">events.services.classic.tests</a></li>
-<li><a href="events/services/classic/util.html">events.services.classic.util</a></li>
-</ul><li><a href="events/services/notification.html">events.services.notification</a></li>
-</ul><li><a href="metadata/controllers/submission.html">metadata.controllers.submission</a></li>
+<ul><li><a href="arxiv/submission/core.html">arxiv.submission.core</a></li>
+<li><a href="arxiv/submission/domain/agent.html">arxiv.submission.domain.agent</a></li>
+<li><a href="arxiv/submission/domain/annotation.html">arxiv.submission.domain.annotation</a></li>
+<li><a href="arxiv/submission/domain/event.html">arxiv.submission.domain.event</a></li>
+<ul><li><a href="arxiv/submission/domain/event/event.html">arxiv.submission.domain.event.event</a></li>
+<li><a href="arxiv/submission/domain/event/flag.html">arxiv.submission.domain.event.flag</a></li>
+<li><a href="arxiv/submission/domain/event/process.html">arxiv.submission.domain.event.process</a></li>
+<li><a href="arxiv/submission/domain/event/proposal.html">arxiv.submission.domain.event.proposal</a></li>
+<li><a href="arxiv/submission/domain/event/request.html">arxiv.submission.domain.event.request</a></li>
+<li><a href="arxiv/submission/domain/event/tests/test_hooks.html">arxiv.submission.domain.event.tests.test_hooks</a></li>
+<li><a href="arxiv/submission/domain/event/util.html">arxiv.submission.domain.event.util</a></li>
+<li><a href="arxiv/submission/domain/event/validators.html">arxiv.submission.domain.event.validators</a></li>
+</ul><li><a href="arxiv/submission/domain/flag.html">arxiv.submission.domain.flag</a></li>
+<li><a href="arxiv/submission/domain/meta.html">arxiv.submission.domain.meta</a></li>
+<li><a href="arxiv/submission/domain/process.html">arxiv.submission.domain.process</a></li>
+<li><a href="arxiv/submission/domain/proposal.html">arxiv.submission.domain.proposal</a></li>
+<li><a href="arxiv/submission/domain/submission.html">arxiv.submission.domain.submission</a></li>
+<li><a href="arxiv/submission/domain/tests/test_events.html">arxiv.submission.domain.tests.test_events</a></li>
+<li><a href="arxiv/submission/domain/util.html">arxiv.submission.domain.util</a></li>
+<li><a href="arxiv/submission/exceptions.html">arxiv.submission.exceptions</a></li>
+<li><a href="arxiv/submission/rules/classification_and_content.html">arxiv.submission.rules.classification_and_content</a></li>
+<li><a href="arxiv/submission/rules/generic.html">arxiv.submission.rules.generic</a></li>
+<li><a href="arxiv/submission/rules/metadata_checks.html">arxiv.submission.rules.metadata_checks</a></li>
+<li><a href="arxiv/submission/rules/reclassification.html">arxiv.submission.rules.reclassification</a></li>
+<li><a href="arxiv/submission/rules/tests/test_classification_and_content.html">arxiv.submission.rules.tests.test_classification_and_content</a></li>
+<li><a href="arxiv/submission/rules/tests/test_metadata_checks.html">arxiv.submission.rules.tests.test_metadata_checks</a></li>
+<li><a href="arxiv/submission/rules/tests/test_reclassification.html">arxiv.submission.rules.tests.test_reclassification</a></li>
+<li><a href="arxiv/submission/rules/util.html">arxiv.submission.rules.util</a></li>
+<li><a href="arxiv/submission/serializer.html">arxiv.submission.serializer</a></li>
+<li><a href="arxiv/submission/services/classic.html">arxiv.submission.services.classic</a></li>
+<ul><li><a href="arxiv/submission/services/classic/bootstrap.html">arxiv.submission.services.classic.bootstrap</a></li>
+<li><a href="arxiv/submission/services/classic/event.html">arxiv.submission.services.classic.event</a></li>
+<li><a href="arxiv/submission/services/classic/exceptions.html">arxiv.submission.services.classic.exceptions</a></li>
+<li><a href="arxiv/submission/services/classic/interpolate.html">arxiv.submission.services.classic.interpolate</a></li>
+<li><a href="arxiv/submission/services/classic/log.html">arxiv.submission.services.classic.log</a></li>
+<li><a href="arxiv/submission/services/classic/models.html">arxiv.submission.services.classic.models</a></li>
+<li><a href="arxiv/submission/services/classic/proposal.html">arxiv.submission.services.classic.proposal</a></li>
+<li><a href="arxiv/submission/services/classic/tests/test_admin_log.html">arxiv.submission.services.classic.tests.test_admin_log</a></li>
+<li><a href="arxiv/submission/services/classic/tests/test_get_licenses.html">arxiv.submission.services.classic.tests.test_get_licenses</a></li>
+<li><a href="arxiv/submission/services/classic/tests/test_get_submission.html">arxiv.submission.services.classic.tests.test_get_submission</a></li>
+<li><a href="arxiv/submission/services/classic/tests/test_store_event.html">arxiv.submission.services.classic.tests.test_store_event</a></li>
+<li><a href="arxiv/submission/services/classic/tests/test_store_proposals.html">arxiv.submission.services.classic.tests.test_store_proposals</a></li>
+<li><a href="arxiv/submission/services/classic/tests/util.html">arxiv.submission.services.classic.tests.util</a></li>
+<li><a href="arxiv/submission/services/classic/util.html">arxiv.submission.services.classic.util</a></li>
+</ul><li><a href="arxiv/submission/services/classifier/classifier.html">arxiv.submission.services.classifier.classifier</a></li>
+<li><a href="arxiv/submission/services/classifier/tests/tests.html">arxiv.submission.services.classifier.tests.tests</a></li>
+<li><a href="arxiv/submission/services/notification.html">arxiv.submission.services.notification</a></li>
+<li><a href="arxiv/submission/services/plaintext/plaintext.html">arxiv.submission.services.plaintext.plaintext</a></li>
+<li><a href="arxiv/submission/services/plaintext/tests.html">arxiv.submission.services.plaintext.tests</a></li>
+<li><a href="arxiv/submission/tasks.html">arxiv.submission.tasks</a></li>
+<li><a href="arxiv/submission/tests/annotations/test_annotations.html">arxiv.submission.tests.annotations.test_annotations</a></li>
+<li><a href="arxiv/submission/tests/api/test_api.html">arxiv.submission.tests.api.test_api</a></li>
+<li><a href="arxiv/submission/tests/classic/test_classic_integration.html">arxiv.submission.tests.classic.test_classic_integration</a></li>
+<li><a href="arxiv/submission/tests/examples/test_01_working_submission.html">arxiv.submission.tests.examples.test_01_working_submission</a></li>
+<li><a href="arxiv/submission/tests/examples/test_02_finalized_submission.html">arxiv.submission.tests.examples.test_02_finalized_submission</a></li>
+<li><a href="arxiv/submission/tests/examples/test_03_on_hold_submission.html">arxiv.submission.tests.examples.test_03_on_hold_submission</a></li>
+<li><a href="arxiv/submission/tests/examples/test_04_published_submission.html">arxiv.submission.tests.examples.test_04_published_submission</a></li>
+<li><a href="arxiv/submission/tests/examples/test_05_working_replacement.html">arxiv.submission.tests.examples.test_05_working_replacement</a></li>
+<li><a href="arxiv/submission/tests/examples/test_06_second_version_published.html">arxiv.submission.tests.examples.test_06_second_version_published</a></li>
+<li><a href="arxiv/submission/tests/examples/test_07_cross_list_requested.html">arxiv.submission.tests.examples.test_07_cross_list_requested</a></li>
+<li><a href="arxiv/submission/tests/examples/test_08_post_submission_checks.html">arxiv.submission.tests.examples.test_08_post_submission_checks</a></li>
+<li><a href="arxiv/submission/tests/util.html">arxiv.submission.tests.util</a></li>
+<li><a href="metadata/controllers/submission.html">metadata.controllers.submission</a></li>
 <ul><li><a href="metadata/controllers/submission/handlers.html">metadata.controllers.submission.handlers</a></li>
-<li><a href="metadata/controllers/submission/tests.html">metadata.controllers.submission.tests</a></li>
 </ul><li><a href="metadata/controllers/util.html">metadata.controllers.util</a></li>
 <li><a href="metadata/factory.html">metadata.factory</a></li>
 <li><a href="metadata/routes.html">metadata.routes</a></li>
 <li><a href="sqlalchemy/orm/attributes.html">sqlalchemy.orm.attributes</a></li>
 <li><a href="sqlalchemy/sql/sqltypes.html">sqlalchemy.sql.sqltypes</a></li>
+<li><a href="typing.html">typing</a></li>
 </ul>
 
           </div>
@@ -72,10 +124,11 @@
 <h3>Navigation</h3>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../architecture.html">Submission &amp; moderation subsystem architecture</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../publication_process.html">Submission &amp; Publication Process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../announcement_process.html">Submission &amp; announcement Process</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../submission_api_context.html">Submission API: Context</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../containers/core/events.html">events package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../containers/core/arxiv.submission.html">arxiv.submission package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../containers/metadata/metadata.html">metadata package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../background.html">Background</a></li>
 </ul>
 
 <div class="relations">
@@ -97,6 +150,14 @@
     </div>
 </div>
 <script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
         </div>
       </div>
       <div class="clearer"></div>
@@ -105,8 +166,8 @@
       &copy;2017, arXiv.org.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.6</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.11</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.3</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
     </div>
 

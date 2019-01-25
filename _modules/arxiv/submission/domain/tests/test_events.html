@@ -1,0 +1,1024 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>arxiv.submission.domain.tests.test_events &#8212; arXiv submission &amp; moderation 0.1 documentation</title>
+    <link rel="stylesheet" href="../../../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/graphviz.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../../../../" src="../../../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for arxiv.submission.domain.tests.test_events</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Tests for :class:`.Event` instances in :mod:`arxiv.submission.domain.event`.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">unittest</span> <span class="k">import</span> <span class="n">TestCase</span><span class="p">,</span> <span class="n">mock</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="k">import</span> <span class="n">datetime</span>
+<span class="kn">from</span> <span class="nn">pytz</span> <span class="k">import</span> <span class="n">UTC</span>
+<span class="kn">from</span> <span class="nn">mimesis</span> <span class="k">import</span> <span class="n">Text</span>
+
+<span class="kn">from</span> <span class="nn">arxiv</span> <span class="k">import</span> <span class="n">taxonomy</span>
+<span class="kn">from</span> <span class="nn">...</span> <span class="k">import</span> <span class="n">save</span>
+<span class="kn">from</span> <span class="nn">..</span> <span class="k">import</span> <span class="n">event</span><span class="p">,</span> <span class="n">agent</span><span class="p">,</span> <span class="n">submission</span><span class="p">,</span> <span class="n">meta</span>
+<span class="kn">from</span> <span class="nn">...exceptions</span> <span class="k">import</span> <span class="n">InvalidEvent</span>
+
+
+<div class="viewcode-block" id="TestWithdrawalSubmission"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.domain.tests.test_events.html#arxiv.submission.domain.tests.test_events.TestWithdrawalSubmission">[docs]</a><span class="k">class</span> <span class="nc">TestWithdrawalSubmission</span><span class="p">(</span><span class="n">TestCase</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Test :class:`event.RequestWithdrawal`.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="TestWithdrawalSubmission.setUp"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.domain.tests.test_events.html#arxiv.submission.domain.tests.test_events.TestWithdrawalSubmission.setUp">[docs]</a>    <span class="k">def</span> <span class="nf">setUp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize auxiliary data for test cases.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">user</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">User</span><span class="p">(</span>
+            <span class="mi">12345</span><span class="p">,</span>
+            <span class="s1">&#39;uuser@cornell.edu&#39;</span><span class="p">,</span>
+            <span class="n">endorsements</span><span class="o">=</span><span class="p">[</span><span class="n">meta</span><span class="o">.</span><span class="n">Classification</span><span class="p">(</span><span class="s1">&#39;astro-ph.GA&#39;</span><span class="p">),</span>
+                          <span class="n">meta</span><span class="o">.</span><span class="n">Classification</span><span class="p">(</span><span class="s1">&#39;astro-ph.CO&#39;</span><span class="p">)]</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">submission</span> <span class="o">=</span> <span class="n">submission</span><span class="o">.</span><span class="n">Submission</span><span class="p">(</span>
+            <span class="n">submission_id</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+            <span class="n">status</span><span class="o">=</span><span class="n">submission</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">PUBLISHED</span><span class="p">,</span>
+            <span class="n">creator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">,</span>
+            <span class="n">owner</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">,</span>
+            <span class="n">created</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">UTC</span><span class="p">),</span>
+            <span class="n">source_content</span><span class="o">=</span><span class="n">submission</span><span class="o">.</span><span class="n">SubmissionContent</span><span class="p">(</span>
+                <span class="n">identifier</span><span class="o">=</span><span class="s1">&#39;6543&#39;</span><span class="p">,</span>
+                <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;pdf&#39;</span><span class="p">,</span>
+                <span class="n">checksum</span><span class="o">=</span><span class="s1">&#39;asdf2345&#39;</span><span class="p">,</span>
+                <span class="n">size</span><span class="o">=</span><span class="mi">594930</span>
+            <span class="p">),</span>
+            <span class="n">compiled_content</span><span class="o">=</span><span class="p">[],</span>
+            <span class="n">primary_classification</span><span class="o">=</span><span class="n">meta</span><span class="o">.</span><span class="n">Classification</span><span class="p">(</span><span class="s1">&#39;astro-ph.GA&#39;</span><span class="p">),</span>
+            <span class="n">secondary_classification</span><span class="o">=</span><span class="p">[</span><span class="n">meta</span><span class="o">.</span><span class="n">Classification</span><span class="p">(</span><span class="s1">&#39;astro-ph.CO&#39;</span><span class="p">)],</span>
+            <span class="n">license</span><span class="o">=</span><span class="n">meta</span><span class="o">.</span><span class="n">License</span><span class="p">(</span><span class="n">uri</span><span class="o">=</span><span class="s1">&#39;http://free&#39;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;free&#39;</span><span class="p">),</span>
+            <span class="n">arxiv_id</span><span class="o">=</span><span class="s1">&#39;1901.001234&#39;</span><span class="p">,</span>
+            <span class="n">version</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+            <span class="n">submitter_contact_verified</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">submitter_is_author</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">submitter_accepts_policy</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">submitter_confirmed_preview</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">metadata</span><span class="o">=</span><span class="n">submission</span><span class="o">.</span><span class="n">SubmissionMetadata</span><span class="p">(</span>
+                <span class="n">title</span><span class="o">=</span><span class="s1">&#39;the best title&#39;</span><span class="p">,</span>
+                <span class="n">abstract</span><span class="o">=</span><span class="s1">&#39;very abstract&#39;</span><span class="p">,</span>
+                <span class="n">authors_display</span><span class="o">=</span><span class="s1">&#39;J K Jones, F W Englund&#39;</span><span class="p">,</span>
+                <span class="n">doi</span><span class="o">=</span><span class="s1">&#39;10.1000/182&#39;</span><span class="p">,</span>
+                <span class="n">comments</span><span class="o">=</span><span class="s1">&#39;These are the comments&#39;</span>
+            <span class="p">)</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestWithdrawalSubmission.test_request_withdrawal"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.domain.tests.test_events.html#arxiv.submission.domain.tests.test_events.TestWithdrawalSubmission.test_request_withdrawal">[docs]</a>    <span class="k">def</span> <span class="nf">test_request_withdrawal</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Request that a paper be withdrawn.&quot;&quot;&quot;</span>
+        <span class="n">e</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">RequestWithdrawal</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">,</span> <span class="n">reason</span><span class="o">=</span><span class="s2">&quot;no good&quot;</span><span class="p">)</span>
+        <span class="n">e</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="p">)</span>
+        <span class="n">replacement</span> <span class="o">=</span> <span class="n">e</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">replacement</span><span class="o">.</span><span class="n">arxiv_id</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">arxiv_id</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">replacement</span><span class="o">.</span><span class="n">version</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">version</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">replacement</span><span class="o">.</span><span class="n">status</span><span class="p">,</span>
+                         <span class="n">submission</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">PUBLISHED</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">replacement</span><span class="o">.</span><span class="n">has_active_requests</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">published</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">replacement</span><span class="o">.</span><span class="n">published</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestWithdrawalSubmission.test_request_without_a_reason"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.domain.tests.test_events.html#arxiv.submission.domain.tests.test_events.TestWithdrawalSubmission.test_request_without_a_reason">[docs]</a>    <span class="k">def</span> <span class="nf">test_request_without_a_reason</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;A reason is required.&quot;&quot;&quot;</span>
+        <span class="n">e</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">RequestWithdrawal</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">)</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">InvalidEvent</span><span class="p">):</span>
+            <span class="n">e</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestWithdrawalSubmission.test_request_without_published_submission"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.domain.tests.test_events.html#arxiv.submission.domain.tests.test_events.TestWithdrawalSubmission.test_request_without_published_submission">[docs]</a>    <span class="k">def</span> <span class="nf">test_request_without_published_submission</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The submission must already be published.&quot;&quot;&quot;</span>
+        <span class="n">e</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">RequestWithdrawal</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">,</span> <span class="n">reason</span><span class="o">=</span><span class="s2">&quot;no good&quot;</span><span class="p">)</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">InvalidEvent</span><span class="p">):</span>
+            <span class="n">e</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="n">mock</span><span class="o">.</span><span class="n">MagicMock</span><span class="p">(</span><span class="n">published</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span></div></div>
+
+
+<div class="viewcode-block" id="TestReplacementSubmission"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.domain.tests.test_events.html#arxiv.submission.domain.tests.test_events.TestReplacementSubmission">[docs]</a><span class="k">class</span> <span class="nc">TestReplacementSubmission</span><span class="p">(</span><span class="n">TestCase</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Test :class:`event.CreateSubmission` with a replacement.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="TestReplacementSubmission.setUp"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.domain.tests.test_events.html#arxiv.submission.domain.tests.test_events.TestReplacementSubmission.setUp">[docs]</a>    <span class="k">def</span> <span class="nf">setUp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize auxiliary data for test cases.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">user</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">User</span><span class="p">(</span>
+            <span class="mi">12345</span><span class="p">,</span>
+            <span class="s1">&#39;uuser@cornell.edu&#39;</span><span class="p">,</span>
+            <span class="n">endorsements</span><span class="o">=</span><span class="p">[</span><span class="n">meta</span><span class="o">.</span><span class="n">Classification</span><span class="p">(</span><span class="s1">&#39;astro-ph.GA&#39;</span><span class="p">),</span>
+                          <span class="n">meta</span><span class="o">.</span><span class="n">Classification</span><span class="p">(</span><span class="s1">&#39;astro-ph.CO&#39;</span><span class="p">)]</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">submission</span> <span class="o">=</span> <span class="n">submission</span><span class="o">.</span><span class="n">Submission</span><span class="p">(</span>
+            <span class="n">submission_id</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+            <span class="n">status</span><span class="o">=</span><span class="n">submission</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">PUBLISHED</span><span class="p">,</span>
+            <span class="n">creator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">,</span>
+            <span class="n">owner</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">,</span>
+            <span class="n">created</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">UTC</span><span class="p">),</span>
+            <span class="n">source_content</span><span class="o">=</span><span class="n">submission</span><span class="o">.</span><span class="n">SubmissionContent</span><span class="p">(</span>
+                <span class="n">identifier</span><span class="o">=</span><span class="s1">&#39;6543&#39;</span><span class="p">,</span>
+                <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;pdf&#39;</span><span class="p">,</span>
+                <span class="n">checksum</span><span class="o">=</span><span class="s1">&#39;asdf2345&#39;</span><span class="p">,</span>
+                <span class="n">size</span><span class="o">=</span><span class="mi">594930</span>
+            <span class="p">),</span>
+            <span class="n">compiled_content</span><span class="o">=</span><span class="p">[],</span>
+            <span class="n">primary_classification</span><span class="o">=</span><span class="n">meta</span><span class="o">.</span><span class="n">Classification</span><span class="p">(</span><span class="s1">&#39;astro-ph.GA&#39;</span><span class="p">),</span>
+            <span class="n">secondary_classification</span><span class="o">=</span><span class="p">[</span><span class="n">meta</span><span class="o">.</span><span class="n">Classification</span><span class="p">(</span><span class="s1">&#39;astro-ph.CO&#39;</span><span class="p">)],</span>
+            <span class="n">license</span><span class="o">=</span><span class="n">meta</span><span class="o">.</span><span class="n">License</span><span class="p">(</span><span class="n">uri</span><span class="o">=</span><span class="s1">&#39;http://free&#39;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;free&#39;</span><span class="p">),</span>
+            <span class="n">arxiv_id</span><span class="o">=</span><span class="s1">&#39;1901.001234&#39;</span><span class="p">,</span>
+            <span class="n">version</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+            <span class="n">submitter_contact_verified</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">submitter_is_author</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">submitter_accepts_policy</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">submitter_confirmed_preview</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">metadata</span><span class="o">=</span><span class="n">submission</span><span class="o">.</span><span class="n">SubmissionMetadata</span><span class="p">(</span>
+                <span class="n">title</span><span class="o">=</span><span class="s1">&#39;the best title&#39;</span><span class="p">,</span>
+                <span class="n">abstract</span><span class="o">=</span><span class="s1">&#39;very abstract&#39;</span><span class="p">,</span>
+                <span class="n">authors_display</span><span class="o">=</span><span class="s1">&#39;J K Jones, F W Englund&#39;</span><span class="p">,</span>
+                <span class="n">doi</span><span class="o">=</span><span class="s1">&#39;10.1000/182&#39;</span><span class="p">,</span>
+                <span class="n">comments</span><span class="o">=</span><span class="s1">&#39;These are the comments&#39;</span>
+            <span class="p">)</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestReplacementSubmission.test_create_submission_replacement"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.domain.tests.test_events.html#arxiv.submission.domain.tests.test_events.TestReplacementSubmission.test_create_submission_replacement">[docs]</a>    <span class="k">def</span> <span class="nf">test_create_submission_replacement</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;A replacement is a new submission based on an old submission.&quot;&quot;&quot;</span>
+        <span class="n">e</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">CreateSubmissionVersion</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">)</span>
+        <span class="n">replacement</span> <span class="o">=</span> <span class="n">e</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">replacement</span><span class="o">.</span><span class="n">arxiv_id</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">arxiv_id</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">replacement</span><span class="o">.</span><span class="n">version</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">version</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">replacement</span><span class="o">.</span><span class="n">status</span><span class="p">,</span> <span class="n">submission</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">WORKING</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">published</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertFalse</span><span class="p">(</span><span class="n">replacement</span><span class="o">.</span><span class="n">published</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">replacement</span><span class="o">.</span><span class="n">compiled_content</span><span class="p">),</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertIsNone</span><span class="p">(</span><span class="n">replacement</span><span class="o">.</span><span class="n">source_content</span><span class="p">)</span>
+
+        <span class="c1"># The user is asked to reaffirm these points.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertFalse</span><span class="p">(</span><span class="n">replacement</span><span class="o">.</span><span class="n">submitter_contact_verified</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertFalse</span><span class="p">(</span><span class="n">replacement</span><span class="o">.</span><span class="n">submitter_accepts_policy</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertFalse</span><span class="p">(</span><span class="n">replacement</span><span class="o">.</span><span class="n">submitter_confirmed_preview</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertFalse</span><span class="p">(</span><span class="n">replacement</span><span class="o">.</span><span class="n">submitter_contact_verified</span><span class="p">)</span>
+
+        <span class="c1"># These should all stay the same.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">replacement</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">title</span><span class="p">,</span>
+                         <span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">title</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">replacement</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">abstract</span><span class="p">,</span>
+                         <span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">abstract</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">replacement</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">authors</span><span class="p">,</span>
+                         <span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">authors</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">replacement</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">authors_display</span><span class="p">,</span>
+                         <span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">authors_display</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">replacement</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">msc_class</span><span class="p">,</span>
+                         <span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">msc_class</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">replacement</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">acm_class</span><span class="p">,</span>
+                         <span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">acm_class</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">replacement</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">doi</span><span class="p">,</span>
+                         <span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">doi</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">replacement</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">journal_ref</span><span class="p">,</span>
+                         <span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">journal_ref</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="TestDOIorJREFAfterPublish"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.domain.tests.test_events.html#arxiv.submission.domain.tests.test_events.TestDOIorJREFAfterPublish">[docs]</a><span class="k">class</span> <span class="nc">TestDOIorJREFAfterPublish</span><span class="p">(</span><span class="n">TestCase</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Test :class:`event.SetDOI` or :class:`event.SetJournalReference`.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="TestDOIorJREFAfterPublish.setUp"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.domain.tests.test_events.html#arxiv.submission.domain.tests.test_events.TestDOIorJREFAfterPublish.setUp">[docs]</a>    <span class="k">def</span> <span class="nf">setUp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize auxiliary data for test cases.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">user</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">User</span><span class="p">(</span>
+            <span class="mi">12345</span><span class="p">,</span>
+            <span class="s1">&#39;uuser@cornell.edu&#39;</span><span class="p">,</span>
+            <span class="n">endorsements</span><span class="o">=</span><span class="p">[</span><span class="n">meta</span><span class="o">.</span><span class="n">Classification</span><span class="p">(</span><span class="s1">&#39;astro-ph.GA&#39;</span><span class="p">),</span>
+                          <span class="n">meta</span><span class="o">.</span><span class="n">Classification</span><span class="p">(</span><span class="s1">&#39;astro-ph.CO&#39;</span><span class="p">)]</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">submission</span> <span class="o">=</span> <span class="n">submission</span><span class="o">.</span><span class="n">Submission</span><span class="p">(</span>
+            <span class="n">submission_id</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+            <span class="n">status</span><span class="o">=</span><span class="n">submission</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">PUBLISHED</span><span class="p">,</span>
+            <span class="n">creator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">,</span>
+            <span class="n">owner</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">,</span>
+            <span class="n">created</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">UTC</span><span class="p">),</span>
+            <span class="n">source_content</span><span class="o">=</span><span class="n">submission</span><span class="o">.</span><span class="n">SubmissionContent</span><span class="p">(</span>
+                <span class="n">identifier</span><span class="o">=</span><span class="s1">&#39;6543&#39;</span><span class="p">,</span>
+                <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;pdf&#39;</span><span class="p">,</span>
+                <span class="n">checksum</span><span class="o">=</span><span class="s1">&#39;asdf2345&#39;</span><span class="p">,</span>
+                <span class="n">size</span><span class="o">=</span><span class="mi">594930</span>
+            <span class="p">),</span>
+            <span class="n">compiled_content</span><span class="o">=</span><span class="p">[],</span>
+            <span class="n">primary_classification</span><span class="o">=</span><span class="n">meta</span><span class="o">.</span><span class="n">Classification</span><span class="p">(</span><span class="s1">&#39;astro-ph.GA&#39;</span><span class="p">),</span>
+            <span class="n">secondary_classification</span><span class="o">=</span><span class="p">[</span><span class="n">meta</span><span class="o">.</span><span class="n">Classification</span><span class="p">(</span><span class="s1">&#39;astro-ph.CO&#39;</span><span class="p">)],</span>
+            <span class="n">license</span><span class="o">=</span><span class="n">meta</span><span class="o">.</span><span class="n">License</span><span class="p">(</span><span class="n">uri</span><span class="o">=</span><span class="s1">&#39;http://free&#39;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;free&#39;</span><span class="p">),</span>
+            <span class="n">arxiv_id</span><span class="o">=</span><span class="s1">&#39;1901.001234&#39;</span><span class="p">,</span>
+            <span class="n">version</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+            <span class="n">submitter_contact_verified</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">submitter_is_author</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">submitter_accepts_policy</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">submitter_confirmed_preview</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">metadata</span><span class="o">=</span><span class="n">submission</span><span class="o">.</span><span class="n">SubmissionMetadata</span><span class="p">(</span>
+                <span class="n">title</span><span class="o">=</span><span class="s1">&#39;the best title&#39;</span><span class="p">,</span>
+                <span class="n">abstract</span><span class="o">=</span><span class="s1">&#39;very abstract&#39;</span><span class="p">,</span>
+                <span class="n">authors_display</span><span class="o">=</span><span class="s1">&#39;J K Jones, F W Englund&#39;</span><span class="p">,</span>
+                <span class="n">doi</span><span class="o">=</span><span class="s1">&#39;10.1000/182&#39;</span><span class="p">,</span>
+                <span class="n">comments</span><span class="o">=</span><span class="s1">&#39;These are the comments&#39;</span>
+            <span class="p">)</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestDOIorJREFAfterPublish.test_create_submission_jref"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.domain.tests.test_events.html#arxiv.submission.domain.tests.test_events.TestDOIorJREFAfterPublish.test_create_submission_jref">[docs]</a>    <span class="k">def</span> <span class="nf">test_create_submission_jref</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;A JREF is just like a replacement, but different.&quot;&quot;&quot;</span>
+        <span class="n">e</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">SetDOI</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">,</span> <span class="n">doi</span><span class="o">=</span><span class="s1">&#39;10.1000/182&#39;</span><span class="p">)</span>
+        <span class="n">after</span> <span class="o">=</span> <span class="n">e</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">after</span><span class="o">.</span><span class="n">arxiv_id</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">arxiv_id</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">after</span><span class="o">.</span><span class="n">version</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">version</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">after</span><span class="o">.</span><span class="n">status</span><span class="p">,</span> <span class="n">submission</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">PUBLISHED</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">published</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">after</span><span class="o">.</span><span class="n">published</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertIsNotNone</span><span class="p">(</span><span class="n">after</span><span class="o">.</span><span class="n">submission_id</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">submission_id</span><span class="p">,</span> <span class="n">after</span><span class="o">.</span><span class="n">submission_id</span><span class="p">)</span>
+
+        <span class="c1"># The user is NOT asked to reaffirm these points.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">after</span><span class="o">.</span><span class="n">submitter_contact_verified</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">after</span><span class="o">.</span><span class="n">submitter_accepts_policy</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">after</span><span class="o">.</span><span class="n">submitter_confirmed_preview</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">after</span><span class="o">.</span><span class="n">submitter_contact_verified</span><span class="p">)</span>
+
+        <span class="c1"># These should all stay the same.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">after</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">title</span><span class="p">,</span>
+                         <span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">title</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">after</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">abstract</span><span class="p">,</span>
+                         <span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">abstract</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">after</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">authors</span><span class="p">,</span>
+                         <span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">authors</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">after</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">authors_display</span><span class="p">,</span>
+                         <span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">authors_display</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">after</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">msc_class</span><span class="p">,</span>
+                         <span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">msc_class</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">after</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">acm_class</span><span class="p">,</span>
+                         <span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">acm_class</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">after</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">doi</span><span class="p">,</span>
+                         <span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">doi</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">after</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">journal_ref</span><span class="p">,</span>
+                         <span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">journal_ref</span><span class="p">)</span></div></div>
+
+
+
+<div class="viewcode-block" id="TestSetPrimaryClassification"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.domain.tests.test_events.html#arxiv.submission.domain.tests.test_events.TestSetPrimaryClassification">[docs]</a><span class="k">class</span> <span class="nc">TestSetPrimaryClassification</span><span class="p">(</span><span class="n">TestCase</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Test :class:`event.SetPrimaryClassification`.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="TestSetPrimaryClassification.setUp"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.domain.tests.test_events.html#arxiv.submission.domain.tests.test_events.TestSetPrimaryClassification.setUp">[docs]</a>    <span class="k">def</span> <span class="nf">setUp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize auxiliary data for test cases.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">user</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">User</span><span class="p">(</span>
+            <span class="mi">12345</span><span class="p">,</span>
+            <span class="s1">&#39;uuser@cornell.edu&#39;</span><span class="p">,</span>
+            <span class="n">endorsements</span><span class="o">=</span><span class="p">[</span><span class="n">meta</span><span class="o">.</span><span class="n">Classification</span><span class="p">(</span><span class="s1">&#39;astro-ph.GA&#39;</span><span class="p">),</span>
+                          <span class="n">meta</span><span class="o">.</span><span class="n">Classification</span><span class="p">(</span><span class="s1">&#39;astro-ph.CO&#39;</span><span class="p">)]</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">submission</span> <span class="o">=</span> <span class="n">submission</span><span class="o">.</span><span class="n">Submission</span><span class="p">(</span>
+            <span class="n">submission_id</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+            <span class="n">creator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">,</span>
+            <span class="n">owner</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">,</span>
+            <span class="n">created</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">UTC</span><span class="p">)</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestSetPrimaryClassification.test_set_primary_with_nonsense"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.domain.tests.test_events.html#arxiv.submission.domain.tests.test_events.TestSetPrimaryClassification.test_set_primary_with_nonsense">[docs]</a>    <span class="k">def</span> <span class="nf">test_set_primary_with_nonsense</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Category is not from the arXiv taxonomy.&quot;&quot;&quot;</span>
+        <span class="n">e</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">SetPrimaryClassification</span><span class="p">(</span>
+            <span class="n">creator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">,</span>
+            <span class="n">submission_id</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+            <span class="n">category</span><span class="o">=</span><span class="s2">&quot;nonsense&quot;</span>
+        <span class="p">)</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="n">InvalidEvent</span><span class="p">):</span>
+            <span class="n">e</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="p">)</span>    <span class="c1"># &quot;Event should not be valid&quot;.</span></div>
+
+<div class="viewcode-block" id="TestSetPrimaryClassification.test_set_primary_with_valid_category"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.domain.tests.test_events.html#arxiv.submission.domain.tests.test_events.TestSetPrimaryClassification.test_set_primary_with_valid_category">[docs]</a>    <span class="k">def</span> <span class="nf">test_set_primary_with_valid_category</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Category is from the arXiv taxonomy.&quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">category</span> <span class="ow">in</span> <span class="n">taxonomy</span><span class="o">.</span><span class="n">CATEGORIES</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">e</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">SetPrimaryClassification</span><span class="p">(</span>
+                <span class="n">creator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">,</span>
+                <span class="n">submission_id</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                <span class="n">category</span><span class="o">=</span><span class="n">category</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">category</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">endorsements</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">e</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="p">)</span>
+                <span class="k">except</span> <span class="n">InvalidEvent</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">fail</span><span class="p">(</span><span class="s2">&quot;Event should be valid&quot;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="n">InvalidEvent</span><span class="p">):</span>
+                    <span class="n">e</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestSetPrimaryClassification.test_set_primary_already_secondary"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.domain.tests.test_events.html#arxiv.submission.domain.tests.test_events.TestSetPrimaryClassification.test_set_primary_already_secondary">[docs]</a>    <span class="k">def</span> <span class="nf">test_set_primary_already_secondary</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Category is already set as a secondary.&quot;&quot;&quot;</span>
+        <span class="n">classification</span> <span class="o">=</span> <span class="n">submission</span><span class="o">.</span><span class="n">Classification</span><span class="p">(</span><span class="s1">&#39;cond-mat.dis-nn&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">secondary_classification</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">classification</span><span class="p">)</span>
+        <span class="n">e</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">SetPrimaryClassification</span><span class="p">(</span>
+            <span class="n">creator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">,</span>
+            <span class="n">submission_id</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+            <span class="n">category</span><span class="o">=</span><span class="s1">&#39;cond-mat.dis-nn&#39;</span>
+        <span class="p">)</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="n">InvalidEvent</span><span class="p">):</span>
+            <span class="n">e</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="p">)</span>    <span class="c1"># &quot;Event should not be valid&quot;.</span></div></div>
+
+
+<div class="viewcode-block" id="TestAddSecondaryClassification"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.domain.tests.test_events.html#arxiv.submission.domain.tests.test_events.TestAddSecondaryClassification">[docs]</a><span class="k">class</span> <span class="nc">TestAddSecondaryClassification</span><span class="p">(</span><span class="n">TestCase</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Test :class:`event.AddSecondaryClassification`.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="TestAddSecondaryClassification.setUp"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.domain.tests.test_events.html#arxiv.submission.domain.tests.test_events.TestAddSecondaryClassification.setUp">[docs]</a>    <span class="k">def</span> <span class="nf">setUp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize auxiliary data for test cases.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">user</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">User</span><span class="p">(</span><span class="mi">12345</span><span class="p">,</span> <span class="s1">&#39;uuser@cornell.edu&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">submission</span> <span class="o">=</span> <span class="n">submission</span><span class="o">.</span><span class="n">Submission</span><span class="p">(</span>
+            <span class="n">submission_id</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+            <span class="n">creator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">,</span>
+            <span class="n">owner</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">,</span>
+            <span class="n">created</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">UTC</span><span class="p">),</span>
+            <span class="n">secondary_classification</span><span class="o">=</span><span class="p">[]</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestAddSecondaryClassification.test_add_secondary_with_nonsense"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.domain.tests.test_events.html#arxiv.submission.domain.tests.test_events.TestAddSecondaryClassification.test_add_secondary_with_nonsense">[docs]</a>    <span class="k">def</span> <span class="nf">test_add_secondary_with_nonsense</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Category is not from the arXiv taxonomy.&quot;&quot;&quot;</span>
+        <span class="n">e</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">AddSecondaryClassification</span><span class="p">(</span>
+            <span class="n">creator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">,</span>
+            <span class="n">submission_id</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+            <span class="n">category</span><span class="o">=</span><span class="s2">&quot;nonsense&quot;</span>
+        <span class="p">)</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="n">InvalidEvent</span><span class="p">):</span>
+            <span class="n">e</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="p">)</span>    <span class="c1"># &quot;Event should not be valid&quot;.</span></div>
+
+<div class="viewcode-block" id="TestAddSecondaryClassification.test_add_secondary_with_valid_category"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.domain.tests.test_events.html#arxiv.submission.domain.tests.test_events.TestAddSecondaryClassification.test_add_secondary_with_valid_category">[docs]</a>    <span class="k">def</span> <span class="nf">test_add_secondary_with_valid_category</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Category is from the arXiv taxonomy.&quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">category</span> <span class="ow">in</span> <span class="n">taxonomy</span><span class="o">.</span><span class="n">CATEGORIES_ACTIVE</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="n">e</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">AddSecondaryClassification</span><span class="p">(</span>
+                <span class="n">creator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">,</span>
+                <span class="n">submission_id</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                <span class="n">category</span><span class="o">=</span><span class="n">category</span>
+            <span class="p">)</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">e</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="p">)</span>
+            <span class="k">except</span> <span class="n">InvalidEvent</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">fail</span><span class="p">(</span><span class="s2">&quot;Event should be valid&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestAddSecondaryClassification.test_add_secondary_already_present"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.domain.tests.test_events.html#arxiv.submission.domain.tests.test_events.TestAddSecondaryClassification.test_add_secondary_already_present">[docs]</a>    <span class="k">def</span> <span class="nf">test_add_secondary_already_present</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Category is already present on the submission.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">secondary_classification</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="n">submission</span><span class="o">.</span><span class="n">Classification</span><span class="p">(</span><span class="s1">&#39;cond-mat.dis-nn&#39;</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">e</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">AddSecondaryClassification</span><span class="p">(</span>
+            <span class="n">creator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">,</span>
+            <span class="n">submission_id</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+            <span class="n">category</span><span class="o">=</span><span class="s1">&#39;cond-mat.dis-nn&#39;</span>
+        <span class="p">)</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="n">InvalidEvent</span><span class="p">):</span>
+            <span class="n">e</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="p">)</span>    <span class="c1"># &quot;Event should not be valid&quot;.</span></div>
+
+<div class="viewcode-block" id="TestAddSecondaryClassification.test_add_secondary_already_primary"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.domain.tests.test_events.html#arxiv.submission.domain.tests.test_events.TestAddSecondaryClassification.test_add_secondary_already_primary">[docs]</a>    <span class="k">def</span> <span class="nf">test_add_secondary_already_primary</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Category is already set as primary.&quot;&quot;&quot;</span>
+        <span class="n">classification</span> <span class="o">=</span> <span class="n">submission</span><span class="o">.</span><span class="n">Classification</span><span class="p">(</span><span class="s1">&#39;cond-mat.dis-nn&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">primary_classification</span> <span class="o">=</span> <span class="n">classification</span>
+
+        <span class="n">e</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">AddSecondaryClassification</span><span class="p">(</span>
+            <span class="n">creator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">,</span>
+            <span class="n">submission_id</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+            <span class="n">category</span><span class="o">=</span><span class="s1">&#39;cond-mat.dis-nn&#39;</span>
+        <span class="p">)</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="n">InvalidEvent</span><span class="p">):</span>
+            <span class="n">e</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="p">)</span>    <span class="c1"># &quot;Event should not be valid&quot;.</span></div></div>
+
+
+<div class="viewcode-block" id="TestRemoveSecondaryClassification"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.domain.tests.test_events.html#arxiv.submission.domain.tests.test_events.TestRemoveSecondaryClassification">[docs]</a><span class="k">class</span> <span class="nc">TestRemoveSecondaryClassification</span><span class="p">(</span><span class="n">TestCase</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Test :class:`event.RemoveSecondaryClassification`.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="TestRemoveSecondaryClassification.setUp"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.domain.tests.test_events.html#arxiv.submission.domain.tests.test_events.TestRemoveSecondaryClassification.setUp">[docs]</a>    <span class="k">def</span> <span class="nf">setUp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize auxiliary data for test cases.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">user</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">User</span><span class="p">(</span><span class="mi">12345</span><span class="p">,</span> <span class="s1">&#39;uuser@cornell.edu&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">submission</span> <span class="o">=</span> <span class="n">submission</span><span class="o">.</span><span class="n">Submission</span><span class="p">(</span>
+            <span class="n">submission_id</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+            <span class="n">creator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">,</span>
+            <span class="n">owner</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">,</span>
+            <span class="n">created</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">UTC</span><span class="p">),</span>
+            <span class="n">secondary_classification</span><span class="o">=</span><span class="p">[]</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestRemoveSecondaryClassification.test_add_secondary_with_nonsense"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.domain.tests.test_events.html#arxiv.submission.domain.tests.test_events.TestRemoveSecondaryClassification.test_add_secondary_with_nonsense">[docs]</a>    <span class="k">def</span> <span class="nf">test_add_secondary_with_nonsense</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Category is not from the arXiv taxonomy.&quot;&quot;&quot;</span>
+        <span class="n">e</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">RemoveSecondaryClassification</span><span class="p">(</span>
+            <span class="n">creator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">,</span>
+            <span class="n">submission_id</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+            <span class="n">category</span><span class="o">=</span><span class="s2">&quot;nonsense&quot;</span>
+        <span class="p">)</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="n">InvalidEvent</span><span class="p">):</span>
+            <span class="n">e</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="p">)</span>    <span class="c1"># &quot;Event should not be valid&quot;.</span></div>
+
+<div class="viewcode-block" id="TestRemoveSecondaryClassification.test_remove_secondary_with_valid_category"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.domain.tests.test_events.html#arxiv.submission.domain.tests.test_events.TestRemoveSecondaryClassification.test_remove_secondary_with_valid_category">[docs]</a>    <span class="k">def</span> <span class="nf">test_remove_secondary_with_valid_category</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Category is from the arXiv taxonomy.&quot;&quot;&quot;</span>
+        <span class="n">classification</span> <span class="o">=</span> <span class="n">submission</span><span class="o">.</span><span class="n">Classification</span><span class="p">(</span><span class="s1">&#39;cond-mat.dis-nn&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">secondary_classification</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">classification</span><span class="p">)</span>
+        <span class="n">e</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">RemoveSecondaryClassification</span><span class="p">(</span>
+            <span class="n">creator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">,</span>
+            <span class="n">submission_id</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+            <span class="n">category</span><span class="o">=</span><span class="s1">&#39;cond-mat.dis-nn&#39;</span>
+        <span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">e</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">InvalidEvent</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fail</span><span class="p">(</span><span class="s2">&quot;Event should be valid&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestRemoveSecondaryClassification.test_remove_secondary_not_present"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.domain.tests.test_events.html#arxiv.submission.domain.tests.test_events.TestRemoveSecondaryClassification.test_remove_secondary_not_present">[docs]</a>    <span class="k">def</span> <span class="nf">test_remove_secondary_not_present</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Category is not present.&quot;&quot;&quot;</span>
+        <span class="n">e</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">RemoveSecondaryClassification</span><span class="p">(</span>
+            <span class="n">creator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">,</span>
+            <span class="n">submission_id</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+            <span class="n">category</span><span class="o">=</span><span class="s1">&#39;cond-mat.dis-nn&#39;</span>
+        <span class="p">)</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="n">InvalidEvent</span><span class="p">):</span>
+            <span class="n">e</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="p">)</span>    <span class="c1"># &quot;Event should not be valid&quot;.</span></div></div>
+
+
+<div class="viewcode-block" id="TestSetAuthors"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.domain.tests.test_events.html#arxiv.submission.domain.tests.test_events.TestSetAuthors">[docs]</a><span class="k">class</span> <span class="nc">TestSetAuthors</span><span class="p">(</span><span class="n">TestCase</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Test :class:`event.SetAuthors`.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="TestSetAuthors.setUp"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.domain.tests.test_events.html#arxiv.submission.domain.tests.test_events.TestSetAuthors.setUp">[docs]</a>    <span class="k">def</span> <span class="nf">setUp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize auxiliary data for test cases.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">user</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">User</span><span class="p">(</span><span class="mi">12345</span><span class="p">,</span> <span class="s1">&#39;uuser@cornell.edu&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">submission</span> <span class="o">=</span> <span class="n">submission</span><span class="o">.</span><span class="n">Submission</span><span class="p">(</span>
+            <span class="n">submission_id</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+            <span class="n">creator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">,</span>
+            <span class="n">owner</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">,</span>
+            <span class="n">created</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">UTC</span><span class="p">)</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestSetAuthors.test_canonical_authors_provided"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.domain.tests.test_events.html#arxiv.submission.domain.tests.test_events.TestSetAuthors.test_canonical_authors_provided">[docs]</a>    <span class="k">def</span> <span class="nf">test_canonical_authors_provided</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Data includes canonical author display string.&quot;&quot;&quot;</span>
+        <span class="n">e</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">SetAuthors</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">,</span>
+                                <span class="n">submission_id</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                                <span class="n">authors</span><span class="o">=</span><span class="p">[</span><span class="n">submission</span><span class="o">.</span><span class="n">Author</span><span class="p">()],</span>
+                                <span class="n">authors_display</span><span class="o">=</span><span class="s2">&quot;Foo authors&quot;</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">e</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fail</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">),</span> <span class="s2">&quot;Data should be valid&quot;</span><span class="p">)</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">e</span><span class="o">.</span><span class="n">project</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">authors_display</span><span class="p">,</span> <span class="n">e</span><span class="o">.</span><span class="n">authors_display</span><span class="p">,</span>
+                         <span class="s2">&quot;Authors string should be updated&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestSetAuthors.test_canonical_authors_not_provided"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.domain.tests.test_events.html#arxiv.submission.domain.tests.test_events.TestSetAuthors.test_canonical_authors_not_provided">[docs]</a>    <span class="k">def</span> <span class="nf">test_canonical_authors_not_provided</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Data does not include canonical author display string.&quot;&quot;&quot;</span>
+        <span class="n">e</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">SetAuthors</span><span class="p">(</span>
+            <span class="n">creator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">,</span>
+            <span class="n">submission_id</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+            <span class="n">authors</span><span class="o">=</span><span class="p">[</span>
+                <span class="n">submission</span><span class="o">.</span><span class="n">Author</span><span class="p">(</span>
+                    <span class="n">forename</span><span class="o">=</span><span class="s2">&quot;Bob&quot;</span><span class="p">,</span>
+                    <span class="n">surname</span><span class="o">=</span><span class="s2">&quot;Paulson&quot;</span><span class="p">,</span>
+                    <span class="n">affiliation</span><span class="o">=</span><span class="s2">&quot;FSU&quot;</span>
+                <span class="p">)</span>
+            <span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">authors_display</span><span class="p">,</span> <span class="s2">&quot;Bob Paulson (FSU)&quot;</span><span class="p">,</span>
+                         <span class="s2">&quot;Display string should be generated automagically&quot;</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">e</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fail</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">),</span> <span class="s2">&quot;Data should be valid&quot;</span><span class="p">)</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">e</span><span class="o">.</span><span class="n">project</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">authors_display</span><span class="p">,</span> <span class="n">e</span><span class="o">.</span><span class="n">authors_display</span><span class="p">,</span>
+                         <span class="s2">&quot;Authors string should be updated&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestSetAuthors.test_canonical_authors_contains_et_al"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.domain.tests.test_events.html#arxiv.submission.domain.tests.test_events.TestSetAuthors.test_canonical_authors_contains_et_al">[docs]</a>    <span class="k">def</span> <span class="nf">test_canonical_authors_contains_et_al</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Author display value contains et al.&quot;&quot;&quot;</span>
+        <span class="n">e</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">SetAuthors</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">,</span>
+                                <span class="n">submission_id</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                                <span class="n">authors</span><span class="o">=</span><span class="p">[</span><span class="n">submission</span><span class="o">.</span><span class="n">Author</span><span class="p">()],</span>
+                                <span class="n">authors_display</span><span class="o">=</span><span class="s2">&quot;Foo authors, et al&quot;</span><span class="p">)</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="n">InvalidEvent</span><span class="p">):</span>
+            <span class="n">e</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="TestSetTitle"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.domain.tests.test_events.html#arxiv.submission.domain.tests.test_events.TestSetTitle">[docs]</a><span class="k">class</span> <span class="nc">TestSetTitle</span><span class="p">(</span><span class="n">TestCase</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Tests for :class:`.event.SetTitle`.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="TestSetTitle.setUp"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.domain.tests.test_events.html#arxiv.submission.domain.tests.test_events.TestSetTitle.setUp">[docs]</a>    <span class="k">def</span> <span class="nf">setUp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize auxiliary data for test cases.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">user</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">User</span><span class="p">(</span><span class="mi">12345</span><span class="p">,</span> <span class="s1">&#39;uuser@cornell.edu&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">submission</span> <span class="o">=</span> <span class="n">submission</span><span class="o">.</span><span class="n">Submission</span><span class="p">(</span>
+            <span class="n">submission_id</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+            <span class="n">creator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">,</span>
+            <span class="n">owner</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">,</span>
+            <span class="n">created</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">UTC</span><span class="p">)</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestSetTitle.test_empty_value"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.domain.tests.test_events.html#arxiv.submission.domain.tests.test_events.TestSetTitle.test_empty_value">[docs]</a>    <span class="k">def</span> <span class="nf">test_empty_value</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Title is set to an empty string.&quot;&quot;&quot;</span>
+        <span class="n">e</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">SetTitle</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="n">InvalidEvent</span><span class="p">):</span>
+            <span class="n">e</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestSetTitle.test_reasonable_title"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.domain.tests.test_events.html#arxiv.submission.domain.tests.test_events.TestSetTitle.test_reasonable_title">[docs]</a>    <span class="k">def</span> <span class="nf">test_reasonable_title</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Title is set to some reasonable value smaller than 240 chars.&quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">100</span><span class="p">):</span>    <span class="c1"># Add a little fuzz to the mix.</span>
+            <span class="k">for</span> <span class="n">locale</span> <span class="ow">in</span> <span class="n">LOCALES</span><span class="p">:</span>
+                <span class="n">title</span> <span class="o">=</span> <span class="n">Text</span><span class="p">(</span><span class="n">locale</span><span class="o">=</span><span class="n">locale</span><span class="p">)</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="mi">6</span><span class="p">)[:</span><span class="mi">240</span><span class="p">]</span> \
+                    <span class="o">.</span><span class="n">strip</span><span class="p">()</span> \
+                    <span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)</span> \
+                    <span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;@&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span> \
+                    <span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;#&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span> \
+                    <span class="o">.</span><span class="n">title</span><span class="p">()</span>
+                <span class="n">e</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">SetTitle</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="n">title</span><span class="p">)</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">e</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="p">)</span>
+                <span class="k">except</span> <span class="n">InvalidEvent</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">fail</span><span class="p">(</span><span class="s1">&#39;Failed to handle title: </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">title</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestSetTitle.test_all_caps_title"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.domain.tests.test_events.html#arxiv.submission.domain.tests.test_events.TestSetTitle.test_all_caps_title">[docs]</a>    <span class="k">def</span> <span class="nf">test_all_caps_title</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Title is all uppercase.&quot;&quot;&quot;</span>
+        <span class="n">title</span> <span class="o">=</span> <span class="n">Text</span><span class="p">()</span><span class="o">.</span><span class="n">title</span><span class="p">()[:</span><span class="mi">240</span><span class="p">]</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
+        <span class="n">e</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">SetTitle</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="n">title</span><span class="p">)</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="n">InvalidEvent</span><span class="p">):</span>
+            <span class="n">e</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestSetTitle.test_title_ends_with_period"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.domain.tests.test_events.html#arxiv.submission.domain.tests.test_events.TestSetTitle.test_title_ends_with_period">[docs]</a>    <span class="k">def</span> <span class="nf">test_title_ends_with_period</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Title ends with a period.&quot;&quot;&quot;</span>
+        <span class="n">title</span> <span class="o">=</span> <span class="n">Text</span><span class="p">()</span><span class="o">.</span><span class="n">title</span><span class="p">()[:</span><span class="mi">239</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot;.&quot;</span>
+        <span class="n">e</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">SetTitle</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="n">title</span><span class="p">)</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="n">InvalidEvent</span><span class="p">):</span>
+            <span class="n">e</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestSetTitle.test_title_ends_with_ellipsis"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.domain.tests.test_events.html#arxiv.submission.domain.tests.test_events.TestSetTitle.test_title_ends_with_ellipsis">[docs]</a>    <span class="k">def</span> <span class="nf">test_title_ends_with_ellipsis</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Title ends with an ellipsis.&quot;&quot;&quot;</span>
+        <span class="n">title</span> <span class="o">=</span> <span class="n">Text</span><span class="p">()</span><span class="o">.</span><span class="n">title</span><span class="p">()[:</span><span class="mi">236</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot;...&quot;</span>
+        <span class="n">e</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">SetTitle</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="n">title</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">e</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">InvalidEvent</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fail</span><span class="p">(</span><span class="s2">&quot;Should accept ellipsis&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestSetTitle.test_huge_title"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.domain.tests.test_events.html#arxiv.submission.domain.tests.test_events.TestSetTitle.test_huge_title">[docs]</a>    <span class="k">def</span> <span class="nf">test_huge_title</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Title is set to something unreasonably large.&quot;&quot;&quot;</span>
+        <span class="n">title</span> <span class="o">=</span> <span class="n">Text</span><span class="p">()</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="mi">200</span><span class="p">)</span>    <span class="c1"># 200 sentences.</span>
+        <span class="n">e</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">SetTitle</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="n">title</span><span class="p">)</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="n">InvalidEvent</span><span class="p">):</span>
+            <span class="n">e</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestSetTitle.test_title_with_html_escapes"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.domain.tests.test_events.html#arxiv.submission.domain.tests.test_events.TestSetTitle.test_title_with_html_escapes">[docs]</a>    <span class="k">def</span> <span class="nf">test_title_with_html_escapes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Title should not allow HTML escapes.&quot;&quot;&quot;</span>
+        <span class="n">e</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">SetTitle</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s1">&#39;foo &amp;nbsp; title&#39;</span><span class="p">)</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="n">InvalidEvent</span><span class="p">):</span>
+            <span class="n">e</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="TestSetAbstract"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.domain.tests.test_events.html#arxiv.submission.domain.tests.test_events.TestSetAbstract">[docs]</a><span class="k">class</span> <span class="nc">TestSetAbstract</span><span class="p">(</span><span class="n">TestCase</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Tests for :class:`.event.SetAbstract`.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="TestSetAbstract.setUp"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.domain.tests.test_events.html#arxiv.submission.domain.tests.test_events.TestSetAbstract.setUp">[docs]</a>    <span class="k">def</span> <span class="nf">setUp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize auxiliary data for test cases.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">user</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">User</span><span class="p">(</span><span class="mi">12345</span><span class="p">,</span> <span class="s1">&#39;uuser@cornell.edu&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">submission</span> <span class="o">=</span> <span class="n">submission</span><span class="o">.</span><span class="n">Submission</span><span class="p">(</span>
+            <span class="n">submission_id</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+            <span class="n">creator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">,</span>
+            <span class="n">owner</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">,</span>
+            <span class="n">created</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">UTC</span><span class="p">)</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestSetAbstract.test_empty_value"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.domain.tests.test_events.html#arxiv.submission.domain.tests.test_events.TestSetAbstract.test_empty_value">[docs]</a>    <span class="k">def</span> <span class="nf">test_empty_value</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Abstract is set to an empty string.&quot;&quot;&quot;</span>
+        <span class="n">e</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">SetAbstract</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">,</span> <span class="n">abstract</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="n">InvalidEvent</span><span class="p">):</span>
+            <span class="n">e</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestSetAbstract.test_reasonable_abstract"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.domain.tests.test_events.html#arxiv.submission.domain.tests.test_events.TestSetAbstract.test_reasonable_abstract">[docs]</a>    <span class="k">def</span> <span class="nf">test_reasonable_abstract</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Abstract is set to some reasonable value smaller than 1920 chars.&quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">locale</span> <span class="ow">in</span> <span class="n">LOCALES</span><span class="p">:</span>
+            <span class="n">abstract</span> <span class="o">=</span> <span class="n">Text</span><span class="p">(</span><span class="n">locale</span><span class="o">=</span><span class="n">locale</span><span class="p">)</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="mi">20</span><span class="p">)[:</span><span class="mi">1920</span><span class="p">]</span>
+            <span class="n">e</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">SetAbstract</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">,</span> <span class="n">abstract</span><span class="o">=</span><span class="n">abstract</span><span class="p">)</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">e</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="p">)</span>
+            <span class="k">except</span> <span class="n">InvalidEvent</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">fail</span><span class="p">(</span><span class="s1">&#39;Failed to handle abstract: </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">abstract</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestSetAbstract.test_huge_abstract"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.domain.tests.test_events.html#arxiv.submission.domain.tests.test_events.TestSetAbstract.test_huge_abstract">[docs]</a>    <span class="k">def</span> <span class="nf">test_huge_abstract</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Abstract is set to something unreasonably large.&quot;&quot;&quot;</span>
+        <span class="n">abstract</span> <span class="o">=</span> <span class="n">Text</span><span class="p">()</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="mi">200</span><span class="p">)</span>    <span class="c1"># 200 sentences.</span>
+        <span class="n">e</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">SetAbstract</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">,</span> <span class="n">abstract</span><span class="o">=</span><span class="n">abstract</span><span class="p">)</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="n">InvalidEvent</span><span class="p">):</span>
+            <span class="n">e</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="TestSetDOI"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.domain.tests.test_events.html#arxiv.submission.domain.tests.test_events.TestSetDOI">[docs]</a><span class="k">class</span> <span class="nc">TestSetDOI</span><span class="p">(</span><span class="n">TestCase</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Tests for :class:`.event.SetDOI`.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="TestSetDOI.setUp"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.domain.tests.test_events.html#arxiv.submission.domain.tests.test_events.TestSetDOI.setUp">[docs]</a>    <span class="k">def</span> <span class="nf">setUp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize auxiliary data for test cases.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">user</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">User</span><span class="p">(</span><span class="mi">12345</span><span class="p">,</span> <span class="s1">&#39;uuser@cornell.edu&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">submission</span> <span class="o">=</span> <span class="n">submission</span><span class="o">.</span><span class="n">Submission</span><span class="p">(</span>
+            <span class="n">submission_id</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+            <span class="n">creator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">,</span>
+            <span class="n">owner</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">,</span>
+            <span class="n">created</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">UTC</span><span class="p">)</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestSetDOI.test_empty_doi"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.domain.tests.test_events.html#arxiv.submission.domain.tests.test_events.TestSetDOI.test_empty_doi">[docs]</a>    <span class="k">def</span> <span class="nf">test_empty_doi</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;DOI is set to an empty string.&quot;&quot;&quot;</span>
+        <span class="n">doi</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="n">e</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">SetDOI</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">,</span> <span class="n">doi</span><span class="o">=</span><span class="n">doi</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">e</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">InvalidEvent</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fail</span><span class="p">(</span><span class="s1">&#39;Failed to handle valid DOI: </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">e</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestSetDOI.test_valid_doi"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.domain.tests.test_events.html#arxiv.submission.domain.tests.test_events.TestSetDOI.test_valid_doi">[docs]</a>    <span class="k">def</span> <span class="nf">test_valid_doi</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;DOI is set to a single valid DOI.&quot;&quot;&quot;</span>
+        <span class="n">doi</span> <span class="o">=</span> <span class="s2">&quot;10.1016/S0550-3213(01)00405-9&quot;</span>
+        <span class="n">e</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">SetDOI</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">,</span> <span class="n">doi</span><span class="o">=</span><span class="n">doi</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">e</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">InvalidEvent</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fail</span><span class="p">(</span><span class="s1">&#39;Failed to handle valid DOI: </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">e</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestSetDOI.test_multiple_valid_dois"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.domain.tests.test_events.html#arxiv.submission.domain.tests.test_events.TestSetDOI.test_multiple_valid_dois">[docs]</a>    <span class="k">def</span> <span class="nf">test_multiple_valid_dois</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;DOI is set to multiple valid DOIs.&quot;&quot;&quot;</span>
+        <span class="n">doi</span> <span class="o">=</span> <span class="s2">&quot;10.1016/S0550-3213(01)00405-9, 10.1016/S0550-3213(01)00405-8&quot;</span>
+        <span class="n">e</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">SetDOI</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">,</span> <span class="n">doi</span><span class="o">=</span><span class="n">doi</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">e</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">InvalidEvent</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fail</span><span class="p">(</span><span class="s1">&#39;Failed to handle valid DOI: </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">e</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestSetDOI.test_invalid_doi"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.domain.tests.test_events.html#arxiv.submission.domain.tests.test_events.TestSetDOI.test_invalid_doi">[docs]</a>    <span class="k">def</span> <span class="nf">test_invalid_doi</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;DOI is set to something other than a valid DOI.&quot;&quot;&quot;</span>
+        <span class="n">not_a_doi</span> <span class="o">=</span> <span class="s2">&quot;101016S0550-3213(01)00405-9&quot;</span>
+        <span class="n">e</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">SetDOI</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">,</span> <span class="n">doi</span><span class="o">=</span><span class="n">not_a_doi</span><span class="p">)</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="n">InvalidEvent</span><span class="p">):</span>
+            <span class="n">e</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="TestSetReportNumber"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.domain.tests.test_events.html#arxiv.submission.domain.tests.test_events.TestSetReportNumber">[docs]</a><span class="k">class</span> <span class="nc">TestSetReportNumber</span><span class="p">(</span><span class="n">TestCase</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Tests for :class:`.event.SetReportNumber`.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="TestSetReportNumber.setUp"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.domain.tests.test_events.html#arxiv.submission.domain.tests.test_events.TestSetReportNumber.setUp">[docs]</a>    <span class="k">def</span> <span class="nf">setUp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize auxiliary data for test cases.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">user</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">User</span><span class="p">(</span><span class="mi">12345</span><span class="p">,</span> <span class="s1">&#39;uuser@cornell.edu&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">submission</span> <span class="o">=</span> <span class="n">submission</span><span class="o">.</span><span class="n">Submission</span><span class="p">(</span>
+            <span class="n">submission_id</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+            <span class="n">creator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">,</span>
+            <span class="n">owner</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">,</span>
+            <span class="n">created</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">UTC</span><span class="p">)</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestSetReportNumber.test_valid_report_number"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.domain.tests.test_events.html#arxiv.submission.domain.tests.test_events.TestSetReportNumber.test_valid_report_number">[docs]</a>    <span class="k">def</span> <span class="nf">test_valid_report_number</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Valid report number values are used.&quot;&quot;&quot;</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="s2">&quot;IPhT-T10/027&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;SITP 10/04, OIQP-10-01&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;UK/09-07&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;COLO-HEP-550, UCI-TR-2009-12&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;TKYNT-10-01, UTHEP-605&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;1003.1130&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;CDMTCS-379&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;BU-HEPP-09-06&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;IMSC-PHYSICS/08-2009, CU-PHYSICS/2-2010&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;CRM preprint No. 867&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;SLAC-PUB-13848, AEI-2009-110, ITP-UH-18/09&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;SLAC-PUB-14011&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;KUNS-2257, DCPT-10/11&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;TTP09-41, SFB/CPP-09-110, Alberta Thy 16-09&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;DPUR/TH/20&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;KEK Preprint 2009-41, Belle Preprint 2010-02, NTLP Preprint 2010-01&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;CERN-PH-EP/2009-018&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;Computer Science ISSN 19475500&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;Computer Science ISSN 19475500&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;Computer Science ISSN 19475500&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;&quot;</span>
+        <span class="p">]</span>
+        <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">values</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">e</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">SetReportNumber</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">,</span> <span class="n">report_num</span><span class="o">=</span><span class="n">value</span><span class="p">)</span>
+                <span class="n">e</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="p">)</span>
+            <span class="k">except</span> <span class="n">InvalidEvent</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">fail</span><span class="p">(</span><span class="s1">&#39;Failed to handle </span><span class="si">%s</span><span class="s1">: </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">e</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="TestSetReportNumber.test_invalid_values"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.domain.tests.test_events.html#arxiv.submission.domain.tests.test_events.TestSetReportNumber.test_invalid_values">[docs]</a>    <span class="k">def</span> <span class="nf">test_invalid_values</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Some invalid values are passed.&quot;&quot;&quot;</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="s2">&quot;not a report number&quot;</span><span class="p">,</span>
+        <span class="p">]</span>
+        <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">values</span><span class="p">:</span>
+            <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="n">InvalidEvent</span><span class="p">):</span>
+                <span class="n">e</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">SetReportNumber</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">,</span> <span class="n">report_num</span><span class="o">=</span><span class="n">value</span><span class="p">)</span>
+                <span class="n">e</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="TestSetJournalReference"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.domain.tests.test_events.html#arxiv.submission.domain.tests.test_events.TestSetJournalReference">[docs]</a><span class="k">class</span> <span class="nc">TestSetJournalReference</span><span class="p">(</span><span class="n">TestCase</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Tests for :class:`.event.SetJournalReference`.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="TestSetJournalReference.setUp"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.domain.tests.test_events.html#arxiv.submission.domain.tests.test_events.TestSetJournalReference.setUp">[docs]</a>    <span class="k">def</span> <span class="nf">setUp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize auxiliary data for test cases.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">user</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">User</span><span class="p">(</span><span class="mi">12345</span><span class="p">,</span> <span class="s1">&#39;uuser@cornell.edu&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">submission</span> <span class="o">=</span> <span class="n">submission</span><span class="o">.</span><span class="n">Submission</span><span class="p">(</span>
+            <span class="n">submission_id</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+            <span class="n">creator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">,</span>
+            <span class="n">owner</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">,</span>
+            <span class="n">created</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">UTC</span><span class="p">)</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestSetJournalReference.test_valid_journal_ref"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.domain.tests.test_events.html#arxiv.submission.domain.tests.test_events.TestSetJournalReference.test_valid_journal_ref">[docs]</a>    <span class="k">def</span> <span class="nf">test_valid_journal_ref</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Valid journal ref values are used.&quot;&quot;&quot;</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="s2">&quot;Phys. Rev. Lett. 104, 097003 (2010)&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;Phys. Rev. B v81, 094405 (2010)&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;Phys. Rev. D81 (2010) 036004&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;Phys. Rev. A 74, 033822 (2006)Phys. Rev. A 74, 033822 (2006)Phys. Rev. A 74, 033822 (2006)Phys. Rev. A 81, 032303 (2010)&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;Opt. Lett. 35, 499-501 (2010)&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;Phys. Rev. D 81, 034023 (2010)&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;Opt. Lett. Vol.31 (2010)&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;Fundamental and Applied Mathematics, 14(8)(2008), 55-67. (in Russian)&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;Czech J Math, 60(135)(2010), 59-76.&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;PHYSICAL REVIEW B 81, 024520 (2010)&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;PHYSICAL REVIEW B 69, 094524 (2004)&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;Published on Ap&amp;SS, Oct. 2009&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;Phys. Rev. Lett. 104, 095701 (2010)&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;Phys. Rev. B 76, 205407 (2007).&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;Extending Database Technology (EDBT) 2010&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;Database and Expert Systems Applications (DEXA) 2009&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;J. Math. Phys. 51 (2010), no. 3, 033503, 12pp&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;South East Asian Bulletin of Mathematics, Vol. 33 (2009), 853-864.&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;Acta Mathematica Academiae Paedagogiace NyÃ­regyhÃ¡ziensis, Vol. 25, No. 2 (2009), 189-190.&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;Creative Mathematics and Informatics, Vol. 18, No. 1 (2009), 39-45.&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;&quot;</span>
+        <span class="p">]</span>
+        <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">values</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">e</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">SetJournalReference</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">,</span>
+                                              <span class="n">journal_ref</span><span class="o">=</span><span class="n">value</span><span class="p">)</span>
+                <span class="n">e</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="p">)</span>
+            <span class="k">except</span> <span class="n">InvalidEvent</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">fail</span><span class="p">(</span><span class="s1">&#39;Failed to handle </span><span class="si">%s</span><span class="s1">: </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">e</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="TestSetJournalReference.test_invalid_values"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.domain.tests.test_events.html#arxiv.submission.domain.tests.test_events.TestSetJournalReference.test_invalid_values">[docs]</a>    <span class="k">def</span> <span class="nf">test_invalid_values</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Some invalid values are passed.&quot;&quot;&quot;</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="s2">&quot;Phys. Rev. Lett. 104, 097003 ()&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;Phys. Rev. accept submit B v81, 094405 (2010)&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;Phys. Rev. D81 036004&quot;</span><span class="p">,</span>
+        <span class="p">]</span>
+        <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">values</span><span class="p">:</span>
+            <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="n">InvalidEvent</span><span class="p">):</span>
+                <span class="n">e</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">SetJournalReference</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">,</span>
+                                              <span class="n">journal_ref</span><span class="o">=</span><span class="n">value</span><span class="p">)</span>
+                <span class="n">e</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="TestSetACMClassification"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.domain.tests.test_events.html#arxiv.submission.domain.tests.test_events.TestSetACMClassification">[docs]</a><span class="k">class</span> <span class="nc">TestSetACMClassification</span><span class="p">(</span><span class="n">TestCase</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Tests for :class:`.event.SetACMClassification`.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="TestSetACMClassification.setUp"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.domain.tests.test_events.html#arxiv.submission.domain.tests.test_events.TestSetACMClassification.setUp">[docs]</a>    <span class="k">def</span> <span class="nf">setUp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize auxiliary data for test cases.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">user</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">User</span><span class="p">(</span><span class="mi">12345</span><span class="p">,</span> <span class="s1">&#39;uuser@cornell.edu&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">submission</span> <span class="o">=</span> <span class="n">submission</span><span class="o">.</span><span class="n">Submission</span><span class="p">(</span>
+            <span class="n">submission_id</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+            <span class="n">creator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">,</span>
+            <span class="n">owner</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">,</span>
+            <span class="n">created</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">UTC</span><span class="p">)</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestSetACMClassification.test_valid_acm_class"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.domain.tests.test_events.html#arxiv.submission.domain.tests.test_events.TestSetACMClassification.test_valid_acm_class">[docs]</a>    <span class="k">def</span> <span class="nf">test_valid_acm_class</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;ACM classification value is valid.&quot;&quot;&quot;</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="s2">&quot;H.2.4&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;F.2.2; H.3.m&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;H.2.8&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;H.2.4&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;G.2.1&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;D.1.1&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;G.2.2&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;C.4&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;I.2.4&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;I.6.3&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;D.2.8&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;B.7.2&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;D.2.4; D.3.1; D.3.2; F.3.2&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;F.2.2; I.2.7&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;G.2.2&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;D.3.1; F.3.2&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;F.4.1; F.4.2&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;C.2.1; G.2.2&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;F.2.2; G.2.2; G.3; I.6.1; J.3 &quot;</span><span class="p">,</span>
+            <span class="s2">&quot;H.2.8; K.4.4; H.3.5&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;&quot;</span>
+        <span class="p">]</span>
+        <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">values</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">e</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">SetACMClassification</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">,</span>
+                                               <span class="n">acm_class</span><span class="o">=</span><span class="n">value</span><span class="p">)</span>
+                <span class="n">e</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="p">)</span>
+            <span class="k">except</span> <span class="n">InvalidEvent</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">fail</span><span class="p">(</span><span class="s1">&#39;Failed to handle </span><span class="si">%s</span><span class="s1">: </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">e</span><span class="p">))</span></div></div>
+
+
+<div class="viewcode-block" id="TestSetMSCClassification"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.domain.tests.test_events.html#arxiv.submission.domain.tests.test_events.TestSetMSCClassification">[docs]</a><span class="k">class</span> <span class="nc">TestSetMSCClassification</span><span class="p">(</span><span class="n">TestCase</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Tests for :class:`.event.SetMSCClassification`.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="TestSetMSCClassification.setUp"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.domain.tests.test_events.html#arxiv.submission.domain.tests.test_events.TestSetMSCClassification.setUp">[docs]</a>    <span class="k">def</span> <span class="nf">setUp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize auxiliary data for test cases.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">user</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">User</span><span class="p">(</span><span class="mi">12345</span><span class="p">,</span> <span class="s1">&#39;uuser@cornell.edu&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">submission</span> <span class="o">=</span> <span class="n">submission</span><span class="o">.</span><span class="n">Submission</span><span class="p">(</span>
+            <span class="n">submission_id</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+            <span class="n">creator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">,</span>
+            <span class="n">owner</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">,</span>
+            <span class="n">created</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">UTC</span><span class="p">)</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestSetMSCClassification.test_valid_msc_class"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.domain.tests.test_events.html#arxiv.submission.domain.tests.test_events.TestSetMSCClassification.test_valid_msc_class">[docs]</a>    <span class="k">def</span> <span class="nf">test_valid_msc_class</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;MSC classification value is valid.&quot;&quot;&quot;</span>
+        <span class="n">values</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="s2">&quot;57M25&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;35k55; 35k65&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;60G51&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;16S15, 13P10, 17A32, 17A99&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;16S15, 13P10, 17A30&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;05A15 ; 30F10 ; 30D05&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;16S15, 13P10, 17A01, 17B67, 16D10&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;primary 05A15 ; secondary 30F10, 30D05.&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;35B45 (Primary), 35J40 (Secondary)&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;13D45, 13C14, 13Exx&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;13D45, 13C14&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;57M25; 05C50&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;32G34 (Primary), 14D07 (Secondary)&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;05C75, 60G09&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;14H20; 13A18; 13F30&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;49K10; 26A33; 26B20&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;20NO5, 08A05&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;20NO5 (Primary), 08A05 (Secondary)&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;83D05&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;20NO5; 08A05&quot;</span>
+        <span class="p">]</span>
+        <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">values</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">e</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">SetMSCClassification</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">,</span>
+                                               <span class="n">msc_class</span><span class="o">=</span><span class="n">value</span><span class="p">)</span>
+                <span class="n">e</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="p">)</span>
+            <span class="k">except</span> <span class="n">InvalidEvent</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">fail</span><span class="p">(</span><span class="s1">&#39;Failed to handle </span><span class="si">%s</span><span class="s1">: </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">e</span><span class="p">))</span></div></div>
+
+
+<div class="viewcode-block" id="TestSetComments"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.domain.tests.test_events.html#arxiv.submission.domain.tests.test_events.TestSetComments">[docs]</a><span class="k">class</span> <span class="nc">TestSetComments</span><span class="p">(</span><span class="n">TestCase</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Tests for :class:`.event.SetComments`.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="TestSetComments.setUp"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.domain.tests.test_events.html#arxiv.submission.domain.tests.test_events.TestSetComments.setUp">[docs]</a>    <span class="k">def</span> <span class="nf">setUp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize auxiliary data for test cases.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">user</span> <span class="o">=</span> <span class="n">agent</span><span class="o">.</span><span class="n">User</span><span class="p">(</span><span class="mi">12345</span><span class="p">,</span> <span class="s1">&#39;uuser@cornell.edu&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">submission</span> <span class="o">=</span> <span class="n">submission</span><span class="o">.</span><span class="n">Submission</span><span class="p">(</span>
+            <span class="n">submission_id</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+            <span class="n">creator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">,</span>
+            <span class="n">owner</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">,</span>
+            <span class="n">created</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">UTC</span><span class="p">)</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestSetComments.test_empty_value"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.domain.tests.test_events.html#arxiv.submission.domain.tests.test_events.TestSetComments.test_empty_value">[docs]</a>    <span class="k">def</span> <span class="nf">test_empty_value</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Comment is set to an empty string.&quot;&quot;&quot;</span>
+        <span class="n">e</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">SetComments</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">,</span> <span class="n">comments</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">e</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">InvalidEvent</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fail</span><span class="p">(</span><span class="s1">&#39;Failed to handle empty comments&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestSetComments.test_reasonable_comment"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.domain.tests.test_events.html#arxiv.submission.domain.tests.test_events.TestSetComments.test_reasonable_comment">[docs]</a>    <span class="k">def</span> <span class="nf">test_reasonable_comment</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Comment is set to some reasonable value smaller than 400 chars.&quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">locale</span> <span class="ow">in</span> <span class="n">LOCALES</span><span class="p">:</span>
+            <span class="n">comments</span> <span class="o">=</span> <span class="n">Text</span><span class="p">(</span><span class="n">locale</span><span class="o">=</span><span class="n">locale</span><span class="p">)</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="mi">20</span><span class="p">)[:</span><span class="mi">400</span><span class="p">]</span>
+            <span class="n">e</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">SetComments</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">,</span> <span class="n">comments</span><span class="o">=</span><span class="n">comments</span><span class="p">)</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">e</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="p">)</span>
+            <span class="k">except</span> <span class="n">InvalidEvent</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">fail</span><span class="p">(</span><span class="s1">&#39;Failed to handle comments: </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">comments</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestSetComments.test_huge_comment"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.domain.tests.test_events.html#arxiv.submission.domain.tests.test_events.TestSetComments.test_huge_comment">[docs]</a>    <span class="k">def</span> <span class="nf">test_huge_comment</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Comment is set to something unreasonably large.&quot;&quot;&quot;</span>
+        <span class="n">comments</span> <span class="o">=</span> <span class="n">Text</span><span class="p">()</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="mi">200</span><span class="p">)</span>    <span class="c1"># 200 sentences.</span>
+        <span class="n">e</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">SetComments</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">,</span> <span class="n">comments</span><span class="o">=</span><span class="n">comments</span><span class="p">)</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="n">InvalidEvent</span><span class="p">):</span>
+            <span class="n">e</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="p">)</span></div></div>
+
+
+<span class="c1"># Locales supported by mimesis.</span>
+<span class="n">LOCALES</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">&quot;cs&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;da&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;de&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;de-at&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;de-ch&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;el&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;en&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;en-au&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;en-ca&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;en-gb&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;es&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;es-mx&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;et&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;fa&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;fi&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;fr&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;hu&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;is&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;it&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;ja&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;kk&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;ko&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;nl&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;nl-be&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;no&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;pl&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;pt&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;pt-br&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;ru&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;sv&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;tr&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;uk&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;zh&quot;</span><span class="p">,</span>
+<span class="p">]</span>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../../index.html">arXiv submission & moderation</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../architecture.html">Submission &amp; moderation subsystem architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../announcement_process.html">Submission &amp; announcement Process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../submission_api_context.html">Submission API: Context</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../containers/core/arxiv.submission.html">arxiv.submission package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../containers/metadata/metadata.html">metadata package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../background.html">Background</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, arXiv.org.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.3</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

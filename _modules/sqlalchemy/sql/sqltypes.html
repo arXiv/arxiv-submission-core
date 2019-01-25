@@ -9,10 +9,12 @@
     <title>sqlalchemy.sql.sqltypes &#8212; arXiv submission &amp; moderation 0.1 documentation</title>
     <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css" />
     <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
     <script type="text/javascript" src="../../../_static/jquery.js"></script>
     <script type="text/javascript" src="../../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../_static/language_data.js"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
    
@@ -33,7 +35,7 @@
             
   <h1>Source code for sqlalchemy.sql.sqltypes</h1><div class="highlight"><pre>
 <span></span><span class="c1"># sql/sqltypes.py</span>
-<span class="c1"># Copyright (C) 2005-2017 the SQLAlchemy authors and contributors</span>
+<span class="c1"># Copyright (C) 2005-2018 the SQLAlchemy authors and contributors</span>
 <span class="c1"># &lt;see AUTHORS file&gt;</span>
 <span class="c1">#</span>
 <span class="c1"># This module is part of SQLAlchemy and is released under</span>
@@ -49,7 +51,8 @@
 <span class="kn">import</span> <span class="nn">json</span>
 
 <span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">elements</span>
-<span class="kn">from</span> <span class="nn">.type_api</span> <span class="k">import</span> <span class="n">TypeEngine</span><span class="p">,</span> <span class="n">TypeDecorator</span><span class="p">,</span> <span class="n">to_instance</span><span class="p">,</span> <span class="n">Variant</span>
+<span class="kn">from</span> <span class="nn">.type_api</span> <span class="k">import</span> <span class="n">TypeEngine</span><span class="p">,</span> <span class="n">TypeDecorator</span><span class="p">,</span> <span class="n">to_instance</span><span class="p">,</span> <span class="n">Variant</span><span class="p">,</span> \
+    <span class="n">Emulated</span><span class="p">,</span> <span class="n">NativeForEmulated</span>
 <span class="kn">from</span> <span class="nn">.elements</span> <span class="k">import</span> <span class="n">quoted_name</span><span class="p">,</span> <span class="n">TypeCoerce</span> <span class="k">as</span> <span class="n">type_coerce</span><span class="p">,</span> <span class="n">_defer_name</span><span class="p">,</span> \
     <span class="n">Slice</span><span class="p">,</span> <span class="n">_literal_as_binds</span>
 <span class="kn">from</span> <span class="nn">..</span> <span class="k">import</span> <span class="n">exc</span><span class="p">,</span> <span class="n">util</span><span class="p">,</span> <span class="n">processors</span>
@@ -65,13 +68,12 @@
     <span class="kn">import</span> <span class="nn">array</span>
 
 
-<span class="k">class</span> <span class="nc">_DateAffinity</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">_LookupExpressionAdapter</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
 
-    <span class="sd">&quot;&quot;&quot;Mixin date/time specific expression adaptations.</span>
+    <span class="sd">&quot;&quot;&quot;Mixin expression adaptations based on lookup tables.</span>
 
-<span class="sd">    Rules are implemented within Date,Time,Interval,DateTime, Numeric,</span>
-<span class="sd">    Integer. Based on http://www.postgresql.org/docs/current/static</span>
-<span class="sd">    /functions-datetime.html.</span>
+<span class="sd">    These rules are currenly used by the numeric, integer and date types</span>
+<span class="sd">    which have detailed cross-expression coercion rules.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
 
@@ -84,12 +86,15 @@
 
         <span class="k">def</span> <span class="nf">_adapt_expression</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op</span><span class="p">,</span> <span class="n">other_comparator</span><span class="p">):</span>
             <span class="n">othertype</span> <span class="o">=</span> <span class="n">other_comparator</span><span class="o">.</span><span class="n">type</span><span class="o">.</span><span class="n">_type_affinity</span>
-            <span class="k">return</span> <span class="p">(</span>
-                <span class="n">op</span><span class="p">,</span> <span class="n">to_instance</span><span class="p">(</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">type</span><span class="o">.</span><span class="n">_expression_adaptations</span><span class="o">.</span>
-                    <span class="n">get</span><span class="p">(</span><span class="n">op</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_blank_dict</span><span class="p">)</span><span class="o">.</span>
-                    <span class="n">get</span><span class="p">(</span><span class="n">othertype</span><span class="p">,</span> <span class="n">NULLTYPE</span><span class="p">))</span>
-            <span class="p">)</span>
+            <span class="n">lookup</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">type</span><span class="o">.</span><span class="n">_expression_adaptations</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+                <span class="n">op</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_blank_dict</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
+                <span class="n">othertype</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">type</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">lookup</span> <span class="ow">is</span> <span class="n">othertype</span><span class="p">:</span>
+                <span class="k">return</span> <span class="p">(</span><span class="n">op</span><span class="p">,</span> <span class="n">other_comparator</span><span class="o">.</span><span class="n">type</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">lookup</span> <span class="ow">is</span> <span class="bp">self</span><span class="o">.</span><span class="n">type</span><span class="o">.</span><span class="n">_type_affinity</span><span class="p">:</span>
+                <span class="k">return</span> <span class="p">(</span><span class="n">op</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">type</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="p">(</span><span class="n">op</span><span class="p">,</span> <span class="n">to_instance</span><span class="p">(</span><span class="n">lookup</span><span class="p">))</span>
     <span class="n">comparator_factory</span> <span class="o">=</span> <span class="n">Comparator</span>
 
 
@@ -237,6 +242,10 @@
     <span class="k">def</span> <span class="nf">literal_processor</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dialect</span><span class="p">):</span>
         <span class="k">def</span> <span class="nf">process</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
             <span class="n">value</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;&#39;&quot;</span><span class="p">,</span> <span class="s2">&quot;&#39;&#39;&quot;</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">dialect</span><span class="o">.</span><span class="n">identifier_preparer</span><span class="o">.</span><span class="n">_double_percents</span><span class="p">:</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;%&#39;</span><span class="p">,</span> <span class="s1">&#39;</span><span class="si">%%</span><span class="s1">&#39;</span><span class="p">)</span>
+
             <span class="k">return</span> <span class="s2">&quot;&#39;</span><span class="si">%s</span><span class="s2">&#39;&quot;</span> <span class="o">%</span> <span class="n">value</span>
         <span class="k">return</span> <span class="n">process</span>
 
@@ -418,7 +427,7 @@
         <span class="nb">super</span><span class="p">(</span><span class="n">UnicodeText</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">length</span><span class="o">=</span><span class="n">length</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
 
-<span class="k">class</span> <span class="nc">Integer</span><span class="p">(</span><span class="n">_DateAffinity</span><span class="p">,</span> <span class="n">TypeEngine</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">Integer</span><span class="p">(</span><span class="n">_LookupExpressionAdapter</span><span class="p">,</span> <span class="n">TypeEngine</span><span class="p">):</span>
 
     <span class="sd">&quot;&quot;&quot;A type for ``int`` integers.&quot;&quot;&quot;</span>
 
@@ -490,7 +499,7 @@
     <span class="n">__visit_name__</span> <span class="o">=</span> <span class="s1">&#39;big_integer&#39;</span>
 
 
-<span class="k">class</span> <span class="nc">Numeric</span><span class="p">(</span><span class="n">_DateAffinity</span><span class="p">,</span> <span class="n">TypeEngine</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">Numeric</span><span class="p">(</span><span class="n">_LookupExpressionAdapter</span><span class="p">,</span> <span class="n">TypeEngine</span><span class="p">):</span>
 
     <span class="sd">&quot;&quot;&quot;A type for fixed precision numbers, such as ``NUMERIC`` or ``DECIMAL``.</span>
 
@@ -734,32 +743,13 @@
             <span class="k">return</span> <span class="n">processors</span><span class="o">.</span><span class="n">to_decimal_processor_factory</span><span class="p">(</span>
                 <span class="n">decimal</span><span class="o">.</span><span class="n">Decimal</span><span class="p">,</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_effective_decimal_return_scale</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">dialect</span><span class="o">.</span><span class="n">supports_native_decimal</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">processors</span><span class="o">.</span><span class="n">to_float</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">None</span>
 
-    <span class="nd">@util</span><span class="o">.</span><span class="n">memoized_property</span>
-    <span class="k">def</span> <span class="nf">_expression_adaptations</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="p">{</span>
-            <span class="n">operators</span><span class="o">.</span><span class="n">mul</span><span class="p">:</span> <span class="p">{</span>
-                <span class="n">Interval</span><span class="p">:</span> <span class="n">Interval</span><span class="p">,</span>
-                <span class="n">Numeric</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">,</span>
-            <span class="p">},</span>
-            <span class="n">operators</span><span class="o">.</span><span class="n">div</span><span class="p">:</span> <span class="p">{</span>
-                <span class="n">Numeric</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">,</span>
-            <span class="p">},</span>
-            <span class="n">operators</span><span class="o">.</span><span class="n">truediv</span><span class="p">:</span> <span class="p">{</span>
-                <span class="n">Numeric</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">,</span>
-            <span class="p">},</span>
-            <span class="n">operators</span><span class="o">.</span><span class="n">add</span><span class="p">:</span> <span class="p">{</span>
-                <span class="n">Numeric</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">,</span>
-            <span class="p">},</span>
-            <span class="n">operators</span><span class="o">.</span><span class="n">sub</span><span class="p">:</span> <span class="p">{</span>
-                <span class="n">Numeric</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">,</span>
-            <span class="p">}</span>
-        <span class="p">}</span>
 
-
-<span class="k">class</span> <span class="nc">DateTime</span><span class="p">(</span><span class="n">_DateAffinity</span><span class="p">,</span> <span class="n">TypeEngine</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">DateTime</span><span class="p">(</span><span class="n">_LookupExpressionAdapter</span><span class="p">,</span> <span class="n">TypeEngine</span><span class="p">):</span>
 
     <span class="sd">&quot;&quot;&quot;A type for ``datetime.datetime()`` objects.</span>
 
@@ -804,6 +794,10 @@
 
     <span class="nd">@util</span><span class="o">.</span><span class="n">memoized_property</span>
     <span class="k">def</span> <span class="nf">_expression_adaptations</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+        <span class="c1"># Based on http://www.postgresql.org/docs/current/\</span>
+        <span class="c1"># static/functions-datetime.html.</span>
+
         <span class="k">return</span> <span class="p">{</span>
             <span class="n">operators</span><span class="o">.</span><span class="n">add</span><span class="p">:</span> <span class="p">{</span>
                 <span class="n">Interval</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">,</span>
@@ -815,7 +809,7 @@
         <span class="p">}</span>
 
 
-<span class="k">class</span> <span class="nc">Date</span><span class="p">(</span><span class="n">_DateAffinity</span><span class="p">,</span> <span class="n">TypeEngine</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">Date</span><span class="p">(</span><span class="n">_LookupExpressionAdapter</span><span class="p">,</span> <span class="n">TypeEngine</span><span class="p">):</span>
 
     <span class="sd">&quot;&quot;&quot;A type for ``datetime.date()`` objects.&quot;&quot;&quot;</span>
 
@@ -830,6 +824,9 @@
 
     <span class="nd">@util</span><span class="o">.</span><span class="n">memoized_property</span>
     <span class="k">def</span> <span class="nf">_expression_adaptations</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># Based on http://www.postgresql.org/docs/current/\</span>
+        <span class="c1"># static/functions-datetime.html.</span>
+
         <span class="k">return</span> <span class="p">{</span>
             <span class="n">operators</span><span class="o">.</span><span class="n">add</span><span class="p">:</span> <span class="p">{</span>
                 <span class="n">Integer</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">,</span>
@@ -853,7 +850,7 @@
         <span class="p">}</span>
 
 
-<span class="k">class</span> <span class="nc">Time</span><span class="p">(</span><span class="n">_DateAffinity</span><span class="p">,</span> <span class="n">TypeEngine</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">Time</span><span class="p">(</span><span class="n">_LookupExpressionAdapter</span><span class="p">,</span> <span class="n">TypeEngine</span><span class="p">):</span>
 
     <span class="sd">&quot;&quot;&quot;A type for ``datetime.time()`` objects.&quot;&quot;&quot;</span>
 
@@ -871,6 +868,9 @@
 
     <span class="nd">@util</span><span class="o">.</span><span class="n">memoized_property</span>
     <span class="k">def</span> <span class="nf">_expression_adaptations</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># Based on http://www.postgresql.org/docs/current/\</span>
+        <span class="c1"># static/functions-datetime.html.</span>
+
         <span class="k">return</span> <span class="p">{</span>
             <span class="n">operators</span><span class="o">.</span><span class="n">add</span><span class="p">:</span> <span class="p">{</span>
                 <span class="n">Date</span><span class="p">:</span> <span class="n">DateTime</span><span class="p">,</span>
@@ -1093,7 +1093,6 @@
         <span class="n">schema</span> <span class="o">=</span> <span class="n">kw</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;schema&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">schema</span><span class="p">)</span>
         <span class="n">metadata</span> <span class="o">=</span> <span class="n">kw</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;metadata&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="p">)</span>
         <span class="n">_create_events</span> <span class="o">=</span> <span class="n">kw</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;_create_events&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
-
         <span class="k">return</span> <span class="n">impltype</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
                         <span class="n">schema</span><span class="o">=</span><span class="n">schema</span><span class="p">,</span>
                         <span class="n">inherit_schema</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">inherit_schema</span><span class="p">,</span>
@@ -1167,8 +1166,7 @@
             <span class="k">return</span> <span class="n">variant_mapping</span><span class="p">[</span><span class="s1">&#39;_default&#39;</span><span class="p">]</span> <span class="ow">is</span> <span class="bp">self</span>
 
 
-<span class="k">class</span> <span class="nc">Enum</span><span class="p">(</span><span class="n">String</span><span class="p">,</span> <span class="n">SchemaType</span><span class="p">):</span>
-
+<span class="k">class</span> <span class="nc">Enum</span><span class="p">(</span><span class="n">Emulated</span><span class="p">,</span> <span class="n">String</span><span class="p">,</span> <span class="n">SchemaType</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Generic Enum Type.</span>
 
 <span class="sd">    The :class:`.Enum` type provides a set of possible string values</span>
@@ -1226,17 +1224,25 @@
 <span class="sd">    indicated as integers, are **not** used; the value of each enum can</span>
 <span class="sd">    therefore be any kind of Python object whether or not it is persistable.</span>
 
+<span class="sd">    In order to persist the values and not the names, the</span>
+<span class="sd">    :paramref:`.Enum.values_callable` parameter may be used.   The value of</span>
+<span class="sd">    this parameter is a user-supplied callable, which  is intended to be used</span>
+<span class="sd">    with a PEP-435-compliant enumerated class and  returns a list of string</span>
+<span class="sd">    values to be persisted.   For a simple enumeration that uses string values,</span>
+<span class="sd">    a callable such as  ``lambda x: [e.value for e in x]`` is sufficient.</span>
+
 <span class="sd">    .. versionadded:: 1.1 - support for PEP-435-style enumerated</span>
 <span class="sd">       classes.</span>
 
 
 <span class="sd">    .. seealso::</span>
 
-<span class="sd">        :class:`~.postgresql.ENUM` - PostgreSQL-specific type,</span>
+<span class="sd">        :class:`.postgresql.ENUM` - PostgreSQL-specific type,</span>
 <span class="sd">        which has additional functionality.</span>
 
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">        :class:`.mysql.ENUM` - MySQL-specific type</span>
 
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">__visit_name__</span> <span class="o">=</span> <span class="s1">&#39;enum&#39;</span>
 
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">enums</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
@@ -1313,14 +1319,40 @@
 
 <span class="sd">           .. versionadded:: 1.1.0b2</span>
 
+<span class="sd">        :param values_callable: A callable which will be passed the PEP-435</span>
+<span class="sd">           compliant enumerated type, which should then return a list of string</span>
+<span class="sd">           values to be persisted. This allows for alternate usages such as</span>
+<span class="sd">           using the string value of an enum to be persisted to the database</span>
+<span class="sd">           instead of its name.</span>
+
+<span class="sd">           .. versionadded:: 1.2.3</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_enum_init</span><span class="p">(</span><span class="n">enums</span><span class="p">,</span> <span class="n">kw</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_enums_argument</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">enum_class</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">enum_class</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">enums</span>
+
+    <span class="k">def</span> <span class="nf">_enum_init</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">enums</span><span class="p">,</span> <span class="n">kw</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;internal init for :class:`.Enum` and subclasses.</span>
+
+<span class="sd">        friendly init helper used by subclasses to remove</span>
+<span class="sd">        all the Enum-specific keyword arguments from kw.  Allows all</span>
+<span class="sd">        other arguments in kw to pass through.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">native_enum</span> <span class="o">=</span> <span class="n">kw</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;native_enum&#39;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">create_constraint</span> <span class="o">=</span> <span class="n">kw</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;create_constraint&#39;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">values_callable</span> <span class="o">=</span> <span class="n">kw</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;values_callable&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
 
         <span class="n">values</span><span class="p">,</span> <span class="n">objects</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_parse_into_values</span><span class="p">(</span><span class="n">enums</span><span class="p">,</span> <span class="n">kw</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_setup_for_values</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">objects</span><span class="p">,</span> <span class="n">kw</span><span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">native_enum</span> <span class="o">=</span> <span class="n">kw</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;native_enum&#39;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
         <span class="n">convert_unicode</span> <span class="o">=</span> <span class="n">kw</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;convert_unicode&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">create_constraint</span> <span class="o">=</span> <span class="n">kw</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;create_constraint&#39;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">validate_strings</span> <span class="o">=</span> <span class="n">kw</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;validate_strings&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">convert_unicode</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -1337,19 +1369,34 @@
             <span class="n">length</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_valid_lookup</span><span class="p">[</span><span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_object_lookup</span><span class="p">[</span><span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
 
-        <span class="n">String</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
-                        <span class="n">length</span><span class="o">=</span><span class="n">length</span><span class="p">,</span>
-                        <span class="n">convert_unicode</span><span class="o">=</span><span class="n">convert_unicode</span><span class="p">,</span>
-                        <span class="p">)</span>
-        <span class="n">SchemaType</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">Enum</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="n">length</span><span class="o">=</span><span class="n">length</span><span class="p">,</span>
+            <span class="n">convert_unicode</span><span class="o">=</span><span class="n">convert_unicode</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">enum_class</span><span class="p">:</span>
+            <span class="n">kw</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">enum_class</span><span class="o">.</span><span class="vm">__name__</span><span class="o">.</span><span class="n">lower</span><span class="p">())</span>
+        <span class="n">SchemaType</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">name</span><span class="o">=</span><span class="n">kw</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
+            <span class="n">schema</span><span class="o">=</span><span class="n">kw</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;schema&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
+            <span class="n">metadata</span><span class="o">=</span><span class="n">kw</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;metadata&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
+            <span class="n">inherit_schema</span><span class="o">=</span><span class="n">kw</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;inherit_schema&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span>
+            <span class="n">quote</span><span class="o">=</span><span class="n">kw</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;quote&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span>
+            <span class="n">_create_events</span><span class="o">=</span><span class="n">kw</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;_create_events&#39;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+        <span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_parse_into_values</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">enums</span><span class="p">,</span> <span class="n">kw</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">enums</span> <span class="ow">and</span> <span class="s1">&#39;_enums&#39;</span> <span class="ow">in</span> <span class="n">kw</span><span class="p">:</span>
+            <span class="n">enums</span> <span class="o">=</span> <span class="n">kw</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;_enums&#39;</span><span class="p">)</span>
+
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">enums</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">enums</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s1">&#39;__members__&#39;</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">enum_class</span> <span class="o">=</span> <span class="n">enums</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-            <span class="n">values</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">enum_class</span><span class="o">.</span><span class="n">__members__</span><span class="p">)</span>
-            <span class="n">objects</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">enum_class</span><span class="o">.</span><span class="n">__members__</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">values</span><span class="p">]</span>
-            <span class="n">kw</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">enum_class</span><span class="o">.</span><span class="vm">__name__</span><span class="o">.</span><span class="n">lower</span><span class="p">())</span>
-
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">values_callable</span><span class="p">:</span>
+                <span class="n">values</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">values_callable</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">enum_class</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">values</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">enum_class</span><span class="o">.</span><span class="n">__members__</span><span class="p">)</span>
+            <span class="n">objects</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">enum_class</span><span class="o">.</span><span class="n">__members__</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">enum_class</span><span class="o">.</span><span class="n">__members__</span><span class="p">]</span>
             <span class="k">return</span> <span class="n">values</span><span class="p">,</span> <span class="n">objects</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">enum_class</span> <span class="o">=</span> <span class="kc">None</span>
@@ -1359,14 +1406,21 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">enums</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_valid_lookup</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
-            <span class="nb">zip</span><span class="p">(</span><span class="n">objects</span><span class="p">,</span> <span class="n">values</span><span class="p">)</span>
+            <span class="nb">zip</span><span class="p">(</span><span class="nb">reversed</span><span class="p">(</span><span class="n">objects</span><span class="p">),</span> <span class="nb">reversed</span><span class="p">(</span><span class="n">values</span><span class="p">))</span>
         <span class="p">)</span>
+
         <span class="bp">self</span><span class="o">.</span><span class="n">_object_lookup</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
-            <span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_valid_lookup</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+            <span class="nb">zip</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">objects</span><span class="p">)</span>
         <span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_valid_lookup</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
-            <span class="p">[(</span><span class="n">value</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span> <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_valid_lookup</span><span class="o">.</span><span class="n">values</span><span class="p">()]</span>
-        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_valid_lookup</span><span class="o">.</span><span class="n">update</span><span class="p">([</span>
+            <span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_valid_lookup</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_object_lookup</span><span class="p">[</span><span class="n">value</span><span class="p">]])</span>
+            <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">values</span>
+        <span class="p">])</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">native</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">native_enum</span>
 
     <span class="k">def</span> <span class="nf">_db_value_for_elem</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">elem</span><span class="p">):</span>
         <span class="k">try</span><span class="p">:</span>
@@ -1408,10 +1462,29 @@
                 <span class="s1">&#39;&quot;</span><span class="si">%s</span><span class="s1">&quot; is not among the defined enum values&#39;</span> <span class="o">%</span> <span class="n">elem</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">util</span><span class="o">.</span><span class="n">generic_repr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
-                                 <span class="n">additional_kw</span><span class="o">=</span><span class="p">[(</span><span class="s1">&#39;native_enum&#39;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)],</span>
-                                 <span class="n">to_inspect</span><span class="o">=</span><span class="p">[</span><span class="n">Enum</span><span class="p">,</span> <span class="n">SchemaType</span><span class="p">],</span>
-                                 <span class="p">)</span>
+        <span class="k">return</span> <span class="n">util</span><span class="o">.</span><span class="n">generic_repr</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">additional_kw</span><span class="o">=</span><span class="p">[(</span><span class="s1">&#39;native_enum&#39;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)],</span>
+            <span class="n">to_inspect</span><span class="o">=</span><span class="p">[</span><span class="n">Enum</span><span class="p">,</span> <span class="n">SchemaType</span><span class="p">],</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">adapt_to_emulated</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">impltype</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+        <span class="n">kw</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">&quot;convert_unicode&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">convert_unicode</span><span class="p">)</span>
+        <span class="n">kw</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">&quot;validate_strings&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">validate_strings</span><span class="p">)</span>
+        <span class="n">kw</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        <span class="n">kw</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;schema&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">schema</span><span class="p">)</span>
+        <span class="n">kw</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;inherit_schema&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">inherit_schema</span><span class="p">)</span>
+        <span class="n">kw</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;metadata&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="p">)</span>
+        <span class="n">kw</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;_create_events&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="n">kw</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;native_enum&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">native_enum</span><span class="p">)</span>
+        <span class="n">kw</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;values_callable&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">values_callable</span><span class="p">)</span>
+        <span class="n">kw</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;create_constraint&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_constraint</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="s1">&#39;_enums&#39;</span> <span class="ow">in</span> <span class="n">kw</span>
+        <span class="k">return</span> <span class="n">impltype</span><span class="p">(</span><span class="o">**</span><span class="n">kw</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">adapt</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">impltype</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+        <span class="n">kw</span><span class="p">[</span><span class="s1">&#39;_enums&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_enums_argument</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">Enum</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">adapt</span><span class="p">(</span><span class="n">impltype</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_should_create_constraint</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">compiler</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_impl_for_variant</span><span class="p">(</span><span class="n">compiler</span><span class="o">.</span><span class="n">dialect</span><span class="p">,</span> <span class="n">kw</span><span class="p">):</span>
@@ -1421,8 +1494,7 @@
 
     <span class="nd">@util</span><span class="o">.</span><span class="n">dependencies</span><span class="p">(</span><span class="s2">&quot;sqlalchemy.sql.schema&quot;</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">_set_table</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">schema</span><span class="p">,</span> <span class="n">column</span><span class="p">,</span> <span class="n">table</span><span class="p">):</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">native_enum</span><span class="p">:</span>
-            <span class="n">SchemaType</span><span class="o">.</span><span class="n">_set_table</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">column</span><span class="p">,</span> <span class="n">table</span><span class="p">)</span>
+        <span class="n">SchemaType</span><span class="o">.</span><span class="n">_set_table</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">column</span><span class="p">,</span> <span class="n">table</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_constraint</span><span class="p">:</span>
             <span class="k">return</span>
@@ -1439,34 +1511,9 @@
         <span class="p">)</span>
         <span class="k">assert</span> <span class="n">e</span><span class="o">.</span><span class="n">table</span> <span class="ow">is</span> <span class="n">table</span>
 
-    <span class="k">def</span> <span class="nf">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">SchemaType</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span>
-
-    <span class="k">def</span> <span class="nf">adapt</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">impltype</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
-        <span class="n">schema</span> <span class="o">=</span> <span class="n">kw</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;schema&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">schema</span><span class="p">)</span>
-        <span class="n">metadata</span> <span class="o">=</span> <span class="n">kw</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;metadata&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="p">)</span>
-        <span class="n">_create_events</span> <span class="o">=</span> <span class="n">kw</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;_create_events&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
-        <span class="k">if</span> <span class="nb">issubclass</span><span class="p">(</span><span class="n">impltype</span><span class="p">,</span> <span class="n">Enum</span><span class="p">):</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">enum_class</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">args</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">enum_class</span><span class="p">]</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">args</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">enums</span>
-            <span class="k">return</span> <span class="n">impltype</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
-                            <span class="n">schema</span><span class="o">=</span><span class="n">schema</span><span class="p">,</span>
-                            <span class="n">metadata</span><span class="o">=</span><span class="n">metadata</span><span class="p">,</span>
-                            <span class="n">convert_unicode</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">convert_unicode</span><span class="p">,</span>
-                            <span class="n">native_enum</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">native_enum</span><span class="p">,</span>
-                            <span class="n">inherit_schema</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">inherit_schema</span><span class="p">,</span>
-                            <span class="n">validate_strings</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">validate_strings</span><span class="p">,</span>
-                            <span class="n">_create_events</span><span class="o">=</span><span class="n">_create_events</span><span class="p">,</span>
-                            <span class="o">*</span><span class="n">args</span><span class="p">,</span>
-                            <span class="o">**</span><span class="n">kw</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="c1"># TODO: why would we be here?</span>
-            <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">Enum</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">adapt</span><span class="p">(</span><span class="n">impltype</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span>
-
     <span class="k">def</span> <span class="nf">literal_processor</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dialect</span><span class="p">):</span>
-        <span class="n">parent_processor</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">Enum</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">literal_processor</span><span class="p">(</span><span class="n">dialect</span><span class="p">)</span>
+        <span class="n">parent_processor</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span>
+            <span class="n">Enum</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">literal_processor</span><span class="p">(</span><span class="n">dialect</span><span class="p">)</span>
 
         <span class="k">def</span> <span class="nf">process</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
             <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_db_value_for_elem</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
@@ -1497,6 +1544,9 @@
             <span class="k">return</span> <span class="n">value</span>
 
         <span class="k">return</span> <span class="n">process</span>
+
+    <span class="k">def</span> <span class="nf">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">SchemaType</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">python_type</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -1586,16 +1636,30 @@
             <span class="k">return</span> <span class="n">x</span> <span class="o">==</span> <span class="n">y</span>
 
 
-<span class="k">class</span> <span class="nc">Boolean</span><span class="p">(</span><span class="n">TypeEngine</span><span class="p">,</span> <span class="n">SchemaType</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">Boolean</span><span class="p">(</span><span class="n">Emulated</span><span class="p">,</span> <span class="n">TypeEngine</span><span class="p">,</span> <span class="n">SchemaType</span><span class="p">):</span>
 
     <span class="sd">&quot;&quot;&quot;A bool datatype.</span>
 
-<span class="sd">    Boolean typically uses BOOLEAN or SMALLINT on the DDL side, and on</span>
+<span class="sd">    :class:`.Boolean` typically uses BOOLEAN or SMALLINT on the DDL side, and on</span>
 <span class="sd">    the Python side deals in ``True`` or ``False``.</span>
+
+<span class="sd">    The :class:`.Boolean` datatype currently has two levels of assertion</span>
+<span class="sd">    that the values persisted are simple true/false values.  For all</span>
+<span class="sd">    backends, only the Python values ``None``, ``True``, ``False``, ``1``</span>
+<span class="sd">    or ``0`` are accepted as parameter values.   For those backends that</span>
+<span class="sd">    don&#39;t support a &quot;native boolean&quot; datatype, a CHECK constraint is also</span>
+<span class="sd">    created on the target column.   Production of the CHECK constraint</span>
+<span class="sd">    can be disabled by passing the :paramref:`.Boolean.create_constraint`</span>
+<span class="sd">    flag set to ``False``.</span>
+
+<span class="sd">    .. versionchanged:: 1.2 the :class:`.Boolean` datatype now asserts that</span>
+<span class="sd">       incoming Python values are already in pure boolean form.</span>
+
 
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">__visit_name__</span> <span class="o">=</span> <span class="s1">&#39;boolean&#39;</span>
+    <span class="n">native</span> <span class="o">=</span> <span class="kc">True</span>
 
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span>
             <span class="bp">self</span><span class="p">,</span> <span class="n">create_constraint</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">_create_events</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
@@ -1616,7 +1680,8 @@
     <span class="k">def</span> <span class="nf">_should_create_constraint</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">compiler</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_impl_for_variant</span><span class="p">(</span><span class="n">compiler</span><span class="o">.</span><span class="n">dialect</span><span class="p">,</span> <span class="n">kw</span><span class="p">):</span>
             <span class="k">return</span> <span class="kc">False</span>
-        <span class="k">return</span> <span class="ow">not</span> <span class="n">compiler</span><span class="o">.</span><span class="n">dialect</span><span class="o">.</span><span class="n">supports_native_boolean</span>
+        <span class="k">return</span> <span class="ow">not</span> <span class="n">compiler</span><span class="o">.</span><span class="n">dialect</span><span class="o">.</span><span class="n">supports_native_boolean</span> <span class="ow">and</span> \
+            <span class="n">compiler</span><span class="o">.</span><span class="n">dialect</span><span class="o">.</span><span class="n">non_native_boolean_check_constraint</span>
 
     <span class="nd">@util</span><span class="o">.</span><span class="n">dependencies</span><span class="p">(</span><span class="s2">&quot;sqlalchemy.sql.schema&quot;</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">_set_table</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">schema</span><span class="p">,</span> <span class="n">column</span><span class="p">,</span> <span class="n">table</span><span class="p">):</span>
@@ -1639,20 +1704,40 @@
     <span class="k">def</span> <span class="nf">python_type</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">bool</span>
 
+    <span class="n">_strict_bools</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">([</span><span class="kc">None</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="kc">False</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">_strict_as_bool</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">value</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_strict_bools</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span>
+                    <span class="s2">&quot;Not a boolean value: </span><span class="si">%r</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="n">value</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="s2">&quot;Value </span><span class="si">%r</span><span class="s2"> is not None, True, or False&quot;</span> <span class="o">%</span> <span class="n">value</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">value</span>
+
     <span class="k">def</span> <span class="nf">literal_processor</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dialect</span><span class="p">):</span>
-        <span class="k">if</span> <span class="n">dialect</span><span class="o">.</span><span class="n">supports_native_boolean</span><span class="p">:</span>
-            <span class="k">def</span> <span class="nf">process</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
-                <span class="k">return</span> <span class="s2">&quot;true&quot;</span> <span class="k">if</span> <span class="n">value</span> <span class="k">else</span> <span class="s2">&quot;false&quot;</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">def</span> <span class="nf">process</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
-                <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="mi">1</span> <span class="k">if</span> <span class="n">value</span> <span class="k">else</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">compiler</span> <span class="o">=</span> <span class="n">dialect</span><span class="o">.</span><span class="n">statement_compiler</span><span class="p">(</span><span class="n">dialect</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">true</span> <span class="o">=</span> <span class="n">compiler</span><span class="o">.</span><span class="n">visit_true</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
+        <span class="n">false</span> <span class="o">=</span> <span class="n">compiler</span><span class="o">.</span><span class="n">visit_false</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
+
+        <span class="k">def</span> <span class="nf">process</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">true</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_strict_as_bool</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="k">else</span> <span class="n">false</span>
         <span class="k">return</span> <span class="n">process</span>
 
     <span class="k">def</span> <span class="nf">bind_processor</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dialect</span><span class="p">):</span>
+        <span class="n">_strict_as_bool</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_strict_as_bool</span>
         <span class="k">if</span> <span class="n">dialect</span><span class="o">.</span><span class="n">supports_native_boolean</span><span class="p">:</span>
-            <span class="k">return</span> <span class="kc">None</span>
+            <span class="n">_coerce</span> <span class="o">=</span> <span class="nb">bool</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">processors</span><span class="o">.</span><span class="n">boolean_to_int</span>
+            <span class="n">_coerce</span> <span class="o">=</span> <span class="nb">int</span>
+
+        <span class="k">def</span> <span class="nf">process</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="n">_strict_as_bool</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">value</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="n">_coerce</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">value</span>
+        <span class="k">return</span> <span class="n">process</span>
 
     <span class="k">def</span> <span class="nf">result_processor</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dialect</span><span class="p">,</span> <span class="n">coltype</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">dialect</span><span class="o">.</span><span class="n">supports_native_boolean</span><span class="p">:</span>
@@ -1661,7 +1746,43 @@
             <span class="k">return</span> <span class="n">processors</span><span class="o">.</span><span class="n">int_to_boolean</span>
 
 
-<span class="k">class</span> <span class="nc">Interval</span><span class="p">(</span><span class="n">_DateAffinity</span><span class="p">,</span> <span class="n">TypeDecorator</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">_AbstractInterval</span><span class="p">(</span><span class="n">_LookupExpressionAdapter</span><span class="p">,</span> <span class="n">TypeEngine</span><span class="p">):</span>
+    <span class="nd">@util</span><span class="o">.</span><span class="n">memoized_property</span>
+    <span class="k">def</span> <span class="nf">_expression_adaptations</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># Based on http://www.postgresql.org/docs/current/\</span>
+        <span class="c1"># static/functions-datetime.html.</span>
+
+        <span class="k">return</span> <span class="p">{</span>
+            <span class="n">operators</span><span class="o">.</span><span class="n">add</span><span class="p">:</span> <span class="p">{</span>
+                <span class="n">Date</span><span class="p">:</span> <span class="n">DateTime</span><span class="p">,</span>
+                <span class="n">Interval</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">,</span>
+                <span class="n">DateTime</span><span class="p">:</span> <span class="n">DateTime</span><span class="p">,</span>
+                <span class="n">Time</span><span class="p">:</span> <span class="n">Time</span><span class="p">,</span>
+            <span class="p">},</span>
+            <span class="n">operators</span><span class="o">.</span><span class="n">sub</span><span class="p">:</span> <span class="p">{</span>
+                <span class="n">Interval</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span>
+            <span class="p">},</span>
+            <span class="n">operators</span><span class="o">.</span><span class="n">mul</span><span class="p">:</span> <span class="p">{</span>
+                <span class="n">Numeric</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span>
+            <span class="p">},</span>
+            <span class="n">operators</span><span class="o">.</span><span class="n">truediv</span><span class="p">:</span> <span class="p">{</span>
+                <span class="n">Numeric</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span>
+            <span class="p">},</span>
+            <span class="n">operators</span><span class="o">.</span><span class="n">div</span><span class="p">:</span> <span class="p">{</span>
+                <span class="n">Numeric</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_type_affinity</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Interval</span>
+
+    <span class="k">def</span> <span class="nf">coerce_compared_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;See :meth:`.TypeEngine.coerce_compared_value` for a description.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">impl</span><span class="o">.</span><span class="n">coerce_compared_value</span><span class="p">(</span><span class="n">op</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">Interval</span><span class="p">(</span><span class="n">Emulated</span><span class="p">,</span> <span class="n">_AbstractInterval</span><span class="p">,</span> <span class="n">TypeDecorator</span><span class="p">):</span>
 
     <span class="sd">&quot;&quot;&quot;A type for ``datetime.timedelta()`` objects.</span>
 
@@ -1706,19 +1827,12 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">second_precision</span> <span class="o">=</span> <span class="n">second_precision</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">day_precision</span> <span class="o">=</span> <span class="n">day_precision</span>
 
-    <span class="k">def</span> <span class="nf">adapt</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="bp">cls</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">native</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="s1">&#39;_adapt_from_generic_interval&#39;</span><span class="p">):</span>
-            <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_adapt_from_generic_interval</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">(</span>
-                <span class="n">native</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">native</span><span class="p">,</span>
-                <span class="n">second_precision</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">second_precision</span><span class="p">,</span>
-                <span class="n">day_precision</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">day_precision</span><span class="p">,</span>
-                <span class="o">**</span><span class="n">kw</span><span class="p">)</span>
-
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">python_type</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">dt</span><span class="o">.</span><span class="n">timedelta</span>
+
+    <span class="k">def</span> <span class="nf">adapt_to_emulated</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">impltype</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">_AbstractInterval</span><span class="o">.</span><span class="n">adapt</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">impltype</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">bind_processor</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dialect</span><span class="p">):</span>
         <span class="n">impl_processor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">impl</span><span class="o">.</span><span class="n">bind_processor</span><span class="p">(</span><span class="n">dialect</span><span class="p">)</span>
@@ -1750,38 +1864,6 @@
                     <span class="k">return</span> <span class="kc">None</span>
                 <span class="k">return</span> <span class="n">value</span> <span class="o">-</span> <span class="n">epoch</span>
         <span class="k">return</span> <span class="n">process</span>
-
-    <span class="nd">@util</span><span class="o">.</span><span class="n">memoized_property</span>
-    <span class="k">def</span> <span class="nf">_expression_adaptations</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="p">{</span>
-            <span class="n">operators</span><span class="o">.</span><span class="n">add</span><span class="p">:</span> <span class="p">{</span>
-                <span class="n">Date</span><span class="p">:</span> <span class="n">DateTime</span><span class="p">,</span>
-                <span class="n">Interval</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">,</span>
-                <span class="n">DateTime</span><span class="p">:</span> <span class="n">DateTime</span><span class="p">,</span>
-                <span class="n">Time</span><span class="p">:</span> <span class="n">Time</span><span class="p">,</span>
-            <span class="p">},</span>
-            <span class="n">operators</span><span class="o">.</span><span class="n">sub</span><span class="p">:</span> <span class="p">{</span>
-                <span class="n">Interval</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span>
-            <span class="p">},</span>
-            <span class="n">operators</span><span class="o">.</span><span class="n">mul</span><span class="p">:</span> <span class="p">{</span>
-                <span class="n">Numeric</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span>
-            <span class="p">},</span>
-            <span class="n">operators</span><span class="o">.</span><span class="n">truediv</span><span class="p">:</span> <span class="p">{</span>
-                <span class="n">Numeric</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span>
-            <span class="p">},</span>
-            <span class="n">operators</span><span class="o">.</span><span class="n">div</span><span class="p">:</span> <span class="p">{</span>
-                <span class="n">Numeric</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span>
-            <span class="p">}</span>
-        <span class="p">}</span>
-
-    <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">_type_affinity</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">Interval</span>
-
-    <span class="k">def</span> <span class="nf">coerce_compared_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;See :meth:`.TypeEngine.coerce_compared_value` for a description.&quot;&quot;&quot;</span>
-
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">impl</span><span class="o">.</span><span class="n">coerce_compared_value</span><span class="p">(</span><span class="n">op</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
 
 
 <span class="k">class</span> <span class="nc">JSON</span><span class="p">(</span><span class="n">Indexable</span><span class="p">,</span> <span class="n">TypeEngine</span><span class="p">):</span>
@@ -2048,7 +2130,7 @@
         <span class="nd">@util</span><span class="o">.</span><span class="n">dependencies</span><span class="p">(</span><span class="s1">&#39;sqlalchemy.sql.default_comparator&#39;</span><span class="p">)</span>
         <span class="k">def</span> <span class="nf">_setup_getitem</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">default_comparator</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="n">util</span><span class="o">.</span><span class="n">string_types</span><span class="p">)</span> <span class="ow">and</span> \
-                    <span class="nb">isinstance</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="n">collections</span><span class="o">.</span><span class="n">Sequence</span><span class="p">):</span>
+                    <span class="nb">isinstance</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="n">compat</span><span class="o">.</span><span class="n">collections_abc</span><span class="o">.</span><span class="n">Sequence</span><span class="p">):</span>
                 <span class="n">index</span> <span class="o">=</span> <span class="n">default_comparator</span><span class="o">.</span><span class="n">_check_literal</span><span class="p">(</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">expr</span><span class="p">,</span> <span class="n">operators</span><span class="o">.</span><span class="n">json_path_getitem_op</span><span class="p">,</span>
                     <span class="n">index</span><span class="p">,</span> <span class="n">bindparam_type</span><span class="o">=</span><span class="n">JSON</span><span class="o">.</span><span class="n">JSONPathType</span>
@@ -2111,7 +2193,7 @@
         <span class="k">return</span> <span class="n">process</span>
 
 
-<span class="k">class</span> <span class="nc">ARRAY</span><span class="p">(</span><span class="n">Indexable</span><span class="p">,</span> <span class="n">Concatenable</span><span class="p">,</span> <span class="n">TypeEngine</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">ARRAY</span><span class="p">(</span><span class="n">SchemaEventTarget</span><span class="p">,</span> <span class="n">Indexable</span><span class="p">,</span> <span class="n">Concatenable</span><span class="p">,</span> <span class="n">TypeEngine</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Represent a SQL Array type.</span>
 
 <span class="sd">    .. note::  This type serves as the basis for all ARRAY operations.</span>
@@ -2249,6 +2331,11 @@
 
             <span class="k">return</span> <span class="n">operators</span><span class="o">.</span><span class="n">getitem</span><span class="p">,</span> <span class="n">index</span><span class="p">,</span> <span class="n">return_type</span>
 
+        <span class="k">def</span> <span class="nf">contains</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">arg</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+                <span class="s2">&quot;ARRAY.contains() not implemented for the base &quot;</span>
+                <span class="s2">&quot;ARRAY type; please use the dialect-specific ARRAY type&quot;</span><span class="p">)</span>
+
         <span class="nd">@util</span><span class="o">.</span><span class="n">dependencies</span><span class="p">(</span><span class="s2">&quot;sqlalchemy.sql.elements&quot;</span><span class="p">)</span>
         <span class="k">def</span> <span class="nf">any</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">elements</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="n">operator</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
             <span class="sd">&quot;&quot;&quot;Return ``other operator ANY (array)`` clause.</span>
@@ -2374,6 +2461,20 @@
 
     <span class="k">def</span> <span class="nf">compare_values</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">x</span> <span class="o">==</span> <span class="n">y</span>
+
+    <span class="k">def</span> <span class="nf">_set_parent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">column</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Support SchemaEventTarget&quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">item_type</span><span class="p">,</span> <span class="n">SchemaEventTarget</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">item_type</span><span class="o">.</span><span class="n">_set_parent</span><span class="p">(</span><span class="n">column</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_set_parent_with_dispatch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">parent</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Support SchemaEventTarget&quot;&quot;&quot;</span>
+
+        <span class="nb">super</span><span class="p">(</span><span class="n">ARRAY</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">_set_parent_with_dispatch</span><span class="p">(</span><span class="n">parent</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">item_type</span><span class="p">,</span> <span class="n">SchemaEventTarget</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">item_type</span><span class="o">.</span><span class="n">_set_parent_with_dispatch</span><span class="p">(</span><span class="n">parent</span><span class="p">)</span>
 
 
 <span class="k">class</span> <span class="nc">REAL</span><span class="p">(</span><span class="n">Float</span><span class="p">):</span>
@@ -2619,7 +2720,7 @@
 
 <span class="n">_type_map</span> <span class="o">=</span> <span class="p">{</span>
     <span class="nb">int</span><span class="p">:</span> <span class="n">Integer</span><span class="p">(),</span>
-    <span class="nb">float</span><span class="p">:</span> <span class="n">Numeric</span><span class="p">(),</span>
+    <span class="nb">float</span><span class="p">:</span> <span class="n">Float</span><span class="p">(),</span>
     <span class="nb">bool</span><span class="p">:</span> <span class="n">BOOLEANTYPE</span><span class="p">,</span>
     <span class="n">decimal</span><span class="o">.</span><span class="n">Decimal</span><span class="p">:</span> <span class="n">Numeric</span><span class="p">(),</span>
     <span class="n">dt</span><span class="o">.</span><span class="n">date</span><span class="p">:</span> <span class="n">Date</span><span class="p">(),</span>
@@ -2687,10 +2788,11 @@
 <h3>Navigation</h3>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../architecture.html">Submission &amp; moderation subsystem architecture</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../publication_process.html">Submission &amp; Publication Process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../announcement_process.html">Submission &amp; announcement Process</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../submission_api_context.html">Submission API: Context</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../containers/core/events.html">events package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../containers/core/arxiv.submission.html">arxiv.submission package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../containers/metadata/metadata.html">metadata package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../background.html">Background</a></li>
 </ul>
 
 <div class="relations">
@@ -2714,6 +2816,14 @@
     </div>
 </div>
 <script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
         </div>
       </div>
       <div class="clearer"></div>
@@ -2722,8 +2832,8 @@
       &copy;2017, arXiv.org.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.6</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.11</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.3</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
     </div>
 

@@ -1,0 +1,180 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>arxiv.submission.domain.event.validators &#8212; arXiv submission &amp; moderation 0.1 documentation</title>
+    <link rel="stylesheet" href="../../../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/graphviz.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../../../../" src="../../../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for arxiv.submission.domain.event.validators</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Reusable validators for events.&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">re</span>
+
+<span class="kn">from</span> <span class="nn">arxiv</span> <span class="k">import</span> <span class="n">taxonomy</span><span class="p">,</span> <span class="n">identifier</span>
+
+<span class="kn">from</span> <span class="nn">.event</span> <span class="k">import</span> <span class="n">Event</span>
+<span class="kn">from</span> <span class="nn">..submission</span> <span class="k">import</span> <span class="n">Submission</span>
+<span class="kn">from</span> <span class="nn">...exceptions</span> <span class="k">import</span> <span class="n">InvalidEvent</span>
+
+
+<div class="viewcode-block" id="submission_is_not_finalized"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.domain.event.validators.html#arxiv.submission.domain.event.validators.submission_is_not_finalized">[docs]</a><span class="k">def</span> <span class="nf">submission_is_not_finalized</span><span class="p">(</span><span class="n">event</span><span class="p">:</span> <span class="n">Event</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Verify that the submission is not finalized.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    event : :class:`.Event`</span>
+<span class="sd">    submission : :class:`.domain.Submission`</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    :class:`.InvalidEvent`</span>
+<span class="sd">        Raised if the submission is finalized.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">submission</span><span class="o">.</span><span class="n">finalized</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">InvalidEvent</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="s2">&quot;Cannot apply to a finalized submission&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="no_trailing_period"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.domain.event.validators.html#arxiv.submission.domain.event.validators.no_trailing_period">[docs]</a><span class="k">def</span> <span class="nf">no_trailing_period</span><span class="p">(</span><span class="n">event</span><span class="p">:</span> <span class="n">Event</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">Submission</span><span class="p">,</span>
+                       <span class="n">value</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Verify that there are no trailing periods in ``value`` except ellipses.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;(?&lt;!\.\.)\.$&quot;</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">InvalidEvent</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="s2">&quot;Must not contain trailing periods except&quot;</span>
+                                  <span class="s2">&quot; ellipses.&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="must_be_a_valid_category"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.domain.event.validators.html#arxiv.submission.domain.event.validators.must_be_a_valid_category">[docs]</a><span class="k">def</span> <span class="nf">must_be_a_valid_category</span><span class="p">(</span><span class="n">event</span><span class="p">:</span> <span class="n">Event</span><span class="p">,</span> <span class="n">category</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+                             <span class="n">submission</span><span class="p">:</span> <span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Valid arXiv categories are defined in :mod:`arxiv.taxonomy`.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">category</span> <span class="ow">or</span> <span class="n">category</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">taxonomy</span><span class="o">.</span><span class="n">CATEGORIES_ACTIVE</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">InvalidEvent</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="s2">&quot;Not a valid category&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="cannot_be_primary"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.domain.event.validators.html#arxiv.submission.domain.event.validators.cannot_be_primary">[docs]</a><span class="k">def</span> <span class="nf">cannot_be_primary</span><span class="p">(</span><span class="n">event</span><span class="p">:</span> <span class="n">Event</span><span class="p">,</span> <span class="n">category</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">Submission</span><span class="p">)</span> \
+        <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;The category can&#39;t already be set as a primary classification.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">submission</span><span class="o">.</span><span class="n">primary_classification</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span>
+    <span class="k">if</span> <span class="n">category</span> <span class="o">==</span> <span class="n">submission</span><span class="o">.</span><span class="n">primary_classification</span><span class="o">.</span><span class="n">category</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">InvalidEvent</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="s2">&quot;The same category cannot be used as both&quot;</span>
+                                  <span class="s2">&quot; the primary and a secondary category.&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="cannot_be_secondary"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.domain.event.validators.html#arxiv.submission.domain.event.validators.cannot_be_secondary">[docs]</a><span class="k">def</span> <span class="nf">cannot_be_secondary</span><span class="p">(</span><span class="n">event</span><span class="p">:</span> <span class="n">Event</span><span class="p">,</span> <span class="n">category</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">Submission</span><span class="p">)</span> \
+        <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;The same category cannot be added as a secondary twice.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">category</span> <span class="ow">in</span> <span class="n">submission</span><span class="o">.</span><span class="n">secondary_categories</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">InvalidEvent</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">f</span><span class="s2">&quot;Secondary </span><span class="si">{category}</span><span class="s2"> already set on this&quot;</span>
+                                  <span class="n">f</span><span class="s2">&quot; submission.&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="no_active_requests"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.domain.event.validators.html#arxiv.submission.domain.event.validators.no_active_requests">[docs]</a><span class="k">def</span> <span class="nf">no_active_requests</span><span class="p">(</span><span class="n">event</span><span class="p">:</span> <span class="n">Event</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">submission</span><span class="o">.</span><span class="n">has_active_requests</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">InvalidEvent</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="s2">&quot;Must not have active requests.&quot;</span><span class="p">)</span></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../../index.html">arXiv submission & moderation</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../architecture.html">Submission &amp; moderation subsystem architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../announcement_process.html">Submission &amp; announcement Process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../submission_api_context.html">Submission API: Context</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../containers/core/arxiv.submission.html">arxiv.submission package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../containers/metadata/metadata.html">metadata package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../background.html">Background</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../../index.html">Module code</a><ul>
+  <li><a href="../event.html">arxiv.submission.domain.event</a><ul>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, arXiv.org.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.3</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

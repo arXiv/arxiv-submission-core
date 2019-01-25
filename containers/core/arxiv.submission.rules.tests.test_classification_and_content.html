@@ -1,0 +1,237 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>arxiv.submission.rules.tests.test_classification_and_content module &#8212; arXiv submission &amp; moderation 0.1 documentation</title>
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="arxiv.submission.rules.tests.test_metadata_checks module" href="arxiv.submission.rules.tests.test_metadata_checks.html" />
+    <link rel="prev" title="arxiv.submission.rules.tests.data.titles module" href="arxiv.submission.rules.tests.data.titles.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="module-arxiv.submission.rules.tests.test_classification_and_content">
+<span id="arxiv-submission-rules-tests-test-classification-and-content-module"></span><h1>arxiv.submission.rules.tests.test_classification_and_content module<a class="headerlink" href="#module-arxiv.submission.rules.tests.test_classification_and_content" title="Permalink to this headline">¶</a></h1>
+<p>Tests for classification and content processing rules.</p>
+<dl class="class">
+<dt id="arxiv.submission.rules.tests.test_classification_and_content.TestCheckStopwordCount">
+<em class="property">class </em><code class="descclassname">arxiv.submission.rules.tests.test_classification_and_content.</code><code class="descname">TestCheckStopwordCount</code><span class="sig-paren">(</span><em>methodName='runTest'</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/rules/tests/test_classification_and_content.html#TestCheckStopwordCount"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.rules.tests.test_classification_and_content.TestCheckStopwordCount" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">unittest.case.TestCase</span></code></p>
+<p>When a stopword count feature is added, we check for low value.</p>
+<dl class="method">
+<dt id="arxiv.submission.rules.tests.test_classification_and_content.TestCheckStopwordCount.setUp">
+<code class="descname">setUp</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/rules/tests/test_classification_and_content.html#TestCheckStopwordCount.setUp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.rules.tests.test_classification_and_content.TestCheckStopwordCount.setUp" title="Permalink to this definition">¶</a></dt>
+<dd><p>We have a submission.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.rules.tests.test_classification_and_content.TestCheckStopwordCount.test_check_stop_count">
+<code class="descname">test_check_stop_count</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/rules/tests/test_classification_and_content.html#TestCheckStopwordCount.test_check_stop_count"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.rules.tests.test_classification_and_content.TestCheckStopwordCount.test_check_stop_count" title="Permalink to this definition">¶</a></dt>
+<dd><p>A stopword count feature is added, and we check its value.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.rules.tests.test_classification_and_content.TestCheckStopwordCount.test_check_stop_count_is_ok">
+<code class="descname">test_check_stop_count_is_ok</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/rules/tests/test_classification_and_content.html#TestCheckStopwordCount.test_check_stop_count_is_ok"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.rules.tests.test_classification_and_content.TestCheckStopwordCount.test_check_stop_count_is_ok" title="Permalink to this definition">¶</a></dt>
+<dd><p>The stopword count is high enough for comfort.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.submission.rules.tests.test_classification_and_content.TestCheckStopwordPercent">
+<em class="property">class </em><code class="descclassname">arxiv.submission.rules.tests.test_classification_and_content.</code><code class="descname">TestCheckStopwordPercent</code><span class="sig-paren">(</span><em>methodName='runTest'</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/rules/tests/test_classification_and_content.html#TestCheckStopwordPercent"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.rules.tests.test_classification_and_content.TestCheckStopwordPercent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">unittest.case.TestCase</span></code></p>
+<p>When a stopword percent feature is added, we check for low value.</p>
+<dl class="method">
+<dt id="arxiv.submission.rules.tests.test_classification_and_content.TestCheckStopwordPercent.setUp">
+<code class="descname">setUp</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/rules/tests/test_classification_and_content.html#TestCheckStopwordPercent.setUp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.rules.tests.test_classification_and_content.TestCheckStopwordPercent.setUp" title="Permalink to this definition">¶</a></dt>
+<dd><p>We have a submission.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.rules.tests.test_classification_and_content.TestCheckStopwordPercent.test_check_stop_count">
+<code class="descname">test_check_stop_count</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/rules/tests/test_classification_and_content.html#TestCheckStopwordPercent.test_check_stop_count"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.rules.tests.test_classification_and_content.TestCheckStopwordPercent.test_check_stop_count" title="Permalink to this definition">¶</a></dt>
+<dd><p>A stopword count feature is added, and we check its value.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.rules.tests.test_classification_and_content.TestCheckStopwordPercent.test_check_stop_percent_is_ok">
+<code class="descname">test_check_stop_percent_is_ok</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/rules/tests/test_classification_and_content.html#TestCheckStopwordPercent.test_check_stop_percent_is_ok"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.rules.tests.test_classification_and_content.TestCheckStopwordPercent.test_check_stop_percent_is_ok" title="Permalink to this definition">¶</a></dt>
+<dd><p>The stopword count is high enough for comfort.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.submission.rules.tests.test_classification_and_content.TestClassificationRequest">
+<em class="property">class </em><code class="descclassname">arxiv.submission.rules.tests.test_classification_and_content.</code><code class="descname">TestClassificationRequest</code><span class="sig-paren">(</span><em>methodName='runTest'</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/rules/tests/test_classification_and_content.html#TestClassificationRequest"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.rules.tests.test_classification_and_content.TestClassificationRequest" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">unittest.case.TestCase</span></code></p>
+<p>When plain text becomes available, we call the auto-classifier.</p>
+<dl class="method">
+<dt id="arxiv.submission.rules.tests.test_classification_and_content.TestClassificationRequest.setUp">
+<code class="descname">setUp</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/rules/tests/test_classification_and_content.html#TestClassificationRequest.setUp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.rules.tests.test_classification_and_content.TestClassificationRequest.setUp" title="Permalink to this definition">¶</a></dt>
+<dd><p>We have a submission.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.rules.tests.test_classification_and_content.TestClassificationRequest.test_call_classifier">
+<code class="descname">test_call_classifier</code><span class="sig-paren">(</span><em>mock_plaintext</em>, <em>mock_classifier</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/rules/tests/test_classification_and_content.html#TestClassificationRequest.test_call_classifier"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.rules.tests.test_classification_and_content.TestClassificationRequest.test_call_classifier" title="Permalink to this definition">¶</a></dt>
+<dd><p>Extraction succeeds, and we request classification.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.rules.tests.test_classification_and_content.TestClassificationRequest.test_classification_fails">
+<code class="descname">test_classification_fails</code><span class="sig-paren">(</span><em>mock_plaintext</em>, <em>mock_classifier</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/rules/tests/test_classification_and_content.html#TestClassificationRequest.test_classification_fails"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.rules.tests.test_classification_and_content.TestClassificationRequest.test_classification_fails" title="Permalink to this definition">¶</a></dt>
+<dd><p>The classification request fails.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.submission.rules.tests.test_classification_and_content.TestPlainTextContentExtraction">
+<em class="property">class </em><code class="descclassname">arxiv.submission.rules.tests.test_classification_and_content.</code><code class="descname">TestPlainTextContentExtraction</code><span class="sig-paren">(</span><em>methodName='runTest'</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/rules/tests/test_classification_and_content.html#TestPlainTextContentExtraction"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.rules.tests.test_classification_and_content.TestPlainTextContentExtraction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">unittest.case.TestCase</span></code></p>
+<p>When the submitter confirms the PDF preview, we extract plain text.</p>
+<dl class="method">
+<dt id="arxiv.submission.rules.tests.test_classification_and_content.TestPlainTextContentExtraction.setUp">
+<code class="descname">setUp</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/rules/tests/test_classification_and_content.html#TestPlainTextContentExtraction.setUp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.rules.tests.test_classification_and_content.TestPlainTextContentExtraction.setUp" title="Permalink to this definition">¶</a></dt>
+<dd><p>We have a submission.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.rules.tests.test_classification_and_content.TestPlainTextContentExtraction.test_extract_text">
+<code class="descname">test_extract_text</code><span class="sig-paren">(</span><em>mock_plaintext</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/rules/tests/test_classification_and_content.html#TestPlainTextContentExtraction.test_extract_text"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.rules.tests.test_classification_and_content.TestPlainTextContentExtraction.test_extract_text" title="Permalink to this definition">¶</a></dt>
+<dd><p>Submitter confirms PDF preview, and we attempt to extract text.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.rules.tests.test_classification_and_content.TestPlainTextContentExtraction.test_extraction_fails_after_start">
+<code class="descname">test_extraction_fails_after_start</code><span class="sig-paren">(</span><em>mock_plaintext</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/rules/tests/test_classification_and_content.html#TestPlainTextContentExtraction.test_extraction_fails_after_start"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.rules.tests.test_classification_and_content.TestPlainTextContentExtraction.test_extraction_fails_after_start" title="Permalink to this definition">¶</a></dt>
+<dd><p>Extraction fails after starting.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.rules.tests.test_classification_and_content.TestPlainTextContentExtraction.test_extraction_request_fails">
+<code class="descname">test_extraction_request_fails</code><span class="sig-paren">(</span><em>mock_plaintext</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/rules/tests/test_classification_and_content.html#TestPlainTextContentExtraction.test_extraction_request_fails"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.rules.tests.test_classification_and_content.TestPlainTextContentExtraction.test_extraction_request_fails" title="Permalink to this definition">¶</a></dt>
+<dd><p>There is a problem requesting plain text extraction.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">arXiv submission & moderation</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../architecture.html">Submission &amp; moderation subsystem architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../announcement_process.html">Submission &amp; announcement Process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../submission_api_context.html">Submission API: Context</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="arxiv.submission.html">arxiv.submission package</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="arxiv.submission.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.submission.html#using-commands-events">Using commands/events</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.submission.html#integration-with-the-legacy-system">Integration with the legacy system</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="arxiv.submission.html#subpackages">Subpackages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.submission.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../metadata/metadata.html">metadata package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../background.html">Background</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="arxiv.submission.html">arxiv.submission package</a><ul>
+  <li><a href="arxiv.submission.rules.html">arxiv.submission.rules package</a><ul>
+  <li><a href="arxiv.submission.rules.tests.html">arxiv.submission.rules.tests package</a><ul>
+      <li>Previous: <a href="arxiv.submission.rules.tests.data.titles.html" title="previous chapter">arxiv.submission.rules.tests.data.titles module</a></li>
+      <li>Next: <a href="arxiv.submission.rules.tests.test_metadata_checks.html" title="next chapter">arxiv.submission.rules.tests.test_metadata_checks module</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, arXiv.org.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.3</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../../_sources/containers/core/arxiv.submission.rules.tests.test_classification_and_content.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

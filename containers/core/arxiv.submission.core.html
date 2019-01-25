@@ -1,0 +1,252 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>arxiv.submission.core module &#8212; arXiv submission &amp; moderation 0.1 documentation</title>
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="arxiv.submission.exceptions module" href="arxiv.submission.exceptions.html" />
+    <link rel="prev" title="arxiv.submission.config module" href="arxiv.submission.config.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="module-arxiv.submission.core">
+<span id="arxiv-submission-core-module"></span><h1>arxiv.submission.core module<a class="headerlink" href="#module-arxiv.submission.core" title="Permalink to this headline">¶</a></h1>
+<p>Core persistence methods for submissions and submission events.</p>
+<dl class="function">
+<dt id="arxiv.submission.core.init_app">
+<code class="descclassname">arxiv.submission.core.</code><code class="descname">init_app</code><span class="sig-paren">(</span><em>app</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/core.html#init_app"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.core.init_app" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set default configuration parameters for an application instance.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><code class="docutils literal notranslate"><span class="pre">None</span></code></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="arxiv.submission.core.load">
+<code class="descclassname">arxiv.submission.core.</code><code class="descname">load</code><span class="sig-paren">(</span><em>submission_id</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/core.html#load"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.core.load" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load a submission and its history.</p>
+<p>This loads all events for the submission, and generates the most
+up-to-date representation based on those events.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>submission_id</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a>) – Submission identifier.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tuple</span></code>[<a class="reference internal" href="arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.Submission" title="arxiv.submission.domain.submission.Submission"><code class="xref py py-class docutils literal notranslate"><span class="pre">Submission</span></code></a>, <a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.List" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference internal" href="arxiv.submission.domain.event.event.html#arxiv.submission.domain.event.event.Event" title="arxiv.submission.domain.event.event.Event"><code class="xref py py-class docutils literal notranslate"><span class="pre">Event</span></code></a>]]</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><ul class="simple">
+<li><code class="xref py py-class docutils literal notranslate"><span class="pre">domain.Submission</span></code> – The current state of the submission.</li>
+<li><em>list</em> – Items are <a class="reference internal" href="arxiv.submission.domain.event.event.html#arxiv.submission.domain.event.event.Event" title="arxiv.submission.domain.event.event.Event"><code class="xref py py-class docutils literal notranslate"><span class="pre">Event</span></code></a> instances, in order of their occurrence.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><a class="reference internal" href="arxiv.submission.exceptions.html#arxiv.submission.exceptions.NoSuchSubmission" title="arxiv.submission.exceptions.NoSuchSubmission"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.submission.exceptions.NoSuchSubmission</span></code></a> – Raised when a submission with the passed ID cannot be found.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="arxiv.submission.core.load_fast">
+<code class="descclassname">arxiv.submission.core.</code><code class="descname">load_fast</code><span class="sig-paren">(</span><em>submission_id</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/core.html#load_fast"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.core.load_fast" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load a <code class="xref py py-class docutils literal notranslate"><span class="pre">domain.Submission</span></code> from its last projected state.</p>
+<p>This does not load and apply past events. The most recent stored submission
+state is loaded directly from the database.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>submission_id</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a>) – Submission identifier.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.Submission" title="arxiv.submission.domain.submission.Submission"><code class="xref py py-class docutils literal notranslate"><span class="pre">Submission</span></code></a></td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><code class="xref py py-class docutils literal notranslate"><span class="pre">domain.Submission</span></code> – The current state of the submission.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="arxiv.submission.core.load_submissions_for_user">
+<code class="descclassname">arxiv.submission.core.</code><code class="descname">load_submissions_for_user</code><span class="sig-paren">(</span><em>user_id</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/core.html#load_submissions_for_user"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.core.load_submissions_for_user" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load active <code class="xref py py-class docutils literal notranslate"><span class="pre">domain.Submission</span></code> instances for a specific user.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>user_id</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/functions.html#int" title="(in Python v3.6)"><em>int</em></a>) – Unique identifier for the user.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.List" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference internal" href="arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.Submission" title="arxiv.submission.domain.submission.Submission"><code class="xref py py-class docutils literal notranslate"><span class="pre">Submission</span></code></a>]</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><em>list</em> – Items are <code class="xref py py-class docutils literal notranslate"><span class="pre">domain.Submission</span></code> instances.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="arxiv.submission.core.save">
+<code class="descclassname">arxiv.submission.core.</code><code class="descname">save</code><span class="sig-paren">(</span><em>*events</em>, <em>submission_id=None</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/core.html#save"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.core.save" title="Permalink to this definition">¶</a></dt>
+<dd><p>Commit a set of new <a class="reference internal" href="arxiv.submission.domain.event.event.html#arxiv.submission.domain.event.event.Event" title="arxiv.submission.domain.event.event.Event"><code class="xref py py-class docutils literal notranslate"><span class="pre">Event</span></code></a> instances for a submission.</p>
+<p>This will persist the events to the database, along with the final
+state of the submission, and generate external notification(s) on the
+appropriate channels.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>events</strong> (<a class="reference internal" href="arxiv.submission.domain.event.event.html#arxiv.submission.domain.event.event.Event" title="arxiv.submission.domain.event.event.Event"><code class="xref py py-class docutils literal notranslate"><span class="pre">Event</span></code></a>) – Events to apply and persist.</li>
+<li><strong>submission_id</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/functions.html#int" title="(in Python v3.6)"><em>int</em></a>) – The unique ID for the submission, if available. If not provided, it is
+expected that <code class="docutils literal notranslate"><span class="pre">events</span></code> includes a <a class="reference internal" href="arxiv.submission.domain.event.html#arxiv.submission.domain.event.CreateSubmission" title="arxiv.submission.domain.event.CreateSubmission"><code class="xref py py-class docutils literal notranslate"><span class="pre">CreateSubmission</span></code></a>.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tuple</span></code>[<a class="reference internal" href="arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.Submission" title="arxiv.submission.domain.submission.Submission"><code class="xref py py-class docutils literal notranslate"><span class="pre">Submission</span></code></a>, <a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.List" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference internal" href="arxiv.submission.domain.event.event.html#arxiv.submission.domain.event.event.Event" title="arxiv.submission.domain.event.event.Event"><code class="xref py py-class docutils literal notranslate"><span class="pre">Event</span></code></a>]]</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><ul class="simple">
+<li><a class="reference internal" href="arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.Submission" title="arxiv.submission.domain.submission.Submission"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.submission.domain.submission.Submission</span></code></a> – The state of the submission after all events (including rule-derived
+events) have been applied. Updated with the submission ID, if a
+<a class="reference internal" href="arxiv.submission.domain.event.html#arxiv.submission.domain.event.CreateSubmission" title="arxiv.submission.domain.event.CreateSubmission"><code class="xref py py-class docutils literal notranslate"><span class="pre">CreateSubmission</span></code></a> was included.</li>
+<li><em>list</em> – A list of <a class="reference internal" href="arxiv.submission.domain.event.event.html#arxiv.submission.domain.event.event.Event" title="arxiv.submission.domain.event.event.Event"><code class="xref py py-class docutils literal notranslate"><span class="pre">Event</span></code></a> instances applied to the submission. Note
+that this list may contain more events than were passed, if event
+rules were triggered.</li>
+</ul>
+</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><ul class="first last simple">
+<li><a class="reference internal" href="arxiv.submission.exceptions.html#arxiv.submission.exceptions.NoSuchSubmission" title="arxiv.submission.exceptions.NoSuchSubmission"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.submission.exceptions.NoSuchSubmission</span></code></a> – Raised if <code class="docutils literal notranslate"><span class="pre">submission_id</span></code> is not provided and the first event is not
+a <a class="reference internal" href="arxiv.submission.domain.event.html#arxiv.submission.domain.event.CreateSubmission" title="arxiv.submission.domain.event.CreateSubmission"><code class="xref py py-class docutils literal notranslate"><span class="pre">CreateSubmission</span></code></a>, or <code class="docutils literal notranslate"><span class="pre">submission_id</span></code> is provided but
+no such submission exists.</li>
+<li><a class="reference internal" href="arxiv.submission.exceptions.html#arxiv.submission.exceptions.InvalidEvent" title="arxiv.submission.exceptions.InvalidEvent"><code class="xref py py-class docutils literal notranslate"><span class="pre">InvalidEvent</span></code></a> – If an invalid event is encountered, the entire operation is aborted
+and this exception is raised.</li>
+<li><a class="reference internal" href="arxiv.submission.exceptions.html#arxiv.submission.exceptions.SaveError" title="arxiv.submission.exceptions.SaveError"><code class="xref py py-class docutils literal notranslate"><span class="pre">SaveError</span></code></a> – There was a problem persisting the events and/or submission state
+to the database.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">arXiv submission & moderation</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../architecture.html">Submission &amp; moderation subsystem architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../announcement_process.html">Submission &amp; announcement Process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../submission_api_context.html">Submission API: Context</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="arxiv.submission.html">arxiv.submission package</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="arxiv.submission.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.submission.html#using-commands-events">Using commands/events</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.submission.html#integration-with-the-legacy-system">Integration with the legacy system</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.submission.html#subpackages">Subpackages</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="arxiv.submission.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../metadata/metadata.html">metadata package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../background.html">Background</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="arxiv.submission.html">arxiv.submission package</a><ul>
+      <li>Previous: <a href="arxiv.submission.config.html" title="previous chapter">arxiv.submission.config module</a></li>
+      <li>Next: <a href="arxiv.submission.exceptions.html" title="next chapter">arxiv.submission.exceptions module</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, arXiv.org.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.3</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../../_sources/containers/core/arxiv.submission.core.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

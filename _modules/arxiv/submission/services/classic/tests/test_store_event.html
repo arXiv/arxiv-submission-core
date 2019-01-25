@@ -1,0 +1,406 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>arxiv.submission.services.classic.tests.test_store_event &#8212; arXiv submission &amp; moderation 0.1 documentation</title>
+    <link rel="stylesheet" href="../../../../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../../../../../_static/graphviz.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../../../../../" src="../../../../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for arxiv.submission.services.classic.tests.test_store_event</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Tests for storing events.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">unittest</span> <span class="k">import</span> <span class="n">TestCase</span><span class="p">,</span> <span class="n">mock</span>
+
+<span class="kn">from</span> <span class="nn">flask</span> <span class="k">import</span> <span class="n">Flask</span>
+
+<span class="kn">from</span> <span class="nn">....domain.agent</span> <span class="k">import</span> <span class="n">User</span><span class="p">,</span> <span class="n">System</span>
+<span class="kn">from</span> <span class="nn">....domain.submission</span> <span class="k">import</span> <span class="n">License</span><span class="p">,</span> <span class="n">Submission</span><span class="p">,</span> <span class="n">Author</span>
+<span class="kn">from</span> <span class="nn">....domain.event</span> <span class="k">import</span> <span class="n">CreateSubmission</span><span class="p">,</span> \
+    <span class="n">FinalizeSubmission</span><span class="p">,</span> <span class="n">SetPrimaryClassification</span><span class="p">,</span> <span class="n">AddSecondaryClassification</span><span class="p">,</span> \
+    <span class="n">SetLicense</span><span class="p">,</span> <span class="n">ConfirmPolicy</span><span class="p">,</span> <span class="n">ConfirmContactInformation</span><span class="p">,</span> <span class="n">SetTitle</span><span class="p">,</span> \
+    <span class="n">SetAbstract</span><span class="p">,</span> <span class="n">SetDOI</span><span class="p">,</span> <span class="n">SetMSCClassification</span><span class="p">,</span> <span class="n">SetACMClassification</span><span class="p">,</span> \
+    <span class="n">SetJournalReference</span><span class="p">,</span> <span class="n">SetComments</span><span class="p">,</span> <span class="n">SetAuthors</span><span class="p">,</span> <span class="n">Publish</span><span class="p">,</span> <span class="n">ConfirmAuthorship</span><span class="p">,</span> \
+    <span class="n">SetUploadPackage</span>
+<span class="kn">from</span> <span class="nn">..</span> <span class="k">import</span> <span class="n">init_app</span><span class="p">,</span> <span class="n">create_all</span><span class="p">,</span> <span class="n">drop_all</span><span class="p">,</span> <span class="n">models</span><span class="p">,</span> <span class="n">DBEvent</span><span class="p">,</span> \
+    <span class="n">get_submission</span><span class="p">,</span> <span class="n">current_session</span><span class="p">,</span> <span class="n">get_licenses</span><span class="p">,</span> <span class="n">exceptions</span><span class="p">,</span> <span class="n">store_event</span>
+
+<span class="kn">from</span> <span class="nn">.util</span> <span class="k">import</span> <span class="n">in_memory_db</span>
+
+
+<div class="viewcode-block" id="TestStoreEvent"><a class="viewcode-back" href="../../../../../../containers/core/arxiv.submission.services.classic.tests.test_store_event.html#arxiv.submission.services.classic.tests.test_store_event.TestStoreEvent">[docs]</a><span class="k">class</span> <span class="nc">TestStoreEvent</span><span class="p">(</span><span class="n">TestCase</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Tests for :func:`.store_event`.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="TestStoreEvent.setUp"><a class="viewcode-back" href="../../../../../../containers/core/arxiv.submission.services.classic.tests.test_store_event.html#arxiv.submission.services.classic.tests.test_store_event.TestStoreEvent.setUp">[docs]</a>    <span class="k">def</span> <span class="nf">setUp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Instantiate a user.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">user</span> <span class="o">=</span> <span class="n">User</span><span class="p">(</span><span class="mi">12345</span><span class="p">,</span> <span class="s1">&#39;joe@joe.joe&#39;</span><span class="p">,</span>
+                         <span class="n">endorsements</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;physics.soc-ph&#39;</span><span class="p">,</span> <span class="s1">&#39;cs.DL&#39;</span><span class="p">])</span></div>
+
+<div class="viewcode-block" id="TestStoreEvent.test_store_creation"><a class="viewcode-back" href="../../../../../../containers/core/arxiv.submission.services.classic.tests.test_store_event.html#arxiv.submission.services.classic.tests.test_store_event.TestStoreEvent.test_store_creation">[docs]</a>    <span class="k">def</span> <span class="nf">test_store_creation</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Store a :class:`CreateSubmission`.&quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="n">in_memory_db</span><span class="p">()</span> <span class="k">as</span> <span class="n">session</span><span class="p">:</span>
+            <span class="n">before</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="n">event</span> <span class="o">=</span> <span class="n">CreateSubmission</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">)</span>
+            <span class="n">after</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">before</span><span class="p">)</span>
+
+            <span class="n">event</span><span class="p">,</span> <span class="n">after</span> <span class="o">=</span> <span class="n">store_event</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">before</span><span class="p">,</span> <span class="n">after</span><span class="p">)</span>
+
+            <span class="n">db_sb</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">submission_id</span><span class="p">)</span>
+
+            <span class="c1"># Make sure that we get the right submission ID.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertIsNotNone</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">submission_id</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">submission_id</span><span class="p">,</span> <span class="n">after</span><span class="o">.</span><span class="n">submission_id</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">submission_id</span><span class="p">,</span> <span class="n">db_sb</span><span class="o">.</span><span class="n">submission_id</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">db_sb</span><span class="o">.</span><span class="n">status</span><span class="p">,</span>  <span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">NOT_SUBMITTED</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">db_sb</span><span class="o">.</span><span class="n">type</span><span class="p">,</span> <span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">NEW_SUBMISSION</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">db_sb</span><span class="o">.</span><span class="n">version</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestStoreEvent.test_store_events_with_metadata"><a class="viewcode-back" href="../../../../../../containers/core/arxiv.submission.services.classic.tests.test_store_event.html#arxiv.submission.services.classic.tests.test_store_event.TestStoreEvent.test_store_events_with_metadata">[docs]</a>    <span class="k">def</span> <span class="nf">test_store_events_with_metadata</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Store events and attendant submission with metadata.&quot;&quot;&quot;</span>
+        <span class="n">metadata</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;title&#39;</span><span class="p">:</span> <span class="s1">&#39;foo title&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;abstract&#39;</span><span class="p">:</span> <span class="s1">&#39;very abstract&#39;</span> <span class="o">*</span> <span class="mi">20</span><span class="p">,</span>
+            <span class="s1">&#39;comments&#39;</span><span class="p">:</span> <span class="s1">&#39;indeed&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;msc_class&#39;</span><span class="p">:</span> <span class="s1">&#39;foo msc&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;acm_class&#39;</span><span class="p">:</span> <span class="s1">&#39;F.2.2; I.2.7&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;doi&#39;</span><span class="p">:</span> <span class="s1">&#39;10.1000/182&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;journal_ref&#39;</span><span class="p">:</span> <span class="s1">&#39;Nature 1991 2: 1&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;authors&#39;</span><span class="p">:</span> <span class="p">[</span><span class="n">Author</span><span class="p">(</span><span class="n">order</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">forename</span><span class="o">=</span><span class="s1">&#39;Joe&#39;</span><span class="p">,</span> <span class="n">surname</span><span class="o">=</span><span class="s1">&#39;Bloggs&#39;</span><span class="p">)]</span>
+        <span class="p">}</span>
+        <span class="k">with</span> <span class="n">in_memory_db</span><span class="p">()</span> <span class="k">as</span> <span class="n">session</span><span class="p">:</span>
+            <span class="n">ev</span> <span class="o">=</span> <span class="n">CreateSubmission</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">)</span>
+            <span class="n">ev2</span> <span class="o">=</span> <span class="n">SetTitle</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="n">metadata</span><span class="p">[</span><span class="s1">&#39;title&#39;</span><span class="p">])</span>
+            <span class="n">ev3</span> <span class="o">=</span> <span class="n">SetAbstract</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">,</span> <span class="n">abstract</span><span class="o">=</span><span class="n">metadata</span><span class="p">[</span><span class="s1">&#39;abstract&#39;</span><span class="p">])</span>
+            <span class="n">ev4</span> <span class="o">=</span> <span class="n">SetComments</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">,</span> <span class="n">comments</span><span class="o">=</span><span class="n">metadata</span><span class="p">[</span><span class="s1">&#39;comments&#39;</span><span class="p">])</span>
+            <span class="n">ev5</span> <span class="o">=</span> <span class="n">SetMSCClassification</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">,</span>
+                                       <span class="n">msc_class</span><span class="o">=</span><span class="n">metadata</span><span class="p">[</span><span class="s1">&#39;msc_class&#39;</span><span class="p">])</span>
+            <span class="n">ev6</span> <span class="o">=</span> <span class="n">SetACMClassification</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">,</span>
+                                       <span class="n">acm_class</span><span class="o">=</span><span class="n">metadata</span><span class="p">[</span><span class="s1">&#39;acm_class&#39;</span><span class="p">])</span>
+            <span class="n">ev7</span> <span class="o">=</span> <span class="n">SetJournalReference</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">,</span>
+                                      <span class="n">journal_ref</span><span class="o">=</span><span class="n">metadata</span><span class="p">[</span><span class="s1">&#39;journal_ref&#39;</span><span class="p">])</span>
+            <span class="n">ev8</span> <span class="o">=</span> <span class="n">SetDOI</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">,</span> <span class="n">doi</span><span class="o">=</span><span class="n">metadata</span><span class="p">[</span><span class="s1">&#39;doi&#39;</span><span class="p">])</span>
+            <span class="n">events</span> <span class="o">=</span> <span class="p">[</span><span class="n">ev</span><span class="p">,</span> <span class="n">ev2</span><span class="p">,</span> <span class="n">ev3</span><span class="p">,</span> <span class="n">ev4</span><span class="p">,</span> <span class="n">ev5</span><span class="p">,</span> <span class="n">ev6</span><span class="p">,</span> <span class="n">ev7</span><span class="p">,</span> <span class="n">ev8</span><span class="p">]</span>
+
+            <span class="n">before</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">event</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">events</span><span class="p">)):</span>
+                <span class="n">after</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">before</span><span class="p">)</span>
+                <span class="n">event</span><span class="p">,</span> <span class="n">after</span> <span class="o">=</span> <span class="n">store_event</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">before</span><span class="p">,</span> <span class="n">after</span><span class="p">)</span>
+                <span class="n">events</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">event</span>
+                <span class="n">before</span> <span class="o">=</span> <span class="n">after</span>
+
+            <span class="n">db_submission</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="p">)</span>\
+                <span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">after</span><span class="o">.</span><span class="n">submission_id</span><span class="p">)</span>
+            <span class="n">db_events</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">DBEvent</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">metadata</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="o">==</span> <span class="s1">&#39;authors&#39;</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">db_submission</span><span class="p">,</span> <span class="n">key</span><span class="p">),</span> <span class="n">value</span><span class="p">,</span>
+                             <span class="n">f</span><span class="s2">&quot;The value of </span><span class="si">{key}</span><span class="s2"> should be </span><span class="si">{value}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">db_submission</span><span class="o">.</span><span class="n">authors</span><span class="p">,</span>
+                         <span class="n">after</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">authors_display</span><span class="p">,</span>
+                         <span class="s2">&quot;The canonical author string should be used to&quot;</span>
+                         <span class="s2">&quot; update the submission in the database.&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">db_events</span><span class="p">),</span> <span class="mi">8</span><span class="p">,</span> <span class="s2">&quot;Eight events should be stored&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">db_event</span> <span class="ow">in</span> <span class="n">db_events</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">db_event</span><span class="o">.</span><span class="n">submission_id</span><span class="p">,</span> <span class="n">after</span><span class="o">.</span><span class="n">submission_id</span><span class="p">,</span>
+                             <span class="s2">&quot;The submission id should be set&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestStoreEvent.test_store_events_with_finalized_submission"><a class="viewcode-back" href="../../../../../../containers/core/arxiv.submission.services.classic.tests.test_store_event.html#arxiv.submission.services.classic.tests.test_store_event.TestStoreEvent.test_store_events_with_finalized_submission">[docs]</a>    <span class="k">def</span> <span class="nf">test_store_events_with_finalized_submission</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Store events and a finalized submission.&quot;&quot;&quot;</span>
+        <span class="n">metadata</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;title&#39;</span><span class="p">:</span> <span class="s1">&#39;foo title&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;abstract&#39;</span><span class="p">:</span> <span class="s1">&#39;very abstract&#39;</span> <span class="o">*</span> <span class="mi">20</span><span class="p">,</span>
+            <span class="s1">&#39;comments&#39;</span><span class="p">:</span> <span class="s1">&#39;indeed&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;msc_class&#39;</span><span class="p">:</span> <span class="s1">&#39;foo msc&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;acm_class&#39;</span><span class="p">:</span> <span class="s1">&#39;F.2.2; I.2.7&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;doi&#39;</span><span class="p">:</span> <span class="s1">&#39;10.1000/182&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;journal_ref&#39;</span><span class="p">:</span> <span class="s1">&#39;Nature 1991 2: 1&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;authors&#39;</span><span class="p">:</span> <span class="p">[</span><span class="n">Author</span><span class="p">(</span><span class="n">order</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">forename</span><span class="o">=</span><span class="s1">&#39;Joe&#39;</span><span class="p">,</span> <span class="n">surname</span><span class="o">=</span><span class="s1">&#39;Bloggs&#39;</span><span class="p">)]</span>
+        <span class="p">}</span>
+        <span class="k">with</span> <span class="n">in_memory_db</span><span class="p">()</span> <span class="k">as</span> <span class="n">session</span><span class="p">:</span>
+
+            <span class="n">events</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="n">CreateSubmission</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">),</span>
+                <span class="n">ConfirmContactInformation</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">),</span>
+                <span class="n">ConfirmAuthorship</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">,</span> <span class="n">submitter_is_author</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+                <span class="n">ConfirmContactInformation</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">),</span>
+                <span class="n">ConfirmPolicy</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">),</span>
+                <span class="n">SetTitle</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="n">metadata</span><span class="p">[</span><span class="s1">&#39;title&#39;</span><span class="p">]),</span>
+                <span class="n">SetAuthors</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">,</span> <span class="n">authors</span><span class="o">=</span><span class="p">[</span>
+                    <span class="n">Author</span><span class="p">(</span><span class="n">order</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">forename</span><span class="o">=</span><span class="s1">&#39;Joe&#39;</span><span class="p">,</span> <span class="n">surname</span><span class="o">=</span><span class="s1">&#39;Bloggs&#39;</span><span class="p">,</span>
+                           <span class="n">email</span><span class="o">=</span><span class="s1">&#39;joe@blo.ggs&#39;</span><span class="p">),</span>
+                    <span class="n">Author</span><span class="p">(</span><span class="n">order</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">forename</span><span class="o">=</span><span class="s1">&#39;Jane&#39;</span><span class="p">,</span> <span class="n">surname</span><span class="o">=</span><span class="s1">&#39;Doe&#39;</span><span class="p">,</span>
+                           <span class="n">email</span><span class="o">=</span><span class="s1">&#39;j@doe.com&#39;</span><span class="p">),</span>
+                <span class="p">]),</span>
+                <span class="n">SetAbstract</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">,</span> <span class="n">abstract</span><span class="o">=</span><span class="n">metadata</span><span class="p">[</span><span class="s1">&#39;abstract&#39;</span><span class="p">]),</span>
+                <span class="n">SetComments</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">,</span> <span class="n">comments</span><span class="o">=</span><span class="n">metadata</span><span class="p">[</span><span class="s1">&#39;comments&#39;</span><span class="p">]),</span>
+                <span class="n">SetMSCClassification</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">,</span>
+                                     <span class="n">msc_class</span><span class="o">=</span><span class="n">metadata</span><span class="p">[</span><span class="s1">&#39;msc_class&#39;</span><span class="p">]),</span>
+                <span class="n">SetACMClassification</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">,</span>
+                                     <span class="n">acm_class</span><span class="o">=</span><span class="n">metadata</span><span class="p">[</span><span class="s1">&#39;acm_class&#39;</span><span class="p">]),</span>
+                <span class="n">SetJournalReference</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">,</span>
+                                    <span class="n">journal_ref</span><span class="o">=</span><span class="n">metadata</span><span class="p">[</span><span class="s1">&#39;journal_ref&#39;</span><span class="p">]),</span>
+                <span class="n">SetDOI</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">,</span> <span class="n">doi</span><span class="o">=</span><span class="n">metadata</span><span class="p">[</span><span class="s1">&#39;doi&#39;</span><span class="p">]),</span>
+                <span class="n">SetLicense</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">,</span>
+                           <span class="n">license_uri</span><span class="o">=</span><span class="s1">&#39;http://foo.org/1.0/&#39;</span><span class="p">,</span>
+                           <span class="n">license_name</span><span class="o">=</span><span class="s1">&#39;Foo zero 1.0&#39;</span><span class="p">),</span>
+                <span class="n">SetUploadPackage</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">,</span> <span class="n">identifier</span><span class="o">=</span><span class="s1">&#39;12345&#39;</span><span class="p">),</span>
+                <span class="n">SetPrimaryClassification</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">,</span>
+                                         <span class="n">category</span><span class="o">=</span><span class="s1">&#39;physics.soc-ph&#39;</span><span class="p">),</span>
+                <span class="n">FinalizeSubmission</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">)</span>
+            <span class="p">]</span>
+
+            <span class="n">before</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">event</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">events</span><span class="p">)):</span>
+                <span class="n">after</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">before</span><span class="p">)</span>
+                <span class="n">event</span><span class="p">,</span> <span class="n">after</span> <span class="o">=</span> <span class="n">store_event</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">before</span><span class="p">,</span> <span class="n">after</span><span class="p">)</span>
+                <span class="n">events</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">event</span>
+                <span class="n">before</span> <span class="o">=</span> <span class="n">after</span>
+
+            <span class="n">db_submission</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="p">)</span> \
+                <span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">after</span><span class="o">.</span><span class="n">submission_id</span><span class="p">)</span>
+            <span class="n">db_events</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">DBEvent</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">db_submission</span><span class="o">.</span><span class="n">submission_id</span><span class="p">,</span> <span class="n">after</span><span class="o">.</span><span class="n">submission_id</span><span class="p">,</span>
+                         <span class="s2">&quot;The submission should be updated with the PK id.&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">db_submission</span><span class="o">.</span><span class="n">status</span><span class="p">,</span> <span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">SUBMITTED</span><span class="p">,</span>
+                         <span class="s2">&quot;Submission should be in submitted state.&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">db_events</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">events</span><span class="p">),</span>
+                         <span class="s2">&quot;</span><span class="si">%i</span><span class="s2"> events should be stored&quot;</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="n">events</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">db_event</span> <span class="ow">in</span> <span class="n">db_events</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">db_event</span><span class="o">.</span><span class="n">submission_id</span><span class="p">,</span> <span class="n">after</span><span class="o">.</span><span class="n">submission_id</span><span class="p">,</span>
+                             <span class="s2">&quot;The submission id should be set&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestStoreEvent.test_store_doi_jref_with_publication"><a class="viewcode-back" href="../../../../../../containers/core/arxiv.submission.services.classic.tests.test_store_event.html#arxiv.submission.services.classic.tests.test_store_event.TestStoreEvent.test_store_doi_jref_with_publication">[docs]</a>    <span class="k">def</span> <span class="nf">test_store_doi_jref_with_publication</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;:class:`SetDOI` or :class:`SetJournalReference` after pub.&quot;&quot;&quot;</span>
+        <span class="n">metadata</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;title&#39;</span><span class="p">:</span> <span class="s1">&#39;foo title&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;abstract&#39;</span><span class="p">:</span> <span class="s1">&#39;very abstract&#39;</span> <span class="o">*</span> <span class="mi">20</span><span class="p">,</span>
+            <span class="s1">&#39;comments&#39;</span><span class="p">:</span> <span class="s1">&#39;indeed&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;msc_class&#39;</span><span class="p">:</span> <span class="s1">&#39;foo msc&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;acm_class&#39;</span><span class="p">:</span> <span class="s1">&#39;F.2.2; I.2.7&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;doi&#39;</span><span class="p">:</span> <span class="s1">&#39;10.1000/182&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;journal_ref&#39;</span><span class="p">:</span> <span class="s1">&#39;Nature 1991 2: 1&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;authors&#39;</span><span class="p">:</span> <span class="p">[</span><span class="n">Author</span><span class="p">(</span><span class="n">order</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">forename</span><span class="o">=</span><span class="s1">&#39;Joe&#39;</span><span class="p">,</span> <span class="n">surname</span><span class="o">=</span><span class="s1">&#39;Bloggs&#39;</span><span class="p">)]</span>
+        <span class="p">}</span>
+
+        <span class="k">with</span> <span class="n">in_memory_db</span><span class="p">()</span> <span class="k">as</span> <span class="n">session</span><span class="p">:</span>
+            <span class="n">events</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="n">CreateSubmission</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">),</span>
+                <span class="n">ConfirmContactInformation</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">),</span>
+                <span class="n">ConfirmAuthorship</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">,</span> <span class="n">submitter_is_author</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+                <span class="n">ConfirmContactInformation</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">),</span>
+                <span class="n">ConfirmPolicy</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">),</span>
+                <span class="n">SetTitle</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="n">metadata</span><span class="p">[</span><span class="s1">&#39;title&#39;</span><span class="p">]),</span>
+                <span class="n">SetAuthors</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">,</span> <span class="n">authors</span><span class="o">=</span><span class="p">[</span>
+                    <span class="n">Author</span><span class="p">(</span><span class="n">order</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">forename</span><span class="o">=</span><span class="s1">&#39;Joe&#39;</span><span class="p">,</span> <span class="n">surname</span><span class="o">=</span><span class="s1">&#39;Bloggs&#39;</span><span class="p">,</span>
+                           <span class="n">email</span><span class="o">=</span><span class="s1">&#39;joe@blo.ggs&#39;</span><span class="p">),</span>
+                    <span class="n">Author</span><span class="p">(</span><span class="n">order</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">forename</span><span class="o">=</span><span class="s1">&#39;Jane&#39;</span><span class="p">,</span> <span class="n">surname</span><span class="o">=</span><span class="s1">&#39;Doe&#39;</span><span class="p">,</span>
+                           <span class="n">email</span><span class="o">=</span><span class="s1">&#39;j@doe.com&#39;</span><span class="p">),</span>
+                <span class="p">]),</span>
+                <span class="n">SetAbstract</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">,</span> <span class="n">abstract</span><span class="o">=</span><span class="n">metadata</span><span class="p">[</span><span class="s1">&#39;abstract&#39;</span><span class="p">]),</span>
+                <span class="n">SetComments</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">,</span> <span class="n">comments</span><span class="o">=</span><span class="n">metadata</span><span class="p">[</span><span class="s1">&#39;comments&#39;</span><span class="p">]),</span>
+                <span class="n">SetMSCClassification</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">,</span>
+                                     <span class="n">msc_class</span><span class="o">=</span><span class="n">metadata</span><span class="p">[</span><span class="s1">&#39;msc_class&#39;</span><span class="p">]),</span>
+                <span class="n">SetACMClassification</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">,</span>
+                                     <span class="n">acm_class</span><span class="o">=</span><span class="n">metadata</span><span class="p">[</span><span class="s1">&#39;acm_class&#39;</span><span class="p">]),</span>
+                <span class="n">SetJournalReference</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">,</span>
+                                    <span class="n">journal_ref</span><span class="o">=</span><span class="n">metadata</span><span class="p">[</span><span class="s1">&#39;journal_ref&#39;</span><span class="p">]),</span>
+                <span class="n">SetDOI</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">,</span> <span class="n">doi</span><span class="o">=</span><span class="n">metadata</span><span class="p">[</span><span class="s1">&#39;doi&#39;</span><span class="p">]),</span>
+                <span class="n">SetLicense</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">,</span>
+                           <span class="n">license_uri</span><span class="o">=</span><span class="s1">&#39;http://foo.org/1.0/&#39;</span><span class="p">,</span>
+                           <span class="n">license_name</span><span class="o">=</span><span class="s1">&#39;Foo zero 1.0&#39;</span><span class="p">),</span>
+                <span class="n">SetUploadPackage</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">,</span> <span class="n">identifier</span><span class="o">=</span><span class="s1">&#39;12345&#39;</span><span class="p">),</span>
+                <span class="n">SetPrimaryClassification</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">,</span>
+                                         <span class="n">category</span><span class="o">=</span><span class="s1">&#39;physics.soc-ph&#39;</span><span class="p">),</span>
+                <span class="n">FinalizeSubmission</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">)</span>
+            <span class="p">]</span>
+
+            <span class="n">before</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">event</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">events</span><span class="p">)):</span>
+                <span class="n">after</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">before</span><span class="p">)</span>
+                <span class="n">event</span> <span class="o">=</span> <span class="n">store_event</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">before</span><span class="p">,</span> <span class="n">after</span><span class="p">)</span>
+                <span class="n">events</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">event</span>
+                <span class="n">before</span> <span class="o">=</span> <span class="n">after</span>
+
+            <span class="c1"># Published!</span>
+            <span class="n">paper_id</span> <span class="o">=</span> <span class="s1">&#39;1901.00123&#39;</span>
+            <span class="n">db_submission</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="p">)</span> \
+                <span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">after</span><span class="o">.</span><span class="n">submission_id</span><span class="p">)</span>
+            <span class="n">db_submission</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="n">db_submission</span><span class="o">.</span><span class="n">PUBLISHED</span>
+            <span class="n">db_document</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">Document</span><span class="p">(</span><span class="n">paper_id</span><span class="o">=</span><span class="n">paper_id</span><span class="p">)</span>
+            <span class="n">db_submission</span><span class="o">.</span><span class="n">doc_paper_id</span> <span class="o">=</span> <span class="n">paper_id</span>
+            <span class="n">db_submission</span><span class="o">.</span><span class="n">document</span> <span class="o">=</span> <span class="n">db_document</span>
+            <span class="n">session</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">db_submission</span><span class="p">)</span>
+            <span class="n">session</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">db_document</span><span class="p">)</span>
+            <span class="n">session</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+
+            <span class="c1"># This would normally happen during a load.</span>
+            <span class="n">pub</span> <span class="o">=</span> <span class="n">Publish</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">System</span><span class="p">(</span><span class="vm">__name__</span><span class="p">),</span> <span class="n">arxiv_id</span><span class="o">=</span><span class="n">paper_id</span><span class="p">,</span>
+                          <span class="n">committed</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">before</span> <span class="o">=</span> <span class="n">pub</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">before</span><span class="p">)</span>
+            <span class="n">before</span> <span class="o">=</span> <span class="n">db_submission</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">before</span><span class="p">)</span>
+
+            <span class="c1"># Now set DOI + journal ref</span>
+            <span class="n">doi</span> <span class="o">=</span> <span class="s1">&#39;10.1000/182&#39;</span>
+            <span class="n">journal_ref</span> <span class="o">=</span> <span class="s1">&#39;foo journal 1994&#39;</span>
+            <span class="n">e3</span> <span class="o">=</span> <span class="n">SetDOI</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">,</span> <span class="n">doi</span><span class="o">=</span><span class="n">doi</span><span class="p">,</span>
+                        <span class="n">submission_id</span><span class="o">=</span><span class="n">after</span><span class="o">.</span><span class="n">submission_id</span><span class="p">)</span>
+            <span class="n">after</span> <span class="o">=</span> <span class="n">e3</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">before</span><span class="p">)</span>
+            <span class="n">store_event</span><span class="p">(</span><span class="n">e3</span><span class="p">,</span> <span class="n">before</span><span class="p">,</span> <span class="n">after</span><span class="p">)</span>
+
+            <span class="n">e4</span> <span class="o">=</span> <span class="n">SetJournalReference</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">,</span>
+                                     <span class="n">journal_ref</span><span class="o">=</span><span class="n">journal_ref</span><span class="p">,</span>
+                                     <span class="n">submission_id</span><span class="o">=</span><span class="n">after</span><span class="o">.</span><span class="n">submission_id</span><span class="p">)</span>
+            <span class="n">before</span> <span class="o">=</span> <span class="n">after</span>
+            <span class="n">after</span> <span class="o">=</span> <span class="n">e4</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">before</span><span class="p">)</span>
+            <span class="n">store_event</span><span class="p">(</span><span class="n">e4</span><span class="p">,</span> <span class="n">before</span><span class="p">,</span> <span class="n">after</span><span class="p">)</span>
+
+            <span class="c1"># What happened.</span>
+            <span class="n">db_submission</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="p">)</span> \
+                <span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">doc_paper_id</span> <span class="o">==</span> <span class="n">paper_id</span><span class="p">)</span> \
+                <span class="o">.</span><span class="n">order_by</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">submission_id</span><span class="o">.</span><span class="n">desc</span><span class="p">())</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">db_submission</span><span class="o">.</span><span class="n">count</span><span class="p">(),</span> <span class="mi">2</span><span class="p">,</span>
+                             <span class="s2">&quot;Creates a second row for the JREF&quot;</span><span class="p">)</span>
+            <span class="n">db_jref</span> <span class="o">=</span> <span class="n">db_submission</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">db_jref</span><span class="o">.</span><span class="n">is_jref</span><span class="p">())</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">db_jref</span><span class="o">.</span><span class="n">doi</span><span class="p">,</span> <span class="n">doi</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">db_jref</span><span class="o">.</span><span class="n">journal_ref</span><span class="p">,</span> <span class="n">journal_ref</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestStoreEvent.test_store_events_with_classification"><a class="viewcode-back" href="../../../../../../containers/core/arxiv.submission.services.classic.tests.test_store_event.html#arxiv.submission.services.classic.tests.test_store_event.TestStoreEvent.test_store_events_with_classification">[docs]</a>    <span class="k">def</span> <span class="nf">test_store_events_with_classification</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Store events including classification.&quot;&quot;&quot;</span>
+        <span class="n">ev</span> <span class="o">=</span> <span class="n">CreateSubmission</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">)</span>
+        <span class="n">ev2</span> <span class="o">=</span> <span class="n">SetPrimaryClassification</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">,</span>
+                                       <span class="n">category</span><span class="o">=</span><span class="s1">&#39;physics.soc-ph&#39;</span><span class="p">)</span>
+        <span class="n">ev3</span> <span class="o">=</span> <span class="n">AddSecondaryClassification</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">user</span><span class="p">,</span>
+                                         <span class="n">category</span><span class="o">=</span><span class="s1">&#39;physics.acc-ph&#39;</span><span class="p">)</span>
+        <span class="n">events</span> <span class="o">=</span> <span class="p">[</span><span class="n">ev</span><span class="p">,</span> <span class="n">ev2</span><span class="p">,</span> <span class="n">ev3</span><span class="p">]</span>
+
+        <span class="k">with</span> <span class="n">in_memory_db</span><span class="p">()</span> <span class="k">as</span> <span class="n">session</span><span class="p">:</span>
+            <span class="n">before</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">event</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">events</span><span class="p">)):</span>
+                <span class="n">after</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">before</span><span class="p">)</span>
+                <span class="n">event</span><span class="p">,</span> <span class="n">after</span> <span class="o">=</span> <span class="n">store_event</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">before</span><span class="p">,</span> <span class="n">after</span><span class="p">)</span>
+                <span class="n">events</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">event</span>
+                <span class="n">before</span> <span class="o">=</span> <span class="n">after</span>
+
+            <span class="n">db_submission</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="p">)</span>\
+                <span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">after</span><span class="o">.</span><span class="n">submission_id</span><span class="p">)</span>
+            <span class="n">db_events</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">DBEvent</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">db_submission</span><span class="o">.</span><span class="n">submission_id</span><span class="p">,</span> <span class="n">after</span><span class="o">.</span><span class="n">submission_id</span><span class="p">,</span>
+                         <span class="s2">&quot;The submission should be updated with the PK id.&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">db_events</span><span class="p">),</span> <span class="mi">3</span><span class="p">,</span> <span class="s2">&quot;Three events should be stored&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">db_event</span> <span class="ow">in</span> <span class="n">db_events</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">db_event</span><span class="o">.</span><span class="n">submission_id</span><span class="p">,</span> <span class="n">after</span><span class="o">.</span><span class="n">submission_id</span><span class="p">,</span>
+                             <span class="s2">&quot;The submission id should be set&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">db_submission</span><span class="o">.</span><span class="n">categories</span><span class="p">),</span> <span class="mi">2</span><span class="p">,</span>
+                         <span class="s2">&quot;Two category relations should be set&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">db_submission</span><span class="o">.</span><span class="n">primary_classification</span><span class="o">.</span><span class="n">category</span><span class="p">,</span>
+                         <span class="n">after</span><span class="o">.</span><span class="n">primary_classification</span><span class="o">.</span><span class="n">category</span><span class="p">,</span>
+                         <span class="s2">&quot;Primary classification should be set.&quot;</span><span class="p">)</span></div></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../../../index.html">arXiv submission & moderation</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../architecture.html">Submission &amp; moderation subsystem architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../announcement_process.html">Submission &amp; announcement Process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../submission_api_context.html">Submission API: Context</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../containers/core/arxiv.submission.html">arxiv.submission package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../containers/metadata/metadata.html">metadata package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../background.html">Background</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../../../index.html">Module code</a><ul>
+  <li><a href="../../classic.html">arxiv.submission.services.classic</a><ul>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, arXiv.org.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.3</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

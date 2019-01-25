@@ -1,0 +1,276 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>arxiv.submission.domain.event.flag &#8212; arXiv submission &amp; moderation 0.1 documentation</title>
+    <link rel="stylesheet" href="../../../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/graphviz.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../../../../" src="../../../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for arxiv.submission.domain.event.flag</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Events/commands related to quality assurance.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span>
+
+<span class="kn">from</span> <span class="nn">dataclasses</span> <span class="k">import</span> <span class="n">field</span>
+
+<span class="kn">from</span> <span class="nn">.util</span> <span class="k">import</span> <span class="n">dataclass</span>
+<span class="kn">from</span> <span class="nn">.event</span> <span class="k">import</span> <span class="n">Event</span>
+<span class="kn">from</span> <span class="nn">..flag</span> <span class="k">import</span> <span class="n">Flag</span><span class="p">,</span> <span class="n">ContentFlag</span><span class="p">,</span> <span class="n">MetadataFlag</span><span class="p">,</span> <span class="n">UserFlag</span>
+<span class="kn">from</span> <span class="nn">..submission</span> <span class="k">import</span> <span class="n">Submission</span><span class="p">,</span> <span class="n">SubmissionMetadata</span><span class="p">,</span> <span class="n">Hold</span>
+<span class="kn">from</span> <span class="nn">...exceptions</span> <span class="k">import</span> <span class="n">InvalidEvent</span>
+
+
+<div class="viewcode-block" id="AddFlag"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.domain.event.flag.html#arxiv.submission.domain.event.flag.AddFlag">[docs]</a><span class="nd">@dataclass</span><span class="p">()</span>
+<span class="k">class</span> <span class="nc">AddFlag</span><span class="p">(</span><span class="n">Event</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Base class for flag events; not for direct use.&quot;&quot;&quot;</span>
+
+    <span class="n">NAME</span> <span class="o">=</span> <span class="s2">&quot;add flag&quot;</span>
+    <span class="n">NAMED</span> <span class="o">=</span> <span class="s2">&quot;flag added&quot;</span>
+
+    <span class="n">flag_data</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">dict</span><span class="p">,</span> <span class="nb">list</span><span class="p">]]</span> \
+        <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">comment</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+
+<div class="viewcode-block" id="AddFlag.validate"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.domain.event.flag.html#arxiv.submission.domain.event.flag.AddFlag.validate">[docs]</a>    <span class="k">def</span> <span class="nf">validate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Not implemented.&quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Invoke a child event instead&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="AddFlag.project"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.domain.event.flag.html#arxiv.submission.domain.event.flag.AddFlag.project">[docs]</a>    <span class="k">def</span> <span class="nf">project</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Submission</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Not implemented.&quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Invoke a child event instead&quot;</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="RemoveFlag"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.domain.event.flag.html#arxiv.submission.domain.event.flag.RemoveFlag">[docs]</a><span class="nd">@dataclass</span><span class="p">()</span>
+<span class="k">class</span> <span class="nc">RemoveFlag</span><span class="p">(</span><span class="n">Event</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Remove a :class:`.domain.Flag` from a submission.&quot;&quot;&quot;</span>
+
+    <span class="n">NAME</span> <span class="o">=</span> <span class="s2">&quot;remove flag&quot;</span>
+    <span class="n">NAMED</span> <span class="o">=</span> <span class="s2">&quot;flag removed&quot;</span>
+
+    <span class="n">flag_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="sd">&quot;&quot;&quot;This is the ``event_id`` of the event that added the flag.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="RemoveFlag.validate"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.domain.event.flag.html#arxiv.submission.domain.event.flag.RemoveFlag.validate">[docs]</a>    <span class="k">def</span> <span class="nf">validate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Verify that the flag exists.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">flag_id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">submission</span><span class="o">.</span><span class="n">flags</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">InvalidEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">f</span><span class="s2">&quot;Unknown flag: </span><span class="si">{self.flag_id}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="RemoveFlag.project"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.domain.event.flag.html#arxiv.submission.domain.event.flag.RemoveFlag.project">[docs]</a>    <span class="k">def</span> <span class="nf">project</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Submission</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Remove the flag from the submission.&quot;&quot;&quot;</span>
+        <span class="n">submission</span><span class="o">.</span><span class="n">flags</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">flag_id</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">submission</span></div></div>
+
+
+<div class="viewcode-block" id="AddContentFlag"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.domain.event.flag.html#arxiv.submission.domain.event.flag.AddContentFlag">[docs]</a><span class="nd">@dataclass</span><span class="p">()</span>
+<span class="k">class</span> <span class="nc">AddContentFlag</span><span class="p">(</span><span class="n">AddFlag</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Add a :class:`.domain.ContentFlag` related to content.&quot;&quot;&quot;</span>
+
+    <span class="n">NAME</span> <span class="o">=</span> <span class="s2">&quot;add content flag&quot;</span>
+    <span class="n">NAMED</span> <span class="o">=</span> <span class="s2">&quot;content flag added&quot;</span>
+
+    <span class="n">flag_type</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">ContentFlag</span><span class="o">.</span><span class="n">FlagTypes</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+
+<div class="viewcode-block" id="AddContentFlag.validate"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.domain.event.flag.html#arxiv.submission.domain.event.flag.AddContentFlag.validate">[docs]</a>    <span class="k">def</span> <span class="nf">validate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Verify that we have a known flag.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">flag_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">ContentFlag</span><span class="o">.</span><span class="n">FlagTypes</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">InvalidEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">f</span><span class="s2">&quot;Unknown content flag: </span><span class="si">{self.flag_type}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="AddContentFlag.project"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.domain.event.flag.html#arxiv.submission.domain.event.flag.AddContentFlag.project">[docs]</a>    <span class="k">def</span> <span class="nf">project</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Submission</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Add the flag to the submission.&quot;&quot;&quot;</span>
+        <span class="n">submission</span><span class="o">.</span><span class="n">flags</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">event_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">ContentFlag</span><span class="p">(</span>
+            <span class="n">event_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">event_id</span><span class="p">,</span>
+            <span class="n">created</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">created</span><span class="p">,</span>
+            <span class="n">creator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">creator</span><span class="p">,</span>
+            <span class="n">proxy</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">proxy</span><span class="p">,</span>
+            <span class="n">flag_type</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">flag_type</span><span class="p">,</span>
+            <span class="n">flag_data</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">flag_data</span><span class="p">,</span>
+            <span class="n">comment</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">comment</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">submission</span></div></div>
+
+
+<div class="viewcode-block" id="AddMetadataFlag"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.domain.event.flag.html#arxiv.submission.domain.event.flag.AddMetadataFlag">[docs]</a><span class="nd">@dataclass</span><span class="p">()</span>
+<span class="k">class</span> <span class="nc">AddMetadataFlag</span><span class="p">(</span><span class="n">AddFlag</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Add a :class:`.domain.MetadataFlag` related to the metadata.&quot;&quot;&quot;</span>
+
+    <span class="n">NAME</span> <span class="o">=</span> <span class="s2">&quot;add metadata flag&quot;</span>
+    <span class="n">NAMED</span> <span class="o">=</span> <span class="s2">&quot;metadata flag added&quot;</span>
+
+    <span class="n">flag_type</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">MetadataFlag</span><span class="o">.</span><span class="n">FlagTypes</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">field</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="sd">&quot;&quot;&quot;Name of the metadata field to which the flag applies.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="AddMetadataFlag.validate"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.domain.event.flag.html#arxiv.submission.domain.event.flag.AddMetadataFlag.validate">[docs]</a>    <span class="k">def</span> <span class="nf">validate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Verify that we have a known flag and metadata field.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">flag_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">MetadataFlag</span><span class="o">.</span><span class="n">FlagTypes</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">InvalidEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">f</span><span class="s2">&quot;Unknown meta flag: </span><span class="si">{self.flag_type}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">SubmissionMetadata</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">field</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">InvalidEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;Not a valid metadata field&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="AddMetadataFlag.project"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.domain.event.flag.html#arxiv.submission.domain.event.flag.AddMetadataFlag.project">[docs]</a>    <span class="k">def</span> <span class="nf">project</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Submission</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Add the flag to the submission.&quot;&quot;&quot;</span>
+        <span class="n">submission</span><span class="o">.</span><span class="n">flags</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">event_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">MetadataFlag</span><span class="p">(</span>
+            <span class="n">event_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">event_id</span><span class="p">,</span>
+            <span class="n">created</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">created</span><span class="p">,</span>
+            <span class="n">creator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">creator</span><span class="p">,</span>
+            <span class="n">proxy</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">proxy</span><span class="p">,</span>
+            <span class="n">flag_type</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">flag_type</span><span class="p">,</span>
+            <span class="n">flag_data</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">flag_data</span><span class="p">,</span>
+            <span class="n">comment</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">comment</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">submission</span></div></div>
+
+
+<div class="viewcode-block" id="AddUserFlag"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.domain.event.flag.html#arxiv.submission.domain.event.flag.AddUserFlag">[docs]</a><span class="nd">@dataclass</span><span class="p">()</span>
+<span class="k">class</span> <span class="nc">AddUserFlag</span><span class="p">(</span><span class="n">AddFlag</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Add a :class:`.domain.UserFlag` related to the submitter.&quot;&quot;&quot;</span>
+
+    <span class="n">NAME</span> <span class="o">=</span> <span class="s2">&quot;add user flag&quot;</span>
+    <span class="n">NAMED</span> <span class="o">=</span> <span class="s2">&quot;user flag added&quot;</span>
+
+    <span class="n">flag_type</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">UserFlag</span><span class="o">.</span><span class="n">FlagTypes</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+
+<div class="viewcode-block" id="AddUserFlag.validate"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.domain.event.flag.html#arxiv.submission.domain.event.flag.AddUserFlag.validate">[docs]</a>    <span class="k">def</span> <span class="nf">validate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Verify that we have a known flag.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">flag_type</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">MetadataFlag</span><span class="o">.</span><span class="n">FlagTypes</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">InvalidEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">f</span><span class="s2">&quot;Unknown user flag: </span><span class="si">{self.flag_type}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="AddUserFlag.project"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.domain.event.flag.html#arxiv.submission.domain.event.flag.AddUserFlag.project">[docs]</a>    <span class="k">def</span> <span class="nf">project</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Submission</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Add the flag to the submission.&quot;&quot;&quot;</span>
+        <span class="n">submission</span><span class="o">.</span><span class="n">flags</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">event_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">UserFlag</span><span class="p">(</span>
+            <span class="n">event_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">event_id</span><span class="p">,</span>
+            <span class="n">created</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">created</span><span class="p">,</span>
+            <span class="n">creator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">creator</span><span class="p">,</span>
+            <span class="n">flag_type</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">flag_type</span><span class="p">,</span>
+            <span class="n">flag_data</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">flag_data</span><span class="p">,</span>
+            <span class="n">comment</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">comment</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">submission</span></div></div>
+
+
+<div class="viewcode-block" id="AddHold"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.domain.event.flag.html#arxiv.submission.domain.event.flag.AddHold">[docs]</a><span class="nd">@dataclass</span><span class="p">()</span>
+<span class="k">class</span> <span class="nc">AddHold</span><span class="p">(</span><span class="n">Event</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Add a hold to a submission.&quot;&quot;&quot;</span>
+
+    <span class="n">NAME</span> <span class="o">=</span> <span class="s2">&quot;add hold&quot;</span>
+    <span class="n">NAMED</span> <span class="o">=</span> <span class="s2">&quot;hold added&quot;</span>
+
+    <span class="n">hold_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">str</span><span class="p">)</span>
+    <span class="n">hold_reason</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
+
+<div class="viewcode-block" id="AddHold.validate"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.domain.event.flag.html#arxiv.submission.domain.event.flag.AddHold.validate">[docs]</a>    <span class="k">def</span> <span class="nf">validate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="AddHold.project"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.domain.event.flag.html#arxiv.submission.domain.event.flag.AddHold.project">[docs]</a>    <span class="k">def</span> <span class="nf">project</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Submission</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Add the hold to the submission.&quot;&quot;&quot;</span>
+        <span class="n">submission</span><span class="o">.</span><span class="n">holds</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">event_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">Hold</span><span class="p">(</span>
+            <span class="n">event_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">event_id</span><span class="p">,</span>
+            <span class="n">created</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">created</span><span class="p">,</span>
+            <span class="n">creator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">creator</span><span class="p">,</span>
+            <span class="n">hold_type</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">hold_type</span><span class="p">,</span>
+            <span class="n">hold_reason</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">hold_reason</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">submission</span></div></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../../index.html">arXiv submission & moderation</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../architecture.html">Submission &amp; moderation subsystem architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../announcement_process.html">Submission &amp; announcement Process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../submission_api_context.html">Submission API: Context</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../containers/core/arxiv.submission.html">arxiv.submission package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../containers/metadata/metadata.html">metadata package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../background.html">Background</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../../index.html">Module code</a><ul>
+  <li><a href="../event.html">arxiv.submission.domain.event</a><ul>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, arXiv.org.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.3</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

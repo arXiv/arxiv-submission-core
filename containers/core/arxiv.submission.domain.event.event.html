@@ -1,0 +1,350 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>arxiv.submission.domain.event.event module &#8212; arXiv submission &amp; moderation 0.1 documentation</title>
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="arxiv.submission.domain.event.flag module" href="arxiv.submission.domain.event.flag.html" />
+    <link rel="prev" title="arxiv.submission.domain.event.tests.test_hooks module" href="arxiv.submission.domain.event.tests.test_hooks.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="module-arxiv.submission.domain.event.event">
+<span id="arxiv-submission-domain-event-event-module"></span><h1>arxiv.submission.domain.event.event module<a class="headerlink" href="#module-arxiv.submission.domain.event.event" title="Permalink to this headline">¶</a></h1>
+<p>Provides the base command/event class, <a class="reference internal" href="#arxiv.submission.domain.event.event.Event" title="arxiv.submission.domain.event.event.Event"><code class="xref py py-class docutils literal notranslate"><span class="pre">Event</span></code></a>.</p>
+<dl class="class">
+<dt id="arxiv.submission.domain.event.event.Event">
+<em class="property">class </em><code class="descclassname">arxiv.submission.domain.event.event.</code><code class="descname">Event</code><span class="sig-paren">(</span><em>creator</em>, <em>created=&lt;factory&gt;</em>, <em>proxy=None</em>, <em>client=None</em>, <em>submission_id=None</em>, <em>committed=False</em>, <em>before=None</em>, <em>after=None</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/domain/event/event.html#Event"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.event.Event" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.6/library/functions.html#object" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Base class for submission-related events/commands.</p>
+<p>An event represents a change to a <code class="xref py py-class docutils literal notranslate"><span class="pre">domain.Submission</span></code>. Rather than
+changing submissions directly, an application should create (and store)
+events. Each event class must inherit from this base class, extend it with
+whatever data is needed for the event, and define methods for validation
+and projection (changing a submission):</p>
+<ul class="simple">
+<li><code class="docutils literal notranslate"><span class="pre">validate(self,</span> <span class="pre">submission:</span> <span class="pre">Submission)</span> <span class="pre">-&gt;</span> <span class="pre">None</span></code> should raise
+<a class="reference internal" href="arxiv.submission.exceptions.html#arxiv.submission.exceptions.InvalidEvent" title="arxiv.submission.exceptions.InvalidEvent"><code class="xref py py-class docutils literal notranslate"><span class="pre">InvalidEvent</span></code></a> if the event instance has invalid data.</li>
+<li><code class="docutils literal notranslate"><span class="pre">project(self,</span> <span class="pre">submission:</span> <span class="pre">Submission)</span> <span class="pre">-&gt;</span> <span class="pre">Submission</span></code> should perform
+changes to the <code class="xref py py-class docutils literal notranslate"><span class="pre">domain.Submission</span></code> and return it.</li>
+</ul>
+<p>An event class also provides a hook for doing things automatically when the
+submission changes. To register a function that gets called when an event
+is committed, use the <a class="reference internal" href="#arxiv.submission.domain.event.event.Event.bind" title="arxiv.submission.domain.event.event.Event.bind"><code class="xref py py-func docutils literal notranslate"><span class="pre">bind()</span></code></a> method.</p>
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.event.Event.after">
+<code class="descname">after</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.submission.domain.event.event.Event.after" title="Permalink to this definition">¶</a></dt>
+<dd><p>The state of the submission after the event.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.event.event.Event.apply">
+<code class="descname">apply</code><span class="sig-paren">(</span><em>submission=None</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/domain/event/event.html#Event.apply"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.event.Event.apply" title="Permalink to this definition">¶</a></dt>
+<dd><p>Apply the projection for this <a class="reference internal" href="#arxiv.submission.domain.event.event.Event" title="arxiv.submission.domain.event.event.Event"><code class="xref py py-class docutils literal notranslate"><span class="pre">Event</span></code></a> instance.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.Submission" title="arxiv.submission.domain.submission.Submission"><code class="xref py py-class docutils literal notranslate"><span class="pre">Submission</span></code></a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.event.Event.before">
+<code class="descname">before</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.submission.domain.event.event.Event.before" title="Permalink to this definition">¶</a></dt>
+<dd><p>The state of the submission prior to the event.</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="arxiv.submission.domain.event.event.Event.bind">
+<em class="property">classmethod </em><code class="descname">bind</code><span class="sig-paren">(</span><em>condition=None</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/domain/event/event.html#Event.bind"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.event.Event.bind" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate a decorator to bind a callback to an event type.</p>
+<p>To register a function that will be called whenever an event is
+committed, decorate it like so:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@MyEvent.bind</span><span class="p">()</span>
+<span class="k">def</span> <span class="nf">say_hello</span><span class="p">(</span><span class="n">event</span><span class="p">:</span> <span class="n">MyEvent</span><span class="p">,</span> <span class="n">before</span><span class="p">:</span> <span class="n">Submission</span><span class="p">,</span>
+              <span class="n">after</span><span class="p">:</span> <span class="n">Submission</span><span class="p">,</span> <span class="n">creator</span><span class="p">:</span> <span class="n">Agent</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Event</span><span class="p">]:</span>
+    <span class="k">yield</span> <span class="n">SomeOtherEvent</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The callback function will be passed the event that triggered it, the
+state of the submission before and after the triggering event was
+applied, and a <a class="reference internal" href="arxiv.submission.domain.agent.html#arxiv.submission.domain.agent.System" title="arxiv.submission.domain.agent.System"><code class="xref py py-class docutils literal notranslate"><span class="pre">System</span></code></a> agent that can be used as the creator
+of subsequent events. It should return an iterable of other
+<a class="reference internal" href="#arxiv.submission.domain.event.event.Event" title="arxiv.submission.domain.event.event.Event"><code class="xref py py-class docutils literal notranslate"><span class="pre">Event</span></code></a> instances, either by <code class="docutils literal notranslate"><span class="pre">yield</span></code>ing them, or by
+returning an iterable object of some kind.</p>
+<p>By default, callbacks will only be called if the creator of the
+trigger event is not a <a class="reference internal" href="arxiv.submission.domain.agent.html#arxiv.submission.domain.agent.System" title="arxiv.submission.domain.agent.System"><code class="xref py py-class docutils literal notranslate"><span class="pre">System</span></code></a> instance. This makes it less
+easy to define infinite chains of callbacks. You can pass a custom
+condition to the decorator, for example:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">jill_created_an_event</span><span class="p">(</span><span class="n">event</span><span class="p">:</span> <span class="n">MyEvent</span><span class="p">,</span> <span class="n">before</span><span class="p">:</span> <span class="n">Submission</span><span class="p">,</span>
+                          <span class="n">after</span><span class="p">:</span> <span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">event</span><span class="o">.</span><span class="n">creator</span><span class="o">.</span><span class="n">username</span> <span class="o">==</span> <span class="s1">&#39;jill&#39;</span>
+
+
+<span class="nd">@MyEvent.bind</span><span class="p">(</span><span class="n">jill_created_an_event</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">say_hi</span><span class="p">(</span><span class="n">event</span><span class="p">:</span> <span class="n">MyEvent</span><span class="p">,</span> <span class="n">before</span><span class="p">:</span> <span class="n">Submission</span><span class="p">,</span>
+           <span class="n">after</span><span class="p">:</span> <span class="n">Submission</span><span class="p">,</span> <span class="n">creator</span><span class="p">:</span> <span class="n">Agent</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Event</span><span class="p">]:</span>
+    <span class="k">yield</span> <span class="n">SomeOtherEvent</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Note that the condition signature is <code class="docutils literal notranslate"><span class="pre">(event:</span> <span class="pre">MyEvent,</span> <span class="pre">before:</span>
+<span class="pre">Submission,</span> <span class="pre">after:</span> <span class="pre">Submission)</span> <span class="pre">-&gt;</span> <span class="pre">bool</span></code>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>condition</strong> (<em>Callable</em>) – A callable with the signature <code class="docutils literal notranslate"><span class="pre">(event:</span> <span class="pre">Event,</span> <span class="pre">before:</span> <span class="pre">Submission,</span>
+<span class="pre">after:</span> <span class="pre">Submission)</span> <span class="pre">-&gt;</span> <span class="pre">bool</span></code>. If this callable returns <code class="docutils literal notranslate"><span class="pre">True</span></code>,
+the callback will be triggered when the event to which it is bound
+is saved. The default condition is that the event was not created
+by <code class="xref py py-class docutils literal notranslate"><span class="pre">System</span></code></td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Callable" title="(in Python v3.6)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code></a>[[<a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Callable" title="(in Python v3.6)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code></a>], <a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Callable" title="(in Python v3.6)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code></a>]</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><em>Callable</em> – Decorator for a callback function, with signature <code class="docutils literal notranslate"><span class="pre">(event:</span> <span class="pre">Event,</span>
+<span class="pre">before:</span> <span class="pre">Submission,</span> <span class="pre">after:</span> <span class="pre">Submission,</span> <span class="pre">creator:</span> <span class="pre">Agent</span> <span class="pre">=</span>
+<span class="pre">System(...))</span> <span class="pre">-&gt;</span> <span class="pre">Iterable[Event]</span></code>.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.event.Event.client">
+<code class="descname">client</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.submission.domain.event.event.Event.client" title="Permalink to this definition">¶</a></dt>
+<dd><p>The client through which the <a class="reference internal" href="#arxiv.submission.domain.event.event.Event.creator" title="arxiv.submission.domain.event.event.Event.creator"><code class="xref py py-attr docutils literal notranslate"><span class="pre">creator</span></code></a> performed the operation.</p>
+<p>If the creator was directly involved in the operation, this property should
+be the client that facilitated the operation.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.event.event.Event.commit">
+<code class="descname">commit</code><span class="sig-paren">(</span><em>store</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/domain/event/event.html#Event.commit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.event.Event.commit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Persist this event instance using an injected store method.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>save</strong> (<em>Callable</em>) – Should have signature <code class="docutils literal notranslate"><span class="pre">(*Event,</span> <span class="pre">submission_id:</span> <span class="pre">int)</span> <span class="pre">-&gt;</span>
+<span class="pre">Tuple[Event,</span> <span class="pre">Submission]</span></code>.</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tuple</span></code>[<a class="reference internal" href="arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.Submission" title="arxiv.submission.domain.submission.Submission"><code class="xref py py-class docutils literal notranslate"><span class="pre">Submission</span></code></a>, <a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Iterable" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code></a>[<a class="reference internal" href="#arxiv.submission.domain.event.event.Event" title="arxiv.submission.domain.event.event.Event"><code class="xref py py-class docutils literal notranslate"><span class="pre">Event</span></code></a>]]</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><ul class="simple">
+<li><code class="xref py py-class docutils literal notranslate"><span class="pre">Submission</span></code> – State of the submission after storage. Some changes may have been
+made to ensure consistency with the underlying datastore.</li>
+<li><em>list</em> – Items are <a class="reference internal" href="#arxiv.submission.domain.event.event.Event" title="arxiv.submission.domain.event.event.Event"><code class="xref py py-class docutils literal notranslate"><span class="pre">Event</span></code></a> instances.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.event.Event.committed">
+<code class="descname">committed</code><em class="property"> = False</em><a class="headerlink" href="#arxiv.submission.domain.event.event.Event.committed" title="Permalink to this definition">¶</a></dt>
+<dd><p>Indicates whether the event has been committed to the database.</p>
+<p>This should generally not be set from outside this package.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.event.Event.created">
+<code class="descname">created</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.submission.domain.event.event.Event.created" title="Permalink to this definition">¶</a></dt>
+<dd><p>The timestamp when the event was originally committed.</p>
+<p>This should generally not be set from outside this package.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.event.Event.creator">
+<code class="descname">creator</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.submission.domain.event.event.Event.creator" title="Permalink to this definition">¶</a></dt>
+<dd><p>The agent responsible for the operation represented by this event.</p>
+<p>This is <strong>not</strong> necessarily the creator of the submission.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.event.Event.event_id">
+<code class="descname">event_id</code><a class="headerlink" href="#arxiv.submission.domain.event.event.Event.event_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>Unique ID for this event.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.event.Event.event_type">
+<code class="descname">event_type</code><a class="headerlink" href="#arxiv.submission.domain.event.event.Event.event_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>Name of the event type.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="arxiv.submission.domain.event.event.Event.get_event_type">
+<em class="property">classmethod </em><code class="descname">get_event_type</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/domain/event/event.html#Event.get_event_type"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.event.Event.get_event_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the name of the event type.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.event.Event.proxy">
+<code class="descname">proxy</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.submission.domain.event.event.Event.proxy" title="Permalink to this definition">¶</a></dt>
+<dd><p>The agent who facilitated the operation on behalf of the <a class="reference internal" href="#arxiv.submission.domain.event.event.Event.creator" title="arxiv.submission.domain.event.event.Event.creator"><code class="xref py py-attr docutils literal notranslate"><span class="pre">creator</span></code></a>.</p>
+<p>This may be an API client, or another user who has been designated as a
+proxy. Note that proxy implies that the creator was not directly involved.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.event.Event.submission_id">
+<code class="descname">submission_id</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.submission.domain.event.event.Event.submission_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>The primary identifier of the submission being operated upon.</p>
+<p>This is defined as optional to support creation events, and to facilitate
+chaining of events with creation events in the same transaction.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.event.event.Event.to_dict">
+<code class="descname">to_dict</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/domain/event/event.html#Event.to_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.event.Event.to_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate a dict representation of this <a class="reference internal" href="#arxiv.submission.domain.event.event.Event" title="arxiv.submission.domain.event.event.Event"><code class="xref py py-class docutils literal notranslate"><span class="pre">Event</span></code></a>.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">arXiv submission & moderation</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../architecture.html">Submission &amp; moderation subsystem architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../announcement_process.html">Submission &amp; announcement Process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../submission_api_context.html">Submission API: Context</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="arxiv.submission.html">arxiv.submission package</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="arxiv.submission.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.submission.html#using-commands-events">Using commands/events</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.submission.html#integration-with-the-legacy-system">Integration with the legacy system</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="arxiv.submission.html#subpackages">Subpackages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.submission.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../metadata/metadata.html">metadata package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../background.html">Background</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="arxiv.submission.html">arxiv.submission package</a><ul>
+  <li><a href="arxiv.submission.domain.html">arxiv.submission.domain package</a><ul>
+  <li><a href="arxiv.submission.domain.event.html">arxiv.submission.domain.event package</a><ul>
+      <li>Previous: <a href="arxiv.submission.domain.event.tests.test_hooks.html" title="previous chapter">arxiv.submission.domain.event.tests.test_hooks module</a></li>
+      <li>Next: <a href="arxiv.submission.domain.event.flag.html" title="next chapter">arxiv.submission.domain.event.flag module</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, arXiv.org.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.3</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../../_sources/containers/core/arxiv.submission.domain.event.event.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

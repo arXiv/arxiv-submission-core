@@ -1,0 +1,194 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Background &#8212; arXiv submission &amp; moderation 0.1 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="_static/graphviz.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="metadata.controllers.submission package" href="containers/metadata/metadata.controllers.submission.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="background">
+<h1>Background<a class="headerlink" href="#background" title="Permalink to this headline">¶</a></h1>
+<p>This section summarizes some of the drivers that contributed to the design
+of the NG submission system.</p>
+<div class="section" id="separation-of-concerns">
+<h2>Separation of concerns<a class="headerlink" href="#separation-of-concerns" title="Permalink to this headline">¶</a></h2>
+<p>In the classic arXiv submission system, there is tight coupling between the
+submission and a variety of related objects and processes. For example,
+processes like TeX compilation, auto-classification, etc are integrated with
+web controllers for the submission UI. A major benefit of this approach is that
+it keeps operations close together in the submission workflow. A major drawback
+is its relative inflexibility: developing any one component of the submission
+system risks generating cascading effects to other components, and assumptions
+about the implementation details of components are baked into the system.</p>
+<p>One of the major shifts in the NG reimplementation of the submission system is
+to pull some of those components apart into self-contained services with
+clearly-defined APIs. Our goal is to limit coupling to where it really matters,
+and open the door to exchangeability of those components. This should make it
+easier to develop individual components without breaking the whole system, and
+also make it easier to respond to changing operational policies and procedures.</p>
+<p>The <a class="reference internal" href="architecture.html#utility-services"><span class="std std-ref">Utility services</span></a> section describes some of the backend components
+that will be “compartmentalized” as stand-alone services in NG.</p>
+</div>
+<div class="section" id="commands-events-as-data">
+<h2>Commands (events) as data<a class="headerlink" href="#commands-events-as-data" title="Permalink to this headline">¶</a></h2>
+<p>The classic arXiv submission system is built around an object-centric data
+model. Submissions are represented objects whose properties map to rows in a
+database table, and workflows are implemented by developing web controllers
+that mutate those objects (and the underlying rows). In order to support
+administrative requirements of visibility onto activity in the submission
+system, a log is updated by those controllers whenever they are executed.
+Conditional operations are implemented by adding procedures to those
+controllers. This model works well for simple systems in which there is a
+single point of entry for submission data: each controller is solely
+responsible for a command or set of commands, and so coupling between user
+request handling/views and the commands themselves (along with conditional
+operations linked to those commands) is not problematic.</p>
+<p>A requirement of arXiv-NG is to provide consistent support for evolving and
+potentially many accession pathways into arXiv. A limitation of the classic
+architecture is that it requires new submission interfaces to reimplement the
+commands (and rules) that it exposes, and to reimplement updates to the
+administrative log. In the NG submission system, commands (and log updates)
+are independent of the interface controllers – this allows for a greater
+deal of flexibility when implementing or changing interfaces. We can achieve
+this either by implementing a command controller as standalone service that
+handles commands from other applications, or by implementing a software package
+that exposes commands as an internal API (arXiv-lib could be seen as an
+attempt in that direction, although it is somewhat defeated by its broad scope
+and leakage of business logic).</p>
+<p>Another major requirement of arXiv-NG is to support triggers and automated
+processes that can be configured by administrators, in addition to continuing
+to support to the administrative log. A step in this direction would be to
+include hooks for triggers behind the command API (above), and load parameters
+(e.g. set in a database or a configuration file by an admin) that control
+whether/how the trigger is executed. This has the potential to not scale well,
+however, as the kinds of triggers and automation required must be anticipated
+ahead of time and semi-hard-coded into the system. An alternative approach (the
+one adopted here) is to define a set of primitives that explicitly represent
+commands and rules, and build interfaces that allow them to be combined
+arbitrarily to build workflows. In this approach, instances of command
+execution (events) themselves are treated as data. This meets the requirements
+of maintaining a high-fidelity comprehensive activity log.</p>
+<p>A knock-on benefit of treating command execution/events as data is that it
+allows for freer evolution of how we represent submission objects. If event
+data are treated as the primary source of truth, the representation of the
+submission itself can be treated as a secondary and somewhat disposable
+projection. In the short term, as we reimplement components of the submission
+system, we will need to guarantee that we generate projections in the classic
+submission database that satisfy the requirements of legacy components that
+have not yet been reimplemented. For example, when implementing a new
+submission UI for NG we can collect and store new forms of data about a
+submission in the event data (e.g. data used to populate new metadata fields),
+but must also ensure that the appropriate tables in the classic database are
+kept up-to-date for the sake of the classic moderation system. In the longer
+term, projections of event data can be used to support efficient queries, but
+do not constrain the evolution of the submission system in other areas.</p>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">arXiv submission & moderation</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="architecture.html">Submission &amp; moderation subsystem architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="announcement_process.html">Submission &amp; announcement Process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="submission_api_context.html">Submission API: Context</a></li>
+<li class="toctree-l1"><a class="reference internal" href="containers/core/arxiv.submission.html">arxiv.submission package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="containers/metadata/metadata.html">metadata package</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Background</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#separation-of-concerns">Separation of concerns</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#commands-events-as-data">Commands (events) as data</a></li>
+</ul>
+</li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="containers/metadata/metadata.controllers.submission.html" title="previous chapter">metadata.controllers.submission package</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, arXiv.org.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.3</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/background.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

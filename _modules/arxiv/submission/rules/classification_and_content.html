@@ -1,0 +1,294 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>arxiv.submission.rules.classification_and_content &#8212; arXiv submission &amp; moderation 0.1 documentation</title>
+    <link rel="stylesheet" href="../../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/graphviz.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for arxiv.submission.rules.classification_and_content</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Extract text, and get suggestions, features, and flags from classifier.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Iterable</span>
+<span class="kn">from</span> <span class="nn">itertools</span> <span class="k">import</span> <span class="n">count</span>
+<span class="kn">import</span> <span class="nn">time</span>
+
+<span class="kn">from</span> <span class="nn">..domain.event</span> <span class="k">import</span> <span class="n">Event</span><span class="p">,</span> <span class="n">AddProcessStatus</span><span class="p">,</span> <span class="n">ConfirmPreview</span><span class="p">,</span> \
+    <span class="n">AddClassifierResults</span><span class="p">,</span> <span class="n">AddContentFlag</span><span class="p">,</span> <span class="n">AddFeature</span>
+<span class="kn">from</span> <span class="nn">..domain.event.event</span> <span class="k">import</span> <span class="n">Condition</span>
+<span class="kn">from</span> <span class="nn">..domain.submission</span> <span class="k">import</span> <span class="n">Submission</span>
+<span class="kn">from</span> <span class="nn">..domain.flag</span> <span class="k">import</span> <span class="n">Flag</span><span class="p">,</span> <span class="n">ContentFlag</span>
+<span class="kn">from</span> <span class="nn">..domain.annotation</span> <span class="k">import</span> <span class="n">Feature</span>
+<span class="kn">from</span> <span class="nn">..domain.agent</span> <span class="k">import</span> <span class="n">Agent</span><span class="p">,</span> <span class="n">User</span>
+<span class="kn">from</span> <span class="nn">..domain.process</span> <span class="k">import</span> <span class="n">ProcessStatus</span>
+<span class="kn">from</span> <span class="nn">..services</span> <span class="k">import</span> <span class="n">classifier</span><span class="p">,</span> <span class="n">plaintext</span>
+<span class="kn">from</span> <span class="nn">..tasks</span> <span class="k">import</span> <span class="n">is_async</span>
+
+<span class="kn">from</span> <span class="nn">arxiv.taxonomy</span> <span class="k">import</span> <span class="n">CATEGORIES</span><span class="p">,</span> <span class="n">Category</span>
+
+<span class="c1"># TODO: make this configurable</span>
+<span class="n">PROPOSAL_THRESHOLD</span> <span class="o">=</span> <span class="mf">0.57</span>   <span class="c1"># Equiv. to logodds of 0.3.</span>
+<span class="sd">&quot;&quot;&quot;This is the threshold for generating a proposal from a classifier result.&quot;&quot;&quot;</span>
+
+<span class="c1"># TODO: make this configurable.</span>
+<span class="n">LOW_STOP_PERCENT</span> <span class="o">=</span> <span class="mf">0.10</span>
+<span class="sd">&quot;&quot;&quot;This is the threshold for abornmally low stopword content by percentage.&quot;&quot;&quot;</span>
+
+<span class="n">LOW_STOP</span> <span class="o">=</span> <span class="mi">400</span>
+<span class="sd">&quot;&quot;&quot;This is the threshold for abornmally low stopword content by count.&quot;&quot;&quot;</span>
+
+<span class="n">HIGH_STOP_PERCENT</span> <span class="o">=</span> <span class="mf">0.30</span>
+<span class="sd">&quot;&quot;&quot;This is the threshold for abnormally high stopword content by percentage.&quot;&quot;&quot;</span>
+
+<span class="n">MULTIPLE_LIMIT</span> <span class="o">=</span> <span class="mf">1.01</span>
+<span class="n">LINENOS_LIMIT</span> <span class="o">=</span> <span class="mi">0</span>
+
+<span class="n">Process</span> <span class="o">=</span> <span class="n">ProcessStatus</span><span class="o">.</span><span class="n">Process</span>
+<span class="n">Status</span> <span class="o">=</span> <span class="n">ProcessStatus</span><span class="o">.</span><span class="n">Status</span>
+
+
+<div class="viewcode-block" id="extract_plain_text"><a class="viewcode-back" href="../../../../containers/core/arxiv.submission.rules.classification_and_content.html#arxiv.submission.rules.classification_and_content.extract_plain_text">[docs]</a><span class="nd">@ConfirmPreview</span><span class="o">.</span><span class="n">bind</span><span class="p">()</span>  <span class="c1"># As soon as the user has confirmed their PDF preview.</span>
+<span class="nd">@is_async</span>
+<span class="k">def</span> <span class="nf">extract_plain_text</span><span class="p">(</span><span class="n">event</span><span class="p">:</span> <span class="n">ConfirmPreview</span><span class="p">,</span> <span class="n">before</span><span class="p">:</span> <span class="n">Submission</span><span class="p">,</span>
+                       <span class="n">after</span><span class="p">:</span> <span class="n">Submission</span><span class="p">,</span> <span class="n">creator</span><span class="p">:</span> <span class="n">Agent</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Event</span><span class="p">]:</span>
+    <span class="sd">&quot;&quot;&quot;Use the plain text extraction service to extract text from the PDF.&quot;&quot;&quot;</span>
+    <span class="n">identifier</span> <span class="o">=</span> <span class="n">after</span><span class="o">.</span><span class="n">source_content</span><span class="o">.</span><span class="n">identifier</span>
+    <span class="n">process</span> <span class="o">=</span> <span class="n">ProcessStatus</span><span class="o">.</span><span class="n">Process</span><span class="o">.</span><span class="n">PLAIN_TEXT_EXTRACTION</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">plaintext</span><span class="o">.</span><span class="n">request_extraction</span><span class="p">(</span><span class="n">after</span><span class="o">.</span><span class="n">source_content</span><span class="o">.</span><span class="n">identifier</span><span class="p">)</span>
+        <span class="k">yield</span> <span class="n">AddProcessStatus</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">creator</span><span class="p">,</span> <span class="n">process</span><span class="o">=</span><span class="n">process</span><span class="p">,</span>
+                               <span class="n">status</span><span class="o">=</span><span class="n">ProcessStatus</span><span class="o">.</span><span class="n">Status</span><span class="o">.</span><span class="n">REQUESTED</span><span class="p">,</span>
+                               <span class="n">service</span><span class="o">=</span><span class="s1">&#39;plaintext&#39;</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="n">plaintext</span><span class="o">.</span><span class="n">VERSION</span><span class="p">,</span>
+                               <span class="n">identifier</span><span class="o">=</span><span class="n">identifier</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">tries</span> <span class="ow">in</span> <span class="n">count</span><span class="p">(</span><span class="mi">1</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">plaintext</span><span class="o">.</span><span class="n">extraction_is_complete</span><span class="p">(</span><span class="n">identifier</span><span class="p">):</span>
+                <span class="k">yield</span> <span class="n">AddProcessStatus</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">creator</span><span class="p">,</span> <span class="n">process</span><span class="o">=</span><span class="n">process</span><span class="p">,</span>
+                                       <span class="n">status</span><span class="o">=</span><span class="n">ProcessStatus</span><span class="o">.</span><span class="n">Status</span><span class="o">.</span><span class="n">SUCCEEDED</span><span class="p">,</span>
+                                       <span class="n">service</span><span class="o">=</span><span class="s1">&#39;plaintext&#39;</span><span class="p">,</span>
+                                       <span class="n">version</span><span class="o">=</span><span class="n">plaintext</span><span class="o">.</span><span class="n">VERSION</span><span class="p">,</span>
+                                       <span class="n">identifier</span><span class="o">=</span><span class="n">identifier</span><span class="p">)</span>
+                <span class="k">break</span>
+            <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="n">tries</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>  <span class="c1"># Exponential back-off.</span>
+    <span class="k">except</span> <span class="p">(</span><span class="n">plaintext</span><span class="o">.</span><span class="n">RequestFailed</span><span class="p">,</span> <span class="n">plaintext</span><span class="o">.</span><span class="n">ExtractionFailed</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">reason</span> <span class="o">=</span> <span class="s1">&#39;request failed (</span><span class="si">%s</span><span class="s1">): </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
+        <span class="k">yield</span> <span class="n">AddProcessStatus</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">creator</span><span class="p">,</span> <span class="n">process</span><span class="o">=</span><span class="n">process</span><span class="p">,</span>
+                               <span class="n">status</span><span class="o">=</span><span class="n">ProcessStatus</span><span class="o">.</span><span class="n">Status</span><span class="o">.</span><span class="n">FAILED</span><span class="p">,</span>
+                               <span class="n">service</span><span class="o">=</span><span class="s1">&#39;plaintext&#39;</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="n">plaintext</span><span class="o">.</span><span class="n">VERSION</span><span class="p">,</span>
+                               <span class="n">identifier</span><span class="o">=</span><span class="n">identifier</span><span class="p">,</span> <span class="n">reason</span><span class="o">=</span><span class="n">reason</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="when"><a class="viewcode-back" href="../../../../containers/core/arxiv.submission.rules.classification_and_content.html#arxiv.submission.rules.classification_and_content.when">[docs]</a><span class="k">def</span> <span class="nf">when</span><span class="p">(</span><span class="n">process</span><span class="p">:</span> <span class="n">Process</span><span class="p">,</span> <span class="n">status</span><span class="p">:</span> <span class="n">Status</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Condition</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Generate a condition for a :class:`Process` and :class:`Status`.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">inner</span><span class="p">(</span><span class="n">event</span><span class="p">:</span> <span class="n">AddProcessStatus</span><span class="p">,</span> <span class="n">before</span><span class="p">:</span> <span class="n">Submission</span><span class="p">,</span>
+              <span class="n">after</span><span class="p">:</span> <span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">event</span><span class="o">.</span><span class="n">process</span> <span class="ow">is</span> <span class="n">process</span> <span class="ow">and</span> <span class="n">event</span><span class="o">.</span><span class="n">status</span> <span class="ow">is</span> <span class="n">status</span>
+    <span class="k">return</span> <span class="n">inner</span></div>
+
+
+<span class="n">CLASSIFIER_FLAGS</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;</span><span class="si">%s</span><span class="s1">top&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>  <span class="c1"># We will handle this ourselves.</span>
+    <span class="s1">&#39;stops&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>  <span class="c1"># We will handle this ourselves.</span>
+    <span class="s1">&#39;language&#39;</span><span class="p">:</span> <span class="n">ContentFlag</span><span class="o">.</span><span class="n">FlagTypes</span><span class="o">.</span><span class="n">LANGUAGE</span><span class="p">,</span>
+    <span class="s1">&#39;charset&#39;</span><span class="p">:</span> <span class="n">ContentFlag</span><span class="o">.</span><span class="n">FlagTypes</span><span class="o">.</span><span class="n">CHARACTER_SET</span><span class="p">,</span>
+    <span class="s1">&#39;linenos&#39;</span><span class="p">:</span> <span class="n">ContentFlag</span><span class="o">.</span><span class="n">FlagTypes</span><span class="o">.</span><span class="n">LINE_NUMBERS</span>
+<span class="p">}</span>
+<span class="n">FEATURE_TYPES</span> <span class="o">=</span> <span class="p">{</span>
+
+<span class="p">}</span>
+
+
+<div class="viewcode-block" id="call_classifier"><a class="viewcode-back" href="../../../../containers/core/arxiv.submission.rules.classification_and_content.html#arxiv.submission.rules.classification_and_content.call_classifier">[docs]</a><span class="nd">@AddProcessStatus</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="n">when</span><span class="p">(</span><span class="n">Process</span><span class="o">.</span><span class="n">PLAIN_TEXT_EXTRACTION</span><span class="p">,</span> <span class="n">Status</span><span class="o">.</span><span class="n">SUCCEEDED</span><span class="p">))</span>
+<span class="nd">@is_async</span>
+<span class="k">def</span> <span class="nf">call_classifier</span><span class="p">(</span><span class="n">event</span><span class="p">:</span> <span class="n">AddProcessStatus</span><span class="p">,</span> <span class="n">before</span><span class="p">:</span> <span class="n">Submission</span><span class="p">,</span>
+                    <span class="n">after</span><span class="p">:</span> <span class="n">Submission</span><span class="p">,</span> <span class="n">creator</span><span class="p">:</span> <span class="n">Agent</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Event</span><span class="p">]:</span>
+    <span class="sd">&quot;&quot;&quot;Request the opinion of the auto-classifier.&quot;&quot;&quot;</span>
+    <span class="n">identifier</span> <span class="o">=</span> <span class="n">after</span><span class="o">.</span><span class="n">source_content</span><span class="o">.</span><span class="n">identifier</span>
+    <span class="k">yield</span> <span class="n">AddProcessStatus</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">creator</span><span class="p">,</span> <span class="n">process</span><span class="o">=</span><span class="n">Process</span><span class="o">.</span><span class="n">CLASSIFICATION</span><span class="p">,</span>
+                           <span class="n">status</span><span class="o">=</span><span class="n">ProcessStatus</span><span class="o">.</span><span class="n">Status</span><span class="o">.</span><span class="n">REQUESTED</span><span class="p">,</span>
+                           <span class="n">service</span><span class="o">=</span><span class="n">classifier</span><span class="o">.</span><span class="n">SERVICE</span><span class="p">,</span>
+                           <span class="n">version</span><span class="o">=</span><span class="n">classifier</span><span class="o">.</span><span class="n">VERSION</span><span class="p">,</span>
+                           <span class="n">identifier</span><span class="o">=</span><span class="n">identifier</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">suggestions</span><span class="p">,</span> <span class="n">flags</span><span class="p">,</span> <span class="n">counts</span> <span class="o">=</span> \
+            <span class="n">classifier</span><span class="o">.</span><span class="n">classify</span><span class="p">(</span><span class="n">plaintext</span><span class="o">.</span><span class="n">retrieve_content</span><span class="p">(</span><span class="n">identifier</span><span class="p">))</span>
+    <span class="k">except</span> <span class="p">(</span><span class="n">plaintext</span><span class="o">.</span><span class="n">RequestFailed</span><span class="p">,</span> <span class="n">classifier</span><span class="o">.</span><span class="n">RequestFailed</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">reason</span> <span class="o">=</span> <span class="s1">&#39;request failed (</span><span class="si">%s</span><span class="s1">): </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">e</span><span class="p">),</span> <span class="n">e</span><span class="p">)</span>
+        <span class="k">yield</span> <span class="n">AddProcessStatus</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">creator</span><span class="p">,</span>
+                               <span class="n">process</span><span class="o">=</span><span class="n">Process</span><span class="o">.</span><span class="n">CLASSIFICATION</span><span class="p">,</span>
+                               <span class="n">status</span><span class="o">=</span><span class="n">ProcessStatus</span><span class="o">.</span><span class="n">Status</span><span class="o">.</span><span class="n">FAILED</span><span class="p">,</span>
+                               <span class="n">service</span><span class="o">=</span><span class="n">classifier</span><span class="o">.</span><span class="n">SERVICE</span><span class="p">,</span>
+                               <span class="n">version</span><span class="o">=</span><span class="n">classifier</span><span class="o">.</span><span class="n">VERSION</span><span class="p">,</span>
+                               <span class="n">identifier</span><span class="o">=</span><span class="n">identifier</span><span class="p">,</span> <span class="n">reason</span><span class="o">=</span><span class="n">reason</span><span class="p">)</span>
+        <span class="k">return</span>
+
+    <span class="n">success</span> <span class="o">=</span> <span class="n">AddProcessStatus</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">creator</span><span class="p">,</span>
+                               <span class="n">process</span><span class="o">=</span><span class="n">Process</span><span class="o">.</span><span class="n">CLASSIFICATION</span><span class="p">,</span>
+                               <span class="n">status</span><span class="o">=</span><span class="n">ProcessStatus</span><span class="o">.</span><span class="n">Status</span><span class="o">.</span><span class="n">SUCCEEDED</span><span class="p">,</span>
+                               <span class="n">service</span><span class="o">=</span><span class="n">classifier</span><span class="o">.</span><span class="n">SERVICE</span><span class="p">,</span>
+                               <span class="n">version</span><span class="o">=</span><span class="n">classifier</span><span class="o">.</span><span class="n">VERSION</span><span class="p">,</span>
+                               <span class="n">identifier</span><span class="o">=</span><span class="n">identifier</span><span class="p">)</span>
+    <span class="k">yield</span> <span class="n">success</span>
+    <span class="k">yield</span> <span class="n">AddClassifierResults</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">creator</span><span class="p">,</span>
+                               <span class="n">results</span><span class="o">=</span><span class="p">[{</span><span class="s1">&#39;category&#39;</span><span class="p">:</span> <span class="n">suggestion</span><span class="o">.</span><span class="n">category</span><span class="p">,</span>
+                                         <span class="s1">&#39;probability&#39;</span><span class="p">:</span> <span class="n">suggestion</span><span class="o">.</span><span class="n">probability</span><span class="p">}</span>
+                                        <span class="k">for</span> <span class="n">suggestion</span> <span class="ow">in</span> <span class="n">suggestions</span><span class="p">])</span>
+
+    <span class="k">for</span> <span class="n">flag</span> <span class="ow">in</span> <span class="n">flags</span><span class="p">:</span>
+        <span class="n">comment</span> <span class="o">=</span> <span class="s2">&quot;flag from classification succeeded at </span><span class="si">%s</span><span class="s2">&quot;</span> \
+            <span class="o">%</span> <span class="n">success</span><span class="o">.</span><span class="n">created</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span>
+        <span class="n">flag_type</span> <span class="o">=</span> <span class="n">CLASSIFIER_FLAGS</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">flag</span><span class="o">.</span><span class="n">key</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">flag_type</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="k">yield</span> <span class="n">AddContentFlag</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">creator</span><span class="p">,</span> <span class="n">flag_type</span><span class="o">=</span><span class="n">flag_type</span><span class="p">,</span>
+                             <span class="n">flag_data</span><span class="o">=</span><span class="n">flag</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">comment</span><span class="o">=</span><span class="n">comment</span><span class="p">)</span>
+
+    <span class="k">yield</span> <span class="n">AddFeature</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">creator</span><span class="p">,</span>
+                     <span class="n">feature_type</span><span class="o">=</span><span class="n">Feature</span><span class="o">.</span><span class="n">FeatureTypes</span><span class="o">.</span><span class="n">CHARACTER_COUNT</span><span class="p">,</span>
+                     <span class="n">feature_value</span><span class="o">=</span><span class="n">counts</span><span class="o">.</span><span class="n">chars</span><span class="p">)</span>
+    <span class="k">yield</span> <span class="n">AddFeature</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">creator</span><span class="p">,</span>
+                     <span class="n">feature_type</span><span class="o">=</span><span class="n">Feature</span><span class="o">.</span><span class="n">FeatureTypes</span><span class="o">.</span><span class="n">PAGE_COUNT</span><span class="p">,</span>
+                     <span class="n">feature_value</span><span class="o">=</span><span class="n">counts</span><span class="o">.</span><span class="n">pages</span><span class="p">)</span>
+    <span class="k">yield</span> <span class="n">AddFeature</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">creator</span><span class="p">,</span>
+                     <span class="n">feature_type</span><span class="o">=</span><span class="n">Feature</span><span class="o">.</span><span class="n">FeatureTypes</span><span class="o">.</span><span class="n">STOPWORD_COUNT</span><span class="p">,</span>
+                     <span class="n">feature_value</span><span class="o">=</span><span class="n">counts</span><span class="o">.</span><span class="n">stops</span><span class="p">)</span>
+    <span class="k">yield</span> <span class="n">AddFeature</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">creator</span><span class="p">,</span>
+                     <span class="n">feature_type</span><span class="o">=</span><span class="n">Feature</span><span class="o">.</span><span class="n">FeatureTypes</span><span class="o">.</span><span class="n">WORD_COUNT</span><span class="p">,</span>
+                     <span class="n">feature_value</span><span class="o">=</span><span class="n">counts</span><span class="o">.</span><span class="n">words</span><span class="p">)</span>
+    <span class="k">yield</span> <span class="n">AddFeature</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">creator</span><span class="p">,</span>
+                     <span class="n">feature_type</span><span class="o">=</span><span class="n">Feature</span><span class="o">.</span><span class="n">FeatureTypes</span><span class="o">.</span><span class="n">STOPWORD_PERCENT</span><span class="p">,</span>
+                     <span class="n">feature_value</span><span class="o">=</span><span class="n">counts</span><span class="o">.</span><span class="n">stops</span><span class="o">/</span><span class="n">counts</span><span class="o">.</span><span class="n">words</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="feature_type_is"><a class="viewcode-back" href="../../../../containers/core/arxiv.submission.rules.classification_and_content.html#arxiv.submission.rules.classification_and_content.feature_type_is">[docs]</a><span class="k">def</span> <span class="nf">feature_type_is</span><span class="p">(</span><span class="n">feature_type</span><span class="p">:</span> <span class="n">Feature</span><span class="o">.</span><span class="n">FeatureTypes</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Condition</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Generate a condition based on feature type.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">condition</span><span class="p">(</span><span class="n">event</span><span class="p">:</span> <span class="n">AddFeature</span><span class="p">,</span> <span class="n">before</span><span class="p">:</span> <span class="n">Submission</span><span class="p">,</span>
+                  <span class="n">after</span><span class="p">:</span> <span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">event</span><span class="o">.</span><span class="n">feature_type</span> <span class="ow">is</span> <span class="n">feature_type</span>
+    <span class="k">return</span> <span class="n">condition</span></div>
+
+
+<div class="viewcode-block" id="check_stop_percent"><a class="viewcode-back" href="../../../../containers/core/arxiv.submission.rules.classification_and_content.html#arxiv.submission.rules.classification_and_content.check_stop_percent">[docs]</a><span class="nd">@AddFeature</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="n">feature_type_is</span><span class="p">(</span><span class="n">Feature</span><span class="o">.</span><span class="n">FeatureTypes</span><span class="o">.</span><span class="n">STOPWORD_PERCENT</span><span class="p">))</span>
+<span class="k">def</span> <span class="nf">check_stop_percent</span><span class="p">(</span><span class="n">event</span><span class="p">:</span> <span class="n">AddFeature</span><span class="p">,</span> <span class="n">before</span><span class="p">:</span> <span class="n">Submission</span><span class="p">,</span>
+                       <span class="n">after</span><span class="p">:</span> <span class="n">Submission</span><span class="p">,</span> <span class="n">creator</span><span class="p">:</span> <span class="n">Agent</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Event</span><span class="p">]:</span>
+    <span class="sd">&quot;&quot;&quot;Flag the submission if the percentage of stopwords is too low.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">event</span><span class="o">.</span><span class="n">feature_value</span> <span class="o">&lt;</span> <span class="n">LOW_STOP_PERCENT</span><span class="p">:</span>
+        <span class="k">yield</span> <span class="n">AddContentFlag</span><span class="p">(</span>
+            <span class="n">creator</span><span class="o">=</span><span class="n">creator</span><span class="p">,</span>
+            <span class="n">flag_type</span><span class="o">=</span><span class="n">ContentFlag</span><span class="o">.</span><span class="n">FlagTypes</span><span class="o">.</span><span class="n">LOW_STOP_PERCENT</span><span class="p">,</span>
+            <span class="n">flag_data</span><span class="o">=</span><span class="n">event</span><span class="o">.</span><span class="n">feature_value</span><span class="p">,</span>
+            <span class="n">comment</span><span class="o">=</span><span class="s2">&quot;Classifier reports low stops or </span><span class="si">%s</span><span class="s2">tops&quot;</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="check_stop_count"><a class="viewcode-back" href="../../../../containers/core/arxiv.submission.rules.classification_and_content.html#arxiv.submission.rules.classification_and_content.check_stop_count">[docs]</a><span class="nd">@AddFeature</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="n">feature_type_is</span><span class="p">(</span><span class="n">Feature</span><span class="o">.</span><span class="n">FeatureTypes</span><span class="o">.</span><span class="n">STOPWORD_COUNT</span><span class="p">))</span>
+<span class="k">def</span> <span class="nf">check_stop_count</span><span class="p">(</span><span class="n">event</span><span class="p">:</span> <span class="n">AddFeature</span><span class="p">,</span> <span class="n">before</span><span class="p">:</span> <span class="n">Submission</span><span class="p">,</span>
+                     <span class="n">after</span><span class="p">:</span> <span class="n">Submission</span><span class="p">,</span> <span class="n">creator</span><span class="p">:</span> <span class="n">Agent</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Event</span><span class="p">]:</span>
+    <span class="sd">&quot;&quot;&quot;Flag the submission if the number of stopwords is too low.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">event</span><span class="o">.</span><span class="n">feature_value</span> <span class="o">&lt;</span> <span class="n">LOW_STOP</span><span class="p">:</span>
+        <span class="k">yield</span> <span class="n">AddContentFlag</span><span class="p">(</span>
+            <span class="n">creator</span><span class="o">=</span><span class="n">creator</span><span class="p">,</span>
+            <span class="n">flag_type</span><span class="o">=</span><span class="n">ContentFlag</span><span class="o">.</span><span class="n">FlagTypes</span><span class="o">.</span><span class="n">LOW_STOP</span><span class="p">,</span>
+            <span class="n">flag_data</span><span class="o">=</span><span class="n">event</span><span class="o">.</span><span class="n">feature_value</span><span class="p">,</span>
+            <span class="n">comment</span><span class="o">=</span><span class="s2">&quot;Classifier reports low stops or </span><span class="si">%s</span><span class="s2">tops&quot;</span>
+        <span class="p">)</span></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../index.html">arXiv submission & moderation</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../architecture.html">Submission &amp; moderation subsystem architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../announcement_process.html">Submission &amp; announcement Process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../submission_api_context.html">Submission API: Context</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../containers/core/arxiv.submission.html">arxiv.submission package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../containers/metadata/metadata.html">metadata package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../background.html">Background</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, arXiv.org.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.3</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

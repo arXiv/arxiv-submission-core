@@ -9,14 +9,16 @@
     <title>Submission API: Context &#8212; arXiv submission &amp; moderation 0.1 documentation</title>
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="_static/graphviz.css" />
     <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="events package" href="containers/core/events.html" />
-    <link rel="prev" title="Submission &amp; Publication Process" href="publication_process.html" />
+    <link rel="next" title="arxiv.submission package" href="containers/core/arxiv.submission.html" />
+    <link rel="prev" title="Submission &amp; announcement Process" href="announcement_process.html" />
    
   <link rel="stylesheet" href="_static/custom.css" type="text/css" />
   
@@ -213,7 +215,7 @@ it is responsible. To register a webhook for a specific submission, a POST
 request may be made to <code class="docutils literal notranslate"><span class="pre">/submission/{id}/webhooks/</span></code>. To register a webhook
 for all submissions for which the client is responsible, a POST request may be
 made to <code class="docutils literal notranslate"><span class="pre">/webhooks/</span></code>. See <span class="xref std std-ref">api-webhooks</span>.</p>
-<p>Once the submission has been published, the submission will be updated with
+<p>Once the submission has been announced, the submission will be updated with
 its arXiv identifier and version number. If a webhook is registered, a
 publication notification will also be issued.</p>
 <p>The client may transfer ownership of the submission to another agent (user or
@@ -244,23 +246,24 @@ to delegate editing privileges to another agent, via the
 <h3>Navigation</h3>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="architecture.html">Submission &amp; moderation subsystem architecture</a></li>
-<li class="toctree-l1"><a class="reference internal" href="publication_process.html">Submission &amp; Publication Process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="announcement_process.html">Submission &amp; announcement Process</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Submission API: Context</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#submission-workflows">Submission Workflows</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#access-authorization">Access &amp; Authorization</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#submission-overview">Submission Overview</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="containers/core/events.html">events package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="containers/core/arxiv.submission.html">arxiv.submission package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="containers/metadata/metadata.html">metadata package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="background.html">Background</a></li>
 </ul>
 
 <div class="relations">
 <h3>Related Topics</h3>
 <ul>
   <li><a href="index.html">Documentation overview</a><ul>
-      <li>Previous: <a href="publication_process.html" title="previous chapter">Submission &amp; Publication Process</a></li>
-      <li>Next: <a href="containers/core/events.html" title="next chapter">events package</a></li>
+      <li>Previous: <a href="announcement_process.html" title="previous chapter">Submission &amp; announcement Process</a></li>
+      <li>Next: <a href="containers/core/arxiv.submission.html" title="next chapter">arxiv.submission package</a></li>
   </ul></li>
 </ul>
 </div>
@@ -276,6 +279,14 @@ to delegate editing privileges to another agent, via the
     </div>
 </div>
 <script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
         </div>
       </div>
       <div class="clearer"></div>
@@ -284,8 +295,8 @@ to delegate editing privileges to another agent, via the
       &copy;2017, arXiv.org.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.6</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.11</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.3</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |
       <a href="_sources/submission_api_context.rst.txt"

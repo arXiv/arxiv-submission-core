@@ -9,10 +9,12 @@
     <title>Submission &amp; moderation &#8212; arXiv submission &amp; moderation 0.1 documentation</title>
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="_static/graphviz.css" />
     <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Submission &amp; moderation subsystem architecture" href="architecture.html" />
@@ -43,11 +45,11 @@ subsystem.</p>
 <li class="toctree-l2"><a class="reference internal" href="architecture.html#key-requirements">Key requirements</a></li>
 <li class="toctree-l2"><a class="reference internal" href="architecture.html#solution-strategy">Solution Strategy</a></li>
 <li class="toctree-l2"><a class="reference internal" href="architecture.html#context">Context</a></li>
-<li class="toctree-l2"><a class="reference internal" href="architecture.html#containers-services-building-blocks">Containers (Services &amp; Building Blocks)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="architecture.html#services-building-blocks">Services &amp; Building Blocks</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="publication_process.html">Submission &amp; Publication Process</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="publication_process.html#submissions-states">Submissions &amp; States</a></li>
+<li class="toctree-l1"><a class="reference internal" href="announcement_process.html">Submission &amp; announcement Process</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="announcement_process.html#submissions-states">Submissions &amp; States</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="submission_api_context.html">Submission API: Context</a><ul>
@@ -56,12 +58,12 @@ subsystem.</p>
 <li class="toctree-l2"><a class="reference internal" href="submission_api_context.html#submission-overview">Submission Overview</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="containers/core/events.html">events package</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="containers/core/events.html#using-events">Using events</a></li>
-<li class="toctree-l2"><a class="reference internal" href="containers/core/events.html#subpackages">Subpackages</a></li>
-<li class="toctree-l2"><a class="reference internal" href="containers/core/events.html#submodules">Submodules</a></li>
-<li class="toctree-l2"><a class="reference internal" href="containers/core/events.html#module-events.exceptions">events.exceptions module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="containers/core/events.html#module-events.tests">events.tests module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="containers/core/arxiv.submission.html">arxiv.submission package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="containers/core/arxiv.submission.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="containers/core/arxiv.submission.html#using-commands-events">Using commands/events</a></li>
+<li class="toctree-l2"><a class="reference internal" href="containers/core/arxiv.submission.html#integration-with-the-legacy-system">Integration with the legacy system</a></li>
+<li class="toctree-l2"><a class="reference internal" href="containers/core/arxiv.submission.html#subpackages">Subpackages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="containers/core/arxiv.submission.html#submodules">Submodules</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="containers/metadata/metadata.html">metadata package</a><ul>
@@ -70,6 +72,11 @@ subsystem.</p>
 <li class="toctree-l2"><a class="reference internal" href="containers/metadata/metadata.html#module-metadata.config">metadata.config module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="containers/metadata/metadata.html#module-metadata.factory">metadata.factory module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="containers/metadata/metadata.html#module-metadata.routes">metadata.routes module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="background.html">Background</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="background.html#separation-of-concerns">Separation of concerns</a></li>
+<li class="toctree-l2"><a class="reference internal" href="background.html#commands-events-as-data">Commands (events) as data</a></li>
 </ul>
 </li>
 </ul>
@@ -95,10 +102,11 @@ subsystem.</p>
 <h3>Navigation</h3>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="architecture.html">Submission &amp; moderation subsystem architecture</a></li>
-<li class="toctree-l1"><a class="reference internal" href="publication_process.html">Submission &amp; Publication Process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="announcement_process.html">Submission &amp; announcement Process</a></li>
 <li class="toctree-l1"><a class="reference internal" href="submission_api_context.html">Submission API: Context</a></li>
-<li class="toctree-l1"><a class="reference internal" href="containers/core/events.html">events package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="containers/core/arxiv.submission.html">arxiv.submission package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="containers/metadata/metadata.html">metadata package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="background.html">Background</a></li>
 </ul>
 
 <div class="relations">
@@ -121,6 +129,14 @@ subsystem.</p>
     </div>
 </div>
 <script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
         </div>
       </div>
       <div class="clearer"></div>
@@ -129,8 +145,8 @@ subsystem.</p>
       &copy;2017, arXiv.org.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.6</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.11</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.3</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |
       <a href="_sources/index.rst.txt"

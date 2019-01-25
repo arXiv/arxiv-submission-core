@@ -1,0 +1,285 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>arxiv.submission.core &#8212; arXiv submission &amp; moderation 0.1 documentation</title>
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for arxiv.submission.core</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Core persistence methods for submissions and submission events.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Optional</span>
+<span class="kn">from</span> <span class="nn">functools</span> <span class="k">import</span> <span class="n">wraps</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">defaultdict</span>
+
+<span class="kn">from</span> <span class="nn">flask</span> <span class="k">import</span> <span class="n">Flask</span>
+
+<span class="kn">from</span> <span class="nn">arxiv.base</span> <span class="k">import</span> <span class="n">logging</span>
+<span class="kn">from</span> <span class="nn">arxiv.base.globals</span> <span class="k">import</span> <span class="n">get_application_config</span><span class="p">,</span> <span class="n">get_application_global</span>
+
+<span class="kn">from</span> <span class="nn">.domain.submission</span> <span class="k">import</span> <span class="n">Submission</span><span class="p">,</span> <span class="n">SubmissionMetadata</span><span class="p">,</span> <span class="n">Author</span>
+<span class="kn">from</span> <span class="nn">.domain.agent</span> <span class="k">import</span> <span class="n">Agent</span><span class="p">,</span> <span class="n">User</span><span class="p">,</span> <span class="n">System</span><span class="p">,</span> <span class="n">Client</span>
+<span class="kn">from</span> <span class="nn">.domain.event</span> <span class="k">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">.services</span> <span class="k">import</span> <span class="n">classic</span>
+<span class="kn">from</span> <span class="nn">.exceptions</span> <span class="k">import</span> <span class="n">InvalidEvent</span><span class="p">,</span> <span class="n">InvalidStack</span><span class="p">,</span> <span class="n">NoSuchSubmission</span><span class="p">,</span> <span class="n">SaveError</span>
+
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="load"><a class="viewcode-back" href="../../../containers/core/arxiv.submission.core.html#arxiv.submission.core.load">[docs]</a><span class="k">def</span> <span class="nf">load</span><span class="p">(</span><span class="n">submission_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Submission</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Event</span><span class="p">]]:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Load a submission and its history.</span>
+
+<span class="sd">    This loads all events for the submission, and generates the most</span>
+<span class="sd">    up-to-date representation based on those events.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    submission_id : str</span>
+<span class="sd">        Submission identifier.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    :class:`.domain.Submission`</span>
+<span class="sd">        The current state of the submission.</span>
+<span class="sd">    list</span>
+<span class="sd">        Items are :class:`.Event` instances, in order of their occurrence.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    :class:`arxiv.submission.exceptions.NoSuchSubmission`</span>
+<span class="sd">        Raised when a submission with the passed ID cannot be found.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">classic</span><span class="o">.</span><span class="n">get_submission</span><span class="p">(</span><span class="n">submission_id</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">classic</span><span class="o">.</span><span class="n">NoSuchSubmission</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">NoSuchSubmission</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;No submission with id </span><span class="si">{submission_id}</span><span class="s1">&#39;</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span></div>
+
+
+<div class="viewcode-block" id="load_submissions_for_user"><a class="viewcode-back" href="../../../containers/core/arxiv.submission.core.html#arxiv.submission.core.load_submissions_for_user">[docs]</a><span class="k">def</span> <span class="nf">load_submissions_for_user</span><span class="p">(</span><span class="n">user_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Submission</span><span class="p">]:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Load active :class:`.domain.Submission` instances for a specific user.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    user_id : int</span>
+<span class="sd">        Unique identifier for the user.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    list</span>
+<span class="sd">        Items are :class:`.domain.Submission` instances.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">classic</span><span class="o">.</span><span class="n">get_user_submissions_fast</span><span class="p">(</span><span class="n">user_id</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="load_fast"><a class="viewcode-back" href="../../../containers/core/arxiv.submission.core.html#arxiv.submission.core.load_fast">[docs]</a><span class="k">def</span> <span class="nf">load_fast</span><span class="p">(</span><span class="n">submission_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Submission</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Load a :class:`.domain.Submission` from its last projected state.</span>
+
+<span class="sd">    This does not load and apply past events. The most recent stored submission</span>
+<span class="sd">    state is loaded directly from the database.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    submission_id : str</span>
+<span class="sd">        Submission identifier.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    :class:`.domain.Submission`</span>
+<span class="sd">        The current state of the submission.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">classic</span><span class="o">.</span><span class="n">get_submission_fast</span><span class="p">(</span><span class="n">submission_id</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">classic</span><span class="o">.</span><span class="n">NoSuchSubmission</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">NoSuchSubmission</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;No submission with id </span><span class="si">{submission_id}</span><span class="s1">&#39;</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span></div>
+
+
+<div class="viewcode-block" id="save"><a class="viewcode-back" href="../../../containers/core/arxiv.submission.core.html#arxiv.submission.core.save">[docs]</a><span class="k">def</span> <span class="nf">save</span><span class="p">(</span><span class="o">*</span><span class="n">events</span><span class="p">:</span> <span class="n">Event</span><span class="p">,</span> <span class="n">submission_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> \
+        <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Submission</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Event</span><span class="p">]]:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Commit a set of new :class:`.Event` instances for a submission.</span>
+
+<span class="sd">    This will persist the events to the database, along with the final</span>
+<span class="sd">    state of the submission, and generate external notification(s) on the</span>
+<span class="sd">    appropriate channels.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    events : :class:`.Event`</span>
+<span class="sd">        Events to apply and persist.</span>
+<span class="sd">    submission_id : int</span>
+<span class="sd">        The unique ID for the submission, if available. If not provided, it is</span>
+<span class="sd">        expected that ``events`` includes a :class:`.CreateSubmission`.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    :class:`arxiv.submission.domain.submission.Submission`</span>
+<span class="sd">        The state of the submission after all events (including rule-derived</span>
+<span class="sd">        events) have been applied. Updated with the submission ID, if a</span>
+<span class="sd">        :class:`.CreateSubmission` was included.</span>
+<span class="sd">    list</span>
+<span class="sd">        A list of :class:`.Event` instances applied to the submission. Note</span>
+<span class="sd">        that this list may contain more events than were passed, if event</span>
+<span class="sd">        rules were triggered.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    :class:`arxiv.submission.exceptions.NoSuchSubmission`</span>
+<span class="sd">        Raised if ``submission_id`` is not provided and the first event is not</span>
+<span class="sd">        a :class:`.CreateSubmission`, or ``submission_id`` is provided but</span>
+<span class="sd">        no such submission exists.</span>
+<span class="sd">    :class:`.InvalidEvent`</span>
+<span class="sd">        If an invalid event is encountered, the entire operation is aborted</span>
+<span class="sd">        and this exception is raised.</span>
+<span class="sd">    :class:`.SaveError`</span>
+<span class="sd">        There was a problem persisting the events and/or submission state</span>
+<span class="sd">        to the database.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">events</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Must pass at least one event&#39;</span><span class="p">)</span>
+    <span class="n">events</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">events</span><span class="p">)</span>   <span class="c1"># Coerce to list so that we can index.</span>
+    <span class="n">prior</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Event</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">before</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Submission</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="c1"># Get the current state of the submission from past events.</span>
+    <span class="k">if</span> <span class="n">submission_id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">before</span><span class="p">,</span> <span class="n">prior</span> <span class="o">=</span> <span class="n">classic</span><span class="o">.</span><span class="n">get_submission</span><span class="p">(</span><span class="n">submission_id</span><span class="p">)</span>
+
+    <span class="c1"># Either we need a submission ID, or the first event must be a creation.</span>
+    <span class="k">elif</span> <span class="n">events</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">submission_id</span> <span class="ow">is</span> <span class="kc">None</span> \
+            <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">events</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">CreateSubmission</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">NoSuchSubmission</span><span class="p">(</span><span class="s1">&#39;Unable to determine submission&#39;</span><span class="p">)</span>
+
+    <span class="n">events</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">prior</span><span class="p">)</span> <span class="o">|</span> <span class="nb">set</span><span class="p">(</span><span class="n">events</span><span class="p">),</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">e</span><span class="p">:</span> <span class="n">e</span><span class="o">.</span><span class="n">created</span><span class="p">)</span>
+    <span class="n">applied</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Event</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">event</span> <span class="ow">in</span> <span class="n">events</span><span class="p">:</span>
+        <span class="c1"># Fill in event IDs, if they are missing.</span>
+        <span class="k">if</span> <span class="n">event</span><span class="o">.</span><span class="n">submission_id</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">submission_id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">event</span><span class="o">.</span><span class="n">submission_id</span> <span class="o">=</span> <span class="n">submission_id</span>
+
+        <span class="c1"># Mutation happens here; raises InvalidEvent.</span>
+        <span class="n">after</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">before</span><span class="p">)</span>
+        <span class="n">applied</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">event</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">event</span><span class="o">.</span><span class="n">committed</span><span class="p">:</span>
+            <span class="c1"># TODO: &lt;-- emit event here.</span>
+            <span class="n">after</span><span class="p">,</span> <span class="n">consequent_events</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">commit</span><span class="p">(</span><span class="n">classic</span><span class="o">.</span><span class="n">store_event</span><span class="p">)</span>
+            <span class="n">applied</span> <span class="o">+=</span> <span class="n">consequent_events</span>
+
+        <span class="n">before</span> <span class="o">=</span> <span class="n">after</span>
+    <span class="k">return</span> <span class="n">after</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">applied</span><span class="p">),</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">e</span><span class="p">:</span> <span class="n">e</span><span class="o">.</span><span class="n">created</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="init_app"><a class="viewcode-back" href="../../../containers/core/arxiv.submission.core.html#arxiv.submission.core.init_app">[docs]</a><span class="k">def</span> <span class="nf">init_app</span><span class="p">(</span><span class="n">app</span><span class="p">:</span> <span class="n">Flask</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Set default configuration parameters for an application instance.&quot;&quot;&quot;</span>
+    <span class="n">classic</span><span class="o">.</span><span class="n">init_app</span><span class="p">(</span><span class="n">app</span><span class="p">)</span>
+    <span class="n">app</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;ENABLE_CALLBACKS&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="n">app</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;ENABLE_ASYNC&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../index.html">arXiv submission & moderation</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../architecture.html">Submission &amp; moderation subsystem architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../announcement_process.html">Submission &amp; announcement Process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../submission_api_context.html">Submission API: Context</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../containers/core/arxiv.submission.html">arxiv.submission package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../containers/metadata/metadata.html">metadata package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../background.html">Background</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, arXiv.org.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.3</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

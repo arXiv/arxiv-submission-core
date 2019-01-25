@@ -1,0 +1,258 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>arxiv.submission.services.classifier.classifier &#8212; arXiv submission &amp; moderation 0.1 documentation</title>
+    <link rel="stylesheet" href="../../../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/graphviz.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../../../../" src="../../../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for arxiv.submission.services.classifier.classifier</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Classifier service integration.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">NamedTuple</span><span class="p">,</span> <span class="n">Optional</span>
+<span class="kn">from</span> <span class="nn">math</span> <span class="k">import</span> <span class="n">exp</span><span class="p">,</span> <span class="n">log</span>
+<span class="kn">from</span> <span class="nn">functools</span> <span class="k">import</span> <span class="n">wraps</span>
+
+<span class="kn">from</span> <span class="nn">arxiv</span> <span class="k">import</span> <span class="n">status</span>
+<span class="kn">from</span> <span class="nn">arxiv.taxonomy</span> <span class="k">import</span> <span class="n">Category</span>
+<span class="kn">from</span> <span class="nn">arxiv.base.globals</span> <span class="k">import</span> <span class="n">get_application_config</span><span class="p">,</span> <span class="n">get_application_global</span>
+
+<span class="kn">import</span> <span class="nn">requests</span>
+<span class="kn">from</span> <span class="nn">requests.packages.urllib3.util.retry</span> <span class="k">import</span> <span class="n">Retry</span>
+
+<span class="n">VERSION</span> <span class="o">=</span> <span class="s1">&#39;0.0&#39;</span>
+<span class="n">SERVICE</span> <span class="o">=</span> <span class="s1">&#39;classic&#39;</span>
+
+
+<div class="viewcode-block" id="Flag"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.services.classifier.classifier.html#arxiv.submission.services.classifier.classifier.Flag">[docs]</a><span class="k">class</span> <span class="nc">Flag</span><span class="p">(</span><span class="n">NamedTuple</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;General-purpose QA flag.&quot;&quot;&quot;</span>
+
+    <span class="n">key</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">value</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">,</span> <span class="nb">dict</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="Suggestion"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.services.classifier.classifier.html#arxiv.submission.services.classifier.classifier.Suggestion">[docs]</a><span class="k">class</span> <span class="nc">Suggestion</span><span class="p">(</span><span class="n">NamedTuple</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A category suggested by the classifier.&quot;&quot;&quot;</span>
+
+    <span class="n">category</span><span class="p">:</span> <span class="n">Category</span>
+    <span class="n">probability</span><span class="p">:</span> <span class="nb">int</span></div>
+
+
+<div class="viewcode-block" id="Counts"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.services.classifier.classifier.html#arxiv.submission.services.classifier.classifier.Counts">[docs]</a><span class="k">class</span> <span class="nc">Counts</span><span class="p">(</span><span class="n">NamedTuple</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Various counts of paper content.&quot;&quot;&quot;</span>
+
+    <span class="n">chars</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">pages</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">stops</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">words</span><span class="p">:</span> <span class="nb">int</span></div>
+
+
+<div class="viewcode-block" id="RequestFailed"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.services.classifier.classifier.html#arxiv.submission.services.classifier.classifier.RequestFailed">[docs]</a><span class="k">class</span> <span class="nc">RequestFailed</span><span class="p">(</span><span class="ne">ConnectionError</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The request to the classifier service failed.&quot;&quot;&quot;</span></div>
+
+
+<div class="viewcode-block" id="Classifier"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.services.classifier.classifier.html#arxiv.submission.services.classifier.classifier.Classifier">[docs]</a><span class="k">class</span> <span class="nc">Classifier</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Represents an interface to the classifier service.&quot;&quot;&quot;</span>
+
+    <span class="n">ClassifierResponse</span> <span class="o">=</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Suggestion</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">Flag</span><span class="p">],</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Counts</span><span class="p">]]</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">host</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">port</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Set the host and port for the service.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_host</span> <span class="o">=</span> <span class="n">host</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_port</span> <span class="o">=</span> <span class="n">port</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_session</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">Session</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_retry</span> <span class="o">=</span> <span class="n">Retry</span><span class="p">(</span>  <span class="c1"># type: ignore</span>
+            <span class="n">total</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+            <span class="n">read</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+            <span class="n">connect</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+            <span class="n">status</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+            <span class="n">backoff_factor</span><span class="o">=</span><span class="mf">0.5</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_adapter</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">adapters</span><span class="o">.</span><span class="n">HTTPAdapter</span><span class="p">(</span><span class="n">max_retries</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_retry</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">mount</span><span class="p">(</span><span class="s1">&#39;http://&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_adapter</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">endpoint</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the URL of the classifier endpoint.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">f</span><span class="s1">&#39;http://</span><span class="si">{self._host}</span><span class="s1">:</span><span class="si">{self._port}</span><span class="s1">/ctxt&#39;</span>
+
+<div class="viewcode-block" id="Classifier.probability"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.services.classifier.classifier.html#arxiv.submission.services.classifier.classifier.Classifier.probability">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">probability</span><span class="p">(</span><span class="n">logodds</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Convert log odds to a probability.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">exp</span><span class="p">(</span><span class="n">logodds</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">exp</span><span class="p">(</span><span class="n">logodds</span><span class="p">))</span></div>
+
+    <span class="k">def</span> <span class="nf">_counts</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Counts</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Parse counts from the response data.&quot;&quot;&quot;</span>
+        <span class="n">counts</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Counts</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="s1">&#39;counts&#39;</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+            <span class="n">counts</span> <span class="o">=</span> <span class="n">Counts</span><span class="p">(</span><span class="o">**</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;counts&#39;</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">counts</span>
+
+    <span class="k">def</span> <span class="nf">_flags</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Flag</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Parse flags from the response data.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">[</span>
+            <span class="n">Flag</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;flags&#39;</span><span class="p">,</span> <span class="p">{})</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+        <span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">_suggestions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Suggestion</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Parse classification suggestions from the response data.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">Suggestion</span><span class="p">(</span><span class="n">category</span><span class="o">=</span><span class="n">Category</span><span class="p">(</span><span class="n">datum</span><span class="p">[</span><span class="s1">&#39;category&#39;</span><span class="p">]),</span>
+                           <span class="n">probability</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">probability</span><span class="p">(</span><span class="n">datum</span><span class="p">[</span><span class="s1">&#39;logodds&#39;</span><span class="p">]))</span>
+                <span class="k">for</span> <span class="n">datum</span> <span class="ow">in</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;classifier&#39;</span><span class="p">]]</span>
+
+    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">content</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ClassifierResponse</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Make a classification request to the classifier service.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        content : bytes</span>
+<span class="sd">            Raw text content from an e-print.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        list</span>
+<span class="sd">            A list of classifications.</span>
+<span class="sd">        list</span>
+<span class="sd">            A list of QA flags.</span>
+<span class="sd">        :class:`Counts` or None</span>
+<span class="sd">            Feature counts, if provided.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">endpoint</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">content</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">response</span><span class="o">.</span><span class="n">status_code</span> <span class="o">!=</span> <span class="n">status</span><span class="o">.</span><span class="n">HTTP_200_OK</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">RequestFailed</span><span class="p">(</span><span class="s1">&#39;Failed: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">response</span><span class="o">.</span><span class="n">content</span><span class="p">)</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_suggestions</span><span class="p">(</span><span class="n">data</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">_flags</span><span class="p">(</span><span class="n">data</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">_counts</span><span class="p">(</span><span class="n">data</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="init_app"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.services.classifier.classifier.html#arxiv.submission.services.classifier.classifier.init_app">[docs]</a><span class="k">def</span> <span class="nf">init_app</span><span class="p">(</span><span class="n">app</span><span class="p">:</span> <span class="nb">object</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Configure an application instance.&quot;&quot;&quot;</span>
+    <span class="n">config</span> <span class="o">=</span> <span class="n">get_application_config</span><span class="p">(</span><span class="n">app</span><span class="p">)</span>
+    <span class="n">config</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;CLASSIFIER_HOST&#39;</span><span class="p">,</span> <span class="s1">&#39;localhost&#39;</span><span class="p">)</span>
+    <span class="n">config</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;CLASSIFIER_PORT&#39;</span><span class="p">,</span> <span class="mi">8000</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="get_instance"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.services.classifier.classifier.html#arxiv.submission.services.classifier.classifier.get_instance">[docs]</a><span class="k">def</span> <span class="nf">get_instance</span><span class="p">(</span><span class="n">app</span><span class="p">:</span> <span class="nb">object</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Classifier</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Create a new :class:`.Classifier`.&quot;&quot;&quot;</span>
+    <span class="n">config</span> <span class="o">=</span> <span class="n">get_application_config</span><span class="p">()</span>
+    <span class="n">host</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;CLASSIFIER_HOST&#39;</span><span class="p">,</span> <span class="s1">&#39;localhost&#39;</span><span class="p">)</span>
+    <span class="n">port</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;CLASSIFIER_PORT&#39;</span><span class="p">,</span> <span class="mi">8000</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">Classifier</span><span class="p">(</span><span class="n">host</span><span class="p">,</span> <span class="n">port</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="current_instance"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.services.classifier.classifier.html#arxiv.submission.services.classifier.classifier.current_instance">[docs]</a><span class="k">def</span> <span class="nf">current_instance</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;Get/create :class:`.Classifier` instance for this context.&quot;&quot;&quot;</span>
+    <span class="n">g</span> <span class="o">=</span> <span class="n">get_application_global</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">g</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">get_instance</span><span class="p">()</span>
+    <span class="k">if</span> <span class="s1">&#39;classifier&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">g</span><span class="p">:</span>
+        <span class="n">g</span><span class="o">.</span><span class="n">classifier</span> <span class="o">=</span> <span class="n">get_instance</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">g</span><span class="o">.</span><span class="n">classifier</span></div>
+
+
+<div class="viewcode-block" id="classify"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.services.classifier.classifier.html#arxiv.submission.services.classifier.classifier.classify">[docs]</a><span class="nd">@wraps</span><span class="p">(</span><span class="n">Classifier</span><span class="o">.</span><span class="fm">__call__</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">classify</span><span class="p">(</span><span class="n">content</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Classifier</span><span class="o">.</span><span class="n">ClassifierResponse</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Make a classification request to the classifier service.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">current_instance</span><span class="p">()(</span><span class="n">content</span><span class="p">)</span></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../../index.html">arXiv submission & moderation</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../architecture.html">Submission &amp; moderation subsystem architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../announcement_process.html">Submission &amp; announcement Process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../submission_api_context.html">Submission API: Context</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../containers/core/arxiv.submission.html">arxiv.submission package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../containers/metadata/metadata.html">metadata package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../background.html">Background</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, arXiv.org.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.3</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

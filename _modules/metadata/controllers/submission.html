@@ -9,10 +9,12 @@
     <title>metadata.controllers.submission &#8212; arXiv submission &amp; moderation 0.1 documentation</title>
     <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css" />
     <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
     <script type="text/javascript" src="../../../_static/jquery.js"></script>
     <script type="text/javascript" src="../../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../_static/language_data.js"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
    
@@ -39,7 +41,7 @@
 <span class="kn">from</span> <span class="nn">datetime</span> <span class="k">import</span> <span class="n">datetime</span>
 <span class="kn">import</span> <span class="nn">copy</span>
 <span class="kn">from</span> <span class="nn">arxiv.base</span> <span class="k">import</span> <span class="n">logging</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Optional</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Dict</span>
 
 <span class="kn">from</span> <span class="nn">flask</span> <span class="k">import</span> <span class="n">url_for</span><span class="p">,</span> <span class="n">current_app</span>
 <span class="kn">from</span> <span class="nn">werkzeug.exceptions</span> <span class="k">import</span> <span class="n">NotFound</span><span class="p">,</span> <span class="n">BadRequest</span><span class="p">,</span> <span class="n">InternalServerError</span>
@@ -47,9 +49,11 @@
 <span class="kn">from</span> <span class="nn">arxiv</span> <span class="k">import</span> <span class="n">status</span>
 <span class="kn">from</span> <span class="nn">arxiv.submission.domain.agent</span> <span class="k">import</span> <span class="n">Agent</span><span class="p">,</span> <span class="n">agent_factory</span><span class="p">,</span> <span class="n">System</span>
 <span class="kn">from</span> <span class="nn">arxiv.submission.domain</span> <span class="k">import</span> <span class="n">Event</span>
-<span class="kn">from</span> <span class="nn">arxiv.submission.domain.submission</span> <span class="k">import</span> <span class="n">Submission</span><span class="p">,</span> <span class="n">Classification</span><span class="p">,</span> <span class="n">License</span><span class="p">,</span> \
-    <span class="n">SubmissionMetadata</span>
+<span class="kn">from</span> <span class="nn">arxiv.submission.domain.submission</span> <span class="k">import</span> <span class="n">Submission</span><span class="p">,</span> <span class="n">Classification</span><span class="p">,</span> \
+    <span class="n">License</span><span class="p">,</span> <span class="n">SubmissionMetadata</span>
 <span class="kn">import</span> <span class="nn">arxiv.submission</span> <span class="k">as</span> <span class="nn">ev</span>
+
+<span class="kn">import</span> <span class="nn">arxiv.users.domain</span> <span class="k">as</span> <span class="nn">auth_domain</span>
 
 <span class="kn">from</span> <span class="nn">metadata.controllers</span> <span class="k">import</span> <span class="n">util</span>
 <span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">handlers</span>
@@ -60,25 +64,9 @@
 <span class="n">Response</span> <span class="o">=</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">dict</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">dict</span><span class="p">]</span>
 
 
-<span class="k">def</span> <span class="nf">_get_agents</span><span class="p">(</span><span class="n">headers</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">user_data</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">client_data</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> \
-        <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Agent</span><span class="p">,</span> <span class="n">Agent</span><span class="p">,</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Agent</span><span class="p">]]:</span>
-    <span class="n">user</span> <span class="o">=</span> <span class="n">ev</span><span class="o">.</span><span class="n">User</span><span class="p">(</span>
-        <span class="n">native_id</span><span class="o">=</span><span class="n">user_data</span><span class="p">[</span><span class="s1">&#39;user_id&#39;</span><span class="p">],</span>
-        <span class="n">email</span><span class="o">=</span><span class="n">user_data</span><span class="p">[</span><span class="s1">&#39;email&#39;</span><span class="p">]</span>
-    <span class="p">)</span>
-    <span class="n">client</span> <span class="o">=</span> <span class="n">ev</span><span class="o">.</span><span class="n">Client</span><span class="p">(</span><span class="n">native_id</span><span class="o">=</span><span class="n">client_data</span><span class="p">[</span><span class="s1">&#39;client_id&#39;</span><span class="p">])</span>
-    <span class="n">on_behalf_of</span> <span class="o">=</span> <span class="n">headers</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;X-On-Behalf-Of&#39;</span><span class="p">)</span>
-    <span class="k">if</span> <span class="n">on_behalf_of</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">proxy</span> <span class="o">=</span> <span class="n">user</span>
-        <span class="n">user</span> <span class="o">=</span> <span class="n">ev</span><span class="o">.</span><span class="n">User</span><span class="p">(</span><span class="n">on_behalf_of</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">proxy</span> <span class="o">=</span> <span class="kc">None</span>
-    <span class="k">return</span> <span class="n">user</span><span class="p">,</span> <span class="n">client</span><span class="p">,</span> <span class="n">proxy</span>
-
-
 <div class="viewcode-block" id="create_submission"><a class="viewcode-back" href="../../../containers/metadata/metadata.controllers.submission.html#metadata.controllers.submission.create_submission">[docs]</a><span class="nd">@util</span><span class="o">.</span><span class="n">validate_request</span><span class="p">(</span><span class="s1">&#39;schema/resources/submission.json&#39;</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">create_submission</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">headers</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">user_data</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span>
-                      <span class="n">client_data</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">token</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Response</span><span class="p">:</span>
+<span class="k">def</span> <span class="nf">create_submission</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">headers</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">agents</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Agent</span><span class="p">],</span>
+                      <span class="n">token</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Response</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Create a new submission.</span>
 
@@ -100,11 +88,8 @@
 <span class="sd">    dict</span>
 <span class="sd">        Headers to add to the response.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Received request to create submission&#39;</span><span class="p">)</span>
-    <span class="n">user</span><span class="p">,</span> <span class="n">client</span><span class="p">,</span> <span class="n">proxy</span> <span class="o">=</span> <span class="n">_get_agents</span><span class="p">(</span><span class="n">headers</span><span class="p">,</span> <span class="n">user_data</span><span class="p">,</span> <span class="n">client_data</span><span class="p">)</span>
-    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;User: </span><span class="si">{user}</span><span class="s1">; client: </span><span class="si">{client}</span><span class="s1">, proxy: </span><span class="si">{proxy}</span><span class="s1">&#39;</span><span class="p">)</span>
-    <span class="n">agents</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">user</span><span class="p">,</span> <span class="n">client</span><span class="o">=</span><span class="n">client</span><span class="p">,</span> <span class="n">proxy</span><span class="o">=</span><span class="n">proxy</span><span class="p">)</span>
-    <span class="n">create</span> <span class="o">=</span> <span class="n">ev</span><span class="o">.</span><span class="n">CreateSubmission</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">user</span><span class="p">,</span> <span class="n">client</span><span class="o">=</span><span class="n">client</span><span class="p">,</span> <span class="n">proxy</span><span class="o">=</span><span class="n">proxy</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;Received request to create submission, </span><span class="si">{agents}</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="n">create</span> <span class="o">=</span> <span class="n">ev</span><span class="o">.</span><span class="n">CreateSubmission</span><span class="p">(</span><span class="o">**</span><span class="n">agents</span><span class="p">)</span>
     <span class="n">events</span> <span class="o">=</span> <span class="n">handlers</span><span class="o">.</span><span class="n">handle_submission</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">agents</span><span class="p">)</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="n">submission</span><span class="p">,</span> <span class="n">events</span> <span class="o">=</span> <span class="n">ev</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">create</span><span class="p">,</span> <span class="o">*</span><span class="n">events</span><span class="p">)</span>
@@ -122,8 +107,8 @@
     <span class="k">return</span> <span class="n">submission</span><span class="o">.</span><span class="n">to_dict</span><span class="p">(),</span> <span class="n">status</span><span class="o">.</span><span class="n">HTTP_201_CREATED</span><span class="p">,</span> <span class="n">response_headers</span></div>
 
 
-<div class="viewcode-block" id="get_submission"><a class="viewcode-back" href="../../../containers/metadata/metadata.controllers.submission.html#metadata.controllers.submission.get_submission">[docs]</a><span class="k">def</span> <span class="nf">get_submission</span><span class="p">(</span><span class="n">submission_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">user</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-                   <span class="n">client</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<div class="viewcode-block" id="get_submission"><a class="viewcode-back" href="../../../containers/metadata/metadata.controllers.submission.html#metadata.controllers.submission.get_submission">[docs]</a><span class="k">def</span> <span class="nf">get_submission</span><span class="p">(</span><span class="n">submission_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+                   <span class="n">agents</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Agent</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
                    <span class="n">token</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Response</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;Retrieve the current state of a submission.&quot;&quot;&quot;</span>
     <span class="k">try</span><span class="p">:</span>
@@ -137,13 +122,13 @@
 
 
 <div class="viewcode-block" id="update_submission"><a class="viewcode-back" href="../../../containers/metadata/metadata.controllers.submission.html#metadata.controllers.submission.update_submission">[docs]</a><span class="nd">@util</span><span class="o">.</span><span class="n">validate_request</span><span class="p">(</span><span class="s1">&#39;schema/resources/submission.json&#39;</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">update_submission</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">headers</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">user_data</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span>
-                      <span class="n">client_data</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">token</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">submission_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> \
-        <span class="o">-&gt;</span> <span class="n">Response</span><span class="p">:</span>
+<span class="k">def</span> <span class="nf">update_submission</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">headers</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">agents</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Agent</span><span class="p">],</span>
+                      <span class="n">token</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">submission_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Response</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;Update the submission.&quot;&quot;&quot;</span>
-    <span class="n">user</span><span class="p">,</span> <span class="n">client</span><span class="p">,</span> <span class="n">proxy</span> <span class="o">=</span> <span class="n">_get_agents</span><span class="p">(</span><span class="n">headers</span><span class="p">,</span> <span class="n">user_data</span><span class="p">,</span> <span class="n">client_data</span><span class="p">)</span>
-    <span class="n">agents</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">user</span><span class="p">,</span> <span class="n">client</span><span class="o">=</span><span class="n">client</span><span class="p">,</span> <span class="n">proxy</span><span class="o">=</span><span class="n">proxy</span><span class="p">)</span>
     <span class="n">events</span> <span class="o">=</span> <span class="n">handlers</span><span class="o">.</span><span class="n">handle_submission</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">agents</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">data</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">BadRequest</span><span class="p">(</span><span class="s1">&#39;No data in request body&#39;</span><span class="p">)</span>
+
     <span class="k">try</span><span class="p">:</span>
         <span class="n">submission</span><span class="p">,</span> <span class="n">events</span> <span class="o">=</span> <span class="n">ev</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="o">*</span><span class="n">events</span><span class="p">,</span> <span class="n">submission_id</span><span class="o">=</span><span class="n">submission_id</span><span class="p">)</span>
     <span class="k">except</span> <span class="n">ev</span><span class="o">.</span><span class="n">NoSuchSubmission</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
@@ -154,7 +139,8 @@
         <span class="k">raise</span> <span class="n">InternalServerError</span><span class="p">(</span><span class="s1">&#39;Problem interacting with database&#39;</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span>
 
     <span class="n">response_headers</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="s1">&#39;Location&#39;</span><span class="p">:</span> <span class="n">url_for</span><span class="p">(</span><span class="s1">&#39;submission.get_submission&#39;</span><span class="p">,</span> <span class="n">creator</span><span class="o">=</span><span class="n">user</span><span class="p">,</span>
+        <span class="s1">&#39;Location&#39;</span><span class="p">:</span> <span class="n">url_for</span><span class="p">(</span><span class="s1">&#39;submission.get_submission&#39;</span><span class="p">,</span>
+                            <span class="n">creator</span><span class="o">=</span><span class="n">agents</span><span class="p">[</span><span class="s1">&#39;creator&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">native_id</span><span class="p">,</span>
                             <span class="n">submission_id</span><span class="o">=</span><span class="n">submission</span><span class="o">.</span><span class="n">submission_id</span><span class="p">)</span>
     <span class="p">}</span>
     <span class="k">return</span> <span class="n">submission</span><span class="o">.</span><span class="n">to_dict</span><span class="p">(),</span> <span class="n">status</span><span class="o">.</span><span class="n">HTTP_200_OK</span><span class="p">,</span> <span class="n">response_headers</span></div>
@@ -178,10 +164,11 @@
 <h3>Navigation</h3>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../architecture.html">Submission &amp; moderation subsystem architecture</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../publication_process.html">Submission &amp; Publication Process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../announcement_process.html">Submission &amp; announcement Process</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../submission_api_context.html">Submission API: Context</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../containers/core/events.html">events package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../containers/core/arxiv.submission.html">arxiv.submission package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../containers/metadata/metadata.html">metadata package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../background.html">Background</a></li>
 </ul>
 
 <div class="relations">
@@ -205,6 +192,14 @@
     </div>
 </div>
 <script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
         </div>
       </div>
       <div class="clearer"></div>
@@ -213,8 +208,8 @@
       &copy;2017, arXiv.org.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.6</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.11</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.3</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
     </div>
 

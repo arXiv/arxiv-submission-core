@@ -1,0 +1,194 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>arxiv.submission.tasks &#8212; arXiv submission &amp; moderation 0.1 documentation</title>
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for arxiv.submission.tasks</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Provides support for asynchronous tasks.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Iterable</span>
+<span class="kn">from</span> <span class="nn">functools</span> <span class="k">import</span> <span class="n">wraps</span><span class="p">,</span> <span class="n">partial</span>
+
+<span class="kn">from</span> <span class="nn">flask</span> <span class="k">import</span> <span class="n">Flask</span>
+<span class="kn">from</span> <span class="nn">celery</span> <span class="k">import</span> <span class="n">shared_task</span><span class="p">,</span> <span class="n">Celery</span>
+
+<span class="kn">from</span> <span class="nn">arxiv.base.globals</span> <span class="k">import</span> <span class="n">get_application_config</span><span class="p">,</span> <span class="n">get_application_global</span>
+<span class="kn">from</span> <span class="nn">.domain.submission</span> <span class="k">import</span> <span class="n">Submission</span>
+<span class="kn">from</span> <span class="nn">.domain.event</span> <span class="k">import</span> <span class="n">Event</span>
+<span class="kn">from</span> <span class="nn">.domain.agent</span> <span class="k">import</span> <span class="n">Agent</span>
+<span class="kn">from</span> <span class="nn">.core</span> <span class="k">import</span> <span class="n">save</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">config</span>
+
+
+<div class="viewcode-block" id="create_worker_app"><a class="viewcode-back" href="../../../containers/core/arxiv.submission.tasks.html#arxiv.submission.tasks.create_worker_app">[docs]</a><span class="k">def</span> <span class="nf">create_worker_app</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Celery</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Initialize the worker application.&quot;&quot;&quot;</span>
+    <span class="n">result_backend</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">RESULT_BACKEND</span>
+    <span class="n">broker</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">BROKER_URL</span>
+    <span class="n">celery_app</span> <span class="o">=</span> <span class="n">Celery</span><span class="p">(</span><span class="s1">&#39;submission&#39;</span><span class="p">,</span>
+                        <span class="n">results</span><span class="o">=</span><span class="n">result_backend</span><span class="p">,</span>
+                        <span class="n">backend</span><span class="o">=</span><span class="n">result_backend</span><span class="p">,</span>
+                        <span class="n">result_backend</span><span class="o">=</span><span class="n">result_backend</span><span class="p">,</span>
+                        <span class="n">broker</span><span class="o">=</span><span class="n">broker</span><span class="p">)</span>
+    <span class="n">celery_app</span><span class="o">.</span><span class="n">config_from_object</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+
+    <span class="n">celery_app</span><span class="o">.</span><span class="n">conf</span><span class="o">.</span><span class="n">task_default_queue</span> <span class="o">=</span> <span class="s1">&#39;submission-worker&#39;</span>
+    <span class="k">return</span> <span class="n">celery_app</span></div>
+
+
+<div class="viewcode-block" id="get_or_create_worker_app"><a class="viewcode-back" href="../../../containers/core/arxiv.submission.tasks.html#arxiv.submission.tasks.get_or_create_worker_app">[docs]</a><span class="k">def</span> <span class="nf">get_or_create_worker_app</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Celery</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Get the current worker app, or create one.</span>
+
+<span class="sd">    Uses the Flask application global to keep track of the worker app.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">g</span> <span class="o">=</span> <span class="n">get_application_global</span><span class="p">()</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">g</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">create_worker_app</span><span class="p">()</span>
+    <span class="k">if</span> <span class="s1">&#39;worker&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">g</span><span class="p">:</span>
+        <span class="n">g</span><span class="o">.</span><span class="n">worker</span> <span class="o">=</span> <span class="n">create_worker_app</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">g</span><span class="o">.</span><span class="n">worker</span></div>
+
+
+<div class="viewcode-block" id="name_for_callback"><a class="viewcode-back" href="../../../containers/core/arxiv.submission.tasks.html#arxiv.submission.tasks.name_for_callback">[docs]</a><span class="k">def</span> <span class="nf">name_for_callback</span><span class="p">(</span><span class="n">func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Produce a name for a function suitable for use as a task name.&quot;&quot;&quot;</span>
+    <span class="n">parent</span> <span class="o">=</span> <span class="n">func</span><span class="o">.</span><span class="vm">__module__</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">f</span><span class="s1">&#39;</span><span class="si">{parent}</span><span class="s1">.</span><span class="si">{func.__name__}</span><span class="s1">&#39;</span></div>
+
+
+<div class="viewcode-block" id="is_async"><a class="viewcode-back" href="../../../containers/core/arxiv.submission.tasks.html#arxiv.submission.tasks.is_async">[docs]</a><span class="k">def</span> <span class="nf">is_async</span><span class="p">(</span><span class="n">func</span><span class="p">:</span> <span class="n">Callable</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Callable</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Turn a function into an asynchronous task.</span>
+
+<span class="sd">    Registers the function with the worker application, and decorates the</span>
+<span class="sd">    function with logic to dispatch the function to the worker when called.</span>
+<span class="sd">    When the decorated function is called, a task is added to the worker queue</span>
+<span class="sd">    and an empty iterable is returned. If ``ENABLE_ASYNC=0`` on the app config,</span>
+<span class="sd">    calls to the decorated function will execute in-thread and return normally.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">worker_app</span> <span class="o">=</span> <span class="n">get_or_create_worker_app</span><span class="p">()</span>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">name_for_callback</span><span class="p">(</span><span class="n">func</span><span class="p">)</span>
+
+    <span class="nd">@wraps</span><span class="p">(</span><span class="n">func</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">do_callback</span><span class="p">(</span><span class="n">event</span><span class="p">:</span> <span class="n">Event</span><span class="p">,</span> <span class="n">before</span><span class="p">:</span> <span class="n">Submission</span><span class="p">,</span>
+                    <span class="n">after</span><span class="p">:</span> <span class="n">Submission</span><span class="p">,</span> <span class="n">creator</span><span class="p">:</span> <span class="n">Agent</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Event</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Run the callback, and save the results.&quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">event</span> <span class="ow">in</span> <span class="n">func</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">before</span><span class="p">,</span> <span class="n">after</span><span class="p">,</span> <span class="n">creator</span><span class="p">):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">event</span><span class="o">.</span><span class="n">committed</span><span class="p">:</span>
+                <span class="n">event</span><span class="o">.</span><span class="n">commit</span><span class="p">(</span><span class="n">save</span><span class="p">)</span>
+    <span class="n">worker_app</span><span class="o">.</span><span class="n">task</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)(</span><span class="n">do_callback</span><span class="p">)</span>     <span class="c1"># Register wrapped callback.</span>
+
+    <span class="nd">@wraps</span><span class="p">(</span><span class="n">func</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">execute_callback</span><span class="p">(</span><span class="n">event</span><span class="p">:</span> <span class="n">Event</span><span class="p">,</span> <span class="n">before</span><span class="p">:</span> <span class="n">Submission</span><span class="p">,</span>
+                         <span class="n">after</span><span class="p">:</span> <span class="n">Submission</span><span class="p">,</span> <span class="n">creator</span><span class="p">:</span> <span class="n">Agent</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">Event</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Execute the callback asynchronously.&quot;&quot;&quot;</span>
+        <span class="n">config</span> <span class="o">=</span> <span class="n">get_application_config</span><span class="p">()</span>
+        <span class="k">if</span> <span class="nb">bool</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;ENABLE_ASYNC&#39;</span><span class="p">,</span> <span class="s1">&#39;0&#39;</span><span class="p">))):</span>
+            <span class="n">worker_app</span> <span class="o">=</span> <span class="n">get_or_create_worker_app</span><span class="p">()</span>
+            <span class="n">worker_app</span><span class="o">.</span><span class="n">send_task</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">before</span><span class="p">,</span> <span class="n">after</span><span class="p">,</span> <span class="n">creator</span><span class="p">))</span>
+            <span class="k">return</span> <span class="p">[]</span>
+        <span class="k">return</span> <span class="n">func</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">before</span><span class="p">,</span> <span class="n">after</span><span class="p">,</span> <span class="n">creator</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">execute_callback</span></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../index.html">arXiv submission & moderation</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../architecture.html">Submission &amp; moderation subsystem architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../announcement_process.html">Submission &amp; announcement Process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../submission_api_context.html">Submission API: Context</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../containers/core/arxiv.submission.html">arxiv.submission package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../containers/metadata/metadata.html">metadata package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../background.html">Background</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, arXiv.org.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.3</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

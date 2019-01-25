@@ -1,0 +1,284 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>arxiv.submission.rules.metadata_checks module &#8212; arXiv submission &amp; moderation 0.1 documentation</title>
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="arxiv.submission.rules.reclassification module" href="arxiv.submission.rules.reclassification.html" />
+    <link rel="prev" title="arxiv.submission.rules.generic module" href="arxiv.submission.rules.generic.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="module-arxiv.submission.rules.metadata_checks">
+<span id="arxiv-submission-rules-metadata-checks-module"></span><h1>arxiv.submission.rules.metadata_checks module<a class="headerlink" href="#module-arxiv.submission.rules.metadata_checks" title="Permalink to this headline">¶</a></h1>
+<p>Automated metadata checks.</p>
+<dl class="data">
+<dt id="arxiv.submission.rules.metadata_checks.REMOVE_PUNCTUATION">
+<code class="descclassname">arxiv.submission.rules.metadata_checks.</code><code class="descname">REMOVE_PUNCTUATION</code><em class="property"> = {33: 32, 34: 32, 35: 32, 36: 32, 37: 32, 38: 32, 39: 32, 40: 32, 41: 32, 42: 32, 43: 32, 44: 32, 45: 32, 46: 32, 47: 32, 58: 32, 59: 32, 60: 32, 61: 32, 62: 32, 63: 32, 64: 32, 91: 32, 92: 32, 93: 32, 94: 32, 95: 32, 96: 32, 123: 32, 124: 32, 125: 32, 126: 32}</em><a class="headerlink" href="#arxiv.submission.rules.metadata_checks.REMOVE_PUNCTUATION" title="Permalink to this definition">¶</a></dt>
+<dd><p>Translator that converts punctuation characters into single spaces.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="arxiv.submission.rules.metadata_checks.above_similarity_threshold">
+<code class="descclassname">arxiv.submission.rules.metadata_checks.</code><code class="descname">above_similarity_threshold</code><span class="sig-paren">(</span><em>similarity</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/rules/metadata_checks.html#above_similarity_threshold"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.rules.metadata_checks.above_similarity_threshold" title="Permalink to this definition">¶</a></dt>
+<dd><p>Whether or not a Jaccard similarity is above the threshold.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3.6/library/functions.html#bool" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="arxiv.submission.rules.metadata_checks.check_abstract_ascii">
+<code class="descclassname">arxiv.submission.rules.metadata_checks.</code><code class="descname">check_abstract_ascii</code><span class="sig-paren">(</span><em>event</em>, <em>before</em>, <em>after</em>, <em>creator</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/rules/metadata_checks.html#check_abstract_ascii"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.rules.metadata_checks.check_abstract_ascii" title="Permalink to this definition">¶</a></dt>
+<dd><p>Screen for possible abuse of unicode in abstracts.</p>
+<p>We support unicode characters in abstracts, but this can get out of hand.
+This rule adds a flag if the ratio of non-ASCII to ASCII characters
+is too high.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Iterable" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code></a>[<a class="reference internal" href="arxiv.submission.domain.event.event.html#arxiv.submission.domain.event.event.Event" title="arxiv.submission.domain.event.event.Event"><code class="xref py py-class docutils literal notranslate"><span class="pre">Event</span></code></a>]</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="arxiv.submission.rules.metadata_checks.check_similar_titles">
+<code class="descclassname">arxiv.submission.rules.metadata_checks.</code><code class="descname">check_similar_titles</code><span class="sig-paren">(</span><em>event</em>, <em>before</em>, <em>after</em>, <em>creator</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/rules/metadata_checks.html#check_similar_titles"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.rules.metadata_checks.check_similar_titles" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check for other submissions with very similar titles.</p>
+<p>Ask classic for titles of papers submitted within the last several months.
+Add an annotation to the submission if a title is more similar to the
+current submission’s title than a configurable threshold.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Iterable" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code></a>[<a class="reference internal" href="arxiv.submission.domain.event.event.html#arxiv.submission.domain.event.event.Event" title="arxiv.submission.domain.event.event.Event"><code class="xref py py-class docutils literal notranslate"><span class="pre">Event</span></code></a>]</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="arxiv.submission.rules.metadata_checks.check_title_ascii">
+<code class="descclassname">arxiv.submission.rules.metadata_checks.</code><code class="descname">check_title_ascii</code><span class="sig-paren">(</span><em>event</em>, <em>before</em>, <em>after</em>, <em>creator</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/rules/metadata_checks.html#check_title_ascii"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.rules.metadata_checks.check_title_ascii" title="Permalink to this definition">¶</a></dt>
+<dd><p>Screen for possible abuse of unicode in titles.</p>
+<p>We support unicode characters in titles, but this can get out of hand.
+This rule adds a flag if the ratio of non-ASCII to ASCII characters
+is too high.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Iterable" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code></a>[<a class="reference internal" href="arxiv.submission.domain.event.event.html#arxiv.submission.domain.event.event.Event" title="arxiv.submission.domain.event.event.Event"><code class="xref py py-class docutils literal notranslate"><span class="pre">Event</span></code></a>]</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="arxiv.submission.rules.metadata_checks.intersection">
+<code class="descclassname">arxiv.submission.rules.metadata_checks.</code><code class="descname">intersection</code><span class="sig-paren">(</span><em>phrase_a</em>, <em>phrase_b</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/rules/metadata_checks.html#intersection"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.rules.metadata_checks.intersection" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the number tokens shared by two phrases.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3.6/library/functions.html#int" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="arxiv.submission.rules.metadata_checks.jaccard">
+<code class="descclassname">arxiv.submission.rules.metadata_checks.</code><code class="descname">jaccard</code><span class="sig-paren">(</span><em>phrase_a</em>, <em>phrase_b</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/rules/metadata_checks.html#jaccard"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.rules.metadata_checks.jaccard" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the Jaccard similarity of two phrases.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3.6/library/functions.html#float" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.rules.metadata_checks.normalize">
+<code class="descclassname">arxiv.submission.rules.metadata_checks.</code><code class="descname">normalize</code><span class="sig-paren">(</span><em>phrase</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/rules/metadata_checks.html#normalize"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.rules.metadata_checks.normalize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Prepare a phrase for tokenization.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.rules.metadata_checks.tokenized">
+<code class="descclassname">arxiv.submission.rules.metadata_checks.</code><code class="descname">tokenized</code><span class="sig-paren">(</span><em>phrase</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/rules/metadata_checks.html#tokenized"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.rules.metadata_checks.tokenized" title="Permalink to this definition">¶</a></dt>
+<dd><p>Split a phrase into tokens and remove stopwords.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Set" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Set</span></code></a>[<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="arxiv.submission.rules.metadata_checks.union">
+<code class="descclassname">arxiv.submission.rules.metadata_checks.</code><code class="descname">union</code><span class="sig-paren">(</span><em>phrase_a</em>, <em>phrase_b</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/rules/metadata_checks.html#union"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.rules.metadata_checks.union" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the  total number tokens in two phrases.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3.6/library/functions.html#int" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="arxiv.submission.rules.metadata_checks.window">
+<code class="descclassname">arxiv.submission.rules.metadata_checks.</code><code class="descname">window</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/rules/metadata_checks.html#window"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.rules.metadata_checks.window" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the time window for possible duplicate submissions.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3.6/library/datetime.html#datetime.datetime" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">datetime</span></code></a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">arXiv submission & moderation</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../architecture.html">Submission &amp; moderation subsystem architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../announcement_process.html">Submission &amp; announcement Process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../submission_api_context.html">Submission API: Context</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="arxiv.submission.html">arxiv.submission package</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="arxiv.submission.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.submission.html#using-commands-events">Using commands/events</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.submission.html#integration-with-the-legacy-system">Integration with the legacy system</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="arxiv.submission.html#subpackages">Subpackages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.submission.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../metadata/metadata.html">metadata package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../background.html">Background</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="arxiv.submission.html">arxiv.submission package</a><ul>
+  <li><a href="arxiv.submission.rules.html">arxiv.submission.rules package</a><ul>
+      <li>Previous: <a href="arxiv.submission.rules.generic.html" title="previous chapter">arxiv.submission.rules.generic module</a></li>
+      <li>Next: <a href="arxiv.submission.rules.reclassification.html" title="next chapter">arxiv.submission.rules.reclassification module</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, arXiv.org.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.3</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../../_sources/containers/core/arxiv.submission.rules.metadata_checks.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

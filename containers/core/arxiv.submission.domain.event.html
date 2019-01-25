@@ -1,0 +1,1959 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>arxiv.submission.domain.event package &#8212; arXiv submission &amp; moderation 0.1 documentation</title>
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="arxiv.submission.domain.event.tests package" href="arxiv.submission.domain.event.tests.html" />
+    <link rel="prev" title="arxiv.submission.domain package" href="arxiv.submission.domain.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="module-arxiv.submission.domain.event">
+<span id="arxiv-submission-domain-event-package"></span><h1>arxiv.submission.domain.event package<a class="headerlink" href="#module-arxiv.submission.domain.event" title="Permalink to this headline">¶</a></h1>
+<p>Data structures for submissions events.</p>
+<ul class="simple">
+<li>Events have unique identifiers generated from their data (creation, agent,
+submission).</li>
+<li>Events provide methods to update a submission based on the event data.</li>
+<li>Events provide validation methods for event data.</li>
+</ul>
+<div class="section" id="writing-new-events-commands">
+<h2>Writing new events/commands<a class="headerlink" href="#writing-new-events-commands" title="Permalink to this headline">¶</a></h2>
+<p>Events/commands are implemented as classes that inherit from <a class="reference internal" href="arxiv.submission.domain.event.event.html#arxiv.submission.domain.event.event.Event" title="arxiv.submission.domain.event.event.Event"><code class="xref py py-class docutils literal notranslate"><span class="pre">Event</span></code></a>.
+It should:</p>
+<ul class="simple">
+<li>Be a dataclass (i.e. be decorated with <code class="xref py py-func docutils literal notranslate"><span class="pre">dataclasses.dataclass()</span></code>).</li>
+<li>Define (using <code class="xref py py-func docutils literal notranslate"><span class="pre">dataclasses.field()</span></code>) associated data.</li>
+<li>Implement a validation method with the signature
+<code class="docutils literal notranslate"><span class="pre">validate(self,</span> <span class="pre">submission:</span> <span class="pre">Submission)</span> <span class="pre">-&gt;</span> <span class="pre">None</span></code> (see below).</li>
+<li>Implement a projection method with the signature
+<code class="docutils literal notranslate"><span class="pre">project(self,</span> <span class="pre">submission:</span> <span class="pre">Submission)</span> <span class="pre">-&gt;</span> <span class="pre">Submission:</span></code> that mutates
+the passed <code class="xref py py-class docutils literal notranslate"><span class="pre">domain.Submission</span></code> instance.</li>
+<li>Be fully documented. Be sure that the class docstring fully describes the
+meaning of the event/command, and that both public and private methods have
+at least a summary docstring.</li>
+<li>Have a corresponding <a class="reference external" href="https://docs.python.org/3.6/library/unittest.html#unittest.TestCase" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">unittest.TestCase</span></code></a> in
+<a class="reference internal" href="arxiv.submission.domain.tests.test_events.html#module-arxiv.submission.domain.tests.test_events" title="arxiv.submission.domain.tests.test_events"><code class="xref py py-mod docutils literal notranslate"><span class="pre">arxiv.submission.domain.tests.test_events</span></code></a>.</li>
+</ul>
+</div>
+<div class="section" id="adding-validation-to-events">
+<h2>Adding validation to events<a class="headerlink" href="#adding-validation-to-events" title="Permalink to this headline">¶</a></h2>
+<p>Each command/event class should implement an instance method
+<code class="docutils literal notranslate"><span class="pre">validate(self,</span> <span class="pre">submission:</span> <span class="pre">Submission)</span> <span class="pre">-&gt;</span> <span class="pre">None</span></code> that raises
+<a class="reference internal" href="arxiv.submission.exceptions.html#arxiv.submission.exceptions.InvalidEvent" title="arxiv.submission.exceptions.InvalidEvent"><code class="xref py py-class docutils literal notranslate"><span class="pre">InvalidEvent</span></code></a> exceptions if the data on the event instance is not
+valid.</p>
+<p>For clarity, it’s a good practice to individuate validation steps as separate
+private instance methods, and call them from the public <code class="docutils literal notranslate"><span class="pre">validate</span></code> method.
+This makes it easier to identify which validation criteria are being applied,
+in what order, and what those criteria mean.</p>
+<p>See <a class="reference internal" href="#arxiv.submission.domain.event.SetPrimaryClassification" title="arxiv.submission.domain.event.SetPrimaryClassification"><code class="xref py py-class docutils literal notranslate"><span class="pre">SetPrimaryClassification</span></code></a> for an example.</p>
+<p>We could consider standalone validation functions for validation checks that
+are performed on several event types (instead of just private instance
+methods).</p>
+</div>
+<div class="section" id="registering-event-callbacks">
+<h2>Registering event callbacks<a class="headerlink" href="#registering-event-callbacks" title="Permalink to this headline">¶</a></h2>
+<p>The base <code class="xref py py-class docutils literal notranslate"><span class="pre">Event</span></code> provides support for callbacks that are executed when
+an event instance is committed. To attach a callback to an event type, use the
+<code class="xref py py-func docutils literal notranslate"><span class="pre">Event.bind()</span></code> decorator. For example:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@SetTitle.bind</span><span class="p">()</span>
+<span class="k">def</span> <span class="nf">do_this_when_a_title_is_set</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">before</span><span class="p">,</span> <span class="n">after</span><span class="p">,</span> <span class="n">agent</span><span class="p">):</span>
+    <span class="o">...</span>
+    <span class="k">return</span> <span class="p">[]</span>
+</pre></div>
+</div>
+<p>Callbacks must have the signature <code class="docutils literal notranslate"><span class="pre">(event:</span> <span class="pre">Event,</span> <span class="pre">before:</span> <span class="pre">Submission,</span>
+<span class="pre">after:</span> <span class="pre">Submission,</span> <span class="pre">creator:</span> <span class="pre">Agent)</span> <span class="pre">-&gt;</span> <span class="pre">Iterable[Event]</span></code>. <code class="docutils literal notranslate"><span class="pre">event</span></code> is the
+event instance being committed that triggered the callback. <code class="docutils literal notranslate"><span class="pre">before</span></code> and
+<code class="docutils literal notranslate"><span class="pre">after</span></code> are the states of the submission before and after the event was
+applied, respectively. <code class="docutils literal notranslate"><span class="pre">agent</span></code> is the agent responsible for any subsequent
+events created by the callback, and should be used for that purpose.</p>
+<p>The callback should not concern itself with persistence; that is handled by
+<code class="xref py py-func docutils literal notranslate"><span class="pre">Event.commit()</span></code>. Any mutations of submission should be made by returning
+the appropriate command/event instances.</p>
+<p>The circumstances under which the callback is executed can be controlled by
+passing a condition callable to the decorator. This should have the signature
+<code class="docutils literal notranslate"><span class="pre">(event:</span> <span class="pre">Event,</span> <span class="pre">before:</span> <span class="pre">Submission,</span> <span class="pre">after:</span> <span class="pre">Submission,</span> <span class="pre">creator:</span> <span class="pre">Agent)</span> <span class="pre">-&gt;</span>
+<span class="pre">bool</span></code>; if it returns <code class="docutils literal notranslate"><span class="pre">True</span></code>, the  callback will be executed. For example:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@SetTitle.bind</span><span class="p">(</span><span class="n">condition</span><span class="o">=</span><span class="k">lambda</span> <span class="n">e</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">c</span><span class="p">:</span> <span class="n">e</span><span class="o">.</span><span class="n">title</span> <span class="o">==</span> <span class="s1">&#39;foo&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">do_this_when_a_title_is_set_to_foo</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">before</span><span class="p">,</span> <span class="n">after</span><span class="p">,</span> <span class="n">agent</span><span class="p">):</span>
+    <span class="o">...</span>
+    <span class="k">return</span> <span class="p">[]</span>
+</pre></div>
+</div>
+<div class="section" id="when-do-things-actually-happen">
+<h3>When do things actually happen?<a class="headerlink" href="#when-do-things-actually-happen" title="Permalink to this headline">¶</a></h3>
+<p>Callbacks are triggered when the <code class="xref py py-func docutils literal notranslate"><span class="pre">commit()</span></code> method is called,
+usually by <a class="reference internal" href="arxiv.submission.core.html#arxiv.submission.core.save" title="arxiv.submission.core.save"><code class="xref py py-func docutils literal notranslate"><span class="pre">core.save()</span></code></a>. Normally, any event instances returned
+by the callback are applied and committed right away, in order. If the
+callback is asynchronous (see <a class="reference internal" href="arxiv.submission.tasks.html#arxiv.submission.tasks.is_async" title="arxiv.submission.tasks.is_async"><code class="xref py py-func docutils literal notranslate"><span class="pre">tasks.is_async()</span></code></a>), it will be
+executed whenever the <a class="reference internal" href="arxiv.submission.worker.html#module-arxiv.submission.worker" title="arxiv.submission.worker"><code class="xref py py-mod docutils literal notranslate"><span class="pre">worker</span></code></a> gets around to it, and any events
+it returns will be applied and stored in order at that time.</p>
+<p>Note that setting <code class="xref py py-mod docutils literal notranslate"><span class="pre">config.ENABLE_ASYNC=0</span></code> will cause async tasks
+to be executed in the current thread.</p>
+<p>Setting <code class="xref py py-mod docutils literal notranslate"><span class="pre">config.ENABLE_CALLBACKS=0</span></code> will disable callbacks
+entirely.</p>
+<dl class="class">
+<dt id="arxiv.submission.domain.event.AddClassifierResults">
+<em class="property">class </em><code class="descclassname">arxiv.submission.domain.event.</code><code class="descname">AddClassifierResults</code><span class="sig-paren">(</span><em>creator</em>, <em>created=&lt;factory&gt;</em>, <em>proxy=None</em>, <em>client=None</em>, <em>submission_id=None</em>, <em>committed=False</em>, <em>before=None</em>, <em>after=None</em>, <em>classifier=&lt;Classifiers.CLASSIC: 'classic'&gt;</em>, <em>results=&lt;factory&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/domain/event.html#AddClassifierResults"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.AddClassifierResults" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="arxiv.submission.domain.event.event.html#arxiv.submission.domain.event.event.Event" title="arxiv.submission.domain.event.event.Event"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.submission.domain.event.event.Event</span></code></a></p>
+<p>Add the results of a classifier to a submission.</p>
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.AddClassifierResults.NAME">
+<code class="descname">NAME</code><em class="property"> = 'add classifer results'</em><a class="headerlink" href="#arxiv.submission.domain.event.AddClassifierResults.NAME" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.AddClassifierResults.NAMED">
+<code class="descname">NAMED</code><em class="property"> = 'classifier results added'</em><a class="headerlink" href="#arxiv.submission.domain.event.AddClassifierResults.NAMED" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.AddClassifierResults.classifier">
+<code class="descname">classifier</code><em class="property"> = 'classic'</em><a class="headerlink" href="#arxiv.submission.domain.event.AddClassifierResults.classifier" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.event.AddClassifierResults.project">
+<code class="descname">project</code><span class="sig-paren">(</span><em>submission</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/domain/event.html#AddClassifierResults.project"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.AddClassifierResults.project" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add the annotation to the submission.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.Submission" title="arxiv.submission.domain.submission.Submission"><code class="xref py py-class docutils literal notranslate"><span class="pre">Submission</span></code></a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.event.AddClassifierResults.validate">
+<code class="descname">validate</code><span class="sig-paren">(</span><em>submission</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/domain/event.html#AddClassifierResults.validate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.AddClassifierResults.validate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Verify that the classifier is a known value.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><code class="docutils literal notranslate"><span class="pre">None</span></code></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.submission.domain.event.AddDelegate">
+<em class="property">class </em><code class="descclassname">arxiv.submission.domain.event.</code><code class="descname">AddDelegate</code><span class="sig-paren">(</span><em>creator</em>, <em>created=&lt;factory&gt;</em>, <em>proxy=None</em>, <em>client=None</em>, <em>submission_id=None</em>, <em>committed=False</em>, <em>before=None</em>, <em>after=None</em>, <em>delegate=None</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/domain/event.html#AddDelegate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.AddDelegate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="arxiv.submission.domain.event.event.html#arxiv.submission.domain.event.event.Event" title="arxiv.submission.domain.event.event.Event"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.submission.domain.event.event.Event</span></code></a></p>
+<p>Owner delegates authority to another agent.</p>
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.AddDelegate.delegate">
+<code class="descname">delegate</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.submission.domain.event.AddDelegate.delegate" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.event.AddDelegate.project">
+<code class="descname">project</code><span class="sig-paren">(</span><em>submission</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/domain/event.html#AddDelegate.project"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.AddDelegate.project" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add the delegate to the submission.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.Submission" title="arxiv.submission.domain.submission.Submission"><code class="xref py py-class docutils literal notranslate"><span class="pre">Submission</span></code></a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.event.AddDelegate.validate">
+<code class="descname">validate</code><span class="sig-paren">(</span><em>submission</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/domain/event.html#AddDelegate.validate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.AddDelegate.validate" title="Permalink to this definition">¶</a></dt>
+<dd><p>The event creator must be the owner of the submission.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><code class="docutils literal notranslate"><span class="pre">None</span></code></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.submission.domain.event.AddFeature">
+<em class="property">class </em><code class="descclassname">arxiv.submission.domain.event.</code><code class="descname">AddFeature</code><span class="sig-paren">(</span><em>creator</em>, <em>created=&lt;factory&gt;</em>, <em>proxy=None</em>, <em>client=None</em>, <em>submission_id=None</em>, <em>committed=False</em>, <em>before=None</em>, <em>after=None</em>, <em>feature_type=&lt;FeatureTypes.WORD_COUNT: 'words'&gt;</em>, <em>feature_value=0</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/domain/event.html#AddFeature"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.AddFeature" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="arxiv.submission.domain.event.event.html#arxiv.submission.domain.event.event.Event" title="arxiv.submission.domain.event.event.Event"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.submission.domain.event.event.Event</span></code></a></p>
+<p>Add feature metadata to a submission.</p>
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.AddFeature.NAME">
+<code class="descname">NAME</code><em class="property"> = 'add feature metadata'</em><a class="headerlink" href="#arxiv.submission.domain.event.AddFeature.NAME" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.AddFeature.NAMED">
+<code class="descname">NAMED</code><em class="property"> = 'feature metadata added'</em><a class="headerlink" href="#arxiv.submission.domain.event.AddFeature.NAMED" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.AddFeature.feature_type">
+<code class="descname">feature_type</code><em class="property"> = 'words'</em><a class="headerlink" href="#arxiv.submission.domain.event.AddFeature.feature_type" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.AddFeature.feature_value">
+<code class="descname">feature_value</code><em class="property"> = 0</em><a class="headerlink" href="#arxiv.submission.domain.event.AddFeature.feature_value" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.event.AddFeature.project">
+<code class="descname">project</code><span class="sig-paren">(</span><em>submission</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/domain/event.html#AddFeature.project"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.AddFeature.project" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add the annotation to the submission.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.Submission" title="arxiv.submission.domain.submission.Submission"><code class="xref py py-class docutils literal notranslate"><span class="pre">Submission</span></code></a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.event.AddFeature.validate">
+<code class="descname">validate</code><span class="sig-paren">(</span><em>submission</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/domain/event.html#AddFeature.validate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.AddFeature.validate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Verify that the feature type is a known value.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><code class="docutils literal notranslate"><span class="pre">None</span></code></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.submission.domain.event.AddSecondaryClassification">
+<em class="property">class </em><code class="descclassname">arxiv.submission.domain.event.</code><code class="descname">AddSecondaryClassification</code><span class="sig-paren">(</span><em>creator</em>, <em>created=&lt;factory&gt;</em>, <em>proxy=None</em>, <em>client=None</em>, <em>submission_id=None</em>, <em>committed=False</em>, <em>before=None</em>, <em>after=None</em>, <em>category=None</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/domain/event.html#AddSecondaryClassification"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.AddSecondaryClassification" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="arxiv.submission.domain.event.event.html#arxiv.submission.domain.event.event.Event" title="arxiv.submission.domain.event.event.Event"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.submission.domain.event.event.Event</span></code></a></p>
+<p>Add a secondary <a class="reference internal" href="arxiv.submission.domain.meta.html#arxiv.submission.domain.meta.Classification" title="arxiv.submission.domain.meta.Classification"><code class="xref py py-class docutils literal notranslate"><span class="pre">Classification</span></code></a> to a submission.</p>
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.AddSecondaryClassification.NAME">
+<code class="descname">NAME</code><em class="property"> = 'add cross-list classification'</em><a class="headerlink" href="#arxiv.submission.domain.event.AddSecondaryClassification.NAME" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.AddSecondaryClassification.NAMED">
+<code class="descname">NAMED</code><em class="property"> = 'cross-list classification added'</em><a class="headerlink" href="#arxiv.submission.domain.event.AddSecondaryClassification.NAMED" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.AddSecondaryClassification.category">
+<code class="descname">category</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.submission.domain.event.AddSecondaryClassification.category" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.event.AddSecondaryClassification.project">
+<code class="descname">project</code><span class="sig-paren">(</span><em>submission</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/domain/event.html#AddSecondaryClassification.project"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.AddSecondaryClassification.project" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add a <a class="reference internal" href="arxiv.submission.domain.meta.html#arxiv.submission.domain.meta.Classification" title="arxiv.submission.domain.meta.Classification"><code class="xref py py-class docutils literal notranslate"><span class="pre">Classification</span></code></a> as a secondary classification.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.Submission" title="arxiv.submission.domain.submission.Submission"><code class="xref py py-class docutils literal notranslate"><span class="pre">Submission</span></code></a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.event.AddSecondaryClassification.validate">
+<code class="descname">validate</code><span class="sig-paren">(</span><em>submission</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/domain/event.html#AddSecondaryClassification.validate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.AddSecondaryClassification.validate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Validate the secondary classification category to add.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><code class="docutils literal notranslate"><span class="pre">None</span></code></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.submission.domain.event.ConfirmAuthorship">
+<em class="property">class </em><code class="descclassname">arxiv.submission.domain.event.</code><code class="descname">ConfirmAuthorship</code><span class="sig-paren">(</span><em>creator</em>, <em>created=&lt;factory&gt;</em>, <em>proxy=None</em>, <em>client=None</em>, <em>submission_id=None</em>, <em>committed=False</em>, <em>before=None</em>, <em>after=None</em>, <em>submitter_is_author=True</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/domain/event.html#ConfirmAuthorship"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.ConfirmAuthorship" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="arxiv.submission.domain.event.event.html#arxiv.submission.domain.event.event.Event" title="arxiv.submission.domain.event.event.Event"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.submission.domain.event.event.Event</span></code></a></p>
+<p>The submitting user asserts whether they are an author of the paper.</p>
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.ConfirmAuthorship.NAME">
+<code class="descname">NAME</code><em class="property"> = 'confirm that submitter is an author'</em><a class="headerlink" href="#arxiv.submission.domain.event.ConfirmAuthorship.NAME" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.ConfirmAuthorship.NAMED">
+<code class="descname">NAMED</code><em class="property"> = 'submitter authorship status confirmed'</em><a class="headerlink" href="#arxiv.submission.domain.event.ConfirmAuthorship.NAMED" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.event.ConfirmAuthorship.project">
+<code class="descname">project</code><span class="sig-paren">(</span><em>submission</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/domain/event.html#ConfirmAuthorship.project"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.ConfirmAuthorship.project" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update the authorship flag on the submission.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.Submission" title="arxiv.submission.domain.submission.Submission"><code class="xref py py-class docutils literal notranslate"><span class="pre">Submission</span></code></a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.ConfirmAuthorship.submitter_is_author">
+<code class="descname">submitter_is_author</code><em class="property"> = True</em><a class="headerlink" href="#arxiv.submission.domain.event.ConfirmAuthorship.submitter_is_author" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.event.ConfirmAuthorship.validate">
+<code class="descname">validate</code><span class="sig-paren">(</span><em>submission</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/domain/event.html#ConfirmAuthorship.validate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.ConfirmAuthorship.validate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Cannot apply to a finalized submission.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><code class="docutils literal notranslate"><span class="pre">None</span></code></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.submission.domain.event.ConfirmContactInformation">
+<em class="property">class </em><code class="descclassname">arxiv.submission.domain.event.</code><code class="descname">ConfirmContactInformation</code><span class="sig-paren">(</span><em>creator</em>, <em>created=&lt;factory&gt;</em>, <em>proxy=None</em>, <em>client=None</em>, <em>submission_id=None</em>, <em>committed=False</em>, <em>before=None</em>, <em>after=None</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/domain/event.html#ConfirmContactInformation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.ConfirmContactInformation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="arxiv.submission.domain.event.event.html#arxiv.submission.domain.event.event.Event" title="arxiv.submission.domain.event.event.Event"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.submission.domain.event.event.Event</span></code></a></p>
+<p>Submitter has verified their contact information.</p>
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.ConfirmContactInformation.NAME">
+<code class="descname">NAME</code><em class="property"> = 'confirm contact information'</em><a class="headerlink" href="#arxiv.submission.domain.event.ConfirmContactInformation.NAME" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.ConfirmContactInformation.NAMED">
+<code class="descname">NAMED</code><em class="property"> = 'contact information confirmed'</em><a class="headerlink" href="#arxiv.submission.domain.event.ConfirmContactInformation.NAMED" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.event.ConfirmContactInformation.project">
+<code class="descname">project</code><span class="sig-paren">(</span><em>submission</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/domain/event.html#ConfirmContactInformation.project"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.ConfirmContactInformation.project" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update <a class="reference internal" href="arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.Submission.submitter_contact_verified" title="arxiv.submission.domain.submission.Submission.submitter_contact_verified"><code class="xref py py-attr docutils literal notranslate"><span class="pre">Submission.submitter_contact_verified</span></code></a>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.Submission" title="arxiv.submission.domain.submission.Submission"><code class="xref py py-class docutils literal notranslate"><span class="pre">Submission</span></code></a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.event.ConfirmContactInformation.validate">
+<code class="descname">validate</code><span class="sig-paren">(</span><em>submission</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/domain/event.html#ConfirmContactInformation.validate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.ConfirmContactInformation.validate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Cannot apply to a finalized submission.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><code class="docutils literal notranslate"><span class="pre">None</span></code></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.submission.domain.event.ConfirmPolicy">
+<em class="property">class </em><code class="descclassname">arxiv.submission.domain.event.</code><code class="descname">ConfirmPolicy</code><span class="sig-paren">(</span><em>creator</em>, <em>created=&lt;factory&gt;</em>, <em>proxy=None</em>, <em>client=None</em>, <em>submission_id=None</em>, <em>committed=False</em>, <em>before=None</em>, <em>after=None</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/domain/event.html#ConfirmPolicy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.ConfirmPolicy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="arxiv.submission.domain.event.event.html#arxiv.submission.domain.event.event.Event" title="arxiv.submission.domain.event.event.Event"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.submission.domain.event.event.Event</span></code></a></p>
+<p>The submitting user accepts the arXiv submission policy.</p>
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.ConfirmPolicy.NAME">
+<code class="descname">NAME</code><em class="property"> = 'confirm policy acceptance'</em><a class="headerlink" href="#arxiv.submission.domain.event.ConfirmPolicy.NAME" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.ConfirmPolicy.NAMED">
+<code class="descname">NAMED</code><em class="property"> = 'policy acceptance confirmed'</em><a class="headerlink" href="#arxiv.submission.domain.event.ConfirmPolicy.NAMED" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.event.ConfirmPolicy.project">
+<code class="descname">project</code><span class="sig-paren">(</span><em>submission</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/domain/event.html#ConfirmPolicy.project"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.ConfirmPolicy.project" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the policy flag on the submission.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.Submission" title="arxiv.submission.domain.submission.Submission"><code class="xref py py-class docutils literal notranslate"><span class="pre">Submission</span></code></a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.event.ConfirmPolicy.validate">
+<code class="descname">validate</code><span class="sig-paren">(</span><em>submission</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/domain/event.html#ConfirmPolicy.validate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.ConfirmPolicy.validate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Cannot apply to a finalized submission.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><code class="docutils literal notranslate"><span class="pre">None</span></code></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.submission.domain.event.ConfirmPreview">
+<em class="property">class </em><code class="descclassname">arxiv.submission.domain.event.</code><code class="descname">ConfirmPreview</code><span class="sig-paren">(</span><em>creator</em>, <em>created=&lt;factory&gt;</em>, <em>proxy=None</em>, <em>client=None</em>, <em>submission_id=None</em>, <em>committed=False</em>, <em>before=None</em>, <em>after=None</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/domain/event.html#ConfirmPreview"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.ConfirmPreview" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="arxiv.submission.domain.event.event.html#arxiv.submission.domain.event.event.Event" title="arxiv.submission.domain.event.event.Event"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.submission.domain.event.event.Event</span></code></a></p>
+<p>Confirm that the paper and abstract previews are acceptable.</p>
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.ConfirmPreview.NAME">
+<code class="descname">NAME</code><em class="property"> = 'approve submission preview'</em><a class="headerlink" href="#arxiv.submission.domain.event.ConfirmPreview.NAME" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.ConfirmPreview.NAMED">
+<code class="descname">NAMED</code><em class="property"> = 'submission preview approved'</em><a class="headerlink" href="#arxiv.submission.domain.event.ConfirmPreview.NAMED" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.event.ConfirmPreview.project">
+<code class="descname">project</code><span class="sig-paren">(</span><em>submission</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/domain/event.html#ConfirmPreview.project"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.ConfirmPreview.project" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set <code class="xref py py-attr docutils literal notranslate"><span class="pre">Submission.return</span> <span class="pre">submission</span></code>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.Submission" title="arxiv.submission.domain.submission.Submission"><code class="xref py py-class docutils literal notranslate"><span class="pre">Submission</span></code></a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.event.ConfirmPreview.validate">
+<code class="descname">validate</code><span class="sig-paren">(</span><em>submission</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/domain/event.html#ConfirmPreview.validate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.ConfirmPreview.validate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Validate data for <a class="reference internal" href="#arxiv.submission.domain.event.ConfirmPreview" title="arxiv.submission.domain.event.ConfirmPreview"><code class="xref py py-class docutils literal notranslate"><span class="pre">ConfirmPreview</span></code></a>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><code class="docutils literal notranslate"><span class="pre">None</span></code></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.submission.domain.event.CreateComment">
+<em class="property">class </em><code class="descclassname">arxiv.submission.domain.event.</code><code class="descname">CreateComment</code><span class="sig-paren">(</span><em>creator</em>, <em>created=&lt;factory&gt;</em>, <em>proxy=None</em>, <em>client=None</em>, <em>submission_id=None</em>, <em>committed=False</em>, <em>before=None</em>, <em>after=None</em>, <em>body=&lt;factory&gt;</em>, <em>scope='private'</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/domain/event.html#CreateComment"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.CreateComment" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="arxiv.submission.domain.event.event.html#arxiv.submission.domain.event.event.Event" title="arxiv.submission.domain.event.event.Event"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.submission.domain.event.event.Event</span></code></a></p>
+<p>Creation of a <a class="reference internal" href="arxiv.submission.domain.annotation.html#arxiv.submission.domain.annotation.Comment" title="arxiv.submission.domain.annotation.Comment"><code class="xref py py-class docutils literal notranslate"><span class="pre">Comment</span></code></a> on a <code class="xref py py-class docutils literal notranslate"><span class="pre">domain.Submission</span></code>.</p>
+<dl class="method">
+<dt id="arxiv.submission.domain.event.CreateComment.project">
+<code class="descname">project</code><span class="sig-paren">(</span><em>submission</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/domain/event.html#CreateComment.project"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.CreateComment.project" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a new <a class="reference internal" href="arxiv.submission.domain.annotation.html#arxiv.submission.domain.annotation.Comment" title="arxiv.submission.domain.annotation.Comment"><code class="xref py py-class docutils literal notranslate"><span class="pre">Comment</span></code></a> and attach it to the submission.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.Submission" title="arxiv.submission.domain.submission.Submission"><code class="xref py py-class docutils literal notranslate"><span class="pre">Submission</span></code></a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.CreateComment.read_scope">
+<code class="descname">read_scope</code><em class="property"> = 'submission:moderate'</em><a class="headerlink" href="#arxiv.submission.domain.event.CreateComment.read_scope" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.CreateComment.scope">
+<code class="descname">scope</code><em class="property"> = 'private'</em><a class="headerlink" href="#arxiv.submission.domain.event.CreateComment.scope" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.event.CreateComment.validate">
+<code class="descname">validate</code><span class="sig-paren">(</span><em>submission</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/domain/event.html#CreateComment.validate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.CreateComment.validate" title="Permalink to this definition">¶</a></dt>
+<dd><p>The <code class="xref py py-attr docutils literal notranslate"><span class="pre">body</span></code> should be set.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><code class="docutils literal notranslate"><span class="pre">None</span></code></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.CreateComment.write_scope">
+<code class="descname">write_scope</code><em class="property"> = 'submission:moderate'</em><a class="headerlink" href="#arxiv.submission.domain.event.CreateComment.write_scope" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.submission.domain.event.CreateSubmission">
+<em class="property">class </em><code class="descclassname">arxiv.submission.domain.event.</code><code class="descname">CreateSubmission</code><span class="sig-paren">(</span><em>creator</em>, <em>created=&lt;factory&gt;</em>, <em>proxy=None</em>, <em>client=None</em>, <em>submission_id=None</em>, <em>committed=False</em>, <em>before=None</em>, <em>after=None</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/domain/event.html#CreateSubmission"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.CreateSubmission" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="arxiv.submission.domain.event.event.html#arxiv.submission.domain.event.event.Event" title="arxiv.submission.domain.event.event.Event"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.submission.domain.event.event.Event</span></code></a></p>
+<p>Creation of a new <code class="xref py py-class docutils literal notranslate"><span class="pre">domain.Submission</span></code>.</p>
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.CreateSubmission.NAME">
+<code class="descname">NAME</code><em class="property"> = 'create submission'</em><a class="headerlink" href="#arxiv.submission.domain.event.CreateSubmission.NAME" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.CreateSubmission.NAMED">
+<code class="descname">NAMED</code><em class="property"> = 'submission created'</em><a class="headerlink" href="#arxiv.submission.domain.event.CreateSubmission.NAMED" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="classmethod">
+<dt id="arxiv.submission.domain.event.CreateSubmission.from_dict">
+<em class="property">classmethod </em><code class="descname">from_dict</code><span class="sig-paren">(</span><em>**data</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/domain/event.html#CreateSubmission.from_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.CreateSubmission.from_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Override the <code class="docutils literal notranslate"><span class="pre">from_dict</span></code> constructor to handle submission.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="#arxiv.submission.domain.event.CreateSubmission" title="arxiv.submission.domain.event.CreateSubmission"><code class="xref py py-class docutils literal notranslate"><span class="pre">CreateSubmission</span></code></a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.event.CreateSubmission.project">
+<code class="descname">project</code><span class="sig-paren">(</span><em>submission=None</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/domain/event.html#CreateSubmission.project"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.CreateSubmission.project" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a new <code class="xref py py-class docutils literal notranslate"><span class="pre">domain.Submission</span></code>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.Submission" title="arxiv.submission.domain.submission.Submission"><code class="xref py py-class docutils literal notranslate"><span class="pre">Submission</span></code></a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.event.CreateSubmission.to_dict">
+<code class="descname">to_dict</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/domain/event.html#CreateSubmission.to_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.CreateSubmission.to_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate a dict of this <a class="reference internal" href="#arxiv.submission.domain.event.CreateSubmission" title="arxiv.submission.domain.event.CreateSubmission"><code class="xref py py-class docutils literal notranslate"><span class="pre">CreateSubmission</span></code></a>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.event.CreateSubmission.validate">
+<code class="descname">validate</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/domain/event.html#CreateSubmission.validate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.CreateSubmission.validate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Validate creation of a submission.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><code class="docutils literal notranslate"><span class="pre">None</span></code></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.submission.domain.event.CreateSubmissionVersion">
+<em class="property">class </em><code class="descclassname">arxiv.submission.domain.event.</code><code class="descname">CreateSubmissionVersion</code><span class="sig-paren">(</span><em>creator</em>, <em>created=&lt;factory&gt;</em>, <em>proxy=None</em>, <em>client=None</em>, <em>submission_id=None</em>, <em>committed=False</em>, <em>before=None</em>, <em>after=None</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/domain/event.html#CreateSubmissionVersion"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.CreateSubmissionVersion" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="arxiv.submission.domain.event.event.html#arxiv.submission.domain.event.event.Event" title="arxiv.submission.domain.event.event.Event"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.submission.domain.event.event.Event</span></code></a></p>
+<p>Creates a new version of a submission.</p>
+<p>Takes the submission back to “working” state; the user or client may make
+additional changes before finalizing the submission.</p>
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.CreateSubmissionVersion.NAME">
+<code class="descname">NAME</code><em class="property"> = 'create a new version'</em><a class="headerlink" href="#arxiv.submission.domain.event.CreateSubmissionVersion.NAME" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.CreateSubmissionVersion.NAMED">
+<code class="descname">NAMED</code><em class="property"> = 'new version created'</em><a class="headerlink" href="#arxiv.submission.domain.event.CreateSubmissionVersion.NAMED" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.event.CreateSubmissionVersion.project">
+<code class="descname">project</code><span class="sig-paren">(</span><em>submission</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/domain/event.html#CreateSubmissionVersion.project"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.CreateSubmissionVersion.project" title="Permalink to this definition">¶</a></dt>
+<dd><p>Increment the version number, and reset several fields.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.Submission" title="arxiv.submission.domain.submission.Submission"><code class="xref py py-class docutils literal notranslate"><span class="pre">Submission</span></code></a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.event.CreateSubmissionVersion.validate">
+<code class="descname">validate</code><span class="sig-paren">(</span><em>submission</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/domain/event.html#CreateSubmissionVersion.validate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.CreateSubmissionVersion.validate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Only applies to published submissions.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><code class="docutils literal notranslate"><span class="pre">None</span></code></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.submission.domain.event.DeleteComment">
+<em class="property">class </em><code class="descclassname">arxiv.submission.domain.event.</code><code class="descname">DeleteComment</code><span class="sig-paren">(</span><em>creator</em>, <em>created=&lt;factory&gt;</em>, <em>proxy=None</em>, <em>client=None</em>, <em>submission_id=None</em>, <em>committed=False</em>, <em>before=None</em>, <em>after=None</em>, <em>comment_id=&lt;factory&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/domain/event.html#DeleteComment"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.DeleteComment" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="arxiv.submission.domain.event.event.html#arxiv.submission.domain.event.event.Event" title="arxiv.submission.domain.event.event.Event"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.submission.domain.event.event.Event</span></code></a></p>
+<p>Deletion of a <a class="reference internal" href="arxiv.submission.domain.annotation.html#arxiv.submission.domain.annotation.Comment" title="arxiv.submission.domain.annotation.Comment"><code class="xref py py-class docutils literal notranslate"><span class="pre">Comment</span></code></a> on a <code class="xref py py-class docutils literal notranslate"><span class="pre">domain.Submission</span></code>.</p>
+<dl class="method">
+<dt id="arxiv.submission.domain.event.DeleteComment.project">
+<code class="descname">project</code><span class="sig-paren">(</span><em>submission</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/domain/event.html#DeleteComment.project"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.DeleteComment.project" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remove the comment from the submission.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.Submission" title="arxiv.submission.domain.submission.Submission"><code class="xref py py-class docutils literal notranslate"><span class="pre">Submission</span></code></a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.DeleteComment.read_scope">
+<code class="descname">read_scope</code><em class="property"> = 'submission:moderate'</em><a class="headerlink" href="#arxiv.submission.domain.event.DeleteComment.read_scope" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.event.DeleteComment.validate">
+<code class="descname">validate</code><span class="sig-paren">(</span><em>submission</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/domain/event.html#DeleteComment.validate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.DeleteComment.validate" title="Permalink to this definition">¶</a></dt>
+<dd><p>The <code class="xref py py-attr docutils literal notranslate"><span class="pre">comment_id</span></code> must present on the submission.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><code class="docutils literal notranslate"><span class="pre">None</span></code></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.DeleteComment.write_scope">
+<code class="descname">write_scope</code><em class="property"> = 'submission:moderate'</em><a class="headerlink" href="#arxiv.submission.domain.event.DeleteComment.write_scope" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.submission.domain.event.FinalizeSubmission">
+<em class="property">class </em><code class="descclassname">arxiv.submission.domain.event.</code><code class="descname">FinalizeSubmission</code><span class="sig-paren">(</span><em>creator</em>, <em>created=&lt;factory&gt;</em>, <em>proxy=None</em>, <em>client=None</em>, <em>submission_id=None</em>, <em>committed=False</em>, <em>before=None</em>, <em>after=None</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/domain/event.html#FinalizeSubmission"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.FinalizeSubmission" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="arxiv.submission.domain.event.event.html#arxiv.submission.domain.event.event.Event" title="arxiv.submission.domain.event.event.Event"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.submission.domain.event.event.Event</span></code></a></p>
+<p>Send the submission to the queue for announcement.</p>
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.FinalizeSubmission.NAME">
+<code class="descname">NAME</code><em class="property"> = 'finalize submission for announcement'</em><a class="headerlink" href="#arxiv.submission.domain.event.FinalizeSubmission.NAME" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.FinalizeSubmission.NAMED">
+<code class="descname">NAMED</code><em class="property"> = 'submission finalized'</em><a class="headerlink" href="#arxiv.submission.domain.event.FinalizeSubmission.NAMED" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.FinalizeSubmission.REQUIRED">
+<code class="descname">REQUIRED</code><em class="property"> = ['creator', 'primary_classification', 'submitter_contact_verified', 'submitter_accepts_policy', 'license', 'source_content', 'metadata']</em><a class="headerlink" href="#arxiv.submission.domain.event.FinalizeSubmission.REQUIRED" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.FinalizeSubmission.REQUIRED_METADATA">
+<code class="descname">REQUIRED_METADATA</code><em class="property"> = ['title', 'abstract', 'authors_display']</em><a class="headerlink" href="#arxiv.submission.domain.event.FinalizeSubmission.REQUIRED_METADATA" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.event.FinalizeSubmission.project">
+<code class="descname">project</code><span class="sig-paren">(</span><em>submission</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/domain/event.html#FinalizeSubmission.project"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.FinalizeSubmission.project" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set <code class="xref py py-attr docutils literal notranslate"><span class="pre">Submission.finalized</span></code>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.Submission" title="arxiv.submission.domain.submission.Submission"><code class="xref py py-class docutils literal notranslate"><span class="pre">Submission</span></code></a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.event.FinalizeSubmission.validate">
+<code class="descname">validate</code><span class="sig-paren">(</span><em>submission</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/domain/event.html#FinalizeSubmission.validate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.FinalizeSubmission.validate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Ensure that all required data/steps are complete.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><code class="docutils literal notranslate"><span class="pre">None</span></code></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.submission.domain.event.Publish">
+<em class="property">class </em><code class="descclassname">arxiv.submission.domain.event.</code><code class="descname">Publish</code><span class="sig-paren">(</span><em>creator</em>, <em>created=&lt;factory&gt;</em>, <em>proxy=None</em>, <em>client=None</em>, <em>submission_id=None</em>, <em>committed=False</em>, <em>before=None</em>, <em>after=None</em>, <em>arxiv_id=None</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/domain/event.html#Publish"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.Publish" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="arxiv.submission.domain.event.event.html#arxiv.submission.domain.event.event.Event" title="arxiv.submission.domain.event.event.Event"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.submission.domain.event.event.Event</span></code></a></p>
+<p>Publish the current version of the submission.</p>
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.Publish.NAME">
+<code class="descname">NAME</code><em class="property"> = 'publish submission'</em><a class="headerlink" href="#arxiv.submission.domain.event.Publish.NAME" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.Publish.NAMED">
+<code class="descname">NAMED</code><em class="property"> = 'submission published'</em><a class="headerlink" href="#arxiv.submission.domain.event.Publish.NAMED" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.Publish.arxiv_id">
+<code class="descname">arxiv_id</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.submission.domain.event.Publish.arxiv_id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.event.Publish.project">
+<code class="descname">project</code><span class="sig-paren">(</span><em>submission</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/domain/event.html#Publish.project"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.Publish.project" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set the arXiv ID on the submission.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.Submission" title="arxiv.submission.domain.submission.Submission"><code class="xref py py-class docutils literal notranslate"><span class="pre">Submission</span></code></a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.event.Publish.validate">
+<code class="descname">validate</code><span class="sig-paren">(</span><em>submission</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/domain/event.html#Publish.validate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.Publish.validate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make sure that we have a valid arXiv ID.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><code class="docutils literal notranslate"><span class="pre">None</span></code></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.submission.domain.event.RemoveDelegate">
+<em class="property">class </em><code class="descclassname">arxiv.submission.domain.event.</code><code class="descname">RemoveDelegate</code><span class="sig-paren">(</span><em>creator</em>, <em>created=&lt;factory&gt;</em>, <em>proxy=None</em>, <em>client=None</em>, <em>submission_id=None</em>, <em>committed=False</em>, <em>before=None</em>, <em>after=None</em>, <em>delegation_id=&lt;factory&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/domain/event.html#RemoveDelegate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.RemoveDelegate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="arxiv.submission.domain.event.event.html#arxiv.submission.domain.event.event.Event" title="arxiv.submission.domain.event.event.Event"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.submission.domain.event.event.Event</span></code></a></p>
+<p>Owner revokes authority from another agent.</p>
+<dl class="method">
+<dt id="arxiv.submission.domain.event.RemoveDelegate.project">
+<code class="descname">project</code><span class="sig-paren">(</span><em>submission</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/domain/event.html#RemoveDelegate.project"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.RemoveDelegate.project" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remove the delegate from the submission.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.Submission" title="arxiv.submission.domain.submission.Submission"><code class="xref py py-class docutils literal notranslate"><span class="pre">Submission</span></code></a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.event.RemoveDelegate.validate">
+<code class="descname">validate</code><span class="sig-paren">(</span><em>submission</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/domain/event.html#RemoveDelegate.validate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.RemoveDelegate.validate" title="Permalink to this definition">¶</a></dt>
+<dd><p>The event creator must be the owner of the submission.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><code class="docutils literal notranslate"><span class="pre">None</span></code></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.submission.domain.event.RemoveSecondaryClassification">
+<em class="property">class </em><code class="descclassname">arxiv.submission.domain.event.</code><code class="descname">RemoveSecondaryClassification</code><span class="sig-paren">(</span><em>creator</em>, <em>created=&lt;factory&gt;</em>, <em>proxy=None</em>, <em>client=None</em>, <em>submission_id=None</em>, <em>committed=False</em>, <em>before=None</em>, <em>after=None</em>, <em>category=None</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/domain/event.html#RemoveSecondaryClassification"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.RemoveSecondaryClassification" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="arxiv.submission.domain.event.event.html#arxiv.submission.domain.event.event.Event" title="arxiv.submission.domain.event.event.Event"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.submission.domain.event.event.Event</span></code></a></p>
+<p>Remove secondary <a class="reference internal" href="arxiv.submission.domain.meta.html#arxiv.submission.domain.meta.Classification" title="arxiv.submission.domain.meta.Classification"><code class="xref py py-class docutils literal notranslate"><span class="pre">Classification</span></code></a> from submission.</p>
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.RemoveSecondaryClassification.NAME">
+<code class="descname">NAME</code><em class="property"> = 'remove cross-list classification'</em><a class="headerlink" href="#arxiv.submission.domain.event.RemoveSecondaryClassification.NAME" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.RemoveSecondaryClassification.NAMED">
+<code class="descname">NAMED</code><em class="property"> = 'cross-list classification removed'</em><a class="headerlink" href="#arxiv.submission.domain.event.RemoveSecondaryClassification.NAMED" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.RemoveSecondaryClassification.category">
+<code class="descname">category</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.submission.domain.event.RemoveSecondaryClassification.category" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.event.RemoveSecondaryClassification.project">
+<code class="descname">project</code><span class="sig-paren">(</span><em>submission</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/domain/event.html#RemoveSecondaryClassification.project"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.RemoveSecondaryClassification.project" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remove from <code class="xref py py-attr docutils literal notranslate"><span class="pre">Submission.secondary_classification</span></code>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.Submission" title="arxiv.submission.domain.submission.Submission"><code class="xref py py-class docutils literal notranslate"><span class="pre">Submission</span></code></a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.event.RemoveSecondaryClassification.validate">
+<code class="descname">validate</code><span class="sig-paren">(</span><em>submission</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/domain/event.html#RemoveSecondaryClassification.validate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.RemoveSecondaryClassification.validate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Validate the secondary classification category to remove.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><code class="docutils literal notranslate"><span class="pre">None</span></code></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.submission.domain.event.Rollback">
+<em class="property">class </em><code class="descclassname">arxiv.submission.domain.event.</code><code class="descname">Rollback</code><span class="sig-paren">(</span><em>creator</em>, <em>created=&lt;factory&gt;</em>, <em>proxy=None</em>, <em>client=None</em>, <em>submission_id=None</em>, <em>committed=False</em>, <em>before=None</em>, <em>after=None</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/domain/event.html#Rollback"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.Rollback" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="arxiv.submission.domain.event.event.html#arxiv.submission.domain.event.event.Event" title="arxiv.submission.domain.event.event.Event"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.submission.domain.event.event.Event</span></code></a></p>
+<p>Roll back to the most recent published version, or delete.</p>
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.Rollback.NAME">
+<code class="descname">NAME</code><em class="property"> = 'roll back or delete'</em><a class="headerlink" href="#arxiv.submission.domain.event.Rollback.NAME" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.Rollback.NAMED">
+<code class="descname">NAMED</code><em class="property"> = 'rolled back or deleted'</em><a class="headerlink" href="#arxiv.submission.domain.event.Rollback.NAMED" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.event.Rollback.project">
+<code class="descname">project</code><span class="sig-paren">(</span><em>submission</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/domain/event.html#Rollback.project"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.Rollback.project" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decrement the version number, and reset fields.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.Submission" title="arxiv.submission.domain.submission.Submission"><code class="xref py py-class docutils literal notranslate"><span class="pre">Submission</span></code></a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.event.Rollback.validate">
+<code class="descname">validate</code><span class="sig-paren">(</span><em>submission</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/domain/event.html#Rollback.validate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.Rollback.validate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Only applies to submissions in an unpublished state.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><code class="docutils literal notranslate"><span class="pre">None</span></code></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.submission.domain.event.SetACMClassification">
+<em class="property">class </em><code class="descclassname">arxiv.submission.domain.event.</code><code class="descname">SetACMClassification</code><span class="sig-paren">(</span><em>creator</em>, <em>created=&lt;factory&gt;</em>, <em>proxy=None</em>, <em>client=None</em>, <em>submission_id=None</em>, <em>committed=False</em>, <em>before=None</em>, <em>after=None</em>, <em>acm_class=''</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/domain/event.html#SetACMClassification"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.SetACMClassification" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="arxiv.submission.domain.event.event.html#arxiv.submission.domain.event.event.Event" title="arxiv.submission.domain.event.event.Event"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.submission.domain.event.event.Event</span></code></a></p>
+<p>Update the ACM classification codes of a submission.</p>
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.SetACMClassification.MAX_LENGTH">
+<code class="descname">MAX_LENGTH</code><em class="property"> = 160</em><a class="headerlink" href="#arxiv.submission.domain.event.SetACMClassification.MAX_LENGTH" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.SetACMClassification.NAME">
+<code class="descname">NAME</code><em class="property"> = 'update ACM classification'</em><a class="headerlink" href="#arxiv.submission.domain.event.SetACMClassification.NAME" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.SetACMClassification.NAMED">
+<code class="descname">NAMED</code><em class="property"> = 'ACM classification updated'</em><a class="headerlink" href="#arxiv.submission.domain.event.SetACMClassification.NAMED" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.SetACMClassification.acm_class">
+<code class="descname">acm_class</code><em class="property"> = ''</em><a class="headerlink" href="#arxiv.submission.domain.event.SetACMClassification.acm_class" title="Permalink to this definition">¶</a></dt>
+<dd><p>E.g. F.2.2; I.2.7</p>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="arxiv.submission.domain.event.SetACMClassification.cleanup">
+<em class="property">static </em><code class="descname">cleanup</code><span class="sig-paren">(</span><em>value</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/domain/event.html#SetACMClassification.cleanup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.SetACMClassification.cleanup" title="Permalink to this definition">¶</a></dt>
+<dd><p>Perform light cleanup.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.event.SetACMClassification.project">
+<code class="descname">project</code><span class="sig-paren">(</span><em>submission</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/domain/event.html#SetACMClassification.project"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.SetACMClassification.project" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update the ACM classification on a <code class="xref py py-class docutils literal notranslate"><span class="pre">domain.Submission</span></code>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.Submission" title="arxiv.submission.domain.submission.Submission"><code class="xref py py-class docutils literal notranslate"><span class="pre">Submission</span></code></a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.event.SetACMClassification.validate">
+<code class="descname">validate</code><span class="sig-paren">(</span><em>submission</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/domain/event.html#SetACMClassification.validate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.SetACMClassification.validate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Validate the ACM classification value.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><code class="docutils literal notranslate"><span class="pre">None</span></code></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.submission.domain.event.SetAbstract">
+<em class="property">class </em><code class="descclassname">arxiv.submission.domain.event.</code><code class="descname">SetAbstract</code><span class="sig-paren">(</span><em>creator</em>, <em>created=&lt;factory&gt;</em>, <em>proxy=None</em>, <em>client=None</em>, <em>submission_id=None</em>, <em>committed=False</em>, <em>before=None</em>, <em>after=None</em>, <em>abstract=''</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/domain/event.html#SetAbstract"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.SetAbstract" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="arxiv.submission.domain.event.event.html#arxiv.submission.domain.event.event.Event" title="arxiv.submission.domain.event.event.Event"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.submission.domain.event.event.Event</span></code></a></p>
+<p>Update the abstract of a submission.</p>
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.SetAbstract.MAX_LENGTH">
+<code class="descname">MAX_LENGTH</code><em class="property"> = 1920</em><a class="headerlink" href="#arxiv.submission.domain.event.SetAbstract.MAX_LENGTH" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.SetAbstract.MIN_LENGTH">
+<code class="descname">MIN_LENGTH</code><em class="property"> = 20</em><a class="headerlink" href="#arxiv.submission.domain.event.SetAbstract.MIN_LENGTH" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.SetAbstract.NAME">
+<code class="descname">NAME</code><em class="property"> = 'update abstract'</em><a class="headerlink" href="#arxiv.submission.domain.event.SetAbstract.NAME" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.SetAbstract.NAMED">
+<code class="descname">NAMED</code><em class="property"> = 'abstract updated'</em><a class="headerlink" href="#arxiv.submission.domain.event.SetAbstract.NAMED" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.SetAbstract.abstract">
+<code class="descname">abstract</code><em class="property"> = ''</em><a class="headerlink" href="#arxiv.submission.domain.event.SetAbstract.abstract" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="staticmethod">
+<dt id="arxiv.submission.domain.event.SetAbstract.cleanup">
+<em class="property">static </em><code class="descname">cleanup</code><span class="sig-paren">(</span><em>value</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/domain/event.html#SetAbstract.cleanup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.SetAbstract.cleanup" title="Permalink to this definition">¶</a></dt>
+<dd><p>Perform some light tidying on the abstract.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.event.SetAbstract.project">
+<code class="descname">project</code><span class="sig-paren">(</span><em>submission</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/domain/event.html#SetAbstract.project"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.SetAbstract.project" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update the abstract on a <code class="xref py py-class docutils literal notranslate"><span class="pre">domain.Submission</span></code>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.Submission" title="arxiv.submission.domain.submission.Submission"><code class="xref py py-class docutils literal notranslate"><span class="pre">Submission</span></code></a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.event.SetAbstract.validate">
+<code class="descname">validate</code><span class="sig-paren">(</span><em>submission</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/domain/event.html#SetAbstract.validate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.SetAbstract.validate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Validate the abstract value.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><code class="docutils literal notranslate"><span class="pre">None</span></code></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.submission.domain.event.SetAuthors">
+<em class="property">class </em><code class="descclassname">arxiv.submission.domain.event.</code><code class="descname">SetAuthors</code><span class="sig-paren">(</span><em>creator</em>, <em>created=&lt;factory&gt;</em>, <em>proxy=None</em>, <em>client=None</em>, <em>submission_id=None</em>, <em>committed=False</em>, <em>before=None</em>, <em>after=None</em>, <em>authors=&lt;factory&gt;</em>, <em>authors_display=None</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/domain/event.html#SetAuthors"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.SetAuthors" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="arxiv.submission.domain.event.event.html#arxiv.submission.domain.event.event.Event" title="arxiv.submission.domain.event.event.Event"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.submission.domain.event.event.Event</span></code></a></p>
+<p>Update the authors on a <code class="xref py py-class docutils literal notranslate"><span class="pre">domain.Submission</span></code>.</p>
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.SetAuthors.NAME">
+<code class="descname">NAME</code><em class="property"> = 'update authors'</em><a class="headerlink" href="#arxiv.submission.domain.event.SetAuthors.NAME" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.SetAuthors.NAMED">
+<code class="descname">NAMED</code><em class="property"> = 'authors updated'</em><a class="headerlink" href="#arxiv.submission.domain.event.SetAuthors.NAMED" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.SetAuthors.authors_display">
+<code class="descname">authors_display</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.submission.domain.event.SetAuthors.authors_display" title="Permalink to this definition">¶</a></dt>
+<dd><p>The authors string may be provided.</p>
+</dd></dl>
+
+<dl class="staticmethod">
+<dt id="arxiv.submission.domain.event.SetAuthors.cleanup">
+<em class="property">static </em><code class="descname">cleanup</code><span class="sig-paren">(</span><em>s</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/domain/event.html#SetAuthors.cleanup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.SetAuthors.cleanup" title="Permalink to this definition">¶</a></dt>
+<dd><p>Perform some light tidying on the provided author string(s).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="arxiv.submission.domain.event.SetAuthors.from_dict">
+<em class="property">classmethod </em><code class="descname">from_dict</code><span class="sig-paren">(</span><em>**data</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/domain/event.html#SetAuthors.from_dict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.SetAuthors.from_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Override the default <code class="docutils literal notranslate"><span class="pre">from_dict</span></code> constructor to handle authors.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="#arxiv.submission.domain.event.SetAuthors" title="arxiv.submission.domain.event.SetAuthors"><code class="xref py py-class docutils literal notranslate"><span class="pre">SetAuthors</span></code></a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.event.SetAuthors.project">
+<code class="descname">project</code><span class="sig-paren">(</span><em>submission</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/domain/event.html#SetAuthors.project"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.SetAuthors.project" title="Permalink to this definition">¶</a></dt>
+<dd><p>Replace <code class="xref py py-attr docutils literal notranslate"><span class="pre">Submission.metadata.authors</span></code>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.Submission" title="arxiv.submission.domain.submission.Submission"><code class="xref py py-class docutils literal notranslate"><span class="pre">Submission</span></code></a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.event.SetAuthors.validate">
+<code class="descname">validate</code><span class="sig-paren">(</span><em>submission</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/domain/event.html#SetAuthors.validate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.SetAuthors.validate" title="Permalink to this definition">¶</a></dt>
+<dd><p>May not apply to a finalized submission.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><code class="docutils literal notranslate"><span class="pre">None</span></code></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.submission.domain.event.SetComments">
+<em class="property">class </em><code class="descclassname">arxiv.submission.domain.event.</code><code class="descname">SetComments</code><span class="sig-paren">(</span><em>creator</em>, <em>created=&lt;factory&gt;</em>, <em>proxy=None</em>, <em>client=None</em>, <em>submission_id=None</em>, <em>committed=False</em>, <em>before=None</em>, <em>after=None</em>, <em>comments=''</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/domain/event.html#SetComments"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.SetComments" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="arxiv.submission.domain.event.event.html#arxiv.submission.domain.event.event.Event" title="arxiv.submission.domain.event.event.Event"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.submission.domain.event.event.Event</span></code></a></p>
+<p>Update the comments of a submission.</p>
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.SetComments.MAX_LENGTH">
+<code class="descname">MAX_LENGTH</code><em class="property"> = 400</em><a class="headerlink" href="#arxiv.submission.domain.event.SetComments.MAX_LENGTH" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.SetComments.NAME">
+<code class="descname">NAME</code><em class="property"> = 'update comments'</em><a class="headerlink" href="#arxiv.submission.domain.event.SetComments.NAME" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.SetComments.NAMED">
+<code class="descname">NAMED</code><em class="property"> = 'comments updated'</em><a class="headerlink" href="#arxiv.submission.domain.event.SetComments.NAMED" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="staticmethod">
+<dt id="arxiv.submission.domain.event.SetComments.cleanup">
+<em class="property">static </em><code class="descname">cleanup</code><span class="sig-paren">(</span><em>value</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/domain/event.html#SetComments.cleanup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.SetComments.cleanup" title="Permalink to this definition">¶</a></dt>
+<dd><p>Light cleanup on comment value.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.SetComments.comments">
+<code class="descname">comments</code><em class="property"> = ''</em><a class="headerlink" href="#arxiv.submission.domain.event.SetComments.comments" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.event.SetComments.project">
+<code class="descname">project</code><span class="sig-paren">(</span><em>submission</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/domain/event.html#SetComments.project"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.SetComments.project" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update the comments on a <code class="xref py py-class docutils literal notranslate"><span class="pre">domain.Submission</span></code>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.Submission" title="arxiv.submission.domain.submission.Submission"><code class="xref py py-class docutils literal notranslate"><span class="pre">Submission</span></code></a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.event.SetComments.validate">
+<code class="descname">validate</code><span class="sig-paren">(</span><em>submission</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/domain/event.html#SetComments.validate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.SetComments.validate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Validate the comments value.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><code class="docutils literal notranslate"><span class="pre">None</span></code></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.submission.domain.event.SetDOI">
+<em class="property">class </em><code class="descclassname">arxiv.submission.domain.event.</code><code class="descname">SetDOI</code><span class="sig-paren">(</span><em>creator</em>, <em>created=&lt;factory&gt;</em>, <em>proxy=None</em>, <em>client=None</em>, <em>submission_id=None</em>, <em>committed=False</em>, <em>before=None</em>, <em>after=None</em>, <em>doi=''</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/domain/event.html#SetDOI"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.SetDOI" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="arxiv.submission.domain.event.event.html#arxiv.submission.domain.event.event.Event" title="arxiv.submission.domain.event.event.Event"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.submission.domain.event.event.Event</span></code></a></p>
+<p>Update the external DOI of a submission.</p>
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.SetDOI.NAME">
+<code class="descname">NAME</code><em class="property"> = 'add a DOI'</em><a class="headerlink" href="#arxiv.submission.domain.event.SetDOI.NAME" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.SetDOI.NAMED">
+<code class="descname">NAMED</code><em class="property"> = 'DOI added'</em><a class="headerlink" href="#arxiv.submission.domain.event.SetDOI.NAMED" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="staticmethod">
+<dt id="arxiv.submission.domain.event.SetDOI.cleanup">
+<em class="property">static </em><code class="descname">cleanup</code><span class="sig-paren">(</span><em>value</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/domain/event.html#SetDOI.cleanup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.SetDOI.cleanup" title="Permalink to this definition">¶</a></dt>
+<dd><p>Perform some light tidying on the title.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.SetDOI.doi">
+<code class="descname">doi</code><em class="property"> = ''</em><a class="headerlink" href="#arxiv.submission.domain.event.SetDOI.doi" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.event.SetDOI.project">
+<code class="descname">project</code><span class="sig-paren">(</span><em>submission</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/domain/event.html#SetDOI.project"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.SetDOI.project" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update the doi on a <code class="xref py py-class docutils literal notranslate"><span class="pre">domain.Submission</span></code>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.Submission" title="arxiv.submission.domain.submission.Submission"><code class="xref py py-class docutils literal notranslate"><span class="pre">Submission</span></code></a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.event.SetDOI.validate">
+<code class="descname">validate</code><span class="sig-paren">(</span><em>submission</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/domain/event.html#SetDOI.validate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.SetDOI.validate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Validate the DOI value.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><code class="docutils literal notranslate"><span class="pre">None</span></code></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.submission.domain.event.SetJournalReference">
+<em class="property">class </em><code class="descclassname">arxiv.submission.domain.event.</code><code class="descname">SetJournalReference</code><span class="sig-paren">(</span><em>creator</em>, <em>created=&lt;factory&gt;</em>, <em>proxy=None</em>, <em>client=None</em>, <em>submission_id=None</em>, <em>committed=False</em>, <em>before=None</em>, <em>after=None</em>, <em>journal_ref=''</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/domain/event.html#SetJournalReference"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.SetJournalReference" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="arxiv.submission.domain.event.event.html#arxiv.submission.domain.event.event.Event" title="arxiv.submission.domain.event.event.Event"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.submission.domain.event.event.Event</span></code></a></p>
+<p>Update the journal reference of a submission.</p>
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.SetJournalReference.NAME">
+<code class="descname">NAME</code><em class="property"> = 'add a journal reference'</em><a class="headerlink" href="#arxiv.submission.domain.event.SetJournalReference.NAME" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.SetJournalReference.NAMED">
+<code class="descname">NAMED</code><em class="property"> = 'journal reference added'</em><a class="headerlink" href="#arxiv.submission.domain.event.SetJournalReference.NAMED" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="staticmethod">
+<dt id="arxiv.submission.domain.event.SetJournalReference.cleanup">
+<em class="property">static </em><code class="descname">cleanup</code><span class="sig-paren">(</span><em>value</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/domain/event.html#SetJournalReference.cleanup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.SetJournalReference.cleanup" title="Permalink to this definition">¶</a></dt>
+<dd><p>Perform light cleanup.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.SetJournalReference.journal_ref">
+<code class="descname">journal_ref</code><em class="property"> = ''</em><a class="headerlink" href="#arxiv.submission.domain.event.SetJournalReference.journal_ref" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.event.SetJournalReference.project">
+<code class="descname">project</code><span class="sig-paren">(</span><em>submission</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/domain/event.html#SetJournalReference.project"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.SetJournalReference.project" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update the journal reference on a <code class="xref py py-class docutils literal notranslate"><span class="pre">domain.Submission</span></code>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.Submission" title="arxiv.submission.domain.submission.Submission"><code class="xref py py-class docutils literal notranslate"><span class="pre">Submission</span></code></a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.event.SetJournalReference.validate">
+<code class="descname">validate</code><span class="sig-paren">(</span><em>submission</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/domain/event.html#SetJournalReference.validate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.SetJournalReference.validate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Validate the journal reference value.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><code class="docutils literal notranslate"><span class="pre">None</span></code></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.submission.domain.event.SetLicense">
+<em class="property">class </em><code class="descclassname">arxiv.submission.domain.event.</code><code class="descname">SetLicense</code><span class="sig-paren">(</span><em>creator</em>, <em>created=&lt;factory&gt;</em>, <em>proxy=None</em>, <em>client=None</em>, <em>submission_id=None</em>, <em>committed=False</em>, <em>before=None</em>, <em>after=None</em>, <em>license_name=None</em>, <em>license_uri=None</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/domain/event.html#SetLicense"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.SetLicense" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="arxiv.submission.domain.event.event.html#arxiv.submission.domain.event.event.Event" title="arxiv.submission.domain.event.event.Event"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.submission.domain.event.event.Event</span></code></a></p>
+<p>The submitter has selected a license for their submission.</p>
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.SetLicense.NAME">
+<code class="descname">NAME</code><em class="property"> = 'select distribution license'</em><a class="headerlink" href="#arxiv.submission.domain.event.SetLicense.NAME" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.SetLicense.NAMED">
+<code class="descname">NAMED</code><em class="property"> = 'distribution license selected'</em><a class="headerlink" href="#arxiv.submission.domain.event.SetLicense.NAMED" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.SetLicense.license_name">
+<code class="descname">license_name</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.submission.domain.event.SetLicense.license_name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.SetLicense.license_uri">
+<code class="descname">license_uri</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.submission.domain.event.SetLicense.license_uri" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.event.SetLicense.project">
+<code class="descname">project</code><span class="sig-paren">(</span><em>submission</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/domain/event.html#SetLicense.project"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.SetLicense.project" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set <code class="xref py py-attr docutils literal notranslate"><span class="pre">domain.Submission.license</span></code>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.Submission" title="arxiv.submission.domain.submission.Submission"><code class="xref py py-class docutils literal notranslate"><span class="pre">Submission</span></code></a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.event.SetLicense.validate">
+<code class="descname">validate</code><span class="sig-paren">(</span><em>submission</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/domain/event.html#SetLicense.validate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.SetLicense.validate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Validate the selected license.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><code class="docutils literal notranslate"><span class="pre">None</span></code></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.submission.domain.event.SetMSCClassification">
+<em class="property">class </em><code class="descclassname">arxiv.submission.domain.event.</code><code class="descname">SetMSCClassification</code><span class="sig-paren">(</span><em>creator</em>, <em>created=&lt;factory&gt;</em>, <em>proxy=None</em>, <em>client=None</em>, <em>submission_id=None</em>, <em>committed=False</em>, <em>before=None</em>, <em>after=None</em>, <em>msc_class=''</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/domain/event.html#SetMSCClassification"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.SetMSCClassification" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="arxiv.submission.domain.event.event.html#arxiv.submission.domain.event.event.Event" title="arxiv.submission.domain.event.event.Event"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.submission.domain.event.event.Event</span></code></a></p>
+<p>Update the MSC classification codes of a submission.</p>
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.SetMSCClassification.MAX_LENGTH">
+<code class="descname">MAX_LENGTH</code><em class="property"> = 160</em><a class="headerlink" href="#arxiv.submission.domain.event.SetMSCClassification.MAX_LENGTH" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.SetMSCClassification.NAME">
+<code class="descname">NAME</code><em class="property"> = 'update MSC classification'</em><a class="headerlink" href="#arxiv.submission.domain.event.SetMSCClassification.NAME" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.SetMSCClassification.NAMED">
+<code class="descname">NAMED</code><em class="property"> = 'MSC classification updated'</em><a class="headerlink" href="#arxiv.submission.domain.event.SetMSCClassification.NAMED" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="staticmethod">
+<dt id="arxiv.submission.domain.event.SetMSCClassification.cleanup">
+<em class="property">static </em><code class="descname">cleanup</code><span class="sig-paren">(</span><em>value</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/domain/event.html#SetMSCClassification.cleanup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.SetMSCClassification.cleanup" title="Permalink to this definition">¶</a></dt>
+<dd><p>Perform some light fixes on the MSC classification value.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.SetMSCClassification.msc_class">
+<code class="descname">msc_class</code><em class="property"> = ''</em><a class="headerlink" href="#arxiv.submission.domain.event.SetMSCClassification.msc_class" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.event.SetMSCClassification.project">
+<code class="descname">project</code><span class="sig-paren">(</span><em>submission</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/domain/event.html#SetMSCClassification.project"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.SetMSCClassification.project" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update the MSC classification on a <code class="xref py py-class docutils literal notranslate"><span class="pre">domain.Submission</span></code>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.Submission" title="arxiv.submission.domain.submission.Submission"><code class="xref py py-class docutils literal notranslate"><span class="pre">Submission</span></code></a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.event.SetMSCClassification.validate">
+<code class="descname">validate</code><span class="sig-paren">(</span><em>submission</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/domain/event.html#SetMSCClassification.validate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.SetMSCClassification.validate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Validate the MSC classification value.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><code class="docutils literal notranslate"><span class="pre">None</span></code></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.submission.domain.event.SetPrimaryClassification">
+<em class="property">class </em><code class="descclassname">arxiv.submission.domain.event.</code><code class="descname">SetPrimaryClassification</code><span class="sig-paren">(</span><em>creator</em>, <em>created=&lt;factory&gt;</em>, <em>proxy=None</em>, <em>client=None</em>, <em>submission_id=None</em>, <em>committed=False</em>, <em>before=None</em>, <em>after=None</em>, <em>category=None</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/domain/event.html#SetPrimaryClassification"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.SetPrimaryClassification" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="arxiv.submission.domain.event.event.html#arxiv.submission.domain.event.event.Event" title="arxiv.submission.domain.event.event.Event"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.submission.domain.event.event.Event</span></code></a></p>
+<p>Update the primary classification of a submission.</p>
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.SetPrimaryClassification.NAME">
+<code class="descname">NAME</code><em class="property"> = 'set primary classification'</em><a class="headerlink" href="#arxiv.submission.domain.event.SetPrimaryClassification.NAME" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.SetPrimaryClassification.NAMED">
+<code class="descname">NAMED</code><em class="property"> = 'primary classification set'</em><a class="headerlink" href="#arxiv.submission.domain.event.SetPrimaryClassification.NAMED" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.SetPrimaryClassification.category">
+<code class="descname">category</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.submission.domain.event.SetPrimaryClassification.category" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.event.SetPrimaryClassification.project">
+<code class="descname">project</code><span class="sig-paren">(</span><em>submission</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/domain/event.html#SetPrimaryClassification.project"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.SetPrimaryClassification.project" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set <code class="xref py py-attr docutils literal notranslate"><span class="pre">domain.Submission.primary_classification</span></code>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.Submission" title="arxiv.submission.domain.submission.Submission"><code class="xref py py-class docutils literal notranslate"><span class="pre">Submission</span></code></a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.event.SetPrimaryClassification.validate">
+<code class="descname">validate</code><span class="sig-paren">(</span><em>submission</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/domain/event.html#SetPrimaryClassification.validate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.SetPrimaryClassification.validate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Validate the primary classification category.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><code class="docutils literal notranslate"><span class="pre">None</span></code></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.submission.domain.event.SetReportNumber">
+<em class="property">class </em><code class="descclassname">arxiv.submission.domain.event.</code><code class="descname">SetReportNumber</code><span class="sig-paren">(</span><em>creator</em>, <em>created=&lt;factory&gt;</em>, <em>proxy=None</em>, <em>client=None</em>, <em>submission_id=None</em>, <em>committed=False</em>, <em>before=None</em>, <em>after=None</em>, <em>report_num=''</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/domain/event.html#SetReportNumber"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.SetReportNumber" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="arxiv.submission.domain.event.event.html#arxiv.submission.domain.event.event.Event" title="arxiv.submission.domain.event.event.Event"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.submission.domain.event.event.Event</span></code></a></p>
+<p>Update the report number of a submission.</p>
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.SetReportNumber.NAME">
+<code class="descname">NAME</code><em class="property"> = 'update report number'</em><a class="headerlink" href="#arxiv.submission.domain.event.SetReportNumber.NAME" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.SetReportNumber.NAMED">
+<code class="descname">NAMED</code><em class="property"> = 'report number updated'</em><a class="headerlink" href="#arxiv.submission.domain.event.SetReportNumber.NAMED" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="staticmethod">
+<dt id="arxiv.submission.domain.event.SetReportNumber.cleanup">
+<em class="property">static </em><code class="descname">cleanup</code><span class="sig-paren">(</span><em>value</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/domain/event.html#SetReportNumber.cleanup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.SetReportNumber.cleanup" title="Permalink to this definition">¶</a></dt>
+<dd><p>Light cleanup on report number value.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.event.SetReportNumber.project">
+<code class="descname">project</code><span class="sig-paren">(</span><em>submission</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/domain/event.html#SetReportNumber.project"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.SetReportNumber.project" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update the report number on a <code class="xref py py-class docutils literal notranslate"><span class="pre">domain.Submission</span></code>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.Submission" title="arxiv.submission.domain.submission.Submission"><code class="xref py py-class docutils literal notranslate"><span class="pre">Submission</span></code></a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.SetReportNumber.report_num">
+<code class="descname">report_num</code><em class="property"> = ''</em><a class="headerlink" href="#arxiv.submission.domain.event.SetReportNumber.report_num" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.event.SetReportNumber.validate">
+<code class="descname">validate</code><span class="sig-paren">(</span><em>submission</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/domain/event.html#SetReportNumber.validate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.SetReportNumber.validate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Validate the report number value.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><code class="docutils literal notranslate"><span class="pre">None</span></code></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.submission.domain.event.SetTitle">
+<em class="property">class </em><code class="descclassname">arxiv.submission.domain.event.</code><code class="descname">SetTitle</code><span class="sig-paren">(</span><em>creator</em>, <em>created=&lt;factory&gt;</em>, <em>proxy=None</em>, <em>client=None</em>, <em>submission_id=None</em>, <em>committed=False</em>, <em>before=None</em>, <em>after=None</em>, <em>title=''</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/domain/event.html#SetTitle"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.SetTitle" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="arxiv.submission.domain.event.event.html#arxiv.submission.domain.event.event.Event" title="arxiv.submission.domain.event.event.Event"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.submission.domain.event.event.Event</span></code></a></p>
+<p>Update the title of a submission.</p>
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.SetTitle.ALLOWED_HTML">
+<code class="descname">ALLOWED_HTML</code><em class="property"> = ['br', 'sup', 'sub', 'hr', 'em', 'strong', 'h']</em><a class="headerlink" href="#arxiv.submission.domain.event.SetTitle.ALLOWED_HTML" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.SetTitle.MAX_LENGTH">
+<code class="descname">MAX_LENGTH</code><em class="property"> = 240</em><a class="headerlink" href="#arxiv.submission.domain.event.SetTitle.MAX_LENGTH" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.SetTitle.MIN_LENGTH">
+<code class="descname">MIN_LENGTH</code><em class="property"> = 5</em><a class="headerlink" href="#arxiv.submission.domain.event.SetTitle.MIN_LENGTH" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.SetTitle.NAME">
+<code class="descname">NAME</code><em class="property"> = 'update title'</em><a class="headerlink" href="#arxiv.submission.domain.event.SetTitle.NAME" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.SetTitle.NAMED">
+<code class="descname">NAMED</code><em class="property"> = 'title updated'</em><a class="headerlink" href="#arxiv.submission.domain.event.SetTitle.NAMED" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="staticmethod">
+<dt id="arxiv.submission.domain.event.SetTitle.cleanup">
+<em class="property">static </em><code class="descname">cleanup</code><span class="sig-paren">(</span><em>value</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/domain/event.html#SetTitle.cleanup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.SetTitle.cleanup" title="Permalink to this definition">¶</a></dt>
+<dd><p>Perform some light tidying on the title.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.event.SetTitle.project">
+<code class="descname">project</code><span class="sig-paren">(</span><em>submission</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/domain/event.html#SetTitle.project"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.SetTitle.project" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update the title on a <code class="xref py py-class docutils literal notranslate"><span class="pre">domain.Submission</span></code>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.Submission" title="arxiv.submission.domain.submission.Submission"><code class="xref py py-class docutils literal notranslate"><span class="pre">Submission</span></code></a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.SetTitle.title">
+<code class="descname">title</code><em class="property"> = ''</em><a class="headerlink" href="#arxiv.submission.domain.event.SetTitle.title" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.event.SetTitle.validate">
+<code class="descname">validate</code><span class="sig-paren">(</span><em>submission</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/domain/event.html#SetTitle.validate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.SetTitle.validate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Validate the title value.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><code class="docutils literal notranslate"><span class="pre">None</span></code></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.submission.domain.event.SetUploadPackage">
+<em class="property">class </em><code class="descclassname">arxiv.submission.domain.event.</code><code class="descname">SetUploadPackage</code><span class="sig-paren">(</span><em>creator</em>, <em>created=&lt;factory&gt;</em>, <em>proxy=None</em>, <em>client=None</em>, <em>submission_id=None</em>, <em>committed=False</em>, <em>before=None</em>, <em>after=None</em>, <em>identifier=&lt;factory&gt;</em>, <em>format=&lt;factory&gt;</em>, <em>checksum=&lt;factory&gt;</em>, <em>size=0</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/domain/event.html#SetUploadPackage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.SetUploadPackage" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="arxiv.submission.domain.event.event.html#arxiv.submission.domain.event.event.Event" title="arxiv.submission.domain.event.event.Event"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.submission.domain.event.event.Event</span></code></a></p>
+<p>Set the upload workspace for this submission.</p>
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.SetUploadPackage.ALLOWED_FORMATS">
+<code class="descname">ALLOWED_FORMATS</code><em class="property"> = ['pdftex', 'tex', 'pdf', 'ps', 'html', 'invalid', 'withdrawn']</em><a class="headerlink" href="#arxiv.submission.domain.event.SetUploadPackage.ALLOWED_FORMATS" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.SetUploadPackage.NAME">
+<code class="descname">NAME</code><em class="property"> = 'set the upload package'</em><a class="headerlink" href="#arxiv.submission.domain.event.SetUploadPackage.NAME" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.SetUploadPackage.NAMED">
+<code class="descname">NAMED</code><em class="property"> = 'upload package set'</em><a class="headerlink" href="#arxiv.submission.domain.event.SetUploadPackage.NAMED" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.event.SetUploadPackage.project">
+<code class="descname">project</code><span class="sig-paren">(</span><em>submission</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/domain/event.html#SetUploadPackage.project"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.SetUploadPackage.project" title="Permalink to this definition">¶</a></dt>
+<dd><p>Replace <a class="reference internal" href="arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.SubmissionContent" title="arxiv.submission.domain.submission.SubmissionContent"><code class="xref py py-class docutils literal notranslate"><span class="pre">SubmissionContent</span></code></a> metadata on the submission.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.Submission" title="arxiv.submission.domain.submission.Submission"><code class="xref py py-class docutils literal notranslate"><span class="pre">Submission</span></code></a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.SetUploadPackage.size">
+<code class="descname">size</code><em class="property"> = 0</em><a class="headerlink" href="#arxiv.submission.domain.event.SetUploadPackage.size" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.event.SetUploadPackage.validate">
+<code class="descname">validate</code><span class="sig-paren">(</span><em>submission</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/domain/event.html#SetUploadPackage.validate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.SetUploadPackage.validate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Validate data for <a class="reference internal" href="#arxiv.submission.domain.event.SetUploadPackage" title="arxiv.submission.domain.event.SetUploadPackage"><code class="xref py py-class docutils literal notranslate"><span class="pre">SetUploadPackage</span></code></a>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><code class="docutils literal notranslate"><span class="pre">None</span></code></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.submission.domain.event.UnFinalizeSubmission">
+<em class="property">class </em><code class="descclassname">arxiv.submission.domain.event.</code><code class="descname">UnFinalizeSubmission</code><span class="sig-paren">(</span><em>creator</em>, <em>created=&lt;factory&gt;</em>, <em>proxy=None</em>, <em>client=None</em>, <em>submission_id=None</em>, <em>committed=False</em>, <em>before=None</em>, <em>after=None</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/domain/event.html#UnFinalizeSubmission"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.UnFinalizeSubmission" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="arxiv.submission.domain.event.event.html#arxiv.submission.domain.event.event.Event" title="arxiv.submission.domain.event.event.Event"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.submission.domain.event.event.Event</span></code></a></p>
+<p>Withdraw the submission from the queue for announcement.</p>
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.UnFinalizeSubmission.NAME">
+<code class="descname">NAME</code><em class="property"> = 're-open submission for modification'</em><a class="headerlink" href="#arxiv.submission.domain.event.UnFinalizeSubmission.NAME" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.UnFinalizeSubmission.NAMED">
+<code class="descname">NAMED</code><em class="property"> = 'submission re-opened for modification'</em><a class="headerlink" href="#arxiv.submission.domain.event.UnFinalizeSubmission.NAMED" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.event.UnFinalizeSubmission.project">
+<code class="descname">project</code><span class="sig-paren">(</span><em>submission</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/domain/event.html#UnFinalizeSubmission.project"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.UnFinalizeSubmission.project" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set <code class="xref py py-attr docutils literal notranslate"><span class="pre">Submission.finalized</span></code>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.Submission" title="arxiv.submission.domain.submission.Submission"><code class="xref py py-class docutils literal notranslate"><span class="pre">Submission</span></code></a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.event.UnFinalizeSubmission.validate">
+<code class="descname">validate</code><span class="sig-paren">(</span><em>submission</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/domain/event.html#UnFinalizeSubmission.validate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.UnFinalizeSubmission.validate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Validate the unfinalize action.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><code class="docutils literal notranslate"><span class="pre">None</span></code></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.submission.domain.event.UnsetUploadPackage">
+<em class="property">class </em><code class="descclassname">arxiv.submission.domain.event.</code><code class="descname">UnsetUploadPackage</code><span class="sig-paren">(</span><em>creator</em>, <em>created=&lt;factory&gt;</em>, <em>proxy=None</em>, <em>client=None</em>, <em>submission_id=None</em>, <em>committed=False</em>, <em>before=None</em>, <em>after=None</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/domain/event.html#UnsetUploadPackage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.UnsetUploadPackage" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="arxiv.submission.domain.event.event.html#arxiv.submission.domain.event.event.Event" title="arxiv.submission.domain.event.event.Event"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.submission.domain.event.event.Event</span></code></a></p>
+<p>Unset the upload workspace for this submission.</p>
+<dl class="method">
+<dt id="arxiv.submission.domain.event.UnsetUploadPackage.project">
+<code class="descname">project</code><span class="sig-paren">(</span><em>submission</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/domain/event.html#UnsetUploadPackage.project"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.UnsetUploadPackage.project" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set <code class="xref py py-attr docutils literal notranslate"><span class="pre">Submission.source_content</span></code> to None.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.Submission" title="arxiv.submission.domain.submission.Submission"><code class="xref py py-class docutils literal notranslate"><span class="pre">Submission</span></code></a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.event.UnsetUploadPackage.validate">
+<code class="descname">validate</code><span class="sig-paren">(</span><em>submission</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/domain/event.html#UnsetUploadPackage.validate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.UnsetUploadPackage.validate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Validate data for <a class="reference internal" href="#arxiv.submission.domain.event.UnsetUploadPackage" title="arxiv.submission.domain.event.UnsetUploadPackage"><code class="xref py py-class docutils literal notranslate"><span class="pre">UnsetUploadPackage</span></code></a>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><code class="docutils literal notranslate"><span class="pre">None</span></code></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="arxiv.submission.domain.event.event_factory">
+<code class="descclassname">arxiv.submission.domain.event.</code><code class="descname">event_factory</code><span class="sig-paren">(</span><em>event_type</em>, <em>**data</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/domain/event.html#event_factory"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.event_factory" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convenience factory for generating <a class="reference internal" href="arxiv.submission.domain.event.event.html#arxiv.submission.domain.event.event.Event" title="arxiv.submission.domain.event.event.Event"><code class="xref py py-class docutils literal notranslate"><span class="pre">Event</span></code></a> instances.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>event_type</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a>) – Should be the name of a <a class="reference internal" href="arxiv.submission.domain.event.event.html#arxiv.submission.domain.event.event.Event" title="arxiv.submission.domain.event.event.Event"><code class="xref py py-class docutils literal notranslate"><span class="pre">Event</span></code></a> subclass.</li>
+<li><strong>data</strong> (<em>kwargs</em>) – Keyword parameters passed to the event constructor.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><p class="first"><a class="reference internal" href="arxiv.submission.domain.event.event.html#arxiv.submission.domain.event.event.Event" title="arxiv.submission.domain.event.event.Event"><code class="xref py py-class docutils literal notranslate"><span class="pre">Event</span></code></a></p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><a class="reference internal" href="arxiv.submission.domain.event.event.html#arxiv.submission.domain.event.event.Event" title="arxiv.submission.domain.event.event.Event"><code class="xref py py-class docutils literal notranslate"><span class="pre">Event</span></code></a> – An instance of an <a class="reference internal" href="arxiv.submission.domain.event.event.html#arxiv.submission.domain.event.event.Event" title="arxiv.submission.domain.event.event.Event"><code class="xref py py-class docutils literal notranslate"><span class="pre">Event</span></code></a> subclass.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="subpackages">
+<h2>Subpackages<a class="headerlink" href="#subpackages" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="arxiv.submission.domain.event.tests.html">arxiv.submission.domain.event.tests package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.submission.domain.event.tests.html#submodules">Submodules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="arxiv.submission.domain.event.tests.test_hooks.html">arxiv.submission.domain.event.tests.test_hooks module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="arxiv.submission.domain.event.event.html">arxiv.submission.domain.event.event module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="arxiv.submission.domain.event.flag.html">arxiv.submission.domain.event.flag module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="arxiv.submission.domain.event.process.html">arxiv.submission.domain.event.process module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="arxiv.submission.domain.event.proposal.html">arxiv.submission.domain.event.proposal module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="arxiv.submission.domain.event.request.html">arxiv.submission.domain.event.request module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="arxiv.submission.domain.event.util.html">arxiv.submission.domain.event.util module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="arxiv.submission.domain.event.validators.html">arxiv.submission.domain.event.validators module</a></li>
+</ul>
+</div>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">arXiv submission & moderation</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../architecture.html">Submission &amp; moderation subsystem architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../announcement_process.html">Submission &amp; announcement Process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../submission_api_context.html">Submission API: Context</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="arxiv.submission.html">arxiv.submission package</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="arxiv.submission.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.submission.html#using-commands-events">Using commands/events</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.submission.html#integration-with-the-legacy-system">Integration with the legacy system</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="arxiv.submission.html#subpackages">Subpackages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.submission.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../metadata/metadata.html">metadata package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../background.html">Background</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="arxiv.submission.html">arxiv.submission package</a><ul>
+  <li><a href="arxiv.submission.domain.html">arxiv.submission.domain package</a><ul>
+      <li>Previous: <a href="arxiv.submission.domain.html" title="previous chapter">arxiv.submission.domain package</a></li>
+      <li>Next: <a href="arxiv.submission.domain.event.tests.html" title="next chapter">arxiv.submission.domain.event.tests package</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, arXiv.org.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.3</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../../_sources/containers/core/arxiv.submission.domain.event.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

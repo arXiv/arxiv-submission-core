@@ -1,0 +1,352 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>arxiv.submission.tests.classic.test_classic_integration module &#8212; arXiv submission &amp; moderation 0.1 documentation</title>
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="arxiv.submission.tests.examples package" href="arxiv.submission.tests.examples.html" />
+    <link rel="prev" title="arxiv.submission.tests.classic package" href="arxiv.submission.tests.classic.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="module-arxiv.submission.tests.classic.test_classic_integration">
+<span id="arxiv-submission-tests-classic-test-classic-integration-module"></span><h1>arxiv.submission.tests.classic.test_classic_integration module<a class="headerlink" href="#module-arxiv.submission.tests.classic.test_classic_integration" title="Permalink to this headline">¶</a></h1>
+<p>Tests for integration with the classic system.</p>
+<p>Provides test cases for the new events model’s ability to replicate the classic
+model. The function <cite>TestClassicUIWorkflow.test_classic_workflow()</cite> provides
+keyword arguments to pass different types of data through the workflow.</p>
+<p>TODO: Presently, <cite>test_classic_workflow</cite> expects <cite>core.domain</cite> objects. That
+should change to instantiate each object at runtime for database imports.</p>
+<dl class="class">
+<dt id="arxiv.submission.tests.classic.test_classic_integration.TestClassicUIWorkflow">
+<em class="property">class </em><code class="descclassname">arxiv.submission.tests.classic.test_classic_integration.</code><code class="descname">TestClassicUIWorkflow</code><span class="sig-paren">(</span><em>methodName='runTest'</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/tests/classic/test_classic_integration.html#TestClassicUIWorkflow"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.tests.classic.test_classic_integration.TestClassicUIWorkflow" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">unittest.case.TestCase</span></code></p>
+<p>Replicate the classic submission UI workflow.</p>
+<dl class="method">
+<dt id="arxiv.submission.tests.classic.test_classic_integration.TestClassicUIWorkflow.setUp">
+<code class="descname">setUp</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/tests/classic/test_classic_integration.html#TestClassicUIWorkflow.setUp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.tests.classic.test_classic_integration.TestClassicUIWorkflow.setUp" title="Permalink to this definition">¶</a></dt>
+<dd><p>An arXiv user is submitting a new paper.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.tests.classic.test_classic_integration.TestClassicUIWorkflow.test_classic_workflow">
+<code class="descname">test_classic_workflow</code><span class="sig-paren">(</span><em>submitter=None</em>, <em>metadata=None</em>, <em>authors=None</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/tests/classic/test_classic_integration.html#TestClassicUIWorkflow.test_classic_workflow"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.tests.classic.test_classic_integration.TestClassicUIWorkflow.test_classic_workflow" title="Permalink to this definition">¶</a></dt>
+<dd><p>Submitter proceeds through workflow in a linear fashion.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.tests.classic.test_classic_integration.TestClassicUIWorkflow.test_texism_titles">
+<code class="descname">test_texism_titles</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/tests/classic/test_classic_integration.html#TestClassicUIWorkflow.test_texism_titles"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.tests.classic.test_classic_integration.TestClassicUIWorkflow.test_texism_titles" title="Permalink to this definition">¶</a></dt>
+<dd><p>Submitter proceeds through workflow in a linear fashion.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.tests.classic.test_classic_integration.TestClassicUIWorkflow.test_unicode_submitter">
+<code class="descname">test_unicode_submitter</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/tests/classic/test_classic_integration.html#TestClassicUIWorkflow.test_unicode_submitter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.tests.classic.test_classic_integration.TestClassicUIWorkflow.test_unicode_submitter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Submitter proceeds through workflow in a linear fashion.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.submission.tests.classic.test_classic_integration.TestJREFIntegration">
+<em class="property">class </em><code class="descclassname">arxiv.submission.tests.classic.test_classic_integration.</code><code class="descname">TestJREFIntegration</code><span class="sig-paren">(</span><em>methodName='runTest'</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/tests/classic/test_classic_integration.html#TestJREFIntegration"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.tests.classic.test_classic_integration.TestJREFIntegration" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">unittest.case.TestCase</span></code></p>
+<p>Test integration with the classic database with JREF submissions.</p>
+<dl class="method">
+<dt id="arxiv.submission.tests.classic.test_classic_integration.TestJREFIntegration.setUp">
+<code class="descname">setUp</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/tests/classic/test_classic_integration.html#TestJREFIntegration.setUp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.tests.classic.test_classic_integration.TestJREFIntegration.setUp" title="Permalink to this definition">¶</a></dt>
+<dd><p>An arXiv user is submitting a new paper.</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="arxiv.submission.tests.classic.test_classic_integration.TestJREFIntegration.setUpClass">
+<em class="property">classmethod </em><code class="descname">setUpClass</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/tests/classic/test_classic_integration.html#TestJREFIntegration.setUpClass"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.tests.classic.test_classic_integration.TestJREFIntegration.setUpClass" title="Permalink to this definition">¶</a></dt>
+<dd><p>Instantiate an app for use with a SQLite database.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.tests.classic.test_classic_integration.TestJREFIntegration.tearDown">
+<code class="descname">tearDown</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/tests/classic/test_classic_integration.html#TestJREFIntegration.tearDown"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.tests.classic.test_classic_integration.TestJREFIntegration.tearDown" title="Permalink to this definition">¶</a></dt>
+<dd><p>Clear the database after each test.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.tests.classic.test_classic_integration.TestJREFIntegration.test_jref">
+<code class="descname">test_jref</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/tests/classic/test_classic_integration.html#TestJREFIntegration.test_jref"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.tests.classic.test_classic_integration.TestJREFIntegration.test_jref" title="Permalink to this definition">¶</a></dt>
+<dd><p>User has started a JREF submission.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.submission.tests.classic.test_classic_integration.TestPublicationIntegration">
+<em class="property">class </em><code class="descclassname">arxiv.submission.tests.classic.test_classic_integration.</code><code class="descname">TestPublicationIntegration</code><span class="sig-paren">(</span><em>methodName='runTest'</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/tests/classic/test_classic_integration.html#TestPublicationIntegration"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.tests.classic.test_classic_integration.TestPublicationIntegration" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">unittest.case.TestCase</span></code></p>
+<p>Test integration with the classic database concerning publication.</p>
+<p>Since the publication process continues to run outside of the event model
+in the short term, we need to be certain that publication-related changes
+are represented accurately in this project.</p>
+<dl class="method">
+<dt id="arxiv.submission.tests.classic.test_classic_integration.TestPublicationIntegration.setUp">
+<code class="descname">setUp</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/tests/classic/test_classic_integration.html#TestPublicationIntegration.setUp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.tests.classic.test_classic_integration.TestPublicationIntegration.setUp" title="Permalink to this definition">¶</a></dt>
+<dd><p>An arXiv user is submitting a new paper.</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="arxiv.submission.tests.classic.test_classic_integration.TestPublicationIntegration.setUpClass">
+<em class="property">classmethod </em><code class="descname">setUpClass</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/tests/classic/test_classic_integration.html#TestPublicationIntegration.setUpClass"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.tests.classic.test_classic_integration.TestPublicationIntegration.setUpClass" title="Permalink to this definition">¶</a></dt>
+<dd><p>Instantiate an app for use with a SQLite database.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.tests.classic.test_classic_integration.TestPublicationIntegration.tearDown">
+<code class="descname">tearDown</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/tests/classic/test_classic_integration.html#TestPublicationIntegration.tearDown"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.tests.classic.test_classic_integration.TestPublicationIntegration.tearDown" title="Permalink to this definition">¶</a></dt>
+<dd><p>Clear the database after each test.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.tests.classic.test_classic_integration.TestPublicationIntegration.test_deleted">
+<code class="descname">test_deleted</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/tests/classic/test_classic_integration.html#TestPublicationIntegration.test_deleted"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.tests.classic.test_classic_integration.TestPublicationIntegration.test_deleted" title="Permalink to this definition">¶</a></dt>
+<dd><p>The submission was deleted by the classic system.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.tests.classic.test_classic_integration.TestPublicationIntegration.test_deleted_in_ng">
+<code class="descname">test_deleted_in_ng</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/tests/classic/test_classic_integration.html#TestPublicationIntegration.test_deleted_in_ng"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.tests.classic.test_classic_integration.TestPublicationIntegration.test_deleted_in_ng" title="Permalink to this definition">¶</a></dt>
+<dd><p>The submission was deleted in this package.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.tests.classic.test_classic_integration.TestPublicationIntegration.test_publication_failed">
+<code class="descname">test_publication_failed</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/tests/classic/test_classic_integration.html#TestPublicationIntegration.test_publication_failed"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.tests.classic.test_classic_integration.TestPublicationIntegration.test_publication_failed" title="Permalink to this definition">¶</a></dt>
+<dd><p>The submission was not published successfully.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.tests.classic.test_classic_integration.TestPublicationIntegration.test_publication_status_is_reflected">
+<code class="descname">test_publication_status_is_reflected</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/tests/classic/test_classic_integration.html#TestPublicationIntegration.test_publication_status_is_reflected"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.tests.classic.test_classic_integration.TestPublicationIntegration.test_publication_status_is_reflected" title="Permalink to this definition">¶</a></dt>
+<dd><p>The submission has been published/announced.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.tests.classic.test_classic_integration.TestPublicationIntegration.test_publication_status_is_reflected_after_files_expire">
+<code class="descname">test_publication_status_is_reflected_after_files_expire</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/tests/classic/test_classic_integration.html#TestPublicationIntegration.test_publication_status_is_reflected_after_files_expire"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.tests.classic.test_classic_integration.TestPublicationIntegration.test_publication_status_is_reflected_after_files_expire" title="Permalink to this definition">¶</a></dt>
+<dd><p>The submission has been published/announced, and files expired.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.tests.classic.test_classic_integration.TestPublicationIntegration.test_scheduled_status_is_reflected">
+<code class="descname">test_scheduled_status_is_reflected</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/tests/classic/test_classic_integration.html#TestPublicationIntegration.test_scheduled_status_is_reflected"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.tests.classic.test_classic_integration.TestPublicationIntegration.test_scheduled_status_is_reflected" title="Permalink to this definition">¶</a></dt>
+<dd><p>The submission has been scheduled for publication today.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.tests.classic.test_classic_integration.TestPublicationIntegration.test_scheduled_status_is_reflected_prior_to_announcement">
+<code class="descname">test_scheduled_status_is_reflected_prior_to_announcement</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/tests/classic/test_classic_integration.html#TestPublicationIntegration.test_scheduled_status_is_reflected_prior_to_announcement"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.tests.classic.test_classic_integration.TestPublicationIntegration.test_scheduled_status_is_reflected_prior_to_announcement" title="Permalink to this definition">¶</a></dt>
+<dd><p>The submission is being published; not yet announced.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.tests.classic.test_classic_integration.TestPublicationIntegration.test_scheduled_status_is_reflected_processing_submission">
+<code class="descname">test_scheduled_status_is_reflected_processing_submission</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/tests/classic/test_classic_integration.html#TestPublicationIntegration.test_scheduled_status_is_reflected_processing_submission"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.tests.classic.test_classic_integration.TestPublicationIntegration.test_scheduled_status_is_reflected_processing_submission" title="Permalink to this definition">¶</a></dt>
+<dd><p>The submission has been scheduled for publication today.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.tests.classic.test_classic_integration.TestPublicationIntegration.test_scheduled_tomorrow_status_is_reflected">
+<code class="descname">test_scheduled_tomorrow_status_is_reflected</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/tests/classic/test_classic_integration.html#TestPublicationIntegration.test_scheduled_tomorrow_status_is_reflected"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.tests.classic.test_classic_integration.TestPublicationIntegration.test_scheduled_tomorrow_status_is_reflected" title="Permalink to this definition">¶</a></dt>
+<dd><p>The submission has been scheduled for publication tomorrow.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.submission.tests.classic.test_classic_integration.TestReplacementIntegration">
+<em class="property">class </em><code class="descclassname">arxiv.submission.tests.classic.test_classic_integration.</code><code class="descname">TestReplacementIntegration</code><span class="sig-paren">(</span><em>methodName='runTest'</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/tests/classic/test_classic_integration.html#TestReplacementIntegration"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.tests.classic.test_classic_integration.TestReplacementIntegration" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">unittest.case.TestCase</span></code></p>
+<p>Test integration with the classic database with replacements.</p>
+<dl class="method">
+<dt id="arxiv.submission.tests.classic.test_classic_integration.TestReplacementIntegration.setUp">
+<code class="descname">setUp</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/tests/classic/test_classic_integration.html#TestReplacementIntegration.setUp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.tests.classic.test_classic_integration.TestReplacementIntegration.setUp" title="Permalink to this definition">¶</a></dt>
+<dd><p>An arXiv user is submitting a new paper.</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="arxiv.submission.tests.classic.test_classic_integration.TestReplacementIntegration.setUpClass">
+<em class="property">classmethod </em><code class="descname">setUpClass</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/tests/classic/test_classic_integration.html#TestReplacementIntegration.setUpClass"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.tests.classic.test_classic_integration.TestReplacementIntegration.setUpClass" title="Permalink to this definition">¶</a></dt>
+<dd><p>Instantiate an app for use with a SQLite database.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.tests.classic.test_classic_integration.TestReplacementIntegration.tearDown">
+<code class="descname">tearDown</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/tests/classic/test_classic_integration.html#TestReplacementIntegration.tearDown"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.tests.classic.test_classic_integration.TestReplacementIntegration.tearDown" title="Permalink to this definition">¶</a></dt>
+<dd><p>Clear the database after each test.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.tests.classic.test_classic_integration.TestReplacementIntegration.test_replacement">
+<code class="descname">test_replacement</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/tests/classic/test_classic_integration.html#TestReplacementIntegration.test_replacement"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.tests.classic.test_classic_integration.TestReplacementIntegration.test_replacement" title="Permalink to this definition">¶</a></dt>
+<dd><p>User has started a replacement submission.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.submission.tests.classic.test_classic_integration.TestWithdrawalIntegration">
+<em class="property">class </em><code class="descclassname">arxiv.submission.tests.classic.test_classic_integration.</code><code class="descname">TestWithdrawalIntegration</code><span class="sig-paren">(</span><em>methodName='runTest'</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/tests/classic/test_classic_integration.html#TestWithdrawalIntegration"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.tests.classic.test_classic_integration.TestWithdrawalIntegration" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">unittest.case.TestCase</span></code></p>
+<p>Test integration with the classic database concerning withdrawals.</p>
+<p>The <a class="reference internal" href="arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.Submission" title="arxiv.submission.domain.submission.Submission"><code class="xref py py-class docutils literal notranslate"><span class="pre">domain.submission.Submission</span></code></a> representation has only two
+statuses: <code class="xref py py-attr docutils literal notranslate"><span class="pre">domain.submission.WITHDRAWAL_REQUESTED</span></code> and
+<code class="xref py py-attr docutils literal notranslate"><span class="pre">domain.submission.WITHDRAWN</span></code>. Like other post-publish operations,
+we are simply adding events to the single stream for the original
+submission ID. This screens off details that are due to the underlying
+implementation, and focuses on how humans are actually interacting with
+withdrawals.</p>
+<p>On the classic side, we create a new row in the submission table for a
+withdrawal request, and it passes through the same states as a regular
+submission.</p>
+<dl class="method">
+<dt id="arxiv.submission.tests.classic.test_classic_integration.TestWithdrawalIntegration.setUp">
+<code class="descname">setUp</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/tests/classic/test_classic_integration.html#TestWithdrawalIntegration.setUp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.tests.classic.test_classic_integration.TestWithdrawalIntegration.setUp" title="Permalink to this definition">¶</a></dt>
+<dd><p>An arXiv user is submitting a new paper.</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="arxiv.submission.tests.classic.test_classic_integration.TestWithdrawalIntegration.setUpClass">
+<em class="property">classmethod </em><code class="descname">setUpClass</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/tests/classic/test_classic_integration.html#TestWithdrawalIntegration.setUpClass"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.tests.classic.test_classic_integration.TestWithdrawalIntegration.setUpClass" title="Permalink to this definition">¶</a></dt>
+<dd><p>Instantiate an app for use with a SQLite database.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.tests.classic.test_classic_integration.TestWithdrawalIntegration.tearDown">
+<code class="descname">tearDown</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/tests/classic/test_classic_integration.html#TestWithdrawalIntegration.tearDown"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.tests.classic.test_classic_integration.TestWithdrawalIntegration.tearDown" title="Permalink to this definition">¶</a></dt>
+<dd><p>Clear the database after each test.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.tests.classic.test_classic_integration.TestWithdrawalIntegration.test_request_withdrawal">
+<code class="descname">test_request_withdrawal</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/tests/classic/test_classic_integration.html#TestWithdrawalIntegration.test_request_withdrawal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.tests.classic.test_classic_integration.TestWithdrawalIntegration.test_request_withdrawal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Request a withdrawal.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">arXiv submission & moderation</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../architecture.html">Submission &amp; moderation subsystem architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../announcement_process.html">Submission &amp; announcement Process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../submission_api_context.html">Submission API: Context</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="arxiv.submission.html">arxiv.submission package</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="arxiv.submission.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.submission.html#using-commands-events">Using commands/events</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.submission.html#integration-with-the-legacy-system">Integration with the legacy system</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="arxiv.submission.html#subpackages">Subpackages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.submission.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../metadata/metadata.html">metadata package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../background.html">Background</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="arxiv.submission.html">arxiv.submission package</a><ul>
+  <li><a href="arxiv.submission.tests.html">arxiv.submission.tests package</a><ul>
+  <li><a href="arxiv.submission.tests.classic.html">arxiv.submission.tests.classic package</a><ul>
+      <li>Previous: <a href="arxiv.submission.tests.classic.html" title="previous chapter">arxiv.submission.tests.classic package</a></li>
+      <li>Next: <a href="arxiv.submission.tests.examples.html" title="next chapter">arxiv.submission.tests.examples package</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, arXiv.org.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.3</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../../_sources/containers/core/arxiv.submission.tests.classic.test_classic_integration.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
