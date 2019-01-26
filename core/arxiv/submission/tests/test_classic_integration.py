@@ -410,7 +410,7 @@ class TestReplacementIntegration(TestCase):
         self.assertTrue(submission_to_replace.published)
         self.assertFalse(replacement.published)
 
-        self.assertEqual(len(replacement.compiled_content), 0)
+        self.assertEqual(len(replacement.compilations), 0)
         self.assertIsNone(replacement.source_content)
 
         self.assertFalse(replacement.submitter_contact_verified)

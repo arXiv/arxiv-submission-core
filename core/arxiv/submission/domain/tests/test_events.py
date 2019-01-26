@@ -34,7 +34,7 @@ class TestWithdrawalSubmission(TestCase):
                 checksum='asdf2345',
                 size=594930
             ),
-            compiled_content=[],
+            compilations=[],
             primary_classification=meta.Classification('astro-ph.GA'),
             secondary_classification=[meta.Classification('astro-ph.CO')],
             license=meta.License(uri='http://free', name='free'),
@@ -102,7 +102,7 @@ class TestReplacementSubmission(TestCase):
                 checksum='asdf2345',
                 size=594930
             ),
-            compiled_content=[],
+            compilations=[],
             primary_classification=meta.Classification('astro-ph.GA'),
             secondary_classification=[meta.Classification('astro-ph.CO')],
             license=meta.License(uri='http://free', name='free'),
@@ -131,7 +131,7 @@ class TestReplacementSubmission(TestCase):
         self.assertTrue(self.submission.published)
         self.assertFalse(replacement.published)
 
-        self.assertEqual(len(replacement.compiled_content), 0)
+        self.assertEqual(len(replacement.compilations), 0)
         self.assertIsNone(replacement.source_content)
 
         # The user is asked to reaffirm these points.
@@ -182,7 +182,7 @@ class TestDOIorJREFAfterPublish(TestCase):
                 checksum='asdf2345',
                 size=594930
             ),
-            compiled_content=[],
+            compilations=[],
             primary_classification=meta.Classification('astro-ph.GA'),
             secondary_classification=[meta.Classification('astro-ph.CO')],
             license=meta.License(uri='http://free', name='free'),
