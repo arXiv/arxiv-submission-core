@@ -21,11 +21,13 @@ is defined in :mod:`.classic.event`.
 
 """
 
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Set
 from datetime import datetime
 from pytz import UTC
 from itertools import groupby
 import copy
+from functools import reduce
+from operator import ior
 
 from sqlalchemy import or_
 
@@ -33,22 +35,23 @@ from arxiv.base import logging
 from arxiv.base.globals import get_application_config, get_application_global
 from ...domain.event import Event, Publish, RequestWithdrawal, SetDOI, \
     SetJournalReference, SetReportNumber, Rollback, RequestCrossList, \
-    ApplyRequest, RejectRequest, ApproveRequest
+    ApplyRequest, RejectRequest, ApproveRequest, AddProposal
 
 from ...domain.submission import License, Submission, WithdrawalRequest, \
     CrossListClassificationRequest
+from ...domain.agent import Agent, User
 from .models import Base
 from .exceptions import ClassicBaseException, NoSuchSubmission, CommitFailed
 from .util import transaction, current_session
 from .event import DBEvent
-from . import models, util, interpolate
+from . import models, util, interpolate, log, proposal
 
 
 logger = logging.getLogger(__name__)
 
 
 def get_licenses() -> List[License]:
-    """Get a list of :class:`.License`s available for new submissions."""
+    """Get a list of :class:`.domain.License` instances available."""
     license_data = util.current_session().query(models.License) \
         .filter(models.License.active == '1')
     return [License(uri=row.name, name=row.label) for row in license_data]
@@ -69,7 +72,7 @@ def get_events(submission_id: int) -> List[Event]:
 
     Raises
     ------
-    :class:`.NoSuchSubmission`
+    :class:`.classic.exceptions.NoSuchSubmission`
         Raised when there are no events for the provided submission ID.
 
     """
@@ -96,7 +99,7 @@ def get_user_submissions_fast(user_id: int) -> List[Submission]:
     Returns
     -------
     list
-        Items are the user's :class:`.Submission` instances.
+        Items are the user's :class:`.domain.Submission` instances.
 
     """
     with transaction() as session:
@@ -133,11 +136,11 @@ def get_submission_fast(submission_id: int) -> List[Submission]:
 
     Returns
     -------
-    :class:`.Submission`
+    :class:`.domain.Submission`
 
     Raises
     ------
-    :class:`.NoSuchSubmission`
+    :class:`.classic.exceptions.NoSuchSubmission`
         Raised when there are is no submission for the provided submission ID.
 
     """
@@ -163,7 +166,7 @@ def _get_db_submission_rows(submission_id: int) -> List[models.Submission]:
 
 def get_submission(submission_id: int) -> Tuple[Submission, List[Event]]:
     """
-    Get the current state of a :class:`.Submission` from the database.
+    Get the current state of a :class:`.domain.Submission` from the database.
 
     In the medium term, services that use this package will need to
     play well with legacy services that integrate with the classic
@@ -183,7 +186,7 @@ def get_submission(submission_id: int) -> Tuple[Submission, List[Event]]:
 
     Returns
     -------
-    :class:`.Submission`
+    :class:`.domain.Submission`
     list
         Items are :class:`Event` instances.
 
@@ -309,6 +312,10 @@ def store_event(event: Event, before: Optional[Submission],
     session.add(dbs)
     session.add(db_event)
 
+    log.handle(event, before, after)   # Create admin log entry, if applicable.
+    if isinstance(event, AddProposal):
+        proposal.add(event, before, after)
+
     # Attach the database object for the event to the row for the submission.
     if this_is_a_new_submission:    # Update in transaction.
         db_event.submission = dbs
@@ -335,6 +342,36 @@ def store_event(event: Event, before: Optional[Submission],
     return event, after
 
 
+def get_titles(since: datetime) -> List[Tuple[int, str, Agent]]:
+    """Get titles from submissions created on or after a particular date."""
+    # TODO: consider making this a param, if we need this function for anything
+    # else.
+    STATUSES_TO_CHECK = [
+        models.Submission.SUBMITTED,
+        models.Submission.ON_HOLD,
+        models.Submission.NEXT_PUBLISH_DAY,
+        models.Submission.REMOVED,
+        models.Submission.USER_DELETED,
+        models.Submission.DELETED_ON_HOLD,
+        models.Submission.DELETED_PROCESSING,
+        models.Submission.DELETED_REMOVED,
+        models.Submission.DELETED_USER_EXPIRED
+    ]
+    with transaction() as session:
+        q = session.query(
+            models.Submission.submission_id,
+            models.Submission.title,
+            models.Submission.submitter_id,
+            models.Submission.submitter_email
+        )
+        q = q.filter(models.Submission.status.in_(STATUSES_TO_CHECK))
+        q = q.filter(models.Submission.created >= since)
+        return [
+            (submission_id, title, User(native_id=user_id, email=user_email))
+            for submission_id, title, user_id, user_email in q.all()
+        ]
+
+
 def init_app(app: object = None) -> None:
     """Set default configuration parameters for an application instance."""
     config = get_application_config(app)
@@ -349,6 +386,9 @@ def create_all() -> None:
 def drop_all() -> None:
     """Drop all tables in the database."""
     Base.metadata.drop_all(util.current_engine())
+
+
+# Private functions down here.
 
 
 def _load_submission(submission_id: Optional[int] = None,
@@ -477,6 +517,7 @@ def _create_jref(document_id: int, paper_id: str, version: int,
 
 def _new_dbevent(event: Event) -> DBEvent:
     """Create an event entry in the database."""
+    # print(event.to_dict())
     return DBEvent(event_type=event.event_type,
                    event_id=event.event_id,
                    data=event.to_dict(),
@@ -541,3 +582,20 @@ def _db_to_projection(dbss: List[models.Submission]) -> Submission:
     if submission.published:
         submission.versions.insert(0, copy.deepcopy(submission))
     return submission
+
+
+def _get_db_submission_rows(submission_id: int) -> List[models.Submission]:
+    with transaction() as session:
+        head = session.query(models.Submission.submission_id,
+                             models.Submission.doc_paper_id) \
+            .filter_by(submission_id=submission_id) \
+            .subquery()
+        dbss = list(
+            session.query(models.Submission)
+            .filter(or_(models.Submission.submission_id == submission_id,
+                        models.Submission.doc_paper_id == head.c.doc_paper_id))
+            .order_by(models.Submission.submission_id.desc())
+        )
+    if not dbss:
+        raise NoSuchSubmission('No submission found')
+    return dbss

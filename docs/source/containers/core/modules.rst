@@ -1,7 +1,7 @@
-events
-======
+arxiv
+=====
 
 .. toctree::
    :maxdepth: 4
 
-   events
+   arxiv.submission

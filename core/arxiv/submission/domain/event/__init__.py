@@ -18,7 +18,7 @@ It should:
   ``validate(self, submission: Submission) -> None`` (see below).
 - Implement a projection method with the signature
   ``project(self, submission: Submission) -> Submission:`` that mutates
-  the passed :class:`.Submission` instance.
+  the passed :class:`.domain.Submission` instance.
 - Be fully documented. Be sure that the class docstring fully describes the
   meaning of the event/command, and that both public and private methods have
   at least a summary docstring.
@@ -44,6 +44,60 @@ We could consider standalone validation functions for validation checks that
 are performed on several event types (instead of just private instance
 methods).
 
+Registering event callbacks
+===========================
+
+The base :class:`Event` provides support for callbacks that are executed when
+an event instance is committed. To attach a callback to an event type, use the
+:func:`Event.bind` decorator. For example:
+
+.. code-block:: python
+
+   @SetTitle.bind()
+   def do_this_when_a_title_is_set(event, before, after, agent):
+       ...
+       return []
+
+
+Callbacks must have the signature ``(event: Event, before: Submission,
+after: Submission, creator: Agent) -> Iterable[Event]``. ``event`` is the
+event instance being committed that triggered the callback. ``before`` and
+``after`` are the states of the submission before and after the event was
+applied, respectively. ``agent`` is the agent responsible for any subsequent
+events created by the callback, and should be used for that purpose.
+
+The callback should not concern itself with persistence; that is handled by
+:func:`Event.commit`. Any mutations of submission should be made by returning
+the appropriate command/event instances.
+
+The circumstances under which the callback is executed can be controlled by
+passing a condition callable to the decorator. This should have the signature
+``(event: Event, before: Submission, after: Submission, creator: Agent) ->
+bool``; if it returns ``True``, the  callback will be executed. For example:
+
+.. code-block:: python
+
+   @SetTitle.bind(condition=lambda e, b, a, c: e.title == 'foo')
+   def do_this_when_a_title_is_set_to_foo(event, before, after, agent):
+       ...
+       return []
+
+
+When do things actually happen?
+-------------------------------
+Callbacks are triggered when the :func:`.commit` method is called,
+usually by :func:`.core.save`. Normally, any event instances returned
+by the callback are applied and committed right away, in order. If the
+callback is asynchronous (see :func:`.tasks.is_async`), it will be
+executed whenever the :mod:`.worker` gets around to it, and any events
+it returns will be applied and stored in order at that time.
+
+Note that setting :mod:`.config.ENABLE_ASYNC=0` will cause async tasks
+to be executed in the current thread.
+
+Setting :mod:`.config.ENABLE_CALLBACKS=0` will disable callbacks
+entirely.
+
 """
 
 import hashlib
@@ -51,19 +105,22 @@ import re
 import copy
 from datetime import datetime
 from pytz import UTC
-from typing import Optional, TypeVar, List, Tuple, Any, Dict
+from typing import Optional, TypeVar, List, Tuple, Any, Dict, Union
 from urllib.parse import urlparse
-from dataclasses import dataclass, field, asdict
+from dataclasses import field, asdict
+from .util import dataclass
 import bleach
 
 from arxiv.util import schema
 from arxiv import taxonomy, identifier
 from arxiv.base import logging
 
-from ..agent import Agent
+from ..agent import Agent, System
 from ..submission import Submission, SubmissionMetadata, Author, \
-    Classification, License, Delegation, Comment, Flag, Proposal, \
+    Classification, License, Delegation,  \
     SubmissionContent, WithdrawalRequest, CrossListClassificationRequest
+from ..annotation import Comment, Feature, ClassifierResults, \
+    ClassifierResult
 
 from ...exceptions import InvalidEvent
 from ..util import get_tzaware_utc_now
@@ -71,6 +128,10 @@ from .event import Event
 from .request import RequestCrossList, RequestWithdrawal, ApplyRequest, \
     RejectRequest, ApproveRequest
 from . import validators
+from .proposal import AddProposal, RejectProposal, AcceptProposal
+from .flag import AddMetadataFlag, AddUserFlag, AddContentFlag, RemoveFlag, \
+    AddHold
+from .process import AddProcessStatus
 
 logger = logging.getLogger(__name__)
 
@@ -80,23 +141,19 @@ logger = logging.getLogger(__name__)
 # These are largely the domain of the metadata API, and the submission UI.
 
 
-@dataclass
+@dataclass()
 class CreateSubmission(Event):
-    """Creation of a new :class:`.Submission`."""
+    """Creation of a new :class:`.domain.Submission`."""
 
     NAME = "create submission"
     NAMED = "submission created"
-
-    def __hash__(self):
-        """Use event ID as object hash."""
-        return hash(self.event_id)
 
     def validate(self, *args, **kwargs) -> None:
         """Validate creation of a submission."""
         return
 
     def project(self, submission: None = None) -> Submission:
-        """Create a new :class:`.Submission`."""
+        """Create a new :class:`.domain.Submission`."""
         return Submission(creator=self.creator, created=self.created,
                           owner=self.creator, proxy=self.proxy,
                           client=self.client)
@@ -123,10 +180,6 @@ class CreateSubmissionVersion(Event):
 
     NAME = "create a new version"
     NAMED = "new version created"
-
-    def __hash__(self):
-        """Use event ID as object hash."""
-        return hash(self.event_id)
 
     def validate(self, submission: Submission) -> None:
         """Only applies to published submissions."""
@@ -159,10 +212,6 @@ class Rollback(Event):
 
     NAME = "roll back or delete"
     NAMED = "rolled back or deleted"
-
-    def __hash__(self):
-        """Use event ID as object hash."""
-        return hash(self.event_id)
 
     def validate(self, submission: Submission) -> None:
         """Only applies to submissions in an unpublished state."""
@@ -200,30 +249,22 @@ class ConfirmContactInformation(Event):
     NAME = "confirm contact information"
     NAMED = "contact information confirmed"
 
-    def __hash__(self):
-        """Use event ID as object hash."""
-        return hash(self.event_id)
-
     def validate(self, submission: Submission) -> None:
         """Cannot apply to a finalized submission."""
         validators.submission_is_not_finalized(self, submission)
 
     def project(self, submission: Submission) -> Submission:
-        """Update :prop:`.Submission.submitter_contact_verified`."""
+        """Update :attr:`.Submission.submitter_contact_verified`."""
         submission.submitter_contact_verified = True
         return submission
 
 
-@dataclass
+@dataclass()
 class ConfirmAuthorship(Event):
     """The submitting user asserts whether they are an author of the paper."""
 
     NAME = "confirm that submitter is an author"
     NAMED = "submitter authorship status confirmed"
-
-    def __hash__(self):
-        """Use event ID as object hash."""
-        return hash(self.event_id)
 
     submitter_is_author: bool = True
 
@@ -244,10 +285,6 @@ class ConfirmPolicy(Event):
     NAME = "confirm policy acceptance"
     NAMED = "policy acceptance confirmed"
 
-    def __hash__(self):
-        """Use event ID as object hash."""
-        return hash(self.event_id)
-
     def validate(self, submission: Submission) -> None:
         """Cannot apply to a finalized submission."""
         validators.submission_is_not_finalized(self, submission)
@@ -258,18 +295,14 @@ class ConfirmPolicy(Event):
         return submission
 
 
-@dataclass
+@dataclass()
 class SetPrimaryClassification(Event):
     """Update the primary classification of a submission."""
 
     NAME = "set primary classification"
     NAMED = "primary classification set"
 
-    def __hash__(self):
-        """Use event ID as object hash."""
-        return hash(self.event_id)
-
-    category: Optional[str] = None
+    category: Optional[taxonomy.Category] = None
 
     def validate(self, submission: Submission) -> None:
         """Validate the primary classification category."""
@@ -287,6 +320,8 @@ class SetPrimaryClassification(Event):
 
     def _creator_must_be_endorsed(self, submission: Submission) -> None:
         """The creator of this event must be endorsed for the category."""
+        if isinstance(self.creator, System):
+            return
         try:
             archive,  = self.category.split('.', 1)
         except ValueError:
@@ -298,24 +333,20 @@ class SetPrimaryClassification(Event):
                                      f" {self.category}.")
 
     def project(self, submission: Submission) -> Submission:
-        """Set :prop:`.Submission.primary_classification`."""
+        """Set :attr:`.domain.Submission.primary_classification`."""
         clsn = Classification(category=self.category)
         submission.primary_classification = clsn
         return submission
 
 
-@dataclass
+@dataclass()
 class AddSecondaryClassification(Event):
     """Add a secondary :class:`.Classification` to a submission."""
 
     NAME = "add cross-list classification"
     NAMED = "cross-list classification added"
 
-    def __hash__(self):
-        """Use event ID as object hash."""
-        return hash(self.event_id)
-
-    category: Optional[str] = field(default=None)
+    category: Optional[taxonomy.Category] = field(default=None)
 
     def validate(self, submission: Submission) -> None:
         """Validate the secondary classification category to add."""
@@ -331,16 +362,12 @@ class AddSecondaryClassification(Event):
         return submission
 
 
-@dataclass
+@dataclass()
 class RemoveSecondaryClassification(Event):
     """Remove secondary :class:`.Classification` from submission."""
 
     NAME = "remove cross-list classification"
     NAMED = "cross-list classification removed"
-
-    def __hash__(self):
-        """Use event ID as object hash."""
-        return hash(self.event_id)
 
     category: Optional[str] = field(default=None)
 
@@ -351,7 +378,7 @@ class RemoveSecondaryClassification(Event):
         validators.submission_is_not_finalized(self, submission)
 
     def project(self, submission: Submission) -> Submission:
-        """Remove from :prop:`.Submission.secondary_classification`."""
+        """Remove from :attr:`.Submission.secondary_classification`."""
         submission.secondary_classification = [
             classn for classn in submission.secondary_classification
             if not classn.category == self.category
@@ -364,16 +391,12 @@ class RemoveSecondaryClassification(Event):
             raise InvalidEvent(self, 'No such category on submission')
 
 
-@dataclass
+@dataclass()
 class SetLicense(Event):
     """The submitter has selected a license for their submission."""
 
     NAME = "select distribution license"
     NAMED = "distribution license selected"
-
-    def __hash__(self):
-        """Use event ID as object hash."""
-        return hash(self.event_id)
 
     license_name: Optional[str] = field(default=None)
     license_uri: Optional[str] = field(default=None)
@@ -383,7 +406,7 @@ class SetLicense(Event):
         validators.submission_is_not_finalized(self, submission)
 
     def project(self, submission: Submission) -> Submission:
-        """Set :prop:`.Submission.license`."""
+        """Set :attr:`.domain.Submission.license`."""
         submission.license = License(
             name=self.license_name,
             uri=self.license_uri
@@ -391,16 +414,12 @@ class SetLicense(Event):
         return submission
 
 
-@dataclass
+@dataclass()
 class SetTitle(Event):
     """Update the title of a submission."""
 
     NAME = "update title"
     NAMED = "title updated"
-
-    def __hash__(self):
-        """Use event ID as object hash."""
-        return hash(self.event_id)
 
     title: str = field(default='')
 
@@ -423,7 +442,7 @@ class SetTitle(Event):
         self._check_for_html(submission)
 
     def project(self, submission: Submission) -> Submission:
-        """Update the title on a :class:`.Submission`."""
+        """Update the title on a :class:`.domain.Submission`."""
         submission.metadata.title = self.title
         return submission
 
@@ -455,16 +474,12 @@ class SetTitle(Event):
         return value
 
 
-@dataclass
+@dataclass()
 class SetAbstract(Event):
     """Update the abstract of a submission."""
 
     NAME = "update abstract"
     NAMED = "abstract updated"
-
-    def __hash__(self):
-        """Use event ID as object hash."""
-        return hash(self.event_id)
 
     abstract: str = field(default='')
 
@@ -481,7 +496,7 @@ class SetAbstract(Event):
         self._acceptable_length(submission)
 
     def project(self, submission: Submission) -> Submission:
-        """Update the abstract on a :class:`.Submission`."""
+        """Update the abstract on a :class:`.domain.Submission`."""
         submission.metadata.abstract = self.abstract
         return submission
 
@@ -514,16 +529,12 @@ class SetAbstract(Event):
         return value
 
 
-@dataclass
+@dataclass()
 class SetDOI(Event):
     """Update the external DOI of a submission."""
 
     NAME = "add a DOI"
     NAMED = "DOI added"
-
-    def __hash__(self):
-        """Use event ID as object hash."""
-        return hash(self.event_id)
 
     doi: str = field(default='')
 
@@ -543,7 +554,7 @@ class SetDOI(Event):
                 raise InvalidEvent(self, f"Invalid DOI: {value}")
 
     def project(self, submission: Submission) -> Submission:
-        """Update the doi on a :class:`.Submission`."""
+        """Update the doi on a :class:`.domain.Submission`."""
         submission.metadata.doi = self.doi
         return submission
 
@@ -559,16 +570,12 @@ class SetDOI(Event):
         return value
 
 
-@dataclass
+@dataclass()
 class SetMSCClassification(Event):
     """Update the MSC classification codes of a submission."""
 
     NAME = "update MSC classification"
     NAMED = "MSC classification updated"
-
-    def __hash__(self):
-        """Use event ID as object hash."""
-        return hash(self.event_id)
 
     msc_class: str = field(default='')
 
@@ -585,7 +592,7 @@ class SetMSCClassification(Event):
             return
 
     def project(self, submission: Submission) -> Submission:
-        """Update the MSC classification on a :class:`.Submission`."""
+        """Update the MSC classification on a :class:`.domain.Submission`."""
         submission.metadata.msc_class = self.msc_class
         return submission
 
@@ -602,16 +609,12 @@ class SetMSCClassification(Event):
         return value
 
 
-@dataclass
+@dataclass()
 class SetACMClassification(Event):
     """Update the ACM classification codes of a submission."""
 
     NAME = "update ACM classification"
     NAMED = "ACM classification updated"
-
-    def __hash__(self):
-        """Use event ID as object hash."""
-        return hash(self.event_id)
 
     acm_class: str = field(default='')
     """E.g. F.2.2; I.2.7"""
@@ -630,7 +633,7 @@ class SetACMClassification(Event):
         self._valid_acm_class(submission)
 
     def project(self, submission: Submission) -> Submission:
-        """Update the ACM classification on a :class:`.Submission`."""
+        """Update the ACM classification on a :class:`.domain.Submission`."""
         submission.metadata.acm_class = self.acm_class
         return submission
 
@@ -658,16 +661,12 @@ class SetACMClassification(Event):
         return value
 
 
-@dataclass
+@dataclass()
 class SetJournalReference(Event):
     """Update the journal reference of a submission."""
 
     NAME = "add a journal reference"
     NAMED = "journal reference added"
-
-    def __hash__(self):
-        """Use event ID as object hash."""
-        return hash(self.event_id)
 
     journal_ref: str = field(default='')
 
@@ -683,7 +682,7 @@ class SetJournalReference(Event):
         self._contains_valid_year(submission)
 
     def project(self, submission: Submission) -> Submission:
-        """Update the journal reference on a :class:`.Submission`."""
+        """Update the journal reference on a :class:`.domain.Submission`."""
         submission.metadata.journal_ref = self.journal_ref
         return submission
 
@@ -710,16 +709,12 @@ class SetJournalReference(Event):
         return value
 
 
-@dataclass
+@dataclass()
 class SetReportNumber(Event):
     """Update the report number of a submission."""
 
     NAME = "update report number"
     NAMED = "report number updated"
-
-    def __hash__(self):
-        """Use event ID as object hash."""
-        return hash(self.event_id)
 
     report_num: str = field(default='')
 
@@ -736,7 +731,7 @@ class SetReportNumber(Event):
                                      " consecutive digits")
 
     def project(self, submission: Submission) -> Submission:
-        """Update the report number on a :class:`.Submission`."""
+        """Update the report number on a :class:`.domain.Submission`."""
         submission.metadata.report_num = self.report_num
         return submission
 
@@ -748,16 +743,12 @@ class SetReportNumber(Event):
         return value
 
 
-@dataclass
+@dataclass()
 class SetComments(Event):
     """Update the comments of a submission."""
 
     NAME = "update comments"
     NAMED = "comments updated"
-
-    def __hash__(self):
-        """Use event ID as object hash."""
-        return hash(self.event_id)
 
     comments: str = field(default='')
 
@@ -777,7 +768,7 @@ class SetComments(Event):
                                      f" {self.MAX_LENGTH} characters long")
 
     def project(self, submission: Submission) -> Submission:
-        """Update the comments on a :class:`.Submission`."""
+        """Update the comments on a :class:`.domain.Submission`."""
         submission.metadata.comments = self.comments
         return submission
 
@@ -789,16 +780,12 @@ class SetComments(Event):
         return value
 
 
-@dataclass
+@dataclass()
 class SetAuthors(Event):
-    """Update the authors on a :class:`.Submission`."""
+    """Update the authors on a :class:`.domain.Submission`."""
 
     NAME = "update authors"
     NAMED = "authors updated"
-
-    def __hash__(self):
-        """Use event ID as object hash."""
-        return hash(self.event_id)
 
     authors: List[Author] = field(default_factory=list)
     authors_display: Optional[str] = field(default=None)
@@ -839,7 +826,7 @@ class SetAuthors(Event):
             raise InvalidEvent(self, "Authors should not contain et al.")
 
     def project(self, submission: Submission) -> Submission:
-        """Replace :prop:`.Submission.metadata.authors`."""
+        """Replace :attr:`.Submission.metadata.authors`."""
         submission.metadata.authors = self.authors
         submission.metadata.authors_display = self.authors_display
         return submission
@@ -853,16 +840,12 @@ class SetAuthors(Event):
         return cls(**data)
 
 
-@dataclass
+@dataclass()
 class SetUploadPackage(Event):
     """Set the upload workspace for this submission."""
 
     NAME = "set the upload package"
     NAMED = "upload package set"
-
-    def __hash__(self):
-        """Use event ID as object hash."""
-        return hash(self.event_id)
 
     identifier: str = field(default_factory=str)
     format: str = field(default_factory=str)
@@ -895,7 +878,7 @@ class SetUploadPackage(Event):
         return submission
 
 
-@dataclass
+@dataclass()
 class UnsetUploadPackage(Event):
     """Unset the upload workspace for this submission."""
 
@@ -904,29 +887,25 @@ class UnsetUploadPackage(Event):
         validators.submission_is_not_finalized(self, submission)
 
     def project(self, submission: Submission) -> Submission:
-        """Set :prop:`Submission.source_content` to None."""
+        """Set :attr:`Submission.source_content` to None."""
         submission.source_content = None
         submission.submitter_confirmed_preview = False
         return submission
 
 
-@dataclass
+@dataclass()
 class ConfirmPreview(Event):
     """Confirm that the paper and abstract previews are acceptable."""
 
     NAME = "approve submission preview"
     NAMED = "submission preview approved"
 
-    def __hash__(self):
-        """Use event ID as object hash."""
-        return hash(self.event_id)
-
     def validate(self, submission: Submission) -> None:
         """Validate data for :class:`.ConfirmPreview`."""
         validators.submission_is_not_finalized(self, submission)
 
     def project(self, submission: Submission) -> Submission:
-        """Set :prop:`Submission.return submission`."""
+        """Set :attr:`Submission.return submission`."""
         submission.submitter_confirmed_preview = True
         return submission
 
@@ -937,10 +916,6 @@ class FinalizeSubmission(Event):
 
     NAME = "finalize submission for announcement"
     NAMED = "submission finalized"
-
-    def __hash__(self):
-        """Use event ID as object hash."""
-        return hash(self.event_id)
 
     REQUIRED = [
         'creator', 'primary_classification', 'submitter_contact_verified',
@@ -957,7 +932,7 @@ class FinalizeSubmission(Event):
         self._required_fields_are_complete(submission)
 
     def project(self, submission: Submission) -> Submission:
-        """Set :prop:`Submission.finalized`."""
+        """Set :attr:`Submission.finalized`."""
         submission.status = Submission.SUBMITTED
         return submission
 
@@ -971,16 +946,12 @@ class FinalizeSubmission(Event):
                 raise InvalidEvent(self, f"Missing {key}")
 
 
-@dataclass
+@dataclass()
 class UnFinalizeSubmission(Event):
     """Withdraw the submission from the queue for announcement."""
 
     NAME = "re-open submission for modification"
     NAMED = "submission re-opened for modification"
-
-    def __hash__(self):
-        """Use event ID as object hash."""
-        return hash(self.event_id)
 
     def validate(self, submission: Submission) -> None:
         """Validate the unfinalize action."""
@@ -994,21 +965,17 @@ class UnFinalizeSubmission(Event):
             raise InvalidEvent(self, "Submission is not finalized")
 
     def project(self, submission: Submission) -> Submission:
-        """Set :prop:`Submission.finalized`."""
+        """Set :attr:`Submission.finalized`."""
         submission.status = Submission.WORKING
         return submission
 
 
-@dataclass
+@dataclass()
 class Publish(Event):
     """Publish the current version of the submission."""
 
     NAME = "publish submission"
     NAMED = "submission published"
-
-    def __hash__(self):
-        """Use event ID as object hash."""
-        return hash(self.event_id)
 
     arxiv_id: Optional[str] = None
 
@@ -1038,9 +1005,9 @@ class Publish(Event):
 # Moderation-related events.
 
 
-@dataclass
+@dataclass()
 class CreateComment(Event):
-    """Creation of a :class:`.Comment` on a :class:`.Submission`."""
+    """Creation of a :class:`.Comment` on a :class:`.domain.Submission`."""
 
     read_scope = 'submission:moderate'
     write_scope = 'submission:moderate'
@@ -1049,22 +1016,26 @@ class CreateComment(Event):
     scope: str = 'private'
 
     def validate(self, submission: Submission) -> None:
-        """The :prop:`.body` should be set."""
+        """The :attr:`.body` should be set."""
         if not self.body:
             raise ValueError('Comment body not set')
 
     def project(self, submission: Submission) -> Submission:
         """Create a new :class:`.Comment` and attach it to the submission."""
-        comment = Comment(creator=self.creator, created=self.created,
-                          proxy=self.proxy, submission=submission,
-                          body=self.body, scope=self.scope)
-        submission.comments[comment.comment_id] = comment
+        submission.comments[self.event_id] = Comment(
+            event_id=self.event_id,
+            creator=self.creator,
+            created=self.created,
+            proxy=self.proxy,
+            submission=submission,
+            body=self.body
+        )
         return submission
 
 
-@dataclass
+@dataclass()
 class DeleteComment(Event):
-    """Deletion of a :class:`.Comment` on a :class:`.Submission`."""
+    """Deletion of a :class:`.Comment` on a :class:`.domain.Submission`."""
 
     read_scope = 'submission:moderate'
     write_scope = 'submission:moderate'
@@ -1072,13 +1043,13 @@ class DeleteComment(Event):
     comment_id: str = field(default_factory=str)
 
     def validate(self, submission: Submission) -> None:
-        """The :prop:`.comment_id` must present on the submission."""
+        """The :attr:`.comment_id` must present on the submission."""
         if self.comment_id is None:
             raise InvalidEvent(self, 'comment_id is required')
         if not hasattr(submission, 'comments') or not submission.comments:
-            raise InvalidEvent(self, 'Cannot delete comment that does not exist')
+            raise InvalidEvent(self, 'Cannot delete nonexistant comment')
         if self.comment_id not in submission.comments:
-            raise InvalidEvent(self, 'Cannot delete comment that does not exist')
+            raise InvalidEvent(self, 'Cannot delete nonexistant comment')
 
     def project(self, submission: Submission) -> Submission:
         """Remove the comment from the submission."""
@@ -1086,7 +1057,7 @@ class DeleteComment(Event):
         return submission
 
 
-@dataclass
+@dataclass()
 class AddDelegate(Event):
     """Owner delegates authority to another agent."""
 
@@ -1108,7 +1079,7 @@ class AddDelegate(Event):
         return submission
 
 
-@dataclass
+@dataclass()
 class RemoveDelegate(Event):
     """Owner revokes authority from another agent."""
 
@@ -1126,39 +1097,65 @@ class RemoveDelegate(Event):
         return submission
 
 
-# class CreateSourcePackage(Event):
-#     pass
-#
-# class UpdateSourcePackage(Event):
-#     pass
-#
-#
-# class DeleteSourcePackage(Event):
-#     pass
-#
-#
-# class Annotation(Event):
-#     pass
-#
-#
-# class CreateFlagEvent(AnnotationEvent):
-#     pass
-#
-#
-# class DeleteFlagEvent(AnnotationEvent):
-#     pass
-#
-#
-# class DeleteCommentEvent(AnnotationEvent):
-#     pass
-#
-#
-# class CreateProposalEvent(AnnotationEvent):
-#     pass
-#
-#
-# class DeleteProposalEvent(AnnotationEvent):
-#     pass
+@dataclass()
+class AddFeature(Event):
+    """Add feature metadata to a submission."""
+
+    NAME = "add feature metadata"
+    NAMED = "feature metadata added"
+
+    feature_type: Feature.FeatureTypes = \
+        field(default=Feature.FeatureTypes.WORD_COUNT)
+    feature_value: Union[float, int] = field(default=0)
+
+    def validate(self, submission: Submission) -> None:
+        """Verify that the feature type is a known value."""
+        if self.feature_type not in Feature.FeatureTypes:
+            valid_types = ", ".join([ft.value for ft in Feature.FeatureTypes])
+            raise InvalidEvent(self, "Must be one of %s" % valid_types)
+
+    def project(self, submission: Submission) -> Submission:
+        """Add the annotation to the submission."""
+        submission.annotations[self.event_id] = Feature(
+            event_id=self.event_id,
+            creator=self.creator,
+            created=self.created,
+            proxy=self.proxy,
+            feature_type=self.feature_type,
+            feature_value=self.feature_value
+        )
+        return submission
+
+
+@dataclass()
+class AddClassifierResults(Event):
+    """Add the results of a classifier to a submission."""
+
+    NAME = "add classifer results"
+    NAMED = "classifier results added"
+
+    classifier: ClassifierResults.Classifiers \
+        = field(default=ClassifierResults.Classifiers.CLASSIC)
+    results: List[ClassifierResult] = field(default_factory=list)
+
+    def validate(self, submission: Submission) -> None:
+        """Verify that the classifier is a known value."""
+        if self.classifier not in ClassifierResults.Classifiers:
+            valid = ", ".join([c.value for c in ClassifierResults.Classifiers])
+            raise InvalidEvent(self, "Must be one of %s" % valid)
+
+    def project(self, submission: Submission) -> Submission:
+        """Add the annotation to the submission."""
+        submission.annotations[self.event_id] = ClassifierResults(
+            event_id=self.event_id,
+            creator=self.creator,
+            created=self.created,
+            proxy=self.proxy,
+            classifier=self.classifier,
+            results=self.results
+        )
+        return submission
+
 
 EVENT_TYPES = {
     obj.get_event_type(): obj for obj in locals().values()
@@ -1168,7 +1165,7 @@ EVENT_TYPES = {
 
 def event_factory(event_type: str, **data) -> Event:
     """
-    Convenience factory for generating :class:`.Event`s.
+    Convenience factory for generating :class:`.Event` instances.
 
     Parameters
     ----------

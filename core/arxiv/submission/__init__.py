@@ -2,12 +2,89 @@
 Core event-centric data abstraction for the submission & moderation subsystem.
 
 This package provides an event-based API for mutating submissions. Instead of
-representing submissions as objects, and mutating them directly in web
+representing submissions as objects and mutating them directly in web
 controllers and other places, we represent a submission as a stream of commands
 or events. This ensures that we have a precise and complete record of
 activities concerning submissions, and provides an explicit and consistent
 definition of operations that can be performed within the arXiv submission
 system.
+
+Overview
+========
+
+Event types are defined in :mod:`.domain.event`. The base class for all events
+is :class:`.domain.event.event.Event`. Each event type defines additional
+required data, and have ``validate`` and ``project`` methods that implement its
+logic. Events operate on :class:`.domain.submission.Submission` instances.
+
+.. code-block:: python
+
+   from arxiv.submission import CreateSubmission, User, Submission
+   user = User(1345, 'foo@user.com')
+   creation = CreateSubmission(creator=user)
+
+
+:mod:`.core` defines the persistence API for submission data.
+:func:`.core.save` is used to commit new events. :func:`.core.load` retrieves
+events for a submission and plays them forward to get the current state,
+whereas :func:`.core.load_fast` retrieves the latest projected state of the
+submission (faster, theoretically less reliable).
+
+.. code-block:: python
+
+   from arxiv.submission import save, SetTitle
+   submission, events = save(creation, SetTitle(creator=user, title='Title!'))
+
+
+Watch out for :class:`.exceptions.InvalidEvent` to catch validation-related
+problems (e.g. bad data, submission in wrong state). Watch for
+:class:`.SaveError` to catch problems with persisting events.
+
+Callbacks can be attached to event types in order to execute routines
+automatically when specific events are committed, using
+:func:`.domain.Event.bind`.
+
+.. code-block:: python
+
+   from typing import Iterable
+
+   @SetTitle.bind()
+   def flip_title(event: SetTitle, before: Submissionm, after: Submission,
+                  creator: Agent) -> Iterable[SetTitle]:
+       yield SetTitle(creator=creator, title=f"(╯°□°）╯︵ ┻━┻ {event.title}")
+
+
+Quality control processes and policies are defined in :mod:`.rules` using
+bound callbacks. This includes things like calling the auto-classifier,
+checking titles for weirdness, etc.
+
+Some callbacks take too long to perform in the context of an HTTP request, and
+so we perform them concurrently in the :ref:`submission-worker`. Callbacks
+that should be run by the worker are decorated with :func:`.tasks.is_async`.
+This registers the callback by name with the worker, and performs magic so that
+when the callback is executed a task is dispatched the worker queue rather than
+running the callback in the current thread. See also :mod:`.worker`.
+
+.. code-block:: python
+
+   from ..tasks import is_async
+
+   @SetTitle.bind()
+   @is_async
+   def flip_title(event: SetTitle, before: Submissionm, after: Submission,
+                  creator: Agent) -> Iterable[SetTitle]:
+       time.sleep(30)    # *yawn*
+       yield SetTitle(creator=creator, title=f"(╯°□°）╯︵ ┻━┻ {event.title}")
+
+
+Finally, :mod:`.services.classic` provides integration with the classic
+submission database. We use the classic database to store events (new table),
+and also keep its legacy tables up to date so that other legacy components
+continue to work as expected.
+
+
+Using commands/events
+=====================
 
 Command/event classes are defined in :mod:`arxiv.submission.domain.event`, and
 are accessible from the root namespace of this package. Each event type defines
@@ -24,10 +101,6 @@ are defined, see :class:`arxiv.submission.domain.event.Event`.
    the submission table for things like creating a replacement, adding a DOI,
    or requesting a withdrawal. The :ref:`legacy-integration` handles the
    interchange between these two models.
-
-
-Using commands/events
-=====================
 
 Commands/events types are `PEP 557 data classes
 <https://www.python.org/dev/peps/pep-0557/>`_. Each command/event inherits from
@@ -90,162 +163,8 @@ same API.
 
 """
 
-from typing import Optional, List, Tuple
-from arxiv.base import logging
+from .domain.event import *
+from .core import save, load, load_fast, init_app
 from .domain.submission import Submission, SubmissionMetadata, Author
 from .domain.agent import Agent, User, System, Client
-from .domain.event import *
-from .domain.rule import RuleCondition, RuleConsequence, EventRule
 from .services import classic
-from .exceptions import InvalidEvent, InvalidStack, NoSuchSubmission, SaveError
-
-logger = logging.getLogger(__name__)
-
-
-def load(submission_id: int) -> Tuple[Submission, List[Event]]:
-    """
-    Load a submission and its history.
-
-    This loads all events for the submission, and generates the most
-    up-to-date representation based on those events.
-
-    Parameters
-    ----------
-    submission_id : str
-        Submission identifier.
-
-    Returns
-    -------
-    :class:`.Submission`
-        The current state of the submission.
-    list
-        Items are :class:`.Event`s, in order of their occurrence.
-
-    Raises
-    ------
-    :class:`.NoSuchSubmission`
-        Raised when a submission with the passed ID cannot be found.
-    """
-    try:
-        return classic.get_submission(submission_id)
-    except classic.NoSuchSubmission as e:
-        raise NoSuchSubmission(f'No submission with id {submission_id}') from e
-
-
-def load_submissions_for_user(user_id: int) -> List[Submission]:
-    """
-    Load active :class:`.Submission`s for a specific user.
-
-    Parameters
-    ----------
-    user_id : int
-        Unique identifier for the user.
-
-    Returns
-    -------
-    list
-        Items are :class:`.Submission` instances.
-
-    """
-    return classic.get_user_submissions_fast(user_id)
-
-
-def load_fast(submission_id: int) -> Submission:
-    """
-    Load a :class:`.Submission` from its last projected state.
-
-    This does not load and apply past events. The most recent stored submission
-    state is loaded directly from the database.
-
-    Parameters
-    ----------
-    submission_id : str
-        Submission identifier.
-
-    Returns
-    -------
-    :class:`.Submission`
-        The current state of the submission.
-
-    """
-    try:
-        return classic.get_submission_fast(submission_id)
-    except classic.NoSuchSubmission as e:
-        raise NoSuchSubmission(f'No submission with id {submission_id}') from e
-
-
-def save(*events: Event, submission_id: Optional[str] = None) \
-        -> Tuple[Submission, List[Event]]:
-    """
-    Commit a set of new :class:`.Event`s for a submission.
-
-    This will persist the events to the database, along with the final
-    state of the submission, and generate external notification(s) on the
-    appropriate channels.
-
-    Parameters
-    ----------
-    events : :class:`.Event`
-        Events to apply and persist.
-    submission_id : int
-        The unique ID for the submission, if available. If not provided, it is
-        expected that ``events`` includes a :class:`.CreateSubmission`.
-
-    Returns
-    -------
-    :class:`arxiv.submission.domain.submission.Submission`
-        The state of the submission after all events (including rule-derived
-        events) have been applied. Updated with the submission ID, if a
-        :class:`.CreateSubmission` was included.
-    list
-        A list of :class:`.Event` instances applied to the submission. Note
-        that this list may contain more events than were passed, if event
-        rules were triggered.
-
-    Raises
-    ------
-    :class:`.NoSuchSubmission`
-        Raised if ``submission_id`` is not provided and the first event is not
-        a :class:`.CreateSubmission`, or ``submission_id`` is provided but
-        no such submission exists.
-    :class:`.InvalidEvent`
-        If an invalid event is encountered, the entire operation is aborted
-        and this exception is raised.
-    :class:`.SaveError`
-        There was a problem persisting the events and/or submission state
-        to the database.
-
-    """
-    if len(events) == 0:
-        raise ValueError('Must pass at least one event')
-    events = list(events)   # Coerce to list so that we can index.
-    prior: List[Event] = []
-    before: Optional[Submission] = None
-
-    # Get the current state of the submission from past events.
-    if submission_id is not None:
-        before, prior = classic.get_submission(submission_id)
-
-    # Either we need a submission ID, or the first event must be a creation.
-    elif events[0].submission_id is None \
-            and not isinstance(events[0], CreateSubmission):
-        raise NoSuchSubmission('Unable to determine submission')
-
-    events = sorted(list(set(prior) | set(events)), key=lambda e: e.created)
-
-    # Apply the events from the end of the existing stream.
-    for i, event in enumerate(list(events)):
-        # Fill in event IDs, if they are missing.
-        if event.submission_id is None and submission_id is not None:
-            event.submission_id = submission_id
-
-        # Mutation happens here; raises InvalidEvent.
-        after = event.apply(before)
-        if not event.committed:
-            event, after = classic.store_event(event, before, after)
-
-        # TODO: <-- emit event here.
-        # TODO: <-- apply rules here.
-        events[i] = event
-        before = after
-    return after, events    # Return the whole stack.

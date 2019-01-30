@@ -1,4 +1,4 @@
-"""Tests for :class:`.Event`s in :mod:`arxiv.submission.domain.event`."""
+"""Tests for :class:`.Event` instances in :mod:`arxiv.submission.domain.event`."""
 
 from unittest import TestCase, mock
 from datetime import datetime

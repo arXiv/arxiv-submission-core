@@ -1,4 +1,4 @@
-"""Utility classes and functions for :mod:`.classic`."""
+"""Utility classes and functions for :mod:`.services.classic`."""
 
 import json
 from contextlib import contextmanager
@@ -14,6 +14,8 @@ from arxiv.base.globals import get_application_config, get_application_global
 from arxiv.base import logging
 from .exceptions import ClassicBaseException, CommitFailed
 
+from ... import serializer
+
 logger = logging.getLogger(__name__)
 
 
@@ -25,13 +27,13 @@ class SQLiteJSON(types.TypeDecorator):
     def process_bind_param(self, value: Optional[dict], dialect: str) -> str:
         """Serialize a dict to JSON."""
         if value is not None:
-            value = json.dumps(value)
+            value = serializer.dumps(value)
         return value
 
     def process_result_value(self, value: str, dialect: str) -> Optional[dict]:
         """Deserialize JSON content to a dict."""
         if value is not None:
-            value = json.loads(value)
+            value = serializer.loads(value)
         return value
 
 

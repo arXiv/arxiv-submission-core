@@ -20,7 +20,7 @@ from . import models
 from ...domain.submission import Submission, UserRequest, WithdrawalRequest, \
     CrossListClassificationRequest
 from ...domain.event import Event, SetDOI, SetJournalReference, \
-    SetReportNumber, ApplyRequest, RejectRequest, Publish
+    SetReportNumber, ApplyRequest, RejectRequest, Publish, AddHold
 from ...domain.agent import System, User
 
 
@@ -134,6 +134,14 @@ class ClassicEventInterpolator:
                      self.current_row.submission_id,
                      self.current_row.type, self.current_row.status)
         self.submission = self.current_row.patch(self.submission)
+        if self.current_row.sticky_status == models.Submission.ON_HOLD \
+                or self.current_row.status == models.Submission.ON_HOLD:
+            self._apply_event(AddHold(
+                creator=SYSTEM,
+                created=self.current_row.get_updated(),
+                committed=True,
+                hold_type='patch'
+            ))
         logger.debug('user requests: %s', self.submission.user_requests)
 
     def _apply_event(self, event: Event) -> None:
@@ -161,7 +169,7 @@ class ClassicEventInterpolator:
 
         Returns
         -------
-        :class:`.Submission`
+        :class:`.domain.Submission`
             The most recent state of the submission given the provided events
             and database rows.
         list

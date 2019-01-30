@@ -10,6 +10,7 @@ from sqlalchemy.orm import relationship, joinedload, backref
 
 from sqlalchemy.ext.declarative import declarative_base
 from arxiv.license import LICENSES
+from arxiv import taxonomy
 from ... import domain
 from .util import transaction
 
@@ -190,7 +191,7 @@ class Submission(Base):    # type: ignore
 
     def patch(self, submission: domain.Submission) -> domain.Submission:
         """
-        Patch a :class:`.Submission` with data outside the event scope.
+        Patch a :class:`.domain.Submission` with data outside the event scope.
 
         There are several fields that may change after a submission enters the
         classic moderation and publication system, that cannot be inferred
@@ -242,9 +243,6 @@ class Submission(Base):    # type: ignore
         return submission
 
     def patch_hold(self, submission: domain.Submission) -> domain.Submission:
-        submission.holds.append(
-            domain.Hold(creator=domain.System(__name__), hold_type='patch')
-        )
         if self.status == self.ON_HOLD:
             submission.status = domain.Submission.ON_HOLD
         return submission
@@ -267,7 +265,7 @@ class Submission(Base):    # type: ignore
 
     def patch_jref(self, submission: domain.Submission) -> domain.Submission:
         """
-        Patch a :class:`.Submission` with JREF data outside the event scope.
+        Patch a :class:`.domain.Submission` with JREF data outside the event scope.
 
         Parameters
         ----------
@@ -374,22 +372,20 @@ class Submission(Base):    # type: ignore
                 wdr_status = domain.WithdrawalRequest.APPLIED
             else:
                 raise RuntimeError("Unhandled condition")
-            submission.add_user_request(
-                domain.WithdrawalRequest(
-                    creator=domain.User(
-                        native_id=self.submitter_id,
-                        email=self.submitter_email,
-                    ),
-                    reason_for_withdrawal=self._get_withdrawal_reason(),
-                    created=self.get_created(),
-                    updated=self.get_updated(),
-                    status=wdr_status
-                )
+            request = domain.WithdrawalRequest(
+                creator=domain.User(
+                    native_id=self.submitter_id,
+                    email=self.submitter_email,
+                ),
+                reason_for_withdrawal=self._get_withdrawal_reason(),
+                created=self.get_created(),
+                updated=self.get_updated(),
+                status=wdr_status
             )
+            submission.user_requests[request.request_id] = request
         elif self.is_crosslist():
-            submission.add_user_request(
-                self._get_crosslist_request(submission)
-            )
+            request = self._get_crosslist_request(submission)
+            submission.user_requests[request.request_id] = request
         return submission
 
     WDR_DELIMETER = '. Withdrawn: '
@@ -435,18 +431,17 @@ class Submission(Base):    # type: ignore
             submission.reason_for_withdrawal = reason
         elif self.is_rejected():
             status = domain.WithdrawalRequest.REJECTED
-        submission.add_user_request(
-            domain.WithdrawalRequest(
-                creator=domain.User(
-                    native_id=self.submitter_id,
-                    email=self.submitter_email,
-                ),
-                created=self.get_created(),
-                updated=self.get_updated(),
-                reason_for_withdrawal=reason,
-                status=status
-            )
+        request = domain.WithdrawalRequest(
+            creator=domain.User(
+                native_id=self.submitter_id,
+                email=self.submitter_email,
+            ),
+            created=self.get_created(),
+            updated=self.get_updated(),
+            reason_for_withdrawal=reason,
+            status=status
         )
+        submission.user_requests[request.request_id] = request
         return submission
 
     def _get_crosslist_categories(self, submission: domain.Submission) \
@@ -486,7 +481,7 @@ class Submission(Base):    # type: ignore
         if self.is_published():
             for classification in request.classifications:
                 submission.secondary_classification.append(classification)
-        submission.add_user_request(request)
+        submission.user_requests[request.request_id] = request
         return submission
 
     def update_from_submission(self, submission: domain.Submission) -> None:
@@ -835,6 +830,50 @@ class User(Base):    # type: ignore
 
     tapir_policy_class = relationship('PolicyClass')
 
+    def to_user(self) -> domain.agent.User:
+        return domain.agent.User(
+            self.user_id,
+            self.email,
+            username=self.username,
+            forename=self.first_name,
+            surname=self.last_name,
+            suffix=self.suffix_name
+        )
+
+
+class Username(Base):  # type: ignore
+    """
+    Users' usernames (because why not have a separate table).
+
+    +--------------+------------------+------+-----+---------+----------------+
+    | Field        | Type             | Null | Key | Default | Extra          |
+    +--------------+------------------+------+-----+---------+----------------+
+    | nick_id      | int(10) unsigned | NO   | PRI | NULL    | autoincrement  |
+    | nickname     | varchar(20)      | NO   | UNI |         |                |
+    | user_id      | int(4) unsigned  | NO   | MUL | 0       |                |
+    | user_seq     | int(1) unsigned  | NO   |     | 0       |                |
+    | flag_valid   | int(1) unsigned  | NO   | MUL | 0       |                |
+    | role         | int(10) unsigned | NO   | MUL | 0       |                |
+    | policy       | int(10) unsigned | NO   | MUL | 0       |                |
+    | flag_primary | int(1) unsigned  | NO   |     | 0       |                |
+    +--------------+------------------+------+-----+---------+----------------+
+    """
+
+    __tablename__ = 'tapir_nicknames'
+
+    nick_id = Column(Integer, primary_key=True)
+    nickname = Column(String(20), nullable=False, unique=True, index=True)
+    user_id = Column(ForeignKey('tapir_users.user_id'), nullable=False,
+                     server_default=text("'0'"))
+    user = relationship('User')
+    user_seq = Column(Integer, nullable=False, server_default=text("'0'"))
+    flag_valid = Column(Integer, nullable=False, server_default=text("'0'"))
+    role = Column(Integer, nullable=False, server_default=text("'0'"))
+    policy = Column(Integer, nullable=False, server_default=text("'0'"))
+    flag_primary = Column(Integer, nullable=False, server_default=text("'0'"))
+
+    user = relationship('User')
+
 
 # TODO: what is this?
 class PolicyClass(Base):    # type: ignore
@@ -997,6 +1036,107 @@ class Category(Base):    # type: ignore
                                server_default=text("'0'"))
 
 
+class AdminLogEntry(Base):    # type: ignore
+    """
+
+    +---------------+-----------------------+------+-----+-------------------+
+    | Field         | Type                  | Null | Key | Default           |
+    +---------------+-----------------------+------+-----+-------------------+
+    | id            | int(11)               | NO   | PRI | NULL              |
+    | logtime       | varchar(24)           | YES  |     | NULL              |
+    | created       | timestamp             | NO   |     | CURRENT_TIMESTAMP |
+    | paper_id      | varchar(20)           | YES  | MUL | NULL              |
+    | username      | varchar(20)           | YES  |     | NULL              |
+    | host          | varchar(64)           | YES  |     | NULL              |
+    | program       | varchar(20)           | YES  |     | NULL              |
+    | command       | varchar(20)           | YES  | MUL | NULL              |
+    | logtext       | text                  | YES  |     | NULL              |
+    | document_id   | mediumint(8) unsigned | YES  |     | NULL              |
+    | submission_id | int(11)               | YES  | MUL | NULL              |
+    | notify        | tinyint(1)            | YES  |     | 0                 |
+    +---------------+-----------------------+------+-----+-------------------+
+    """
+
+    __tablename__ = 'arXiv_admin_log'
+
+    id = Column(Integer, primary_key=True)
+    logtime = Column(String(24), nullable=True)
+    created = Column(DateTime, default=lambda: datetime.now(UTC))
+    paper_id = Column(String(20), nullable=True)
+    username = Column(String(20), nullable=True)
+    host = Column(String(64), nullable=True)
+    program = Column(String(20), nullable=True)
+    command = Column(String(20), nullable=True)
+    logtext = Column(Text, nullable=True)
+    document_id = Column(Integer, nullable=True)
+    submission_id = Column(Integer, nullable=True)
+    notify = Column(Integer, nullable=True, default=0)
+
+
+class CategoryProposal(Base):   # type: ignore
+    """
+    Represents a proposal to change the classification of a submission.
+
+    +---------------------+-----------------+------+-----+---------+
+    | Field               | Type            | Null | Key | Default |
+    +---------------------+-----------------+------+-----+---------+
+    | proposal_id         | int(11)         | NO   | PRI | NULL    |
+    | submission_id       | int(11)         | NO   | PRI | NULL    |
+    | category            | varchar(32)     | NO   | PRI | NULL    |
+    | is_primary          | tinyint(1)      | NO   | PRI | 0       |
+    | proposal_status     | int(11)         | YES  |     | 0       |
+    | user_id             | int(4) unsigned | NO   | MUL | NULL    |
+    | updated             | datetime        | YES  |     | NULL    |
+    | proposal_comment_id | int(11)         | YES  | MUL | NULL    |
+    | response_comment_id | int(11)         | YES  | MUL | NULL    |
+    +---------------------+-----------------+------+-----+---------+
+    """
+
+    __tablename__ = 'arXiv_submission_category_proposal'
+
+    UNRESOLVED = 0
+    ACCEPTED_AS_PRIMARY = 1
+    ACCEPTED_AS_SECONDARY = 2
+    REJECTED = 3
+    DOMAIN_STATUS = {
+        UNRESOLVED: domain.proposal.Proposal.Status.PENDING,
+        ACCEPTED_AS_PRIMARY: domain.proposal.Proposal.Status.ACCEPTED,
+        ACCEPTED_AS_SECONDARY: domain.proposal.Proposal.Status.ACCEPTED,
+        REJECTED: domain.proposal.Proposal.Status.REJECTED
+    }
+
+    proposal_id = Column(Integer, primary_key=True)
+    submission_id = Column(ForeignKey('arXiv_submissions.submission_id'))
+    submission = relationship('Submission')
+    category = Column(String(32))
+    is_primary = Column(Integer, server_default=("'0'"))
+    proposal_status = Column(Integer, nullable=True, server_default=("'0'"))
+    user_id = Column(ForeignKey('tapir_users.user_id'))
+    user = relationship("User")
+    updated = Column(DateTime, default=lambda: datetime.now(UTC))
+    proposal_comment_id = Column(ForeignKey('arXiv_admin_log.id'),
+                                 nullable=True)
+    proposal_comment = relationship("AdminLogEntry",
+                                    foreign_keys=[proposal_comment_id])
+    response_comment_id = Column(ForeignKey('arXiv_admin_log.id'),
+                                 nullable=True)
+    response_comment = relationship("AdminLogEntry",
+                                    foreign_keys=[response_comment_id])
+
+    def status_from_domain(self, proposal: domain.proposal.Proposal) -> int:
+        if proposal.status == domain.proposal.Proposal.Status.PENDING:
+            return self.UNRESOLVED
+        elif proposal.status == domain.proposal.Proposal.Status.REJECTED:
+            return self.REJECTED
+        elif proposal.status == domain.proposal.Proposal.Status.ACCEPTED:
+            if proposal.proposed_event_type \
+                    is domain.event.SetPrimaryClassification:
+                return self.ACCEPTED_AS_PRIMARY
+            else:
+                return self.ACCEPTED_AS_SECONDARY
+
+
+
 def _load_document(paper_id: str) -> Document:
     with transaction() as session:
         document = session.query(Document) \
@@ -1005,3 +1145,11 @@ def _load_document(paper_id: str) -> Document:
         if document is None:
             raise RuntimeError('No such document')
         return document
+
+
+def _get_user_by_username(username: str) -> User:
+    with transaction() as session:
+        return (session.query(Username)
+                .filter(Username.nickname == username)
+                .first()
+                .user)

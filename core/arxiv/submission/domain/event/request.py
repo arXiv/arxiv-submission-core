@@ -2,7 +2,10 @@
 
 from typing import Optional, List
 
-from dataclasses import dataclass, field
+from dataclasses import field
+from .util import dataclass
+
+from arxiv import taxonomy
 
 from . import validators
 from .event import Event
@@ -11,18 +14,22 @@ from ..submission import Submission, Classification, WithdrawalRequest, \
 from ...exceptions import InvalidEvent
 
 
-@dataclass
+@dataclass()
 class ApproveRequest(Event):
     """Approve a user request."""
 
     NAME = "approve user request"
     NAMED = "user request approved"
 
-    def __hash__(self):
+    request_id: Optional[str] = field(default=None)
+
+    def __hash__(self) -> int:
         """Use event ID as object hash."""
         return hash(self.event_id)
 
-    request_id: Optional[str] = field(default=None)
+    def __eq__(self, other: Event) -> bool:
+        """Compare this event to another event."""
+        return hash(self) == hash(other)
 
     def validate(self, submission: Submission) -> None:
         if self.request_id not in submission.user_requests:
@@ -33,16 +40,20 @@ class ApproveRequest(Event):
         return submission
 
 
-@dataclass
+@dataclass()
 class RejectRequest(Event):
     NAME = "reject user request"
     NAMED = "user request rejected"
 
-    def __hash__(self):
+    request_id: Optional[str] = field(default=None)
+
+    def __hash__(self) -> int:
         """Use event ID as object hash."""
         return hash(self.event_id)
 
-    request_id: Optional[str] = field(default=None)
+    def __eq__(self, other: Event) -> bool:
+        """Compare this event to another event."""
+        return hash(self) == hash(other)
 
     def validate(self, submission: Submission) -> None:
         if self.request_id not in submission.user_requests:
@@ -53,16 +64,20 @@ class RejectRequest(Event):
         return submission
 
 
-@dataclass
+@dataclass()
 class ApplyRequest(Event):
     NAME = "apply user request"
     NAMED = "user request applied"
 
-    def __hash__(self):
+    request_id: Optional[str] = field(default=None)
+
+    def __hash__(self) -> int:
         """Use event ID as object hash."""
         return hash(self.event_id)
 
-    request_id: Optional[str] = field(default=None)
+    def __eq__(self, other: Event) -> bool:
+        """Compare this event to another event."""
+        return hash(self) == hash(other)
 
     def validate(self, submission: Submission) -> None:
         if self.request_id not in submission.user_requests:
@@ -73,18 +88,22 @@ class ApplyRequest(Event):
         return submission
 
 
-@dataclass
+@dataclass()
 class RequestCrossList(Event):
     """Request that a secondary classification be added after announcement."""
 
     NAME = "request cross-list classification"
     NAMED = "cross-list classification requested"
 
-    def __hash__(self):
+    categories: List[taxonomy.Category] = field(default_factory=list)
+
+    def __hash__(self) -> int:
         """Use event ID as object hash."""
         return hash(self.event_id)
 
-    categories: List[str] = field(default_factory=list)
+    def __eq__(self, other: Event) -> bool:
+        """Compare this event to another event."""
+        return hash(self) == hash(other)
 
     def validate(self, submission: Submission) -> None:
         """Validate the cross-list request."""
@@ -101,28 +120,34 @@ class RequestCrossList(Event):
         classifications = [
             Classification(category=category) for category in self.categories
         ]
-        submission.add_user_request(
-            CrossListClassificationRequest(creator=self.creator,
-                                           created=self.created,
-                                           status=WithdrawalRequest.PENDING,
-                                           classifications=classifications))
+        request = CrossListClassificationRequest(
+            creator=self.creator,
+            created=self.created,
+            status=WithdrawalRequest.PENDING,
+            classifications=classifications
+        )
+        submission.user_requests[request.request_id] = request
         return submission
 
 
-@dataclass
+@dataclass()
 class RequestWithdrawal(Event):
     """Request that a paper be withdrawn."""
 
     NAME = "request withdrawal"
     NAMED = "withdrawal requested"
 
-    def __hash__(self):
-        """Use event ID as object hash."""
-        return hash(self.event_id)
-
     reason: str = field(default_factory=str)
 
     MAX_LENGTH = 400
+
+    def __hash__(self) -> int:
+        """Use event ID as object hash."""
+        return hash(self.event_id)
+
+    def __eq__(self, other: Event) -> bool:
+        """Compare this event to another event."""
+        return hash(self) == hash(other)
 
     def validate(self, submission: Submission) -> None:
         """Make sure that a reason was provided."""
@@ -136,10 +161,12 @@ class RequestWithdrawal(Event):
 
     def project(self, submission: Submission) -> Submission:
         """Update the submission status and withdrawal reason."""
-        submission.add_user_request(
-            WithdrawalRequest(creator=self.creator,
-                              created=self.created,
-                              updated=self.created,
-                              status=WithdrawalRequest.PENDING,
-                              reason_for_withdrawal=self.reason))
+        request = WithdrawalRequest(
+            creator=self.creator,
+            created=self.created,
+            updated=self.created,
+            status=WithdrawalRequest.PENDING,
+            reason_for_withdrawal=self.reason
+        )
+        submission.user_requests[request.request_id] = request
         return submission
