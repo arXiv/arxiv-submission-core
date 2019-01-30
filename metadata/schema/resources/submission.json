@@ -123,7 +123,7 @@
         "$ref": "file:./event.json"
       }
     },
-    "compiled_content": {
+    "compilations": {
       "description": "Compiled representations of the submission content, e.g. PDF, DVI, PS, HTML",
       "type": "array",
       "items": {

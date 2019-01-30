@@ -1,9 +1,10 @@
 """Data structures for submissions."""
 
-import hashlib
 from typing import Optional, Dict, TypeVar, List
 from datetime import datetime
 from dateutil.parser import parse as parse_date
+from enum import Enum
+import hashlib
 
 from dataclasses import dataclass, field
 from dataclasses import asdict
@@ -62,7 +63,6 @@ class Author:
         """Generate a dict representation of this :class:`.Author`."""
         return asdict(self)
 
-
 @dataclass
 class SubmissionContent:
     """Metadata about the submission source package."""
@@ -72,15 +72,27 @@ class SubmissionContent:
     checksum: str
     size: int
 
+class CompilationStatus(Enum):      # type: ignore
+    """Represents the status of a requested compilation."""
+
+    IN_PROGRESS = "in_progress"
+    """Compilation is in progress."""
+
+    COMPLETED = "completed"
+    """Compilation successfully completed."""
+
+    FAILED = "failed"
+    """Compilation failed."""
 
 @dataclass
-class SubmissionCompiled:
-    """Metadata about a submission compilation product."""
+class Compilation:
+    """Represents a submission compilation."""
 
-    identifier: str
+    task_id: str
+    source_etag: str
     format: str
-    checksum: str
-    size: int
+    start_time: datetime = field(default_factory=get_tzaware_utc_now)
+    status: CompilationStatus = field(default=CompilationStatus.IN_PROGRESS)
 
 
 @dataclass
@@ -246,7 +258,7 @@ class Submission:
     updated: Optional[datetime] = field(default=None)
 
     source_content: Optional[SubmissionContent] = field(default=None)
-    compiled_content: List[SubmissionCompiled] = field(default_factory=list)
+    compilations: List[Compilation] = field(default_factory=list)
 
     primary_classification: Optional[Classification] = field(default=None)
     delegations: Dict[str, Delegation] = field(default_factory=dict)
