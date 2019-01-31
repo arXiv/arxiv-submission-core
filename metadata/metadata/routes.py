@@ -29,7 +29,7 @@ def get_agents() -> None:
         raise Unauthorized('No authenticated client found')
 
     client = Client(session.client.client_id)
-    endorsements = [c.compound for c in session.authorizations.endorsements]
+    endorsements = session.authorizations.endorsements
     if request.session.user:
         creator = User(session.user.user_id, session.user.email,
                        endorsements=endorsements)
