@@ -319,11 +319,11 @@ class SetPrimaryClassification(Event):
                                      " before publication.")
 
     def _creator_must_be_endorsed(self, submission: Submission) -> None:
-        """The creator of this event must be endorsed for the category."""
+        """Creator of this event must be endorsed for the category."""
         if isinstance(self.creator, System):
             return
         try:
-            archive,  = self.category.split('.', 1)
+            archive, _ = self.category.split('.', 1)
         except ValueError:
             archive = self.category
         if self.category not in self.creator.endorsements \
