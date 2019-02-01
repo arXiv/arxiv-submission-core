@@ -18,6 +18,7 @@ mimesis = "==2.1.0"
 bleach = "==3.0.2"
 python-dateutil = "*"
 unidecode = "*"
+mypy_extensions = "*"
 
 [dev-packages]
 "nose2" = "*"

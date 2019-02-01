@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "44c10d979035bbe96ee463ae87b83680a556be262cd1f7806c194b31779219b0"
+            "sha256": "491415ae9d367c3c55488ed5b95d494ff537c26c3cd5e1ef037a9d692981b47d"
         },
         "pipfile-spec": 6,
         "requires": {},
@@ -23,10 +23,10 @@
         },
         "arxiv-auth": {
             "hashes": [
-                "sha256:6d4a5b3e27bf718a95c79e3fef92e7a148b5aca5a0719dca7bdb300c52ce7abb"
+                "sha256:5e4d2e2155fde458653142613c614fced9f3bc6021d8e3e1c0dd2cd9b0279701"
             ],
             "index": "pypi",
-            "version": "==0.2.3"
+            "version": "==0.2.5"
         },
         "arxiv-base": {
             "hashes": [
@@ -181,6 +181,14 @@
             ],
             "index": "pypi",
             "version": "==2.1.0"
+        },
+        "mypy-extensions": {
+            "hashes": [
+                "sha256:37e0e956f41369209a3d5f34580150bcacfabaa57b33a15c0b25f4b5725e0812",
+                "sha256:b16cabe759f55e3409a7d231ebd2841378fb0c27a5d1994719e340e4f429ac3e"
+            ],
+            "index": "pypi",
+            "version": "==0.4.1"
         },
         "mysqlclient": {
             "hashes": [
@@ -543,6 +551,7 @@
                 "sha256:37e0e956f41369209a3d5f34580150bcacfabaa57b33a15c0b25f4b5725e0812",
                 "sha256:b16cabe759f55e3409a7d231ebd2841378fb0c27a5d1994719e340e4f429ac3e"
             ],
+            "index": "pypi",
             "version": "==0.4.1"
         },
         "nose2": {

@@ -21,6 +21,7 @@ unidecode = "*"
 celery = "==4.1.0"
 arxiv-auth = "*"
 "c6a1273" = {path = "./core"}
+mypy_extensions = "*"
 
 [dev-packages]
 "nose2" = "*"
