@@ -879,6 +879,37 @@ class SetUploadPackage(Event):
 
 
 @dataclass()
+class UpdateUploadPackage(Event):
+    """Update the upload workspace on this submission."""
+
+    NAME = "update the upload package"
+    NAMED = "upload package updated"
+
+    format: str = field(default_factory=str)
+    checksum: str = field(default_factory=str)
+    size: int = field(default=0)
+
+    ALLOWED_FORMATS = [
+        'pdftex', 'tex', 'pdf', 'ps', 'html', 'invalid', 'withdrawn'
+    ]
+
+    def validate(self, submission: Submission) -> None:
+        """Validate data for :class:`.SetUploadPackage`."""
+        validators.submission_is_not_finalized(self, submission)
+
+        if self.format and self.format not in self.ALLOWED_FORMATS:
+            raise InvalidEvent(self, f'Format {self.format} not allowed')
+
+    def project(self, submission: Submission) -> Submission:
+        """Replace :class:`.SubmissionContent` metadata on the submission."""
+        submission.source_content.format = self.format
+        submission.source_content.checksum = self.checksum
+        submission.source_content.size = self.size
+        submission.submitter_confirmed_preview = False
+        return submission
+
+
+@dataclass()
 class UnsetUploadPackage(Event):
     """Unset the upload workspace for this submission."""
 
