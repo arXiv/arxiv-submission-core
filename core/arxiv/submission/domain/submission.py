@@ -82,7 +82,7 @@ class Compilation:
     class Status(Enum):      # type: ignore
         """Represents the status of a requested compilation."""
 
-        REQUESTED = "requested"
+        STARTED = "started"
         """Compilation has been requested."""
 
         SUCCEEDED = "succeeded"
@@ -99,7 +99,7 @@ class Compilation:
     """Compilation target format."""
     start_time: datetime
     end_time: Optional[datetime]
-    status: Status = field(default=Status.REQUESTED)
+    status: Status = field(default=Status.STARTED)
 
     @classmethod
     def from_processes(cls, processes: List[ProcessStatus]) -> 'Compilation':
@@ -122,12 +122,12 @@ class Compilation:
                            key=lambda p: p.created)
         if not processes:
             return None
-
+        finished_states = [ProcessStatus.Status.SUCCEEDED,
+                           ProcessStatus.Status.FAILED]
         latest = processes[-1]
         source_id, checksum, output_format = \
             latest.process_identifier.split("::")
-        if latest.status is ProcessStatus.Status.SUCCEEDED \
-                or latest.status is ProcessStatus.Status.FAILED:
+        if latest.status in finished_states:
             end_time = latest.created
             for proc in processes[::-1]:
                 if proc.process_identifier == latest.process_identifier \
@@ -138,7 +138,7 @@ class Compilation:
             start_time = latest.created
             end_time = None
         status_map = {
-            ProcessStatus.Status.REQUESTED: cls.Status.REQUESTED,
+            ProcessStatus.Status.REQUESTED: cls.Status.STARTED,
             ProcessStatus.Status.SUCCEEDED: cls.Status.SUCCEEDED,
             ProcessStatus.Status.FAILED: cls.Status.FAILED,
         }
@@ -418,6 +418,7 @@ class Submission:
         finished_states = [ProcessStatus.Status.SUCCEEDED,
                            ProcessStatus.Status.FAILED]
         for process in sorted(self.processes, key=lambda p: p.created):
+
             if process.process is not ProcessStatus.Process.COMPILATION:
                 continue
             if on_deck:
@@ -426,7 +427,7 @@ class Submission:
                 new_process = identifier != on_deck[-1].process_identifier
                 if finished or new_process:
                     yield Compilation.from_processes(on_deck)
-                on_deck.clear()     # Next attempt.
+                    on_deck.clear()     # Next attempt.
             on_deck.append(process)
         if on_deck:     # Whatever is left.
             yield Compilation.from_processes(on_deck)

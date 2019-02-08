@@ -356,7 +356,7 @@ class CompilerService(object):
                                 output_format: Format) -> bool:
         """Check whether compilation has completed successfully."""
         stat = self.get_status(upload_id, checksum, output_format)
-        if stat.status is Status.COMPLETED:
+        if stat.status is Status.SUCCEEDED:
             return True
         elif stat.status is Status.FAILED:
             raise CompilationFailed('Compilation failed')

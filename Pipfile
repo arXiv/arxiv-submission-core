@@ -22,6 +22,7 @@ celery = "==4.1.0"
 arxiv-auth = "*"
 "c6a1273" = {path = "./core"}
 mypy_extensions = "*"
+kombu = "==4.1.0"
 
 [dev-packages]
 "nose2" = "*"

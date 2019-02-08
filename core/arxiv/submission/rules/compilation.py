@@ -4,8 +4,8 @@ from typing import Iterable
 from itertools import count
 import time
 
-from ..domain.event import Event, AddProcessStatus, ConfirmPreview, \
-    AddClassifierResults, AddContentFlag, AddFeature
+from arxiv.base import logging
+from ..domain.event import Event, AddProcessStatus
 from ..domain.event.event import Condition
 from ..domain.submission import Submission
 from ..domain.flag import Flag, ContentFlag
@@ -15,7 +15,7 @@ from ..domain.process import ProcessStatus
 from ..services import plaintext, compiler
 from ..tasks import is_async
 
-from arxiv.taxonomy import CATEGORIES, Category
+logger = logging.getLogger(__name__)
 
 
 def when_compilation_starts(event: Event, *args, **kwargs) -> bool:
@@ -29,6 +29,7 @@ def when_compilation_starts(event: Event, *args, **kwargs) -> bool:
 def poll_compilation(event: AddProcessStatus, before: Submission,
                      after: Submission, creator: Agent) -> Iterable[Event]:
     """Monitor the status of the compilation process until completion."""
+    logger.debug('Poll compilation for submission %s', after.submission_id)
     source_id, checksum, fmt = compiler.split_task_id(event.identifier)
     process = ProcessStatus.Process.COMPILATION
     try:
