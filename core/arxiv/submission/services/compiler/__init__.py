@@ -223,7 +223,7 @@ class CompilerService(object):
     def _make_request(self, method: str, path: str,
                       expected_codes: List[int] = [200], **kw) \
             -> requests.Response:
-        kw.update({'allow_redirects': False})
+        # kw.update({'allow_redirects': False})
         try:
             resp = getattr(self._session, method)(self._path(path), **kw)
         except requests.exceptions.SSLError as e:
@@ -257,9 +257,13 @@ class CompilerService(object):
 
         # There should be nothing in a 204 response.
         if resp.status_code is status.HTTP_204_NO_CONTENT:
+            logger.debug('service responded with 204 No Content')
             return {}, resp.headers
         try:
-            return resp.json(), resp.headers
+            data = resp.json()
+            logger.debug('service responded with data %s and headers %s',
+                         data, resp.headers)
+            return data, resp.headers
         except json.decoder.JSONDecodeError as e:
             raise BadResponse('Could not decode: {resp.content}') from e
 
@@ -296,15 +300,18 @@ class CompilerService(object):
         data, headers = self.request('post', f'/',
                                      json=payload,
                                      expected_codes=[
-                                        status.HTTP_202_ACCEPTED,
-                                        status.HTTP_302_FOUND,
-                                        status.HTTP_303_SEE_OTHER,
+                                        status.HTTP_200_OK,
+                                        status.HTTP_202_ACCEPTED
                                      ])
+        if 'status' in data and 'status' in data['status']:
+            compilation_status = Status(data['status']['status'])
+        else:
+            compilation_status = Status.IN_PROGRESS
         return CompilationStatus(
             upload_id=upload_id,
             checksum=checksum,
             output_format=self.output_format,
-            status=Status.IN_PROGRESS
+            status=compilation_status
         )
 
     def get_compilation_product(self, upload_id: str, checksum: str,
