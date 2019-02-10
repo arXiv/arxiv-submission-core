@@ -53,6 +53,24 @@ class Format(Enum):      # type: ignore
     PS = "ps"
 
 
+class Compiler(Enum):
+    """Compiler known to be supported by the compiler service."""
+
+    PDFLATEX = 'pdflatex'
+
+
+class Reason(Enum):
+    """Specific reasons for a (usually failure) outcome."""
+
+    AUTHORIZATION = "auth_error"
+    MISSING = "missing_source"
+    SOURCE_TYPE = "invalid_source_type"
+    CORRUPTED = "corrupted_source"
+    CANCELLED = "cancelled"
+    ERROR = "compilation_errors"
+    NETWORK = "network_error"
+
+
 class CompilationStatus(NamedTuple):
     """The state of a compilation attempt from the :mod:`.compiler` service."""
 
@@ -65,6 +83,10 @@ class CompilationStatus(NamedTuple):
     """Checksum of the source package that we are compiling."""
     output_format: Format = Format.PDF
     """The requested output format."""
+    reason: Optional[Reason] = None
+    """The specific reason for the :attr:`.status`."""
+    description: Optional[str] = None
+    """Additional detail about the :attr:`.status`."""
 
     @property
     def identifier(self):
@@ -160,11 +182,6 @@ class Download(object):
 class CompilerService(object):
     """Encapsulates a connection with the compiler service."""
 
-    class Compilers(Enum):
-        """Compilers known to be supported by the compiler service."""
-
-        foo = 'foo'
-
     def __init__(self, endpoint: str, verify_cert: bool = True,
                  headers: dict = {}) -> None:
         """
@@ -199,12 +216,15 @@ class CompilerService(object):
         self._endpoint = endpoint
         self._session.headers.update(headers)
 
-        self.output_format = Format.PDF
-
-    def _parse_compilation_status(self, data: dict) -> CompilationStatus:
-
+    def _parse_status_response(self, data: dict) -> CompilationStatus:
+        data = data['status']
         return CompilationStatus(
-
+            upload_id=data['source_id'],
+            checksum=data['checksum'],
+            output_format=Format(data['output_format']),
+            status=Status(data['status']),
+            reason=Reason(data['reason']) if 'reason' in data else None,
+            description=data.get('description', None)
         )
 
     def _parse_task_id(self, task_uri: str) -> str:
@@ -221,11 +241,11 @@ class CompilerService(object):
         ))
 
     def _make_request(self, method: str, path: str,
-                      expected_codes: List[int] = [200], **kw) \
-            -> requests.Response:
-        # kw.update({'allow_redirects': False})
+                      expected_codes: List[int] = [status.HTTP_200_OK],
+                      **kwargs) -> requests.Response:
+        logger.debug('%s %s, expects %s', method.upper(), path, expected_codes)
         try:
-            resp = getattr(self._session, method)(self._path(path), **kw)
+            resp = getattr(self._session, method)(self._path(path), **kwargs)
         except requests.exceptions.SSLError as e:
             raise SecurityException('SSL failed: %s' % e) from e
         except requests.exceptions.ConnectionError as e:
@@ -237,7 +257,6 @@ class CompilerService(object):
         elif resp.status_code == status.HTTP_403_FORBIDDEN:
             raise RequestForbidden(f'Forbidden: {resp.content}')
         elif resp.status_code == status.HTTP_404_NOT_FOUND:
-            logger.debug(resp.json())
             raise NoSuchResource('Resource does not exist', data=resp.json())
         elif resp.status_code >= status.HTTP_400_BAD_REQUEST:
             raise BadRequest(f'Bad request: {resp.content}',
@@ -250,39 +269,58 @@ class CompilerService(object):
         """Set the authn/z token to use in subsequent requests."""
         self._session.headers.update({'Authorization': token})
 
-    def request(self, method: str, path: str, expected_codes: int = 200,
-                **kwargs) -> Tuple[dict, dict]:
+    def _request(self, method: str, path: str,
+                 expected_codes: List[int] = [status.HTTP_200_OK],
+                 **kwargs) -> Tuple[dict, dict]:
         """Perform an HTTP request, and handle any exceptions."""
-        resp = self._make_request(method, path, expected_codes, **kwargs)
-
+        r = self._make_request(method, path, expected_codes, **kwargs)
+        redirects = [status.HTTP_302_FOUND, status.HTTP_303_SEE_OTHER]
         # There should be nothing in a 204 response.
-        if resp.status_code is status.HTTP_204_NO_CONTENT:
+        if r.status_code is status.HTTP_204_NO_CONTENT:
             logger.debug('service responded with 204 No Content')
-            return {}, resp.headers
+            return {}, r.headers
+        elif r.status_code in redirects and r.status_code in expected_codes:
+            r = self._make_request('get', r.headers['Location'])
         try:
-            data = resp.json()
+            data = r.json()
             logger.debug('service responded with data %s and headers %s',
-                         data, resp.headers)
-            return data, resp.headers
+                         data, r.headers)
+            return data, r.headers
         except json.decoder.JSONDecodeError as e:
-            raise BadResponse('Could not decode: {resp.content}') from e
+            raise BadResponse('Could not decode: {r.content}') from e
 
     def get_service_status(self) -> dict:
         """Get the status of the compiler service."""
-        return self.request('get', 'status')
+        return self._request('get', 'status')
 
-    def request_compilation(self, upload_id: str, checksum: str,
-                            compiler: Optional[Compilers] = None) \
-            -> CompilationStatus:
+    def compile(self, upload_id: str, checksum: str,
+                compiler: Optional[Compiler] = None,
+                output_format: Format = Format.PDF,
+                force: bool = False) -> CompilationStatus:
         """
         Request compilation for an upload workspace.
+
+        Unless ``force`` is ``True``, the compiler service will only attempt
+        to compile a source ID + checksum + format combo once. If there is
+        already a compilation underway or complete for the parameters in this
+        request, the service will redirect to the corresponding status URI.
+        Hence the data returned by this function may be from the response to
+        the initial POST request, or from the status endpoint after being
+        redirected.
 
         Parameters
         ----------
         upload_id : int
             Unique identifier for the upload workspace.
-        compiler : str or None
+        checksum : str
+            State up of the upload workspace.
+        compiler : :class:`.Compiler` or None
             Name of the preferred compiler.
+        output_format : :class:`.Format`
+            Defaults to :attr:`.Format.PDF`.
+        force : bool
+            If True, compilation will be forced even if it has been attempted
+            with these parameters previously. Default is ``False``.
 
         Returns
         -------
@@ -290,74 +328,40 @@ class CompilerService(object):
             The current state of the compilation.
 
         """
-        logger.debug("Requesting compilation for %s: %s",
-                     upload_id, self.output_format)
-        payload = {
-            'source_id': upload_id,
-            'checksum': checksum,
-            'format': self.output_format.value
-        }
-        data, headers = self.request('post', f'/',
-                                     json=payload,
-                                     expected_codes=[
-                                        status.HTTP_200_OK,
-                                        status.HTTP_202_ACCEPTED
-                                     ])
-        if 'status' in data and 'status' in data['status']:
-            compilation_status = Status(data['status']['status'])
-        else:
-            compilation_status = Status.IN_PROGRESS
-        return CompilationStatus(
-            upload_id=upload_id,
-            checksum=checksum,
-            output_format=self.output_format,
-            status=compilation_status
-        )
-
-    def get_compilation_product(self, upload_id: str, checksum: str,
-                                output_format: Format) \
-            -> Union[CompilationStatus, CompilationProduct]:
-        """
-        Get the compilation product for an upload workspace, if it exists.
-
-        The file management service will check its latest PDF product against
-        the checksum of the upload workspace. If there is a match, it returns
-        the file. Otherwise, if there is a compilation task with a matching
-        checksum, redirects to the task status endpoint. Otherwise, a 404 is
-        returned resulting in :class:`NoSuchResource` exception.
-        """
-        expected_codes = [
-           status.HTTP_200_OK,
-           status.HTTP_302_FOUND
-        ]
-        endpoint = f'/task/{upload_id}/{checksum}/{output_format.value}'
-        logger.debug('GET %s', endpoint)
-        response = self._make_request('get', endpoint, expected_codes,
-                                      stream=True)
-
-        if 'Location' in response.headers:
-            task_id = self._parse_task_id(response.headers['Location'])
-            return get_status(upload_id, task_id)
-        return CompilationProduct(
-            upload_id=upload_id,
-            stream=Download(response)
-        )
+        logger.debug("Requesting compilation for %s @ %s: %s",
+                     upload_id, checksum, output_format)
+        payload = {'source_id': upload_id, 'checksum': checksum,
+                   'format': output_format.value, 'force': force}
+        endpoint = '/'
+        expected_codes = [status.HTTP_200_OK, status.HTTP_202_ACCEPTED,
+                          status.HTTP_303_SEE_OTHER, status.HTTP_302_FOUND]
+        data, headers = self._request('post', endpoint, json=payload,
+                                      expected_codes=expected_codes)
+        return self._parse_status_response(data)
 
     def get_status(self, upload_id: str, checksum: str,
-                   output_format: Format) -> CompilationStatus:
-        """Get the status of a compilation task."""
+                   output_format: Format = Format.PDF) -> CompilationStatus:
+        """
+        Get the status of a compilation.
+
+        Parameters
+        ----------
+        upload_id : int
+            Unique identifier for the upload workspace.
+        checksum : str
+            State up of the upload workspace.
+        output_format : :class:`.Format`
+            Defaults to :attr:`.Format.PDF`.
+
+        Returns
+        -------
+        :class:`CompilationStatus`
+            The current state of the compilation.
+
+        """
         endpoint = f'/task/{upload_id}/{checksum}/{output_format.value}'
-        logger.debug('GET %s', endpoint)
-        data, headers = self.request('get', endpoint, expected_codes=[
-                                        status.HTTP_200_OK,
-                                        status.HTTP_303_SEE_OTHER
-                                     ])
-        return CompilationStatus(
-            upload_id=upload_id,
-            checksum=checksum,
-            output_format=output_format,
-            status=Status(data['status']['status'])
-        )
+        data, headers = self._request('get', endpoint)
+        return self._parse_status_response(data)
 
     def compilation_is_complete(self, upload_id: str, checksum: str,
                                 output_format: Format) -> bool:
@@ -368,6 +372,36 @@ class CompilerService(object):
         elif stat.status is Status.FAILED:
             raise CompilationFailed('Compilation failed')
         return False
+
+    def get_product(self, upload_id: str, checksum: str,
+                    output_format: Format = Format.PDF) -> CompilationProduct:
+        """
+        Get the compilation product for an upload workspace, if it exists.
+
+        The file management service will check its latest PDF product against
+        the checksum of the upload workspace. If there is a match, it returns
+        the file. Otherwise, a 404 is returned resulting in
+        :class:`NoSuchResource` exception.
+
+        Parameters
+        ----------
+        upload_id : int
+            Unique identifier for the upload workspace.
+        checksum : str
+            State up of the upload workspace.
+        output_format : :class:`.Format`
+            Defaults to :attr:`.Format.PDF`.
+
+        Returns
+        -------
+        :class:`CompilationProduct`
+            The compilation product itself.
+
+        """
+        endpoint = f'/task/{upload_id}/{checksum}/{output_format.value}'
+        response = self._make_request('get', endpoint, stream=True)
+        return CompilationProduct(upload_id=upload_id,
+                                  stream=Download(response))
 
 
 def init_app(app: object = None) -> None:
@@ -402,19 +436,18 @@ def set_auth_token(token: str) -> None:
     return current_session().set_auth_token(token)
 
 
-@wraps(CompilerService.get_compilation_product)
-def get_compilation_product(upload_id: str) -> \
+@wraps(CompilerService.get_product)
+def get_product(upload_id: str) -> \
         Union[CompilationStatus, CompilationProduct]:
-    """See :meth:`CompilerService.get_compilation_product`."""
-    return current_session().get_compilation_product(upload_id)
+    """See :meth:`CompilerService.get_product`."""
+    return current_session().get_product(upload_id)
 
 
-@wraps(CompilerService.request_compilation)
-def request_compilation(upload_id: str, checksum: str,
-                        compiler: Optional[CompilerService.Compilers] = None) \
-        -> CompilationStatus:
-    """See :meth:`CompilerService.request_compilation`."""
-    return current_session().request_compilation(upload_id, checksum, compiler=compiler)
+@wraps(CompilerService.compile)
+def compile(upload_id: str, checksum: str,
+            compiler: Optional[Compiler] = None) -> CompilationStatus:
+    """See :meth:`CompilerService.compile`."""
+    return current_session().compile(upload_id, checksum, compiler=compiler)
 
 
 @wraps(CompilerService.get_status)
