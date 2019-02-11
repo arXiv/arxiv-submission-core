@@ -34,7 +34,6 @@ class TestWithdrawalSubmission(TestCase):
                 checksum='asdf2345',
                 size=594930
             ),
-            compilations=[],
             primary_classification=meta.Classification('astro-ph.GA'),
             secondary_classification=[meta.Classification('astro-ph.CO')],
             license=meta.License(uri='http://free', name='free'),
@@ -102,7 +101,6 @@ class TestReplacementSubmission(TestCase):
                 checksum='asdf2345',
                 size=594930
             ),
-            compilations=[],
             primary_classification=meta.Classification('astro-ph.GA'),
             secondary_classification=[meta.Classification('astro-ph.CO')],
             license=meta.License(uri='http://free', name='free'),
@@ -182,7 +180,6 @@ class TestDOIorJREFAfterPublish(TestCase):
                 checksum='asdf2345',
                 size=594930
             ),
-            compilations=[],
             primary_classification=meta.Classification('astro-ph.GA'),
             secondary_classification=[meta.Classification('astro-ph.CO')],
             license=meta.License(uri='http://free', name='free'),

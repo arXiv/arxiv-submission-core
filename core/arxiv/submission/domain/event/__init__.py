@@ -202,7 +202,6 @@ class CreateSubmissionVersion(Event):
             Submission.submitter_accepts_policy
         submission.submitter_confirmed_preview = \
             Submission.submitter_confirmed_preview
-        submission.compilations.clear()
         return submission
 
 
@@ -230,7 +229,6 @@ class Rollback(Event):
         # Return these to last published state.
         submission.status = target.status
         submission.source_content = target.source_content
-        submission.compilations = target.compilations
         submission.submitter_contact_verified = \
             target.submitter_contact_verified
         submission.submitter_accepts_policy = \

@@ -1,3 +1,5 @@
+"""Tests for :mod:`.compiler`."""
+
 from unittest import TestCase, mock
 from arxiv import status
 from ... import compiler
@@ -19,12 +21,10 @@ class TestRequestCompilation(TestCase):
                 return_value=mock.MagicMock(
                     status_code=status.HTTP_202_ACCEPTED,
                     json=mock.MagicMock(return_value={
-                        'status': {
-                            'source_id': upload_id,
-                            'checksum': checksum,
-                            'output_format': output_format.value,
-                            'status': compiler.Status.IN_PROGRESS.value
-                        }
+                        'source_id': upload_id,
+                        'checksum': checksum,
+                        'output_format': output_format.value,
+                        'status': compiler.Status.IN_PROGRESS.value
                     }),
                     headers={'Location': location}
                 )
@@ -61,12 +61,10 @@ class TestRequestCompilation(TestCase):
                     status_code=status.HTTP_200_OK,
                     json=mock.MagicMock(
                         return_value={
-                            'status': {
-                                'source_id': upload_id,
-                                'checksum': checksum,
-                                'output_format': output_format.value,
-                                'status': compiler.Status.IN_PROGRESS.value
-                            }
+                            'source_id': upload_id,
+                            'checksum': checksum,
+                            'output_format': output_format.value,
+                            'status': compiler.Status.IN_PROGRESS.value
                         }
                     )
                 )
@@ -99,12 +97,10 @@ class TestGetTaskStatus(TestCase):
                     status_code=status.HTTP_200_OK,
                     json=mock.MagicMock(
                         return_value={
-                            'status': {
-                                'source_id': upload_id,
-                                'checksum': checksum,
-                                'output_format': output_format.value,
-                                'status': compiler.Status.FAILED.value
-                            }
+                            'source_id': upload_id,
+                            'checksum': checksum,
+                            'output_format': output_format.value,
+                            'status': compiler.Status.FAILED.value
                         }
                     )
                 )
@@ -130,12 +126,10 @@ class TestGetTaskStatus(TestCase):
                     status_code=status.HTTP_200_OK,
                     json=mock.MagicMock(
                         return_value={
-                            'status': {
-                                'source_id': upload_id,
-                                'checksum': checksum,
-                                'output_format': output_format.value,
-                                'status': compiler.Status.IN_PROGRESS.value
-                            }
+                            'source_id': upload_id,
+                            'checksum': checksum,
+                            'output_format': output_format.value,
+                            'status': compiler.Status.IN_PROGRESS.value
                         }
                     )
                 )
@@ -162,12 +156,10 @@ class TestGetTaskStatus(TestCase):
                     status_code=status.HTTP_200_OK,
                     json=mock.MagicMock(
                         return_value={
-                            'status': {
-                                'source_id': upload_id,
-                                'checksum': checksum,
-                                'output_format': output_format.value,
-                                'status': compiler.Status.SUCCEEDED.value
-                            }
+                            'source_id': upload_id,
+                            'checksum': checksum,
+                            'output_format': output_format.value,
+                            'status': compiler.Status.SUCCEEDED.value
                         }
                     )
                 )

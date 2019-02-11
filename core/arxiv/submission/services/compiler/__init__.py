@@ -1,5 +1,5 @@
 """
-Integration with the :mod:`compiler` service API.
+Integration with the compiler service API.
 
 The compiler is responsible for building PDF, DVI, and other goodies from
 LaTeX sources. In the submission UI, we specifically want to build a PDF so
@@ -217,7 +217,6 @@ class CompilerService(object):
         self._session.headers.update(headers)
 
     def _parse_status_response(self, data: dict) -> CompilationStatus:
-        data = data['status']
         return CompilationStatus(
             upload_id=data['source_id'],
             checksum=data['checksum'],
