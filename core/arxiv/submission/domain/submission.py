@@ -68,10 +68,28 @@ class Author:
 class SubmissionContent:
     """Metadata about the submission source package."""
 
+    class Format(Enum):
+        """Supported source formats."""
+
+        UNKNOWN = None
+        """We could not determine the source format."""
+        INVALID = "invalid"
+        """We are able to infer the source format, and it is not supported."""
+        TEX = "tex"
+        """A flavor of TeX."""
+        PDFTEX = "pdftex"
+        """A PDF derived from TeX."""
+        POSTSCRIPT = "ps"
+        """A postscript source."""
+        HTML = "html"
+        """An HTML source."""
+        PDF = "ps"
+        """A PDF-only source."""
+
     identifier: str
-    format: str
     checksum: str
     size: int
+    source_format: Format = Format.UNKNOWN
 
 
 # TODO: revisit start_time
@@ -82,7 +100,7 @@ class Compilation:
     class Status(Enum):      # type: ignore
         """Represents the status of a requested compilation."""
 
-        STARTED = "started"
+        IN_PROGRESS = "in_progress"
         """Compilation has been requested."""
 
         SUCCEEDED = "succeeded"
@@ -95,11 +113,15 @@ class Compilation:
     """This is the ID of the source upload workspace."""
     checksum: str
     """The checksum of the source package to compile."""
-    format: str
+    output_format: str
     """Compilation target format."""
     start_time: datetime
     end_time: Optional[datetime]
-    status: Status = field(default=Status.STARTED)
+    status: Status = field(default=Status.IN_PROGRESS)
+
+    @property
+    def identifier(self) -> str:
+        return f"{self.source_id}::{self.checksum}::{self.output_format}"
 
     @classmethod
     def from_processes(cls, processes: List[ProcessStatus]) -> 'Compilation':
@@ -138,14 +160,14 @@ class Compilation:
             start_time = latest.created
             end_time = None
         status_map = {
-            ProcessStatus.Status.REQUESTED: cls.Status.STARTED,
+            ProcessStatus.Status.REQUESTED: cls.Status.IN_PROGRESS,
             ProcessStatus.Status.SUCCEEDED: cls.Status.SUCCEEDED,
             ProcessStatus.Status.FAILED: cls.Status.FAILED,
         }
         return Compilation(
             source_id=source_id,
             checksum=checksum,
-            format=output_format,
+            output_format=output_format,
             start_time=start_time,
             end_time=end_time,
             status=status_map[latest.status]

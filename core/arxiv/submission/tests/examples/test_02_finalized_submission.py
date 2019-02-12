@@ -51,7 +51,7 @@ class TestFinalizedSubmission(TestCase):
                 domain.event.SetPrimaryClassification(category="cs.DL",
                                                       **self.defaults),
                 domain.event.SetUploadPackage(checksum="a9s9k342900ks03330029",
-                                              format='tex', identifier=123,
+                                              source_format=submission.SubmissionContent.Format('tex'), identifier=123,
                                               size=593992, **self.defaults),
                 domain.event.SetAbstract(abstract="Very abstract " * 20,
                                          **self.defaults),

@@ -46,6 +46,9 @@ def get_engine(app: object = None) -> Engine:
     """Get a new :class:`.Engine` for the classic database."""
     config = get_application_config(app)
     database_uri = config.get('CLASSIC_DATABASE_URI', 'sqlite://')
+    if database_uri.startswith('mysql'):
+        return create_engine(database_uri, json_serializer=serializer.dumps,
+                             json_deserializer=serializer.loads)
     return create_engine(database_uri)
 
 

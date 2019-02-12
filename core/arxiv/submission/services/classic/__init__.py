@@ -322,11 +322,11 @@ def store_event(event: Event, before: Optional[Submission],
     else:                           # Just set the ID directly.
         db_event.submission_id = before.submission_id
 
-    try:
-        session.commit()
-    except Exception as e:
-        session.rollback()
-        raise CommitFailed('Something went wrong: %s', e) from e
+    # try:
+    session.commit()
+    # except Exception as e:
+    #     session.rollback()
+    #     raise CommitFailed('Something went wrong: %s', e) from e
 
     event.committed = True
 

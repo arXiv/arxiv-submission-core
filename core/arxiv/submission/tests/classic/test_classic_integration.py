@@ -139,7 +139,7 @@ class TestClassicUIWorkflow(TestCase):
                 SetUploadPackage(
                     creator=submitter,
                     checksum="a9s9k342900skks03330029k",
-                    format='tex',
+                    source_format=submission.SubmissionContent.Format('tex'),
                     identifier=123,
                     size=593992
                 ),
@@ -329,7 +329,7 @@ class TestReplacementIntegration(TestCase):
                 SetUploadPackage(
                     creator=self.submitter,
                     checksum="a9s9k342900skks03330029k",
-                    format='tex',
+                    source_format=submission.SubmissionContent.Format('tex'),
                     identifier=123,
                     size=593992
                 ),
@@ -480,7 +480,7 @@ class TestJREFIntegration(TestCase):
                 SetUploadPackage(
                     creator=self.submitter,
                     checksum="a9s9k342900skks03330029k",
-                    format='tex',
+                    source_format=submission.SubmissionContent.Format('tex'),
                     identifier=123,
                     size=593992
                 ),
@@ -650,7 +650,7 @@ class TestWithdrawalIntegration(TestCase):
                 SetUploadPackage(
                     creator=self.submitter,
                     checksum="a9s9k342900skks03330029k",
-                    format='tex',
+                    source_format=submission.SubmissionContent.Format('tex'),
                     identifier=123,
                     size=593992
                 ),
@@ -788,7 +788,7 @@ class TestPublicationIntegration(TestCase):
                 SetUploadPackage(
                     creator=self.submitter,
                     checksum="a9s9k342900skks03330029k",
-                    format='tex',
+                    source_format=submission.SubmissionContent.Format('tex'),
                     identifier=123,
                     size=593992
                 ),

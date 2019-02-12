@@ -846,13 +846,10 @@ class SetUploadPackage(Event):
     NAMED = "upload package set"
 
     identifier: str = field(default_factory=str)
-    format: str = field(default_factory=str)
     checksum: str = field(default_factory=str)
     size: int = field(default=0)
-
-    ALLOWED_FORMATS = [
-        'pdftex', 'tex', 'pdf', 'ps', 'html', 'invalid', 'withdrawn'
-    ]
+    source_format: SubmissionContent.Format = \
+        field(default=SubmissionContent.Format.UNKNOWN)
 
     def validate(self, submission: Submission) -> None:
         """Validate data for :class:`.SetUploadPackage`."""
@@ -861,16 +858,13 @@ class SetUploadPackage(Event):
         if not self.identifier:
             raise InvalidEvent(self, 'Missing upload ID')
 
-        if self.format and self.format not in self.ALLOWED_FORMATS:
-            raise InvalidEvent(self, f'Format {self.format} not allowed')
-
     def project(self, submission: Submission) -> Submission:
         """Replace :class:`.SubmissionContent` metadata on the submission."""
         submission.source_content = SubmissionContent(
-            format=self.format,
             checksum=self.checksum,
             identifier=self.identifier,
-            size=self.size
+            size=self.size,
+            source_format=self.source_format,
         )
         submission.submitter_confirmed_preview = False
         return submission
@@ -883,24 +877,18 @@ class UpdateUploadPackage(Event):
     NAME = "update the upload package"
     NAMED = "upload package updated"
 
-    format: str = field(default_factory=str)
     checksum: str = field(default_factory=str)
     size: int = field(default=0)
-
-    ALLOWED_FORMATS = [
-        'pdftex', 'tex', 'pdf', 'ps', 'html', 'invalid', 'withdrawn'
-    ]
+    source_format: SubmissionContent.Format = \
+        field(default=SubmissionContent.Format.UNKNOWN)
 
     def validate(self, submission: Submission) -> None:
         """Validate data for :class:`.SetUploadPackage`."""
         validators.submission_is_not_finalized(self, submission)
 
-        if self.format and self.format not in self.ALLOWED_FORMATS:
-            raise InvalidEvent(self, f'Format {self.format} not allowed')
-
     def project(self, submission: Submission) -> Submission:
         """Replace :class:`.SubmissionContent` metadata on the submission."""
-        submission.source_content.format = self.format
+        submission.source_content.source_format = self.source_format
         submission.source_content.checksum = self.checksum
         submission.source_content.size = self.size
         submission.submitter_confirmed_preview = False

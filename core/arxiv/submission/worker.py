@@ -13,6 +13,11 @@ from .tasks import get_or_create_worker_app
 from . import init_app
 from . import rules, config
 
+import logging
+
+logging.getLogger('arxiv.submission.services.classic.interpolate') \
+    .setLevel(logging.ERROR)
+
 app = Flask(__name__)
 app.config.from_object(config)
 app.app_context().push()

@@ -30,7 +30,7 @@ class TestWithdrawalSubmission(TestCase):
             created=datetime.now(UTC),
             source_content=submission.SubmissionContent(
                 identifier='6543',
-                format='pdf',
+                source_format=submission.SubmissionContent.Format('pdf'),
                 checksum='asdf2345',
                 size=594930
             ),
@@ -97,7 +97,7 @@ class TestReplacementSubmission(TestCase):
             created=datetime.now(UTC),
             source_content=submission.SubmissionContent(
                 identifier='6543',
-                format='pdf',
+                source_format=submission.SubmissionContent.Format('pdf'),
                 checksum='asdf2345',
                 size=594930
             ),
@@ -176,7 +176,7 @@ class TestDOIorJREFAfterPublish(TestCase):
             created=datetime.now(UTC),
             source_content=submission.SubmissionContent(
                 identifier='6543',
-                format='pdf',
+                source_format=submission.SubmissionContent.Format('pdf'),
                 checksum='asdf2345',
                 size=594930
             ),

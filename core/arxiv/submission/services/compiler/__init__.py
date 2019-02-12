@@ -7,7 +7,7 @@ that the user can preview their submission. Additionally, we want to show the
 submitter the TeX log so that they can identify any potential problems with
 their sources.
 """
-from typing import Tuple, Optional, List, Union, NamedTuple
+from typing import Tuple, Optional, List, Union, NamedTuple, Mapping
 import json
 import io
 import re
@@ -52,6 +52,16 @@ class Format(Enum):      # type: ignore
     DVI = "dvi"
     PS = "ps"
 
+    @property
+    def content_type(self):
+        """Get the MIME type for the compilation product."""
+        _ctypes = {
+            Format.PDF: 'application/pdf',
+            Format.DVI: 'application/x-dvi',
+            Format.PS: 'application/postscript'
+        }
+        return _ctypes[self]
+
 
 class Compiler(Enum):
     """Compiler known to be supported by the compiler service."""
@@ -69,6 +79,7 @@ class Reason(Enum):
     CANCELLED = "cancelled"
     ERROR = "compilation_errors"
     NETWORK = "network_error"
+    NONE = None
 
 
 class CompilationStatus(NamedTuple):
@@ -83,7 +94,7 @@ class CompilationStatus(NamedTuple):
     """Checksum of the source package that we are compiling."""
     output_format: Format = Format.PDF
     """The requested output format."""
-    reason: Optional[Reason] = None
+    reason: Reason = None
     """The specific reason for the :attr:`.status`."""
     description: Optional[str] = None
     """Additional detail about the :attr:`.status`."""
@@ -119,11 +130,30 @@ class CompilationProduct(NamedTuple):
     stream: io.BytesIO
     """Readable buffer with the product content."""
 
+    content_type: str
+    """MIME-type of the stream."""
+
     status: Optional[CompilationStatus] = None
     """Status information about the product."""
 
     checksum: Optional[str] = None
     """The B64-encoded MD5 hash of the compilation product."""
+
+
+class CompilationLog(NamedTuple):
+    """Content of a compilation log."""
+
+    stream: io.BytesIO
+    """Readable buffer with the product content."""
+
+    status: Optional[CompilationStatus] = None
+    """Status information about the log."""
+
+    checksum: Optional[str] = None
+    """The B64-encoded MD5 hash of the log."""
+
+    content_type: str = 'text/plain'
+    """MIME-type of the stream."""
 
 
 class RequestFailed(IOError):
@@ -174,7 +204,7 @@ class Download(object):
         """Initialize with a :class:`requests.Response` object."""
         self._response = response
 
-    def read(self) -> bytes:
+    def read(self, *args, **kwargs) -> bytes:
         """Read response content."""
         return self._response.content
 
@@ -226,11 +256,6 @@ class CompilerService(object):
             description=data.get('description', None)
         )
 
-    def _parse_task_id(self, task_uri: str) -> str:
-        parts = urlparse(task_uri)
-        task_id = re.match(r'^/task/([^/]+)', parts.path).group(1)
-        return task_id
-
     def _path(self, path: str, query: dict = {}) -> str:
         o = urlparse(self._endpoint)
         path = path.lstrip('/')
@@ -268,18 +293,22 @@ class CompilerService(object):
         """Set the authn/z token to use in subsequent requests."""
         self._session.headers.update({'Authorization': token})
 
+    def _parse_location(self, headers: Mapping) -> str:
+        return urlparse(headers['Location']).path
+
     def _request(self, method: str, path: str,
                  expected_codes: List[int] = [status.HTTP_200_OK],
                  **kwargs) -> Tuple[dict, dict]:
         """Perform an HTTP request, and handle any exceptions."""
         r = self._make_request(method, path, expected_codes, **kwargs)
-        redirects = [status.HTTP_302_FOUND, status.HTTP_303_SEE_OTHER]
+        redirects = [status.HTTP_202_ACCEPTED, status.HTTP_302_FOUND,
+                     status.HTTP_303_SEE_OTHER]
         # There should be nothing in a 204 response.
         if r.status_code is status.HTTP_204_NO_CONTENT:
             logger.debug('service responded with 204 No Content')
             return {}, r.headers
         elif r.status_code in redirects and r.status_code in expected_codes:
-            r = self._make_request('get', r.headers['Location'])
+            r = self._make_request('get', self._parse_location(r.headers))
         try:
             data = r.json()
             logger.debug('service responded with data %s and headers %s',
@@ -358,7 +387,7 @@ class CompilerService(object):
             The current state of the compilation.
 
         """
-        endpoint = f'/task/{upload_id}/{checksum}/{output_format.value}'
+        endpoint = f'/{upload_id}/{checksum}/{output_format.value}'
         data, headers = self._request('get', endpoint)
         return self._parse_status_response(data)
 
@@ -377,10 +406,30 @@ class CompilerService(object):
         """
         Get the compilation product for an upload workspace, if it exists.
 
-        The file management service will check its latest PDF product against
-        the checksum of the upload workspace. If there is a match, it returns
-        the file. Otherwise, a 404 is returned resulting in
-        :class:`NoSuchResource` exception.
+        Parameters
+        ----------
+        upload_id : int
+            Unique identifier for the upload workspace.
+        checksum : str
+            State up of the upload workspace.
+        output_format : :class:`.Format`
+            Defaults to :attr:`.Format.PDF`.
+
+        Returns
+        -------
+        :class:`CompilationProduct`
+            The compilation product itself.
+
+        """
+        endpoint = f'/{upload_id}/{checksum}/{output_format.value}/product'
+        response = self._make_request('get', endpoint, stream=True)
+        return CompilationProduct(content_type=output_format.content_type,
+                                  stream=io.BytesIO(response.content))
+
+    def get_log(self, upload_id: str, checksum: str,
+                output_format: Format = Format.PDF) -> CompilationLog:
+        """
+        Get the compilation log for an upload workspace, if it exists.
 
         Parameters
         ----------
@@ -397,10 +446,9 @@ class CompilerService(object):
             The compilation product itself.
 
         """
-        endpoint = f'/task/{upload_id}/{checksum}/{output_format.value}'
+        endpoint = f'/{upload_id}/{checksum}/{output_format.value}/log'
         response = self._make_request('get', endpoint, stream=True)
-        return CompilationProduct(upload_id=upload_id,
-                                  stream=Download(response))
+        return CompilationLog(stream=io.BytesIO(response.content))
 
 
 def init_app(app: object = None) -> None:
@@ -436,10 +484,17 @@ def set_auth_token(token: str) -> None:
 
 
 @wraps(CompilerService.get_product)
-def get_product(upload_id: str) -> \
-        Union[CompilationStatus, CompilationProduct]:
+def get_product(upload_id: str, checksum: str,
+                output_format: Format = Format.PDF) -> CompilationProduct:
     """See :meth:`CompilerService.get_product`."""
-    return current_session().get_product(upload_id)
+    return current_session().get_product(upload_id, checksum, output_format)
+
+
+@wraps(CompilerService.get_log)
+def get_log(upload_id: str, checksum: str,
+            output_format: Format = Format.PDF) -> CompilationProduct:
+    """See :meth:`CompilerService.get_log`."""
+    return current_session().get_log(upload_id, checksum, output_format)
 
 
 @wraps(CompilerService.compile)

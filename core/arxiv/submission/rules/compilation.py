@@ -32,21 +32,30 @@ def poll_compilation(event: AddProcessStatus, before: Submission,
     logger.debug('Poll compilation for submission %s', after.submission_id)
     source_id, checksum, fmt = compiler.split_task_id(event.identifier)
     process = ProcessStatus.Process.COMPILATION
-    try:
-        for tries in count(1):
+
+    for tries in count(1):
+        try:
+            logger.debug('check compilation status')
             if compiler.compilation_is_complete(source_id, checksum, fmt):
+                logger.debug('compilation is complete; hurray!')
                 yield AddProcessStatus(creator=creator, process=process,
                                        status=ProcessStatus.Status.SUCCEEDED,
                                        service=compiler.NAME,
                                        version=compiler.VERSION,
                                        identifier=event.identifier)
                 break
+            logger.debug(f'not complete, try again in {tries ** 2} seconds')
             time.sleep(tries ** 2)  # Exponential back-off.
-    except (compiler.RequestFailed, compiler.CompilationFailed) as e:
-        reason = 'request failed (%s): %s' % (type(e).__name__, e)
-        yield AddProcessStatus(creator=creator, process=process,
-                               status=ProcessStatus.Status.FAILED,
-                               service=compiler.NAME,
-                               version=plaintext.VERSION,
-                               identifier=event.identifier,
-                               reason=reason)
+        except compiler.NoSuchResource:
+            logger.debug('no such resource; wait and try again')
+            time.sleep(tries ** 2)  # Exponential back-off.
+        except (compiler.RequestFailed, compiler.CompilationFailed) as e:
+            reason = 'request failed (%s): %s' % (type(e).__name__, e)
+            logger.debug('off the rails because %s', reason)
+            yield AddProcessStatus(creator=creator, process=process,
+                                   status=ProcessStatus.Status.FAILED,
+                                   service=compiler.NAME,
+                                   version=plaintext.VERSION,
+                                   identifier=event.identifier,
+                                   reason=reason)
+            break
