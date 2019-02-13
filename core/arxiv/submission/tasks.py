@@ -66,9 +66,11 @@ def is_async(func: Callable) -> Callable:
     def do_callback(event: Event, before: Submission,
                     after: Submission, creator: Agent) -> Iterable[Event]:
         """Run the callback, and save the results."""
-        for event in func(event, before, after, creator):
-            if not event.committed:
-                event.commit(save)
+        save(*func(event, before, after, creator),
+             submission_id=after.submission_id)
+        # for event in func(event, before, after, creator):
+        #     if not event.committed:
+        #         event.commit(save)
     worker_app.task(name=name)(do_callback)     # Register wrapped callback.
 
     @wraps(func)

@@ -13,4 +13,5 @@ that any modules that define rules are imported here.
 
 # Importing these modules causes their callbacks to be registered with their
 # respective events, and (if they are asynchronous) with the submission worker.
-from . import classification_and_content, metadata_checks, reclassification
+from . import classification_and_content, metadata_checks, reclassification, \
+    compilation

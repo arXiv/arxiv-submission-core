@@ -71,7 +71,7 @@ class TestProposeFromClassifierResults(TestCase):
             created=datetime.now(UTC),
             source_content=SubmissionContent(
                 identifier='5678',
-                format='pdf',
+                source_format=SubmissionContent.Format('pdf'),
                 checksum='a1b2c3d4',
                 size=58493
             )
@@ -116,7 +116,7 @@ class TestProposeCrossFromPrimary(TestCase):
             created=datetime.now(UTC),
             source_content=SubmissionContent(
                 identifier='5678',
-                format='pdf',
+                source_format=SubmissionContent.Format('pdf'),
                 checksum='a1b2c3d4',
                 size=58493
             )
@@ -194,7 +194,7 @@ class TestAcceptSystemCrossProposal(TestCase):
             created=datetime.now(UTC),
             source_content=SubmissionContent(
                 identifier='5678',
-                format='pdf',
+                source_format=SubmissionContent.Format('pdf'),
                 checksum='a1b2c3d4',
                 size=58493
             )

@@ -25,6 +25,7 @@ class ProcessStatus:
         """Supported processes."""
 
         NONE = None
+        COMPILATION = 'compilation'
         PLAIN_TEXT_EXTRACTION = 'plaintext'
         CLASSIFICATION = 'classification'
         OVERLAP_DETECTION = 'overlap'

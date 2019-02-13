@@ -1,6 +1,6 @@
 """Data structures for submissions."""
 
-from typing import Optional, Dict, TypeVar, List
+from typing import Optional, Dict, TypeVar, List, Iterable
 from datetime import datetime
 from dateutil.parser import parse as parse_date
 from enum import Enum
@@ -63,36 +63,125 @@ class Author:
         """Generate a dict representation of this :class:`.Author`."""
         return asdict(self)
 
+
 @dataclass
 class SubmissionContent:
     """Metadata about the submission source package."""
 
+    class Format(Enum):
+        """Supported source formats."""
+
+        UNKNOWN = None
+        """We could not determine the source format."""
+        INVALID = "invalid"
+        """We are able to infer the source format, and it is not supported."""
+        TEX = "tex"
+        """A flavor of TeX."""
+        PDFTEX = "pdftex"
+        """A PDF derived from TeX."""
+        POSTSCRIPT = "ps"
+        """A postscript source."""
+        HTML = "html"
+        """An HTML source."""
+        PDF = "pdf"
+        """A PDF-only source."""
+
     identifier: str
-    format: str
     checksum: str
     size: int
+    source_format: Format = Format.UNKNOWN
 
-class CompilationStatus(Enum):      # type: ignore
-    """Represents the status of a requested compilation."""
+    def __post_init__(self):
+        """Make sure that :attr:`.source_format` is a :class:`.Format`."""
+        if self.source_format and type(self.source_format) is str:
+            self.source_format = self.Format(self.source_format)
 
-    IN_PROGRESS = "in_progress"
-    """Compilation is in progress."""
 
-    COMPLETED = "completed"
-    """Compilation successfully completed."""
-
-    FAILED = "failed"
-    """Compilation failed."""
-
+# TODO: revisit start_time
 @dataclass
 class Compilation:
     """Represents a submission compilation."""
 
-    task_id: str
-    source_etag: str
-    format: str
-    start_time: datetime = field(default_factory=get_tzaware_utc_now)
-    status: CompilationStatus = field(default=CompilationStatus.IN_PROGRESS)
+    class Status(Enum):      # type: ignore
+        """Represents the status of a requested compilation."""
+
+        IN_PROGRESS = "in_progress"
+        """Compilation has been requested."""
+
+        SUCCEEDED = "succeeded"
+        """Compilation successfully completed."""
+
+        FAILED = "failed"
+        """Compilation failed."""
+
+    source_id: str
+    """This is the ID of the source upload workspace."""
+    checksum: str
+    """The checksum of the source package to compile."""
+    output_format: str
+    """Compilation target format."""
+    start_time: datetime
+    end_time: Optional[datetime]
+    status: Status = field(default=Status.IN_PROGRESS)
+
+    def __post_init__(self):
+        """Make sure that :attr:`.status` is a :class:`.Status`."""
+        if self.status and type(self.status) is str:
+            self.status = self.Status(self.status)
+
+    @property
+    def identifier(self) -> str:
+        return f"{self.source_id}::{self.checksum}::{self.output_format}"
+
+    @classmethod
+    def from_processes(cls, processes: List[ProcessStatus]) -> 'Compilation':
+        """
+        Get a :class:`.Compilation` from :attr:`.Submission.processes`.
+
+        Parameters
+        ----------
+        processes : list
+            List of :class:`.ProcessStatus` instances from a submission.
+
+        Returns
+        -------
+        :class:`.Compilation`
+            Static representation of the compilation attempt.
+
+        """
+        processes = sorted((p for p in processes
+                            if p.process is ProcessStatus.Process.COMPILATION),
+                           key=lambda p: p.created)
+        if not processes:
+            return None
+        finished_states = [ProcessStatus.Status.SUCCEEDED,
+                           ProcessStatus.Status.FAILED]
+        latest = processes[-1]
+        source_id, checksum, output_format = \
+            latest.process_identifier.split("::")
+        if latest.status in finished_states:
+            end_time = latest.created
+            for proc in processes[::-1]:
+                if proc.process_identifier == latest.process_identifier \
+                        and proc.status is ProcessStatus.Status.REQUESTED:
+                    start_time = proc.created
+                    break
+        else:
+            start_time = latest.created
+            end_time = None
+        status_map = {
+            ProcessStatus.Status.REQUESTED: cls.Status.IN_PROGRESS,
+            ProcessStatus.Status.SUCCEEDED: cls.Status.SUCCEEDED,
+            ProcessStatus.Status.FAILED: cls.Status.FAILED,
+        }
+        return Compilation(
+            source_id=source_id,
+            checksum=checksum,
+            output_format=output_format,
+            start_time=start_time,
+            end_time=end_time,
+            status=status_map[latest.status]
+        )
 
 
 @dataclass
@@ -258,8 +347,6 @@ class Submission:
     updated: Optional[datetime] = field(default=None)
 
     source_content: Optional[SubmissionContent] = field(default=None)
-    compilations: List[Compilation] = field(default_factory=list)
-
     primary_classification: Optional[Classification] = field(default=None)
     delegations: Dict[str, Delegation] = field(default_factory=dict)
     proxy: Optional[Agent] = field(default=None)
@@ -340,6 +427,42 @@ class Submission:
     @property
     def is_on_hold(self) -> bool:
         return len(self.holds) > 0 or self.status == self.ON_HOLD
+
+    @property
+    def latest_compilation(self) -> Optional[Compilation]:
+        """
+        Get data about the latest compilation attempt.
+
+        Returns
+        -------
+        :class:`.Compilation` or None
+
+        """
+        return Compilation.from_processes(self.processes)
+
+    @property
+    def compilations(self) -> List[Compilation]:
+        return list(self.get_compilations())
+
+    def get_compilations(self) -> Iterable[Compilation]:
+        """Get all of the compilation attempts for this submission."""
+        on_deck = []
+        finished_states = [ProcessStatus.Status.SUCCEEDED,
+                           ProcessStatus.Status.FAILED]
+        for process in sorted(self.processes, key=lambda p: p.created):
+
+            if process.process is not ProcessStatus.Process.COMPILATION:
+                continue
+            if on_deck:
+                identifier = process.process_identifier
+                finished = on_deck[-1].status in finished_states
+                new_process = identifier != on_deck[-1].process_identifier
+                if finished or new_process:
+                    yield Compilation.from_processes(on_deck)
+                    on_deck.clear()     # Next attempt.
+            on_deck.append(process)
+        if on_deck:     # Whatever is left.
+            yield Compilation.from_processes(on_deck)
 
     @property
     def has_active_requests(self) -> bool:

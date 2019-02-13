@@ -11,6 +11,7 @@ from ...services import classic
 from ... import save, load, load_fast, domain, exceptions
 
 CCO = 'http://creativecommons.org/publicdomain/zero/1.0/'
+TEX = domain.submission.SubmissionContent.Format('tex')
 
 
 class TestCrossListRequested(TestCase):
@@ -49,7 +50,8 @@ class TestCrossListRequested(TestCase):
                 domain.event.SetPrimaryClassification(category=self.category,
                                                       **self.defaults),
                 domain.event.SetUploadPackage(checksum="a9s9k342900ks03330029",
-                                              format='tex', identifier=123,
+                                              source_format=TEX,
+                                              identifier=123,
                                               size=593992, **self.defaults),
                 domain.event.SetAbstract(abstract="Very abstract " * 20,
                                          **self.defaults),
@@ -330,7 +332,7 @@ class TestCrossListApplied(TestCase):
                 domain.event.SetPrimaryClassification(category=self.category,
                                                       **self.defaults),
                 domain.event.SetUploadPackage(checksum="a9s9k342900ks03330029",
-                                              format='tex', identifier=123,
+                                              source_format=TEX, identifier=123,
                                               size=593992, **self.defaults),
                 domain.event.SetAbstract(abstract="Very abstract " * 20,
                                          **self.defaults),
@@ -710,7 +712,8 @@ class TestCrossListRejected(TestCase):
                 domain.event.SetPrimaryClassification(category=self.category,
                                                       **self.defaults),
                 domain.event.SetUploadPackage(checksum="a9s9k342900ks03330029",
-                                              format='tex', identifier=123,
+                                              source_format=TEX,
+                                              identifier=123,
                                               size=593992, **self.defaults),
                 domain.event.SetAbstract(abstract="Very abstract " * 20,
                                          **self.defaults),

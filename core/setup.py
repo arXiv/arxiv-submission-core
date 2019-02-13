@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='arxiv-submission-core',
-    version='0.6.2rc2',
+    version='0.6.2rc4',
     packages=[f'arxiv.{package}' for package
               in find_packages('arxiv')],
     zip_safe=False,

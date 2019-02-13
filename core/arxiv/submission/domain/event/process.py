@@ -46,3 +46,11 @@ class AddProcessStatus(Event):
             reason=self.reason
         ))
         return submission
+
+    @classmethod
+    def from_dict(cls, **data: dict) -> 'AddProcessStatus':
+        if 'process' in data:
+            data['process'] = cls.Process(data['process'])
+        if 'status' in data:
+            data['status'] = cls.Status(data['status'])
+        return cls(**data)
