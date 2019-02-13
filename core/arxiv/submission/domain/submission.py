@@ -83,13 +83,18 @@ class SubmissionContent:
         """A postscript source."""
         HTML = "html"
         """An HTML source."""
-        PDF = "ps"
+        PDF = "pdf"
         """A PDF-only source."""
 
     identifier: str
     checksum: str
     size: int
     source_format: Format = Format.UNKNOWN
+
+    def __post_init__(self):
+        """Make sure that :attr:`.source_format` is a :class:`.Format`."""
+        if self.source_format and type(self.source_format) is str:
+            self.source_format = self.Format(self.source_format)
 
 
 # TODO: revisit start_time
@@ -118,6 +123,11 @@ class Compilation:
     start_time: datetime
     end_time: Optional[datetime]
     status: Status = field(default=Status.IN_PROGRESS)
+
+    def __post_init__(self):
+        """Make sure that :attr:`.status` is a :class:`.Status`."""
+        if self.status and type(self.status) is str:
+            self.status = self.Status(self.status)
 
     @property
     def identifier(self) -> str:

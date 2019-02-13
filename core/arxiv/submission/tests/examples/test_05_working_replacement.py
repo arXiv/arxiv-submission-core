@@ -49,7 +49,7 @@ class TestReplacementSubmissionInProgress(TestCase):
                 domain.event.SetPrimaryClassification(category=self.category,
                                                       **self.defaults),
                 domain.event.SetUploadPackage(checksum="a9s9k342900ks03330029",
-                                              source_format=submission.SubmissionContent.Format('tex'), identifier=123,
+                                              source_format=domain.submission.SubmissionContent.Format('tex'), identifier=123,
                                               size=593992, **self.defaults),
                 domain.event.SetAbstract(abstract="Very abstract " * 20,
                                          **self.defaults),

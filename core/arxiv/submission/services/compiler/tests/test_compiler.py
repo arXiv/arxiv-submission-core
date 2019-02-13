@@ -28,6 +28,18 @@ class TestRequestCompilation(TestCase):
                     }),
                     headers={'Location': location}
                 )
+            ),
+            get=mock.MagicMock(
+                return_value=mock.MagicMock(
+                    status_code=status.HTTP_200_OK,
+                    json=mock.MagicMock(return_value={
+                        'source_id': upload_id,
+                        'checksum': checksum,
+                        'output_format': output_format.value,
+                        'status': compiler.Status.IN_PROGRESS.value
+                    }),
+                    headers={'Location': location}
+                )
             )
         )
         mock_Session.return_value = mock_session
