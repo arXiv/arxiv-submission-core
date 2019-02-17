@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='arxiv-submission-core',
-    version='0.6.2rc4',
+    version='0.6.2rc5',
     packages=[f'arxiv.{package}' for package
               in find_packages('arxiv')],
     zip_safe=False,
@@ -20,6 +20,8 @@ setup(
         'dataclasses',
         'celery==4.1.0',
         'kombu==4.1.0',
-        'redis==2.10.6'
+        'redis==2.10.6',
+        'mypy_extensions==0.4.1',
+        'requests==2.21.0'
     ]
 )

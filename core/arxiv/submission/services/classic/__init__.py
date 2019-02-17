@@ -520,6 +520,7 @@ def _new_dbevent(event: Event) -> DBEvent:
     # print(event.to_dict())
     return DBEvent(event_type=event.event_type,
                    event_id=event.event_id,
+                   event_version=_get_app_version(),
                    data=event.to_dict(),
                    created=event.created,
                    creator=event.creator.to_dict(),
@@ -599,3 +600,7 @@ def _get_db_submission_rows(submission_id: int) -> List[models.Submission]:
     if not dbss:
         raise NoSuchSubmission('No submission found')
     return dbss
+
+
+def _get_app_version() -> str:
+    return get_application_config().get('CORE_VERSION', '0.0.0')

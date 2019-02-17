@@ -152,6 +152,12 @@ example:
    40032
 
 
+Versioning
+==========
+See :mod:`.versioning` for considerations about changes to the structure of
+existing event/command classes between versions.
+
+
 .. _legacy-integration:
 
 Integration with the legacy system
