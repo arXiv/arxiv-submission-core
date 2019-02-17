@@ -522,7 +522,7 @@ class Submission(Base):    # type: ignore
 
         if submission.source_content is not None:
             self.must_process = 0
-            self.source_size = submission.source_content.size
+            self.source_size = submission.source_content.uncompressed_size
             if submission.source_content.source_format is not None:
                 self.source_format = \
                     submission.source_content.source_format.value

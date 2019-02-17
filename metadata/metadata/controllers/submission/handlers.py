@@ -274,7 +274,8 @@ def handle_source_content(data: dict, agents: dict) -> Tuple[events.Event]:
         format=data.get('format'),
         checksum=data.get('checksum'),
         identifier=data.get('identifier'),
-        size=data.get('size'),
+        uncompressed_size=data.get('uncompressed_size'),
+        compressed_size=data.get('compressed_size')
     ),
 
 

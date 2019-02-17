@@ -88,7 +88,8 @@ class SubmissionContent:
 
     identifier: str
     checksum: str
-    size: int
+    uncompressed_size: int
+    compressed_size: int
     source_format: Format = Format.UNKNOWN
 
     def __post_init__(self):

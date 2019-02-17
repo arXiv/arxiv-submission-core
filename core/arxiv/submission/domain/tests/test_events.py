@@ -32,7 +32,8 @@ class TestWithdrawalSubmission(TestCase):
                 identifier='6543',
                 source_format=submission.SubmissionContent.Format('pdf'),
                 checksum='asdf2345',
-                size=594930
+                uncompressed_size=594930,
+                compressed_size=594930
             ),
             primary_classification=meta.Classification('astro-ph.GA'),
             secondary_classification=[meta.Classification('astro-ph.CO')],
@@ -99,7 +100,8 @@ class TestReplacementSubmission(TestCase):
                 identifier='6543',
                 source_format=submission.SubmissionContent.Format('pdf'),
                 checksum='asdf2345',
-                size=594930
+                uncompressed_size=594930,
+                compressed_size=594930
             ),
             primary_classification=meta.Classification('astro-ph.GA'),
             secondary_classification=[meta.Classification('astro-ph.CO')],
@@ -178,7 +180,8 @@ class TestDOIorJREFAfterPublish(TestCase):
                 identifier='6543',
                 source_format=submission.SubmissionContent.Format('pdf'),
                 checksum='asdf2345',
-                size=594930
+                uncompressed_size=594930,
+                compressed_size=594930
             ),
             primary_classification=meta.Classification('astro-ph.GA'),
             secondary_classification=[meta.Classification('astro-ph.CO')],

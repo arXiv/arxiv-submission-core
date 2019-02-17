@@ -34,7 +34,8 @@ class TestPlainTextContentExtraction(TestCase):
                 identifier='5678',
                 source_format=SubmissionContent.Format('pdf'),
                 checksum='a1b2c3d4',
-                size=58493
+                uncompressed_size=58493,
+                compressed_size=58493
             )
         )
 
@@ -160,7 +161,8 @@ class TestClassificationRequest(TestCase):
                 identifier='5678',
                 source_format=SubmissionContent.Format('pdf'),
                 checksum='a1b2c3d4',
-                size=58493
+                uncompressed_size=58493,
+                compressed_size=58493
             )
         )
 
@@ -287,7 +289,8 @@ class TestCheckStopwordCount(TestCase):
                 identifier='5678',
                 source_format=SubmissionContent.Format('pdf'),
                 checksum='a1b2c3d4',
-                size=58493
+                uncompressed_size=58493,
+                compressed_size=58493
             )
         )
 
@@ -349,7 +352,8 @@ class TestCheckStopwordPercent(TestCase):
                 identifier='5678',
                 source_format=SubmissionContent.Format('pdf'),
                 checksum='a1b2c3d4',
-                size=58493
+                uncompressed_size=58493,
+                compressed_size=58493
             )
         )
 
