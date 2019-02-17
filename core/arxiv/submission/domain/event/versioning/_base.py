@@ -43,7 +43,7 @@ class Version(str):
         return semver.compare(self, other) >= 0
 
 
-FieldTransformer = Callable[[EventData, str, str], Tuple[str, str]]
+FieldTransformer = Callable[[EventData, str, Any], Tuple[str, Any]]
 
 
 class BaseVersionMapping:
