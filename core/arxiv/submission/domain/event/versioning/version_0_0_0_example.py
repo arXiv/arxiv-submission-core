@@ -3,7 +3,7 @@ An example version mapping module.
 
 This module gathers together all event mappings for version 0.0.0.
 
-The mappings in this module will never be used, since there are is no
+The mappings in this module will never be used, since there are no
 data prior to version 0.0.0.
 """
 from typing import Tuple
