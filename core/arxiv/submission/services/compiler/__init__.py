@@ -94,7 +94,7 @@ class CompilationStatus(NamedTuple):
     """Checksum of the source package that we are compiling."""
     output_format: Format = Format.PDF
     """The requested output format."""
-    reason: Reason = None
+    reason: Reason = Reason.NONE
     """The specific reason for the :attr:`.status`."""
     description: Optional[str] = None
     """Additional detail about the :attr:`.status`."""

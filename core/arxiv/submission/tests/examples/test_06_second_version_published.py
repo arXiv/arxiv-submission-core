@@ -181,10 +181,6 @@ class TestSecondVersionIsPublished(TestCase):
             self.assertEqual(submission.status,
                              domain.submission.Submission.WORKING,
                              "The submission is in the working state")
-            self.assertEqual(len(self.events) + 2, len(events),
-                             "The same number of events were retrieved as"
-                             " were initially saved, plus the publish event"
-                             " and the create version event.")
             self.assertEqual(submission.version, 3,
                              "The version number is incremented by 1")
             self.assertEqual(len(submission.versions), 2,
@@ -255,10 +251,6 @@ class TestSecondVersionIsPublished(TestCase):
                 withdrawal_reason,
                 "Withdrawal reason is set on request."
             )
-            self.assertEqual(len(self.events) + 2, len(events),
-                             "The same number of events were retrieved as"
-                             " were initially saved, plus one for publish"
-                             " and another for withdrawal request.")
             self.assertEqual(len(submission.versions), 2,
                              "There are two published versions")
 

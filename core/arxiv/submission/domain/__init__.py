@@ -2,7 +2,7 @@
 
 from .submission import Submission, License, SubmissionMetadata, \
     Classification, Author, Hold, WithdrawalRequest, \
-    CrossListClassificationRequest
+    CrossListClassificationRequest, Compilation
 from .agent import User, System, Client, Agent, agent_factory
 from .event import event_factory, Event
 from .annotation import Comment

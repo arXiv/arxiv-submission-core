@@ -130,7 +130,7 @@ from .request import RequestCrossList, RequestWithdrawal, ApplyRequest, \
 from . import validators
 from .proposal import AddProposal, RejectProposal, AcceptProposal
 from .flag import AddMetadataFlag, AddUserFlag, AddContentFlag, RemoveFlag, \
-    AddHold
+    AddHold, RemoveHold
 from .process import AddProcessStatus
 
 logger = logging.getLogger(__name__)

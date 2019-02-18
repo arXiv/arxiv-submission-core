@@ -255,7 +255,17 @@ class Hold:
     creator: Agent
     created: datetime = field(default_factory=get_tzaware_utc_now)
     hold_type: Type = field(default=Type.PATCH)
-    hold_reason: Optional[str] = field(default_factory=list)
+    hold_reason: Optional[str] = field(default_factory=str)
+
+    @classmethod
+    def from_dict(cls, data: dict) -> 'Hold':
+        creator = data['creator']
+        if not isinstance(creator, Agent):
+            creator = agent_factory(**creator)
+        return cls(event_id=data['event_id'], creator=creator,
+                   created=parse_date(data['created']),
+                   hold_type=cls.Type(data['hold_type']),
+                   hold_reason=data.get('hold_reason', ''))
 
 
 @dataclass
@@ -454,7 +464,10 @@ class Submission:
 
     @property
     def is_on_hold(self) -> bool:
-        return len(self.hold_types - self.waiver_types) > 0
+        # We need to explicitly check ``status`` here because classic doesn't
+        # have a representation for Hold events.
+        return len(self.hold_types - self.waiver_types) > 0 \
+            or self.status == self.ON_HOLD
 
     def has_waiver_for(self, hold_type: Hold.Type) -> bool:
         return hold_type in self.waiver_types
@@ -563,5 +576,8 @@ class Submission:
             data['proxy'] = agent_factory(**data['proxy'])
         if 'client' in data and data['client'] is not None:
             data['client'] = agent_factory(**data['client'])
+        if 'holds' in data and data['holds']:
+            data['holds'] = {k: Hold.from_dict(v)
+                             for k, v in data['holds'].items()}
         return cls(**{k: v for k, v in data.items()
                       if k in cls.__dataclass_fields__})

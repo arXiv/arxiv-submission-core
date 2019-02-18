@@ -85,9 +85,6 @@ class TestFinalizedSubmission(TestCase):
             self.assertEqual(submission.status,
                              domain.submission.Submission.SUBMITTED,
                              "The submission is in the submitted state")
-            self.assertEqual(len(self.events), len(events),
-                             "The same number of events were retrieved as"
-                             " were initially saved.")
             self.assertEqual(len(submission.versions), 0,
                              "There are no published versions")
 
@@ -96,9 +93,6 @@ class TestFinalizedSubmission(TestCase):
             self.assertEqual(submission.status,
                              domain.submission.Submission.SUBMITTED,
                              "The submission is in the submitted state")
-            self.assertEqual(len(self.events), len(events),
-                             "The same number of events were retrieved as"
-                             " were initially saved.")
             self.assertEqual(len(submission.versions), 0,
                              "There are no published versions")
 
@@ -169,9 +163,6 @@ class TestFinalizedSubmission(TestCase):
             self.assertEqual(submission.status,
                              domain.submission.Submission.WORKING,
                              "The submission is in the working state")
-            self.assertEqual(len(self.events) + 1, len(events),
-                             "The same number of events were retrieved as"
-                             " were saved.")
             self.assertEqual(len(submission.versions), 0,
                              "There are no published versions")
 
@@ -180,9 +171,6 @@ class TestFinalizedSubmission(TestCase):
             self.assertEqual(submission.status,
                              domain.submission.Submission.WORKING,
                              "The submission is in the working state")
-            self.assertEqual(len(self.events) + 1, len(events),
-                             "The same number of events were retrieved as"
-                             " were saved.")
             self.assertEqual(len(submission.versions), 0,
                              "There are no published versions")
 

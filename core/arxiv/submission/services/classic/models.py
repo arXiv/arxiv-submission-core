@@ -517,6 +517,15 @@ class Submission(Base):    # type: ignore
         self.acm_class = submission.metadata.acm_class
         self.journal_ref = submission.metadata.journal_ref
 
+        if submission.latest_compilation \
+                and submission.latest_compilation.status \
+                is domain.Compilation.Status.SUCCEEDED \
+                and submission.latest_compilation.checksum \
+                == submission.source_content.checksum:
+            self.must_process = 0
+        else:
+            self.must_process = 1
+
         self.version = submission.version   # Numeric version.
         self.doc_paper_id = submission.arxiv_id     # arXiv canonical ID.
 
@@ -547,10 +556,13 @@ class Submission(Base):    # type: ignore
         # Delete.
         elif submission.deleted:
             self.status = Submission.USER_DELETED
+        elif submission.is_on_hold:
+            self.status = Submission.ON_HOLD
         # Unsubmit.
         elif self.status is None or self.status <= Submission.ON_HOLD:
             if not submission.finalized:
                 self.status = Submission.NOT_SUBMITTED
+            
 
         if submission.primary_classification:
             self._update_primary(submission)

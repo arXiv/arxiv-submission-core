@@ -101,9 +101,6 @@ class TestPublishedSubmission(TestCase):
                              domain.submission.Submission.PUBLISHED,
                              "The submission is in the submitted state")
             self.assertTrue(submission.published, "Submission is published")
-            self.assertEqual(len(self.events) + 1, len(events),
-                             "The same number of events were retrieved as"
-                             " were initially saved, plus the publish event.")
             self.assertEqual(len(submission.versions), 1,
                              "There is one published versions")
 
@@ -113,9 +110,6 @@ class TestPublishedSubmission(TestCase):
                              domain.submission.Submission.PUBLISHED,
                              "The submission is in the submitted state")
             self.assertTrue(submission.published, "Submission is published")
-            self.assertEqual(len(self.events) + 1, len(events),
-                             "The same number of events were retrieved as"
-                             " were initially saved, plus the publish event.")
             self.assertEqual(len(submission.versions), 1,
                              "There is one published versions")
 
@@ -149,10 +143,6 @@ class TestPublishedSubmission(TestCase):
             self.assertEqual(submission.status,
                              domain.submission.Submission.WORKING,
                              "The submission is in the working state")
-            self.assertEqual(len(self.events) + 2, len(events),
-                             "The same number of events were retrieved as"
-                             " were initially saved, plus the publish event"
-                             " and the create version event.")
             self.assertEqual(submission.version, 2,
                              "The version number is incremented by 1")
             self.assertEqual(len(submission.versions), 1,
@@ -163,10 +153,6 @@ class TestPublishedSubmission(TestCase):
             self.assertEqual(submission.status,
                              domain.submission.Submission.WORKING,
                              "The submission is in the working state")
-            self.assertEqual(len(self.events) + 2, len(events),
-                             "The same number of events were retrieved as"
-                             " were initially saved, plus the publish event"
-                             " and the create version event.")
             self.assertEqual(submission.version, 2,
                              "The version number is incremented by 1")
             self.assertEqual(len(submission.versions), 1,
@@ -221,10 +207,6 @@ class TestPublishedSubmission(TestCase):
                 withdrawal_reason,
                 "Withdrawal reason is set on request."
             )
-            self.assertEqual(len(self.events) + 2, len(events),
-                             "The same number of events were retrieved as"
-                             " were initially saved, plus one for publish"
-                             " and another for withdrawal request.")
             self.assertEqual(len(submission.versions), 1,
                              "There is one published versions")
 
@@ -244,10 +226,6 @@ class TestPublishedSubmission(TestCase):
                 withdrawal_reason,
                 "Withdrawal reason is set on request."
             )
-            self.assertEqual(len(self.events) + 2, len(events),
-                             "The same number of events were retrieved as"
-                             " were initially saved, plus one for publish"
-                             " and another for withdrawal request.")
             self.assertEqual(len(submission.versions), 1,
                              "There is one published versions")
 
@@ -308,10 +286,6 @@ class TestPublishedSubmission(TestCase):
             self.assertIn(category,
                           submission.pending_user_requests[0].categories,
                           "Requested category is set on request.")
-            self.assertEqual(len(self.events) + 2, len(events),
-                             "The same number of events were retrieved as"
-                             " were initially saved, plus one for publish"
-                             " and another for cross-list request.")
             self.assertEqual(len(submission.versions), 1,
                              "There is one published versions")
 
@@ -331,10 +305,6 @@ class TestPublishedSubmission(TestCase):
             self.assertIn(category,
                           submission.pending_user_requests[0].categories,
                           "Requested category is set on request.")
-            self.assertEqual(len(self.events) + 2, len(events),
-                             "The same number of events were retrieved as"
-                             " were initially saved, plus one for publish"
-                             " and another for cross-list request.")
             self.assertEqual(len(submission.versions), 1,
                              "There is one published versions")
 
@@ -423,13 +393,6 @@ class TestPublishedSubmission(TestCase):
             self.assertEqual(submission.status,
                              domain.submission.Submission.PUBLISHED,
                              "The submission is in the submitted state.")
-
-            self.assertEqual(len(self.events) + 4, len(events),
-                             "The same number of events were retrieved as"
-                             " were initially saved plus one for the publish"
-                             " event and another for setting DOI, another for"
-                             " setting journal ref, and another for setting"
-                             " report number.")
             self.assertEqual(len(submission.versions), 1,
                              "There is one published versions")
 
@@ -445,12 +408,6 @@ class TestPublishedSubmission(TestCase):
                              domain.submission.Submission.PUBLISHED,
                              "The submission is in the submitted state.")
 
-            self.assertEqual(len(self.events) + 4, len(events),
-                             "The same number of events were retrieved as"
-                             " were initially saved plus one for the publish"
-                             " event and another for setting DOI, another for"
-                             " setting journal ref, and another for setting"
-                             " report number.")
             self.assertEqual(len(submission.versions), 1,
                              "There is one published versions")
 

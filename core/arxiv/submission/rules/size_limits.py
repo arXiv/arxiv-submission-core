@@ -35,9 +35,9 @@ def check_sizes_on_new_source(event: SetUploadPackage, before: Submission,
 
 
 @UpdateUploadPackage.bind(lambda *args, **kwargs: True)    # Always check.
-def check_sizes_on_update_source(event: SetUploadPackage, before: Submission,
-                                 after: Submission, creator: Agent) \
-        -> Iterable[Event]:
+def check_sizes_on_update_source(event: UpdateUploadPackage,
+                                 before: Submission, after: Submission,
+                                 creator: Agent) -> Iterable[Event]:
     """When a source package is updated, check for oversize source."""
     return _check_sizes(event, before, after, creator)
 

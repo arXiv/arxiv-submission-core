@@ -163,6 +163,12 @@ class AddHold(Event):
         )
         return submission
 
+    @classmethod
+    def from_dict(cls, **data) -> 'AddHold':
+        """Override the default ``from_dict`` constructor to handle types."""
+        data['hold_type'] = Hold.Type(data['hold_type'])
+        return cls(**data)
+
 
 @dataclass()
 class RemoveHold(Event):
@@ -181,8 +187,14 @@ class RemoveHold(Event):
 
     def project(self, submission: Submission) -> Submission:
         """Remove the hold from the submission."""
-        submission.holds.pop(self.event_id)
+        submission.holds.pop(self.hold_event_id)
         return submission
+
+    @classmethod
+    def from_dict(cls, **data) -> 'RemoveHold':
+        """Override the default ``from_dict`` constructor to handle types."""
+        data['hold_type'] = Hold.Type(data['hold_type'])
+        return cls(**data)
 
 
 @dataclass()
@@ -205,3 +217,9 @@ class AddWaiver(Event):
             waiver_reason=self.waiver_reason
         )
         return submission
+
+    @classmethod
+    def from_dict(cls, **data) -> 'AddWaiver':
+        """Override the default ``from_dict`` constructor to handle types."""
+        data['waiver_type'] = Hold.Type(data['waiver_type'])
+        return cls(**data)
