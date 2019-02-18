@@ -98,6 +98,8 @@ class CompilationStatus(NamedTuple):
     """The specific reason for the :attr:`.status`."""
     description: Optional[str] = None
     """Additional detail about the :attr:`.status`."""
+    size_bytes: int = 0
+    """The size of the compilation product in bytes."""
 
     @property
     def identifier(self):
@@ -120,7 +122,8 @@ class CompilationStatus(NamedTuple):
             'upload_id': self.upload_id,
             'format': self.output_format.value,
             'checksum': self.checksum,
-            'status': self.status.value
+            'status': self.status.value,
+            'size_bytes': self.size_bytes
         }
 
 
@@ -253,7 +256,8 @@ class CompilerService(object):
             output_format=Format(data['output_format']),
             status=Status(data['status']),
             reason=Reason(data['reason']) if 'reason' in data else None,
-            description=data.get('description', None)
+            description=data.get('description', None),
+            size_bytes=data.get('size_bytes', 0)
         )
 
     def _path(self, path: str, query: dict = {}) -> str:

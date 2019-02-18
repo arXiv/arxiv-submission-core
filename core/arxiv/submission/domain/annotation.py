@@ -60,10 +60,6 @@ class Feature:
         STOPWORD_COUNT = "stops"
         STOPWORD_PERCENT = "%stop"
         WORD_COUNT = "words"
-        COMPRESSED_PACKAGE_SIZE_BYTES = "compressed_package_size"
-        """The total size in bytes of the compressed submission source."""
-        UNCOMPRESSED_PACKAGE_SIZE_BYTES = "uncompressed_package_size"
-        """The total size in bytes of the uncompressed submission source."""
 
     event_id: str
     created: datetime

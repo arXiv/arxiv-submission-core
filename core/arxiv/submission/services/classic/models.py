@@ -243,11 +243,20 @@ class Submission(Base):    # type: ignore
         return submission
 
     def patch_hold(self, submission: domain.Submission) -> domain.Submission:
+        """Patch hold-related data from this database row."""
         if self.status == self.ON_HOLD:
             submission.status = domain.Submission.ON_HOLD
+            created = self.get_updated()
+            creator = domain.agent.System(__name__)
+            event_id = domain.Event.get_id(created, 'AddHold', creator)
+            hold = domain.Hold(event_id=event_id, creator=creator,
+                               created=created,
+                               hold_type=domain.Hold.Type.PATCH)
+            submission.holds[event_id] = hold
         return submission
 
     def patch_status(self, submission: domain.Submission) -> domain.Submission:
+        """Patch status-related data from this database row."""
         # We're phasing journal reference out as a submission
         if self.type != Submission.JOURNAL_REFERENCE:
             # Apply sticky status.
@@ -265,7 +274,8 @@ class Submission(Base):    # type: ignore
 
     def patch_jref(self, submission: domain.Submission) -> domain.Submission:
         """
-        Patch a :class:`.domain.Submission` with JREF data outside the event scope.
+        Patch a :class:`.domain.Submission` with JREF data outside the event
+        scope.
 
         Parameters
         ----------

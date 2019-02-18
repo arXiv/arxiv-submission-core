@@ -7,7 +7,7 @@ from dataclasses import field
 from .util import dataclass
 from .event import Event
 from ..flag import Flag, ContentFlag, MetadataFlag, UserFlag
-from ..submission import Submission, SubmissionMetadata, Hold
+from ..submission import Submission, SubmissionMetadata, Hold, Waiver
 from ...exceptions import InvalidEvent
 
 
@@ -141,13 +141,13 @@ class AddUserFlag(AddFlag):
 
 @dataclass()
 class AddHold(Event):
-    """Add a hold to a submission."""
+    """Add a :class:`.Hold` to a :class:`.Submission`."""
 
     NAME = "add hold"
     NAMED = "hold added"
 
-    hold_type: str = field(default_factory=str)
-    hold_reason: Optional[str] = field(default_factory=list)
+    hold_type: Hold.Type = field(default=Hold.Type.PATCH)
+    hold_reason: Optional[str] = field(default_factory=str)
 
     def validate(self, submission: Submission) -> None:
         pass
@@ -160,5 +160,48 @@ class AddHold(Event):
             creator=self.creator,
             hold_type=self.hold_type,
             hold_reason=self.hold_reason
+        )
+        return submission
+
+
+@dataclass()
+class RemoveHold(Event):
+    """Remove a :class:`.Hold` from a :class:`.Submission`."""
+
+    NAME = "remove hold"
+    NAMED = "hold removed"
+
+    hold_event_id: str = field(default_factory=str)
+    hold_type: Hold.Type = field(default=Hold.Type.PATCH)
+    removal_reason: Optional[str] = field(default_factory=str)
+
+    def validate(self, submission: Submission) -> None:
+        if self.hold_event_id not in submission.holds:
+            raise InvalidEvent(self, "No such hold")
+
+    def project(self, submission: Submission) -> Submission:
+        """Remove the hold from the submission."""
+        submission.holds.pop(self.event_id)
+        return submission
+
+
+@dataclass()
+class AddWaiver(Event):
+    """Add a :class:`.Waiver` to a :class:`.Submission`."""
+
+    waiver_type: Hold.Type = field(default=Hold.Type.SOURCE_OVERSIZE)
+    waiver_reason: str = field(default_factory=str)
+
+    def validate(self, submission: Submission) -> None:
+        pass
+
+    def project(self, submission: Submission) -> Submission:
+        """Add the :class:`.Waiver` to the :class:`.Submission`."""
+        submission.waivers[self.event_id] = Waiver(
+            event_id=self.event_id,
+            created=self.created,
+            creator=self.creator,
+            waiver_type=self.waiver_type,
+            waiver_reason=self.waiver_reason
         )
         return submission

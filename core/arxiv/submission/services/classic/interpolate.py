@@ -18,7 +18,7 @@ from typing import List, Optional, Dict, Tuple
 from arxiv.base import logging
 from . import models
 from ...domain.submission import Submission, UserRequest, WithdrawalRequest, \
-    CrossListClassificationRequest
+    CrossListClassificationRequest, Hold
 from ...domain.event import Event, SetDOI, SetJournalReference, \
     SetReportNumber, ApplyRequest, RejectRequest, Publish, AddHold
 from ...domain.agent import System, User
@@ -140,7 +140,7 @@ class ClassicEventInterpolator:
                 creator=SYSTEM,
                 created=self.current_row.get_updated(),
                 committed=True,
-                hold_type='patch'
+                hold_type=Hold.Type.PATCH
             ))
         logger.debug('user requests: %s', self.submission.user_requests)
 
