@@ -81,7 +81,15 @@
             <span class="n">process_identifier</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">identifier</span><span class="p">,</span>
             <span class="n">reason</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">reason</span>
         <span class="p">))</span>
-        <span class="k">return</span> <span class="n">submission</span></div></div>
+        <span class="k">return</span> <span class="n">submission</span></div>
+
+<div class="viewcode-block" id="AddProcessStatus.from_dict"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.domain.event.process.html#arxiv.submission.domain.event.process.AddProcessStatus.from_dict">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_dict</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="o">**</span><span class="n">data</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;AddProcessStatus&#39;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="s1">&#39;process&#39;</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+            <span class="n">data</span><span class="p">[</span><span class="s1">&#39;process&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">Process</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;process&#39;</span><span class="p">])</span>
+        <span class="k">if</span> <span class="s1">&#39;status&#39;</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+            <span class="n">data</span><span class="p">[</span><span class="s1">&#39;status&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">Status</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;status&#39;</span><span class="p">])</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="o">**</span><span class="n">data</span><span class="p">)</span></div></div>
 </pre></div>
 
           </div>
@@ -148,7 +156,7 @@
       &copy;2017, arXiv.org.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.3</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.4</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
     </div>

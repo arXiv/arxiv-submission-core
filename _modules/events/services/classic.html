@@ -27,6 +27,8 @@
     <div class="document">
       <div class="documentwrapper">
         <div class="bodywrapper">
+          
+
           <div class="body" role="main">
             
   <h1>Source code for events.services.classic</h1><div class="highlight"><pre>
@@ -127,8 +129,8 @@
             <span class="n">submission_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">submission_id</span><span class="p">,</span>
             <span class="n">created</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">created</span><span class="p">,</span>
             <span class="o">**</span><span class="n">data</span>
-        <span class="p">)</span>
-</div></div>
+        <span class="p">)</span></div></div>
+
 
 <div class="viewcode-block" id="transaction"><a class="viewcode-back" href="../../../containers/core/events.services.classic.html#events.services.classic.transaction">[docs]</a><span class="nd">@contextmanager</span>
 <span class="k">def</span> <span class="nf">transaction</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Generator</span><span class="p">:</span>
@@ -144,15 +146,15 @@
     <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Commit failed, rolling back: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
         <span class="n">session</span><span class="o">.</span><span class="n">rollback</span><span class="p">()</span>
-        <span class="k">raise</span> <span class="n">CommitFailed</span><span class="p">(</span><span class="s1">&#39;Failed to commit transaction&#39;</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span>
-</div>
+        <span class="k">raise</span> <span class="n">CommitFailed</span><span class="p">(</span><span class="s1">&#39;Failed to commit transaction&#39;</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span></div>
+
 
 <div class="viewcode-block" id="get_licenses"><a class="viewcode-back" href="../../../containers/core/events.services.classic.html#events.services.classic.get_licenses">[docs]</a><span class="k">def</span> <span class="nf">get_licenses</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">License</span><span class="p">]:</span>
     <span class="sd">&quot;&quot;&quot;Get a list of :class:`.License`s available for new submissions.&quot;&quot;&quot;</span>
     <span class="n">license_data</span> <span class="o">=</span> <span class="n">current_session</span><span class="p">()</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">License</span><span class="p">)</span> \
         <span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">License</span><span class="o">.</span><span class="n">active</span> <span class="o">==</span> <span class="s1">&#39;1&#39;</span><span class="p">)</span>
-    <span class="k">return</span> <span class="p">[</span><span class="n">License</span><span class="p">(</span><span class="n">uri</span><span class="o">=</span><span class="n">row</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">row</span><span class="o">.</span><span class="n">label</span><span class="p">)</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">license_data</span><span class="p">]</span>
-</div>
+    <span class="k">return</span> <span class="p">[</span><span class="n">License</span><span class="p">(</span><span class="n">uri</span><span class="o">=</span><span class="n">row</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">row</span><span class="o">.</span><span class="n">label</span><span class="p">)</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">license_data</span><span class="p">]</span></div>
+
 
 <div class="viewcode-block" id="get_events"><a class="viewcode-back" href="../../../containers/core/events.services.classic.html#events.services.classic.get_events">[docs]</a><span class="k">def</span> <span class="nf">get_events</span><span class="p">(</span><span class="n">submission_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Event</span><span class="p">]:</span>
     <span class="sd">&quot;&quot;&quot;</span>
@@ -179,8 +181,8 @@
             <span class="o">.</span><span class="n">order_by</span><span class="p">(</span><span class="n">DBEvent</span><span class="o">.</span><span class="n">created</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">event_data</span><span class="p">:</span>      <span class="c1"># No events, no dice.</span>
             <span class="k">raise</span> <span class="n">NoSuchSubmission</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;Submission </span><span class="si">{submission_id}</span><span class="s1"> not found&#39;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="p">[</span><span class="n">datum</span><span class="o">.</span><span class="n">to_event</span><span class="p">()</span> <span class="k">for</span> <span class="n">datum</span> <span class="ow">in</span> <span class="n">event_data</span><span class="p">]</span>
-</div>
+        <span class="k">return</span> <span class="p">[</span><span class="n">datum</span><span class="o">.</span><span class="n">to_event</span><span class="p">()</span> <span class="k">for</span> <span class="n">datum</span> <span class="ow">in</span> <span class="n">event_data</span><span class="p">]</span></div>
+
 
 <div class="viewcode-block" id="get_submission"><a class="viewcode-back" href="../../../containers/core/events.services.classic.html#events.services.classic.get_submission">[docs]</a><span class="k">def</span> <span class="nf">get_submission</span><span class="p">(</span><span class="n">submission_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Submission</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Event</span><span class="p">]]:</span>
     <span class="sd">&quot;&quot;&quot;</span>
@@ -220,8 +222,8 @@
         <span class="n">data</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">submission_id</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">data</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">NoSuchSubmission</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;Submission </span><span class="si">{submission_id}</span><span class="s1"> not found&#39;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">data</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">submission</span><span class="p">),</span> <span class="n">events</span>
-</div>
+        <span class="k">return</span> <span class="n">data</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">submission</span><span class="p">),</span> <span class="n">events</span></div>
+
 
 <div class="viewcode-block" id="store_events"><a class="viewcode-back" href="../../../containers/core/events.services.classic.html#events.services.classic.store_events">[docs]</a><span class="k">def</span> <span class="nf">store_events</span><span class="p">(</span><span class="o">*</span><span class="n">events</span><span class="p">:</span> <span class="n">Event</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Submission</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;</span>
@@ -276,28 +278,28 @@
             <span class="n">db_event</span><span class="o">.</span><span class="n">submission</span> <span class="o">=</span> <span class="n">db_submission</span>    <span class="c1"># Will be updated on commit.</span>
             <span class="n">event</span><span class="o">.</span><span class="n">committed</span> <span class="o">=</span> <span class="kc">True</span>
     <span class="n">submission</span><span class="o">.</span><span class="n">submission_id</span> <span class="o">=</span> <span class="n">db_submission</span><span class="o">.</span><span class="n">submission_id</span>
-    <span class="k">return</span> <span class="n">submission</span>
-</div>
+    <span class="k">return</span> <span class="n">submission</span></div>
+
 
 <div class="viewcode-block" id="init_app"><a class="viewcode-back" href="../../../containers/core/events.services.classic.html#events.services.classic.init_app">[docs]</a><span class="k">def</span> <span class="nf">init_app</span><span class="p">(</span><span class="n">app</span><span class="p">:</span> <span class="nb">object</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;Set default configuration parameters for an application instance.&quot;&quot;&quot;</span>
     <span class="n">config</span> <span class="o">=</span> <span class="n">get_application_config</span><span class="p">(</span><span class="n">app</span><span class="p">)</span>
-    <span class="n">config</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;CLASSIC_DATABASE_URI&#39;</span><span class="p">,</span> <span class="s1">&#39;sqlite://&#39;</span><span class="p">)</span>
-</div>
+    <span class="n">config</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">&#39;CLASSIC_DATABASE_URI&#39;</span><span class="p">,</span> <span class="s1">&#39;sqlite://&#39;</span><span class="p">)</span></div>
+
 
 <div class="viewcode-block" id="get_engine"><a class="viewcode-back" href="../../../containers/core/events.services.classic.html#events.services.classic.get_engine">[docs]</a><span class="k">def</span> <span class="nf">get_engine</span><span class="p">(</span><span class="n">app</span><span class="p">:</span> <span class="nb">object</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Engine</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;Get a new :class:`.Engine` for the classic database.&quot;&quot;&quot;</span>
     <span class="n">config</span> <span class="o">=</span> <span class="n">get_application_config</span><span class="p">(</span><span class="n">app</span><span class="p">)</span>
     <span class="n">database_uri</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;CLASSIC_DATABASE_URI&#39;</span><span class="p">,</span> <span class="s1">&#39;sqlite://&#39;</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">create_engine</span><span class="p">(</span><span class="n">database_uri</span><span class="p">)</span>
-</div>
+    <span class="k">return</span> <span class="n">create_engine</span><span class="p">(</span><span class="n">database_uri</span><span class="p">)</span></div>
+
 
 <span class="c1"># TODO: consider making this private.</span>
 <div class="viewcode-block" id="get_session"><a class="viewcode-back" href="../../../containers/core/events.services.classic.html#events.services.classic.get_session">[docs]</a><span class="k">def</span> <span class="nf">get_session</span><span class="p">(</span><span class="n">app</span><span class="p">:</span> <span class="nb">object</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Session</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;Get a new :class:`.Session` for the classic database.&quot;&quot;&quot;</span>
     <span class="n">engine</span> <span class="o">=</span> <span class="n">current_engine</span><span class="p">()</span>
-    <span class="k">return</span> <span class="n">sessionmaker</span><span class="p">(</span><span class="n">bind</span><span class="o">=</span><span class="n">engine</span><span class="p">)()</span>
-</div>
+    <span class="k">return</span> <span class="n">sessionmaker</span><span class="p">(</span><span class="n">bind</span><span class="o">=</span><span class="n">engine</span><span class="p">)()</span></div>
+
 
 <div class="viewcode-block" id="current_engine"><a class="viewcode-back" href="../../../containers/core/events.services.classic.html#events.services.classic.current_engine">[docs]</a><span class="k">def</span> <span class="nf">current_engine</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Engine</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;Get/create :class:`.Engine` for this context.&quot;&quot;&quot;</span>
@@ -306,8 +308,8 @@
         <span class="k">return</span> <span class="n">get_engine</span><span class="p">()</span>
     <span class="k">if</span> <span class="s1">&#39;classic_engine&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">g</span><span class="p">:</span>
         <span class="n">g</span><span class="o">.</span><span class="n">classic_engine</span> <span class="o">=</span> <span class="n">get_engine</span><span class="p">()</span>    <span class="c1"># type: ignore</span>
-    <span class="k">return</span> <span class="n">g</span><span class="o">.</span><span class="n">classic_engine</span>     <span class="c1"># type: ignore</span>
-</div>
+    <span class="k">return</span> <span class="n">g</span><span class="o">.</span><span class="n">classic_engine</span>     <span class="c1"># type: ignore</span></div>
+
 
 <div class="viewcode-block" id="current_session"><a class="viewcode-back" href="../../../containers/core/events.services.classic.html#events.services.classic.current_session">[docs]</a><span class="k">def</span> <span class="nf">current_session</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Session</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;Get/create :class:`.Session` for this context.&quot;&quot;&quot;</span>
@@ -316,18 +318,18 @@
         <span class="k">return</span> <span class="n">get_session</span><span class="p">()</span>
     <span class="k">if</span> <span class="s1">&#39;classic&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">g</span><span class="p">:</span>
         <span class="n">g</span><span class="o">.</span><span class="n">classic</span> <span class="o">=</span> <span class="n">get_session</span><span class="p">()</span>    <span class="c1"># type: ignore</span>
-    <span class="k">return</span> <span class="n">g</span><span class="o">.</span><span class="n">classic</span>     <span class="c1"># type: ignore</span>
-</div>
+    <span class="k">return</span> <span class="n">g</span><span class="o">.</span><span class="n">classic</span>     <span class="c1"># type: ignore</span></div>
+
 
 <div class="viewcode-block" id="create_all"><a class="viewcode-back" href="../../../containers/core/events.services.classic.html#events.services.classic.create_all">[docs]</a><span class="k">def</span> <span class="nf">create_all</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;Create all tables in the database.&quot;&quot;&quot;</span>
-    <span class="n">Base</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">create_all</span><span class="p">(</span><span class="n">current_engine</span><span class="p">())</span>
-</div>
+    <span class="n">Base</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">create_all</span><span class="p">(</span><span class="n">current_engine</span><span class="p">())</span></div>
+
 
 <div class="viewcode-block" id="drop_all"><a class="viewcode-back" href="../../../containers/core/events.services.classic.html#events.services.classic.drop_all">[docs]</a><span class="k">def</span> <span class="nf">drop_all</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;Drop all tables in the database.&quot;&quot;&quot;</span>
-    <span class="n">Base</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">drop_all</span><span class="p">(</span><span class="n">current_engine</span><span class="p">())</span>
-</div>
+    <span class="n">Base</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">drop_all</span><span class="p">(</span><span class="n">current_engine</span><span class="p">())</span></div>
+
 
 <span class="c1"># # TODO: find a better way!</span>
 <span class="c1"># def _declare_event() -&gt; type:</span>
@@ -344,6 +346,7 @@
 </pre></div>
 
           </div>
+          
         </div>
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
@@ -362,6 +365,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../architecture.html">Submission &amp; moderation subsystem architecture</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../publication_process.html">Submission &amp; Publication Process</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../submission_api_context.html">Submission API: Context</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../containers/core/events.html">events package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../containers/metadata/metadata.html">metadata package</a></li>
 </ul>
 
@@ -397,7 +401,7 @@
       
       |
       Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.5</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.11</a>
       
     </div>
 

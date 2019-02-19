@@ -559,7 +559,11 @@
         <span class="k">if</span> <span class="n">submission</span><span class="o">.</span><span class="n">source_content</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">must_process</span> <span class="o">=</span> <span class="mi">0</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">source_size</span> <span class="o">=</span> <span class="n">submission</span><span class="o">.</span><span class="n">source_content</span><span class="o">.</span><span class="n">size</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">source_format</span> <span class="o">=</span> <span class="n">submission</span><span class="o">.</span><span class="n">source_content</span><span class="o">.</span><span class="n">format</span>
+            <span class="k">if</span> <span class="n">submission</span><span class="o">.</span><span class="n">source_content</span><span class="o">.</span><span class="n">source_format</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">source_format</span> <span class="o">=</span> \
+                    <span class="n">submission</span><span class="o">.</span><span class="n">source_content</span><span class="o">.</span><span class="n">source_format</span><span class="o">.</span><span class="n">value</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">source_format</span> <span class="o">=</span> <span class="kc">None</span>
 
         <span class="c1"># Not submitted -&gt; Submitted.</span>
         <span class="k">if</span> <span class="n">submission</span><span class="o">.</span><span class="n">finalized</span> \
@@ -1255,7 +1259,7 @@
       &copy;2017, arXiv.org.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.3</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.4</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
     </div>

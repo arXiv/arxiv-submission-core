@@ -27,6 +27,8 @@
     <div class="document">
       <div class="documentwrapper">
         <div class="bodywrapper">
+          
+
           <div class="body" role="main">
             
   <h1>Source code for events.services.classic.tests</h1><div class="highlight"><pre>
@@ -74,8 +76,8 @@
         <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
             <span class="k">raise</span>
         <span class="k">finally</span><span class="p">:</span>
-            <span class="n">classic</span><span class="o">.</span><span class="n">drop_all</span><span class="p">()</span>
-</div>
+            <span class="n">classic</span><span class="o">.</span><span class="n">drop_all</span><span class="p">()</span></div>
+
 
 <div class="viewcode-block" id="TestGetLicenses"><a class="viewcode-back" href="../../../../containers/core/events.services.classic.html#events.services.classic.tests.TestGetLicenses">[docs]</a><span class="k">class</span> <span class="nc">TestGetLicenses</span><span class="p">(</span><span class="n">TestCase</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Test :func:`.classic.get_licenses`.&quot;&quot;&quot;</span>
@@ -109,8 +111,8 @@
                          <span class="s2">&quot;Should use name column to populate License.uri&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">licenses</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
                          <span class="s2">&quot;Creative Commons Public Domain Declaration&quot;</span><span class="p">,</span>
-                         <span class="s2">&quot;Should use label column to populate License.name&quot;</span><span class="p">)</span>
-</div></div>
+                         <span class="s2">&quot;Should use label column to populate License.name&quot;</span><span class="p">)</span></div></div>
+
 
 <div class="viewcode-block" id="TestStoreEvents"><a class="viewcode-back" href="../../../../containers/core/events.services.classic.html#events.services.classic.tests.TestStoreEvents">[docs]</a><span class="k">class</span> <span class="nc">TestStoreEvents</span><span class="p">(</span><span class="n">TestCase</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Test :func:`.classic.store_events`.&quot;&quot;&quot;</span>
@@ -133,8 +135,8 @@
                          <span class="s2">&quot;The native ID of the creator should be used&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">db_submission</span><span class="o">.</span><span class="n">status</span><span class="p">,</span> <span class="n">db_submission</span><span class="o">.</span><span class="n">NOT_SUBMITTED</span><span class="p">,</span>
                          <span class="s2">&quot;Submission in database should be in status 0 (not&quot;</span>
-                         <span class="s2">&quot; submitted) by default.&quot;</span><span class="p">)</span>
-</div>
+                         <span class="s2">&quot; submitted) by default.&quot;</span><span class="p">)</span></div>
+
 <div class="viewcode-block" id="TestStoreEvents.test_store_events_with_metadata"><a class="viewcode-back" href="../../../../containers/core/events.services.classic.html#events.services.classic.tests.TestStoreEvents.test_store_events_with_metadata">[docs]</a>    <span class="k">def</span> <span class="nf">test_store_events_with_metadata</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Store events and attendant submission with metadata.&quot;&quot;&quot;</span>
         <span class="n">metadata</span> <span class="o">=</span> <span class="p">{</span>
@@ -175,8 +177,8 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">db_events</span><span class="p">),</span> <span class="mi">2</span><span class="p">,</span> <span class="s2">&quot;Two events should be stored&quot;</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">db_event</span> <span class="ow">in</span> <span class="n">db_events</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">db_event</span><span class="o">.</span><span class="n">submission_id</span><span class="p">,</span> <span class="n">submission</span><span class="o">.</span><span class="n">submission_id</span><span class="p">,</span>
-                             <span class="s2">&quot;The submission id should be set&quot;</span><span class="p">)</span>
-</div>
+                             <span class="s2">&quot;The submission id should be set&quot;</span><span class="p">)</span></div>
+
 <div class="viewcode-block" id="TestStoreEvents.test_store_events_with_finalized_submission"><a class="viewcode-back" href="../../../../containers/core/events.services.classic.html#events.services.classic.tests.TestStoreEvents.test_store_events_with_finalized_submission">[docs]</a>    <span class="k">def</span> <span class="nf">test_store_events_with_finalized_submission</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Store events and a finalized submission.&quot;&quot;&quot;</span>
         <span class="k">with</span> <span class="n">in_memory_db</span><span class="p">()</span> <span class="k">as</span> <span class="n">session</span><span class="p">:</span>
@@ -196,8 +198,8 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">db_events</span><span class="p">),</span> <span class="mi">2</span><span class="p">,</span> <span class="s2">&quot;Two events should be stored&quot;</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">db_event</span> <span class="ow">in</span> <span class="n">db_events</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">db_event</span><span class="o">.</span><span class="n">submission_id</span><span class="p">,</span> <span class="n">submission</span><span class="o">.</span><span class="n">submission_id</span><span class="p">,</span>
-                             <span class="s2">&quot;The submission id should be set&quot;</span><span class="p">)</span>
-</div>
+                             <span class="s2">&quot;The submission id should be set&quot;</span><span class="p">)</span></div>
+
 <div class="viewcode-block" id="TestStoreEvents.test_store_events_with_classification"><a class="viewcode-back" href="../../../../containers/core/events.services.classic.html#events.services.classic.tests.TestStoreEvents.test_store_events_with_classification">[docs]</a>    <span class="k">def</span> <span class="nf">test_store_events_with_classification</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Store events including classification.&quot;&quot;&quot;</span>
         <span class="n">user</span> <span class="o">=</span> <span class="n">User</span><span class="p">(</span><span class="mi">12345</span><span class="p">,</span> <span class="s1">&#39;joe@joe.joe&#39;</span><span class="p">)</span>
@@ -228,8 +230,8 @@
                          <span class="s2">&quot;Two category relations should be set&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">db_submission</span><span class="o">.</span><span class="n">primary_classification</span><span class="o">.</span><span class="n">category</span><span class="p">,</span>
                          <span class="n">submission</span><span class="o">.</span><span class="n">primary_classification</span><span class="o">.</span><span class="n">category</span><span class="p">,</span>
-                         <span class="s2">&quot;Primary classification should be set.&quot;</span><span class="p">)</span>
-</div></div>
+                         <span class="s2">&quot;Primary classification should be set.&quot;</span><span class="p">)</span></div></div>
+
 
 <div class="viewcode-block" id="TestGetSubmission"><a class="viewcode-back" href="../../../../containers/core/events.services.classic.html#events.services.classic.tests.TestGetSubmission">[docs]</a><span class="k">class</span> <span class="nc">TestGetSubmission</span><span class="p">(</span><span class="n">TestCase</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Test :func:`.classic.get_submission`.&quot;&quot;&quot;</span>
@@ -238,8 +240,8 @@
         <span class="sd">&quot;&quot;&quot;Test that an exception is raised when submission doesn&#39;t exist.&quot;&quot;&quot;</span>
         <span class="k">with</span> <span class="n">in_memory_db</span><span class="p">():</span>
             <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="n">classic</span><span class="o">.</span><span class="n">exceptions</span><span class="o">.</span><span class="n">NoSuchSubmission</span><span class="p">):</span>
-                <span class="n">classic</span><span class="o">.</span><span class="n">get_submission</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
-</div>
+                <span class="n">classic</span><span class="o">.</span><span class="n">get_submission</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span></div>
+
 <div class="viewcode-block" id="TestGetSubmission.test_get_submission_with_publish"><a class="viewcode-back" href="../../../../containers/core/events.services.classic.html#events.services.classic.tests.TestGetSubmission.test_get_submission_with_publish">[docs]</a>    <span class="k">def</span> <span class="nf">test_get_submission_with_publish</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Test that publication state is reflected in submission data.&quot;&quot;&quot;</span>
         <span class="n">user</span> <span class="o">=</span> <span class="n">User</span><span class="p">(</span><span class="mi">12345</span><span class="p">,</span> <span class="s1">&#39;joe@joe.joe&#39;</span><span class="p">)</span>
@@ -291,8 +293,8 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">submission_loaded</span><span class="o">.</span><span class="n">arxiv_id</span><span class="p">,</span> <span class="s2">&quot;1234.5678&quot;</span><span class="p">,</span>
                          <span class="s2">&quot;arXiv paper ID should be set&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">submission_loaded</span><span class="o">.</span><span class="n">status</span><span class="p">,</span> <span class="n">Submission</span><span class="o">.</span><span class="n">PUBLISHED</span><span class="p">,</span>
-                         <span class="s2">&quot;Submission status should reflect publish action&quot;</span><span class="p">)</span>
-</div>
+                         <span class="s2">&quot;Submission status should reflect publish action&quot;</span><span class="p">)</span></div>
+
 <div class="viewcode-block" id="TestGetSubmission.test_get_submission_with_hold_and_reclass"><a class="viewcode-back" href="../../../../containers/core/events.services.classic.html#events.services.classic.tests.TestGetSubmission.test_get_submission_with_hold_and_reclass">[docs]</a>    <span class="k">def</span> <span class="nf">test_get_submission_with_hold_and_reclass</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Test changes made externally are reflected in submission data.&quot;&quot;&quot;</span>
         <span class="n">user</span> <span class="o">=</span> <span class="n">User</span><span class="p">(</span><span class="mi">12345</span><span class="p">,</span> <span class="s1">&#39;joe@joe.joe&#39;</span><span class="p">)</span>
@@ -351,10 +353,11 @@
                          <span class="s2">&quot; of the event model.&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">submission_loaded</span><span class="o">.</span><span class="n">status</span><span class="p">,</span> <span class="n">Submission</span><span class="o">.</span><span class="n">ON_HOLD</span><span class="p">,</span>
                          <span class="s2">&quot;Submission status should reflect hold action&quot;</span>
-                         <span class="s2">&quot; performed outside the purview of the event model.&quot;</span><span class="p">)</span>
-</pre></div></div></div>
+                         <span class="s2">&quot; performed outside the purview of the event model.&quot;</span><span class="p">)</span></div></div>
+</pre></div>
 
           </div>
+          
         </div>
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
@@ -373,6 +376,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../architecture.html">Submission &amp; moderation subsystem architecture</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../publication_process.html">Submission &amp; Publication Process</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../submission_api_context.html">Submission API: Context</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../containers/core/events.html">events package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../containers/metadata/metadata.html">metadata package</a></li>
 </ul>
 
@@ -410,7 +414,7 @@
       
       |
       Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.5</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.11</a>
       
     </div>
 

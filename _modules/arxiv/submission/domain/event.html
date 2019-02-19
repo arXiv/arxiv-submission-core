@@ -238,7 +238,6 @@
             <span class="n">Submission</span><span class="o">.</span><span class="n">submitter_accepts_policy</span>
         <span class="n">submission</span><span class="o">.</span><span class="n">submitter_confirmed_preview</span> <span class="o">=</span> \
             <span class="n">Submission</span><span class="o">.</span><span class="n">submitter_confirmed_preview</span>
-        <span class="n">submission</span><span class="o">.</span><span class="n">compiled_content</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
         <span class="k">return</span> <span class="n">submission</span></div></div>
 
 
@@ -266,7 +265,6 @@
         <span class="c1"># Return these to last published state.</span>
         <span class="n">submission</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">status</span>
         <span class="n">submission</span><span class="o">.</span><span class="n">source_content</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">source_content</span>
-        <span class="n">submission</span><span class="o">.</span><span class="n">compiled_content</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">compiled_content</span>
         <span class="n">submission</span><span class="o">.</span><span class="n">submitter_contact_verified</span> <span class="o">=</span> \
             <span class="n">target</span><span class="o">.</span><span class="n">submitter_contact_verified</span>
         <span class="n">submission</span><span class="o">.</span><span class="n">submitter_accepts_policy</span> <span class="o">=</span> \
@@ -355,11 +353,11 @@
                                      <span class="s2">&quot; before publication.&quot;</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_creator_must_be_endorsed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;The creator of this event must be endorsed for the category.&quot;&quot;&quot;</span>
+        <span class="sd">&quot;&quot;&quot;Creator of this event must be endorsed for the category.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">creator</span><span class="p">,</span> <span class="n">System</span><span class="p">):</span>
             <span class="k">return</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="n">archive</span><span class="p">,</span>  <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">category</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">archive</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">category</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
             <span class="n">archive</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">category</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">category</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">creator</span><span class="o">.</span><span class="n">endorsements</span> \
@@ -884,32 +882,51 @@
     <span class="n">NAMED</span> <span class="o">=</span> <span class="s2">&quot;upload package set&quot;</span>
 
     <span class="n">identifier</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">str</span><span class="p">)</span>
-    <span class="nb">format</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">str</span><span class="p">)</span>
     <span class="n">checksum</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">str</span><span class="p">)</span>
     <span class="n">size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-
-    <span class="n">ALLOWED_FORMATS</span> <span class="o">=</span> <span class="p">[</span>
-        <span class="s1">&#39;pdftex&#39;</span><span class="p">,</span> <span class="s1">&#39;tex&#39;</span><span class="p">,</span> <span class="s1">&#39;pdf&#39;</span><span class="p">,</span> <span class="s1">&#39;ps&#39;</span><span class="p">,</span> <span class="s1">&#39;html&#39;</span><span class="p">,</span> <span class="s1">&#39;invalid&#39;</span><span class="p">,</span> <span class="s1">&#39;withdrawn&#39;</span>
-    <span class="p">]</span>
+    <span class="n">source_format</span><span class="p">:</span> <span class="n">SubmissionContent</span><span class="o">.</span><span class="n">Format</span> <span class="o">=</span> \
+        <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">SubmissionContent</span><span class="o">.</span><span class="n">Format</span><span class="o">.</span><span class="n">UNKNOWN</span><span class="p">)</span>
 
 <div class="viewcode-block" id="SetUploadPackage.validate"><a class="viewcode-back" href="../../../../containers/core/arxiv.submission.domain.event.html#arxiv.submission.domain.event.SetUploadPackage.validate">[docs]</a>    <span class="k">def</span> <span class="nf">validate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Validate data for :class:`.SetUploadPackage`.&quot;&quot;&quot;</span>
         <span class="n">validators</span><span class="o">.</span><span class="n">submission_is_not_finalized</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">identifier</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">InvalidEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;Missing upload ID&#39;</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">format</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">format</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">ALLOWED_FORMATS</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">InvalidEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">f</span><span class="s1">&#39;Format </span><span class="si">{self.format}</span><span class="s1"> not allowed&#39;</span><span class="p">)</span></div>
+            <span class="k">raise</span> <span class="n">InvalidEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;Missing upload ID&#39;</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="SetUploadPackage.project"><a class="viewcode-back" href="../../../../containers/core/arxiv.submission.domain.event.html#arxiv.submission.domain.event.SetUploadPackage.project">[docs]</a>    <span class="k">def</span> <span class="nf">project</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Submission</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Replace :class:`.SubmissionContent` metadata on the submission.&quot;&quot;&quot;</span>
         <span class="n">submission</span><span class="o">.</span><span class="n">source_content</span> <span class="o">=</span> <span class="n">SubmissionContent</span><span class="p">(</span>
-            <span class="nb">format</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">format</span><span class="p">,</span>
             <span class="n">checksum</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">checksum</span><span class="p">,</span>
             <span class="n">identifier</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">identifier</span><span class="p">,</span>
-            <span class="n">size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">size</span>
+            <span class="n">size</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">size</span><span class="p">,</span>
+            <span class="n">source_format</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">source_format</span><span class="p">,</span>
         <span class="p">)</span>
+        <span class="n">submission</span><span class="o">.</span><span class="n">submitter_confirmed_preview</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">return</span> <span class="n">submission</span></div></div>
+
+
+<div class="viewcode-block" id="UpdateUploadPackage"><a class="viewcode-back" href="../../../../containers/core/arxiv.submission.domain.event.html#arxiv.submission.domain.event.UpdateUploadPackage">[docs]</a><span class="nd">@dataclass</span><span class="p">()</span>
+<span class="k">class</span> <span class="nc">UpdateUploadPackage</span><span class="p">(</span><span class="n">Event</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Update the upload workspace on this submission.&quot;&quot;&quot;</span>
+
+    <span class="n">NAME</span> <span class="o">=</span> <span class="s2">&quot;update the upload package&quot;</span>
+    <span class="n">NAMED</span> <span class="o">=</span> <span class="s2">&quot;upload package updated&quot;</span>
+
+    <span class="n">checksum</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">str</span><span class="p">)</span>
+    <span class="n">size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">source_format</span><span class="p">:</span> <span class="n">SubmissionContent</span><span class="o">.</span><span class="n">Format</span> <span class="o">=</span> \
+        <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">SubmissionContent</span><span class="o">.</span><span class="n">Format</span><span class="o">.</span><span class="n">UNKNOWN</span><span class="p">)</span>
+
+<div class="viewcode-block" id="UpdateUploadPackage.validate"><a class="viewcode-back" href="../../../../containers/core/arxiv.submission.domain.event.html#arxiv.submission.domain.event.UpdateUploadPackage.validate">[docs]</a>    <span class="k">def</span> <span class="nf">validate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Validate data for :class:`.SetUploadPackage`.&quot;&quot;&quot;</span>
+        <span class="n">validators</span><span class="o">.</span><span class="n">submission_is_not_finalized</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="UpdateUploadPackage.project"><a class="viewcode-back" href="../../../../containers/core/arxiv.submission.domain.event.html#arxiv.submission.domain.event.UpdateUploadPackage.project">[docs]</a>    <span class="k">def</span> <span class="nf">project</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Submission</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Replace :class:`.SubmissionContent` metadata on the submission.&quot;&quot;&quot;</span>
+        <span class="n">submission</span><span class="o">.</span><span class="n">source_content</span><span class="o">.</span><span class="n">source_format</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">source_format</span>
+        <span class="n">submission</span><span class="o">.</span><span class="n">source_content</span><span class="o">.</span><span class="n">checksum</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">checksum</span>
+        <span class="n">submission</span><span class="o">.</span><span class="n">source_content</span><span class="o">.</span><span class="n">size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">size</span>
         <span class="n">submission</span><span class="o">.</span><span class="n">submitter_confirmed_preview</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="k">return</span> <span class="n">submission</span></div></div>
 
@@ -1287,7 +1304,7 @@
       &copy;2017, arXiv.org.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.3</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.4</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
     </div>

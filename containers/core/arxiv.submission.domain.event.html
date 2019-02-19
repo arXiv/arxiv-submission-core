@@ -1681,14 +1681,9 @@ additional changes before finalizing the submission.</p>
 
 <dl class="class">
 <dt id="arxiv.submission.domain.event.SetUploadPackage">
-<em class="property">class </em><code class="descclassname">arxiv.submission.domain.event.</code><code class="descname">SetUploadPackage</code><span class="sig-paren">(</span><em>creator</em>, <em>created=&lt;factory&gt;</em>, <em>proxy=None</em>, <em>client=None</em>, <em>submission_id=None</em>, <em>committed=False</em>, <em>before=None</em>, <em>after=None</em>, <em>identifier=&lt;factory&gt;</em>, <em>format=&lt;factory&gt;</em>, <em>checksum=&lt;factory&gt;</em>, <em>size=0</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/domain/event.html#SetUploadPackage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.SetUploadPackage" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">arxiv.submission.domain.event.</code><code class="descname">SetUploadPackage</code><span class="sig-paren">(</span><em>creator</em>, <em>created=&lt;factory&gt;</em>, <em>proxy=None</em>, <em>client=None</em>, <em>submission_id=None</em>, <em>committed=False</em>, <em>before=None</em>, <em>after=None</em>, <em>identifier=&lt;factory&gt;</em>, <em>checksum=&lt;factory&gt;</em>, <em>size=0</em>, <em>source_format=&lt;Format.UNKNOWN: None&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/domain/event.html#SetUploadPackage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.SetUploadPackage" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="arxiv.submission.domain.event.event.html#arxiv.submission.domain.event.event.Event" title="arxiv.submission.domain.event.event.Event"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.submission.domain.event.event.Event</span></code></a></p>
 <p>Set the upload workspace for this submission.</p>
-<dl class="attribute">
-<dt id="arxiv.submission.domain.event.SetUploadPackage.ALLOWED_FORMATS">
-<code class="descname">ALLOWED_FORMATS</code><em class="property"> = ['pdftex', 'tex', 'pdf', 'ps', 'html', 'invalid', 'withdrawn']</em><a class="headerlink" href="#arxiv.submission.domain.event.SetUploadPackage.ALLOWED_FORMATS" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
 <dl class="attribute">
 <dt id="arxiv.submission.domain.event.SetUploadPackage.NAME">
 <code class="descname">NAME</code><em class="property"> = 'set the upload package'</em><a class="headerlink" href="#arxiv.submission.domain.event.SetUploadPackage.NAME" title="Permalink to this definition">¶</a></dt>
@@ -1716,6 +1711,11 @@ additional changes before finalizing the submission.</p>
 <dl class="attribute">
 <dt id="arxiv.submission.domain.event.SetUploadPackage.size">
 <code class="descname">size</code><em class="property"> = 0</em><a class="headerlink" href="#arxiv.submission.domain.event.SetUploadPackage.size" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.SetUploadPackage.source_format">
+<code class="descname">source_format</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.submission.domain.event.SetUploadPackage.source_format" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -1802,6 +1802,61 @@ additional changes before finalizing the submission.</p>
 <dt id="arxiv.submission.domain.event.UnsetUploadPackage.validate">
 <code class="descname">validate</code><span class="sig-paren">(</span><em>submission</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/domain/event.html#UnsetUploadPackage.validate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.UnsetUploadPackage.validate" title="Permalink to this definition">¶</a></dt>
 <dd><p>Validate data for <a class="reference internal" href="#arxiv.submission.domain.event.UnsetUploadPackage" title="arxiv.submission.domain.event.UnsetUploadPackage"><code class="xref py py-class docutils literal notranslate"><span class="pre">UnsetUploadPackage</span></code></a>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><code class="docutils literal notranslate"><span class="pre">None</span></code></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.submission.domain.event.UpdateUploadPackage">
+<em class="property">class </em><code class="descclassname">arxiv.submission.domain.event.</code><code class="descname">UpdateUploadPackage</code><span class="sig-paren">(</span><em>creator</em>, <em>created=&lt;factory&gt;</em>, <em>proxy=None</em>, <em>client=None</em>, <em>submission_id=None</em>, <em>committed=False</em>, <em>before=None</em>, <em>after=None</em>, <em>checksum=&lt;factory&gt;</em>, <em>size=0</em>, <em>source_format=&lt;Format.UNKNOWN: None&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/domain/event.html#UpdateUploadPackage"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.UpdateUploadPackage" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="arxiv.submission.domain.event.event.html#arxiv.submission.domain.event.event.Event" title="arxiv.submission.domain.event.event.Event"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.submission.domain.event.event.Event</span></code></a></p>
+<p>Update the upload workspace on this submission.</p>
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.UpdateUploadPackage.NAME">
+<code class="descname">NAME</code><em class="property"> = 'update the upload package'</em><a class="headerlink" href="#arxiv.submission.domain.event.UpdateUploadPackage.NAME" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.UpdateUploadPackage.NAMED">
+<code class="descname">NAMED</code><em class="property"> = 'upload package updated'</em><a class="headerlink" href="#arxiv.submission.domain.event.UpdateUploadPackage.NAMED" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.event.UpdateUploadPackage.project">
+<code class="descname">project</code><span class="sig-paren">(</span><em>submission</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/domain/event.html#UpdateUploadPackage.project"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.UpdateUploadPackage.project" title="Permalink to this definition">¶</a></dt>
+<dd><p>Replace <a class="reference internal" href="arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.SubmissionContent" title="arxiv.submission.domain.submission.SubmissionContent"><code class="xref py py-class docutils literal notranslate"><span class="pre">SubmissionContent</span></code></a> metadata on the submission.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.Submission" title="arxiv.submission.domain.submission.Submission"><code class="xref py py-class docutils literal notranslate"><span class="pre">Submission</span></code></a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.UpdateUploadPackage.size">
+<code class="descname">size</code><em class="property"> = 0</em><a class="headerlink" href="#arxiv.submission.domain.event.UpdateUploadPackage.size" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.UpdateUploadPackage.source_format">
+<code class="descname">source_format</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.submission.domain.event.UpdateUploadPackage.source_format" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.event.UpdateUploadPackage.validate">
+<code class="descname">validate</code><span class="sig-paren">(</span><em>submission</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/arxiv/submission/domain/event.html#UpdateUploadPackage.validate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.UpdateUploadPackage.validate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Validate data for <a class="reference internal" href="#arxiv.submission.domain.event.SetUploadPackage" title="arxiv.submission.domain.event.SetUploadPackage"><code class="xref py py-class docutils literal notranslate"><span class="pre">SetUploadPackage</span></code></a>.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
@@ -1944,7 +1999,7 @@ additional changes before finalizing the submission.</p>
       &copy;2017, arXiv.org.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.3</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.4</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |

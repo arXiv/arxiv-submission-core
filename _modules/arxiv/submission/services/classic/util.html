@@ -82,6 +82,9 @@
     <span class="sd">&quot;&quot;&quot;Get a new :class:`.Engine` for the classic database.&quot;&quot;&quot;</span>
     <span class="n">config</span> <span class="o">=</span> <span class="n">get_application_config</span><span class="p">(</span><span class="n">app</span><span class="p">)</span>
     <span class="n">database_uri</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;CLASSIC_DATABASE_URI&#39;</span><span class="p">,</span> <span class="s1">&#39;sqlite://&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">database_uri</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;mysql&#39;</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">create_engine</span><span class="p">(</span><span class="n">database_uri</span><span class="p">,</span> <span class="n">json_serializer</span><span class="o">=</span><span class="n">serializer</span><span class="o">.</span><span class="n">dumps</span><span class="p">,</span>
+                             <span class="n">json_deserializer</span><span class="o">=</span><span class="n">serializer</span><span class="o">.</span><span class="n">loads</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">create_engine</span><span class="p">(</span><span class="n">database_uri</span><span class="p">)</span></div>
 
 
@@ -193,7 +196,7 @@
       &copy;2017, arXiv.org.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.3</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.4</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
     </div>

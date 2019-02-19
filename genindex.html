@@ -153,8 +153,6 @@
 </li>
       <li><a href="containers/core/arxiv.submission.services.classic.models.html#arxiv.submission.services.classic.models.Submission.allow_tex_produced">allow_tex_produced (arxiv.submission.services.classic.models.Submission attribute)</a>
 </li>
-      <li><a href="containers/core/arxiv.submission.domain.event.html#arxiv.submission.domain.event.SetUploadPackage.ALLOWED_FORMATS">ALLOWED_FORMATS (arxiv.submission.domain.event.SetUploadPackage attribute)</a>
-</li>
       <li><a href="containers/core/arxiv.submission.domain.event.html#arxiv.submission.domain.event.SetTitle.ALLOWED_HTML">ALLOWED_HTML (arxiv.submission.domain.event.SetTitle attribute)</a>
 </li>
       <li><a href="containers/core/arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.Submission.annotations">annotations (arxiv.submission.domain.submission.Submission attribute)</a>
@@ -491,6 +489,8 @@
 </li>
       <li><a href="containers/core/arxiv.submission.rules.metadata_checks.html#arxiv.submission.rules.metadata_checks.check_title_ascii">check_title_ascii() (in module arxiv.submission.rules.metadata_checks)</a>
 </li>
+      <li><a href="containers/core/arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.Compilation.checksum">checksum (arxiv.submission.domain.submission.Compilation attribute)</a>
+</li>
       <li><a href="containers/core/arxiv.submission.services.classic.models.html#arxiv.submission.services.classic.models.PolicyClass.class_id">class_id (arxiv.submission.services.classic.models.PolicyClass attribute)</a>
 </li>
       <li><a href="containers/core/arxiv.submission.domain.annotation.html#arxiv.submission.domain.annotation.ClassifierResults.Classifiers.CLASSIC">CLASSIC (arxiv.submission.domain.annotation.ClassifierResults.Classifiers attribute)</a>
@@ -586,6 +586,18 @@
       <li><a href="containers/core/arxiv.submission.services.classic.exceptions.html#arxiv.submission.services.classic.exceptions.CommitFailed">CommitFailed</a>
 </li>
       <li><a href="containers/core/arxiv.submission.domain.event.event.html#arxiv.submission.domain.event.event.Event.committed">committed (arxiv.submission.domain.event.event.Event attribute)</a>
+</li>
+      <li><a href="containers/core/arxiv.submission.domain.event.process.html#arxiv.submission.domain.event.process.AddProcessStatus.Process.COMPILATION">COMPILATION (arxiv.submission.domain.event.process.AddProcessStatus.Process attribute)</a>
+
+      <ul>
+        <li><a href="containers/core/arxiv.submission.domain.process.html#arxiv.submission.domain.process.ProcessStatus.Process.COMPILATION">(arxiv.submission.domain.process.ProcessStatus.Process attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="containers/core/arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.Compilation">Compilation (class in arxiv.submission.domain.submission)</a>
+</li>
+      <li><a href="containers/core/arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.Compilation.Status">Compilation.Status (class in arxiv.submission.domain.submission)</a>
+</li>
+      <li><a href="containers/core/arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.Submission.compilations">compilations (arxiv.submission.domain.submission.Submission attribute)</a>
 </li>
       <li><a href="containers/core/arxiv.submission.domain.event.html#arxiv.submission.domain.event.ConfirmAuthorship">ConfirmAuthorship (class in arxiv.submission.domain.event)</a>
 </li>
@@ -850,6 +862,8 @@
       <ul>
         <li><a href="containers/core/arxiv.submission.domain.process.html#arxiv.submission.domain.process.ProcessStatus.Status.FAILED">(arxiv.submission.domain.process.ProcessStatus.Status attribute)</a>
 </li>
+        <li><a href="containers/core/arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.Compilation.Status.FAILED">(arxiv.submission.domain.submission.Compilation.Status attribute)</a>
+</li>
         <li><a href="containers/core/arxiv.submission.services.plaintext.plaintext.html#arxiv.submission.services.plaintext.plaintext.PlainTextService.Status.FAILED">(arxiv.submission.services.plaintext.plaintext.PlainTextService.Status attribute)</a>
 </li>
       </ul></li>
@@ -889,10 +903,10 @@
 </li>
       <li><a href="containers/core/arxiv.submission.services.classic.models.html#arxiv.submission.services.classic.models.User.flag_approved">flag_approved (arxiv.submission.services.classic.models.User attribute)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="containers/core/arxiv.submission.services.classic.models.html#arxiv.submission.services.classic.models.User.flag_banned">flag_banned (arxiv.submission.services.classic.models.User attribute)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="containers/core/arxiv.submission.domain.event.flag.html#arxiv.submission.domain.event.flag.AddFlag.flag_data">flag_data (arxiv.submission.domain.event.flag.AddFlag attribute)</a>
 </li>
       <li><a href="containers/core/arxiv.submission.services.classic.models.html#arxiv.submission.services.classic.models.User.flag_deleted">flag_deleted (arxiv.submission.services.classic.models.User attribute)</a>
@@ -932,9 +946,13 @@
 </li>
         <li><a href="containers/core/arxiv.submission.domain.event.html#arxiv.submission.domain.event.SetAuthors.from_dict">(arxiv.submission.domain.event.SetAuthors class method)</a>
 </li>
+        <li><a href="containers/core/arxiv.submission.domain.event.process.html#arxiv.submission.domain.event.process.AddProcessStatus.from_dict">(arxiv.submission.domain.event.process.AddProcessStatus class method)</a>
+</li>
         <li><a href="containers/core/arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.Submission.from_dict">(arxiv.submission.domain.submission.Submission class method)</a>
 </li>
       </ul></li>
+      <li><a href="containers/core/arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.Compilation.from_processes">from_processes() (arxiv.submission.domain.submission.Compilation class method)</a>
+</li>
   </ul></td>
 </tr></table>
 
@@ -948,6 +966,8 @@
       <li><a href="containers/metadata/metadata.html#metadata.routes.get_agents">get_agents() (in module metadata.routes)</a>
 </li>
       <li><a href="containers/core/arxiv.submission.services.classic.models.html#arxiv.submission.services.classic.models.Submission.get_arxiv_id">get_arxiv_id() (arxiv.submission.services.classic.models.Submission method)</a>
+</li>
+      <li><a href="containers/core/arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.Submission.get_compilations">get_compilations() (arxiv.submission.domain.submission.Submission method)</a>
 </li>
       <li><a href="containers/core/arxiv.submission.rules.reclassification.html#arxiv.submission.rules.reclassification.get_condition">get_condition() (in module arxiv.submission.rules.reclassification)</a>
 </li>
@@ -1067,6 +1087,8 @@
         <li><a href="containers/core/arxiv.submission.domain.agent.html#arxiv.submission.domain.agent.User.hostname">(arxiv.submission.domain.agent.User attribute)</a>
 </li>
       </ul></li>
+      <li><a href="containers/core/arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.SubmissionContent.Format.HTML">HTML (arxiv.submission.domain.submission.SubmissionContent.Format attribute)</a>
+</li>
   </ul></td>
 </tr></table>
 
@@ -1082,6 +1104,8 @@
 </li>
         <li><a href="containers/core/arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.Author.identifier">(arxiv.submission.domain.submission.Author attribute)</a>
 </li>
+        <li><a href="containers/core/arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.Compilation.identifier">(arxiv.submission.domain.submission.Compilation attribute)</a>
+</li>
       </ul></li>
       <li><a href="containers/core/arxiv.submission.services.classic.util.html#arxiv.submission.services.classic.util.SQLiteJSON.impl">impl (arxiv.submission.services.classic.util.SQLiteJSON attribute)</a>
 </li>
@@ -1093,8 +1117,12 @@
         <li><a href="containers/core/arxiv.submission.tests.util.html#arxiv.submission.tests.util.in_memory_db">(in module arxiv.submission.tests.util)</a>
 </li>
       </ul></li>
-      <li><a href="containers/core/arxiv.submission.services.plaintext.plaintext.html#arxiv.submission.services.plaintext.plaintext.PlainTextService.Status.IN_PROGRESS">IN_PROGRESS (arxiv.submission.services.plaintext.plaintext.PlainTextService.Status attribute)</a>
+      <li><a href="containers/core/arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.Compilation.Status.IN_PROGRESS">IN_PROGRESS (arxiv.submission.domain.submission.Compilation.Status attribute)</a>
+
+      <ul>
+        <li><a href="containers/core/arxiv.submission.services.plaintext.plaintext.html#arxiv.submission.services.plaintext.plaintext.PlainTextService.Status.IN_PROGRESS">(arxiv.submission.services.plaintext.plaintext.PlainTextService.Status attribute)</a>
 </li>
+      </ul></li>
       <li><a href="containers/core/arxiv.submission.core.html#arxiv.submission.core.init_app">init_app() (in module arxiv.submission.core)</a>
 
       <ul>
@@ -1106,6 +1134,8 @@
 </li>
       </ul></li>
       <li><a href="containers/core/arxiv.submission.rules.metadata_checks.html#arxiv.submission.rules.metadata_checks.intersection">intersection() (in module arxiv.submission.rules.metadata_checks)</a>
+</li>
+      <li><a href="containers/core/arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.SubmissionContent.Format.INVALID">INVALID (arxiv.submission.domain.submission.SubmissionContent.Format attribute)</a>
 </li>
       <li><a href="containers/core/arxiv.submission.exceptions.html#arxiv.submission.exceptions.InvalidEvent">InvalidEvent</a>
 </li>
@@ -1119,12 +1149,12 @@
 </li>
       <li><a href="containers/core/arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.UserRequest.is_approved">is_approved() (arxiv.submission.domain.submission.UserRequest method)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="containers/core/arxiv.submission.rules.util.html#arxiv.submission.rules.util.is_ascii">is_ascii (in module arxiv.submission.rules.util)</a>
 </li>
       <li><a href="containers/core/arxiv.submission.tasks.html#arxiv.submission.tasks.is_async">is_async() (in module arxiv.submission.tasks)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="containers/core/arxiv.submission.services.classic.models.html#arxiv.submission.services.classic.models.Submission.is_author">is_author (arxiv.submission.services.classic.models.Submission attribute)</a>
 </li>
       <li><a href="containers/core/arxiv.submission.services.classic.models.html#arxiv.submission.services.classic.models.Submission.is_crosslist">is_crosslist() (arxiv.submission.services.classic.models.Submission method)</a>
@@ -1229,6 +1259,8 @@
       </ul></li>
       <li><a href="containers/core/arxiv.submission.services.classic.models.html#arxiv.submission.services.classic.models.User.last_name">last_name (arxiv.submission.services.classic.models.User attribute)</a>
 </li>
+      <li><a href="containers/core/arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.Submission.latest_compilation">latest_compilation (arxiv.submission.domain.submission.Submission attribute)</a>
+</li>
       <li><a href="containers/core/arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.Submission.license">license (arxiv.submission.domain.submission.Submission attribute)</a>
 
       <ul>
@@ -1249,10 +1281,10 @@
 </li>
       <li><a href="containers/core/arxiv.submission.domain.flag.html#arxiv.submission.domain.flag.ContentFlag.FlagTypes.LINE_NUMBERS">LINE_NUMBERS (arxiv.submission.domain.flag.ContentFlag.FlagTypes attribute)</a>
 </li>
-      <li><a href="containers/core/arxiv.submission.core.html#arxiv.submission.core.load">load() (in module arxiv.submission.core)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="containers/core/arxiv.submission.core.html#arxiv.submission.core.load">load() (in module arxiv.submission.core)</a>
+</li>
       <li><a href="containers/core/arxiv.submission.core.html#arxiv.submission.core.load_fast">load_fast() (in module arxiv.submission.core)</a>
 </li>
       <li><a href="containers/core/arxiv.submission.core.html#arxiv.submission.core.load_submissions_for_user">load_submissions_for_user() (in module arxiv.submission.core)</a>
@@ -1313,12 +1345,14 @@
 </li>
       <li><a href="containers/metadata/metadata.controllers.submission.html#module-metadata.controllers.submission.handlers">metadata.controllers.submission.handlers (module)</a>
 </li>
-      <li><a href="containers/metadata/metadata.controllers.html#module-metadata.controllers.util">metadata.controllers.util (module)</a>
+      <li><a href="containers/metadata/metadata.controllers.submission.html#module-metadata.controllers.submission.tests">metadata.controllers.submission.tests (module)</a>
 </li>
-      <li><a href="containers/metadata/metadata.html#module-metadata.factory">metadata.factory (module)</a>
+      <li><a href="containers/metadata/metadata.controllers.html#module-metadata.controllers.util">metadata.controllers.util (module)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="containers/metadata/metadata.html#module-metadata.factory">metadata.factory (module)</a>
+</li>
       <li><a href="containers/metadata/metadata.html#module-metadata.routes">metadata.routes (module)</a>
 </li>
       <li><a href="containers/core/arxiv.submission.services.classic.models.html#arxiv.submission.services.classic.models.Submission.METADATA_ADDED">METADATA_ADDED (arxiv.submission.services.classic.models.Submission attribute)</a>
@@ -1409,6 +1443,8 @@
         <li><a href="containers/core/arxiv.submission.domain.event.html#arxiv.submission.domain.event.SetUploadPackage.NAME">(arxiv.submission.domain.event.SetUploadPackage attribute)</a>
 </li>
         <li><a href="containers/core/arxiv.submission.domain.event.html#arxiv.submission.domain.event.UnFinalizeSubmission.NAME">(arxiv.submission.domain.event.UnFinalizeSubmission attribute)</a>
+</li>
+        <li><a href="containers/core/arxiv.submission.domain.event.html#arxiv.submission.domain.event.UpdateUploadPackage.NAME">(arxiv.submission.domain.event.UpdateUploadPackage attribute)</a>
 </li>
         <li><a href="containers/core/arxiv.submission.domain.event.flag.html#arxiv.submission.domain.event.flag.AddContentFlag.NAME">(arxiv.submission.domain.event.flag.AddContentFlag attribute)</a>
 </li>
@@ -1512,6 +1548,8 @@
 </li>
         <li><a href="containers/core/arxiv.submission.domain.event.html#arxiv.submission.domain.event.UnFinalizeSubmission.NAMED">(arxiv.submission.domain.event.UnFinalizeSubmission attribute)</a>
 </li>
+        <li><a href="containers/core/arxiv.submission.domain.event.html#arxiv.submission.domain.event.UpdateUploadPackage.NAMED">(arxiv.submission.domain.event.UpdateUploadPackage attribute)</a>
+</li>
         <li><a href="containers/core/arxiv.submission.domain.event.flag.html#arxiv.submission.domain.event.flag.AddContentFlag.NAMED">(arxiv.submission.domain.event.flag.AddContentFlag attribute)</a>
 </li>
         <li><a href="containers/core/arxiv.submission.domain.event.flag.html#arxiv.submission.domain.event.flag.AddFlag.NAMED">(arxiv.submission.domain.event.flag.AddFlag attribute)</a>
@@ -1599,6 +1637,8 @@
 </li>
       <li><a href="containers/core/arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.Author.order">order (arxiv.submission.domain.submission.Author attribute)</a>
 </li>
+      <li><a href="containers/core/arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.Compilation.output_format">output_format (arxiv.submission.domain.submission.Compilation attribute)</a>
+</li>
       <li><a href="containers/core/arxiv.submission.domain.event.process.html#arxiv.submission.domain.event.process.AddProcessStatus.Process.OVERLAP_DETECTION">OVERLAP_DETECTION (arxiv.submission.domain.event.process.AddProcessStatus.Process attribute)</a>
 
       <ul>
@@ -1647,6 +1687,10 @@
 </li>
       <li><a href="containers/core/arxiv.submission.services.classic.models.html#arxiv.submission.services.classic.models.Submission.PATCHABLE">PATCHABLE (arxiv.submission.services.classic.models.Submission attribute)</a>
 </li>
+      <li><a href="containers/core/arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.SubmissionContent.Format.PDF">PDF (arxiv.submission.domain.submission.SubmissionContent.Format attribute)</a>
+</li>
+      <li><a href="containers/core/arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.SubmissionContent.Format.PDFTEX">PDFTEX (arxiv.submission.domain.submission.SubmissionContent.Format attribute)</a>
+</li>
       <li><a href="containers/core/arxiv.submission.domain.proposal.html#arxiv.submission.domain.proposal.Proposal.Status.PENDING">PENDING (arxiv.submission.domain.proposal.Proposal.Status attribute)</a>
 
       <ul>
@@ -1678,6 +1722,10 @@
       <li><a href="containers/core/arxiv.submission.domain.flag.html#arxiv.submission.domain.flag.MetadataFlag.FlagTypes.POSSIBLE_DUPLICATE_TITLE">POSSIBLE_DUPLICATE_TITLE (arxiv.submission.domain.flag.MetadataFlag.FlagTypes attribute)</a>
 </li>
       <li><a href="containers/core/arxiv.submission.domain.flag.html#arxiv.submission.domain.flag.PossibleDuplicate">PossibleDuplicate (class in arxiv.submission.domain.flag)</a>
+</li>
+      <li><a href="containers/core/arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.SubmissionContent.Format.POSTSCRIPT">POSTSCRIPT (arxiv.submission.domain.submission.SubmissionContent.Format attribute)</a>
+</li>
+      <li><a href="containers/metadata/metadata.controllers.submission.html#metadata.controllers.submission.tests.preserve_exceptions_and_events">preserve_exceptions_and_events() (in module metadata.controllers.submission.tests)</a>
 </li>
       <li><a href="containers/core/arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.Submission.primary_classification">primary_classification (arxiv.submission.domain.submission.Submission attribute)</a>
 
@@ -1781,6 +1829,8 @@
         <li><a href="containers/core/arxiv.submission.domain.event.html#arxiv.submission.domain.event.UnFinalizeSubmission.project">(arxiv.submission.domain.event.UnFinalizeSubmission method)</a>
 </li>
         <li><a href="containers/core/arxiv.submission.domain.event.html#arxiv.submission.domain.event.UnsetUploadPackage.project">(arxiv.submission.domain.event.UnsetUploadPackage method)</a>
+</li>
+        <li><a href="containers/core/arxiv.submission.domain.event.html#arxiv.submission.domain.event.UpdateUploadPackage.project">(arxiv.submission.domain.event.UpdateUploadPackage method)</a>
 </li>
         <li><a href="containers/core/arxiv.submission.domain.event.flag.html#arxiv.submission.domain.event.flag.AddContentFlag.project">(arxiv.submission.domain.event.flag.AddContentFlag method)</a>
 </li>
@@ -2142,6 +2192,10 @@
 </li>
         <li><a href="containers/core/arxiv.submission.tests.examples.test_08_post_submission_checks.html#arxiv.submission.tests.examples.test_08_post_submission_checks.TestPostSubmissionChecks.setUp">(arxiv.submission.tests.examples.test_08_post_submission_checks.TestPostSubmissionChecks method)</a>
 </li>
+        <li><a href="containers/metadata/metadata.controllers.submission.html#metadata.controllers.submission.tests.TestCreateSubmission.setUp">(metadata.controllers.submission.tests.TestCreateSubmission method)</a>
+</li>
+        <li><a href="containers/metadata/metadata.controllers.submission.html#metadata.controllers.submission.tests.TestUpdateSubmission.setUp">(metadata.controllers.submission.tests.TestUpdateSubmission method)</a>
+</li>
       </ul></li>
       <li><a href="containers/core/arxiv.submission.tests.annotations.test_annotations.html#arxiv.submission.tests.annotations.test_annotations.TestAddRemovePossibleDuplicateAnnotations.setUpClass">setUpClass() (arxiv.submission.tests.annotations.test_annotations.TestAddRemovePossibleDuplicateAnnotations class method)</a>
 
@@ -2175,10 +2229,10 @@
         <li><a href="containers/core/arxiv.submission.tests.examples.test_08_post_submission_checks.html#arxiv.submission.tests.examples.test_08_post_submission_checks.TestPostSubmissionChecks.setUpClass">(arxiv.submission.tests.examples.test_08_post_submission_checks.TestPostSubmissionChecks class method)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="containers/core/arxiv.submission.domain.event.html#arxiv.submission.domain.event.SetUploadPackage">SetUploadPackage (class in arxiv.submission.domain.event)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="containers/core/arxiv.submission.services.classic.models.html#arxiv.submission.services.classic.models.User.share_email">share_email (arxiv.submission.services.classic.models.User attribute)</a>
 </li>
       <li><a href="containers/core/arxiv.submission.services.classic.models.html#arxiv.submission.services.classic.models.User.share_first_name">share_first_name (arxiv.submission.services.classic.models.User attribute)</a>
@@ -2186,12 +2240,26 @@
       <li><a href="containers/core/arxiv.submission.services.classic.models.html#arxiv.submission.services.classic.models.User.share_last_name">share_last_name (arxiv.submission.services.classic.models.User attribute)</a>
 </li>
       <li><a href="containers/core/arxiv.submission.domain.event.html#arxiv.submission.domain.event.SetUploadPackage.size">size (arxiv.submission.domain.event.SetUploadPackage attribute)</a>
+
+      <ul>
+        <li><a href="containers/core/arxiv.submission.domain.event.html#arxiv.submission.domain.event.UpdateUploadPackage.size">(arxiv.submission.domain.event.UpdateUploadPackage attribute)</a>
 </li>
+      </ul></li>
       <li><a href="containers/core/arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.Submission.source_content">source_content (arxiv.submission.domain.submission.Submission attribute)</a>
 </li>
       <li><a href="containers/core/arxiv.submission.services.classic.models.html#arxiv.submission.services.classic.models.Submission.source_flags">source_flags (arxiv.submission.services.classic.models.Submission attribute)</a>
 </li>
-      <li><a href="containers/core/arxiv.submission.services.classic.models.html#arxiv.submission.services.classic.models.Submission.source_format">source_format (arxiv.submission.services.classic.models.Submission attribute)</a>
+      <li><a href="containers/core/arxiv.submission.domain.event.html#arxiv.submission.domain.event.SetUploadPackage.source_format">source_format (arxiv.submission.domain.event.SetUploadPackage attribute)</a>
+
+      <ul>
+        <li><a href="containers/core/arxiv.submission.domain.event.html#arxiv.submission.domain.event.UpdateUploadPackage.source_format">(arxiv.submission.domain.event.UpdateUploadPackage attribute)</a>
+</li>
+        <li><a href="containers/core/arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.SubmissionContent.source_format">(arxiv.submission.domain.submission.SubmissionContent attribute)</a>
+</li>
+        <li><a href="containers/core/arxiv.submission.services.classic.models.html#arxiv.submission.services.classic.models.Submission.source_format">(arxiv.submission.services.classic.models.Submission attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="containers/core/arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.Compilation.source_id">source_id (arxiv.submission.domain.submission.Compilation attribute)</a>
 </li>
       <li><a href="containers/core/arxiv.submission.services.classic.models.html#arxiv.submission.services.classic.models.Submission.source_size">source_size (arxiv.submission.services.classic.models.Submission attribute)</a>
 </li>
@@ -2213,6 +2281,8 @@
         <li><a href="containers/core/arxiv.submission.domain.process.html#arxiv.submission.domain.process.ProcessStatus.status">(arxiv.submission.domain.process.ProcessStatus attribute)</a>
 </li>
         <li><a href="containers/core/arxiv.submission.domain.proposal.html#arxiv.submission.domain.proposal.Proposal.status">(arxiv.submission.domain.proposal.Proposal attribute)</a>
+</li>
+        <li><a href="containers/core/arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.Compilation.status">(arxiv.submission.domain.submission.Compilation attribute)</a>
 </li>
         <li><a href="containers/core/arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.Submission.status">(arxiv.submission.domain.submission.Submission attribute)</a>
 </li>
@@ -2277,9 +2347,9 @@
 </li>
       <li><a href="containers/core/arxiv.submission.services.classic.models.html#arxiv.submission.services.classic.models.SubmissionCategory">SubmissionCategory (class in arxiv.submission.services.classic.models)</a>
 </li>
-      <li><a href="containers/core/arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.SubmissionCompiled">SubmissionCompiled (class in arxiv.submission.domain.submission)</a>
-</li>
       <li><a href="containers/core/arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.SubmissionContent">SubmissionContent (class in arxiv.submission.domain.submission)</a>
+</li>
+      <li><a href="containers/core/arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.SubmissionContent.Format">SubmissionContent.Format (class in arxiv.submission.domain.submission)</a>
 </li>
       <li><a href="containers/core/arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.SubmissionMetadata">SubmissionMetadata (class in arxiv.submission.domain.submission)</a>
 </li>
@@ -2327,6 +2397,8 @@
 
       <ul>
         <li><a href="containers/core/arxiv.submission.domain.process.html#arxiv.submission.domain.process.ProcessStatus.Status.SUCCEEDED">(arxiv.submission.domain.process.ProcessStatus.Status attribute)</a>
+</li>
+        <li><a href="containers/core/arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.Compilation.Status.SUCCEEDED">(arxiv.submission.domain.submission.Compilation.Status attribute)</a>
 </li>
         <li><a href="containers/core/arxiv.submission.services.plaintext.plaintext.html#arxiv.submission.services.plaintext.plaintext.PlainTextService.Status.SUCCEEDED">(arxiv.submission.services.plaintext.plaintext.PlainTextService.Status attribute)</a>
 </li>
@@ -2575,6 +2647,14 @@
 </li>
       <li><a href="containers/core/arxiv.submission.domain.tests.test_events.html#arxiv.submission.domain.tests.test_events.TestReplacementSubmission.test_create_submission_replacement">test_create_submission_replacement() (arxiv.submission.domain.tests.test_events.TestReplacementSubmission method)</a>
 </li>
+      <li><a href="containers/metadata/metadata.controllers.submission.html#metadata.controllers.submission.tests.TestCreateSubmission.test_create_submission_with_db_down">test_create_submission_with_db_down() (metadata.controllers.submission.tests.TestCreateSubmission method)</a>
+</li>
+      <li><a href="containers/metadata/metadata.controllers.submission.html#metadata.controllers.submission.tests.TestCreateSubmission.test_create_submission_with_invalid_data">test_create_submission_with_invalid_data() (metadata.controllers.submission.tests.TestCreateSubmission method)</a>
+</li>
+      <li><a href="containers/metadata/metadata.controllers.submission.html#metadata.controllers.submission.tests.TestCreateSubmission.test_create_submission_with_invalid_event">test_create_submission_with_invalid_event() (metadata.controllers.submission.tests.TestCreateSubmission method)</a>
+</li>
+      <li><a href="containers/metadata/metadata.controllers.submission.html#metadata.controllers.submission.tests.TestCreateSubmission.test_create_submission_with_valid_data">test_create_submission_with_valid_data() (metadata.controllers.submission.tests.TestCreateSubmission method)</a>
+</li>
       <li><a href="containers/core/arxiv.submission.rules.tests.test_reclassification.html#arxiv.submission.rules.tests.test_reclassification.TestProposeCrossFromPrimary.test_cross_already_set">test_cross_already_set() (arxiv.submission.rules.tests.test_reclassification.TestProposeCrossFromPrimary method)</a>
 </li>
       <li><a href="containers/core/arxiv.submission.tests.classic.test_classic_integration.html#arxiv.submission.tests.classic.test_classic_integration.TestPublicationIntegration.test_deleted">test_deleted() (arxiv.submission.tests.classic.test_classic_integration.TestPublicationIntegration method)</a>
@@ -2622,6 +2702,10 @@
       <li><a href="containers/core/arxiv.submission.services.plaintext.tests.html#arxiv.submission.services.plaintext.tests.TestPlainTextServiceModule.test_extraction_unauthorized">test_extraction_unauthorized() (arxiv.submission.services.plaintext.tests.TestPlainTextServiceModule method)</a>
 </li>
       <li><a href="containers/core/arxiv.submission.services.classic.tests.test_get_licenses.html#arxiv.submission.services.classic.tests.test_get_licenses.TestGetLicenses.test_get_all_active_licenses">test_get_all_active_licenses() (arxiv.submission.services.classic.tests.test_get_licenses.TestGetLicenses method)</a>
+</li>
+      <li><a href="containers/metadata/metadata.controllers.submission.html#metadata.controllers.submission.tests.TestGetSubmission.test_get_nonexistant_submission">test_get_nonexistant_submission() (metadata.controllers.submission.tests.TestGetSubmission method)</a>
+</li>
+      <li><a href="containers/metadata/metadata.controllers.submission.html#metadata.controllers.submission.tests.TestGetSubmission.test_get_submission">test_get_submission() (metadata.controllers.submission.tests.TestGetSubmission method)</a>
 </li>
       <li><a href="containers/core/arxiv.submission.services.classic.tests.test_get_submission.html#arxiv.submission.services.classic.tests.test_get_submission.TestGetSubmission.test_get_submission_that_does_not_exist">test_get_submission_that_does_not_exist() (arxiv.submission.services.classic.tests.test_get_submission.TestGetSubmission method)</a>
 </li>
@@ -2691,10 +2775,10 @@
 </li>
       <li><a href="containers/core/arxiv.submission.domain.tests.test_events.html#arxiv.submission.domain.tests.test_events.TestSetAbstract.test_reasonable_abstract">test_reasonable_abstract() (arxiv.submission.domain.tests.test_events.TestSetAbstract method)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="containers/core/arxiv.submission.domain.tests.test_events.html#arxiv.submission.domain.tests.test_events.TestSetComments.test_reasonable_comment">test_reasonable_comment() (arxiv.submission.domain.tests.test_events.TestSetComments method)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="containers/core/arxiv.submission.domain.tests.test_events.html#arxiv.submission.domain.tests.test_events.TestSetTitle.test_reasonable_title">test_reasonable_title() (arxiv.submission.domain.tests.test_events.TestSetTitle method)</a>
 </li>
       <li><a href="containers/core/arxiv.submission.domain.tests.test_events.html#arxiv.submission.domain.tests.test_events.TestRemoveSecondaryClassification.test_remove_secondary_not_present">test_remove_secondary_not_present() (arxiv.submission.domain.tests.test_events.TestRemoveSecondaryClassification method)</a>
@@ -2823,6 +2907,16 @@
 </li>
       <li><a href="containers/core/arxiv.submission.tests.classic.test_classic_integration.html#arxiv.submission.tests.classic.test_classic_integration.TestClassicUIWorkflow.test_unicode_submitter">test_unicode_submitter() (arxiv.submission.tests.classic.test_classic_integration.TestClassicUIWorkflow method)</a>
 </li>
+      <li><a href="containers/metadata/metadata.controllers.submission.html#metadata.controllers.submission.tests.TestUpdateSubmission.test_update_nonexistant_submission">test_update_nonexistant_submission() (metadata.controllers.submission.tests.TestUpdateSubmission method)</a>
+</li>
+      <li><a href="containers/metadata/metadata.controllers.submission.html#metadata.controllers.submission.tests.TestUpdateSubmission.test_update_submission_with_db_down">test_update_submission_with_db_down() (metadata.controllers.submission.tests.TestUpdateSubmission method)</a>
+</li>
+      <li><a href="containers/metadata/metadata.controllers.submission.html#metadata.controllers.submission.tests.TestUpdateSubmission.test_update_submission_with_invalid_data">test_update_submission_with_invalid_data() (metadata.controllers.submission.tests.TestUpdateSubmission method)</a>
+</li>
+      <li><a href="containers/metadata/metadata.controllers.submission.html#metadata.controllers.submission.tests.TestUpdateSubmission.test_update_submission_with_invalid_event">test_update_submission_with_invalid_event() (metadata.controllers.submission.tests.TestUpdateSubmission method)</a>
+</li>
+      <li><a href="containers/metadata/metadata.controllers.submission.html#metadata.controllers.submission.tests.TestUpdateSubmission.test_update_submission_with_valid_data">test_update_submission_with_valid_data() (metadata.controllers.submission.tests.TestUpdateSubmission method)</a>
+</li>
       <li><a href="containers/core/arxiv.submission.rules.tests.test_reclassification.html#arxiv.submission.rules.tests.test_reclassification.TestAcceptSystemCrossProposal.test_user_cross_proposal">test_user_cross_proposal() (arxiv.submission.rules.tests.test_reclassification.TestAcceptSystemCrossProposal method)</a>
 </li>
       <li><a href="containers/core/arxiv.submission.domain.tests.test_events.html#arxiv.submission.domain.tests.test_events.TestSetACMClassification.test_valid_acm_class">test_valid_acm_class() (arxiv.submission.domain.tests.test_events.TestSetACMClassification method)</a>
@@ -2859,6 +2953,8 @@
 </li>
       <li><a href="containers/core/arxiv.submission.domain.event.tests.test_hooks.html#arxiv.submission.domain.event.tests.test_hooks.TestCommitEvent">TestCommitEvent (class in arxiv.submission.domain.event.tests.test_hooks)</a>
 </li>
+      <li><a href="containers/metadata/metadata.controllers.submission.html#metadata.controllers.submission.tests.TestCreateSubmission">TestCreateSubmission (class in metadata.controllers.submission.tests)</a>
+</li>
       <li><a href="containers/core/arxiv.submission.tests.examples.test_07_cross_list_requested.html#arxiv.submission.tests.examples.test_07_cross_list_requested.TestCrossListApplied">TestCrossListApplied (class in arxiv.submission.tests.examples.test_07_cross_list_requested)</a>
 </li>
       <li><a href="containers/core/arxiv.submission.tests.examples.test_07_cross_list_requested.html#arxiv.submission.tests.examples.test_07_cross_list_requested.TestCrossListRejected">TestCrossListRejected (class in arxiv.submission.tests.examples.test_07_cross_list_requested)</a>
@@ -2872,7 +2968,11 @@
       <li><a href="containers/core/arxiv.submission.services.classic.tests.test_get_licenses.html#arxiv.submission.services.classic.tests.test_get_licenses.TestGetLicenses">TestGetLicenses (class in arxiv.submission.services.classic.tests.test_get_licenses)</a>
 </li>
       <li><a href="containers/core/arxiv.submission.services.classic.tests.test_get_submission.html#arxiv.submission.services.classic.tests.test_get_submission.TestGetSubmission">TestGetSubmission (class in arxiv.submission.services.classic.tests.test_get_submission)</a>
+
+      <ul>
+        <li><a href="containers/metadata/metadata.controllers.submission.html#metadata.controllers.submission.tests.TestGetSubmission">(class in metadata.controllers.submission.tests)</a>
 </li>
+      </ul></li>
       <li><a href="containers/core/arxiv.submission.tests.classic.test_classic_integration.html#arxiv.submission.tests.classic.test_classic_integration.TestJREFIntegration">TestJREFIntegration (class in arxiv.submission.tests.classic.test_classic_integration)</a>
 </li>
       <li><a href="containers/core/arxiv.submission.tests.api.test_api.html#arxiv.submission.tests.api.test_api.TestLoad">TestLoad (class in arxiv.submission.tests.api.test_api)</a>
@@ -2937,11 +3037,15 @@
         <li><a href="containers/core/arxiv.submission.services.classic.tests.test_store_event.html#arxiv.submission.services.classic.tests.test_store_event.TestStoreEvent">(class in arxiv.submission.services.classic.tests.test_store_event)</a>
 </li>
       </ul></li>
+      <li><a href="containers/metadata/metadata.controllers.submission.html#metadata.controllers.submission.tests.TestUpdateSubmission">TestUpdateSubmission (class in metadata.controllers.submission.tests)</a>
+</li>
       <li><a href="containers/core/arxiv.submission.tests.classic.test_classic_integration.html#arxiv.submission.tests.classic.test_classic_integration.TestWithdrawalIntegration">TestWithdrawalIntegration (class in arxiv.submission.tests.classic.test_classic_integration)</a>
 </li>
       <li><a href="containers/core/arxiv.submission.domain.tests.test_events.html#arxiv.submission.domain.tests.test_events.TestWithdrawalSubmission">TestWithdrawalSubmission (class in arxiv.submission.domain.tests.test_events)</a>
 </li>
       <li><a href="containers/core/arxiv.submission.tests.examples.test_01_working_submission.html#arxiv.submission.tests.examples.test_01_working_submission.TestWorkingSubmission">TestWorkingSubmission (class in arxiv.submission.tests.examples.test_01_working_submission)</a>
+</li>
+      <li><a href="containers/core/arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.SubmissionContent.Format.TEX">TEX (arxiv.submission.domain.submission.SubmissionContent.Format attribute)</a>
 </li>
       <li><a href="containers/core/arxiv.submission.services.classic.models.html#arxiv.submission.services.classic.models.Tracking.timestamp">timestamp (arxiv.submission.services.classic.models.Tracking attribute)</a>
 </li>
@@ -3011,6 +3115,8 @@
 </li>
       <li><a href="containers/core/arxiv.submission.rules.metadata_checks.html#arxiv.submission.rules.metadata_checks.union">union() (in module arxiv.submission.rules.metadata_checks)</a>
 </li>
+      <li><a href="containers/core/arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.SubmissionContent.Format.UNKNOWN">UNKNOWN (arxiv.submission.domain.submission.SubmissionContent.Format attribute)</a>
+</li>
       <li><a href="containers/core/arxiv.submission.services.classic.models.html#arxiv.submission.services.classic.models.CategoryProposal.UNRESOLVED">UNRESOLVED (arxiv.submission.services.classic.models.CategoryProposal attribute)</a>
 </li>
       <li><a href="containers/core/arxiv.submission.domain.event.html#arxiv.submission.domain.event.UnsetUploadPackage">UnsetUploadPackage (class in arxiv.submission.domain.event)</a>
@@ -3037,6 +3143,8 @@
         <li><a href="containers/core/arxiv.submission.services.classic.models.html#arxiv.submission.services.classic.models.Submission.updated">(arxiv.submission.services.classic.models.Submission attribute)</a>
 </li>
       </ul></li>
+      <li><a href="containers/core/arxiv.submission.domain.event.html#arxiv.submission.domain.event.UpdateUploadPackage">UpdateUploadPackage (class in arxiv.submission.domain.event)</a>
+</li>
       <li><a href="containers/core/arxiv.submission.services.classic.models.html#arxiv.submission.services.classic.models.CategoryProposal.user">user (arxiv.submission.services.classic.models.CategoryProposal attribute)</a>
 
       <ul>
@@ -3151,6 +3259,8 @@
         <li><a href="containers/core/arxiv.submission.domain.event.html#arxiv.submission.domain.event.UnFinalizeSubmission.validate">(arxiv.submission.domain.event.UnFinalizeSubmission method)</a>
 </li>
         <li><a href="containers/core/arxiv.submission.domain.event.html#arxiv.submission.domain.event.UnsetUploadPackage.validate">(arxiv.submission.domain.event.UnsetUploadPackage method)</a>
+</li>
+        <li><a href="containers/core/arxiv.submission.domain.event.html#arxiv.submission.domain.event.UpdateUploadPackage.validate">(arxiv.submission.domain.event.UpdateUploadPackage method)</a>
 </li>
         <li><a href="containers/core/arxiv.submission.domain.event.flag.html#arxiv.submission.domain.event.flag.AddContentFlag.validate">(arxiv.submission.domain.event.flag.AddContentFlag method)</a>
 </li>
@@ -3302,7 +3412,7 @@
       &copy;2017, arXiv.org.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.3</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.4</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
     </div>

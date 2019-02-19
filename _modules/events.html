@@ -27,6 +27,8 @@
     <div class="document">
       <div class="documentwrapper">
         <div class="bodywrapper">
+          
+
           <div class="body" role="main">
             
   <h1>Source code for events</h1><div class="highlight"><pre>
@@ -123,7 +125,7 @@
 <span class="p">)</span>
 <span class="kn">from</span> <span class="nn">events.domain.rule</span> <span class="k">import</span> <span class="n">RuleCondition</span><span class="p">,</span> <span class="n">RuleConsequence</span><span class="p">,</span> <span class="n">EventRule</span>
 <span class="kn">from</span> <span class="nn">events.services</span> <span class="k">import</span> <span class="n">classic</span>
-<span class="kn">from</span> <span class="nn">events.exceptions</span> <span class="k">import</span> <span class="n">InvalidEvent</span><span class="p">,</span> <span class="n">InvalidStack</span><span class="p">,</span> <span class="n">NoSuchSubmission</span><span class="p">,</span> <span class="n">SaveError</span>
+<span class="kn">from</span> <span class="nn">events.exceptions</span> <span class="k">import</span> <span class="n">InvalidEvent</span><span class="p">,</span> <span class="n">NoSuchSubmission</span><span class="p">,</span> <span class="n">SaveError</span>
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
@@ -152,8 +154,8 @@
     <span class="k">try</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">classic</span><span class="o">.</span><span class="n">get_submission</span><span class="p">(</span><span class="n">submission_id</span><span class="p">)</span>
     <span class="k">except</span> <span class="n">classic</span><span class="o">.</span><span class="n">NoSuchSubmission</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="n">NoSuchSubmission</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;No submission with id </span><span class="si">{submission_id}</span><span class="s1">&#39;</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span>
-</div>
+        <span class="k">raise</span> <span class="n">NoSuchSubmission</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;No submission with id </span><span class="si">{submission_id}</span><span class="s1">&#39;</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span></div>
+
 
 <div class="viewcode-block" id="save"><a class="viewcode-back" href="../containers/core/events.html#events.save">[docs]</a><span class="k">def</span> <span class="nf">save</span><span class="p">(</span><span class="o">*</span><span class="n">events</span><span class="p">:</span> <span class="n">Event</span><span class="p">,</span> <span class="n">submission_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> \
         <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Submission</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Event</span><span class="p">]]:</span>
@@ -235,8 +237,8 @@
 
     <span class="k">for</span> <span class="n">event</span> <span class="ow">in</span> <span class="n">combined</span><span class="p">:</span>
         <span class="n">event</span><span class="o">.</span><span class="n">submission_id</span> <span class="o">=</span> <span class="n">submission</span><span class="o">.</span><span class="n">submission_id</span>
-    <span class="k">return</span> <span class="n">submission</span><span class="p">,</span> <span class="n">combined</span>
-</div>
+    <span class="k">return</span> <span class="n">submission</span><span class="p">,</span> <span class="n">combined</span></div>
+
 
 <span class="k">def</span> <span class="nf">_apply_rules</span><span class="p">(</span><span class="n">submission</span><span class="p">:</span> <span class="n">Submission</span><span class="p">,</span> <span class="n">event</span><span class="p">:</span> <span class="n">Event</span><span class="p">,</span>
                  <span class="n">rules</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">EventRule</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Event</span><span class="p">]:</span>
@@ -278,8 +280,9 @@
 <span class="sd">    :class:`.NoSuchSubmission`</span>
 <span class="sd">        If ``submission`` is not provided, and the first event is not a</span>
 <span class="sd">        :class:`.CreateSubmission`, there&#39;s not much else to go on.</span>
-<span class="sd">    :class:`.InvalidStack`</span>
-<span class="sd">        If at least one invalid event is encountered, this exception is raised.</span>
+<span class="sd">    :class:`.InvalidEvent`</span>
+<span class="sd">        If an invalid event is encountered, the entire operation is aborted</span>
+<span class="sd">        and this exception is raised.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">events</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">events</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">e</span><span class="p">:</span> <span class="n">e</span><span class="o">.</span><span class="n">created</span><span class="p">)</span>
@@ -289,14 +292,8 @@
         <span class="k">raise</span> <span class="n">NoSuchSubmission</span><span class="p">(</span><span class="s1">&#39;No creation, and submission not provided&#39;</span><span class="p">)</span>
 
     <span class="n">extra_events</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Event</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>    <span class="c1"># Generated by applied rules.</span>
-
-    <span class="n">invalid_events</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">InvalidEvent</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">event</span> <span class="ow">in</span> <span class="n">events</span><span class="p">:</span>
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">event</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="n">submission</span><span class="p">)</span>      <span class="c1"># Will throw InvalidEvent.</span>
-        <span class="k">except</span> <span class="n">InvalidEvent</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-            <span class="n">invalid_events</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
-            <span class="k">continue</span>
+        <span class="n">event</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="n">submission</span><span class="p">)</span>      <span class="c1"># Will throw InvalidEvent.</span>
 
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">CreateSubmission</span><span class="p">):</span>
             <span class="n">submission</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">apply</span><span class="p">()</span>
@@ -307,21 +304,13 @@
             <span class="c1"># Any rule-derived events should be applied before moving on.</span>
             <span class="n">_extra</span> <span class="o">=</span> <span class="n">_apply_rules</span><span class="p">(</span><span class="n">submission</span><span class="p">,</span> <span class="n">event</span><span class="p">,</span> <span class="n">rules</span><span class="p">)</span>
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">_extra</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-                <span class="k">try</span><span class="p">:</span>
-                    <span class="n">submission</span><span class="p">,</span> <span class="n">_extra</span> <span class="o">=</span> <span class="n">_apply_events</span><span class="p">(</span><span class="n">_extra</span><span class="p">,</span> <span class="n">rules</span><span class="p">,</span> <span class="n">submission</span><span class="p">)</span>
-                    <span class="n">extra_events</span> <span class="o">+=</span> <span class="n">_extra</span>
-                <span class="k">except</span> <span class="n">InvalidStack</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-                    <span class="c1"># TODO: Handle merging of stacks</span>
-                    <span class="n">invalid_events</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">event_exceptions</span><span class="p">)</span>
-   
-    <span class="k">if</span> <span class="n">invalid_events</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="n">InvalidStack</span><span class="p">(</span><span class="n">invalid_events</span><span class="p">)</span>
-    
+                <span class="n">submission</span><span class="p">,</span> <span class="n">_extra</span> <span class="o">=</span> <span class="n">_apply_events</span><span class="p">(</span><span class="n">_extra</span><span class="p">,</span> <span class="n">rules</span><span class="p">,</span> <span class="n">submission</span><span class="p">)</span>
+                <span class="n">extra_events</span> <span class="o">+=</span> <span class="n">_extra</span>
     <span class="k">return</span> <span class="n">submission</span><span class="p">,</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">events</span> <span class="o">+</span> <span class="n">extra_events</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">e</span><span class="p">:</span> <span class="n">e</span><span class="o">.</span><span class="n">created</span><span class="p">)</span>
-
 </pre></div>
 
           </div>
+          
         </div>
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
@@ -340,6 +329,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../architecture.html">Submission &amp; moderation subsystem architecture</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../publication_process.html">Submission &amp; Publication Process</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../submission_api_context.html">Submission API: Context</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../containers/core/events.html">events package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../containers/metadata/metadata.html">metadata package</a></li>
 </ul>
 
@@ -373,7 +363,7 @@
       
       |
       Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.5</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.11</a>
       
     </div>
 

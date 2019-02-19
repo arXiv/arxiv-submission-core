@@ -27,6 +27,8 @@
     <div class="document">
       <div class="documentwrapper">
         <div class="bodywrapper">
+          
+
           <div class="body" role="main">
             
   <h1>Source code for events.domain.agent</h1><div class="highlight"><pre>
@@ -62,8 +64,8 @@
 <div class="viewcode-block" id="Agent.get_agent_type"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.agent.Agent.get_agent_type">[docs]</a>    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">get_agent_type</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Get the name of the instance&#39;s class.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="vm">__name__</span>
-</div>
+        <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="vm">__name__</span></div>
+
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">agent_identifier</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -83,8 +85,8 @@
         <span class="n">native_id</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;native_id&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">agent_type</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">type</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span> <span class="ow">is</span> <span class="n">Agent</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;agent_type not provided&#39;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">agent_factory</span><span class="p">(</span><span class="n">agent_type</span><span class="p">,</span> <span class="n">native_id</span><span class="p">,</span> <span class="o">**</span><span class="n">data</span><span class="p">)</span>
-</div>
+        <span class="k">return</span> <span class="n">agent_factory</span><span class="p">(</span><span class="n">agent_type</span><span class="p">,</span> <span class="n">native_id</span><span class="p">,</span> <span class="o">**</span><span class="n">data</span><span class="p">)</span></div>
+
     <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Equality comparison for agents based on type and identifier.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">):</span>
@@ -96,8 +98,8 @@
         <span class="k">return</span> <span class="p">{</span>
             <span class="s1">&#39;native_id&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">native_id</span><span class="p">,</span>
             <span class="s1">&#39;agent_type&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">agent_type</span>
-        <span class="p">}</span>
-</div></div>
+        <span class="p">}</span></div></div>
+
 
 <div class="viewcode-block" id="User"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.agent.User">[docs]</a><span class="nd">@dataclass</span>
 <span class="k">class</span> <span class="nc">User</span><span class="p">(</span><span class="n">Agent</span><span class="p">):</span>
@@ -130,16 +132,16 @@
         <span class="n">data</span><span class="p">[</span><span class="s1">&#39;identifier&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">identifier</span>
         <span class="n">data</span><span class="p">[</span><span class="s1">&#39;affiliation&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">affiliation</span>
         <span class="n">data</span><span class="p">[</span><span class="s1">&#39;user_id&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">native_id</span>
-        <span class="k">return</span> <span class="n">data</span>
-</div></div>
+        <span class="k">return</span> <span class="n">data</span></div></div>
+
 
 <span class="c1"># TODO: extend this to support arXiv-internal services.</span>
 <div class="viewcode-block" id="System"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.agent.System">[docs]</a><span class="nd">@dataclass</span>
 <span class="k">class</span> <span class="nc">System</span><span class="p">(</span><span class="n">Agent</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;The submission application (this application).&quot;&quot;&quot;</span>
 
-    <span class="n">FIELDS</span> <span class="o">=</span> <span class="p">[]</span>
-</div>
+    <span class="n">FIELDS</span> <span class="o">=</span> <span class="p">[]</span></div>
+
 
 <div class="viewcode-block" id="Client"><a class="viewcode-back" href="../../../containers/core/events.domain.html#events.domain.agent.Client">[docs]</a><span class="nd">@dataclass</span>
 <span class="k">class</span> <span class="nc">Client</span><span class="p">(</span><span class="n">Agent</span><span class="p">):</span>
@@ -151,8 +153,8 @@
         <span class="sd">&quot;&quot;&quot;Generate a dict representation of this :class:`.Client` instance.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="p">{</span>
             <span class="s1">&#39;client_id&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">native_id</span>
-        <span class="p">}</span>
-</div></div>
+        <span class="p">}</span></div></div>
+
 
 <span class="n">_agent_types</span> <span class="o">=</span> <span class="p">{</span>
     <span class="n">User</span><span class="o">.</span><span class="n">get_agent_type</span><span class="p">():</span> <span class="n">User</span><span class="p">,</span>
@@ -167,10 +169,11 @@
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;No such agent type: </span><span class="si">{agent_type}</span><span class="s1">&#39;</span><span class="p">)</span>
     <span class="n">klass</span> <span class="o">=</span> <span class="n">_agent_types</span><span class="p">[</span><span class="n">agent_type</span><span class="p">]</span>
     <span class="n">extra</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">extra</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">klass</span><span class="o">.</span><span class="n">FIELDS</span><span class="p">}</span>
-    <span class="k">return</span> <span class="n">klass</span><span class="p">(</span><span class="n">native_id</span><span class="o">=</span><span class="n">native_id</span><span class="p">,</span> <span class="o">**</span><span class="n">extra</span><span class="p">)</span>
-</pre></div></div>
+    <span class="k">return</span> <span class="n">klass</span><span class="p">(</span><span class="n">native_id</span><span class="o">=</span><span class="n">native_id</span><span class="p">,</span> <span class="o">**</span><span class="n">extra</span><span class="p">)</span></div>
+</pre></div>
 
           </div>
+          
         </div>
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
@@ -189,6 +192,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../architecture.html">Submission &amp; moderation subsystem architecture</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../publication_process.html">Submission &amp; Publication Process</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../submission_api_context.html">Submission API: Context</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../containers/core/events.html">events package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../containers/metadata/metadata.html">metadata package</a></li>
 </ul>
 
@@ -224,7 +228,7 @@
       
       |
       Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.5</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.11</a>
       
     </div>
 

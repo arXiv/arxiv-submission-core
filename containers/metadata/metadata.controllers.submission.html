@@ -375,8 +375,114 @@ up to us to verify the shape of the data.</p>
 </dd></dl>
 
 </div>
-<div class="section" id="metadata-controllers-submission-tests-module">
-<h2>metadata.controllers.submission.tests module<a class="headerlink" href="#metadata-controllers-submission-tests-module" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="module-metadata.controllers.submission.tests">
+<span id="metadata-controllers-submission-tests-module"></span><h2>metadata.controllers.submission.tests module<a class="headerlink" href="#module-metadata.controllers.submission.tests" title="Permalink to this headline">¶</a></h2>
+<p>Tests for <code class="xref py py-mod docutils literal notranslate"><span class="pre">api.controllers</span></code>.</p>
+<dl class="class">
+<dt id="metadata.controllers.submission.tests.TestCreateSubmission">
+<em class="property">class </em><code class="descclassname">metadata.controllers.submission.tests.</code><code class="descname">TestCreateSubmission</code><span class="sig-paren">(</span><em>methodName='runTest'</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/metadata/controllers/submission/tests.html#TestCreateSubmission"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metadata.controllers.submission.tests.TestCreateSubmission" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">unittest.case.TestCase</span></code></p>
+<p>Tests for <a class="reference internal" href="#metadata.controllers.submission.create_submission" title="metadata.controllers.submission.create_submission"><code class="xref py py-func docutils literal notranslate"><span class="pre">submission.create_submission()</span></code></a>.</p>
+<dl class="method">
+<dt id="metadata.controllers.submission.tests.TestCreateSubmission.setUp">
+<code class="descname">setUp</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/metadata/controllers/submission/tests.html#TestCreateSubmission.setUp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metadata.controllers.submission.tests.TestCreateSubmission.setUp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create some fake request data.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="metadata.controllers.submission.tests.TestCreateSubmission.test_create_submission_with_db_down">
+<code class="descname">test_create_submission_with_db_down</code><span class="sig-paren">(</span><em>mock_events</em>, <em>url_for</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/metadata/controllers/submission/tests.html#TestCreateSubmission.test_create_submission_with_db_down"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metadata.controllers.submission.tests.TestCreateSubmission.test_create_submission_with_db_down" title="Permalink to this definition">¶</a></dt>
+<dd><p>An internal server error is raised when the database is down.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="metadata.controllers.submission.tests.TestCreateSubmission.test_create_submission_with_invalid_data">
+<code class="descname">test_create_submission_with_invalid_data</code><span class="sig-paren">(</span><em>mock_events</em>, <em>url_for</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/metadata/controllers/submission/tests.html#TestCreateSubmission.test_create_submission_with_invalid_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metadata.controllers.submission.tests.TestCreateSubmission.test_create_submission_with_invalid_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Trying to create a submission with invalid data throws exception.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="metadata.controllers.submission.tests.TestCreateSubmission.test_create_submission_with_invalid_event">
+<code class="descname">test_create_submission_with_invalid_event</code><span class="sig-paren">(</span><em>mock_events</em>, <em>url_for</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/metadata/controllers/submission/tests.html#TestCreateSubmission.test_create_submission_with_invalid_event"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metadata.controllers.submission.tests.TestCreateSubmission.test_create_submission_with_invalid_event" title="Permalink to this definition">¶</a></dt>
+<dd><p>A Bad Request error is raised on an invalid event.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="metadata.controllers.submission.tests.TestCreateSubmission.test_create_submission_with_valid_data">
+<code class="descname">test_create_submission_with_valid_data</code><span class="sig-paren">(</span><em>mock_events</em>, <em>url_for</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/metadata/controllers/submission/tests.html#TestCreateSubmission.test_create_submission_with_valid_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metadata.controllers.submission.tests.TestCreateSubmission.test_create_submission_with_valid_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a submission with valid data.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="metadata.controllers.submission.tests.TestGetSubmission">
+<em class="property">class </em><code class="descclassname">metadata.controllers.submission.tests.</code><code class="descname">TestGetSubmission</code><span class="sig-paren">(</span><em>methodName='runTest'</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/metadata/controllers/submission/tests.html#TestGetSubmission"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metadata.controllers.submission.tests.TestGetSubmission" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">unittest.case.TestCase</span></code></p>
+<p>Tests for <a class="reference internal" href="#metadata.controllers.submission.get_submission" title="metadata.controllers.submission.get_submission"><code class="xref py py-func docutils literal notranslate"><span class="pre">submission.get_submission()</span></code></a>.</p>
+<dl class="method">
+<dt id="metadata.controllers.submission.tests.TestGetSubmission.test_get_nonexistant_submission">
+<code class="descname">test_get_nonexistant_submission</code><span class="sig-paren">(</span><em>mock_events</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/metadata/controllers/submission/tests.html#TestGetSubmission.test_get_nonexistant_submission"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metadata.controllers.submission.tests.TestGetSubmission.test_get_nonexistant_submission" title="Permalink to this definition">¶</a></dt>
+<dd><p>Should raise NotFound if the submission does not exist.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="metadata.controllers.submission.tests.TestGetSubmission.test_get_submission">
+<code class="descname">test_get_submission</code><span class="sig-paren">(</span><em>mock_events</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/metadata/controllers/submission/tests.html#TestGetSubmission.test_get_submission"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metadata.controllers.submission.tests.TestGetSubmission.test_get_submission" title="Permalink to this definition">¶</a></dt>
+<dd><p>Should return a JSON-serializable dict if submisison exists.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="metadata.controllers.submission.tests.TestUpdateSubmission">
+<em class="property">class </em><code class="descclassname">metadata.controllers.submission.tests.</code><code class="descname">TestUpdateSubmission</code><span class="sig-paren">(</span><em>methodName='runTest'</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/metadata/controllers/submission/tests.html#TestUpdateSubmission"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metadata.controllers.submission.tests.TestUpdateSubmission" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">unittest.case.TestCase</span></code></p>
+<p>Tests for <a class="reference internal" href="#metadata.controllers.submission.update_submission" title="metadata.controllers.submission.update_submission"><code class="xref py py-func docutils literal notranslate"><span class="pre">submission.update_submission()</span></code></a>.</p>
+<dl class="method">
+<dt id="metadata.controllers.submission.tests.TestUpdateSubmission.setUp">
+<code class="descname">setUp</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/metadata/controllers/submission/tests.html#TestUpdateSubmission.setUp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metadata.controllers.submission.tests.TestUpdateSubmission.setUp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create some fake request data.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="metadata.controllers.submission.tests.TestUpdateSubmission.test_update_nonexistant_submission">
+<code class="descname">test_update_nonexistant_submission</code><span class="sig-paren">(</span><em>mock_events</em>, <em>url_for</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/metadata/controllers/submission/tests.html#TestUpdateSubmission.test_update_nonexistant_submission"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metadata.controllers.submission.tests.TestUpdateSubmission.test_update_nonexistant_submission" title="Permalink to this definition">¶</a></dt>
+<dd><p>Trying to update a nonexistant submission throws exception.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="metadata.controllers.submission.tests.TestUpdateSubmission.test_update_submission_with_db_down">
+<code class="descname">test_update_submission_with_db_down</code><span class="sig-paren">(</span><em>mock_events</em>, <em>url_for</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/metadata/controllers/submission/tests.html#TestUpdateSubmission.test_update_submission_with_db_down"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metadata.controllers.submission.tests.TestUpdateSubmission.test_update_submission_with_db_down" title="Permalink to this definition">¶</a></dt>
+<dd><p>An internal server error is raised when the database is down.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="metadata.controllers.submission.tests.TestUpdateSubmission.test_update_submission_with_invalid_data">
+<code class="descname">test_update_submission_with_invalid_data</code><span class="sig-paren">(</span><em>mock_events</em>, <em>url_for</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/metadata/controllers/submission/tests.html#TestUpdateSubmission.test_update_submission_with_invalid_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metadata.controllers.submission.tests.TestUpdateSubmission.test_update_submission_with_invalid_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Trying to update a submission with invalid data throws exception.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="metadata.controllers.submission.tests.TestUpdateSubmission.test_update_submission_with_invalid_event">
+<code class="descname">test_update_submission_with_invalid_event</code><span class="sig-paren">(</span><em>mock_events</em>, <em>url_for</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/metadata/controllers/submission/tests.html#TestUpdateSubmission.test_update_submission_with_invalid_event"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metadata.controllers.submission.tests.TestUpdateSubmission.test_update_submission_with_invalid_event" title="Permalink to this definition">¶</a></dt>
+<dd><p>A Bad Request is raised on an invalid event.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="metadata.controllers.submission.tests.TestUpdateSubmission.test_update_submission_with_valid_data">
+<code class="descname">test_update_submission_with_valid_data</code><span class="sig-paren">(</span><em>mock_events</em>, <em>url_for</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/metadata/controllers/submission/tests.html#TestUpdateSubmission.test_update_submission_with_valid_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metadata.controllers.submission.tests.TestUpdateSubmission.test_update_submission_with_valid_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update a submission with valid data.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="metadata.controllers.submission.tests.preserve_exceptions_and_events">
+<code class="descclassname">metadata.controllers.submission.tests.</code><code class="descname">preserve_exceptions_and_events</code><span class="sig-paren">(</span><em>mock_events</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/metadata/controllers/submission/tests.html#preserve_exceptions_and_events"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#metadata.controllers.submission.tests.preserve_exceptions_and_events" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add real exceptions back to the mock.</p>
+</dd></dl>
+
 </div>
 </div>
 
@@ -454,7 +560,7 @@ up to us to verify the shape of the data.</p>
       &copy;2017, arXiv.org.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.3</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.4</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |

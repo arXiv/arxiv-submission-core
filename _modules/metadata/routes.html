@@ -65,7 +65,7 @@
         <span class="k">raise</span> <span class="n">Unauthorized</span><span class="p">(</span><span class="s1">&#39;No authenticated client found&#39;</span><span class="p">)</span>
 
     <span class="n">client</span> <span class="o">=</span> <span class="n">Client</span><span class="p">(</span><span class="n">session</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">client_id</span><span class="p">)</span>
-    <span class="n">endorsements</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span><span class="o">.</span><span class="n">compound</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">session</span><span class="o">.</span><span class="n">authorizations</span><span class="o">.</span><span class="n">endorsements</span><span class="p">]</span>
+    <span class="n">endorsements</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">authorizations</span><span class="o">.</span><span class="n">endorsements</span>
     <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">user</span><span class="p">:</span>
         <span class="n">creator</span> <span class="o">=</span> <span class="n">User</span><span class="p">(</span><span class="n">session</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">user_id</span><span class="p">,</span> <span class="n">session</span><span class="o">.</span><span class="n">user</span><span class="o">.</span><span class="n">email</span><span class="p">,</span>
                        <span class="n">endorsements</span><span class="o">=</span><span class="n">endorsements</span><span class="p">)</span>
@@ -211,7 +211,7 @@
       &copy;2017, arXiv.org.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.3</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.4</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
     </div>

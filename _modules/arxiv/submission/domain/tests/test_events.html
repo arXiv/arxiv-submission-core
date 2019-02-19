@@ -66,11 +66,10 @@
             <span class="n">created</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">UTC</span><span class="p">),</span>
             <span class="n">source_content</span><span class="o">=</span><span class="n">submission</span><span class="o">.</span><span class="n">SubmissionContent</span><span class="p">(</span>
                 <span class="n">identifier</span><span class="o">=</span><span class="s1">&#39;6543&#39;</span><span class="p">,</span>
-                <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;pdf&#39;</span><span class="p">,</span>
+                <span class="n">source_format</span><span class="o">=</span><span class="n">submission</span><span class="o">.</span><span class="n">SubmissionContent</span><span class="o">.</span><span class="n">Format</span><span class="p">(</span><span class="s1">&#39;pdf&#39;</span><span class="p">),</span>
                 <span class="n">checksum</span><span class="o">=</span><span class="s1">&#39;asdf2345&#39;</span><span class="p">,</span>
                 <span class="n">size</span><span class="o">=</span><span class="mi">594930</span>
             <span class="p">),</span>
-            <span class="n">compiled_content</span><span class="o">=</span><span class="p">[],</span>
             <span class="n">primary_classification</span><span class="o">=</span><span class="n">meta</span><span class="o">.</span><span class="n">Classification</span><span class="p">(</span><span class="s1">&#39;astro-ph.GA&#39;</span><span class="p">),</span>
             <span class="n">secondary_classification</span><span class="o">=</span><span class="p">[</span><span class="n">meta</span><span class="o">.</span><span class="n">Classification</span><span class="p">(</span><span class="s1">&#39;astro-ph.CO&#39;</span><span class="p">)],</span>
             <span class="n">license</span><span class="o">=</span><span class="n">meta</span><span class="o">.</span><span class="n">License</span><span class="p">(</span><span class="n">uri</span><span class="o">=</span><span class="s1">&#39;http://free&#39;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;free&#39;</span><span class="p">),</span>
@@ -134,11 +133,10 @@
             <span class="n">created</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">UTC</span><span class="p">),</span>
             <span class="n">source_content</span><span class="o">=</span><span class="n">submission</span><span class="o">.</span><span class="n">SubmissionContent</span><span class="p">(</span>
                 <span class="n">identifier</span><span class="o">=</span><span class="s1">&#39;6543&#39;</span><span class="p">,</span>
-                <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;pdf&#39;</span><span class="p">,</span>
+                <span class="n">source_format</span><span class="o">=</span><span class="n">submission</span><span class="o">.</span><span class="n">SubmissionContent</span><span class="o">.</span><span class="n">Format</span><span class="p">(</span><span class="s1">&#39;pdf&#39;</span><span class="p">),</span>
                 <span class="n">checksum</span><span class="o">=</span><span class="s1">&#39;asdf2345&#39;</span><span class="p">,</span>
                 <span class="n">size</span><span class="o">=</span><span class="mi">594930</span>
             <span class="p">),</span>
-            <span class="n">compiled_content</span><span class="o">=</span><span class="p">[],</span>
             <span class="n">primary_classification</span><span class="o">=</span><span class="n">meta</span><span class="o">.</span><span class="n">Classification</span><span class="p">(</span><span class="s1">&#39;astro-ph.GA&#39;</span><span class="p">),</span>
             <span class="n">secondary_classification</span><span class="o">=</span><span class="p">[</span><span class="n">meta</span><span class="o">.</span><span class="n">Classification</span><span class="p">(</span><span class="s1">&#39;astro-ph.CO&#39;</span><span class="p">)],</span>
             <span class="n">license</span><span class="o">=</span><span class="n">meta</span><span class="o">.</span><span class="n">License</span><span class="p">(</span><span class="n">uri</span><span class="o">=</span><span class="s1">&#39;http://free&#39;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;free&#39;</span><span class="p">),</span>
@@ -167,7 +165,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">published</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">assertFalse</span><span class="p">(</span><span class="n">replacement</span><span class="o">.</span><span class="n">published</span><span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">replacement</span><span class="o">.</span><span class="n">compiled_content</span><span class="p">),</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">replacement</span><span class="o">.</span><span class="n">compilations</span><span class="p">),</span> <span class="mi">0</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">assertIsNone</span><span class="p">(</span><span class="n">replacement</span><span class="o">.</span><span class="n">source_content</span><span class="p">)</span>
 
         <span class="c1"># The user is asked to reaffirm these points.</span>
@@ -214,11 +212,10 @@
             <span class="n">created</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">UTC</span><span class="p">),</span>
             <span class="n">source_content</span><span class="o">=</span><span class="n">submission</span><span class="o">.</span><span class="n">SubmissionContent</span><span class="p">(</span>
                 <span class="n">identifier</span><span class="o">=</span><span class="s1">&#39;6543&#39;</span><span class="p">,</span>
-                <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;pdf&#39;</span><span class="p">,</span>
+                <span class="n">source_format</span><span class="o">=</span><span class="n">submission</span><span class="o">.</span><span class="n">SubmissionContent</span><span class="o">.</span><span class="n">Format</span><span class="p">(</span><span class="s1">&#39;pdf&#39;</span><span class="p">),</span>
                 <span class="n">checksum</span><span class="o">=</span><span class="s1">&#39;asdf2345&#39;</span><span class="p">,</span>
                 <span class="n">size</span><span class="o">=</span><span class="mi">594930</span>
             <span class="p">),</span>
-            <span class="n">compiled_content</span><span class="o">=</span><span class="p">[],</span>
             <span class="n">primary_classification</span><span class="o">=</span><span class="n">meta</span><span class="o">.</span><span class="n">Classification</span><span class="p">(</span><span class="s1">&#39;astro-ph.GA&#39;</span><span class="p">),</span>
             <span class="n">secondary_classification</span><span class="o">=</span><span class="p">[</span><span class="n">meta</span><span class="o">.</span><span class="n">Classification</span><span class="p">(</span><span class="s1">&#39;astro-ph.CO&#39;</span><span class="p">)],</span>
             <span class="n">license</span><span class="o">=</span><span class="n">meta</span><span class="o">.</span><span class="n">License</span><span class="p">(</span><span class="n">uri</span><span class="o">=</span><span class="s1">&#39;http://free&#39;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;free&#39;</span><span class="p">),</span>
@@ -1012,7 +1009,7 @@
       &copy;2017, arXiv.org.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.3</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.4</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
     </div>

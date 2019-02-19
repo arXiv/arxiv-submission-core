@@ -9,10 +9,12 @@
     <title>metadata.controllers.submission.tests &#8212; arXiv submission &amp; moderation 0.1 documentation</title>
     <link rel="stylesheet" href="../../../../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/graphviz.css" />
     <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
     <script type="text/javascript" src="../../../../_static/jquery.js"></script>
     <script type="text/javascript" src="../../../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../../_static/language_data.js"></script>
     <link rel="index" title="Index" href="../../../../genindex.html" />
     <link rel="search" title="Search" href="../../../../search.html" />
    
@@ -27,6 +29,8 @@
     <div class="document">
       <div class="documentwrapper">
         <div class="bodywrapper">
+          
+
           <div class="body" role="main">
             
   <h1>Source code for metadata.controllers.submission.tests</h1><div class="highlight"><pre>
@@ -36,15 +40,15 @@
 <span class="kn">import</span> <span class="nn">json</span>
 <span class="kn">from</span> <span class="nn">datetime</span> <span class="k">import</span> <span class="n">datetime</span>
 <span class="kn">from</span> <span class="nn">werkzeug.exceptions</span> <span class="k">import</span> <span class="n">BadRequest</span><span class="p">,</span> <span class="n">InternalServerError</span><span class="p">,</span> <span class="n">NotFound</span>
-
+<span class="kn">from</span> <span class="nn">pytz</span> <span class="k">import</span> <span class="n">UTC</span>
 <span class="kn">from</span> <span class="nn">arxiv</span> <span class="k">import</span> <span class="n">status</span>
-<span class="kn">from</span> <span class="nn">arxiv.submission.domain</span> <span class="k">import</span> <span class="n">User</span><span class="p">,</span> <span class="n">Submission</span><span class="p">,</span> <span class="n">Author</span>
+<span class="kn">from</span> <span class="nn">arxiv.submission.domain</span> <span class="k">import</span> <span class="n">User</span><span class="p">,</span> <span class="n">Submission</span><span class="p">,</span> <span class="n">Author</span><span class="p">,</span> <span class="n">Client</span>
 <span class="kn">from</span> <span class="nn">arxiv.submission</span> <span class="k">import</span> <span class="n">CreateSubmission</span><span class="p">,</span> <span class="n">SaveError</span><span class="p">,</span> \
     <span class="n">InvalidEvent</span><span class="p">,</span> <span class="n">NoSuchSubmission</span><span class="p">,</span> <span class="n">SetPrimaryClassification</span><span class="p">,</span> \
-    <span class="n">AttachSourceContent</span><span class="p">,</span> <span class="n">UpdateAuthors</span><span class="p">,</span> <span class="n">InvalidStack</span><span class="p">,</span> \
+    <span class="n">SetUploadPackage</span><span class="p">,</span> <span class="n">SetAuthors</span><span class="p">,</span> <span class="n">InvalidStack</span><span class="p">,</span> \
     <span class="n">SetTitle</span><span class="p">,</span> <span class="n">SetAbstract</span><span class="p">,</span> <span class="n">SetDOI</span><span class="p">,</span> \
     <span class="n">SetMSCClassification</span><span class="p">,</span> <span class="n">SetACMClassification</span><span class="p">,</span> <span class="n">SetJournalReference</span><span class="p">,</span>  \
-    <span class="n">SetComments</span> 
+    <span class="n">SetComments</span>
 <span class="kn">from</span> <span class="nn">metadata.controllers</span> <span class="k">import</span> <span class="n">submission</span>
 
 
@@ -62,11 +66,11 @@
     <span class="n">mock_events</span><span class="o">.</span><span class="n">SetACMClassification</span> <span class="o">=</span> <span class="n">SetACMClassification</span>
     <span class="n">mock_events</span><span class="o">.</span><span class="n">SetJournalReference</span> <span class="o">=</span> <span class="n">SetJournalReference</span>
 
-    <span class="n">mock_events</span><span class="o">.</span><span class="n">UpdateAuthors</span> <span class="o">=</span> <span class="n">UpdateAuthors</span>
+    <span class="n">mock_events</span><span class="o">.</span><span class="n">SetAuthors</span> <span class="o">=</span> <span class="n">SetAuthors</span>
     <span class="n">mock_events</span><span class="o">.</span><span class="n">Author</span> <span class="o">=</span> <span class="n">Author</span>
     <span class="n">mock_events</span><span class="o">.</span><span class="n">CreateSubmission</span> <span class="o">=</span> <span class="n">CreateSubmission</span>
     <span class="n">mock_events</span><span class="o">.</span><span class="n">SetPrimaryClassification</span> <span class="o">=</span> <span class="n">SetPrimaryClassification</span>
-    <span class="n">mock_events</span><span class="o">.</span><span class="n">AttachSourceContent</span> <span class="o">=</span> <span class="n">AttachSourceContent</span></div>
+    <span class="n">mock_events</span><span class="o">.</span><span class="n">SetUploadPackage</span> <span class="o">=</span> <span class="n">SetUploadPackage</span></div>
 
 
 <div class="viewcode-block" id="TestCreateSubmission"><a class="viewcode-back" href="../../../../containers/metadata/metadata.controllers.submission.html#metadata.controllers.submission.tests.TestCreateSubmission">[docs]</a><span class="k">class</span> <span class="nc">TestCreateSubmission</span><span class="p">(</span><span class="n">TestCase</span><span class="p">):</span>
@@ -74,8 +78,12 @@
 
 <div class="viewcode-block" id="TestCreateSubmission.setUp"><a class="viewcode-back" href="../../../../containers/metadata/metadata.controllers.submission.html#metadata.controllers.submission.tests.TestCreateSubmission.setUp">[docs]</a>    <span class="k">def</span> <span class="nf">setUp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Create some fake request data.&quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">user_data</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;user_id&#39;</span><span class="p">:</span> <span class="mi">1234</span><span class="p">,</span> <span class="s1">&#39;email&#39;</span><span class="p">:</span> <span class="s1">&#39;foo@bar.baz&#39;</span><span class="p">}</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">client_data</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;client_id&#39;</span><span class="p">:</span> <span class="mi">5678</span><span class="p">}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">agents</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;creator&#39;</span><span class="p">:</span> <span class="n">User</span><span class="p">(</span><span class="mi">1234</span><span class="p">,</span> <span class="s1">&#39;foo@bar.baz&#39;</span><span class="p">,</span>
+                            <span class="n">endorsements</span><span class="o">=</span><span class="p">[(</span><span class="s1">&#39;astro-ph&#39;</span><span class="p">,</span> <span class="s1">&#39;GA&#39;</span><span class="p">)]),</span>
+            <span class="s1">&#39;client&#39;</span><span class="p">:</span> <span class="n">Client</span><span class="p">(</span><span class="mi">5678</span><span class="p">),</span>
+            <span class="s1">&#39;proxy&#39;</span><span class="p">:</span> <span class="kc">None</span>
+        <span class="p">}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">token</span> <span class="o">=</span> <span class="s1">&#39;asdf1234&#39;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">headers</span> <span class="o">=</span> <span class="p">{}</span></div>
 
@@ -87,17 +95,16 @@
         <span class="n">url_for</span><span class="o">.</span><span class="n">return_value</span> <span class="o">=</span> <span class="s1">&#39;/foo/&#39;</span>
         <span class="n">user</span> <span class="o">=</span> <span class="n">User</span><span class="p">(</span><span class="mi">1234</span><span class="p">,</span> <span class="s1">&#39;foo@bar.baz&#39;</span><span class="p">)</span>
         <span class="n">mock_events</span><span class="o">.</span><span class="n">save</span><span class="o">.</span><span class="n">return_value</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="n">Submission</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">user</span><span class="p">,</span> <span class="n">owner</span><span class="o">=</span><span class="n">user</span><span class="p">,</span> <span class="n">created</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()),</span>
+            <span class="n">Submission</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">user</span><span class="p">,</span> <span class="n">owner</span><span class="o">=</span><span class="n">user</span><span class="p">,</span> <span class="n">created</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">UTC</span><span class="p">)),</span>
             <span class="p">[</span><span class="n">CreateSubmission</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">user</span><span class="p">)]</span>
         <span class="p">)</span>
         <span class="n">data</span> <span class="o">=</span> <span class="p">{</span>
             <span class="s1">&#39;primary_classification&#39;</span><span class="p">:</span> <span class="p">{</span>
-                <span class="s1">&#39;category&#39;</span><span class="p">:</span> <span class="s1">&#39;astro-ph&#39;</span>
+                <span class="s1">&#39;category&#39;</span><span class="p">:</span> <span class="s1">&#39;astro-ph.GA&#39;</span>
             <span class="p">}</span>
         <span class="p">}</span>
         <span class="n">resp</span><span class="p">,</span> <span class="n">stat</span><span class="p">,</span> <span class="n">head</span> <span class="o">=</span> <span class="n">submission</span><span class="o">.</span><span class="n">create_submission</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">headers</span><span class="p">,</span>
-                                                        <span class="bp">self</span><span class="o">.</span><span class="n">user_data</span><span class="p">,</span>
-                                                        <span class="bp">self</span><span class="o">.</span><span class="n">client_data</span><span class="p">,</span>
+                                                        <span class="bp">self</span><span class="o">.</span><span class="n">agents</span><span class="p">,</span>
                                                         <span class="bp">self</span><span class="o">.</span><span class="n">token</span><span class="p">)</span>
         <span class="n">call_args</span><span class="p">,</span> <span class="n">call_kwargs</span> <span class="o">=</span> <span class="n">mock_events</span><span class="o">.</span><span class="n">save</span><span class="o">.</span><span class="n">call_args</span>
 
@@ -120,8 +127,8 @@
             <span class="s1">&#39;metadata&#39;</span><span class="p">:</span> <span class="s1">&#39;bad value&#39;</span><span class="p">,</span>
         <span class="p">}</span>
         <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="n">BadRequest</span><span class="p">):</span>
-            <span class="n">submission</span><span class="o">.</span><span class="n">create_submission</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">headers</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">user_data</span><span class="p">,</span>
-                                         <span class="bp">self</span><span class="o">.</span><span class="n">client_data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">token</span><span class="p">)</span></div>
+            <span class="n">submission</span><span class="o">.</span><span class="n">create_submission</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">headers</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">agents</span><span class="p">,</span>
+                                         <span class="bp">self</span><span class="o">.</span><span class="n">token</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="TestCreateSubmission.test_create_submission_with_db_down"><a class="viewcode-back" href="../../../../containers/metadata/metadata.controllers.submission.html#metadata.controllers.submission.tests.TestCreateSubmission.test_create_submission_with_db_down">[docs]</a>    <span class="nd">@mock</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="s1">&#39;metadata.controllers.submission.url_for&#39;</span><span class="p">)</span>
     <span class="nd">@mock</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="s1">&#39;metadata.controllers.submission.ev&#39;</span><span class="p">)</span>
@@ -136,8 +143,8 @@
             <span class="p">}</span>
         <span class="p">}</span>
         <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="n">InternalServerError</span><span class="p">):</span>
-            <span class="n">submission</span><span class="o">.</span><span class="n">create_submission</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">headers</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">user_data</span><span class="p">,</span>
-                                         <span class="bp">self</span><span class="o">.</span><span class="n">client_data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">token</span><span class="p">)</span></div>
+            <span class="n">submission</span><span class="o">.</span><span class="n">create_submission</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">headers</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">agents</span><span class="p">,</span>
+                                         <span class="bp">self</span><span class="o">.</span><span class="n">token</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="TestCreateSubmission.test_create_submission_with_invalid_event"><a class="viewcode-back" href="../../../../containers/metadata/metadata.controllers.submission.html#metadata.controllers.submission.tests.TestCreateSubmission.test_create_submission_with_invalid_event">[docs]</a>    <span class="nd">@mock</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="s1">&#39;metadata.controllers.submission.url_for&#39;</span><span class="p">)</span>
     <span class="nd">@mock</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="s1">&#39;metadata.controllers.submission.ev&#39;</span><span class="p">)</span>
@@ -146,10 +153,10 @@
         <span class="n">url_for</span><span class="o">.</span><span class="n">return_value</span> <span class="o">=</span> <span class="s1">&#39;/foo/&#39;</span>
 
         <span class="k">def</span> <span class="nf">raise_invalid_event</span><span class="p">(</span><span class="o">*</span><span class="n">events</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-            <span class="n">user</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">user_data</span><span class="p">)</span>
-            <span class="n">user</span><span class="p">[</span><span class="s1">&#39;native_id&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">user</span><span class="p">[</span><span class="s1">&#39;user_id&#39;</span><span class="p">]</span>
-            <span class="n">user</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;user_id&#39;</span><span class="p">)</span>
-            <span class="k">raise</span> <span class="n">InvalidEvent</span><span class="p">(</span><span class="n">CreateSubmission</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">User</span><span class="p">(</span><span class="o">**</span><span class="n">user</span><span class="p">)),</span> <span class="s1">&#39;foo&#39;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">InvalidEvent</span><span class="p">(</span>
+                <span class="n">CreateSubmission</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">agents</span><span class="p">[</span><span class="s1">&#39;creator&#39;</span><span class="p">]),</span>
+                <span class="s1">&#39;foo&#39;</span>
+            <span class="p">)</span>
 
         <span class="n">mock_events</span><span class="o">.</span><span class="n">save</span><span class="o">.</span><span class="n">side_effect</span> <span class="o">=</span> <span class="n">raise_invalid_event</span>
         <span class="n">preserve_exceptions_and_events</span><span class="p">(</span><span class="n">mock_events</span><span class="p">)</span>
@@ -159,8 +166,8 @@
             <span class="p">}</span>
         <span class="p">}</span>
         <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="n">BadRequest</span><span class="p">):</span>
-            <span class="n">submission</span><span class="o">.</span><span class="n">create_submission</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">headers</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">user_data</span><span class="p">,</span>
-                                         <span class="bp">self</span><span class="o">.</span><span class="n">client_data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">token</span><span class="p">)</span></div></div>
+            <span class="n">submission</span><span class="o">.</span><span class="n">create_submission</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">headers</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">agents</span><span class="p">,</span>
+                                         <span class="bp">self</span><span class="o">.</span><span class="n">token</span><span class="p">)</span></div></div>
 
 
 <div class="viewcode-block" id="TestUpdateSubmission"><a class="viewcode-back" href="../../../../containers/metadata/metadata.controllers.submission.html#metadata.controllers.submission.tests.TestUpdateSubmission">[docs]</a><span class="k">class</span> <span class="nc">TestUpdateSubmission</span><span class="p">(</span><span class="n">TestCase</span><span class="p">):</span>
@@ -168,8 +175,12 @@
 
 <div class="viewcode-block" id="TestUpdateSubmission.setUp"><a class="viewcode-back" href="../../../../containers/metadata/metadata.controllers.submission.html#metadata.controllers.submission.tests.TestUpdateSubmission.setUp">[docs]</a>    <span class="k">def</span> <span class="nf">setUp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Create some fake request data.&quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">user_data</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;user_id&#39;</span><span class="p">:</span> <span class="mi">1234</span><span class="p">,</span> <span class="s1">&#39;email&#39;</span><span class="p">:</span> <span class="s1">&#39;foo@bar.baz&#39;</span><span class="p">}</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">client_data</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;client_id&#39;</span><span class="p">:</span> <span class="mi">5678</span><span class="p">}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">agents</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;creator&#39;</span><span class="p">:</span> <span class="n">User</span><span class="p">(</span><span class="mi">1234</span><span class="p">,</span> <span class="s1">&#39;foo@bar.baz&#39;</span><span class="p">,</span>
+                            <span class="n">endorsements</span><span class="o">=</span><span class="p">[(</span><span class="s1">&#39;astro-ph&#39;</span><span class="p">,</span> <span class="s1">&#39;GA&#39;</span><span class="p">)]),</span>
+            <span class="s1">&#39;client&#39;</span><span class="p">:</span> <span class="n">Client</span><span class="p">(</span><span class="mi">5678</span><span class="p">),</span>
+            <span class="s1">&#39;proxy&#39;</span><span class="p">:</span> <span class="kc">None</span>
+        <span class="p">}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">token</span> <span class="o">=</span> <span class="s1">&#39;asdf1234&#39;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">headers</span> <span class="o">=</span> <span class="p">{}</span></div>
 
@@ -181,7 +192,7 @@
         <span class="n">url_for</span><span class="o">.</span><span class="n">return_value</span> <span class="o">=</span> <span class="s1">&#39;/foo/&#39;</span>
         <span class="n">user</span> <span class="o">=</span> <span class="n">User</span><span class="p">(</span><span class="mi">1234</span><span class="p">,</span> <span class="s1">&#39;foo@bar.baz&#39;</span><span class="p">)</span>
         <span class="n">mock_events</span><span class="o">.</span><span class="n">save</span><span class="o">.</span><span class="n">return_value</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="n">Submission</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">user</span><span class="p">,</span> <span class="n">owner</span><span class="o">=</span><span class="n">user</span><span class="p">,</span> <span class="n">created</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()),</span>
+            <span class="n">Submission</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">user</span><span class="p">,</span> <span class="n">owner</span><span class="o">=</span><span class="n">user</span><span class="p">,</span> <span class="n">created</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">UTC</span><span class="p">)),</span>
             <span class="p">[</span><span class="n">CreateSubmission</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">user</span><span class="p">),</span>
              <span class="n">SetTitle</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">user</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s1">&#39;foo title&#39;</span><span class="p">)]</span>
         <span class="p">)</span>
@@ -198,8 +209,7 @@
              <span class="p">}</span>
         <span class="p">}</span>
         <span class="n">resp</span><span class="p">,</span> <span class="n">stat</span><span class="p">,</span> <span class="n">head</span> <span class="o">=</span> <span class="n">submission</span><span class="o">.</span><span class="n">update_submission</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">headers</span><span class="p">,</span>
-                                                        <span class="bp">self</span><span class="o">.</span><span class="n">user_data</span><span class="p">,</span>
-                                                        <span class="bp">self</span><span class="o">.</span><span class="n">client_data</span><span class="p">,</span>
+                                                        <span class="bp">self</span><span class="o">.</span><span class="n">agents</span><span class="p">,</span>
                                                         <span class="bp">self</span><span class="o">.</span><span class="n">token</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">stat</span><span class="p">,</span> <span class="n">status</span><span class="o">.</span><span class="n">HTTP_200_OK</span><span class="p">,</span>
                          <span class="s2">&quot;Should return 200 OK when submission is&quot;</span>
@@ -209,8 +219,8 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">assertIsInstance</span><span class="p">(</span><span class="n">call_args</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">SetTitle</span><span class="p">,</span>
                               <span class="s2">&quot;Should pass a SetTitle&quot;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">assertIsInstance</span><span class="p">(</span><span class="n">call_args</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">UpdateAuthors</span><span class="p">,</span>
-                              <span class="s2">&quot;Should pass an UpdateAuthors&quot;</span><span class="p">)</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertIsInstance</span><span class="p">(</span><span class="n">call_args</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">SetAuthors</span><span class="p">,</span>
+                              <span class="s2">&quot;Should pass an SetAuthors&quot;</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="TestUpdateSubmission.test_update_nonexistant_submission"><a class="viewcode-back" href="../../../../containers/metadata/metadata.controllers.submission.html#metadata.controllers.submission.tests.TestUpdateSubmission.test_update_nonexistant_submission">[docs]</a>    <span class="nd">@mock</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="s1">&#39;metadata.controllers.submission.url_for&#39;</span><span class="p">)</span>
     <span class="nd">@mock</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="s1">&#39;metadata.controllers.submission.ev&#39;</span><span class="p">)</span>
@@ -225,8 +235,8 @@
              <span class="p">}</span>
         <span class="p">}</span>
         <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="n">NotFound</span><span class="p">):</span>
-            <span class="n">submission</span><span class="o">.</span><span class="n">update_submission</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">headers</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">user_data</span><span class="p">,</span>
-                                         <span class="bp">self</span><span class="o">.</span><span class="n">client_data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">token</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span></div>
+            <span class="n">submission</span><span class="o">.</span><span class="n">update_submission</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">headers</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">agents</span><span class="p">,</span>
+                                         <span class="bp">self</span><span class="o">.</span><span class="n">token</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="TestUpdateSubmission.test_update_submission_with_invalid_data"><a class="viewcode-back" href="../../../../containers/metadata/metadata.controllers.submission.html#metadata.controllers.submission.tests.TestUpdateSubmission.test_update_submission_with_invalid_data">[docs]</a>    <span class="nd">@mock</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="s1">&#39;metadata.controllers.submission.url_for&#39;</span><span class="p">)</span>
     <span class="nd">@mock</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="s1">&#39;metadata.controllers.submission.ev&#39;</span><span class="p">)</span>
@@ -238,8 +248,8 @@
             <span class="s1">&#39;metadata&#39;</span><span class="p">:</span> <span class="s1">&#39;bad value&#39;</span><span class="p">,</span>
         <span class="p">}</span>
         <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="n">BadRequest</span><span class="p">):</span>
-            <span class="n">submission</span><span class="o">.</span><span class="n">update_submission</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">headers</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">user_data</span><span class="p">,</span>
-                                         <span class="bp">self</span><span class="o">.</span><span class="n">client_data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">token</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span></div>
+            <span class="n">submission</span><span class="o">.</span><span class="n">update_submission</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">headers</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">agents</span><span class="p">,</span>
+                                         <span class="bp">self</span><span class="o">.</span><span class="n">token</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="TestUpdateSubmission.test_update_submission_with_db_down"><a class="viewcode-back" href="../../../../containers/metadata/metadata.controllers.submission.html#metadata.controllers.submission.tests.TestUpdateSubmission.test_update_submission_with_db_down">[docs]</a>    <span class="nd">@mock</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="s1">&#39;metadata.controllers.submission.url_for&#39;</span><span class="p">)</span>
     <span class="nd">@mock</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="s1">&#39;metadata.controllers.submission.ev&#39;</span><span class="p">)</span>
@@ -254,8 +264,8 @@
             <span class="p">}</span>
         <span class="p">}</span>
         <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="n">InternalServerError</span><span class="p">):</span>
-            <span class="n">submission</span><span class="o">.</span><span class="n">update_submission</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">headers</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">user_data</span><span class="p">,</span>
-                                         <span class="bp">self</span><span class="o">.</span><span class="n">client_data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">token</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span></div>
+            <span class="n">submission</span><span class="o">.</span><span class="n">update_submission</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">headers</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">agents</span><span class="p">,</span>
+                                         <span class="bp">self</span><span class="o">.</span><span class="n">token</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="TestUpdateSubmission.test_update_submission_with_invalid_event"><a class="viewcode-back" href="../../../../containers/metadata/metadata.controllers.submission.html#metadata.controllers.submission.tests.TestUpdateSubmission.test_update_submission_with_invalid_event">[docs]</a>    <span class="nd">@mock</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="s1">&#39;metadata.controllers.submission.url_for&#39;</span><span class="p">)</span>
     <span class="nd">@mock</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="s1">&#39;metadata.controllers.submission.ev&#39;</span><span class="p">)</span>
@@ -265,10 +275,10 @@
         <span class="n">preserve_exceptions_and_events</span><span class="p">(</span><span class="n">mock_events</span><span class="p">)</span>
 
         <span class="k">def</span> <span class="nf">raise_invalid_event</span><span class="p">(</span><span class="o">*</span><span class="n">events</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-            <span class="n">user</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">user_data</span><span class="p">)</span>
-            <span class="n">user</span><span class="p">[</span><span class="s1">&#39;native_id&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">user</span><span class="p">[</span><span class="s1">&#39;user_id&#39;</span><span class="p">]</span>
-            <span class="n">user</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;user_id&#39;</span><span class="p">)</span>
-            <span class="k">raise</span> <span class="n">InvalidEvent</span><span class="p">(</span><span class="n">CreateSubmission</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">User</span><span class="p">(</span><span class="o">**</span><span class="n">user</span><span class="p">)),</span> <span class="s1">&#39;foo&#39;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">InvalidEvent</span><span class="p">(</span>
+                <span class="n">CreateSubmission</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">agents</span><span class="p">[</span><span class="s1">&#39;creator&#39;</span><span class="p">]),</span>
+                <span class="s1">&#39;foo&#39;</span>
+            <span class="p">)</span>
 
         <span class="n">mock_events</span><span class="o">.</span><span class="n">save</span><span class="o">.</span><span class="n">side_effect</span> <span class="o">=</span> <span class="n">raise_invalid_event</span>
         <span class="n">data</span> <span class="o">=</span> <span class="p">{</span>
@@ -277,8 +287,8 @@
             <span class="p">}</span>
         <span class="p">}</span>
         <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="n">BadRequest</span><span class="p">):</span>
-            <span class="n">submission</span><span class="o">.</span><span class="n">update_submission</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">headers</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">user_data</span><span class="p">,</span>
-                                         <span class="bp">self</span><span class="o">.</span><span class="n">client_data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">token</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span></div></div>
+            <span class="n">submission</span><span class="o">.</span><span class="n">update_submission</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">headers</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">agents</span><span class="p">,</span>
+                                         <span class="bp">self</span><span class="o">.</span><span class="n">token</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span></div></div>
 
 
 <div class="viewcode-block" id="TestGetSubmission"><a class="viewcode-back" href="../../../../containers/metadata/metadata.controllers.submission.html#metadata.controllers.submission.tests.TestGetSubmission">[docs]</a><span class="k">class</span> <span class="nc">TestGetSubmission</span><span class="p">(</span><span class="n">TestCase</span><span class="p">):</span>
@@ -290,7 +300,7 @@
         <span class="n">preserve_exceptions_and_events</span><span class="p">(</span><span class="n">mock_events</span><span class="p">)</span>
         <span class="n">user</span> <span class="o">=</span> <span class="n">User</span><span class="p">(</span><span class="mi">1234</span><span class="p">,</span> <span class="s1">&#39;foo@bar.baz&#39;</span><span class="p">)</span>
         <span class="n">mock_events</span><span class="o">.</span><span class="n">load</span><span class="o">.</span><span class="n">return_value</span> <span class="o">=</span> <span class="p">(</span>
-            <span class="n">Submission</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">user</span><span class="p">,</span> <span class="n">owner</span><span class="o">=</span><span class="n">user</span><span class="p">,</span> <span class="n">created</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()),</span>
+            <span class="n">Submission</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">user</span><span class="p">,</span> <span class="n">owner</span><span class="o">=</span><span class="n">user</span><span class="p">,</span> <span class="n">created</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">UTC</span><span class="p">)),</span>
             <span class="p">[</span><span class="n">CreateSubmission</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">user</span><span class="p">)]</span>
         <span class="p">)</span>
         <span class="n">content</span><span class="p">,</span> <span class="n">status_code</span><span class="p">,</span> <span class="n">headers</span> <span class="o">=</span> <span class="n">submission</span><span class="o">.</span><span class="n">get_submission</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
@@ -314,6 +324,7 @@
 </pre></div>
 
           </div>
+          
         </div>
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
@@ -330,9 +341,11 @@
 <h3>Navigation</h3>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../../architecture.html">Submission &amp; moderation subsystem architecture</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../publication_process.html">Submission &amp; Publication Process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../announcement_process.html">Submission &amp; announcement Process</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../submission_api_context.html">Submission API: Context</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../containers/core/arxiv.submission.html">arxiv.submission package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../containers/metadata/metadata.html">metadata package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../background.html">Background</a></li>
 </ul>
 
 <div class="relations">
@@ -358,6 +371,14 @@
     </div>
 </div>
 <script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
         </div>
       </div>
       <div class="clearer"></div>
@@ -366,8 +387,8 @@
       &copy;2017, arXiv.org.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.5</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.4</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
     </div>
 

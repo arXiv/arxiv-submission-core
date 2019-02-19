@@ -27,6 +27,8 @@
     <div class="document">
       <div class="documentwrapper">
         <div class="bodywrapper">
+          
+
           <div class="body" role="main">
             
   <h1>Source code for events.services.classic.models</h1><div class="highlight"><pre>
@@ -37,7 +39,7 @@
 <span class="kn">from</span> <span class="nn">datetime</span> <span class="k">import</span> <span class="n">datetime</span>
 <span class="kn">from</span> <span class="nn">sqlalchemy</span> <span class="k">import</span> <span class="n">Column</span><span class="p">,</span> <span class="n">Date</span><span class="p">,</span> <span class="n">DateTime</span><span class="p">,</span> <span class="n">Enum</span><span class="p">,</span> <span class="n">ForeignKey</span><span class="p">,</span> <span class="n">Text</span><span class="p">,</span> <span class="n">text</span><span class="p">,</span> \
     <span class="n">ForeignKeyConstraint</span><span class="p">,</span> <span class="n">Index</span><span class="p">,</span> <span class="n">Integer</span><span class="p">,</span> <span class="n">SmallInteger</span><span class="p">,</span> <span class="n">String</span><span class="p">,</span> <span class="n">Table</span>
-<span class="kn">from</span> <span class="nn">sqlalchemy.orm</span> <span class="k">import</span> <span class="n">relationship</span><span class="p">,</span> <span class="n">joinedload</span><span class="p">,</span> <span class="n">backref</span>
+<span class="kn">from</span> <span class="nn">sqlalchemy.orm</span> <span class="k">import</span> <span class="n">relationship</span><span class="p">,</span> <span class="n">joinedload</span>
 
 <span class="kn">from</span> <span class="nn">sqlalchemy.ext.declarative</span> <span class="k">import</span> <span class="n">declarative_base</span>
 
@@ -212,8 +214,7 @@
     <span class="n">submitter</span> <span class="o">=</span> <span class="n">relationship</span><span class="p">(</span><span class="s1">&#39;User&#39;</span><span class="p">)</span>
     <span class="n">sword</span> <span class="o">=</span> <span class="n">relationship</span><span class="p">(</span><span class="s1">&#39;Tracking&#39;</span><span class="p">)</span>
     <span class="n">categories</span> <span class="o">=</span> <span class="n">relationship</span><span class="p">(</span><span class="s1">&#39;SubmissionCategory&#39;</span><span class="p">,</span>
-                              <span class="n">back_populates</span><span class="o">=</span><span class="s1">&#39;submission&#39;</span><span class="p">,</span> <span class="n">lazy</span><span class="o">=</span><span class="s1">&#39;joined&#39;</span><span class="p">,</span>
-                              <span class="n">cascade</span><span class="o">=</span><span class="s2">&quot;all, delete-orphan&quot;</span><span class="p">)</span>
+                              <span class="n">back_populates</span><span class="o">=</span><span class="s2">&quot;submission&quot;</span><span class="p">,</span> <span class="n">lazy</span><span class="o">=</span><span class="s1">&#39;joined&#39;</span><span class="p">)</span>
 
 <div class="viewcode-block" id="Submission.patch"><a class="viewcode-back" href="../../../../containers/core/events.services.classic.html#events.services.classic.models.Submission.patch">[docs]</a>    <span class="k">def</span> <span class="nf">patch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">domain</span><span class="o">.</span><span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">domain</span><span class="o">.</span><span class="n">Submission</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -260,8 +261,8 @@
         <span class="c1"># Apply sticky status.</span>
         <span class="k">if</span> <span class="n">submission</span><span class="o">.</span><span class="n">finalized</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">sticky_status</span> <span class="ow">is</span> <span class="bp">self</span><span class="o">.</span><span class="n">ON_HOLD</span><span class="p">:</span>
             <span class="n">submission</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="n">submission</span><span class="o">.</span><span class="n">ON_HOLD</span>
-        <span class="k">return</span> <span class="n">submission</span>
-</div>
+        <span class="k">return</span> <span class="n">submission</span></div>
+
 <div class="viewcode-block" id="Submission.to_submission"><a class="viewcode-back" href="../../../../containers/core/events.services.classic.html#events.services.classic.models.Submission.to_submission">[docs]</a>    <span class="k">def</span> <span class="nf">to_submission</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">domain</span><span class="o">.</span><span class="n">Submission</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Generate a representation of submission state from a DB instance.</span>
@@ -315,8 +316,8 @@
                 <span class="k">for</span> <span class="n">db_cat</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">categories</span>
                 <span class="k">if</span> <span class="n">db_cat</span><span class="o">.</span><span class="n">is_primary</span> <span class="o">==</span> <span class="mi">0</span>
             <span class="p">]</span>
-        <span class="p">)</span>
-</div>
+        <span class="p">)</span></div>
+
 <div class="viewcode-block" id="Submission.update_from_submission"><a class="viewcode-back" href="../../../../containers/core/events.services.classic.html#events.services.classic.models.Submission.update_from_submission">[docs]</a>    <span class="k">def</span> <span class="nf">update_from_submission</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">domain</span><span class="o">.</span><span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Update this database object from a :class:`.domain.Submission`.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">submitter_id</span> <span class="o">=</span> <span class="n">submission</span><span class="o">.</span><span class="n">creator</span><span class="o">.</span><span class="n">native_id</span>
@@ -358,8 +359,8 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_update_primary</span><span class="p">(</span><span class="n">submission</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_update_secondaries</span><span class="p">(</span><span class="n">submission</span><span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">_update_submitter</span><span class="p">(</span><span class="n">submission</span><span class="p">)</span>
-</div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_update_submitter</span><span class="p">(</span><span class="n">submission</span><span class="p">)</span></div>
+
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">primary_classification</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Get the primary classification for this submission.&quot;&quot;&quot;</span>
@@ -431,8 +432,8 @@
                         <span class="n">category</span><span class="o">=</span><span class="n">cat</span><span class="o">.</span><span class="n">category</span><span class="p">,</span>
                         <span class="n">is_primary</span><span class="o">=</span><span class="mi">0</span>
                     <span class="p">)</span>
-                <span class="p">)</span>
-</div>
+                <span class="p">)</span></div>
+
 
 <div class="viewcode-block" id="License"><a class="viewcode-back" href="../../../../containers/core/events.services.classic.html#events.services.classic.models.License">[docs]</a><span class="k">class</span> <span class="nc">License</span><span class="p">(</span><span class="n">Base</span><span class="p">):</span>    <span class="c1"># type: ignore</span>
     <span class="sd">&quot;&quot;&quot;Licenses available for submissions.&quot;&quot;&quot;</span>
@@ -449,8 +450,8 @@
     <span class="sd">&quot;&quot;&quot;Only offer licenses with active=1.&quot;&quot;&quot;</span>
 
     <span class="n">note</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">String</span><span class="p">(</span><span class="mi">255</span><span class="p">))</span>
-    <span class="n">sequence</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Integer</span><span class="p">)</span>
-</div>
+    <span class="n">sequence</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Integer</span><span class="p">)</span></div>
+
 
 <div class="viewcode-block" id="CategoryDef"><a class="viewcode-back" href="../../../../containers/core/events.services.classic.html#events.services.classic.models.CategoryDef">[docs]</a><span class="k">class</span> <span class="nc">CategoryDef</span><span class="p">(</span><span class="n">Base</span><span class="p">):</span>    <span class="c1"># type: ignore</span>
     <span class="sd">&quot;&quot;&quot;Classification categories available for submissions.&quot;&quot;&quot;</span>
@@ -459,8 +460,8 @@
 
     <span class="n">category</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">String</span><span class="p">(</span><span class="mi">32</span><span class="p">),</span> <span class="n">primary_key</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="n">name</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">String</span><span class="p">(</span><span class="mi">255</span><span class="p">))</span>
-    <span class="n">active</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Integer</span><span class="p">,</span> <span class="n">server_default</span><span class="o">=</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&#39;1&#39;&quot;</span><span class="p">))</span>
-</div>
+    <span class="n">active</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Integer</span><span class="p">,</span> <span class="n">server_default</span><span class="o">=</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&#39;1&#39;&quot;</span><span class="p">))</span></div>
+
 
 <div class="viewcode-block" id="SubmissionCategory"><a class="viewcode-back" href="../../../../containers/core/events.services.classic.html#events.services.classic.models.SubmissionCategory">[docs]</a><span class="k">class</span> <span class="nc">SubmissionCategory</span><span class="p">(</span><span class="n">Base</span><span class="p">):</span>    <span class="c1"># type: ignore</span>
     <span class="sd">&quot;&quot;&quot;Classification relation for submissions.&quot;&quot;&quot;</span>
@@ -486,8 +487,8 @@
     <span class="n">is_published</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Integer</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">server_default</span><span class="o">=</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&#39;0&#39;&quot;</span><span class="p">))</span>
 
     <span class="c1"># category_def = relationship(&#39;CategoryDef&#39;)</span>
-    <span class="n">submission</span> <span class="o">=</span> <span class="n">relationship</span><span class="p">(</span><span class="s1">&#39;Submission&#39;</span><span class="p">,</span> <span class="n">back_populates</span><span class="o">=</span><span class="s1">&#39;categories&#39;</span><span class="p">)</span>
-</div>
+    <span class="n">submission</span> <span class="o">=</span> <span class="n">relationship</span><span class="p">(</span><span class="s1">&#39;Submission&#39;</span><span class="p">,</span> <span class="n">back_populates</span><span class="o">=</span><span class="s1">&#39;categories&#39;</span><span class="p">)</span></div>
+
 
 <div class="viewcode-block" id="Document"><a class="viewcode-back" href="../../../../containers/core/events.services.classic.html#events.services.classic.models.Document">[docs]</a><span class="k">class</span> <span class="nc">Document</span><span class="p">(</span><span class="n">Base</span><span class="p">):</span>    <span class="c1"># type: ignore</span>
     <span class="sd">&quot;&quot;&quot;</span>
@@ -517,8 +518,8 @@
     <span class="n">submitter_email</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">String</span><span class="p">(</span><span class="mi">64</span><span class="p">),</span> <span class="n">nullable</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                              <span class="n">server_default</span><span class="o">=</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&#39;&#39;&quot;</span><span class="p">))</span>
     <span class="n">submitter_id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">ForeignKey</span><span class="p">(</span><span class="s1">&#39;tapir_users.user_id&#39;</span><span class="p">),</span> <span class="n">index</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="n">submitter</span> <span class="o">=</span> <span class="n">relationship</span><span class="p">(</span><span class="s1">&#39;User&#39;</span><span class="p">)</span>
-</div>
+    <span class="n">submitter</span> <span class="o">=</span> <span class="n">relationship</span><span class="p">(</span><span class="s1">&#39;User&#39;</span><span class="p">)</span></div>
+
 
 <div class="viewcode-block" id="DocumentCategory"><a class="viewcode-back" href="../../../../containers/core/events.services.classic.html#events.services.classic.models.DocumentCategory">[docs]</a><span class="k">class</span> <span class="nc">DocumentCategory</span><span class="p">(</span><span class="n">Base</span><span class="p">):</span>    <span class="c1"># type: ignore</span>
     <span class="sd">&quot;&quot;&quot;Relation between published arXiv papers and their classifications.&quot;&quot;&quot;</span>
@@ -542,8 +543,8 @@
     <span class="n">is_primary</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Integer</span><span class="p">,</span> <span class="n">nullable</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">server_default</span><span class="o">=</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&#39;0&#39;&quot;</span><span class="p">))</span>
 
     <span class="n">category_def</span> <span class="o">=</span> <span class="n">relationship</span><span class="p">(</span><span class="s1">&#39;CategoryDef&#39;</span><span class="p">)</span>
-    <span class="n">document</span> <span class="o">=</span> <span class="n">relationship</span><span class="p">(</span><span class="s1">&#39;Document&#39;</span><span class="p">)</span>
-</div>
+    <span class="n">document</span> <span class="o">=</span> <span class="n">relationship</span><span class="p">(</span><span class="s1">&#39;Document&#39;</span><span class="p">)</span></div>
+
 
 <div class="viewcode-block" id="User"><a class="viewcode-back" href="../../../../containers/core/events.services.classic.html#events.services.classic.models.User">[docs]</a><span class="k">class</span> <span class="nc">User</span><span class="p">(</span><span class="n">Base</span><span class="p">):</span>    <span class="c1"># type: ignore</span>
     <span class="sd">&quot;&quot;&quot;Represents an arXiv user.&quot;&quot;&quot;</span>
@@ -604,8 +605,8 @@
     <span class="n">flag_allow_tex_produced</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Integer</span><span class="p">,</span> <span class="n">nullable</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                                      <span class="n">server_default</span><span class="o">=</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&#39;0&#39;&quot;</span><span class="p">))</span>
 
-    <span class="n">tapir_policy_class</span> <span class="o">=</span> <span class="n">relationship</span><span class="p">(</span><span class="s1">&#39;PolicyClass&#39;</span><span class="p">)</span>
-</div>
+    <span class="n">tapir_policy_class</span> <span class="o">=</span> <span class="n">relationship</span><span class="p">(</span><span class="s1">&#39;PolicyClass&#39;</span><span class="p">)</span></div>
+
 
 <span class="c1"># TODO: what is this?</span>
 <div class="viewcode-block" id="PolicyClass"><a class="viewcode-back" href="../../../../containers/core/events.services.classic.html#events.services.classic.models.PolicyClass">[docs]</a><span class="k">class</span> <span class="nc">PolicyClass</span><span class="p">(</span><span class="n">Base</span><span class="p">):</span>    <span class="c1"># type: ignore</span>
@@ -621,8 +622,8 @@
     <span class="n">recovery_policy</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Integer</span><span class="p">,</span> <span class="n">nullable</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                              <span class="n">server_default</span><span class="o">=</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&#39;0&#39;&quot;</span><span class="p">))</span>
     <span class="n">permanent_login</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Integer</span><span class="p">,</span> <span class="n">nullable</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                             <span class="n">server_default</span><span class="o">=</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&#39;0&#39;&quot;</span><span class="p">))</span>
-</div>
+                             <span class="n">server_default</span><span class="o">=</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&#39;0&#39;&quot;</span><span class="p">))</span></div>
+
 
 <div class="viewcode-block" id="Tracking"><a class="viewcode-back" href="../../../../containers/core/events.services.classic.html#events.services.classic.models.Tracking">[docs]</a><span class="k">class</span> <span class="nc">Tracking</span><span class="p">(</span><span class="n">Base</span><span class="p">):</span>    <span class="c1"># type: ignore</span>
     <span class="sd">&quot;&quot;&quot;Record of SWORD submissions.&quot;&quot;&quot;</span>
@@ -635,8 +636,8 @@
     <span class="n">paper_id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">String</span><span class="p">(</span><span class="mi">32</span><span class="p">),</span> <span class="n">nullable</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
     <span class="n">submission_errors</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Text</span><span class="p">)</span>
     <span class="n">timestamp</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">DateTime</span><span class="p">,</span> <span class="n">nullable</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                       <span class="n">server_default</span><span class="o">=</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;CURRENT_TIMESTAMP&quot;</span><span class="p">))</span>
-</div>
+                       <span class="n">server_default</span><span class="o">=</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;CURRENT_TIMESTAMP&quot;</span><span class="p">))</span></div>
+
 
 <div class="viewcode-block" id="ArchiveCategory"><a class="viewcode-back" href="../../../../containers/core/events.services.classic.html#events.services.classic.models.ArchiveCategory">[docs]</a><span class="k">class</span> <span class="nc">ArchiveCategory</span><span class="p">(</span><span class="n">Base</span><span class="p">):</span>    <span class="c1"># type: ignore</span>
     <span class="sd">&quot;&quot;&quot;Maps categories to the archives in which they reside.&quot;&quot;&quot;</span>
@@ -645,8 +646,8 @@
 
     <span class="n">archive_id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">String</span><span class="p">(</span><span class="mi">16</span><span class="p">),</span> <span class="n">primary_key</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">nullable</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                         <span class="n">server_default</span><span class="o">=</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&#39;&#39;&quot;</span><span class="p">))</span>
-    <span class="n">category_id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">String</span><span class="p">(</span><span class="mi">32</span><span class="p">),</span> <span class="n">primary_key</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">nullable</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-</div>
+    <span class="n">category_id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">String</span><span class="p">(</span><span class="mi">32</span><span class="p">),</span> <span class="n">primary_key</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">nullable</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
+
 
 <div class="viewcode-block" id="ArchiveDef"><a class="viewcode-back" href="../../../../containers/core/events.services.classic.html#events.services.classic.models.ArchiveDef">[docs]</a><span class="k">class</span> <span class="nc">ArchiveDef</span><span class="p">(</span><span class="n">Base</span><span class="p">):</span>    <span class="c1"># type: ignore</span>
     <span class="sd">&quot;&quot;&quot;Defines the archives in the arXiv classification taxonomy.&quot;&quot;&quot;</span>
@@ -654,8 +655,8 @@
     <span class="n">__tablename__</span> <span class="o">=</span> <span class="s1">&#39;arXiv_archive_def&#39;</span>
 
     <span class="n">archive</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">String</span><span class="p">(</span><span class="mi">16</span><span class="p">),</span> <span class="n">primary_key</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">server_default</span><span class="o">=</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&#39;&#39;&quot;</span><span class="p">))</span>
-    <span class="n">name</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">String</span><span class="p">(</span><span class="mi">255</span><span class="p">))</span>
-</div>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">String</span><span class="p">(</span><span class="mi">255</span><span class="p">))</span></div>
+
 
 <div class="viewcode-block" id="ArchiveGroup"><a class="viewcode-back" href="../../../../containers/core/events.services.classic.html#events.services.classic.models.ArchiveGroup">[docs]</a><span class="k">class</span> <span class="nc">ArchiveGroup</span><span class="p">(</span><span class="n">Base</span><span class="p">):</span>    <span class="c1"># type: ignore</span>
     <span class="sd">&quot;&quot;&quot;Maps archives to the groups in which they reside.&quot;&quot;&quot;</span>
@@ -665,8 +666,8 @@
     <span class="n">archive_id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">String</span><span class="p">(</span><span class="mi">16</span><span class="p">),</span> <span class="n">primary_key</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">nullable</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                         <span class="n">server_default</span><span class="o">=</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&#39;&#39;&quot;</span><span class="p">))</span>
     <span class="n">group_id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">String</span><span class="p">(</span><span class="mi">16</span><span class="p">),</span> <span class="n">primary_key</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">nullable</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                      <span class="n">server_default</span><span class="o">=</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&#39;&#39;&quot;</span><span class="p">))</span>
-</div>
+                      <span class="n">server_default</span><span class="o">=</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&#39;&#39;&quot;</span><span class="p">))</span></div>
+
 
 <div class="viewcode-block" id="Archive"><a class="viewcode-back" href="../../../../containers/core/events.services.classic.html#events.services.classic.models.Archive">[docs]</a><span class="k">class</span> <span class="nc">Archive</span><span class="p">(</span><span class="n">Base</span><span class="p">):</span>    <span class="c1"># type: ignore</span>
     <span class="sd">&quot;&quot;&quot;Supplemental data about archives in the classification hierarchy.&quot;&quot;&quot;</span>
@@ -683,8 +684,8 @@
     <span class="n">end_date</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">String</span><span class="p">(</span><span class="mi">4</span><span class="p">),</span> <span class="n">nullable</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">server_default</span><span class="o">=</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&#39;&#39;&quot;</span><span class="p">))</span>
     <span class="n">subdivided</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Integer</span><span class="p">,</span> <span class="n">nullable</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">server_default</span><span class="o">=</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&#39;0&#39;&quot;</span><span class="p">))</span>
 
-    <span class="n">arXiv_group</span> <span class="o">=</span> <span class="n">relationship</span><span class="p">(</span><span class="s1">&#39;Group&#39;</span><span class="p">)</span>
-</div>
+    <span class="n">arXiv_group</span> <span class="o">=</span> <span class="n">relationship</span><span class="p">(</span><span class="s1">&#39;Group&#39;</span><span class="p">)</span></div>
+
 
 <div class="viewcode-block" id="GroupDef"><a class="viewcode-back" href="../../../../containers/core/events.services.classic.html#events.services.classic.models.GroupDef">[docs]</a><span class="k">class</span> <span class="nc">GroupDef</span><span class="p">(</span><span class="n">Base</span><span class="p">):</span>    <span class="c1"># type: ignore</span>
     <span class="sd">&quot;&quot;&quot;Defines the groups in the arXiv classification taxonomy.&quot;&quot;&quot;</span>
@@ -693,8 +694,8 @@
 
     <span class="n">archive_group</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">String</span><span class="p">(</span><span class="mi">16</span><span class="p">),</span> <span class="n">primary_key</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                            <span class="n">server_default</span><span class="o">=</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&#39;&#39;&quot;</span><span class="p">))</span>
-    <span class="n">name</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">String</span><span class="p">(</span><span class="mi">255</span><span class="p">))</span>
-</div>
+    <span class="n">name</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">String</span><span class="p">(</span><span class="mi">255</span><span class="p">))</span></div>
+
 
 <div class="viewcode-block" id="Group"><a class="viewcode-back" href="../../../../containers/core/events.services.classic.html#events.services.classic.models.Group">[docs]</a><span class="k">class</span> <span class="nc">Group</span><span class="p">(</span><span class="n">Base</span><span class="p">):</span>    <span class="c1"># type: ignore</span>
     <span class="sd">&quot;&quot;&quot;Supplemental data about groups in the classification hierarchy.&quot;&quot;&quot;</span>
@@ -703,8 +704,8 @@
 
     <span class="n">group_id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">String</span><span class="p">(</span><span class="mi">16</span><span class="p">),</span> <span class="n">primary_key</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">server_default</span><span class="o">=</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&#39;&#39;&quot;</span><span class="p">))</span>
     <span class="n">group_name</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">String</span><span class="p">(</span><span class="mi">255</span><span class="p">),</span> <span class="n">nullable</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">server_default</span><span class="o">=</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&#39;&#39;&quot;</span><span class="p">))</span>
-    <span class="n">start_year</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">String</span><span class="p">(</span><span class="mi">4</span><span class="p">),</span> <span class="n">nullable</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">server_default</span><span class="o">=</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&#39;&#39;&quot;</span><span class="p">))</span>
-</div>
+    <span class="n">start_year</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">String</span><span class="p">(</span><span class="mi">4</span><span class="p">),</span> <span class="n">nullable</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">server_default</span><span class="o">=</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&#39;&#39;&quot;</span><span class="p">))</span></div>
+
 
 <div class="viewcode-block" id="EndorsementDomain"><a class="viewcode-back" href="../../../../containers/core/events.services.classic.html#events.services.classic.models.EndorsementDomain">[docs]</a><span class="k">class</span> <span class="nc">EndorsementDomain</span><span class="p">(</span><span class="n">Base</span><span class="p">):</span>    <span class="c1"># type: ignore</span>
     <span class="sd">&quot;&quot;&quot;Endorsement configurations.&quot;&quot;&quot;</span>
@@ -720,8 +721,8 @@
     <span class="n">endorse_email</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Enum</span><span class="p">(</span><span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="s1">&#39;n&#39;</span><span class="p">),</span> <span class="n">nullable</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                            <span class="n">server_default</span><span class="o">=</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&#39;y&#39;&quot;</span><span class="p">))</span>
     <span class="n">papers_to_endorse</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">SmallInteger</span><span class="p">,</span> <span class="n">nullable</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                               <span class="n">server_default</span><span class="o">=</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&#39;4&#39;&quot;</span><span class="p">))</span>
-</div>
+                               <span class="n">server_default</span><span class="o">=</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&#39;4&#39;&quot;</span><span class="p">))</span></div>
+
 
 <div class="viewcode-block" id="Category"><a class="viewcode-back" href="../../../../containers/core/events.services.classic.html#events.services.classic.models.Category">[docs]</a><span class="k">class</span> <span class="nc">Category</span><span class="p">(</span><span class="n">Base</span><span class="p">):</span>    <span class="c1"># type: ignore</span>
     <span class="sd">&quot;&quot;&quot;Supplemental data about arXiv categories, including endorsement.&quot;&quot;&quot;</span>
@@ -765,10 +766,11 @@
     <span class="sd">&quot;&quot;&quot;E.g. astro-ph, acc-phys, chem-ph, cs.&quot;&quot;&quot;</span>
 
     <span class="n">papers_to_endorse</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">SmallInteger</span><span class="p">,</span> <span class="n">nullable</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                               <span class="n">server_default</span><span class="o">=</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&#39;0&#39;&quot;</span><span class="p">))</span>
-</pre></div></div>
+                               <span class="n">server_default</span><span class="o">=</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&#39;0&#39;&quot;</span><span class="p">))</span></div>
+</pre></div>
 
           </div>
+          
         </div>
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
@@ -787,6 +789,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../architecture.html">Submission &amp; moderation subsystem architecture</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../publication_process.html">Submission &amp; Publication Process</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../submission_api_context.html">Submission API: Context</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../containers/core/events.html">events package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../containers/metadata/metadata.html">metadata package</a></li>
 </ul>
 
@@ -824,7 +827,7 @@
       
       |
       Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.5</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.11</a>
       
     </div>
 
