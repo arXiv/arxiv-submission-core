@@ -141,7 +141,8 @@ class TestClassicUIWorkflow(TestCase):
                     checksum="a9s9k342900skks03330029k",
                     source_format=domain.submission.SubmissionContent.Format('tex'),
                     identifier=123,
-                    size=593992
+                    uncompressed_size=593992,
+                    compressed_size=593992
                 ),
                 submission_id=submission.submission_id
             )
@@ -331,10 +332,10 @@ class TestReplacementIntegration(TestCase):
                     checksum="a9s9k342900skks03330029k",
                     source_format=domain.submission.SubmissionContent.Format('tex'),
                     identifier=123,
-                    size=593992
+                    uncompressed_size=593992,
+                    compressed_size=593992
                 ),
-                SetTitle(creator=self.submitter,
-                                title=metadata['title']),
+                SetTitle(creator=self.submitter, title=metadata['title']),
                 SetAbstract(creator=self.submitter,
                             abstract=metadata['abstract']),
                 SetComments(creator=self.submitter,
@@ -345,7 +346,7 @@ class TestReplacementIntegration(TestCase):
                 ),
                 SetDOI(creator=self.submitter, doi=metadata['doi']),
                 SetReportNumber(creator=self.submitter,
-                                       report_num=metadata['report_num']),
+                                report_num=metadata['report_num']),
                 SetAuthors(
                     creator=self.submitter,
                     authors=[Author(
@@ -482,7 +483,8 @@ class TestJREFIntegration(TestCase):
                     checksum="a9s9k342900skks03330029k",
                     source_format=domain.submission.SubmissionContent.Format('tex'),
                     identifier=123,
-                    size=593992
+                    uncompressed_size=593992,
+                    compressed_size=593992
                 ),
                 SetTitle(creator=self.submitter,
                                 title=metadata['title']),
@@ -652,7 +654,8 @@ class TestWithdrawalIntegration(TestCase):
                     checksum="a9s9k342900skks03330029k",
                     source_format=domain.submission.SubmissionContent.Format('tex'),
                     identifier=123,
-                    size=593992
+                    uncompressed_size=593992,
+                    compressed_size=593992
                 ),
                 SetTitle(creator=self.submitter, title=metadata['title']),
                 SetAbstract(creator=self.submitter,
@@ -790,7 +793,8 @@ class TestPublicationIntegration(TestCase):
                     checksum="a9s9k342900skks03330029k",
                     source_format=domain.submission.SubmissionContent.Format('tex'),
                     identifier=123,
-                    size=593992
+                    uncompressed_size=593992,
+                    compressed_size=593992
                 ),
                 SetTitle(creator=self.submitter,
                                 title=metadata['title']),

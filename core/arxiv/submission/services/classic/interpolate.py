@@ -18,7 +18,7 @@ from typing import List, Optional, Dict, Tuple
 from arxiv.base import logging
 from . import models
 from ...domain.submission import Submission, UserRequest, WithdrawalRequest, \
-    CrossListClassificationRequest
+    CrossListClassificationRequest, Hold
 from ...domain.event import Event, SetDOI, SetJournalReference, \
     SetReportNumber, ApplyRequest, RejectRequest, Publish, AddHold
 from ...domain.agent import System, User
@@ -134,14 +134,14 @@ class ClassicEventInterpolator:
                      self.current_row.submission_id,
                      self.current_row.type, self.current_row.status)
         self.submission = self.current_row.patch(self.submission)
-        if self.current_row.sticky_status == models.Submission.ON_HOLD \
-                or self.current_row.status == models.Submission.ON_HOLD:
-            self._apply_event(AddHold(
-                creator=SYSTEM,
-                created=self.current_row.get_updated(),
-                committed=True,
-                hold_type='patch'
-            ))
+        if self.current_row.status == models.Submission.ON_HOLD:
+            self.submission.status = Submission.ON_HOLD
+            # self._apply_event(AddHold(
+            #     creator=SYSTEM,
+            #     created=self.current_row.get_updated(),
+            #     committed=True,
+            #     hold_type=Hold.Type.PATCH
+            # ))
         logger.debug('user requests: %s', self.submission.user_requests)
 
     def _apply_event(self, event: Event) -> None:

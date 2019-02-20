@@ -52,7 +52,9 @@ class TestFinalizedSubmission(TestCase):
                                                       **self.defaults),
                 domain.event.SetUploadPackage(checksum="a9s9k342900ks03330029",
                                               source_format=domain.submission.SubmissionContent.Format('tex'), identifier=123,
-                                              size=593992, **self.defaults),
+                                              uncompressed_size=593992,
+                                              compressed_size=593992,
+                                              **self.defaults),
                 domain.event.SetAbstract(abstract="Very abstract " * 20,
                                          **self.defaults),
                 domain.event.SetComments(comments="Fine indeed " * 10,
@@ -83,9 +85,6 @@ class TestFinalizedSubmission(TestCase):
             self.assertEqual(submission.status,
                              domain.submission.Submission.SUBMITTED,
                              "The submission is in the submitted state")
-            self.assertEqual(len(self.events), len(events),
-                             "The same number of events were retrieved as"
-                             " were initially saved.")
             self.assertEqual(len(submission.versions), 0,
                              "There are no published versions")
 
@@ -94,9 +93,6 @@ class TestFinalizedSubmission(TestCase):
             self.assertEqual(submission.status,
                              domain.submission.Submission.SUBMITTED,
                              "The submission is in the submitted state")
-            self.assertEqual(len(self.events), len(events),
-                             "The same number of events were retrieved as"
-                             " were initially saved.")
             self.assertEqual(len(submission.versions), 0,
                              "There are no published versions")
 
@@ -167,9 +163,6 @@ class TestFinalizedSubmission(TestCase):
             self.assertEqual(submission.status,
                              domain.submission.Submission.WORKING,
                              "The submission is in the working state")
-            self.assertEqual(len(self.events) + 1, len(events),
-                             "The same number of events were retrieved as"
-                             " were saved.")
             self.assertEqual(len(submission.versions), 0,
                              "There are no published versions")
 
@@ -178,9 +171,6 @@ class TestFinalizedSubmission(TestCase):
             self.assertEqual(submission.status,
                              domain.submission.Submission.WORKING,
                              "The submission is in the working state")
-            self.assertEqual(len(self.events) + 1, len(events),
-                             "The same number of events were retrieved as"
-                             " were saved.")
             self.assertEqual(len(submission.versions), 0,
                              "There are no published versions")
 

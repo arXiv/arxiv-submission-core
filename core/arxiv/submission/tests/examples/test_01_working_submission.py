@@ -57,9 +57,6 @@ class TestWorkingSubmission(TestCase):
             self.assertEqual(submission.status,
                              domain.submission.Submission.WORKING,
                              "The submission is in the working state")
-            self.assertEqual(len(self.events), len(events),
-                             "The same number of events were retrieved as"
-                             " were initially saved.")
             self.assertEqual(len(submission.versions), 0,
                              "There are no published versions")
 
