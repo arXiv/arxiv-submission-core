@@ -12,7 +12,7 @@ python:
 script:
   - pip install pipenv
   - pipenv install --dev
-  - pipenv install ./core
+  - pipenv install ./core --skip-lock
   - pipenv run nose2 -s core/arxiv --with-coverage
 after_success:
   - coveralls
