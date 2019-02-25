@@ -23,6 +23,7 @@ arxiv-auth = "*"
 "c6a1273" = {path = "./core"}
 mypy_extensions = "*"
 kombu = "==4.1.0"
+semver = "*"
 
 [dev-packages]
 "nose2" = "*"

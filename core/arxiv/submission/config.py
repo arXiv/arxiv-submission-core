@@ -55,3 +55,6 @@ Otherwise they will be executed in the thread in which they are called.
 
 ENABLE_CALLBACKS = os.environ.get('ENABLE_CALLBACKS', '0')
 """If ``0``, callbacks bound to events will not be executed."""
+
+
+CORE_VERSION = "0.0.0"

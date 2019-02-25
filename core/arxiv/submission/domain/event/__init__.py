@@ -125,6 +125,7 @@ from ..annotation import Comment, Feature, ClassifierResults, \
 from ...exceptions import InvalidEvent
 from ..util import get_tzaware_utc_now
 from .event import Event
+from .versioning import EventData, map_to_current_version
 from .request import RequestCrossList, RequestWithdrawal, ApplyRequest, \
     RejectRequest, ApproveRequest
 from . import validators
@@ -1184,7 +1185,7 @@ EVENT_TYPES = {
 }
 
 
-def event_factory(event_type: str, **data) -> Event:
+def event_factory(**data: EventData) -> Event:
     """
     Convenience factory for generating :class:`.Event` instances.
 
@@ -1200,6 +1201,10 @@ def event_factory(event_type: str, **data) -> Event:
     :class:`.Event`
         An instance of an :class:`.Event` subclass.
     """
+    data = map_to_current_version(data)
+    event_type = data.pop("event_type")
+    event_version = data.pop("event_version")
+    logger.debug('Create %s with data version %s', event_type, event_version)
     if 'created' not in data:
         data['created'] = datetime.now(UTC)
     if event_type in EVENT_TYPES:

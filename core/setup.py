@@ -20,6 +20,8 @@ setup(
         'dataclasses',
         'celery==4.1.0',
         'kombu==4.1.0',
-        'redis==2.10.6'
+        'redis==2.10.6',
+        'mypy_extensions==0.4.1',
+        'requests==2.21.0'
     ]
 )

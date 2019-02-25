@@ -61,7 +61,7 @@ def process_csv(tsvfile, session):
             for key, value in submission.items():
                 if value == 'NULL':
                     submission[key] = None
-            if int(submission['version']) > 1:
+            if int(submission['event_version']) > 1:
                 continue
             try:
                 submission_id = process_submission(submission)
