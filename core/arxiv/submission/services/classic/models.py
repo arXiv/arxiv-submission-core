@@ -562,7 +562,7 @@ class Submission(Base):    # type: ignore
         elif self.status is None or self.status <= Submission.ON_HOLD:
             if not submission.finalized:
                 self.status = Submission.NOT_SUBMITTED
-            
+
 
         if submission.primary_classification:
             self._update_primary(submission)
@@ -1135,8 +1135,8 @@ class CategoryProposal(Base):   # type: ignore
     submission_id = Column(ForeignKey('arXiv_submissions.submission_id'))
     submission = relationship('Submission')
     category = Column(String(32))
-    is_primary = Column(Integer, server_default=("'0'"))
-    proposal_status = Column(Integer, nullable=True, server_default=("'0'"))
+    is_primary = Column(Integer, server_default=text("'0'"))
+    proposal_status = Column(Integer, nullable=True, server_default=text("'0'"))
     user_id = Column(ForeignKey('tapir_users.user_id'))
     user = relationship("User")
     updated = Column(DateTime, default=lambda: datetime.now(UTC))
