@@ -131,7 +131,7 @@ from .request import RequestCrossList, RequestWithdrawal, ApplyRequest, \
 from . import validators
 from .proposal import AddProposal, RejectProposal, AcceptProposal
 from .flag import AddMetadataFlag, AddUserFlag, AddContentFlag, RemoveFlag, \
-    AddHold
+    AddHold, RemoveHold
 from .process import AddProcessStatus
 
 logger = logging.getLogger(__name__)
@@ -848,7 +848,8 @@ class SetUploadPackage(Event):
 
     identifier: str = field(default_factory=str)
     checksum: str = field(default_factory=str)
-    size: int = field(default=0)
+    uncompressed_size: int = field(default=0)
+    compressed_size: int = field(default=0)
     source_format: SubmissionContent.Format = \
         field(default=SubmissionContent.Format.UNKNOWN)
 
@@ -864,7 +865,8 @@ class SetUploadPackage(Event):
         submission.source_content = SubmissionContent(
             checksum=self.checksum,
             identifier=self.identifier,
-            size=self.size,
+            uncompressed_size=self.uncompressed_size,
+            compressed_size=self.compressed_size,
             source_format=self.source_format,
         )
         submission.submitter_confirmed_preview = False
@@ -879,7 +881,8 @@ class UpdateUploadPackage(Event):
     NAMED = "upload package updated"
 
     checksum: str = field(default_factory=str)
-    size: int = field(default=0)
+    uncompressed_size: int = field(default=0)
+    compressed_size: int = field(default=0)
     source_format: SubmissionContent.Format = \
         field(default=SubmissionContent.Format.UNKNOWN)
 
@@ -891,7 +894,8 @@ class UpdateUploadPackage(Event):
         """Replace :class:`.SubmissionContent` metadata on the submission."""
         submission.source_content.source_format = self.source_format
         submission.source_content.checksum = self.checksum
-        submission.source_content.size = self.size
+        submission.source_content.uncompressed_size = self.uncompressed_size
+        submission.source_content.compressed_size = self.compressed_size
         submission.submitter_confirmed_preview = False
         return submission
 

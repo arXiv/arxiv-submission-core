@@ -1,6 +1,6 @@
 """Data structures for submissions."""
 
-from typing import Optional, Dict, TypeVar, List, Iterable
+from typing import Optional, Dict, TypeVar, List, Iterable, Set
 from datetime import datetime
 from dateutil.parser import parse as parse_date
 from enum import Enum
@@ -88,7 +88,8 @@ class SubmissionContent:
 
     identifier: str
     checksum: str
-    size: int
+    uncompressed_size: int
+    compressed_size: int
     source_format: Format = Format.UNKNOWN
 
     def __post_init__(self):
@@ -236,13 +237,47 @@ class Delegation:
 class Hold:
     """Represents a block on announcement, usually for QA/QC purposes."""
 
+    class Type(Enum):
+        """Supported holds in the submission system."""
+
+        PATCH = 'patch'
+        """A hold generated from the classic submission system."""
+
+        SOURCE_OVERSIZE = "source_oversize"
+        """The submission source is oversize."""
+
+        PDF_OVERSIZE = "pdf_oversize"
+        """The submission PDF is oversize."""
+
     event_id: str
     """The event that created the hold."""
 
     creator: Agent
     created: datetime = field(default_factory=get_tzaware_utc_now)
-    hold_type: str = field(default_factory=str)
-    hold_reason: Optional[str] = field(default_factory=list)
+    hold_type: Type = field(default=Type.PATCH)
+    hold_reason: Optional[str] = field(default_factory=str)
+
+    @classmethod
+    def from_dict(cls, data: dict) -> 'Hold':
+        creator = data['creator']
+        if not isinstance(creator, Agent):
+            creator = agent_factory(**creator)
+        return cls(event_id=data['event_id'], creator=creator,
+                   created=parse_date(data['created']),
+                   hold_type=cls.Type(data['hold_type']),
+                   hold_reason=data.get('hold_reason', ''))
+
+
+@dataclass
+class Waiver:
+    """Represents an exception or override."""
+
+    event_id: str
+    """The identifier of the event that produced this waiver."""
+    waiver_type: Hold.Type
+    waiver_reason: str
+    created: datetime
+    creator: Agent
 
 
 # TODO: add identification mechanism; consider using mechanism similar to
@@ -394,6 +429,9 @@ class Submission:
     holds: Dict[str, Hold] = field(default_factory=dict)
     """Quality control holds."""
 
+    waivers: Dict[str, Waiver] = field(default_factory=dict)
+    """Quality control waivers."""
+
     @property
     def features(self) -> Dict[str, Feature]:
         return {k: v for k, v in self.annotations.items()
@@ -426,7 +464,21 @@ class Submission:
 
     @property
     def is_on_hold(self) -> bool:
-        return len(self.holds) > 0 or self.status == self.ON_HOLD
+        # We need to explicitly check ``status`` here because classic doesn't
+        # have a representation for Hold events.
+        return len(self.hold_types - self.waiver_types) > 0 \
+            or self.status == self.ON_HOLD
+
+    def has_waiver_for(self, hold_type: Hold.Type) -> bool:
+        return hold_type in self.waiver_types
+
+    @property
+    def hold_types(self) -> Set[Hold.Type]:
+        return set([hold.hold_type for hold in self.holds.values()])
+
+    @property
+    def waiver_types(self) -> Set[Hold.Type]:
+        return set([waiver.hold_type for waiver in self.waivers.values()])
 
     @property
     def latest_compilation(self) -> Optional[Compilation]:
@@ -524,5 +576,8 @@ class Submission:
             data['proxy'] = agent_factory(**data['proxy'])
         if 'client' in data and data['client'] is not None:
             data['client'] = agent_factory(**data['client'])
+        if 'holds' in data and data['holds']:
+            data['holds'] = {k: Hold.from_dict(v)
+                             for k, v in data['holds'].items()}
         return cls(**{k: v for k, v in data.items()
                       if k in cls.__dataclass_fields__})

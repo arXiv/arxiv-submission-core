@@ -50,7 +50,7 @@ class ClassifierResults:
 
 @dataclass
 class Feature:
-    """Represents feature counts drawn from the content of the submission."""
+    """Represents features drawn from the content of the submission."""
 
     class FeatureTypes(Enum):
         """Supported features."""

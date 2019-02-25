@@ -243,11 +243,20 @@ class Submission(Base):    # type: ignore
         return submission
 
     def patch_hold(self, submission: domain.Submission) -> domain.Submission:
+        """Patch hold-related data from this database row."""
         if self.status == self.ON_HOLD:
             submission.status = domain.Submission.ON_HOLD
+            created = self.get_updated()
+            creator = domain.agent.System(__name__)
+            event_id = domain.Event.get_id(created, 'AddHold', creator)
+            hold = domain.Hold(event_id=event_id, creator=creator,
+                               created=created,
+                               hold_type=domain.Hold.Type.PATCH)
+            submission.holds[event_id] = hold
         return submission
 
     def patch_status(self, submission: domain.Submission) -> domain.Submission:
+        """Patch status-related data from this database row."""
         # We're phasing journal reference out as a submission
         if self.type != Submission.JOURNAL_REFERENCE:
             # Apply sticky status.
@@ -265,7 +274,8 @@ class Submission(Base):    # type: ignore
 
     def patch_jref(self, submission: domain.Submission) -> domain.Submission:
         """
-        Patch a :class:`.domain.Submission` with JREF data outside the event scope.
+        Patch a :class:`.domain.Submission` with JREF data outside the event
+        scope.
 
         Parameters
         ----------
@@ -507,6 +517,15 @@ class Submission(Base):    # type: ignore
         self.acm_class = submission.metadata.acm_class
         self.journal_ref = submission.metadata.journal_ref
 
+        if submission.latest_compilation \
+                and submission.latest_compilation.status \
+                is domain.Compilation.Status.SUCCEEDED \
+                and submission.latest_compilation.checksum \
+                == submission.source_content.checksum:
+            self.must_process = 0
+        else:
+            self.must_process = 1
+
         self.version = submission.version   # Numeric version.
         self.doc_paper_id = submission.arxiv_id     # arXiv canonical ID.
 
@@ -522,7 +541,7 @@ class Submission(Base):    # type: ignore
 
         if submission.source_content is not None:
             self.must_process = 0
-            self.source_size = submission.source_content.size
+            self.source_size = submission.source_content.uncompressed_size
             if submission.source_content.source_format is not None:
                 self.source_format = \
                     submission.source_content.source_format.value
@@ -537,10 +556,13 @@ class Submission(Base):    # type: ignore
         # Delete.
         elif submission.deleted:
             self.status = Submission.USER_DELETED
+        elif submission.is_on_hold:
+            self.status = Submission.ON_HOLD
         # Unsubmit.
         elif self.status is None or self.status <= Submission.ON_HOLD:
             if not submission.finalized:
                 self.status = Submission.NOT_SUBMITTED
+
 
         if submission.primary_classification:
             self._update_primary(submission)

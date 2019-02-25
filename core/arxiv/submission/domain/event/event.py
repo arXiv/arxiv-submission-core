@@ -117,10 +117,14 @@ class Event:
     @property
     def event_id(self) -> str:
         """Unique ID for this event."""
+        return self.get_id(self.created, self.event_type, self.creator)
+
+    @staticmethod
+    def get_id(created: datetime, event_type: str, creator: Agent) -> str:
         h = hashlib.new('sha1')
-        h.update(b'%s:%s:%s' % (self.created.isoformat().encode('utf-8'),
-                                self.event_type.encode('utf-8'),
-                                self.creator.agent_identifier.encode('utf-8')))
+        h.update(b'%s:%s:%s' % (created.isoformat().encode('utf-8'),
+                                event_type.encode('utf-8'),
+                                creator.agent_identifier.encode('utf-8')))
         return h.hexdigest()
 
     def apply(self, submission: Optional[Submission] = None) -> Submission:
