@@ -21,16 +21,18 @@ is defined in :mod:`.classic.event`.
 
 """
 
-from typing import List, Optional, Tuple, Set
+from typing import List, Optional, Tuple, Set, Callable, Any
+from retry import retry
 from datetime import datetime
 from pytz import UTC
 from itertools import groupby
 import copy
-from functools import reduce
+from functools import reduce, wraps
 from operator import ior
 
 from flask import Flask
 from sqlalchemy import or_
+from sqlalchemy.exc import DBAPIError
 
 from arxiv.base import logging
 from arxiv.base.globals import get_application_config, get_application_global
@@ -51,13 +53,16 @@ from . import models, util, interpolate, log, proposal
 logger = logging.getLogger(__name__)
 
 
+@retry(ClassicBaseException, tries=3, delay=1)
 def get_licenses() -> List[License]:
     """Get a list of :class:`.domain.License` instances available."""
-    license_data = util.current_session().query(models.License) \
-        .filter(models.License.active == '1')
-    return [License(uri=row.name, name=row.label) for row in license_data]
+    with transaction(read_only=True):
+        license_data = util.current_session().query(models.License) \
+            .filter(models.License.active == '1')
+        return [License(uri=row.name, name=row.label) for row in license_data]
 
 
+@retry(ClassicBaseException, tries=3, delay=1)
 def get_events(submission_id: int) -> List[Event]:
     """
     Load events from the classic database.
@@ -77,7 +82,7 @@ def get_events(submission_id: int) -> List[Event]:
         Raised when there are no events for the provided submission ID.
 
     """
-    with transaction() as session:
+    with transaction(read_only=True) as session:
         event_data = session.query(DBEvent) \
             .filter(DBEvent.submission_id == submission_id) \
             .order_by(DBEvent.created)
@@ -87,6 +92,7 @@ def get_events(submission_id: int) -> List[Event]:
         return events
 
 
+@retry(ClassicBaseException, tries=3, delay=1)
 def get_user_submissions_fast(user_id: int) -> List[Submission]:
     """
     Get all active submissions for a user.
@@ -103,7 +109,7 @@ def get_user_submissions_fast(user_id: int) -> List[Submission]:
         Items are the user's :class:`.domain.Submission` instances.
 
     """
-    with transaction() as session:
+    with transaction(read_only=True) as session:
         db_submissions = list(
             session.query(models.Submission)
             .filter(models.Submission.submitter_id == user_id)
@@ -122,6 +128,7 @@ def get_user_submissions_fast(user_id: int) -> List[Submission]:
         return [s for s in submissions if not s.deleted]
 
 
+@retry(ClassicBaseException, tries=3, delay=1)
 def get_submission_fast(submission_id: int) -> List[Submission]:
     """
     Get the projection of the submission directly.
@@ -149,7 +156,7 @@ def get_submission_fast(submission_id: int) -> List[Submission]:
 
 
 def _get_db_submission_rows(submission_id: int) -> List[models.Submission]:
-    with transaction() as session:
+    with transaction(read_only=True) as session:
         head = session.query(models.Submission.submission_id,
                              models.Submission.doc_paper_id) \
             .filter_by(submission_id=submission_id) \
@@ -165,6 +172,7 @@ def _get_db_submission_rows(submission_id: int) -> List[models.Submission]:
     return dbss
 
 
+@retry(ClassicBaseException, tries=3, delay=1)
 def get_submission(submission_id: int) -> Tuple[Submission, List[Event]]:
     """
     Get the current state of a :class:`.domain.Submission` from the database.
@@ -192,7 +200,7 @@ def get_submission(submission_id: int) -> Tuple[Submission, List[Event]]:
         Items are :class:`Event` instances.
 
     """
-    with transaction() as session:
+    with transaction(read_only=True) as session:
         original_row = session.query(models.Submission).get(submission_id)
         if original_row is None:
             raise NoSuchSubmission(f'Submission {submission_id} not found')
@@ -217,7 +225,7 @@ def get_submission(submission_id: int) -> Tuple[Submission, List[Event]]:
     return interpolator.get_submission_state()
 
 
-# TODO: this needs some refactoring/decomposition for semantic clarity.
+@retry(ClassicBaseException, tries=3, delay=1)
 def store_event(event: Event, before: Optional[Submission],
                 after: Optional[Submission]) -> Tuple[Event, Submission]:
     """
@@ -247,93 +255,95 @@ def store_event(event: Event, before: Optional[Submission],
         The state of the submission after the event occurred.
 
     """
-    if event.committed:
-        raise CommitFailed('Event %s already committed', event.event_id)
-    session = current_session()
-    document_id: Optional[int] = None
+    with transaction() as session:
+        if event.committed:
+            raise CommitFailed('Event %s already committed', event.event_id)
 
-    # This is the case that we have a new submission.
-    if before is None and isinstance(after, Submission):
-        dbs = models.Submission(type=models.Submission.NEW_SUBMISSION)
-        dbs.update_from_submission(after)
-        this_is_a_new_submission = True
+        doc_id: Optional[int] = None
 
-    else:   # Otherwise we're making an update for an existing submission.
-        this_is_a_new_submission = False
-
-        # After the original submission is published, a new Document row is
-        #  created. This Document is shared by all subsequent Submission rows.
-        if before.published:
-            document_id = _load_document_id(before.arxiv_id, before.version)
-
-        # From the perspective of the database, a replacement is mainly an
-        # incremented version number. This requires a new row in the database.
-        if after.version > before.version:
-            dbs = _create_replacement(document_id, before.arxiv_id,
-                                      after.version, after, event.created)
-        elif isinstance(event, Rollback) and before.version > 1:
-            dbs = _delete_replacement(document_id, before.arxiv_id,
-                                      before.version)
-
-        # Withdrawals also require a new row, and they use the most recent
-        # version number.
-        elif isinstance(event, RequestWithdrawal):
-            dbs = _create_withdrawal(document_id, event.reason,
-                                     before.arxiv_id, after.version, after,
-                                     event.created)
-        elif isinstance(event, RequestCrossList):
-            dbs = _create_crosslist(document_id, event.categories,
-                                    before.arxiv_id, after.version, after,
-                                    event.created)
-
-        # Adding DOIs and citation information (so-called "journal reference")
-        # also requires a new row. The version number is not incremented.
-        elif before.published and \
-                type(event) in [SetDOI, SetJournalReference, SetReportNumber]:
-            dbs = _create_jref(document_id, before.arxiv_id, after.version,
-                               after, event.created)
-
-        # The submission has been announced.
-        elif isinstance(before, Submission) and before.arxiv_id is not None:
-            dbs = _load_submission(paper_id=before.arxiv_id,
-                                   version=before.version)
-            _preserve_sticky_hold(dbs, before, after, event)
+        # This is the case that we have a new submission.
+        if before is None and isinstance(after, Submission):
+            dbs = models.Submission(type=models.Submission.NEW_SUBMISSION)
             dbs.update_from_submission(after)
+            this_is_a_new_submission = True
 
-        # The submission has not yet been announced; we're working with a
-        # single row.
-        elif isinstance(before, Submission) and before.submission_id:
-            dbs = _load_submission(before.submission_id)
-            _preserve_sticky_hold(dbs, before, after, event)
-            dbs.update_from_submission(after)
-        else:
-            raise CommitFailed("Something is fishy")
+        else:   # Otherwise we're making an update for an existing submission.
+            this_is_a_new_submission = False
 
-    db_event = _new_dbevent(event)
-    session.add(dbs)
-    session.add(db_event)
+            # After the original submission is published, a new Document row is
+            #  created. This Document is shared by all subsequent Submission
+            # rows.
+            if before.published:
+                doc_id = _load_document_id(before.arxiv_id, before.version)
 
-    log.handle(event, before, after)   # Create admin log entry, if applicable.
-    if isinstance(event, AddProposal):
-        proposal.add(event, before, after)
+            JREFEvents = [SetDOI, SetJournalReference, SetReportNumber]
 
-    # Attach the database object for the event to the row for the submission.
-    if this_is_a_new_submission:    # Update in transaction.
-        db_event.submission = dbs
-    else:                           # Just set the ID directly.
-        db_event.submission_id = before.submission_id
+            # From the perspective of the database, a replacement is mainly an
+            # incremented version number. This requires a new row in the
+            # database.
+            if after.version > before.version:
+                dbs = _create_replacement(doc_id, before.arxiv_id,
+                                          after.version, after, event.created)
+            elif isinstance(event, Rollback) and before.version > 1:
+                dbs = _delete_replacement(doc_id, before.arxiv_id,
+                                          before.version)
 
-    # try:
-    session.commit()
-    # except Exception as e:
-    #     session.rollback()
-    #     raise CommitFailed('Something went wrong: %s', e) from e
+            # Withdrawals also require a new row, and they use the most recent
+            # version number.
+            elif isinstance(event, RequestWithdrawal):
+                dbs = _create_withdrawal(doc_id, event.reason,
+                                         before.arxiv_id, after.version, after,
+                                         event.created)
+            elif isinstance(event, RequestCrossList):
+                dbs = _create_crosslist(doc_id, event.categories,
+                                        before.arxiv_id, after.version, after,
+                                        event.created)
+
+            # Adding DOIs and citation information (so-called "journal
+            # reference") also requires a new row. The version number is not
+            # incremented.
+            elif before.published and type(event) in JREFEvents:
+                dbs = _create_jref(doc_id, before.arxiv_id, after.version,
+                                   after, event.created)
+
+            # The submission has been announced.
+            elif isinstance(before, Submission)  \
+                    and before.arxiv_id is not None:
+                dbs = _load_submission(paper_id=before.arxiv_id,
+                                       version=before.version)
+                _preserve_sticky_hold(dbs, before, after, event)
+                dbs.update_from_submission(after)
+
+            # The submission has not yet been announced; we're working with a
+            # single row.
+            elif isinstance(before, Submission) and before.submission_id:
+                dbs = _load_submission(before.submission_id)
+                _preserve_sticky_hold(dbs, before, after, event)
+                dbs.update_from_submission(after)
+            else:
+                raise CommitFailed("Something is fishy")
+
+        db_event = _new_dbevent(event)
+        session.add(dbs)
+        session.add(db_event)
+
+        log.handle(event, before, after)   # Create admin log entry.
+        if isinstance(event, AddProposal):
+            proposal.add(event, before, after)
+
+        # Attach the database object for the event to the row for the
+        #  submission.
+        if this_is_a_new_submission:    # Update in transaction.
+            db_event.submission = dbs
+        else:                           # Just set the ID directly.
+            db_event.submission_id = before.submission_id
 
     event.committed = True
 
     # Update the domain event and submission states with the submission ID.
-    # This should carry forward the original submission ID, even if the classic
-    # database has several rows for the submission (with different IDs).
+    # This should carry forward the original submission ID, even if the
+    # classic database has several rows for the submission (with different
+    # IDs).
     if this_is_a_new_submission:
         event.submission_id = dbs.submission_id
         after.submission_id = dbs.submission_id
@@ -343,6 +353,7 @@ def store_event(event: Event, before: Optional[Submission],
     return event, after
 
 
+@retry(ClassicBaseException, tries=3, delay=1)
 def get_titles(since: datetime) -> List[Tuple[int, str, Agent]]:
     """Get titles from submissions created on or after a particular date."""
     # TODO: consider making this a param, if we need this function for anything
@@ -358,7 +369,7 @@ def get_titles(since: datetime) -> List[Tuple[int, str, Agent]]:
         models.Submission.DELETED_REMOVED,
         models.Submission.DELETED_USER_EXPIRED
     ]
-    with transaction() as session:
+    with transaction(read_only=True) as session:
         q = session.query(
             models.Submission.submission_id,
             models.Submission.title,
@@ -577,7 +588,7 @@ def _db_to_projection(dbss: List[models.Submission]) -> Submission:
 
 
 def _get_db_submission_rows(submission_id: int) -> List[models.Submission]:
-    with transaction() as session:
+    with transaction(read_only=True) as session:
         head = session.query(models.Submission.submission_id,
                              models.Submission.doc_paper_id) \
             .filter_by(submission_id=submission_id) \

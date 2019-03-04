@@ -24,6 +24,7 @@ setup(
         'redis==2.10.6',
         'mypy_extensions==0.4.1',
         'requests==2.21.0',
-        'semver==2.8.1'
+        'semver==2.8.1',
+        'retry==0.9.2'
     ]
 )

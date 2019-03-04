@@ -11,3 +11,7 @@ class NoSuchSubmission(ClassicBaseException):
 
 class CommitFailed(ClassicBaseException):
     """Raised when there was a problem committing changes to the database."""
+
+
+class ReadFailed(ClassicBaseException):
+    """Failed to read from the classic database."""
