@@ -29,6 +29,7 @@ import copy
 from functools import reduce
 from operator import ior
 
+from flask import Flask
 from sqlalchemy import or_
 
 from arxiv.base import logging
@@ -42,7 +43,7 @@ from ...domain.submission import License, Submission, WithdrawalRequest, \
 from ...domain.agent import Agent, User
 from .models import Base
 from .exceptions import ClassicBaseException, NoSuchSubmission, CommitFailed
-from .util import transaction, current_session
+from .util import transaction, current_session, db
 from .event import DBEvent
 from . import models, util, interpolate, log, proposal
 
@@ -372,20 +373,10 @@ def get_titles(since: datetime) -> List[Tuple[int, str, Agent]]:
         ]
 
 
-def init_app(app: object = None) -> None:
-    """Set default configuration parameters for an application instance."""
-    config = get_application_config(app)
-    config.setdefault('CLASSIC_DATABASE_URI', 'sqlite://')
-
-
-def create_all() -> None:
-    """Create all tables in the database."""
-    Base.metadata.create_all(util.current_engine())
-
-
-def drop_all() -> None:
-    """Drop all tables in the database."""
-    Base.metadata.drop_all(util.current_engine())
+# def init_app(app: object = None) -> None:
+#     """Set default configuration parameters for an application instance."""
+#     config = get_application_config(app)
+#     config.setdefault('CLASSIC_DATABASE_URI', 'sqlite://')
 
 
 # Private functions down here.
@@ -604,3 +595,18 @@ def _get_db_submission_rows(submission_id: int) -> List[models.Submission]:
 
 def _get_app_version() -> str:
     return get_application_config().get('CORE_VERSION', '0.0.0')
+
+
+def init_app(app: Flask) -> None:
+    """Register the SQLAlchemy extension to an application."""
+    db.init_app(app)
+
+
+def create_all() -> None:
+    """Create all tables in the database."""
+    Base.metadata.create_all(db.engine)
+
+
+def drop_all() -> None:
+    """Drop all tables in the database."""
+    Base.metadata.drop_all(db.engine)

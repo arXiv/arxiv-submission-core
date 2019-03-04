@@ -288,6 +288,7 @@ class TestReplacementIntegration(TestCase):
         _, db = tempfile.mkstemp(suffix='.sqlite')
         cls.app = Flask('foo')
         cls.app.config['CLASSIC_DATABASE_URI'] = f'sqlite:///{db}'
+        cls.app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
         with cls.app.app_context():
             classic.init_app(cls.app)
@@ -429,7 +430,7 @@ class TestReplacementIntegration(TestCase):
                          classic.models.Submission.NEW)
         self.assertEqual(db_replacement.type,
                          classic.models.Submission.REPLACEMENT)
-        self.assertEqual(db_replacement.document.paper_id, '1901.00123')
+        self.assertEqual(db_replacement.doc_paper_id, '1901.00123')
 
 
 class TestJREFIntegration(TestCase):
@@ -441,6 +442,7 @@ class TestJREFIntegration(TestCase):
         _, db = tempfile.mkstemp(suffix='.sqlite')
         cls.app = Flask('foo')
         cls.app.config['CLASSIC_DATABASE_URI'] = f'sqlite:///{db}'
+        cls.app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
         with cls.app.app_context():
             classic.init_app(cls.app)
@@ -581,7 +583,7 @@ class TestJREFIntegration(TestCase):
                          classic.models.Submission.PROCESSING_SUBMISSION)
         self.assertEqual(db_jref.type,
                          classic.models.Submission.JOURNAL_REFERENCE)
-        self.assertEqual(db_jref.document.paper_id, '1901.00123')
+        self.assertEqual(db_jref.doc_paper_id, '1901.00123')
         self.assertEqual(db_jref.submitter_id,
                          jref_submission.creator.native_id)
 
@@ -610,6 +612,7 @@ class TestWithdrawalIntegration(TestCase):
         _, db = tempfile.mkstemp(suffix='.sqlite')
         cls.app = Flask('foo')
         cls.app.config['CLASSIC_DATABASE_URI'] = f'sqlite:///{db}'
+        cls.app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
         with cls.app.app_context():
             classic.init_app(cls.app)
@@ -749,6 +752,7 @@ class TestPublicationIntegration(TestCase):
         _, db = tempfile.mkstemp(suffix='.sqlite')
         cls.app = Flask('foo')
         cls.app.config['CLASSIC_DATABASE_URI'] = f'sqlite:///{db}'
+        cls.app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
         with cls.app.app_context():
             classic.init_app(cls.app)

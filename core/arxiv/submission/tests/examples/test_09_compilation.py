@@ -23,9 +23,10 @@ class TestSourceSizeLimits(TestCase):
         _, db = tempfile.mkstemp(suffix='.sqlite')
         cls.app = Flask('foo')
         cls.app.config['CLASSIC_DATABASE_URI'] = f'sqlite:///{db}'
+        cls.app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-        with cls.app.app_context():
-            classic.init_app(cls.app)
+        # with cls.app.app_context():
+        classic.init_app(cls.app)
 
     def setUp(self):
         """Set up the database."""
@@ -174,9 +175,10 @@ class TestSubmissionCompilation(TestCase):
         _, db = tempfile.mkstemp(suffix='.sqlite')
         cls.app = Flask('foo')
         cls.app.config['CLASSIC_DATABASE_URI'] = f'sqlite:///{db}'
+        cls.app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-        with cls.app.app_context():
-            classic.init_app(cls.app)
+        # with cls.app.app_context():
+        classic.init_app(cls.app)
 
     def setUp(self):
         """Set up the database."""

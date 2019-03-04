@@ -104,6 +104,10 @@ class Event:
 
     _hooks: ClassVar[Mapping[type, List[Rule]]] = defaultdict(list)
 
+    @staticmethod
+    def event_version() -> str:
+        return get_application_config().get('CORE_VERSION', '0.0.0')
+
     @property
     def event_type(self) -> str:
         """Name of the event type."""
@@ -145,10 +149,11 @@ class Event:
             self.submission_id = self.after.submission_id
         return self.after
 
-    def to_dict(self):
+    def to_dict(self) -> dict:
         """Generate a dict representation of this :class:`.Event`."""
         data = asdict(self)
-        data.update({'event_type': self.event_type})
+        data.update({'event_type': self.event_type,
+                     'event_version': self.event_version()})
         data.pop('before')
         data.pop('after')
         return data

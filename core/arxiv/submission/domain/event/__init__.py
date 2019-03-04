@@ -872,6 +872,12 @@ class SetUploadPackage(Event):
         submission.submitter_confirmed_preview = False
         return submission
 
+    @classmethod
+    def from_dict(cls, **data) -> 'SetAuthors':
+        """Override the default ``from_dict`` constructor to source format."""
+        data['source_format'] = SubmissionContent.Format(data['source_format'])
+        return cls(**data)
+
 
 @dataclass()
 class UpdateUploadPackage(Event):
@@ -898,6 +904,12 @@ class UpdateUploadPackage(Event):
         submission.source_content.compressed_size = self.compressed_size
         submission.submitter_confirmed_preview = False
         return submission
+
+    @classmethod
+    def from_dict(cls, **data) -> 'SetAuthors':
+        """Override the default ``from_dict`` constructor to source format."""
+        data['source_format'] = SubmissionContent.Format(data['source_format'])
+        return cls(**data)
 
 
 @dataclass()

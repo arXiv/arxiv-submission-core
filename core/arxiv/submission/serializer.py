@@ -57,7 +57,7 @@ def event_decoder(obj: dict) -> Any:
     if '__type__' in obj:
         type_name = obj.pop('__type__')
         if type_name == 'event':
-            return event_factory(obj.pop('event_type'), **obj)
+            return event_factory(**obj)
         elif type_name == 'submission':
             return Submission.from_dict(**obj)
         elif type_name == 'agent':
