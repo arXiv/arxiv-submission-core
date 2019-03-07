@@ -105,7 +105,7 @@ class CompilationStatus(NamedTuple):
     @property
     def identifier(self):
         """Get the task identifier."""
-        return f"{self.upload_id}::{self.checksum}::{self.output_format.value}"
+        return f"{self.upload_id}/{self.checksum}/{self.output_format.value}"
 
     @property
     def content_type(self):
@@ -269,10 +269,11 @@ class CompilerService(object):
             None, urlencode(query), None
         ))
 
-    def _make_request(self, method: str, path: str,
+    def _make_request(self, method: str, path: str, token: str,
                       expected_codes: List[int] = [status.HTTP_200_OK],
                       **kwargs) -> requests.Response:
         logger.debug('%s %s, expects %s', method.upper(), path, expected_codes)
+        kwargs['headers'] = {'Authorization': token}
         try:
             resp = getattr(self._session, method)(self._path(path), **kwargs)
         except requests.exceptions.SSLError as e:
@@ -294,18 +295,14 @@ class CompilerService(object):
             raise RequestFailed(f'Unexpected status code: {resp.status_code}')
         return resp
 
-    def set_auth_token(self, token: str) -> None:
-        """Set the authn/z token to use in subsequent requests."""
-        self._session.headers.update({'Authorization': token})
-
-    def _parse_location(self, headers: Mapping) -> str:
+    def _parse_loc(self, headers: Mapping) -> str:
         return urlparse(headers['Location']).path
 
-    def _request(self, method: str, path: str,
+    def _request(self, method: str, path: str, token: str,
                  expected_codes: List[int] = [status.HTTP_200_OK],
                  **kwargs) -> Tuple[dict, dict]:
         """Perform an HTTP request, and handle any exceptions."""
-        r = self._make_request(method, path, expected_codes, **kwargs)
+        r = self._make_request(method, path, token, expected_codes, **kwargs)
         redirects = [status.HTTP_202_ACCEPTED, status.HTTP_302_FOUND,
                      status.HTTP_303_SEE_OTHER]
         # There should be nothing in a 204 response.
@@ -313,7 +310,7 @@ class CompilerService(object):
             logger.debug('service responded with 204 No Content')
             return {}, r.headers
         elif r.status_code in redirects and r.status_code in expected_codes:
-            r = self._make_request('get', self._parse_location(r.headers))
+            r = self._make_request('get', self._parse_loc(r.headers), token)
         try:
             data = r.json()
             logger.debug('service responded with data %s and headers %s',
@@ -326,7 +323,7 @@ class CompilerService(object):
         """Get the status of the compiler service."""
         return self._request('get', 'status')
 
-    def compile(self, upload_id: str, checksum: str,
+    def compile(self, upload_id: str, checksum: str, token: str,
                 compiler: Optional[Compiler] = None,
                 output_format: Format = Format.PDF,
                 force: bool = False) -> CompilationStatus:
@@ -368,11 +365,11 @@ class CompilerService(object):
         endpoint = '/'
         expected_codes = [status.HTTP_200_OK, status.HTTP_202_ACCEPTED,
                           status.HTTP_303_SEE_OTHER, status.HTTP_302_FOUND]
-        data, headers = self._request('post', endpoint, json=payload,
+        data, headers = self._request('post', endpoint, token, json=payload,
                                       expected_codes=expected_codes)
         return self._parse_status_response(data)
 
-    def get_status(self, upload_id: str, checksum: str,
+    def get_status(self, upload_id: str, checksum: str, token: str,
                    output_format: Format = Format.PDF) -> CompilationStatus:
         """
         Get the status of a compilation.
@@ -393,20 +390,20 @@ class CompilerService(object):
 
         """
         endpoint = f'/{upload_id}/{checksum}/{output_format.value}'
-        data, headers = self._request('get', endpoint)
+        data, headers = self._request('get', endpoint, token)
         return self._parse_status_response(data)
 
     def compilation_is_complete(self, upload_id: str, checksum: str,
-                                output_format: Format) -> bool:
+                                token: str, output_format: Format) -> bool:
         """Check whether compilation has completed successfully."""
-        stat = self.get_status(upload_id, checksum, output_format)
+        stat = self.get_status(upload_id, checksum, token, output_format)
         if stat.status is Status.SUCCEEDED:
             return True
         elif stat.status is Status.FAILED:
             raise CompilationFailed('Compilation failed')
         return False
 
-    def get_product(self, upload_id: str, checksum: str,
+    def get_product(self, upload_id: str, checksum: str, token: str,
                     output_format: Format = Format.PDF) -> CompilationProduct:
         """
         Get the compilation product for an upload workspace, if it exists.
@@ -427,11 +424,11 @@ class CompilerService(object):
 
         """
         endpoint = f'/{upload_id}/{checksum}/{output_format.value}/product'
-        response = self._make_request('get', endpoint, stream=True)
+        response = self._make_request('get', endpoint, token, stream=True)
         return CompilationProduct(content_type=output_format.content_type,
                                   stream=io.BytesIO(response.content))
 
-    def get_log(self, upload_id: str, checksum: str,
+    def get_log(self, upload_id: str, checksum: str, token: str,
                 output_format: Format = Format.PDF) -> CompilationLog:
         """
         Get the compilation log for an upload workspace, if it exists.
@@ -452,7 +449,7 @@ class CompilerService(object):
 
         """
         endpoint = f'/{upload_id}/{checksum}/{output_format.value}/log'
-        response = self._make_request('get', endpoint, stream=True)
+        response = self._make_request('get', endpoint, token, stream=True)
         return CompilationLog(stream=io.BytesIO(response.content))
 
 
@@ -482,50 +479,49 @@ def current_session() -> CompilerService:
     return g.filemanager    # type: ignore
 
 
-@wraps(CompilerService.set_auth_token)
-def set_auth_token(token: str) -> None:
-    """See :meth:`CompilerService.set_auth_token`."""
-    return current_session().set_auth_token(token)
-
-
 @wraps(CompilerService.get_product)
-def get_product(upload_id: str, checksum: str,
+def get_product(upload_id: str, checksum: str, token: str,
                 output_format: Format = Format.PDF) -> CompilationProduct:
     """See :meth:`CompilerService.get_product`."""
-    return current_session().get_product(upload_id, checksum, output_format)
+    return current_session().get_product(upload_id, checksum, token,
+                                         output_format)
 
 
 @wraps(CompilerService.get_log)
-def get_log(upload_id: str, checksum: str,
+def get_log(upload_id: str, checksum: str, token: str,
             output_format: Format = Format.PDF) -> CompilationProduct:
     """See :meth:`CompilerService.get_log`."""
-    return current_session().get_log(upload_id, checksum, output_format)
+    return current_session().get_log(upload_id, checksum, token, output_format)
 
 
 @wraps(CompilerService.compile)
-def compile(upload_id: str, checksum: str,
+def compile(upload_id: str, checksum: str, token: str,
             compiler: Optional[Compiler] = None) -> CompilationStatus:
     """See :meth:`CompilerService.compile`."""
-    return current_session().compile(upload_id, checksum, compiler=compiler)
+    return current_session().compile(upload_id, checksum, token,
+                                     compiler=compiler)
 
 
 @wraps(CompilerService.get_status)
-def get_status(upload_id: str, checksum: str, fmt: str) -> CompilationStatus:
+def get_status(upload_id: str, checksum: str, token: str,
+               fmt: str) -> CompilationStatus:
     """See :meth:`CompilerService.get_status`."""
-    return current_session().get_status(upload_id, checksum, fmt)
+    return current_session().get_status(upload_id, checksum, token, fmt)
 
 
 @wraps(CompilerService.compilation_is_complete)
-def compilation_is_complete(upload_id: str, checksum: str, fmt: str) -> bool:
+def compilation_is_complete(upload_id: str, checksum: str, token: str,
+                            fmt: str) -> bool:
     """See :meth:`CompilerService.compilation_is_complete`."""
-    return current_session().compilation_is_complete(upload_id, checksum, fmt)
+    return current_session().compilation_is_complete(upload_id, checksum,
+                                                     token, fmt)
 
 
 def get_task_id(upload_id: str, checksum: str, output_format: Format) -> str:
     """Generate a key for a /checksum/format combination."""
-    return f"{upload_id}::{checksum}::{output_format.value}"
+    return f"{upload_id}/{checksum}/{output_format.value}"
 
 
 def split_task_id(task_id: str) -> Tuple[str, str, Format]:
-    upload_id, checksum, format_value = task_id.split("::")
+    upload_id, checksum, format_value = task_id.split("/")
     return upload_id, checksum, Format(format_value)

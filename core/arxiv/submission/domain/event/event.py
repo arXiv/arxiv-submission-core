@@ -1,10 +1,11 @@
-"""Provides the base command/event class, :class:`Event`."""
+"""Provides the base event class."""
 
 from typing import Optional, Callable, Tuple, Iterable, List, ClassVar, Mapping
 from collections import defaultdict
 from datetime import datetime
 import hashlib
 import copy
+from pytz import UTC
 from functools import wraps
 from flask import current_app
 from dataclasses import field, asdict
@@ -13,14 +14,13 @@ from .util import dataclass
 from arxiv.base import logging
 from arxiv.base.globals import get_application_config
 
-from ..agent import Agent, System
+from ..agent import Agent, System, agent_factory
 from ...exceptions import InvalidEvent
 from ..util import get_tzaware_utc_now
 from ..submission import Submission
+from .versioning import EventData, map_to_current_version
 
 logger = logging.getLogger(__name__)
-logger.propagate = False
-
 
 Events = Iterable['Event']
 Condition = Callable[['Event', Submission, Submission], bool]
@@ -104,6 +104,20 @@ class Event:
 
     _hooks: ClassVar[Mapping[type, List[Rule]]] = defaultdict(list)
 
+    def __post_init__(self):
+        """Make sure data look right."""
+        if self.client and type(self.client) is dict:
+            self.client = agent_factory(self.client.pop('agent_type'),
+                                        **self.client)
+        if self.creator and type(self.creator) is dict:
+            self.creator = agent_factory(self.creator.pop('agent_type'),
+                                         **self.creator)
+        if self.proxy and type(self.proxy) is dict:
+            self.proxy = agent_factory(self.proxy.pop('agent_type'),
+                                       **self.proxy)
+        if self.before and type(self.before) is dict:
+            self.before = event_factory(**self.before)
+
     @staticmethod
     def event_version() -> str:
         return get_application_config().get('CORE_VERSION', '0.0.0')
@@ -156,6 +170,11 @@ class Event:
                      'event_version': self.event_version()})
         data.pop('before')
         data.pop('after')
+        data['creator'] = self.creator.to_dict()
+        if self.client:
+            data['client'] = self.client.to_dict()
+        if self.proxy:
+            data['proxy'] = self.proxy.to_dict()
         return data
 
     @classmethod
@@ -284,3 +303,35 @@ class Event:
                     for addl in addl_consequences:
                         consequences.append(addl)
         return self.after, consequences
+
+
+def event_factory(**data: EventData) -> Event:
+    """
+    Generate an :class:`Event` instance from raw :const:`EventData`.
+
+    Parameters
+    ----------
+    event_type : str
+        Should be the name of a :class:`.Event` subclass.
+    data : kwargs
+        Keyword parameters passed to the event constructor.
+
+    Returns
+    -------
+    :class:`.Event`
+        An instance of an :class:`.Event` subclass.
+
+    """
+    etypes = {klas.get_event_type(): klas for klas in Event.__subclasses__()}
+    data = map_to_current_version(data)
+    event_type = data.pop("event_type")
+    event_version = data.pop("event_version")
+    logger.debug('Create %s with data version %s', event_type, event_version)
+    if 'created' not in data:
+        data['created'] = datetime.now(UTC)
+    if event_type in etypes:
+        klass = etypes[event_type]
+        if hasattr(klass, 'from_dict'):
+            return klass.from_dict(**data)
+        return etypes[event_type](**data)
+    raise RuntimeError('Unknown event type: %s' % event_type)

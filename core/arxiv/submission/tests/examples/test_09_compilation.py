@@ -165,7 +165,6 @@ class TestSourceSizeLimits(TestCase):
             self.assertTrue(db_row.is_on_hold(), "Database reflects hold")
 
 
-
 class TestSubmissionCompilation(TestCase):
     """Submitter has added their source, and is compiling to preview."""
 
@@ -176,6 +175,7 @@ class TestSubmissionCompilation(TestCase):
         cls.app = Flask('foo')
         cls.app.config['CLASSIC_DATABASE_URI'] = f'sqlite:///{db}'
         cls.app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+        cls.app.config['JWT_SECRET'] = 'foosecret'
 
         # with cls.app.app_context():
         classic.init_app(cls.app)

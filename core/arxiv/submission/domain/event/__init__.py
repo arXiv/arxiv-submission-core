@@ -104,8 +104,11 @@ import hashlib
 import re
 import copy
 from datetime import datetime
+from collections import defaultdict
+from functools import wraps
 from pytz import UTC
-from typing import Optional, TypeVar, List, Tuple, Any, Dict, Union
+from typing import Optional, TypeVar, List, Tuple, Any, Dict, Union, Iterable,\
+    Callable, ClassVar, Mapping
 from urllib.parse import urlparse
 from dataclasses import field, asdict
 from .util import dataclass
@@ -114,8 +117,9 @@ import bleach
 from arxiv.util import schema
 from arxiv import taxonomy, identifier
 from arxiv.base import logging
+from arxiv.base.globals import get_application_config
 
-from ..agent import Agent, System
+from ..agent import Agent, System, agent_factory
 from ..submission import Submission, SubmissionMetadata, Author, \
     Classification, License, Delegation,  \
     SubmissionContent, WithdrawalRequest, CrossListClassificationRequest
@@ -124,8 +128,7 @@ from ..annotation import Comment, Feature, ClassifierResults, \
 
 from ...exceptions import InvalidEvent
 from ..util import get_tzaware_utc_now
-from .event import Event
-from .versioning import EventData, map_to_current_version
+from .event import Event, event_factory
 from .request import RequestCrossList, RequestWithdrawal, ApplyRequest, \
     RejectRequest, ApproveRequest
 from . import validators
@@ -1189,39 +1192,3 @@ class AddClassifierResults(Event):
             results=self.results
         )
         return submission
-
-
-EVENT_TYPES = {
-    obj.get_event_type(): obj for obj in locals().values()
-    if type(obj) is type and issubclass(obj, Event)
-}
-
-
-def event_factory(**data: EventData) -> Event:
-    """
-    Convenience factory for generating :class:`.Event` instances.
-
-    Parameters
-    ----------
-    event_type : str
-        Should be the name of a :class:`.Event` subclass.
-    data : kwargs
-        Keyword parameters passed to the event constructor.
-
-    Return
-    ------
-    :class:`.Event`
-        An instance of an :class:`.Event` subclass.
-    """
-    data = map_to_current_version(data)
-    event_type = data.pop("event_type")
-    event_version = data.pop("event_version")
-    logger.debug('Create %s with data version %s', event_type, event_version)
-    if 'created' not in data:
-        data['created'] = datetime.now(UTC)
-    if event_type in EVENT_TYPES:
-        klass = EVENT_TYPES[event_type]
-        if hasattr(klass, 'from_dict'):
-            return klass.from_dict(**data)
-        return EVENT_TYPES[event_type](**data)
-    raise RuntimeError('Unknown event type: %s' % event_type)

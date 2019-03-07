@@ -4,13 +4,13 @@ from setuptools import setup, find_packages
 
 setup(
     name='arxiv-submission-core',
-    version='0.6.2rc12',
+    version='0.6.2rc14',
     packages=[f'arxiv.{package}' for package
               in find_packages('arxiv')],
     zip_safe=False,
     install_requires=[
         'arxiv-base',
-        'arxiv-auth',
+        'arxiv-auth==0.3.2rc3',
         'flask',
         'mysqlclient',
         'bleach',

@@ -132,7 +132,7 @@ class Compilation:
 
     @property
     def identifier(self) -> str:
-        return f"{self.source_id}::{self.checksum}::{self.output_format}"
+        return f"{self.source_id}/{self.checksum}/{self.output_format}"
 
     @classmethod
     def from_processes(cls, processes: List[ProcessStatus]) -> 'Compilation':
@@ -159,7 +159,7 @@ class Compilation:
                            ProcessStatus.Status.FAILED]
         latest = processes[-1]
         source_id, checksum, output_format = \
-            latest.process_identifier.split("::")
+            latest.process_identifier.split("/")
         if latest.status in finished_states:
             end_time = latest.created
             for proc in processes[::-1]:

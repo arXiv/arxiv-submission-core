@@ -44,10 +44,10 @@ class TestRequestCompilation(TestCase):
         )
         mock_Session.return_value = mock_session
 
-        comp_status = compiler.compile(upload_id, checksum)
+        comp_status = compiler.compile(upload_id, checksum, 'footoken')
         self.assertEqual(comp_status.upload_id, upload_id)
         self.assertEqual(comp_status.identifier,
-                         f"{upload_id}::{checksum}::{output_format.value}")
+                         f"{upload_id}/{checksum}/{output_format.value}")
         self.assertEqual(comp_status.status,
                          compiler.Status.IN_PROGRESS)
         self.assertEqual(mock_session.post.call_count, 1)
@@ -83,10 +83,10 @@ class TestRequestCompilation(TestCase):
             )
         )
         mock_Session.return_value = mock_session
-        comp_status = compiler.compile(upload_id, checksum)
+        comp_status = compiler.compile(upload_id, checksum, 'footoken')
         self.assertEqual(comp_status.upload_id, upload_id)
         self.assertEqual(comp_status.identifier,
-                         f"{upload_id}::{checksum}::{output_format.value}")
+                         f"{upload_id}/{checksum}/{output_format.value}")
         self.assertEqual(comp_status.status,
                          compiler.Status.IN_PROGRESS)
         self.assertEqual(mock_session.post.call_count, 1)
@@ -119,10 +119,11 @@ class TestGetTaskStatus(TestCase):
             )
         )
         mock_Session.return_value = mock_session
-        comp_status = compiler.get_status(upload_id, checksum, output_format)
+        comp_status = compiler.get_status(upload_id, checksum, 'footoken',
+                                          output_format)
         self.assertEqual(comp_status.upload_id, upload_id)
         self.assertEqual(comp_status.identifier,
-                         f"{upload_id}::{checksum}::{output_format.value}")
+                         f"{upload_id}/{checksum}/{output_format.value}")
         self.assertEqual(comp_status.status, compiler.Status.FAILED)
         self.assertEqual(mock_session.get.call_count, 1)
 
@@ -148,10 +149,11 @@ class TestGetTaskStatus(TestCase):
             )
         )
         mock_Session.return_value = mock_session
-        comp_status = compiler.get_status(upload_id, checksum, output_format)
+        comp_status = compiler.get_status(upload_id, checksum, 'footoken',
+                                          output_format)
         self.assertEqual(comp_status.upload_id, upload_id)
         self.assertEqual(comp_status.identifier,
-                         f"{upload_id}::{checksum}::{output_format.value}")
+                         f"{upload_id}/{checksum}/{output_format.value}")
         self.assertEqual(comp_status.status, compiler.Status.IN_PROGRESS)
         self.assertEqual(mock_session.get.call_count, 1)
 
@@ -178,10 +180,11 @@ class TestGetTaskStatus(TestCase):
             )
         )
         mock_Session.return_value = mock_session
-        comp_status = compiler.get_status(upload_id, checksum, output_format)
+        comp_status = compiler.get_status(upload_id, checksum, 'footoken',
+                                          output_format)
         self.assertEqual(comp_status.upload_id, upload_id)
         self.assertEqual(comp_status.identifier,
-                         f"{upload_id}::{checksum}::{output_format.value}")
+                         f"{upload_id}/{checksum}/{output_format.value}")
         self.assertEqual(comp_status.status, compiler.Status.SUCCEEDED)
         self.assertEqual(mock_session.get.call_count, 1)
 
@@ -203,4 +206,4 @@ class TestGetTaskStatus(TestCase):
         )
         mock_Session.return_value = mock_session
         with self.assertRaises(compiler.NoSuchResource):
-            compiler.get_status(upload_id, checksum, output_format)
+            compiler.get_status(upload_id, checksum, 'footoken', output_format)
