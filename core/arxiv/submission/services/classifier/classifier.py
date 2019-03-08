@@ -4,15 +4,12 @@ from typing import Tuple, List, Any, Union, NamedTuple, Optional
 from math import exp, log
 from functools import wraps
 
-from arxiv import status
 from arxiv.taxonomy import Category
 from arxiv.base.globals import get_application_config, get_application_global
+from arxiv.integration.api import status, service
 
 import requests
 from requests.packages.urllib3.util.retry import Retry
-
-VERSION = '0.0'
-SERVICE = 'classic'
 
 
 class Flag(NamedTuple):
@@ -42,25 +39,18 @@ class RequestFailed(ConnectionError):
     """The request to the classifier service failed."""
 
 
-class Classifier(object):
+class Classifier(service.HTTPIntegration):
     """Represents an interface to the classifier service."""
+
+    VERSION = '0.0'
+    SERVICE = 'classic'
 
     ClassifierResponse = Tuple[List[Suggestion], List[Flag], Optional[Counts]]
 
-    def __init__(self, host: str, port: int) -> None:
-        """Set the host and port for the service."""
-        self._host = host
-        self._port = port
-        self._session = requests.Session()
-        self._retry = Retry(  # type: ignore
-            total=10,
-            read=10,
-            connect=10,
-            status=10,
-            backoff_factor=0.5
-        )
-        self._adapter = requests.adapters.HTTPAdapter(max_retries=self._retry)
-        self._session.mount('http://', self._adapter)
+    class Meta:
+        """Configuration for :class:`Classifier`."""
+
+        service_name = "classifier"
 
     @property
     def endpoint(self):
@@ -91,7 +81,7 @@ class Classifier(object):
                            probability=self.probability(datum['logodds']))
                 for datum in data['classifier']]
 
-    def __call__(self, content: bytes) -> ClassifierResponse:
+    def classify(self, content: bytes) -> ClassifierResponse:
         """
         Make a classification request to the classifier service.
 
@@ -110,39 +100,5 @@ class Classifier(object):
             Feature counts, if provided.
 
         """
-        response = self._session.post(self.endpoint, data=content)
-        if response.status_code != status.HTTP_200_OK:
-            raise RequestFailed('Failed: %s', response.content)
-        data = response.json()
+        data, _ = self.json('post', 'ctxt', data=content)
         return self._suggestions(data), self._flags(data), self._counts(data)
-
-
-def init_app(app: object=None) -> None:
-    """Configure an application instance."""
-    config = get_application_config(app)
-    config.setdefault('CLASSIFIER_HOST', 'localhost')
-    config.setdefault('CLASSIFIER_PORT', 8000)
-
-
-def get_instance(app: object=None) -> Classifier:
-    """Create a new :class:`.Classifier`."""
-    config = get_application_config()
-    host = config.get('CLASSIFIER_HOST', 'localhost')
-    port = config.get('CLASSIFIER_PORT', 8000)
-    return Classifier(host, port)
-
-
-def current_instance():
-    """Get/create :class:`.Classifier` instance for this context."""
-    g = get_application_global()
-    if g is None:
-        return get_instance()
-    if 'classifier' not in g:
-        g.classifier = get_instance()
-    return g.classifier
-
-
-@wraps(Classifier.__call__)
-def classify(content: bytes) -> Classifier.ClassifierResponse:
-    """Make a classification request to the classifier service."""
-    return current_instance()(content)

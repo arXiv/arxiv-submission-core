@@ -14,7 +14,7 @@ from flask_sqlalchemy import SQLAlchemy
 
 from arxiv.base.globals import get_application_config, get_application_global
 from arxiv.base import logging
-from .exceptions import ClassicBaseException, CommitFailed, ReadFailed
+from .exceptions import ClassicBaseException, TransactionFailed
 
 from ... import serializer
 
@@ -79,22 +79,17 @@ def current_session() -> Session:
 
 
 @contextmanager
-def transaction(read_only: bool = False) -> Generator:
+def transaction() -> Generator:
     """Context manager for database transaction."""
     session = current_session()
     try:
         yield session
-        if not read_only:
-            session.commit()
+        session.commit()
     except ClassicBaseException as e:
         logger.debug('Command failed, rolling back: %s', str(e))
-        if not read_only:
-            session.rollback()
+        session.rollback()
         raise   # Propagate exceptions raised from this module.
     except Exception as e:
         logger.debug('Command failed, rolling back: %s', str(e))
-        if not read_only:
-            session.rollback()
-        if read_only:
-            raise ReadFailed('Failed to read from database') from e
-        raise CommitFailed('Failed to execute transaction') from e
+        session.rollback()
+        raise TransactionFailed('Failed to execute transaction') from e

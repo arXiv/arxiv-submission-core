@@ -44,7 +44,7 @@ from ...domain.submission import License, Submission, WithdrawalRequest, \
     CrossListClassificationRequest
 from ...domain.agent import Agent, User
 from .models import Base
-from .exceptions import ClassicBaseException, NoSuchSubmission, CommitFailed
+from .exceptions import ClassicBaseException, NoSuchSubmission, TransactionFailed
 from .util import transaction, current_session, db
 from .event import DBEvent
 from . import models, util, interpolate, log, proposal
@@ -56,7 +56,7 @@ logger = logging.getLogger(__name__)
 @retry(ClassicBaseException, tries=3, delay=1)
 def get_licenses() -> List[License]:
     """Get a list of :class:`.domain.License` instances available."""
-    with transaction(read_only=True):
+    with transaction():
         license_data = util.current_session().query(models.License) \
             .filter(models.License.active == '1')
         return [License(uri=row.name, name=row.label) for row in license_data]
@@ -82,7 +82,7 @@ def get_events(submission_id: int) -> List[Event]:
         Raised when there are no events for the provided submission ID.
 
     """
-    with transaction(read_only=True) as session:
+    with transaction() as session:
         event_data = session.query(DBEvent) \
             .filter(DBEvent.submission_id == submission_id) \
             .order_by(DBEvent.created)
@@ -109,7 +109,7 @@ def get_user_submissions_fast(user_id: int) -> List[Submission]:
         Items are the user's :class:`.domain.Submission` instances.
 
     """
-    with transaction(read_only=True) as session:
+    with transaction() as session:
         db_submissions = list(
             session.query(models.Submission)
             .filter(models.Submission.submitter_id == user_id)
@@ -156,7 +156,7 @@ def get_submission_fast(submission_id: int) -> List[Submission]:
 
 
 def _get_db_submission_rows(submission_id: int) -> List[models.Submission]:
-    with transaction(read_only=True) as session:
+    with transaction() as session:
         head = session.query(models.Submission.submission_id,
                              models.Submission.doc_paper_id) \
             .filter_by(submission_id=submission_id) \
@@ -200,7 +200,7 @@ def get_submission(submission_id: int) -> Tuple[Submission, List[Event]]:
         Items are :class:`Event` instances.
 
     """
-    with transaction(read_only=True) as session:
+    with transaction() as session:
         original_row = session.query(models.Submission).get(submission_id)
         if original_row is None:
             raise NoSuchSubmission(f'Submission {submission_id} not found')
@@ -257,7 +257,7 @@ def store_event(event: Event, before: Optional[Submission],
     """
     with transaction() as session:
         if event.committed:
-            raise CommitFailed('Event %s already committed', event.event_id)
+            raise TransactionFailed('Event %s already committed', event.event_id)
 
         doc_id: Optional[int] = None
 
@@ -321,7 +321,7 @@ def store_event(event: Event, before: Optional[Submission],
                 _preserve_sticky_hold(dbs, before, after, event)
                 dbs.update_from_submission(after)
             else:
-                raise CommitFailed("Something is fishy")
+                raise TransactionFailed("Something is fishy")
 
         db_event = _new_dbevent(event)
         session.add(dbs)
@@ -369,7 +369,7 @@ def get_titles(since: datetime) -> List[Tuple[int, str, Agent]]:
         models.Submission.DELETED_REMOVED,
         models.Submission.DELETED_USER_EXPIRED
     ]
-    with transaction(read_only=True) as session:
+    with transaction() as session:
         q = session.query(
             models.Submission.submission_id,
             models.Submission.title,
@@ -588,7 +588,7 @@ def _db_to_projection(dbss: List[models.Submission]) -> Submission:
 
 
 def _get_db_submission_rows(submission_id: int) -> List[models.Submission]:
-    with transaction(read_only=True) as session:
+    with transaction() as session:
         head = session.query(models.Submission.submission_id,
                              models.Submission.doc_paper_id) \
             .filter_by(submission_id=submission_id) \
@@ -611,6 +611,12 @@ def _get_app_version() -> str:
 def init_app(app: Flask) -> None:
     """Register the SQLAlchemy extension to an application."""
     db.init_app(app)
+
+    @app.teardown_request
+    def teardown_request(exception):
+        if exception:
+            db.session.rollback()
+        db.session.remove()
 
 
 def create_all() -> None:

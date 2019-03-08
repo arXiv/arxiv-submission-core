@@ -9,9 +9,5 @@ class NoSuchSubmission(ClassicBaseException):
     """A request was made for a submission that does not exist."""
 
 
-class CommitFailed(ClassicBaseException):
+class TransactionFailed(ClassicBaseException):
     """Raised when there was a problem committing changes to the database."""
-
-
-class ReadFailed(ClassicBaseException):
-    """Failed to read from the classic database."""

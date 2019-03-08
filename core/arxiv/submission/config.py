@@ -44,6 +44,9 @@ COMPILER_ENDPOINT = os.environ.get(
 )
 COMPILER_VERIFY = bool(int(os.environ.get('COMPILER_VERIFY', '1')))
 
+CLASSIFIER_ENDPOINT = os.environ.get('CLASSIFIER_ENDPOINT', 'http://localhost:8000')
+CLASSIFIER_VERIFY = bool(int(os.environ.get('CLASSIFIER_VERIFY', '0')))
+
 CLASSIC_DATABASE_URI = os.environ.get('CLASSIC_DATABASE_URI', 'sqlite:///')
 
 ENABLE_ASYNC = os.environ.get('ENABLE_ASYNC', '0')

@@ -1,4 +1,4 @@
-"""Extract text, and get suggestions, features, and flags from classifier."""
+"""Extract text, and get suggestions, features, and flags from Classifier."""
 
 from typing import Iterable
 from itertools import count
@@ -12,7 +12,7 @@ from ..domain.flag import Flag, ContentFlag
 from ..domain.annotation import Feature
 from ..domain.agent import Agent, User
 from ..domain.process import ProcessStatus
-from ..services import classifier, plaintext
+from ..services import Classifier, plaintext
 from ..tasks import is_async
 
 from arxiv.taxonomy import CATEGORIES, Category
@@ -92,31 +92,31 @@ FEATURE_TYPES = {
 @is_async
 def call_classifier(event: AddProcessStatus, before: Submission,
                     after: Submission, creator: Agent) -> Iterable[Event]:
-    """Request the opinion of the auto-classifier."""
+    """Request the opinion of the auto-Classifier."""
     identifier = after.source_content.identifier
     yield AddProcessStatus(creator=creator, process=Process.CLASSIFICATION,
                            status=ProcessStatus.Status.REQUESTED,
-                           service=classifier.SERVICE,
-                           version=classifier.VERSION,
+                           service=Classifier.SERVICE,
+                           version=Classifier.VERSION,
                            identifier=identifier)
     try:
         suggestions, flags, counts = \
-            classifier.classify(plaintext.retrieve_content(identifier))
-    except (plaintext.RequestFailed, classifier.RequestFailed) as e:
+            Classifier.classify(plaintext.retrieve_content(identifier))
+    except (plaintext.RequestFailed, Classifier.RequestFailed) as e:
         reason = 'request failed (%s): %s' % (type(e), e)
         yield AddProcessStatus(creator=creator,
                                process=Process.CLASSIFICATION,
                                status=ProcessStatus.Status.FAILED,
-                               service=classifier.SERVICE,
-                               version=classifier.VERSION,
+                               service=Classifier.SERVICE,
+                               version=Classifier.VERSION,
                                identifier=identifier, reason=reason)
         return
 
     success = AddProcessStatus(creator=creator,
                                process=Process.CLASSIFICATION,
                                status=ProcessStatus.Status.SUCCEEDED,
-                               service=classifier.SERVICE,
-                               version=classifier.VERSION,
+                               service=Classifier.SERVICE,
+                               version=Classifier.VERSION,
                                identifier=identifier)
     yield success
     yield AddClassifierResults(creator=creator,

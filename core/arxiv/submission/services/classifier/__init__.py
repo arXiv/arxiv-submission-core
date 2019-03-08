@@ -13,4 +13,4 @@ business-logic: the objective is simply to provide a user-friendly calling
 API.
 """
 
-from .classifier import classify, VERSION, SERVICE, RequestFailed
+from .classifier import Classifier
