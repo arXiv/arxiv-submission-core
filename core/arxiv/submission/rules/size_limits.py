@@ -53,7 +53,7 @@ def pdf_is_compiled(event: Event, *args, **kwargs) -> bool:
 def check_pdf_size(event: AddProcessStatus, before: Submission,
                    after: Submission, creator: Agent) -> Iterable[Event]:
     """When a PDF is compiled, check for oversize."""
-    stat = compiler.get_status(*compiler.split_task_id(event.identifier))
+    stat = compiler.Compiler.get_status(*compiler.split_task_id(event.identifier))
     msg = "PDF is %i bytes" % stat.size_bytes
     if stat.size_bytes > PDF_LIMIT:
         if Hold.Type.PDF_OVERSIZE in after.hold_types:

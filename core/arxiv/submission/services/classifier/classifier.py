@@ -53,8 +53,8 @@ class Classifier(service.HTTPIntegration):
         """Get the URL of the classifier endpoint."""
         return f'http://{self._host}:{self._port}/ctxt'
 
-    @staticmethod
-    def probability(logodds: float) -> float:
+    @classmethod
+    def probability(cls, logodds: float) -> float:
         """Convert log odds to a probability."""
         return exp(logodds)/(1 + exp(logodds))
 

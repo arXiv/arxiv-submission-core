@@ -51,15 +51,13 @@ class TestPostSubmissionChecks(TestCase):
                 mock.MagicMock(return_value={'ENABLE_ASYNC': 0}))
     @mock.patch(f'{domain.__name__}.event.event.get_application_config',
                 mock.MagicMock(return_value={'ENABLE_CALLBACKS': 1}))
-    @mock.patch(f'{plaintext.__name__}.request_extraction',
-                lambda *a, **k: None)
-    @mock.patch(f'{plaintext.__name__}.extraction_is_complete',
-                lambda *a, **k: True)
-    @mock.patch(f'{plaintext.__name__}.retrieve_content',
-                lambda *a, **k: b'foo content')
-    @mock.patch(f'{classifier.__name__}.classify')
-    def test_submission(self, mock_classify):
+    @mock.patch(f'{classifier.__name__}.Classifier.classify')
+    @mock.patch(f'{plaintext.__name__}.PlainTextService')
+    def test_submission(self, mock_plaintext, mock_classify):
         """Create, and complete the submission."""
+        mock_plaintext.request_extraction.return_value = None
+        mock_plaintext.extraction_is_complete.return_value = True
+        mock_plaintext.retrieve_content.return_value = b'foo content'
         mock_classify.return_value = (
             [classifier.classifier.Suggestion('cs.DL', 0.9),
              classifier.classifier.Suggestion('cs.AI', 0.4)],
