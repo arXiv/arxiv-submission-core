@@ -19,6 +19,7 @@ bleach = "==3.0.2"
 python-dateutil = "*"
 unidecode = "*"
 mypy_extensions = "*"
+"e1839a8" = {path = "."}
 
 [dev-packages]
 "nose2" = "*"

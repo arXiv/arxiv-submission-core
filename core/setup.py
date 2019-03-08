@@ -10,7 +10,7 @@ setup(
     zip_safe=False,
     install_requires=[
         'arxiv-base',
-        'arxiv-auth==0.3.2rc3',
+        'arxiv-auth>=0.3.2rc3',
         'flask',
         'mysqlclient',
         'bleach',
@@ -26,6 +26,7 @@ setup(
         'requests==2.21.0',
         'semver==2.8.1',
         'retry==0.9.2',
+        'pytz',
 	'backports-datetime-fromisoformat==1.0.0'
     ]
 )
