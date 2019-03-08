@@ -7,7 +7,38 @@ from enum import Enum
 from importlib import import_module
 from .domain import Event, event_factory, Submission, Agent, agent_factory
 
-from arxiv.util.serialize import ISO8601JSONDecoder, ISO8601JSONEncoder
+from arxiv.util.serialize import ISO8601JSONEncoder
+from backports.datetime_fromisoformat import MonkeyPatch
+MonkeyPatch.patch_fromisoformat()
+
+
+# The base implementation of this decoder is too generous; we'll use this until
+# base gets updated.
+class ISO8601JSONDecoder(json.JSONDecoder):
+    """Attempts to parse ISO8601 strings as datetime objects."""
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        """Pass :func:`object_hook` to the base constructor."""
+        kwargs['object_hook'] = kwargs.get('object_hook', self.object_hook)
+        super(ISO8601JSONDecoder, self).__init__(*args, **kwargs)
+
+    def _try_isoparse(self, value: Any) -> Any:
+        """Attempt to parse a value as an ISO8601 datetime."""
+        if type(value) is not str:
+            return value
+        try:
+            return datetime.fromisoformat(value)  # type: ignore
+        except ValueError:
+            return value
+
+    def object_hook(self, data: dict, **extra: Any) -> Any:
+        """Intercept and coerce ISO8601 strings to datetimes."""
+        for key, value in data.items():
+            if type(value) is list:
+                data[key] = [self._try_isoparse(v) for v in value]
+            else:
+                data[key] = self._try_isoparse(value)
+        return data
 
 
 class EventJSONEncoder(ISO8601JSONEncoder):

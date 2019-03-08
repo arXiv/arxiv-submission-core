@@ -26,6 +26,7 @@ kombu = "==4.1.0"
 semver = "*"
 flask-sqlalchemy = "*"
 retry = "*"
+backports-datetime-fromisoformat = "*"
 
 [dev-packages]
 "nose2" = "*"

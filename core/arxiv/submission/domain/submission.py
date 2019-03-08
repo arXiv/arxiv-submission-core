@@ -260,10 +260,13 @@ class Hold:
     @classmethod
     def from_dict(cls, data: dict) -> 'Hold':
         creator = data['creator']
+        created = data['created']
         if not isinstance(creator, Agent):
             creator = agent_factory(**creator)
+        if not isinstance(created, datetime):
+            created = parse_date(created)
         return cls(event_id=data['event_id'], creator=creator,
-                   created=parse_date(data['created']),
+                   created=created,
                    hold_type=cls.Type(data['hold_type']),
                    hold_reason=data.get('hold_reason', ''))
 
@@ -565,8 +568,10 @@ class Submission:
     @classmethod
     def from_dict(cls, **data) -> 'Submission':
         """Construct from a ``dict``."""
-        data['created'] = parse_date(data['created'])
-        if 'updated' in data and data['updated'] is not None:
+        if not isinstance(data['created'], datetime):
+            data['created'] = parse_date(data['created'])
+        if 'updated' in data and data['updated'] is not None \
+                and not isinstance(data['updated'], datetime):
             data['updated'] = parse_date(data['updated'])
         if 'metadata' in data and data['metadata'] is not None:
             data['metadata'] = SubmissionMetadata(**data['metadata'])
