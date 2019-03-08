@@ -108,8 +108,8 @@ class Compiler(service.HTTPIntegration):
         endpoint = '/'
         expected_codes = [status.HTTP_200_OK, status.HTTP_202_ACCEPTED,
                           status.HTTP_303_SEE_OTHER, status.HTTP_302_FOUND]
-        data, headers = self.json('post', endpoint, token, json=payload,
-                                  expected_code=expected_codes)
+        data, _, headers = self.json('post', endpoint, token, json=payload,
+                                     expected_code=expected_codes)
         return self._parse_status_response(data)
 
     def get_status(self, upload_id: str, checksum: str, token: str,
@@ -133,7 +133,7 @@ class Compiler(service.HTTPIntegration):
 
         """
         endpoint = f'/{upload_id}/{checksum}/{output_format.value}'
-        data, headers = self.json('get', endpoint, token)
+        data, _, headers = self.json('get', endpoint, token)
         return self._parse_status_response(data)
 
     def compilation_is_complete(self, upload_id: str, checksum: str,
@@ -167,7 +167,7 @@ class Compiler(service.HTTPIntegration):
 
         """
         endpoint = f'/{upload_id}/{checksum}/{output_format.value}/product'
-        response = self.json('get', endpoint, token, stream=True)
+        response = self.request('get', endpoint, token, stream=True)
         return CompilationProduct(content_type=output_format.content_type,
                                   stream=io.BytesIO(response.content))
 
@@ -192,7 +192,7 @@ class Compiler(service.HTTPIntegration):
 
         """
         endpoint = f'/{upload_id}/{checksum}/{output_format.value}/log'
-        response = self.json('get', endpoint, token, stream=True)
+        response = self.request('get', endpoint, token, stream=True)
         return CompilationLog(stream=io.BytesIO(response.content))
 
 

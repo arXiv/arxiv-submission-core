@@ -11,6 +11,7 @@ from ...rules.tests.data.titles import TITLES
 
 
 CCO = 'http://creativecommons.org/publicdomain/zero/1.0/'
+TEX = domain.submission.SubmissionContent.Format('tex')
 
 
 class TestPostSubmissionChecks(TestCase):
@@ -86,7 +87,8 @@ class TestPostSubmissionChecks(TestCase):
                 domain.event.SetPrimaryClassification(category="cs.AI",
                                                       **self.defaults),
                 domain.event.SetUploadPackage(checksum="a9s9k342900ks03330029",
-                                              source_format=domain.submission.SubmissionContent.Format('tex'), identifier=123,
+                                              source_format=TEX,
+                                              identifier=123,
                                               uncompressed_size=593992,
                                               compressed_size=593992,
                                               **self.defaults),

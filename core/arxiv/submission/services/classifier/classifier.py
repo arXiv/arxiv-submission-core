@@ -96,5 +96,5 @@ class Classifier(service.HTTPIntegration):
             Feature counts, if provided.
 
         """
-        data, _ = self.json('post', 'ctxt', data=content)
+        data, _, _ = self.json('post', 'ctxt', data=content)
         return self._suggestions(data), self._flags(data), self._counts(data)
