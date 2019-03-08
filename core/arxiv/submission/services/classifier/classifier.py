@@ -5,11 +5,7 @@ from math import exp, log
 from functools import wraps
 
 from arxiv.taxonomy import Category
-from arxiv.base.globals import get_application_config, get_application_global
 from arxiv.integration.api import status, service
-
-import requests
-from requests.packages.urllib3.util.retry import Retry
 
 
 class Flag(NamedTuple):

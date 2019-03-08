@@ -49,7 +49,7 @@ def poll_compilation(event: AddProcessStatus, before: Submission,
                 break
             logger.debug(f'not complete, try again in {tries ** 2} seconds')
             time.sleep(tries ** 2)  # Exponential back-off.
-        except compiler.NoSuchResource:
+        except compiler.NotFound:
             logger.debug('no such resource; wait and try again')
             time.sleep(tries ** 2)  # Exponential back-off.
         except (compiler.RequestFailed, compiler.CompilationFailed) as e:

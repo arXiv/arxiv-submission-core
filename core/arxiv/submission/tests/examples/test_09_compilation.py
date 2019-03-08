@@ -236,7 +236,7 @@ class TestSubmissionCompilation(TestCase):
     @mock.patch(f'{compiler.__name__}.get_status')
     def test_compilation(self, mock_get_status, mock_compile_complete):
         """The submission source content is compiled to PDF."""
-        mock_compile_complete.side_effect = [compiler.NoSuchResource('nope'),
+        mock_compile_complete.side_effect = [compiler.NotFound('nope'),
                                              False, True]
         mock_get_status.return_value = compiler.CompilationStatus(
             upload_id=self.upload_id,
@@ -303,7 +303,7 @@ class TestSubmissionCompilation(TestCase):
     @mock.patch(f'{compiler.__name__}.get_status')
     def test_pdf_oversize(self, mock_get_status, mock_compile_complete):
         """The generated PDF is too large."""
-        mock_compile_complete.side_effect = [compiler.NoSuchResource('nope'),
+        mock_compile_complete.side_effect = [compiler.NotFound('nope'),
                                              True]
         mock_get_status.return_value = compiler.CompilationStatus(
             upload_id=self.upload_id,
