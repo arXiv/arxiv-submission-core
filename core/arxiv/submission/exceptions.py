@@ -35,3 +35,7 @@ class NoSuchSubmission(Exception):
 
 class SaveError(RuntimeError):
     """Failed to persist event state."""
+
+
+class NothingToDo(RuntimeError):
+    """There is nothing to do."""

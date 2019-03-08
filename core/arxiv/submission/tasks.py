@@ -12,6 +12,7 @@ from .domain.submission import Submission
 from .domain.event import Event
 from .domain.agent import Agent
 from .core import save
+from .exceptions import NothingToDo
 from . import config
 
 logger = logging.getLogger(__name__)
@@ -70,11 +71,11 @@ def is_async(func: Callable) -> Callable:
     def do_callback(event: Event, before: Submission,
                     after: Submission, creator: Agent) -> Iterable[Event]:
         """Run the callback, and save the results."""
-        # try:
-        save(*func(event, before, after, creator),
-             submission_id=after.submission_id)
-        # except ValueError as e:
-        #     logger.debug('No events to save, move along: %s', e)
+        try:
+            save(*func(event, before, after, creator),
+                 submission_id=after.submission_id)
+        except NothingToDo as e:
+            logger.debug('No events to save, move along: %s', e)
 
     worker_app.task(name=name)(do_callback)     # Register wrapped callback.
 

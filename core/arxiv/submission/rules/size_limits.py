@@ -14,6 +14,7 @@ from ..domain.agent import Agent, User
 from ..domain.process import ProcessStatus
 from ..services import plaintext, compiler
 from ..tasks import is_async
+from ..auth import get_system_token, get_compiler_scopes
 
 from arxiv.taxonomy import CATEGORIES, Category
 
@@ -53,7 +54,10 @@ def pdf_is_compiled(event: Event, *args, **kwargs) -> bool:
 def check_pdf_size(event: AddProcessStatus, before: Submission,
                    after: Submission, creator: Agent) -> Iterable[Event]:
     """When a PDF is compiled, check for oversize."""
-    stat = compiler.Compiler.get_status(*compiler.split_task_id(event.identifier))
+    upload_id, checksum, fmt = compiler.split_task_id(event.identifier)
+    token = get_system_token(__name__, event.creator,
+                             get_compiler_scopes(event.identifier))
+    stat = compiler.Compiler.get_status(upload_id, checksum, token, fmt)
     msg = "PDF is %i bytes" % stat.size_bytes
     if stat.size_bytes > PDF_LIMIT:
         if Hold.Type.PDF_OVERSIZE in after.hold_types:
