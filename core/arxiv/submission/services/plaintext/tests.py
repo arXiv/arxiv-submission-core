@@ -35,21 +35,32 @@ class TestPlainTextService(TestCase):
     @mock.patch('arxiv.integration.api.service.requests.Session')
     def test_request_extraction(self, mock_Session):
         """Extraction is successfully requested."""
-        mock_post = mock.MagicMock(
-            return_value=mock.MagicMock(
-                status_code=status.HTTP_202_ACCEPTED,
-                json=mock.MagicMock(return_value={
-                    'reason': 'fulltext extraction in process'
-                }),
-                headers={'Location': '...'}
+        mock_session = mock.MagicMock(**{
+            'post': mock.MagicMock(
+                return_value=mock.MagicMock(
+                    status_code=status.HTTP_202_ACCEPTED,
+                    json=mock.MagicMock(return_value={}),
+                    content='',
+                    headers={'Location': '/somewhere'}
+                )
+            ),
+            'get': mock.MagicMock(
+                return_value=mock.MagicMock(
+                    status_code=status.HTTP_200_OK,
+                    json=mock.MagicMock(
+                        return_value={'reason': 'extraction in process'}
+                    ),
+                    content="{'reason': 'fulltext extraction in process'}",
+                    headers={}
+                )
             )
-        )
-        mock_Session.return_value = mock.MagicMock(post=mock_post)
+        })
+        mock_Session.return_value = mock_session
         upload_id = '132456'
         service = plaintext.PlainTextService('http://foohost:8123')
         self.assertIsNone(service.request_extraction(upload_id))
         self.assertEqual(
-            mock_post.call_args[0][0],
+            mock_session.post.call_args[0][0],
             'http://foohost:8123/submission/132456'
         )
 
@@ -352,15 +363,31 @@ class TestPlainTextServiceModule(TestCase):
     @mock.patch('arxiv.integration.api.service.requests.Session')
     def test_request_extraction(self, mock_Session):
         """Extraction is successfully requested."""
-        mock_session = self.session(
-            status_code=status.HTTP_202_ACCEPTED,
-            method='post',
-            headers={'Location': '...'},
-            json={'reason': 'fulltext extraction in process'}
-        )
+        mock_session = mock.MagicMock(**{
+            'post': mock.MagicMock(
+                return_value=mock.MagicMock(
+                    status_code=status.HTTP_202_ACCEPTED,
+                    json=mock.MagicMock(return_value={}),
+                    content='',
+                    headers={'Location': '/somewhere'}
+                )
+            ),
+            'get': mock.MagicMock(
+                return_value=mock.MagicMock(
+                    status_code=status.HTTP_200_OK,
+                    json=mock.MagicMock(
+                        return_value={'reason': 'extraction in process'}
+                    ),
+                    content="{'reason': 'fulltext extraction in process'}",
+                    headers={}
+                )
+            )
+        })
         mock_Session.return_value = mock_session
         upload_id = '132456'
-        self.assertIsNone(plaintext.PlainTextService.request_extraction(upload_id))
+        self.assertIsNone(
+            plaintext.PlainTextService.request_extraction(upload_id)
+        )
         self.assertEqual(mock_session.post.call_args[0][0],
                          'http://foohost:5432/submission/132456')
 

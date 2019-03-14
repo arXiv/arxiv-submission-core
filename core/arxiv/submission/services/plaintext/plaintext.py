@@ -68,12 +68,13 @@ class PlainTextService(service.HTTPIntegration):
             ID of the submission upload workspace.
 
         """
-        expected_code = [status.HTTP_202_ACCEPTED, status.HTTP_303_SEE_OTHER]
+        expected_code = [status.HTTP_200_OK, status.HTTP_202_ACCEPTED,
+                         status.HTTP_303_SEE_OTHER]
         response = self.request('post', self.endpoint(upload_id),
                                 expected_code=expected_code)
         if response.status_code == status.HTTP_303_SEE_OTHER:
             raise ExtractionInProgress('Extraction already exists', response)
-        elif response.status_code != status.HTTP_202_ACCEPTED:
+        elif response.status_code not in expected_code:
             raise exceptions.RequestFailed('Unexpected status', response)
         return
 
