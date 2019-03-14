@@ -13,9 +13,9 @@ def in_memory_db(app=None):
         app = Flask('foo')
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite://'
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
+    init_app(app)
     with app.app_context():
-        init_app(app)
+
         create_all()
         try:
             yield current_session()

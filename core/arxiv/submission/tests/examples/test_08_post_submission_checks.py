@@ -11,6 +11,7 @@ from ...rules.tests.data.titles import TITLES
 
 
 CCO = 'http://creativecommons.org/publicdomain/zero/1.0/'
+TEX = domain.submission.SubmissionContent.Format('tex')
 
 
 class TestPostSubmissionChecks(TestCase):
@@ -27,6 +28,7 @@ class TestPostSubmissionChecks(TestCase):
         _, db = tempfile.mkstemp(suffix='.sqlite')
         cls.app = Flask('foo')
         cls.app.config['CLASSIC_DATABASE_URI'] = f'sqlite:///{db}'
+        cls.app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
         with cls.app.app_context():
             classic.init_app(cls.app)
@@ -50,15 +52,13 @@ class TestPostSubmissionChecks(TestCase):
                 mock.MagicMock(return_value={'ENABLE_ASYNC': 0}))
     @mock.patch(f'{domain.__name__}.event.event.get_application_config',
                 mock.MagicMock(return_value={'ENABLE_CALLBACKS': 1}))
-    @mock.patch(f'{plaintext.__name__}.request_extraction',
-                lambda *a, **k: None)
-    @mock.patch(f'{plaintext.__name__}.extraction_is_complete',
-                lambda *a, **k: True)
-    @mock.patch(f'{plaintext.__name__}.retrieve_content',
-                lambda *a, **k: b'foo content')
-    @mock.patch(f'{classifier.__name__}.classify')
-    def test_submission(self, mock_classify):
+    @mock.patch(f'{classifier.__name__}.Classifier.classify')
+    @mock.patch(f'{plaintext.__name__}.PlainTextService')
+    def test_submission(self, mock_plaintext, mock_classify):
         """Create, and complete the submission."""
+        mock_plaintext.request_extraction.return_value = None
+        mock_plaintext.extraction_is_complete.return_value = True
+        mock_plaintext.retrieve_content.return_value = b'foo content'
         mock_classify.return_value = (
             [classifier.classifier.Suggestion('cs.DL', 0.9),
              classifier.classifier.Suggestion('cs.AI', 0.4)],
@@ -87,7 +87,8 @@ class TestPostSubmissionChecks(TestCase):
                 domain.event.SetPrimaryClassification(category="cs.AI",
                                                       **self.defaults),
                 domain.event.SetUploadPackage(checksum="a9s9k342900ks03330029",
-                                              source_format=domain.submission.SubmissionContent.Format('tex'), identifier=123,
+                                              source_format=TEX,
+                                              identifier=123,
                                               uncompressed_size=593992,
                                               compressed_size=593992,
                                               **self.defaults),

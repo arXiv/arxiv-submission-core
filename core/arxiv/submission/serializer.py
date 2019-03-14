@@ -7,23 +7,38 @@ from enum import Enum
 from importlib import import_module
 from .domain import Event, event_factory, Submission, Agent, agent_factory
 
+from arxiv.util.serialize import ISO8601JSONEncoder
+from backports.datetime_fromisoformat import MonkeyPatch
+MonkeyPatch.patch_fromisoformat()
 
 
-# TODO: get rid of this when base-0.13 is available.
-class ISO8601JSONEncoder(json.JSONEncoder):
-    """Renders date and datetime objects as ISO8601 datetime strings."""
+# The base implementation of this decoder is too generous; we'll use this until
+# base gets updated.
+class ISO8601JSONDecoder(json.JSONDecoder):
+    """Attempts to parse ISO8601 strings as datetime objects."""
 
-    def default(self, obj: Any) -> Union[str, List[Any]]:
-        """Overriden to render date(time)s in isoformat."""
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        """Pass :func:`object_hook` to the base constructor."""
+        kwargs['object_hook'] = kwargs.get('object_hook', self.object_hook)
+        super(ISO8601JSONDecoder, self).__init__(*args, **kwargs)
+
+    def _try_isoparse(self, value: Any) -> Any:
+        """Attempt to parse a value as an ISO8601 datetime."""
+        if type(value) is not str:
+            return value
         try:
-            if isinstance(obj, (date, datetime)):
-                return obj.isoformat()
-            iterable = iter(obj)
-        except TypeError:
-            pass
-        else:
-            return list(iterable)
-        return json.JSONEncoder.default(self, obj)  # type: ignore
+            return datetime.fromisoformat(value)  # type: ignore
+        except ValueError:
+            return value
+
+    def object_hook(self, data: dict, **extra: Any) -> Any:
+        """Intercept and coerce ISO8601 strings to datetimes."""
+        for key, value in data.items():
+            if type(value) is list:
+                data[key] = [self._try_isoparse(v) for v in value]
+            else:
+                data[key] = self._try_isoparse(value)
+        return data
 
 
 class EventJSONEncoder(ISO8601JSONEncoder):
@@ -52,31 +67,42 @@ class EventJSONEncoder(ISO8601JSONEncoder):
         return data
 
 
-def event_decoder(obj: dict) -> Any:
-    """Decode domain objects in this package."""
-    if '__type__' in obj:
-        type_name = obj.pop('__type__')
-        if type_name == 'event':
-            return event_factory(obj.pop('event_type'), **obj)
-        elif type_name == 'submission':
-            return Submission.from_dict(**obj)
-        elif type_name == 'agent':
-            return agent_factory(obj.pop('agent_type'), **obj)
-        elif type_name == 'type':
-            # Supports deserialization of Event classes.
-            #
-            # This is fairly dangerous, since we are importing and calling
-            # an arbitrary object specified in data. We need to be sure to
-            # check that the object originates in this package, and that it is
-            # actually a child of Event.
-            if not (obj['__module__'].startswith('arxiv.submission')
-                    or obj['__module__'].startswith('submission')):
-                raise json.decoder.JSONDecodeError(obj['__module__'], pos=0)
-            cls = getattr(import_module(obj['__module__']), obj['__name__'])
-            if Event not in cls.mro():
-                raise json.decoder.JSONDecodeError(obj['__name__'], pos=0)
-            return cls
-    return obj
+class EventJSONDecoder(ISO8601JSONDecoder):
+    """Decode :class:`.Event` and other domain objects from JSON data."""
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        """Pass :func:`object_hook` to the base constructor."""
+        kwargs['object_hook'] = kwargs.get('object_hook', self.object_hook)
+        super(EventJSONDecoder, self).__init__(*args, **kwargs)
+
+    def object_hook(self, obj: dict, **extra: Any) -> Any:
+        """Decode domain objects in this package."""
+        obj = super(EventJSONDecoder, self).object_hook(obj, **extra)
+
+        if '__type__' in obj:
+            type_name = obj.pop('__type__')
+            if type_name == 'event':
+                return event_factory(**obj)
+            elif type_name == 'submission':
+                return Submission.from_dict(**obj)
+            elif type_name == 'agent':
+                return agent_factory(obj.pop('agent_type'), **obj)
+            elif type_name == 'type':
+                # Supports deserialization of Event classes.
+                #
+                # This is fairly dangerous, since we are importing and calling
+                # an arbitrary object specified in data. We need to be sure to
+                # check that the object originates in this package, and that it
+                # is actually a child of Event.
+                module_name = obj['__module__']
+                if not (module_name.startswith('arxiv.submission')
+                        or module_name.startswith('submission')):
+                    raise json.decoder.JSONDecodeError(module_name, pos=0)
+                cls = getattr(import_module(module_name), obj['__name__'])
+                if Event not in cls.mro():
+                    raise json.decoder.JSONDecodeError(obj['__name__'], pos=0)
+                return cls
+        return obj
 
 
 def dumps(obj: Any) -> str:
@@ -86,4 +112,4 @@ def dumps(obj: Any) -> str:
 
 def loads(data: str) -> Any:
     """Load a Python object from JSON."""
-    return json.loads(data, object_hook=event_decoder)
+    return json.loads(data, cls=EventJSONDecoder)

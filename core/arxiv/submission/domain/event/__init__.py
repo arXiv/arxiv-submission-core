@@ -104,18 +104,23 @@ import hashlib
 import re
 import copy
 from datetime import datetime
+from collections import defaultdict
+from functools import wraps
 from pytz import UTC
-from typing import Optional, TypeVar, List, Tuple, Any, Dict, Union
+from typing import Optional, TypeVar, List, Tuple, Any, Dict, Union, Iterable,\
+    Callable, ClassVar, Mapping
 from urllib.parse import urlparse
 from dataclasses import field, asdict
 from .util import dataclass
 import bleach
 
 from arxiv.util import schema
-from arxiv import taxonomy, identifier
+from arxiv import taxonomy
+from arxiv import identifier as arxiv_identifier
 from arxiv.base import logging
+from arxiv.base.globals import get_application_config
 
-from ..agent import Agent, System
+from ..agent import Agent, System, agent_factory
 from ..submission import Submission, SubmissionMetadata, Author, \
     Classification, License, Delegation,  \
     SubmissionContent, WithdrawalRequest, CrossListClassificationRequest
@@ -124,8 +129,7 @@ from ..annotation import Comment, Feature, ClassifierResults, \
 
 from ...exceptions import InvalidEvent
 from ..util import get_tzaware_utc_now
-from .event import Event
-from .versioning import EventData, map_to_current_version
+from .event import Event, event_factory
 from .request import RequestCrossList, RequestWithdrawal, ApplyRequest, \
     RejectRequest, ApproveRequest
 from . import validators
@@ -792,6 +796,8 @@ class SetAuthors(Event):
 
     def __post_init__(self):
         """Autogenerate and/or clean display names."""
+        self.authors = [Author(**a) if type(a) is dict else a
+                        for a in self.authors]
         if not self.authors_display:
             self.authors_display = self._canonical_author_string()
         self.authors_display = self.cleanup(self.authors_display)
@@ -811,9 +817,9 @@ class SetAuthors(Event):
         s = re.sub(r"\s+", " ", s)          # Single spaces only.
         s = re.sub(r",(\s*,)+", ",", s)     # Remove double commas.
         # Add spaces between word and opening parenthesis.
-        s = re.sub(r"(\w)\(", "\g<1> (", s)
+        s = re.sub(r"(\w)\(", r"\g<1> (", s)
         # Add spaces between closing parenthesis and word.
-        s = re.sub(r"\)(\w)", ") \g<1>", s)
+        s = re.sub(r"\)(\w)", r") \g<1>", s)
         # Change capitalized or uppercase `And` to `and`.
         s = re.sub(r"\bA(?i:ND)\b", "and", s)
         return s.strip()   # Removing leading and trailing whitespace.
@@ -830,14 +836,6 @@ class SetAuthors(Event):
         submission.metadata.authors_display = self.authors_display
         return submission
 
-    @classmethod
-    def from_dict(cls, **data) -> 'SetAuthors':
-        """Override the default ``from_dict`` constructor to handle authors."""
-        if 'authors' not in data:
-            raise ValueError('Missing authors')
-        data['authors'] = [Author(**au) for au in data['authors']]
-        return cls(**data)
-
 
 @dataclass()
 class SetUploadPackage(Event):
@@ -852,6 +850,12 @@ class SetUploadPackage(Event):
     compressed_size: int = field(default=0)
     source_format: SubmissionContent.Format = \
         field(default=SubmissionContent.Format.UNKNOWN)
+
+    def __post_init__(self) -> None:
+        """Make sure that `source_format` is an enum instance."""
+        if type(self.source_format) is str:
+            self.source_format = SubmissionContent.Format(self.source_format)
+        return super(SetUploadPackage, self).__post_init__()
 
     def validate(self, submission: Submission) -> None:
         """Validate data for :class:`.SetUploadPackage`."""
@@ -885,6 +889,12 @@ class UpdateUploadPackage(Event):
     compressed_size: int = field(default=0)
     source_format: SubmissionContent.Format = \
         field(default=SubmissionContent.Format.UNKNOWN)
+
+    def __post_init__(self) -> None:
+        """Make sure that `source_format` is an enum instance."""
+        if type(self.source_format) is str:
+            self.source_format = SubmissionContent.Format(self.source_format)
+        return super(UpdateUploadPackage, self).__post_init__()
 
     def validate(self, submission: Submission) -> None:
         """Validate data for :class:`.SetUploadPackage`."""
@@ -1012,7 +1022,7 @@ class Publish(Event):
         # if self.arxiv_id is None:
         #     raise InvalidEvent(self, "Must provide an arXiv ID.")
         # try:
-        #     identifier.parse_arxiv_id(self.arxiv_id)
+        #     arxiv_identifier.parse_arxiv_id(self.arxiv_id)
         # except ValueError:
         #     raise InvalidEvent(self, "Not a valid arXiv ID.")
 
@@ -1177,39 +1187,3 @@ class AddClassifierResults(Event):
             results=self.results
         )
         return submission
-
-
-EVENT_TYPES = {
-    obj.get_event_type(): obj for obj in locals().values()
-    if type(obj) is type and issubclass(obj, Event)
-}
-
-
-def event_factory(**data: EventData) -> Event:
-    """
-    Convenience factory for generating :class:`.Event` instances.
-
-    Parameters
-    ----------
-    event_type : str
-        Should be the name of a :class:`.Event` subclass.
-    data : kwargs
-        Keyword parameters passed to the event constructor.
-
-    Return
-    ------
-    :class:`.Event`
-        An instance of an :class:`.Event` subclass.
-    """
-    data = map_to_current_version(data)
-    event_type = data.pop("event_type")
-    event_version = data.pop("event_version")
-    logger.debug('Create %s with data version %s', event_type, event_version)
-    if 'created' not in data:
-        data['created'] = datetime.now(UTC)
-    if event_type in EVENT_TYPES:
-        klass = EVENT_TYPES[event_type]
-        if hasattr(klass, 'from_dict'):
-            return klass.from_dict(**data)
-        return EVENT_TYPES[event_type](**data)
-    raise RuntimeError('Unknown event type: %s' % event_type)

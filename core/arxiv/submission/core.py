@@ -13,7 +13,8 @@ from .domain.submission import Submission, SubmissionMetadata, Author
 from .domain.agent import Agent, User, System, Client
 from .domain.event import *
 from .services import classic
-from .exceptions import InvalidEvent, InvalidStack, NoSuchSubmission, SaveError
+from .exceptions import InvalidEvent, InvalidStack, NoSuchSubmission, \
+    SaveError, NothingToDo
 
 
 logger = logging.getLogger(__name__)
@@ -134,7 +135,7 @@ def save(*events: Event, submission_id: Optional[str] = None) \
 
     """
     if len(events) == 0:
-        raise ValueError('Must pass at least one event')
+        raise NothingToDo('Must pass at least one event')
     events = list(events)   # Coerce to list so that we can index.
     prior: List[Event] = []
     before: Optional[Submission] = None

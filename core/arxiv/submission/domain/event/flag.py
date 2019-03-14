@@ -79,6 +79,12 @@ class AddContentFlag(AddFlag):
         )
         return submission
 
+    def __post_init__(self) -> None:
+        """Make sure that `flag_type` is an enum instance."""
+        if type(self.flag_type) is str:
+            self.flag_type = ContentFlag.FlagTypes(self.flag_type)
+        super(AddContentFlag, self).__post_init__()
+
 
 @dataclass()
 class AddMetadataFlag(AddFlag):
@@ -111,6 +117,12 @@ class AddMetadataFlag(AddFlag):
         )
         return submission
 
+    def __post_init__(self) -> None:
+        """Make sure that `flag_type` is an enum instance."""
+        if type(self.flag_type) is str:
+            self.flag_type = MetadataFlag.FlagTypes(self.flag_type)
+        super(AddMetadataFlag, self).__post_init__()
+
 
 @dataclass()
 class AddUserFlag(AddFlag):
@@ -138,6 +150,12 @@ class AddUserFlag(AddFlag):
         )
         return submission
 
+    def __post_init__(self) -> None:
+        """Make sure that `flag_type` is an enum instance."""
+        if type(self.flag_type) is str:
+            self.flag_type = UserFlag.FlagTypes(self.flag_type)
+        super(AddUserFlag, self).__post_init__()
+
 
 @dataclass()
 class AddHold(Event):
@@ -163,11 +181,11 @@ class AddHold(Event):
         )
         return submission
 
-    @classmethod
-    def from_dict(cls, **data) -> 'AddHold':
-        """Override the default ``from_dict`` constructor to handle types."""
-        data['hold_type'] = Hold.Type(data['hold_type'])
-        return cls(**data)
+    def __post_init__(self) -> None:
+        """Make sure that `hold_type` is an enum instance."""
+        if type(self.hold_type) is str:
+            self.hold_type = Hold.Type(self.hold_type)
+        super(AddHold, self).__post_init__()
 
 
 @dataclass()
@@ -190,11 +208,11 @@ class RemoveHold(Event):
         submission.holds.pop(self.hold_event_id)
         return submission
 
-    @classmethod
-    def from_dict(cls, **data) -> 'RemoveHold':
-        """Override the default ``from_dict`` constructor to handle types."""
-        data['hold_type'] = Hold.Type(data['hold_type'])
-        return cls(**data)
+    def __post_init__(self) -> None:
+        """Make sure that `hold_type` is an enum instance."""
+        if type(self.hold_type) is str:
+            self.hold_type = Hold.Type(self.hold_type)
+        super(RemoveHold, self).__post_init__()
 
 
 @dataclass()
@@ -218,8 +236,8 @@ class AddWaiver(Event):
         )
         return submission
 
-    @classmethod
-    def from_dict(cls, **data) -> 'AddWaiver':
-        """Override the default ``from_dict`` constructor to handle types."""
-        data['waiver_type'] = Hold.Type(data['waiver_type'])
-        return cls(**data)
+    def __post_init__(self) -> None:
+        """Make sure that `waiver_type` is an enum instance."""
+        if type(self.waiver_type) is str:
+            self.waiver_type = Hold.Type(self.waiver_type)
+        super(AddWaiver, self).__post_init__()

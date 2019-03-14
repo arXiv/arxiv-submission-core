@@ -5,7 +5,9 @@ import tempfile
 
 from flask import Flask
 
-from ...services import classic, plaintext, classifier, compiler
+from arxiv.integration.api import exceptions as api_exceptions
+
+from ...services import classic, plaintext, compiler
 from ... import save, load, load_fast, domain, exceptions, tasks, core, rules
 from ...rules.tests.data.titles import TITLES
 
@@ -23,9 +25,10 @@ class TestSourceSizeLimits(TestCase):
         _, db = tempfile.mkstemp(suffix='.sqlite')
         cls.app = Flask('foo')
         cls.app.config['CLASSIC_DATABASE_URI'] = f'sqlite:///{db}'
+        cls.app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-        with cls.app.app_context():
-            classic.init_app(cls.app)
+        # with cls.app.app_context():
+        classic.init_app(cls.app)
 
     def setUp(self):
         """Set up the database."""
@@ -40,7 +43,7 @@ class TestSourceSizeLimits(TestCase):
             self.doi = "10.01234/56789"
             self.upload_id = '123'
             self.checksum = "a9s9k342900ks03330029"
-            self.output_format = compiler.Format.PDF
+            self.output_format = domain.compilation.Format.PDF
             self.submission, self.events = save(
                 domain.event.CreateSubmission(**self.defaults),
                 domain.event.ConfirmContactInformation(**self.defaults),
@@ -164,7 +167,6 @@ class TestSourceSizeLimits(TestCase):
             self.assertTrue(db_row.is_on_hold(), "Database reflects hold")
 
 
-
 class TestSubmissionCompilation(TestCase):
     """Submitter has added their source, and is compiling to preview."""
 
@@ -174,9 +176,11 @@ class TestSubmissionCompilation(TestCase):
         _, db = tempfile.mkstemp(suffix='.sqlite')
         cls.app = Flask('foo')
         cls.app.config['CLASSIC_DATABASE_URI'] = f'sqlite:///{db}'
+        cls.app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+        cls.app.config['JWT_SECRET'] = 'foosecret'
 
-        with cls.app.app_context():
-            classic.init_app(cls.app)
+        # with cls.app.app_context():
+        classic.init_app(cls.app)
 
     def setUp(self):
         """Set up the database."""
@@ -191,7 +195,7 @@ class TestSubmissionCompilation(TestCase):
             self.doi = "10.01234/56789"
             self.upload_id = '123'
             self.checksum = "a9s9k342900ks03330029"
-            self.output_format = compiler.Format.PDF
+            self.output_format = domain.compilation.Format.PDF
             self.submission, self.events = save(
                 domain.event.CreateSubmission(**self.defaults),
                 domain.event.ConfirmContactInformation(**self.defaults),
@@ -224,21 +228,24 @@ class TestSubmissionCompilation(TestCase):
                 mock.MagicMock(return_value={'ENABLE_ASYNC': 0}))
     @mock.patch(f'{domain.__name__}.event.event.get_application_config',
                 mock.MagicMock(return_value={'ENABLE_CALLBACKS': 1}))
-    @mock.patch(f'{plaintext.__name__}.request_extraction',
+    @mock.patch(f'{plaintext.__name__}.PlainTextService.request_extraction',
                 lambda *a, **k: None)
-    @mock.patch(f'{plaintext.__name__}.extraction_is_complete',
+    @mock.patch(f'{plaintext.__name__}.PlainTextService.extraction_is_complete',
                 lambda *a, **k: True)
-    @mock.patch(f'{plaintext.__name__}.retrieve_content',
+    @mock.patch(f'{plaintext.__name__}.PlainTextService.retrieve_content',
                 lambda *a, **k: b'foo content')
-    @mock.patch(f'{compiler.__name__}.compilation_is_complete')
-    @mock.patch(f'{compiler.__name__}.get_status')
+    @mock.patch(f'{compiler.__name__}.Compiler.compilation_is_complete')
+    @mock.patch(f'{compiler.__name__}.Compiler.get_status')
     def test_compilation(self, mock_get_status, mock_compile_complete):
         """The submission source content is compiled to PDF."""
-        mock_compile_complete.side_effect = [compiler.NoSuchResource('nope'),
-                                             False, True]
-        mock_get_status.return_value = compiler.CompilationStatus(
+        mock_compile_complete.side_effect = [
+            api_exceptions.NotFound('nope', mock.MagicMock()),
+            False,
+            True
+        ]
+        mock_get_status.return_value = domain.compilation.CompilationStatus(
             upload_id=self.upload_id,
-            status=compiler.Status.SUCCEEDED,
+            status=domain.compilation.Status.SUCCEEDED,
             checksum=self.checksum,
             output_format=self.output_format,
             size_bytes=5_030_930,
@@ -252,8 +259,8 @@ class TestSubmissionCompilation(TestCase):
                     process=domain.event.AddProcessStatus.Process.COMPILATION,
                     status=domain.event.AddProcessStatus.Status.REQUESTED,
                     identifier=task_id,
-                    service=compiler.NAME,
-                    version=compiler.VERSION,
+                    service=compiler.Compiler.NAME,
+                    version=compiler.Compiler.VERSION,
                 ),
                 submission_id=self.submission.submission_id
             )
@@ -291,21 +298,23 @@ class TestSubmissionCompilation(TestCase):
                 mock.MagicMock(return_value={'ENABLE_ASYNC': 0}))
     @mock.patch(f'{domain.__name__}.event.event.get_application_config',
                 mock.MagicMock(return_value={'ENABLE_CALLBACKS': 1}))
-    @mock.patch(f'{plaintext.__name__}.request_extraction',
+    @mock.patch(f'{plaintext.__name__}.PlainTextService.request_extraction',
                 lambda *a, **k: None)
-    @mock.patch(f'{plaintext.__name__}.extraction_is_complete',
+    @mock.patch(f'{plaintext.__name__}.PlainTextService.extraction_is_complete',
                 lambda *a, **k: True)
-    @mock.patch(f'{plaintext.__name__}.retrieve_content',
+    @mock.patch(f'{plaintext.__name__}.PlainTextService.retrieve_content',
                 lambda *a, **k: b'foo content')
-    @mock.patch(f'{compiler.__name__}.compilation_is_complete')
-    @mock.patch(f'{compiler.__name__}.get_status')
+    @mock.patch(f'{compiler.__name__}.Compiler.compilation_is_complete')
+    @mock.patch(f'{compiler.__name__}.Compiler.get_status')
     def test_pdf_oversize(self, mock_get_status, mock_compile_complete):
         """The generated PDF is too large."""
-        mock_compile_complete.side_effect = [compiler.NoSuchResource('nope'),
-                                             True]
-        mock_get_status.return_value = compiler.CompilationStatus(
+        mock_compile_complete.side_effect = [
+            api_exceptions.NotFound('nope', mock.MagicMock()),
+            True
+        ]
+        mock_get_status.return_value = domain.compilation.CompilationStatus(
             upload_id=self.upload_id,
-            status=compiler.Status.SUCCEEDED,
+            status=domain.compilation.Status.SUCCEEDED,
             checksum=self.checksum,
             output_format=self.output_format,
             size_bytes=5_000_030_930,   # That's a big PDF.
@@ -319,8 +328,8 @@ class TestSubmissionCompilation(TestCase):
                     process=domain.event.AddProcessStatus.Process.COMPILATION,
                     status=domain.event.AddProcessStatus.Status.REQUESTED,
                     identifier=task_id,
-                    service=compiler.NAME,
-                    version=compiler.VERSION,
+                    service=compiler.Compiler.NAME,
+                    version=compiler.Compiler.VERSION,
                 ),
                 submission_id=self.submission.submission_id
             )

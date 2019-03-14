@@ -4,7 +4,7 @@ import os
 import json
 from unittest import TestCase, mock
 
-from arxiv import status
+from arxiv.integration.api import status, exceptions
 from .. import classifier
 
 DATA_PATH = os.path.join(os.path.split(os.path.abspath(__file__))[0], "data")
@@ -13,10 +13,17 @@ LINENOS_PATH = os.path.join(DATA_PATH, "linenos.json")
 SAMPLE_FAILED_PATH = os.path.join(DATA_PATH, 'sampleFailedCyrillic.json')
 
 
+mock_app = mock.MagicMock(config={
+    'CLASSIFIER_ENDPOINT': 'http://foohost:1234',
+    'CLASSIFIER_VERIFY': False
+})
+
+
 class TestClassifier(TestCase):
     """Tests for :class:`classifier.Classifier`."""
 
-    @mock.patch(f'{classifier.__name__}.requests.Session')
+    @mock.patch('arxiv.integration.api.service.current_app', mock_app)
+    @mock.patch('arxiv.integration.api.service.requests.Session')
     def test_classifier_with_service_unavailable(self, mock_Session):
         """The classifier service is unavailable."""
         mock_Session.return_value = mock.MagicMock(
@@ -26,10 +33,11 @@ class TestClassifier(TestCase):
                 )
             )
         )
-        with self.assertRaises(classifier.RequestFailed):
-            classifier.Classifier('foo', 9000)(b'somecontent')
+        with self.assertRaises(exceptions.RequestFailed):
+            classifier.Classifier('http://foo:9000').classify(b'somecontent')
 
-    @mock.patch(f'{classifier.__name__}.requests.Session')
+    @mock.patch('arxiv.integration.api.service.current_app', mock_app)
+    @mock.patch('arxiv.integration.api.service.requests.Session')
     def test_classifier_cannot_classify(self, mock_Session):
         """The classifier returns without classification suggestions."""
         with open(SAMPLE_FAILED_PATH) as f:
@@ -42,7 +50,8 @@ class TestClassifier(TestCase):
                 )
             )
         )
-        suggestions, flags, counts = classifier.Classifier('foo', 9000)(b'foo')
+        suggestions, flags, counts = \
+            classifier.Classifier('http://foo:9000').classify(b'foo')
         self.assertEqual(len(suggestions), 0, "There are no suggestions")
         self.assertEqual(len(flags), 4, "There are four flags")
         self.assertEqual(counts.chars, 50475)
@@ -50,7 +59,8 @@ class TestClassifier(TestCase):
         self.assertEqual(counts.stops, 9)
         self.assertEqual(counts.words, 4799)
 
-    @mock.patch(f'{classifier.__name__}.requests.Session')
+    @mock.patch('arxiv.integration.api.service.current_app', mock_app)
+    @mock.patch('arxiv.integration.api.service.requests.Session')
     def test_classifier_returns_suggestions(self, mock_Session):
         """The classifier returns classification suggestions."""
         with open(SAMPLE_PATH) as f:
@@ -68,7 +78,8 @@ class TestClassifier(TestCase):
             'cs.MS': 0.47,
             'math.NA': 0.46
         }
-        suggestions, flags, counts = classifier.Classifier('foo', 9000)(b'foo')
+        suggestions, flags, counts = \
+            classifier.Classifier('http://foo:9000').classify(b'foo')
         self.assertEqual(len(suggestions), 3, "There are three suggestions")
         for suggestion in suggestions:
             self.assertEqual(round(suggestion.probability, 2),
@@ -79,7 +90,8 @@ class TestClassifier(TestCase):
         self.assertEqual(counts.stops, 804)
         self.assertEqual(counts.words, 2860)
 
-    @mock.patch(f'{classifier.__name__}.requests.Session')
+    @mock.patch('arxiv.integration.api.service.current_app', mock_app)
+    @mock.patch('arxiv.integration.api.service.requests.Session')
     def test_classifier_withlinenos(self, mock_Session):
         """The classifier returns classification suggestions."""
         with open(LINENOS_PATH) as f:
@@ -101,7 +113,8 @@ class TestClassifier(TestCase):
 
         }
 
-        suggestions, flags, counts = classifier.Classifier('foo', 9000)(b'foo')
+        suggestions, flags, counts = \
+            classifier.Classifier('http://foo:9000').classify(b'foo')
         self.assertEqual(len(suggestions), 5, "There are five suggestions")
         for suggestion in suggestions:
             self.assertEqual(
@@ -122,33 +135,25 @@ class TestClassifier(TestCase):
 class TestClassifierModule(TestCase):
     """Tests for :mod:`classifier`."""
 
-    @mock.patch(f'{classifier.__name__}.get_application_config')
-    @mock.patch(f'{classifier.__name__}.requests.Session')
-    def test_classifier_unavailable(self, mock_Session, mock_config):
+    @mock.patch('arxiv.integration.api.service.current_app', mock_app)
+    @mock.patch('arxiv.integration.api.service.requests.Session')
+    def test_classifier_unavailable(self, mock_Session):
         """The classifier service is unavailable."""
-        mock_config.return_value = {
-            'CLASSIFIER_HOST': 'foohost',
-            'CLASSIFIER_PORT': 1234
-        }
         mock_post = mock.MagicMock(
             return_value=mock.MagicMock(
                 status_code=status.HTTP_503_SERVICE_UNAVAILABLE
             )
         )
         mock_Session.return_value = mock.MagicMock(post=mock_post)
-        with self.assertRaises(classifier.RequestFailed):
-            classifier.classify(b'somecontent')
+        with self.assertRaises(exceptions.RequestFailed):
+            classifier.Classifier.classify(b'somecontent')
         endpoint = f'http://foohost:1234/ctxt'
         self.assertEqual(mock_post.call_args[0][0], endpoint)
 
-    @mock.patch(f'{classifier.__name__}.get_application_config')
-    @mock.patch(f'{classifier.__name__}.requests.Session')
-    def test_classifier_cannot_classify(self, mock_Session, mock_config):
+    @mock.patch('arxiv.integration.api.service.current_app', mock_app)
+    @mock.patch('arxiv.integration.api.service.requests.Session')
+    def test_classifier_cannot_classify(self, mock_Session):
         """The classifier returns without classification suggestions."""
-        mock_config.return_value = {
-            'CLASSIFIER_HOST': 'foohost',
-            'CLASSIFIER_PORT': 1234
-        }
         with open(SAMPLE_FAILED_PATH) as f:
             data = json.load(f)
         mock_post = mock.MagicMock(
@@ -158,7 +163,7 @@ class TestClassifierModule(TestCase):
             )
         )
         mock_Session.return_value = mock.MagicMock(post=mock_post)
-        suggestions, flags, counts = classifier.classify(b'foo')
+        suggestions, flags, counts = classifier.Classifier.classify(b'foo')
         self.assertEqual(len(suggestions), 0, "There are no suggestions")
         self.assertEqual(len(flags), 4, "There are four flags")
         self.assertEqual(counts.chars, 50475)
@@ -168,14 +173,10 @@ class TestClassifierModule(TestCase):
         endpoint = f'http://foohost:1234/ctxt'
         self.assertEqual(mock_post.call_args[0][0], endpoint)
 
-    @mock.patch(f'{classifier.__name__}.get_application_config')
-    @mock.patch(f'{classifier.__name__}.requests.Session')
-    def test_classifier_returns_suggestions(self, mock_Session, mock_config):
+    @mock.patch('arxiv.integration.api.service.current_app', mock_app)
+    @mock.patch('arxiv.integration.api.service.requests.Session')
+    def test_classifier_returns_suggestions(self, mock_Session):
         """The classifier returns classification suggestions."""
-        mock_config.return_value = {
-            'CLASSIFIER_HOST': 'foohost',
-            'CLASSIFIER_PORT': 1234
-        }
         with open(SAMPLE_PATH) as f:
             data = json.load(f)
         mock_post = mock.MagicMock(
@@ -190,7 +191,7 @@ class TestClassifierModule(TestCase):
             'cs.MS': 0.47,
             'math.NA': 0.46
         }
-        suggestions, flags, counts = classifier.classify(b'foo')
+        suggestions, flags, counts = classifier.Classifier.classify(b'foo')
         self.assertEqual(len(suggestions), 3, "There are three suggestions")
         for suggestion in suggestions:
             self.assertEqual(round(suggestion.probability, 2),
