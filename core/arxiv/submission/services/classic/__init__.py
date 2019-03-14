@@ -32,7 +32,7 @@ from operator import ior
 
 from flask import Flask
 from sqlalchemy import or_
-from sqlalchemy.exc import DBAPIError
+from sqlalchemy.exc import DBAPIError, OperationalError
 
 from arxiv.base import logging
 from arxiv.base.globals import get_application_config, get_application_global
@@ -44,7 +44,8 @@ from ...domain.submission import License, Submission, WithdrawalRequest, \
     CrossListClassificationRequest
 from ...domain.agent import Agent, User
 from .models import Base
-from .exceptions import ClassicBaseException, NoSuchSubmission, TransactionFailed
+from .exceptions import ClassicBaseException, NoSuchSubmission, \
+    TransactionFailed, Unavailable
 from .util import transaction, current_session, db
 from .event import DBEvent
 from . import models, util, interpolate, log, proposal
@@ -53,7 +54,19 @@ from . import models, util, interpolate, log, proposal
 logger = logging.getLogger(__name__)
 
 
+def handle_operational_errors(func):
+    """Catch SQLAlchemy OperationalErrors and raise :class:`.Unavailable`."""
+    @wraps(func)
+    def inner(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except OperationalError as e:
+            raise Unavailable('Classic database unavailable') from e
+    return inner
+
+
 @retry(ClassicBaseException, tries=3, delay=1)
+@handle_operational_errors
 def get_licenses() -> List[License]:
     """Get a list of :class:`.domain.License` instances available."""
     with transaction():
@@ -63,6 +76,7 @@ def get_licenses() -> List[License]:
 
 
 @retry(ClassicBaseException, tries=3, delay=1)
+@handle_operational_errors
 def get_events(submission_id: int) -> List[Event]:
     """
     Load events from the classic database.
@@ -93,6 +107,7 @@ def get_events(submission_id: int) -> List[Event]:
 
 
 @retry(ClassicBaseException, tries=3, delay=1)
+@handle_operational_errors
 def get_user_submissions_fast(user_id: int) -> List[Submission]:
     """
     Get all active submissions for a user.
@@ -129,6 +144,7 @@ def get_user_submissions_fast(user_id: int) -> List[Submission]:
 
 
 @retry(ClassicBaseException, tries=3, delay=1)
+@handle_operational_errors
 def get_submission_fast(submission_id: int) -> List[Submission]:
     """
     Get the projection of the submission directly.
@@ -155,24 +171,8 @@ def get_submission_fast(submission_id: int) -> List[Submission]:
     return _db_to_projection(_get_db_submission_rows(submission_id))
 
 
-def _get_db_submission_rows(submission_id: int) -> List[models.Submission]:
-    with transaction() as session:
-        head = session.query(models.Submission.submission_id,
-                             models.Submission.doc_paper_id) \
-            .filter_by(submission_id=submission_id) \
-            .subquery()
-        dbss = list(
-            session.query(models.Submission)
-            .filter(or_(models.Submission.submission_id == submission_id,
-                        models.Submission.doc_paper_id == head.c.doc_paper_id))
-            .order_by(models.Submission.submission_id.desc())
-        )
-    if not dbss:
-        raise NoSuchSubmission('No submission found')
-    return dbss
-
-
 @retry(ClassicBaseException, tries=3, delay=1)
+@handle_operational_errors
 def get_submission(submission_id: int) -> Tuple[Submission, List[Event]]:
     """
     Get the current state of a :class:`.domain.Submission` from the database.
@@ -226,6 +226,7 @@ def get_submission(submission_id: int) -> Tuple[Submission, List[Event]]:
 
 
 @retry(ClassicBaseException, tries=3, delay=1)
+@handle_operational_errors
 def store_event(event: Event, before: Optional[Submission],
                 after: Optional[Submission]) -> Tuple[Event, Submission]:
     """
@@ -257,7 +258,7 @@ def store_event(event: Event, before: Optional[Submission],
     """
     with transaction() as session:
         if event.committed:
-            raise TransactionFailed('Event %s already committed', event.event_id)
+            raise TransactionFailed('%s already committed', event.event_id)
 
         doc_id: Optional[int] = None
 
@@ -354,6 +355,7 @@ def store_event(event: Event, before: Optional[Submission],
 
 
 @retry(ClassicBaseException, tries=3, delay=1)
+@handle_operational_errors
 def get_titles(since: datetime) -> List[Tuple[int, str, Agent]]:
     """Get titles from submissions created on or after a particular date."""
     # TODO: consider making this a param, if we need this function for anything
@@ -627,3 +629,20 @@ def create_all() -> None:
 def drop_all() -> None:
     """Drop all tables in the database."""
     Base.metadata.drop_all(db.engine)
+
+
+def _get_db_submission_rows(submission_id: int) -> List[models.Submission]:
+    with transaction() as session:
+        head = session.query(models.Submission.submission_id,
+                             models.Submission.doc_paper_id) \
+            .filter_by(submission_id=submission_id) \
+            .subquery()
+        dbss = list(
+            session.query(models.Submission)
+            .filter(or_(models.Submission.submission_id == submission_id,
+                        models.Submission.doc_paper_id == head.c.doc_paper_id))
+            .order_by(models.Submission.submission_id.desc())
+        )
+    if not dbss:
+        raise NoSuchSubmission('No submission found')
+    return dbss

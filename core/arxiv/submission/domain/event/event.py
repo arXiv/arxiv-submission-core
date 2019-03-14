@@ -305,6 +305,14 @@ class Event:
         return self.after, consequences
 
 
+def _get_subclasses(klass: type) -> List[type]:
+    _subclasses = klass.__subclasses__()
+    if _subclasses:
+        return _subclasses + [sub for klass in _subclasses
+                              for sub in _get_subclasses(klass)]
+    return _subclasses
+
+
 def event_factory(**data: EventData) -> Event:
     """
     Generate an :class:`Event` instance from raw :const:`EventData`.
@@ -322,7 +330,7 @@ def event_factory(**data: EventData) -> Event:
         An instance of an :class:`.Event` subclass.
 
     """
-    etypes = {klas.get_event_type(): klas for klas in Event.__subclasses__()}
+    etypes = {klas.get_event_type(): klas for klas in _get_subclasses(Event)}
     data = map_to_current_version(data)
     event_type = data.pop("event_type")
     event_version = data.pop("event_version")

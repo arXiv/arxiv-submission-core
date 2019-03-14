@@ -115,7 +115,8 @@ from .util import dataclass
 import bleach
 
 from arxiv.util import schema
-from arxiv import taxonomy, identifier
+from arxiv import taxonomy
+from arxiv import identifier as arxiv_identifier
 from arxiv.base import logging
 from arxiv.base.globals import get_application_config
 
@@ -795,6 +796,8 @@ class SetAuthors(Event):
 
     def __post_init__(self):
         """Autogenerate and/or clean display names."""
+        self.authors = [Author(**a) if type(a) is dict else a
+                        for a in self.authors]
         if not self.authors_display:
             self.authors_display = self._canonical_author_string()
         self.authors_display = self.cleanup(self.authors_display)
@@ -814,9 +817,9 @@ class SetAuthors(Event):
         s = re.sub(r"\s+", " ", s)          # Single spaces only.
         s = re.sub(r",(\s*,)+", ",", s)     # Remove double commas.
         # Add spaces between word and opening parenthesis.
-        s = re.sub(r"(\w)\(", "\g<1> (", s)
+        s = re.sub(r"(\w)\(", r"\g<1> (", s)
         # Add spaces between closing parenthesis and word.
-        s = re.sub(r"\)(\w)", ") \g<1>", s)
+        s = re.sub(r"\)(\w)", r") \g<1>", s)
         # Change capitalized or uppercase `And` to `and`.
         s = re.sub(r"\bA(?i:ND)\b", "and", s)
         return s.strip()   # Removing leading and trailing whitespace.
@@ -833,14 +836,6 @@ class SetAuthors(Event):
         submission.metadata.authors_display = self.authors_display
         return submission
 
-    @classmethod
-    def from_dict(cls, **data) -> 'SetAuthors':
-        """Override the default ``from_dict`` constructor to handle authors."""
-        if 'authors' not in data:
-            raise ValueError('Missing authors')
-        data['authors'] = [Author(**au) for au in data['authors']]
-        return cls(**data)
-
 
 @dataclass()
 class SetUploadPackage(Event):
@@ -855,6 +850,12 @@ class SetUploadPackage(Event):
     compressed_size: int = field(default=0)
     source_format: SubmissionContent.Format = \
         field(default=SubmissionContent.Format.UNKNOWN)
+
+    def __post_init__(self) -> None:
+        """Make sure that `source_format` is an enum instance."""
+        if type(self.source_format) is str:
+            self.source_format = SubmissionContent.Format(self.source_format)
+        return super(SetUploadPackage, self).__post_init__()
 
     def validate(self, submission: Submission) -> None:
         """Validate data for :class:`.SetUploadPackage`."""
@@ -875,12 +876,6 @@ class SetUploadPackage(Event):
         submission.submitter_confirmed_preview = False
         return submission
 
-    @classmethod
-    def from_dict(cls, **data) -> 'SetAuthors':
-        """Override the default ``from_dict`` constructor to source format."""
-        data['source_format'] = SubmissionContent.Format(data['source_format'])
-        return cls(**data)
-
 
 @dataclass()
 class UpdateUploadPackage(Event):
@@ -895,6 +890,12 @@ class UpdateUploadPackage(Event):
     source_format: SubmissionContent.Format = \
         field(default=SubmissionContent.Format.UNKNOWN)
 
+    def __post_init__(self) -> None:
+        """Make sure that `source_format` is an enum instance."""
+        if type(self.source_format) is str:
+            self.source_format = SubmissionContent.Format(self.source_format)
+        return super(UpdateUploadPackage, self).__post_init__()
+
     def validate(self, submission: Submission) -> None:
         """Validate data for :class:`.SetUploadPackage`."""
         validators.submission_is_not_finalized(self, submission)
@@ -907,12 +908,6 @@ class UpdateUploadPackage(Event):
         submission.source_content.compressed_size = self.compressed_size
         submission.submitter_confirmed_preview = False
         return submission
-
-    @classmethod
-    def from_dict(cls, **data) -> 'SetAuthors':
-        """Override the default ``from_dict`` constructor to source format."""
-        data['source_format'] = SubmissionContent.Format(data['source_format'])
-        return cls(**data)
 
 
 @dataclass()
@@ -1027,7 +1022,7 @@ class Publish(Event):
         # if self.arxiv_id is None:
         #     raise InvalidEvent(self, "Must provide an arXiv ID.")
         # try:
-        #     identifier.parse_arxiv_id(self.arxiv_id)
+        #     arxiv_identifier.parse_arxiv_id(self.arxiv_id)
         # except ValueError:
         #     raise InvalidEvent(self, "Not a valid arXiv ID.")
 
