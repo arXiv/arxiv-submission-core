@@ -73,7 +73,8 @@ class TestProposeFromClassifierResults(TestCase):
                 identifier='5678',
                 source_format=SubmissionContent.Format('pdf'),
                 checksum='a1b2c3d4',
-                size=58493
+                uncompressed_size=58493,
+                compressed_size=58493
             )
         )
 
@@ -118,7 +119,8 @@ class TestProposeCrossFromPrimary(TestCase):
                 identifier='5678',
                 source_format=SubmissionContent.Format('pdf'),
                 checksum='a1b2c3d4',
-                size=58493
+                uncompressed_size=58493,
+                compressed_size=58493
             )
         )
         self.submission.submitter_contact_verified = True
@@ -196,7 +198,8 @@ class TestAcceptSystemCrossProposal(TestCase):
                 identifier='5678',
                 source_format=SubmissionContent.Format('pdf'),
                 checksum='a1b2c3d4',
-                size=58493
+                uncompressed_size=58493,
+                compressed_size=58493
             )
         )
 

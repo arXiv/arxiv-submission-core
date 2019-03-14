@@ -127,9 +127,9 @@ class Client(Agent):
 
     def to_dict(self):
         """Generate a dict representation of this :class:`.Client` instance."""
-        return {
-            'client_id': self.native_id
-        }
+        data = super(User, self).to_dict()
+        data['client_id'] = self.native_id
+        return data
 
 
 _agent_types = {

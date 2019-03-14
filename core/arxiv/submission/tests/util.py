@@ -12,6 +12,7 @@ def in_memory_db(app: Optional[Flask] = None):
     if app is None:
         app = Flask('foo')
     app.config['CLASSIC_DATABASE_URI'] = 'sqlite://'
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
     with app.app_context():
         classic.init_app(app)

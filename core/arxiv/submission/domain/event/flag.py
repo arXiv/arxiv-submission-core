@@ -7,7 +7,7 @@ from dataclasses import field
 from .util import dataclass
 from .event import Event
 from ..flag import Flag, ContentFlag, MetadataFlag, UserFlag
-from ..submission import Submission, SubmissionMetadata, Hold
+from ..submission import Submission, SubmissionMetadata, Hold, Waiver
 from ...exceptions import InvalidEvent
 
 
@@ -79,6 +79,12 @@ class AddContentFlag(AddFlag):
         )
         return submission
 
+    def __post_init__(self) -> None:
+        """Make sure that `flag_type` is an enum instance."""
+        if type(self.flag_type) is str:
+            self.flag_type = ContentFlag.FlagTypes(self.flag_type)
+        super(AddContentFlag, self).__post_init__()
+
 
 @dataclass()
 class AddMetadataFlag(AddFlag):
@@ -111,6 +117,12 @@ class AddMetadataFlag(AddFlag):
         )
         return submission
 
+    def __post_init__(self) -> None:
+        """Make sure that `flag_type` is an enum instance."""
+        if type(self.flag_type) is str:
+            self.flag_type = MetadataFlag.FlagTypes(self.flag_type)
+        super(AddMetadataFlag, self).__post_init__()
+
 
 @dataclass()
 class AddUserFlag(AddFlag):
@@ -138,16 +150,22 @@ class AddUserFlag(AddFlag):
         )
         return submission
 
+    def __post_init__(self) -> None:
+        """Make sure that `flag_type` is an enum instance."""
+        if type(self.flag_type) is str:
+            self.flag_type = UserFlag.FlagTypes(self.flag_type)
+        super(AddUserFlag, self).__post_init__()
+
 
 @dataclass()
 class AddHold(Event):
-    """Add a hold to a submission."""
+    """Add a :class:`.Hold` to a :class:`.Submission`."""
 
     NAME = "add hold"
     NAMED = "hold added"
 
-    hold_type: str = field(default_factory=str)
-    hold_reason: Optional[str] = field(default_factory=list)
+    hold_type: Hold.Type = field(default=Hold.Type.PATCH)
+    hold_reason: Optional[str] = field(default_factory=str)
 
     def validate(self, submission: Submission) -> None:
         pass
@@ -162,3 +180,64 @@ class AddHold(Event):
             hold_reason=self.hold_reason
         )
         return submission
+
+    def __post_init__(self) -> None:
+        """Make sure that `hold_type` is an enum instance."""
+        if type(self.hold_type) is str:
+            self.hold_type = Hold.Type(self.hold_type)
+        super(AddHold, self).__post_init__()
+
+
+@dataclass()
+class RemoveHold(Event):
+    """Remove a :class:`.Hold` from a :class:`.Submission`."""
+
+    NAME = "remove hold"
+    NAMED = "hold removed"
+
+    hold_event_id: str = field(default_factory=str)
+    hold_type: Hold.Type = field(default=Hold.Type.PATCH)
+    removal_reason: Optional[str] = field(default_factory=str)
+
+    def validate(self, submission: Submission) -> None:
+        if self.hold_event_id not in submission.holds:
+            raise InvalidEvent(self, "No such hold")
+
+    def project(self, submission: Submission) -> Submission:
+        """Remove the hold from the submission."""
+        submission.holds.pop(self.hold_event_id)
+        return submission
+
+    def __post_init__(self) -> None:
+        """Make sure that `hold_type` is an enum instance."""
+        if type(self.hold_type) is str:
+            self.hold_type = Hold.Type(self.hold_type)
+        super(RemoveHold, self).__post_init__()
+
+
+@dataclass()
+class AddWaiver(Event):
+    """Add a :class:`.Waiver` to a :class:`.Submission`."""
+
+    waiver_type: Hold.Type = field(default=Hold.Type.SOURCE_OVERSIZE)
+    waiver_reason: str = field(default_factory=str)
+
+    def validate(self, submission: Submission) -> None:
+        pass
+
+    def project(self, submission: Submission) -> Submission:
+        """Add the :class:`.Waiver` to the :class:`.Submission`."""
+        submission.waivers[self.event_id] = Waiver(
+            event_id=self.event_id,
+            created=self.created,
+            creator=self.creator,
+            waiver_type=self.waiver_type,
+            waiver_reason=self.waiver_reason
+        )
+        return submission
+
+    def __post_init__(self) -> None:
+        """Make sure that `waiver_type` is an enum instance."""
+        if type(self.waiver_type) is str:
+            self.waiver_type = Hold.Type(self.waiver_type)
+        super(AddWaiver, self).__post_init__()

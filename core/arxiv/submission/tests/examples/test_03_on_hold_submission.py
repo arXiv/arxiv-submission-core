@@ -24,6 +24,7 @@ class TestOnHoldSubmission(TestCase):
         _, db = tempfile.mkstemp(suffix='.sqlite')
         cls.app = Flask('foo')
         cls.app.config['CLASSIC_DATABASE_URI'] = f'sqlite:///{db}'
+        cls.app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
         with cls.app.app_context():
             classic.init_app(cls.app)
@@ -51,7 +52,9 @@ class TestOnHoldSubmission(TestCase):
                                                       **self.defaults),
                 domain.event.SetUploadPackage(checksum="a9s9k342900ks03330029",
                                               source_format=domain.submission.SubmissionContent.Format('tex'), identifier=123,
-                                              size=593992, **self.defaults),
+                                              uncompressed_size=593992,
+                                              compressed_size=593992,
+                                              **self.defaults),
                 domain.event.SetAbstract(abstract="Very abstract " * 20,
                                          **self.defaults),
                 domain.event.SetComments(comments="Fine indeed " * 10,
@@ -86,14 +89,8 @@ class TestOnHoldSubmission(TestCase):
                              domain.submission.Submission.ON_HOLD,
                              "The submission is in the hold state")
             self.assertTrue(submission.is_on_hold, "The submission is on hold")
-            self.assertEqual(len(self.events) + 1, len(events),
-                             "The same number of events were retrieved as"
-                             " were initially saved.")
             self.assertEqual(len(submission.versions), 0,
                              "There are no published versions")
-            self.assertIn(domain.event.AddHold,
-                          [type(event) for event in events],
-                          "An AddHold event is interpolated")
 
         with self.app.app_context():
             submission = load_fast(self.submission.submission_id)
@@ -101,14 +98,8 @@ class TestOnHoldSubmission(TestCase):
                              domain.submission.Submission.ON_HOLD,
                              "The submission is in the hold state")
             self.assertTrue(submission.is_on_hold, "The submission is on hold")
-            self.assertEqual(len(self.events) + 1, len(events),
-                             "The same number of events were retrieved as"
-                             " were initially saved.")
             self.assertEqual(len(submission.versions), 0,
                              "There are no published versions")
-            self.assertIn(domain.event.AddHold,
-                          [type(event) for event in events],
-                          "An AddHold event is interpolated")
 
         # Check the database state.
         with self.app.app_context():
@@ -177,9 +168,6 @@ class TestOnHoldSubmission(TestCase):
             self.assertEqual(submission.status,
                              domain.submission.Submission.WORKING,
                              "The submission is in the working state")
-            self.assertEqual(len(self.events) + 2, len(events),
-                             "The same number of events were retrieved as"
-                             " were saved.")
             self.assertEqual(len(submission.versions), 0,
                              "There are no published versions")
 
@@ -188,9 +176,6 @@ class TestOnHoldSubmission(TestCase):
             self.assertEqual(submission.status,
                              domain.submission.Submission.WORKING,
                              "The submission is in the working state")
-            self.assertEqual(len(self.events) + 2, len(events),
-                             "The same number of events were retrieved as"
-                             " were saved.")
             self.assertEqual(len(submission.versions), 0,
                              "There are no published versions")
 

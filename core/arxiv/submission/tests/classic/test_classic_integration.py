@@ -141,7 +141,8 @@ class TestClassicUIWorkflow(TestCase):
                     checksum="a9s9k342900skks03330029k",
                     source_format=domain.submission.SubmissionContent.Format('tex'),
                     identifier=123,
-                    size=593992
+                    uncompressed_size=593992,
+                    compressed_size=593992
                 ),
                 submission_id=submission.submission_id
             )
@@ -287,6 +288,7 @@ class TestReplacementIntegration(TestCase):
         _, db = tempfile.mkstemp(suffix='.sqlite')
         cls.app = Flask('foo')
         cls.app.config['CLASSIC_DATABASE_URI'] = f'sqlite:///{db}'
+        cls.app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
         with cls.app.app_context():
             classic.init_app(cls.app)
@@ -331,10 +333,10 @@ class TestReplacementIntegration(TestCase):
                     checksum="a9s9k342900skks03330029k",
                     source_format=domain.submission.SubmissionContent.Format('tex'),
                     identifier=123,
-                    size=593992
+                    uncompressed_size=593992,
+                    compressed_size=593992
                 ),
-                SetTitle(creator=self.submitter,
-                                title=metadata['title']),
+                SetTitle(creator=self.submitter, title=metadata['title']),
                 SetAbstract(creator=self.submitter,
                             abstract=metadata['abstract']),
                 SetComments(creator=self.submitter,
@@ -345,7 +347,7 @@ class TestReplacementIntegration(TestCase):
                 ),
                 SetDOI(creator=self.submitter, doi=metadata['doi']),
                 SetReportNumber(creator=self.submitter,
-                                       report_num=metadata['report_num']),
+                                report_num=metadata['report_num']),
                 SetAuthors(
                     creator=self.submitter,
                     authors=[Author(
@@ -428,7 +430,7 @@ class TestReplacementIntegration(TestCase):
                          classic.models.Submission.NEW)
         self.assertEqual(db_replacement.type,
                          classic.models.Submission.REPLACEMENT)
-        self.assertEqual(db_replacement.document.paper_id, '1901.00123')
+        self.assertEqual(db_replacement.doc_paper_id, '1901.00123')
 
 
 class TestJREFIntegration(TestCase):
@@ -440,6 +442,7 @@ class TestJREFIntegration(TestCase):
         _, db = tempfile.mkstemp(suffix='.sqlite')
         cls.app = Flask('foo')
         cls.app.config['CLASSIC_DATABASE_URI'] = f'sqlite:///{db}'
+        cls.app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
         with cls.app.app_context():
             classic.init_app(cls.app)
@@ -482,7 +485,8 @@ class TestJREFIntegration(TestCase):
                     checksum="a9s9k342900skks03330029k",
                     source_format=domain.submission.SubmissionContent.Format('tex'),
                     identifier=123,
-                    size=593992
+                    uncompressed_size=593992,
+                    compressed_size=593992
                 ),
                 SetTitle(creator=self.submitter,
                                 title=metadata['title']),
@@ -579,7 +583,7 @@ class TestJREFIntegration(TestCase):
                          classic.models.Submission.PROCESSING_SUBMISSION)
         self.assertEqual(db_jref.type,
                          classic.models.Submission.JOURNAL_REFERENCE)
-        self.assertEqual(db_jref.document.paper_id, '1901.00123')
+        self.assertEqual(db_jref.doc_paper_id, '1901.00123')
         self.assertEqual(db_jref.submitter_id,
                          jref_submission.creator.native_id)
 
@@ -608,6 +612,7 @@ class TestWithdrawalIntegration(TestCase):
         _, db = tempfile.mkstemp(suffix='.sqlite')
         cls.app = Flask('foo')
         cls.app.config['CLASSIC_DATABASE_URI'] = f'sqlite:///{db}'
+        cls.app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
         with cls.app.app_context():
             classic.init_app(cls.app)
@@ -652,7 +657,8 @@ class TestWithdrawalIntegration(TestCase):
                     checksum="a9s9k342900skks03330029k",
                     source_format=domain.submission.SubmissionContent.Format('tex'),
                     identifier=123,
-                    size=593992
+                    uncompressed_size=593992,
+                    compressed_size=593992
                 ),
                 SetTitle(creator=self.submitter, title=metadata['title']),
                 SetAbstract(creator=self.submitter,
@@ -746,6 +752,7 @@ class TestPublicationIntegration(TestCase):
         _, db = tempfile.mkstemp(suffix='.sqlite')
         cls.app = Flask('foo')
         cls.app.config['CLASSIC_DATABASE_URI'] = f'sqlite:///{db}'
+        cls.app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
         with cls.app.app_context():
             classic.init_app(cls.app)
@@ -790,7 +797,8 @@ class TestPublicationIntegration(TestCase):
                     checksum="a9s9k342900skks03330029k",
                     source_format=domain.submission.SubmissionContent.Format('tex'),
                     identifier=123,
-                    size=593992
+                    uncompressed_size=593992,
+                    compressed_size=593992
                 ),
                 SetTitle(creator=self.submitter,
                                 title=metadata['title']),

@@ -22,6 +22,7 @@ class TestReplacementSubmissionInProgress(TestCase):
         _, db = tempfile.mkstemp(suffix='.sqlite')
         cls.app = Flask('foo')
         cls.app.config['CLASSIC_DATABASE_URI'] = f'sqlite:///{db}'
+        cls.app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
         with cls.app.app_context():
             classic.init_app(cls.app)
@@ -50,7 +51,9 @@ class TestReplacementSubmissionInProgress(TestCase):
                                                       **self.defaults),
                 domain.event.SetUploadPackage(checksum="a9s9k342900ks03330029",
                                               source_format=domain.submission.SubmissionContent.Format('tex'), identifier=123,
-                                              size=593992, **self.defaults),
+                                              uncompressed_size=593992,
+                                              compressed_size=593992,
+                                              **self.defaults),
                 domain.event.SetAbstract(abstract="Very abstract " * 20,
                                          **self.defaults),
                 domain.event.SetComments(comments="Fine indeed " * 10,

@@ -22,6 +22,7 @@ class TestSecondVersionIsPublished(TestCase):
         _, db = tempfile.mkstemp(suffix='.sqlite')
         cls.app = Flask('foo')
         cls.app.config['CLASSIC_DATABASE_URI'] = f'sqlite:///{db}'
+        cls.app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
         with cls.app.app_context():
             classic.init_app(cls.app)
@@ -51,7 +52,9 @@ class TestSecondVersionIsPublished(TestCase):
                                                       **self.defaults),
                 domain.event.SetUploadPackage(checksum="a9s9k342900ks03330029",
                                               source_format=domain.submission.SubmissionContent.Format('tex'), identifier=123,
-                                              size=593992, **self.defaults),
+                                              uncompressed_size=593992,
+                                              compressed_size=593992,
+                                              **self.defaults),
                 domain.event.SetAbstract(abstract="Very abstract " * 20,
                                          **self.defaults),
                 domain.event.SetComments(comments="Fine indeed " * 10,
@@ -98,7 +101,9 @@ class TestSecondVersionIsPublished(TestCase):
                 domain.event.SetTitle(title=new_title, **self.defaults),
                 domain.event.SetUploadPackage(checksum="a9s9k342900ks03330029",
                                               source_format=domain.submission.SubmissionContent.Format('tex'), identifier=123,
-                                              size=593992, **self.defaults),
+                                              uncompressed_size=593992,
+                                              compressed_size=593992,
+                                              **self.defaults),
                 domain.event.FinalizeSubmission(**self.defaults),
                 submission_id=self.submission.submission_id
             )
@@ -177,10 +182,6 @@ class TestSecondVersionIsPublished(TestCase):
             self.assertEqual(submission.status,
                              domain.submission.Submission.WORKING,
                              "The submission is in the working state")
-            self.assertEqual(len(self.events) + 2, len(events),
-                             "The same number of events were retrieved as"
-                             " were initially saved, plus the publish event"
-                             " and the create version event.")
             self.assertEqual(submission.version, 3,
                              "The version number is incremented by 1")
             self.assertEqual(len(submission.versions), 2,
@@ -251,10 +252,6 @@ class TestSecondVersionIsPublished(TestCase):
                 withdrawal_reason,
                 "Withdrawal reason is set on request."
             )
-            self.assertEqual(len(self.events) + 2, len(events),
-                             "The same number of events were retrieved as"
-                             " were initially saved, plus one for publish"
-                             " and another for withdrawal request.")
             self.assertEqual(len(submission.versions), 2,
                              "There are two published versions")
 

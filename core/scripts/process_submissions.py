@@ -41,6 +41,7 @@ def in_memory_db():
     """Provide an in-memory sqlite database for testing purposes."""
     app = Flask('foo')
     app.config['CLASSIC_DATABASE_URI'] = 'sqlite://'
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
     with app.app_context():
         classic.init_app(app)
@@ -61,7 +62,7 @@ def process_csv(tsvfile, session):
             for key, value in submission.items():
                 if value == 'NULL':
                     submission[key] = None
-            if int(submission['version']) > 1:
+            if int(submission['event_version']) > 1:
                 continue
             try:
                 submission_id = process_submission(submission)

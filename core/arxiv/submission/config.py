@@ -44,6 +44,9 @@ COMPILER_ENDPOINT = os.environ.get(
 )
 COMPILER_VERIFY = bool(int(os.environ.get('COMPILER_VERIFY', '1')))
 
+CLASSIFIER_ENDPOINT = os.environ.get('CLASSIFIER_ENDPOINT', 'http://localhost:8000')
+CLASSIFIER_VERIFY = bool(int(os.environ.get('CLASSIFIER_VERIFY', '0')))
+
 CLASSIC_DATABASE_URI = os.environ.get('CLASSIC_DATABASE_URI', 'sqlite:///')
 
 ENABLE_ASYNC = os.environ.get('ENABLE_ASYNC', '0')
@@ -55,3 +58,7 @@ Otherwise they will be executed in the thread in which they are called.
 
 ENABLE_CALLBACKS = os.environ.get('ENABLE_CALLBACKS', '0')
 """If ``0``, callbacks bound to events will not be executed."""
+
+JWT_SECRET = os.environ.get('JWT_SECRET')
+
+CORE_VERSION = "0.0.0"

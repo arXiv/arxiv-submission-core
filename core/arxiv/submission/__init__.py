@@ -152,6 +152,26 @@ example:
    40032
 
 
+.. _versioning-overview:
+
+Versioning events
+=================
+Handling changes to this software in a way that does not break past data is a
+non-trivial problem. In a traditional relational database arrangement we would
+leverage a database migration tool to do things like apply ``ALTER`` statements
+to tables when upgrading software versions. The premise of the event data
+model, however, is that events are immutable -- we won't be going back to
+modify past events whenever we make a change to the software.
+
+The strategy for version management around event data is implemented in
+:mod:`arxiv.submission.domain.events.versioning`. When event data is stored,
+it is tagged with the current version of this software. When
+event data are loaded from the store in this software, prior to instantiating
+the appropriate :class:`.Event` subclass, the data are mapped to the current
+software version using any defined version mappings for that event type.
+This happens on the fly, in :func:`.domain.event.event_factory`.
+
+
 .. _legacy-integration:
 
 Integration with the legacy system

@@ -25,6 +25,7 @@ class DBEvent(Base):  # type: ignore
 
     event_id = Column(String(40), primary_key=True)
     event_type = Column(String(255))
+    event_version = Column(String(20), default='0.0.0')
     proxy = Column(FriendlyJSON)
     proxy_id = index_property('proxy', 'agent_identifier')
     client = Column(FriendlyJSON)
@@ -52,14 +53,15 @@ class DBEvent(Base):  # type: ignore
 
         """
         _skip = ['creator', 'proxy', 'client', 'submission_id', 'created',
-                 'event_type']
+                 'event_type', 'event_version']
         data = {
             key: value for key, value in self.data.items()
             if key not in _skip
         }
         data['committed'] = True     # Since we're loading from the DB.
         return event_factory(
-            self.event_type,
+            event_version=self.event_version,
+            event_type=self.event_type,
             creator=Agent.from_dict(self.creator),
             proxy=Agent.from_dict(self.proxy) if self.proxy else None,
             client=Agent.from_dict(self.client) if self.client else None,

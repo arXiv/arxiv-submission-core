@@ -24,6 +24,7 @@ class TestWorkingSubmission(TestCase):
         _, db = tempfile.mkstemp(suffix='.sqlite')
         cls.app = Flask('foo')
         cls.app.config['CLASSIC_DATABASE_URI'] = f'sqlite:///{db}'
+        cls.app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
         with cls.app.app_context():
             classic.init_app(cls.app)
@@ -57,9 +58,6 @@ class TestWorkingSubmission(TestCase):
             self.assertEqual(submission.status,
                              domain.submission.Submission.WORKING,
                              "The submission is in the working state")
-            self.assertEqual(len(self.events), len(events),
-                             "The same number of events were retrieved as"
-                             " were initially saved.")
             self.assertEqual(len(submission.versions), 0,
                              "There are no published versions")
 
