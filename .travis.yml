@@ -16,5 +16,5 @@ script:
   - pipenv run nose2 -s core/arxiv --with-coverage
 after_success:
   - coveralls
-  - tests/lint.sh
+#  - tests/lint.sh
   - tests/docstyle.sh
