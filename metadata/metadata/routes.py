@@ -8,7 +8,7 @@ from flask import Blueprint, current_app, redirect, request, g, Response
 
 from arxiv.users.auth.decorators import scoped
 from arxiv.users.auth import scopes
-from arxiv import status
+from arxiv.integration.api import status
 from arxiv.base import logging
 
 from arxiv.submission.domain import User, Client, Classification

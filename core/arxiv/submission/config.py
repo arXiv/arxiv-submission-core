@@ -64,6 +64,7 @@ JWT_SECRET = os.environ.get('JWT_SECRET')
 CORE_VERSION = "0.0.0"
 
 # Email notification configuration.
+EMAIL_ENABLED = bool(int(os.environ.get('EMAIL_ENABLED', '1')))
 DEFAULT_SENDER = os.environ.get('DEFAULT_SENDER', 'noreply@arxiv.org')
 SUPPORT_EMAIL = "help@arxiv.org"
 SMTP_HOSTNAME = os.environ.get('SMTP_HOSTNAME', 'localhost')
