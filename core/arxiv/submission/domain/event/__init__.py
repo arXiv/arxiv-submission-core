@@ -966,6 +966,7 @@ class FinalizeSubmission(Event):
     def project(self, submission: Submission) -> Submission:
         """Set :attr:`Submission.finalized`."""
         submission.status = Submission.SUBMITTED
+        submission.submitted = datetime.now(UTC)
         return submission
 
     def _required_fields_are_complete(self, submission: Submission) -> None:
@@ -999,6 +1000,7 @@ class UnFinalizeSubmission(Event):
     def project(self, submission: Submission) -> Submission:
         """Set :attr:`Submission.finalized`."""
         submission.status = Submission.WORKING
+        submission.submitted = None
         return submission
 
 

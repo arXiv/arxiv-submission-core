@@ -182,6 +182,8 @@ off of the classic database, we will swap in a new service module with the
 same API.
 
 """
+import os
+from flask import Flask, Blueprint
 
 from .domain.event import *
 from .core import *
@@ -189,3 +191,11 @@ from .domain.submission import Submission, SubmissionMetadata, Author
 from .domain.agent import Agent, User, System, Client
 from .services import classic
 from . import rules
+
+
+def init_app(app: Flask) -> None:
+    template_folder = os.path.join(os.path.dirname(os.path.realpath(__file__)),
+                                   'templates')
+    app.register_blueprint(
+        Blueprint('submission-core', __name__, template_folder=template_folder)
+    )
