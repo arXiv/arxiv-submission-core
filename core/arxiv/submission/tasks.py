@@ -4,7 +4,7 @@ from typing import Callable, Optional, Iterable
 from functools import wraps, partial
 
 from flask import Flask
-from celery import shared_task, Celery
+from celery import shared_task, Celery, Task
 
 from arxiv.base.globals import get_application_config, get_application_global
 from arxiv.base import logging
@@ -68,16 +68,17 @@ def is_async(func: Callable) -> Callable:
     name = name_for_callback(func)
 
     @wraps(func)
-    def do_callback(event: Event, before: Submission,
+    def do_callback(self: Task, event: Event, before: Submission,
                     after: Submission, creator: Agent) -> Iterable[Event]:
         """Run the callback, and save the results."""
         try:
-            save(*func(event, before, after, creator),
+            save(*func(event, before, after, creator, task_id=self.request.id),
                  submission_id=after.submission_id)
         except NothingToDo as e:
             logger.debug('No events to save, move along: %s', e)
 
-    worker_app.task(name=name)(do_callback)     # Register wrapped callback.
+    # Register the wrapped callback.
+    worker_app.task(name=name, bind=True)(do_callback)
 
     @wraps(func)
     def execute_callback(event: Event, before: Submission,

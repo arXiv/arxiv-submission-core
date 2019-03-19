@@ -1,7 +1,7 @@
 """Automated metadata checks."""
 
 from datetime import datetime, timedelta
-from typing import Set, List, Tuple, Iterable
+from typing import Set, List, Tuple, Iterable, Optional
 from unidecode import unidecode
 import string
 from functools import lru_cache as memoize
@@ -47,7 +47,9 @@ REMOVE_PUNCTUATION = str.maketrans(string.punctuation,
 @SetTitle.bind(condition=lambda *a: not system_event(*a))
 @is_async
 def check_similar_titles(event: SetTitle, before: Submission,
-                         after: Submission, creator: Agent) -> Iterable[Event]:
+                         after: Submission, creator: Agent,
+                         task_id: Optional[str] = None,
+                         **kwargs) -> Iterable[Event]:
     """
     Check for other submissions with very similar titles.
 
@@ -81,7 +83,9 @@ def check_similar_titles(event: SetTitle, before: Submission,
 
 @SetTitle.bind(condition=lambda *a: not system_event(*a))
 def check_title_ascii(event: SetTitle, before: Submission,
-                      after: Submission, creator: Agent) -> Iterable[Event]:
+                      after: Submission, creator: Agent,
+                      task_id: Optional[str] = None,
+                      **kwargs) -> Iterable[Event]:
     """
     Screen for possible abuse of unicode in titles.
 
@@ -101,7 +105,9 @@ def check_title_ascii(event: SetTitle, before: Submission,
 
 @SetAbstract.bind(condition=lambda *a: not system_event(*a))
 def check_abstract_ascii(event: SetAbstract, before: Submission,
-                         after: Submission, creator: Agent) -> Iterable[Event]:
+                         after: Submission, creator: Agent,
+                         task_id: Optional[str] = None,
+                         **kwargs) -> Iterable[Event]:
     """
     Screen for possible abuse of unicode in abstracts.
 

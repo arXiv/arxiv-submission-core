@@ -27,6 +27,7 @@ class AddProcessStatus(Event):
     version: Optional[str] = field(default=None)
     identifier: Optional[str] = field(default=None)
     reason: Optional[str] = field(default=None)
+    monitoring_task: Optional[str] = field(default=None)
 
     def validate(self, submission: Submission) -> None:
         """Verify that we have a :class:`.ProcessStatus`."""
@@ -43,7 +44,8 @@ class AddProcessStatus(Event):
             process_service=self.service,
             process_version=self.version,
             process_identifier=self.identifier,
-            reason=self.reason
+            reason=self.reason,
+            monitoring_task=self.monitoring_task
         ))
         return submission
 

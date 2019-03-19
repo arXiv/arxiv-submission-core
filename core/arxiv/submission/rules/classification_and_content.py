@@ -1,6 +1,6 @@
 """Extract text, and get suggestions, features, and flags from Classifier."""
 
-from typing import Iterable
+from typing import Iterable, Optional
 from itertools import count
 import time
 
@@ -15,7 +15,8 @@ from ..domain.flag import Flag, ContentFlag
 from ..domain.annotation import Feature
 from ..domain.agent import Agent, User
 from ..domain.process import ProcessStatus
-from ..services import Classifier, plaintext
+from ..services import Classifier, PlainTextService
+from ..services.plaintext import ExtractionFailed
 from ..tasks import is_async
 
 # TODO: make this configurable
@@ -42,31 +43,37 @@ Status = ProcessStatus.Status
 @ConfirmPreview.bind()  # As soon as the user has confirmed their PDF preview.
 @is_async
 def extract_plain_text(event: ConfirmPreview, before: Submission,
-                       after: Submission, creator: Agent) -> Iterable[Event]:
+                       after: Submission, creator: Agent,
+                       task_id: Optional[str] = None,
+                       **kwargs) -> Iterable[Event]:
     """Use the plain text extraction service to extract text from the PDF."""
     identifier = after.source_content.identifier
     process = ProcessStatus.Process.PLAIN_TEXT_EXTRACTION
     try:
-        plaintext.PlainTextService.request_extraction(after.source_content.identifier)
+        PlainTextService.request_extraction(after.source_content.identifier)
         yield AddProcessStatus(creator=creator, process=process,
                                status=ProcessStatus.Status.REQUESTED,
-                               service='plaintext', version=plaintext.PlainTextService.VERSION,
-                               identifier=identifier)
+                               service='plaintext',
+                               version=PlainTextService.VERSION,
+                               identifier=identifier, monitoring_task=task_id)
         for tries in count(1):
-            if plaintext.PlainTextService.extraction_is_complete(identifier):
+            if PlainTextService.extraction_is_complete(identifier):
                 yield AddProcessStatus(creator=creator, process=process,
                                        status=ProcessStatus.Status.SUCCEEDED,
                                        service='plaintext',
-                                       version=plaintext.PlainTextService.VERSION,
-                                       identifier=identifier)
+                                       version=PlainTextService.VERSION,
+                                       identifier=identifier,
+                                       monitoring_task=task_id)
                 break
             time.sleep(tries ** 2)  # Exponential back-off.
-    except (exceptions.RequestFailed, plaintext.ExtractionFailed) as e:
+    except (exceptions.RequestFailed, ExtractionFailed) as e:
         reason = 'request failed (%s): %s' % (type(e).__name__, e)
         yield AddProcessStatus(creator=creator, process=process,
                                status=ProcessStatus.Status.FAILED,
-                               service='plaintext', version=plaintext.PlainTextService.VERSION,
-                               identifier=identifier, reason=reason)
+                               service='plaintext',
+                               version=PlainTextService.VERSION,
+                               identifier=identifier, reason=reason,
+                               monitoring_task=task_id)
 
 
 def when(process: Process, status: Status) -> Condition:
@@ -92,17 +99,20 @@ FEATURE_TYPES = {
 @AddProcessStatus.bind(when(Process.PLAIN_TEXT_EXTRACTION, Status.SUCCEEDED))
 @is_async
 def call_classifier(event: AddProcessStatus, before: Submission,
-                    after: Submission, creator: Agent) -> Iterable[Event]:
+                    after: Submission, creator: Agent,
+                    task_id: Optional[str] = None,
+                    **kwargs) -> Iterable[Event]:
     """Request the opinion of the auto-Classifier."""
     identifier = after.source_content.identifier
     yield AddProcessStatus(creator=creator, process=Process.CLASSIFICATION,
                            status=ProcessStatus.Status.REQUESTED,
                            service=Classifier.SERVICE,
                            version=Classifier.VERSION,
-                           identifier=identifier)
+                           identifier=identifier, monitoring_task=task_id)
     try:
         suggestions, flags, counts = \
-            Classifier.classify(plaintext.PlainTextService.retrieve_content(identifier))
+            Classifier.classify(
+                PlainTextService.retrieve_content(identifier))
     except (exceptions.RequestFailed, exceptions.RequestFailed) as e:
         reason = 'request failed (%s): %s' % (type(e), e)
         yield AddProcessStatus(creator=creator,
@@ -110,7 +120,8 @@ def call_classifier(event: AddProcessStatus, before: Submission,
                                status=ProcessStatus.Status.FAILED,
                                service=Classifier.SERVICE,
                                version=Classifier.VERSION,
-                               identifier=identifier, reason=reason)
+                               identifier=identifier, reason=reason,
+                               monitoring_task=task_id)
         return
 
     success = AddProcessStatus(creator=creator,
@@ -118,7 +129,7 @@ def call_classifier(event: AddProcessStatus, before: Submission,
                                status=ProcessStatus.Status.SUCCEEDED,
                                service=Classifier.SERVICE,
                                version=Classifier.VERSION,
-                               identifier=identifier)
+                               identifier=identifier, monitoring_task=task_id)
     yield success
     yield AddClassifierResults(creator=creator,
                                results=[{'category': suggestion.category,
@@ -161,7 +172,9 @@ def feature_type_is(feature_type: Feature.FeatureTypes) -> Condition:
 
 @AddFeature.bind(feature_type_is(Feature.FeatureTypes.STOPWORD_PERCENT))
 def check_stop_percent(event: AddFeature, before: Submission,
-                       after: Submission, creator: Agent) -> Iterable[Event]:
+                       after: Submission, creator: Agent,
+                       task_id: Optional[str] = None,
+                       **kwargs) -> Iterable[Event]:
     """Flag the submission if the percentage of stopwords is too low."""
     if event.feature_value < LOW_STOP_PERCENT:
         yield AddContentFlag(
@@ -174,7 +187,9 @@ def check_stop_percent(event: AddFeature, before: Submission,
 
 @AddFeature.bind(feature_type_is(Feature.FeatureTypes.STOPWORD_COUNT))
 def check_stop_count(event: AddFeature, before: Submission,
-                     after: Submission, creator: Agent) -> Iterable[Event]:
+                     after: Submission, creator: Agent,
+                     task_id: Optional[str] = None,
+                     **kwargs) -> Iterable[Event]:
     """Flag the submission if the number of stopwords is too low."""
     if event.feature_value < LOW_STOP:
         yield AddContentFlag(

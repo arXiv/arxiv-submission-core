@@ -1,6 +1,6 @@
 """Rules for sending e-mail notifications."""
 
-from typing import Iterable
+from typing import Iterable, Optional
 
 from flask import render_template
 
@@ -17,7 +17,9 @@ from ..tasks import is_async
 @FinalizeSubmission.bind()
 @is_async
 def confirm_submission(event: FinalizeSubmission, before: Submission,
-                       after: Submission, creator: Agent) -> Iterable[Event]:
+                       after: Submission, creator: Agent,
+                       task_id: Optional[str] = None,
+                       **kwargs) -> Iterable[Event]:
     """Send a confirmation e-mail when the submission is finalized."""
     if email_is_enabled():
         context = {
