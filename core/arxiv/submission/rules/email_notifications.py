@@ -38,5 +38,5 @@ def confirm_submission(event: FinalizeSubmission, before: Submission,
 
 
 def email_is_enabled() -> bool:
-    """Whether or not a Jaccard similarity is above the threshold."""
+    """Determine whether or not email is enabled in this application."""
     return bool(get_application_config().get('EMAIL_ENABLED', False))
