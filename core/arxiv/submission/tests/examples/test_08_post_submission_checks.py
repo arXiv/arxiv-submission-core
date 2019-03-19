@@ -8,6 +8,7 @@ from flask import Flask
 from ...services import classic, plaintext, classifier
 from ... import save, load, load_fast, domain, exceptions, tasks, core, rules
 from ...rules.tests.data.titles import TITLES
+from ...rules import classification_and_content
 
 
 CCO = 'http://creativecommons.org/publicdomain/zero/1.0/'
@@ -53,7 +54,7 @@ class TestPostSubmissionChecks(TestCase):
     @mock.patch(f'{domain.__name__}.event.event.get_application_config',
                 mock.MagicMock(return_value={'ENABLE_CALLBACKS': 1}))
     @mock.patch(f'{classifier.__name__}.Classifier.classify')
-    @mock.patch(f'{plaintext.__name__}.PlainTextService')
+    @mock.patch(f'{classification_and_content.__name__}.PlainTextService')
     def test_submission(self, mock_plaintext, mock_classify):
         """Create, and complete the submission."""
         mock_plaintext.request_extraction.return_value = None

@@ -10,7 +10,7 @@ from typing import Tuple, List, Callable, Optional, Dict
 from flask import url_for, current_app
 from werkzeug.exceptions import NotFound, BadRequest, InternalServerError
 
-from arxiv import status
+from arxiv.integration.api import status
 from arxiv.submission.domain.agent import Agent, agent_factory, System
 from arxiv.submission.domain import Event
 from arxiv.submission.domain.submission import Submission, Classification, \
@@ -68,7 +68,7 @@ def create_submission(data: dict, headers: dict, agents: Dict[str, Agent],
         'Location': url_for('submission.get_submission',
                             submission_id=submission.submission_id)
     }
-    return submission.to_dict(), status.HTTP_201_CREATED, response_headers
+    return submission.to_dict(), status.CREATED, response_headers
 
 
 def get_submission(submission_id: int,
@@ -82,7 +82,7 @@ def get_submission(submission_id: int,
     except Exception as e:
         logger.error('Unhandled exception: (%s) %s', str(type(e)), str(e))
         raise InternalServerError('Encountered unhandled exception') from e
-    return submission.to_dict(), status.HTTP_200_OK, {}
+    return submission.to_dict(), status.OK, {}
 
 
 @util.validate_request('schema/resources/submission.json')
@@ -107,4 +107,4 @@ def update_submission(data: dict, headers: dict, agents: Dict[str, Agent],
                             creator=agents['creator'].native_id,
                             submission_id=submission.submission_id)
     }
-    return submission.to_dict(), status.HTTP_200_OK, response_headers
+    return submission.to_dict(), status.OK, response_headers

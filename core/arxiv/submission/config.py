@@ -48,6 +48,8 @@ CLASSIFIER_ENDPOINT = os.environ.get('CLASSIFIER_ENDPOINT', 'http://localhost:80
 CLASSIFIER_VERIFY = bool(int(os.environ.get('CLASSIFIER_VERIFY', '0')))
 
 CLASSIC_DATABASE_URI = os.environ.get('CLASSIC_DATABASE_URI', 'sqlite:///')
+SQLALCHEMY_DATABASE_URI = CLASSIC_DATABASE_URI
+SQLALCHEMY_TRACK_MODIFICATIONS = False
 
 ENABLE_ASYNC = os.environ.get('ENABLE_ASYNC', '0')
 """
@@ -62,3 +64,30 @@ ENABLE_CALLBACKS = os.environ.get('ENABLE_CALLBACKS', '0')
 JWT_SECRET = os.environ.get('JWT_SECRET')
 
 CORE_VERSION = "0.0.0"
+
+# Email notification configuration.
+EMAIL_ENABLED = bool(int(os.environ.get('EMAIL_ENABLED', '1')))
+DEFAULT_SENDER = os.environ.get('DEFAULT_SENDER', 'noreply@arxiv.org')
+SUPPORT_EMAIL = "help@arxiv.org"
+SMTP_HOSTNAME = os.environ.get('SMTP_HOSTNAME', 'localhost')
+SMTP_USERNAME = os.environ.get('SMTP_USERNAME', 'foouser')
+SMTP_PASSWORD = os.environ.get('SMTP_PASSWORD', 'foopass')
+SMTP_PORT = int(os.environ.get('SMTP_PORT', '0'))
+SMTP_LOCAL_HOSTNAME = os.environ.get('SMTP_LOCAL_HOSTNAME', None)
+SMTP_SSL = bool(int(os.environ.get('SMTP_SSL', '0')))
+
+
+EXTERNAL_URL_SCHEME = os.environ.get('EXTERNAL_URL_SCHEME', 'https')
+BASE_SERVER = os.environ.get('BASE_SERVER', 'arxiv.org')
+SERVER_NAME = "submit.arxiv.org"
+
+URLS = [
+    ("submission", "/<int:submission_id>", "submit.arxiv.org")
+]
+"""
+URLs for external services, for use with :func:`flask.url_for`.
+This subset of URLs is common only within submit, for now - maybe move to base
+if these pages seem relevant to other services.
+
+For details, see :mod:`arxiv.base.urls`.
+"""

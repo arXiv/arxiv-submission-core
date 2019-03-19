@@ -29,7 +29,7 @@ class TestClassifier(TestCase):
         mock_Session.return_value = mock.MagicMock(
             post=mock.MagicMock(
                 return_value=mock.MagicMock(
-                    status_code=status.HTTP_503_SERVICE_UNAVAILABLE
+                    status_code=status.SERVICE_UNAVAILABLE
                 )
             )
         )
@@ -45,7 +45,7 @@ class TestClassifier(TestCase):
         mock_Session.return_value = mock.MagicMock(
             post=mock.MagicMock(
                 return_value=mock.MagicMock(
-                    status_code=status.HTTP_200_OK,
+                    status_code=status.OK,
                     json=mock.MagicMock(return_value=data)
                 )
             )
@@ -68,7 +68,7 @@ class TestClassifier(TestCase):
         mock_Session.return_value = mock.MagicMock(
             post=mock.MagicMock(
                 return_value=mock.MagicMock(
-                    status_code=status.HTTP_200_OK,
+                    status_code=status.OK,
                     json=mock.MagicMock(return_value=data)
                 )
             )
@@ -99,7 +99,7 @@ class TestClassifier(TestCase):
         mock_Session.return_value = mock.MagicMock(
             post=mock.MagicMock(
                 return_value=mock.MagicMock(
-                    status_code=status.HTTP_200_OK,
+                    status_code=status.OK,
                     json=mock.MagicMock(return_value=data)
                 )
             )
@@ -141,7 +141,7 @@ class TestClassifierModule(TestCase):
         """The classifier service is unavailable."""
         mock_post = mock.MagicMock(
             return_value=mock.MagicMock(
-                status_code=status.HTTP_503_SERVICE_UNAVAILABLE
+                status_code=status.SERVICE_UNAVAILABLE
             )
         )
         mock_Session.return_value = mock.MagicMock(post=mock_post)
@@ -158,7 +158,7 @@ class TestClassifierModule(TestCase):
             data = json.load(f)
         mock_post = mock.MagicMock(
             return_value=mock.MagicMock(
-                status_code=status.HTTP_200_OK,
+                status_code=status.OK,
                 json=mock.MagicMock(return_value=data)
             )
         )
@@ -181,7 +181,7 @@ class TestClassifierModule(TestCase):
             data = json.load(f)
         mock_post = mock.MagicMock(
             return_value=mock.MagicMock(
-                status_code=status.HTTP_200_OK,
+                status_code=status.OK,
                 json=mock.MagicMock(return_value=data)
             )
         )

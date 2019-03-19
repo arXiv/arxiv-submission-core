@@ -43,13 +43,11 @@ class TestPlainTextContentExtraction(TestCase):
 
     @mock.patch(f'{tasks.__name__}.get_application_config',
                 mock.MagicMock(return_value={'ENABLE_ASYNC': 0}))
-    @mock.patch(f'{c_and_c.__name__}.plaintext')
+    @mock.patch(f'{c_and_c.__name__}.PlainTextService')
     def test_extract_text(self, mock_plaintext):
         """Submitter confirms PDF preview, and we attempt to extract text."""
-        mock_plaintext.ExtractionFailed = plaintext.ExtractionFailed
-
         # Not complete on the first call.
-        mock_plaintext.PlainTextService.extraction_is_complete.side_effect = [False, True]
+        mock_plaintext.extraction_is_complete.side_effect = [False, True]
 
         event = ConfirmPreview(creator=self.creator)
         before, after = self.submission, event.apply(self.submission)
@@ -73,11 +71,9 @@ class TestPlainTextContentExtraction(TestCase):
 
     @mock.patch(f'{tasks.__name__}.get_application_config',
                 mock.MagicMock(return_value={'ENABLE_ASYNC': 0}))
-    @mock.patch(f'{c_and_c.__name__}.plaintext')
+    @mock.patch(f'{c_and_c.__name__}.PlainTextService')
     def test_extraction_request_fails(self, mock_plaintext):
         """There is a problem requesting plain text extraction."""
-        mock_plaintext.ExtractionFailed = plaintext.ExtractionFailed
-
         # The initial extraction request fails.
         exception_message = "exception message"
 
@@ -85,7 +81,7 @@ class TestPlainTextContentExtraction(TestCase):
             raise exceptions.RequestForbidden(exception_message,
                                               mock.MagicMock())
 
-        mock_plaintext.PlainTextService.request_extraction.side_effect = raise_failure
+        mock_plaintext.request_extraction.side_effect = raise_failure
 
         event = ConfirmPreview(creator=self.creator)
         before, after = self.submission, event.apply(self.submission)
@@ -110,19 +106,16 @@ class TestPlainTextContentExtraction(TestCase):
 
     @mock.patch(f'{tasks.__name__}.get_application_config',
                 mock.MagicMock(return_value={'ENABLE_ASYNC': 0}))
-    @mock.patch(f'{c_and_c.__name__}.plaintext')
+    @mock.patch(f'{c_and_c.__name__}.PlainTextService')
     def test_extraction_fails_after_start(self, mock_plaintext):
         """Extraction fails after starting."""
-        mock_plaintext.ExtractionFailed = plaintext.ExtractionFailed
-
         # The initial extraction request fails.
         exception_message = "exception message"
 
         def raise_failure(*args, **kwargs):
             raise plaintext.ExtractionFailed(exception_message,
                                              mock.MagicMock())
-
-        mock_plaintext.PlainTextService.extraction_is_complete.side_effect = raise_failure
+        mock_plaintext.extraction_is_complete.side_effect = raise_failure
 
         event = ConfirmPreview(creator=self.creator)
         before, after = self.submission, event.apply(self.submission)
@@ -172,12 +165,10 @@ class TestClassificationRequest(TestCase):
     @mock.patch(f'{tasks.__name__}.get_application_config',
                 mock.MagicMock(return_value={'ENABLE_ASYNC': 0}))
     @mock.patch(f'{c_and_c.__name__}.Classifier')
-    @mock.patch(f'{c_and_c.__name__}.plaintext')
+    @mock.patch(f'{c_and_c.__name__}.PlainTextService')
     def test_call_classifier(self, mock_plaintext, mock_classifier):
         """Extraction succeeds, and we request classification."""
-        mock_plaintext.ExtractionFailed = plaintext.ExtractionFailed
-
-        mock_plaintext.PlainTextService.retrieve_content.return_value = b'plain text content'
+        mock_plaintext.retrieve_content.return_value = b'plain text content'
         mock_classifier.classify.return_value = (
             [classifier.classifier.Suggestion('astro-ph.HE', 0.9)],
             [classifier.classifier.Flag('%stop', '0.001'),
@@ -190,7 +181,7 @@ class TestClassificationRequest(TestCase):
             process=ProcessStatus.Process.PLAIN_TEXT_EXTRACTION,
             status=ProcessStatus.Status.SUCCEEDED,
             service='plaintext',
-            version=plaintext.PlainTextService.VERSION,
+            version='0.1',
             identifier=self.submission.source_content.identifier
         )
         before, after = self.submission, event.apply(self.submission)
@@ -228,7 +219,7 @@ class TestClassificationRequest(TestCase):
     @mock.patch(f'{tasks.__name__}.get_application_config',
                 mock.MagicMock(return_value={'ENABLE_ASYNC': 0}))
     @mock.patch(f'{c_and_c.__name__}.Classifier')
-    @mock.patch(f'{c_and_c.__name__}.plaintext')
+    @mock.patch(f'{c_and_c.__name__}.PlainTextService')
     def test_classification_fails(self, mock_plaintext, mock_classifier):
         """The classification request fails."""
         mock_plaintext.ExtractionFailed = plaintext.ExtractionFailed
@@ -240,14 +231,14 @@ class TestClassificationRequest(TestCase):
             raise exceptions.RequestFailed(exception_message, mock.MagicMock())
 
         mock_classifier.classify.side_effect = raise_failure
-        mock_plaintext.PlainTextService.retrieve_content.return_value = b'plain text content'
+        mock_plaintext.retrieve_content.return_value = b'plain text content'
 
         event = AddProcessStatus(
             creator=self.creator,
             process=ProcessStatus.Process.PLAIN_TEXT_EXTRACTION,
             status=ProcessStatus.Status.SUCCEEDED,
             service='plaintext',
-            version=plaintext.PlainTextService.VERSION,
+            version='0.1',
             identifier=self.submission.source_content.identifier
         )
         before, after = self.submission, event.apply(self.submission)

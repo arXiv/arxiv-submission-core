@@ -28,7 +28,7 @@ class TestRequestCompilation(TestCase):
         mock_session = mock.MagicMock(
             post=mock.MagicMock(
                 return_value=mock.MagicMock(
-                    status_code=status.HTTP_202_ACCEPTED,
+                    status_code=status.ACCEPTED,
                     json=mock.MagicMock(return_value={
                         'source_id': upload_id,
                         'checksum': checksum,
@@ -40,7 +40,7 @@ class TestRequestCompilation(TestCase):
             ),
             get=mock.MagicMock(
                 return_value=mock.MagicMock(
-                    status_code=status.HTTP_200_OK,
+                    status_code=status.OK,
                     json=mock.MagicMock(return_value={
                         'source_id': upload_id,
                         'checksum': checksum,
@@ -73,7 +73,7 @@ class TestRequestCompilation(TestCase):
         mock_session = mock.MagicMock(
             post=mock.MagicMock(    # Redirected
                 return_value=mock.MagicMock(
-                    status_code=status.HTTP_200_OK,
+                    status_code=status.OK,
                     json=mock.MagicMock(
                         return_value={
                             'source_id': upload_id,
@@ -110,7 +110,7 @@ class TestGetTaskStatus(TestCase):
         mock_session = mock.MagicMock(
             get=mock.MagicMock(
                 return_value=mock.MagicMock(
-                    status_code=status.HTTP_200_OK,
+                    status_code=status.OK,
                     json=mock.MagicMock(
                         return_value={
                             'source_id': upload_id,
@@ -141,7 +141,7 @@ class TestGetTaskStatus(TestCase):
         mock_session = mock.MagicMock(
             get=mock.MagicMock(
                 return_value=mock.MagicMock(
-                    status_code=status.HTTP_200_OK,
+                    status_code=status.OK,
                     json=mock.MagicMock(
                         return_value={
                             'source_id': upload_id,
@@ -173,7 +173,7 @@ class TestGetTaskStatus(TestCase):
         mock_session = mock.MagicMock(
             get=mock.MagicMock(
                 return_value=mock.MagicMock(
-                    status_code=status.HTTP_200_OK,
+                    status_code=status.OK,
                     json=mock.MagicMock(
                         return_value={
                             'source_id': upload_id,
@@ -204,7 +204,7 @@ class TestGetTaskStatus(TestCase):
         mock_session = mock.MagicMock(
             get=mock.MagicMock(
                 return_value=mock.MagicMock(
-                    status_code=status.HTTP_404_NOT_FOUND,
+                    status_code=status.NOT_FOUND,
                     json=mock.MagicMock(
                         return_value={}
                     )

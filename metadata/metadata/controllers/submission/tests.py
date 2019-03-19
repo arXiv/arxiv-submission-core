@@ -5,7 +5,7 @@ import json
 from datetime import datetime
 from werkzeug.exceptions import BadRequest, InternalServerError, NotFound
 from pytz import UTC
-from arxiv import status
+from arxiv.integration.api import status
 from arxiv.submission.domain import User, Submission, Author, Client
 from arxiv.submission import CreateSubmission, SaveError, \
     InvalidEvent, NoSuchSubmission, SetPrimaryClassification, \
@@ -76,7 +76,7 @@ class TestCreateSubmission(TestCase):
                               "Should pass a CreateSubmission first")
         self.assertIsInstance(call_args[1], SetPrimaryClassification,
                               "Should pass a SetPrimaryClassification")
-        self.assertEqual(stat, status.HTTP_201_CREATED,
+        self.assertEqual(stat, status.CREATED,
                          "Should return 201 Created when submission is"
                          " successfully created.")
         self.assertIn('Location', head, "Should include a Location header.")
@@ -175,7 +175,7 @@ class TestUpdateSubmission(TestCase):
         resp, stat, head = submission.update_submission(data, self.headers,
                                                         self.agents,
                                                         self.token, 1)
-        self.assertEqual(stat, status.HTTP_200_OK,
+        self.assertEqual(stat, status.OK,
                          "Should return 200 OK when submission is"
                          " successfully updated.")
         self.assertIn('Location', head, "Should include a Location header.")
@@ -270,7 +270,7 @@ class TestGetSubmission(TestCase):
         content, status_code, headers = submission.get_submission(1)
         self.assertEqual(mock_events.load.call_count, 1,
                          "Should call load() in the events core package")
-        self.assertEqual(status_code, status.HTTP_200_OK,
+        self.assertEqual(status_code, status.OK,
                          "Should return 200 OK")
         self.assertIsInstance(content, dict, "Should return a dict")
         try:

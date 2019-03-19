@@ -383,6 +383,7 @@ class Submission:
     owner: Agent
     created: Optional[datetime] = field(default=None)
     updated: Optional[datetime] = field(default=None)
+    submitted: Optional[datetime] = field(default=None)
 
     source_content: Optional[SubmissionContent] = field(default=None)
     primary_classification: Optional[Classification] = field(default=None)

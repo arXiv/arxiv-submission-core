@@ -20,7 +20,7 @@ class TestPlainTextService(TestCase):
         """A plaintext extraction is already in progress."""
         mock_post = mock.MagicMock(
             return_value=mock.MagicMock(
-                status_code=status.HTTP_303_SEE_OTHER,
+                status_code=status.SEE_OTHER,
                 json=mock.MagicMock(return_value={}),
                 headers={'Location': '...'}
             )
@@ -38,7 +38,7 @@ class TestPlainTextService(TestCase):
         mock_session = mock.MagicMock(**{
             'post': mock.MagicMock(
                 return_value=mock.MagicMock(
-                    status_code=status.HTTP_202_ACCEPTED,
+                    status_code=status.ACCEPTED,
                     json=mock.MagicMock(return_value={}),
                     content='',
                     headers={'Location': '/somewhere'}
@@ -46,7 +46,7 @@ class TestPlainTextService(TestCase):
             ),
             'get': mock.MagicMock(
                 return_value=mock.MagicMock(
-                    status_code=status.HTTP_200_OK,
+                    status_code=status.OK,
                     json=mock.MagicMock(
                         return_value={'reason': 'extraction in process'}
                     ),
@@ -71,7 +71,7 @@ class TestPlainTextService(TestCase):
         mock_Session.return_value = mock.MagicMock(
             post=mock.MagicMock(
                 return_value=mock.MagicMock(
-                    status_code=status.HTTP_400_BAD_REQUEST,
+                    status_code=status.BAD_REQUEST,
                     json=mock.MagicMock(return_value={
                         'reason': 'something is not quite right'
                     })
@@ -90,7 +90,7 @@ class TestPlainTextService(TestCase):
         mock_Session.return_value = mock.MagicMock(
             post=mock.MagicMock(
                 return_value=mock.MagicMock(
-                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    status_code=status.INTERNAL_SERVER_ERROR,
                     json=mock.MagicMock(return_value={
                         'reason': 'something is not quite right'
                     })
@@ -109,7 +109,7 @@ class TestPlainTextService(TestCase):
         mock_Session.return_value = mock.MagicMock(
             post=mock.MagicMock(
                 return_value=mock.MagicMock(
-                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    status_code=status.UNAUTHORIZED,
                     json=mock.MagicMock(return_value={
                         'reason': 'who are you'
                     })
@@ -128,7 +128,7 @@ class TestPlainTextService(TestCase):
         mock_Session.return_value = mock.MagicMock(
             post=mock.MagicMock(
                 return_value=mock.MagicMock(
-                    status_code=status.HTTP_403_FORBIDDEN,
+                    status_code=status.FORBIDDEN,
                     json=mock.MagicMock(return_value={
                         'reason': 'you do not have sufficient authz'
                     })
@@ -146,7 +146,7 @@ class TestPlainTextService(TestCase):
         """Extraction is indeed complete."""
         mock_get = mock.MagicMock(
             return_value=mock.MagicMock(
-                status_code=status.HTTP_303_SEE_OTHER,
+                status_code=status.SEE_OTHER,
                 json=mock.MagicMock(return_value={}),
                 headers={'Location': '...'}
             )
@@ -166,7 +166,7 @@ class TestPlainTextService(TestCase):
         """Extraction is still in progress."""
         mock_get = mock.MagicMock(
             return_value=mock.MagicMock(
-                status_code=status.HTTP_200_OK,
+                status_code=status.OK,
                 json=mock.MagicMock(return_value={'status': 'in_progress'})
             )
         )
@@ -185,7 +185,7 @@ class TestPlainTextService(TestCase):
         """Extraction failed."""
         mock_get = mock.MagicMock(
             return_value=mock.MagicMock(
-                status_code=status.HTTP_200_OK,
+                status_code=status.OK,
                 json=mock.MagicMock(return_value={'status': 'failed'})
             )
         )
@@ -202,7 +202,7 @@ class TestPlainTextService(TestCase):
         mock_Session.return_value = mock.MagicMock(
             get=mock.MagicMock(
                 return_value=mock.MagicMock(
-                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    status_code=status.UNAUTHORIZED,
                     json=mock.MagicMock(return_value={
                         'reason': 'who are you'
                     })
@@ -221,7 +221,7 @@ class TestPlainTextService(TestCase):
         mock_Session.return_value = mock.MagicMock(
             get=mock.MagicMock(
                 return_value=mock.MagicMock(
-                    status_code=status.HTTP_403_FORBIDDEN,
+                    status_code=status.FORBIDDEN,
                     json=mock.MagicMock(return_value={
                         'reason': 'you do not have sufficient authz'
                     })
@@ -240,7 +240,7 @@ class TestPlainTextService(TestCase):
         mock_Session.return_value = mock.MagicMock(
             get=mock.MagicMock(
                 return_value=mock.MagicMock(
-                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    status_code=status.UNAUTHORIZED,
                     json=mock.MagicMock(return_value={
                         'reason': 'who are you'
                     })
@@ -259,7 +259,7 @@ class TestPlainTextService(TestCase):
         mock_Session.return_value = mock.MagicMock(
             get=mock.MagicMock(
                 return_value=mock.MagicMock(
-                    status_code=status.HTTP_403_FORBIDDEN,
+                    status_code=status.FORBIDDEN,
                     json=mock.MagicMock(return_value={
                         'reason': 'you do not have sufficient authz'
                     })
@@ -278,7 +278,7 @@ class TestPlainTextService(TestCase):
         content = b'thisisthecontent'
         mock_get = mock.MagicMock(
             return_value=mock.MagicMock(
-                status_code=status.HTTP_200_OK,
+                status_code=status.OK,
                 content=content
             )
         )
@@ -298,7 +298,7 @@ class TestPlainTextService(TestCase):
         """There is no such plaintext resource."""
         mock_get = mock.MagicMock(
             return_value=mock.MagicMock(
-                status_code=status.HTTP_404_NOT_FOUND,
+                status_code=status.NOT_FOUND,
                 json=mock.MagicMock(return_value={'reason': 'no such thing'})
             )
         )
@@ -314,7 +314,7 @@ class TestPlainTextService(TestCase):
         """There is no such plaintext resource."""
         mock_get = mock.MagicMock(
             return_value=mock.MagicMock(
-                status_code=status.HTTP_303_SEE_OTHER,
+                status_code=status.SEE_OTHER,
                 json=mock.MagicMock(return_value={}),
                 headers={'Location': '...'}
             )
@@ -329,7 +329,7 @@ class TestPlainTextService(TestCase):
 class TestPlainTextServiceModule(TestCase):
     """Tests for :mod:`.services.plaintext`."""
 
-    def session(self, status_code=status.HTTP_200_OK, method="get", json={},
+    def session(self, status_code=status.OK, method="get", json={},
                 content="", headers={}):
         """Make a mock session."""
         return mock.MagicMock(**{
@@ -350,7 +350,7 @@ class TestPlainTextServiceModule(TestCase):
     def test_already_in_progress(self, mock_Session):
         """A plaintext extraction is already in progress."""
         mock_Session.return_value = self.session(
-            status_code=status.HTTP_303_SEE_OTHER,
+            status_code=status.SEE_OTHER,
             method='post',
             headers={'Location': '...'}
         )
@@ -366,7 +366,7 @@ class TestPlainTextServiceModule(TestCase):
         mock_session = mock.MagicMock(**{
             'post': mock.MagicMock(
                 return_value=mock.MagicMock(
-                    status_code=status.HTTP_202_ACCEPTED,
+                    status_code=status.ACCEPTED,
                     json=mock.MagicMock(return_value={}),
                     content='',
                     headers={'Location': '/somewhere'}
@@ -374,7 +374,7 @@ class TestPlainTextServiceModule(TestCase):
             ),
             'get': mock.MagicMock(
                 return_value=mock.MagicMock(
-                    status_code=status.HTTP_200_OK,
+                    status_code=status.OK,
                     json=mock.MagicMock(
                         return_value={'reason': 'extraction in process'}
                     ),
@@ -396,7 +396,7 @@ class TestPlainTextServiceModule(TestCase):
     def test_extraction_bad_request(self, mock_Session):
         """Service returns 400 Bad Request."""
         mock_Session.return_value = self.session(
-            status_code=status.HTTP_400_BAD_REQUEST,
+            status_code=status.BAD_REQUEST,
             method='post',
             json={'reason': 'something is not quite right'}
         )
@@ -409,7 +409,7 @@ class TestPlainTextServiceModule(TestCase):
     def test_extraction_server_error(self, mock_Session):
         """Service returns 500 Internal Server Error."""
         mock_Session.return_value = self.session(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            status_code=status.INTERNAL_SERVER_ERROR,
             method='post',
             json={'reason': 'something is not quite right'}
         )
@@ -422,7 +422,7 @@ class TestPlainTextServiceModule(TestCase):
     def test_extraction_unauthorized(self, mock_Session):
         """Service returns 401 Unauthorized."""
         mock_Session.return_value = self.session(
-            status_code=status.HTTP_401_UNAUTHORIZED,
+            status_code=status.UNAUTHORIZED,
             method='post',
             json={'reason': 'who are you'}
         )
@@ -435,7 +435,7 @@ class TestPlainTextServiceModule(TestCase):
     def test_request_extraction_forbidden(self, mock_Session):
         """Service returns 403 Forbidden."""
         mock_Session.return_value = self.session(
-            status_code=status.HTTP_403_FORBIDDEN,
+            status_code=status.FORBIDDEN,
             method='post',
             json={'reason': 'you do not have sufficient authz'}
         )
@@ -448,7 +448,7 @@ class TestPlainTextServiceModule(TestCase):
     def test_extraction_is_complete(self, mock_Session):
         """Extraction is indeed complete."""
         mock_session = self.session(
-            status_code=status.HTTP_303_SEE_OTHER,
+            status_code=status.SEE_OTHER,
             headers={'Location': '...'}
         )
         mock_Session.return_value = mock_session
@@ -484,7 +484,7 @@ class TestPlainTextServiceModule(TestCase):
     def test_complete_unauthorized(self, mock_Session):
         """Service returns 401 Unauthorized."""
         mock_Session.return_value = self.session(
-            status_code=status.HTTP_401_UNAUTHORIZED,
+            status_code=status.UNAUTHORIZED,
             json={'reason': 'who are you'}
         )
         upload_id = '132456'
@@ -496,7 +496,7 @@ class TestPlainTextServiceModule(TestCase):
     def test_complete_forbidden(self, mock_Session):
         """Service returns 403 Forbidden."""
         mock_Session.return_value = self.session(
-            status_code=status.HTTP_403_FORBIDDEN,
+            status_code=status.FORBIDDEN,
             json={'reason': 'you do not have sufficient authz'}
         )
         upload_id = '132456'
@@ -508,7 +508,7 @@ class TestPlainTextServiceModule(TestCase):
     def test_retrieve_unauthorized(self, mock_Session):
         """Service returns 401 Unauthorized."""
         mock_Session.return_value = self.session(
-            status_code=status.HTTP_401_UNAUTHORIZED,
+            status_code=status.UNAUTHORIZED,
             json={'reason': 'who are you'}
         )
         upload_id = '132456'
@@ -520,7 +520,7 @@ class TestPlainTextServiceModule(TestCase):
     def test_retrieve_forbidden(self, mock_Session):
         """Service returns 403 Forbidden."""
         mock_Session.return_value = self.session(
-            status_code=status.HTTP_403_FORBIDDEN,
+            status_code=status.FORBIDDEN,
             json={'reason': 'you do not have sufficient authz'}
         )
         upload_id = '132456'
@@ -534,7 +534,7 @@ class TestPlainTextServiceModule(TestCase):
         content = b'thisisthecontent'
         mock_get = mock.MagicMock(
             return_value=mock.MagicMock(
-                status_code=status.HTTP_200_OK,
+                status_code=status.OK,
                 content=content
             )
         )
@@ -553,7 +553,7 @@ class TestPlainTextServiceModule(TestCase):
     def test_retrieve_nonexistant(self, mock_Session):
         """There is no such plaintext resource."""
         mock_Session.return_value = self.session(
-            status_code=status.HTTP_404_NOT_FOUND,
+            status_code=status.NOT_FOUND,
             json={'reason': 'no such thing'}
         )
         upload_id = '132456'
@@ -565,7 +565,7 @@ class TestPlainTextServiceModule(TestCase):
     def test_retrieve_in_progress(self, mock_Session):
         """There is no such plaintext resource."""
         mock_Session.return_value = self.session(
-            status_code=status.HTTP_303_SEE_OTHER,
+            status_code=status.SEE_OTHER,
             headers={'Location': '...'}
         )
         upload_id = '132456'

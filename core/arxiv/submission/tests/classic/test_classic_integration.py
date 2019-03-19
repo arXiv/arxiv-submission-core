@@ -15,6 +15,8 @@ import tempfile
 from pytz import UTC
 from flask import Flask
 
+from arxiv.base import Base
+from arxiv import mail
 from ..util import in_memory_db
 from ... import *
 from ...services import classic
@@ -26,7 +28,10 @@ class TestClassicUIWorkflow(TestCase):
     def setUp(self):
         """An arXiv user is submitting a new paper."""
         self.app = Flask(__name__)
+        self.app.config['EMAIL_ENABLED'] = False
+        Base(self.app)
         init_app(self.app)
+        mail.init_app(self.app)
         self.submitter = domain.User(1234, email='j.user@somewhere.edu',
                                      forename='Jane', surname='User',
                                      endorsements=['cs.DL', 'cs.IR'])

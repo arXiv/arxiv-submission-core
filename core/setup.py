@@ -4,12 +4,12 @@ from setuptools import setup, find_packages
 
 setup(
     name='arxiv-submission-core',
-    version='0.6.2rc23',
+    version='0.6.2rc26',
     packages=[f'arxiv.{package}' for package
               in find_packages('arxiv')],
     zip_safe=False,
     install_requires=[
-        'arxiv-base>=0.15.3rc1',
+        'arxiv-base>=0.15.3rc7',
         'arxiv-auth>=0.3.2rc3',
         'flask',
         'mysqlclient',
@@ -28,5 +28,6 @@ setup(
         'retry==0.9.2',
         'pytz==2018.7',
         'backports-datetime-fromisoformat==1.0.0'
-    ]
+    ],
+    include_package_data=True
 )

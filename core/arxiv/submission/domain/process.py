@@ -12,7 +12,7 @@ from .util import get_tzaware_utc_now
 
 @dataclass
 class ProcessStatus:
-    """Base class for process status information."""
+    """Represents the status of a long-running remote process."""
 
     class Status(Enum):
         """Supported statuses."""
@@ -36,6 +36,12 @@ class ProcessStatus:
     process: Process
     status: Status = field(default=Status.REQUESTED)
     process_service: Optional[str] = field(default=None)
+    """The service running the process."""
     process_version: Optional[str] = field(default=None)
+    """The version of the service running the process."""
     process_identifier: Optional[str] = field(default=None)
+    """Unique identifier in the context of the service running the process."""
     reason: Optional[str] = field(default=None)
+    """Optional context or explanatory details related to the status."""
+    monitoring_task: Optional[str] = field(default=None)
+    """identifier of the task used to monitor the status of this process."""

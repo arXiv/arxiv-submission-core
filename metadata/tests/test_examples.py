@@ -8,7 +8,7 @@ import jsonschema
 import tempfile
 from datetime import datetime
 from pytz import UTC
-from arxiv import status
+from arxiv.integration.api import status
 from arxiv.submission.domain import Submission
 from metadata.factory import create_web_app
 from metadata.controllers.submission import ev
@@ -61,7 +61,7 @@ class TestSubmit(TestCase):
             response_data = json.loads(response.data)
         except Exception as e:
             self.fail("Should return valid JSON")
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED,
+        self.assertEqual(response.status_code, status.CREATED,
                          "Should return status 201 Created")
         self.assertIn("Location", response.headers,
                       "Should redirect to created submission resource")
@@ -98,7 +98,7 @@ class TestSubmit(TestCase):
                                     content_type='application/json',
                                     headers=self.headers)
         response_data = json.loads(response.data)
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED,
+        self.assertEqual(response.status_code, status.CREATED,
                          "Should return status 201 Created")
         sub_id = response_data['submission_id']
         self.assertFalse(response_data['finalized'],
@@ -126,7 +126,7 @@ class TestSubmit(TestCase):
                                     content_type='application/json',
                                     headers=self.headers)
         response_data = json.loads(response.data)
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED,
+        self.assertEqual(response.status_code, status.CREATED,
                          "Should return status 201 Created")
         sub_id = response_data['submission_id']
         self.assertTrue(response_data['finalized'], "Should be finalized")
@@ -137,7 +137,7 @@ class TestSubmit(TestCase):
                                     content_type='application/json',
                                     headers=self.headers)
         response_data = json.loads(response.data)
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST,
+        self.assertEqual(response.status_code, status.BAD_REQUEST,
                          "Should return 400 Bad Request")
         self.assertIn("reason", response_data,
                       "A reason for the rejected request should be provided")

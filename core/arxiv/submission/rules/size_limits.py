@@ -1,6 +1,6 @@
 """Enforces size limit rules."""
 
-from typing import Iterable, Union
+from typing import Iterable, Union, Optional
 from itertools import count
 import time
 
@@ -29,18 +29,20 @@ PDF_LIMIT = 15_000_000
 
 @SetUploadPackage.bind(lambda *args, **kwargs: True)    # Always check.
 def check_sizes_on_new_source(event: SetUploadPackage, before: Submission,
-                              after: Submission, creator: Agent) \
-        -> Iterable[Event]:
+                              after: Submission, creator: Agent,
+                              task_id: Optional[str] = None,
+                              **kwargs) -> Iterable[Event]:
     """When a new source package is attached, check for oversize source."""
-    return _check_sizes(event, before, after, creator)
+    return _check_sizes(event, before, after, creator, task_id, **kwargs)
 
 
 @UpdateUploadPackage.bind(lambda *args, **kwargs: True)    # Always check.
 def check_sizes_on_update_source(event: UpdateUploadPackage,
                                  before: Submission, after: Submission,
-                                 creator: Agent) -> Iterable[Event]:
+                                 creator: Agent, task_id: Optional[str] = None,
+                                 **kwargs) -> Iterable[Event]:
     """When a source package is updated, check for oversize source."""
-    return _check_sizes(event, before, after, creator)
+    return _check_sizes(event, before, after, creator, task_id, **kwargs)
 
 
 def pdf_is_compiled(event: Event, *args, **kwargs) -> bool:
@@ -52,7 +54,9 @@ def pdf_is_compiled(event: Event, *args, **kwargs) -> bool:
 @AddProcessStatus.bind(pdf_is_compiled)
 @is_async
 def check_pdf_size(event: AddProcessStatus, before: Submission,
-                   after: Submission, creator: Agent) -> Iterable[Event]:
+                   after: Submission, creator: Agent,
+                   task_id: Optional[str] = None,
+                   **kwargs) -> Iterable[Event]:
     """When a PDF is compiled, check for oversize."""
     upload_id, checksum, fmt = compiler.split_task_id(event.identifier)
     token = get_system_token(__name__, event.creator,
@@ -73,7 +77,9 @@ def check_pdf_size(event: AddProcessStatus, before: Submission,
 
 
 def _check_sizes(event: PackageEvent, before: Submission,
-                 after: Submission, creator: Agent) -> Iterable[Event]:
+                 after: Submission, creator: Agent,
+                 task_id: Optional[str] = None,
+                 **kwargs) -> Iterable[Event]:
     """Perform the source size check procedure."""
     content = after.source_content
     source_is_oversize = (content.uncompressed_size > UNCOMPRESSED_PACKAGE_MAX

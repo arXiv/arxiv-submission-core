@@ -1,6 +1,6 @@
 """Monitor the status of the compilation process."""
 
-from typing import Iterable
+from typing import Iterable, Optional
 from itertools import count
 import time
 
@@ -30,7 +30,9 @@ def when_compilation_starts(event: Event, *args, **kwargs) -> bool:
 @AddProcessStatus.bind(when_compilation_starts)
 @is_async
 def poll_compilation(event: AddProcessStatus, before: Submission,
-                     after: Submission, creator: Agent) -> Iterable[Event]:
+                     after: Submission, creator: Agent,
+                     task_id: Optional[str] = None,
+                     **kwargs) -> Iterable[Event]:
     """Monitor the status of the compilation process until completion."""
     logger.debug('Poll compilation for submission %s', after.submission_id)
     source_id, checksum, fmt = split_task_id(event.identifier)
@@ -47,7 +49,8 @@ def poll_compilation(event: AddProcessStatus, before: Submission,
                                        status=ProcessStatus.Status.SUCCEEDED,
                                        service=Compiler.NAME,
                                        version=Compiler.VERSION,
-                                       identifier=event.identifier)
+                                       identifier=event.identifier,
+                                       monitoring_task=task_id)
                 break
             logger.debug(f'not complete, try again in {tries ** 2} seconds')
             time.sleep(tries ** 2)  # Exponential back-off.
@@ -62,5 +65,6 @@ def poll_compilation(event: AddProcessStatus, before: Submission,
                                    service=Compiler.NAME,
                                    version=plaintext.PlainTextService.VERSION,
                                    identifier=event.identifier,
-                                   reason=reason)
+                                   reason=reason,
+                                   monitoring_task=task_id)
             break

@@ -68,11 +68,11 @@ class PlainTextService(service.HTTPIntegration):
             ID of the submission upload workspace.
 
         """
-        expected_code = [status.HTTP_200_OK, status.HTTP_202_ACCEPTED,
-                         status.HTTP_303_SEE_OTHER]
+        expected_code = [status.OK, status.ACCEPTED,
+                         status.SEE_OTHER]
         response = self.request('post', self.endpoint(upload_id),
                                 expected_code=expected_code)
-        if response.status_code == status.HTTP_303_SEE_OTHER:
+        if response.status_code == status.SEE_OTHER:
             raise ExtractionInProgress('Extraction already exists', response)
         elif response.status_code not in expected_code:
             raise exceptions.RequestFailed('Unexpected status', response)
@@ -99,11 +99,11 @@ class PlainTextService(service.HTTPIntegration):
 
         """
         endpoint = self.status_endpoint(upload_id)
-        expected_code = [status.HTTP_200_OK, status.HTTP_303_SEE_OTHER]
+        expected_code = [status.OK, status.SEE_OTHER]
         response = self.request('get', endpoint, allow_redirects=False,
                                 expected_code=expected_code)
         data = response.json()
-        if response.status_code == status.HTTP_303_SEE_OTHER:
+        if response.status_code == status.SEE_OTHER:
             return True
         elif self.Status(data['status']) is self.Status.IN_PROGRESS:
             return False
@@ -133,9 +133,9 @@ class PlainTextService(service.HTTPIntegration):
             Raised if an extraction is currently in progress
 
         """
-        expected_code = [status.HTTP_200_OK, status.HTTP_303_SEE_OTHER]
+        expected_code = [status.OK, status.SEE_OTHER]
         response = self.request('get', self.endpoint(upload_id),
                                 expected_code=expected_code)
-        if response.status_code == status.HTTP_303_SEE_OTHER:
+        if response.status_code == status.SEE_OTHER:
             raise ExtractionInProgress('Extraction is in progress', response)
         return response.content

@@ -106,8 +106,8 @@ class Compiler(service.HTTPIntegration):
         payload = {'source_id': upload_id, 'checksum': checksum,
                    'format': output_format.value, 'force': force}
         endpoint = '/'
-        expected_codes = [status.HTTP_200_OK, status.HTTP_202_ACCEPTED,
-                          status.HTTP_303_SEE_OTHER, status.HTTP_302_FOUND]
+        expected_codes = [status.OK, status.ACCEPTED,
+                          status.SEE_OTHER, status.FOUND]
         data, _, headers = self.json('post', endpoint, token, json=payload,
                                      expected_code=expected_codes)
         return self._parse_status_response(data)

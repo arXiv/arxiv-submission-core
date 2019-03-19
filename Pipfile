@@ -8,7 +8,6 @@ flask = "==1.0.2"
 dataclasses = "==0.6"
 pyjwt = "==1.6.4"
 jsonschema = "==2.6.0"
-arxiv-base = "==0.15.3rc3"
 sqlalchemy = "==1.2.14"
 pyyaml = "==3.13"
 pytz = "==2018.7"
@@ -20,13 +19,13 @@ python-dateutil = "*"
 unidecode = "*"
 celery = "==4.1.0"
 arxiv-auth = "==0.3.2rc5"
-"c6a1273" = {path = "./core"}
 mypy_extensions = "*"
 kombu = "==4.1.0"
 semver = "*"
 flask-sqlalchemy = "*"
 retry = "*"
 backports-datetime-fromisoformat = "*"
+arxiv-base = "==0.15.3rc8"
 
 [dev-packages]
 "nose2" = "*"
@@ -39,3 +38,6 @@ mimesis = "*"
 sphinx = "*"
 sphinx-autodoc-typehints = "*"
 pydocstyle = "==3.0.0"
+
+[pipenv]
+allow_prereleases = true
