@@ -1,7 +1,5 @@
 {% extends "mail/base.html" %}
 
-{% import "base/macros.html" as macros %}
-
 {% block email_title %}arXiv submission submit/{{ submission_id }}{% endblock email_title %}
 
 {% block message_title %}We have received your submission to arXiv.{% endblock message_title %}
@@ -26,23 +24,5 @@
   contact <a href="mailto:{{ config.SUPPORT_EMAIL }}">{{ config.SUPPORT_EMAIL }}</a> with a
   description of the issue and reference the submission identifier.
 </p>
-
-{{ macros.abs(
-  arxiv_id,
-  submission.metadata.title,
-  submission.metadata.authors_display,
-  submission.metadata.abstract,
-  submission.created,
-  submission.primary_classification.category,
-  comments = submission.metadata.comments,
-  msc_class = submission.metadata.msc_class,
-  acm_class = submission.metadata.acm_class,
-  journal_ref = submission.metadata.journal_ref,
-  doi = submission.metadata.doi,
-  report_num = submission.metadata.report_num,
-  version = submission.version,
-  submission_history = [],
-  secondary_categories = submission.secondary_categories,
-  embed_stylesheet=1) }}
 
 {% endblock message_body %}

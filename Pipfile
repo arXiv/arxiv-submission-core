@@ -25,7 +25,7 @@ semver = "*"
 flask-sqlalchemy = "*"
 retry = "*"
 backports-datetime-fromisoformat = "*"
-arxiv-base = "==0.15.3rc7"
+arxiv-base = "==0.15.3rc8"
 
 [dev-packages]
 "nose2" = "*"
