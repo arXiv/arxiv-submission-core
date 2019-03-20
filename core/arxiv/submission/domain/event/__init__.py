@@ -131,7 +131,7 @@ from ...exceptions import InvalidEvent
 from ..util import get_tzaware_utc_now
 from .event import Event, event_factory
 from .request import RequestCrossList, RequestWithdrawal, ApplyRequest, \
-    RejectRequest, ApproveRequest
+    RejectRequest, ApproveRequest, CancelRequest
 from . import validators
 from .proposal import AddProposal, RejectProposal, AcceptProposal
 from .flag import AddMetadataFlag, AddUserFlag, AddContentFlag, RemoveFlag, \

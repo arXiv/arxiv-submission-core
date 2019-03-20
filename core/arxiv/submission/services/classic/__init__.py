@@ -38,7 +38,7 @@ from arxiv.base import logging
 from arxiv.base.globals import get_application_config, get_application_global
 from ...domain.event import Event, Publish, RequestWithdrawal, SetDOI, \
     SetJournalReference, SetReportNumber, Rollback, RequestCrossList, \
-    ApplyRequest, RejectRequest, ApproveRequest, AddProposal
+    ApplyRequest, RejectRequest, ApproveRequest, AddProposal, CancelRequest
 
 from ...domain.submission import License, Submission, WithdrawalRequest, \
     CrossListClassificationRequest
@@ -307,12 +307,16 @@ def store_event(event: Event, before: Optional[Submission],
                 dbs = _create_jref(doc_id, before.arxiv_id, after.version,
                                    after, event.created)
 
+            elif isinstance(event, CancelRequest):
+                dbs = _cancel_request(event, before, after)
+
             # The submission has been announced.
             elif isinstance(before, Submission)  \
                     and before.arxiv_id is not None:
                 dbs = _load_submission(paper_id=before.arxiv_id,
                                        version=before.version)
                 _preserve_sticky_hold(dbs, before, after, event)
+
                 dbs.update_from_submission(after)
 
             # The submission has not yet been announced; we're working with a
@@ -397,16 +401,24 @@ def get_titles(since: datetime) -> List[Tuple[int, str, Agent]]:
 
 def _load_submission(submission_id: Optional[int] = None,
                      paper_id: Optional[str] = None,
-                     version: Optional[int] = 1) -> models.Submission:
+                     version: Optional[int] = 1,
+                     row_type: Optional[str] = None) -> models.Submission:
+    if row_type is not None:
+        limit_to = [row_type]
+    else:
+        limit_to = [models.Submission.NEW_SUBMISSION,
+                    models.Submission.REPLACEMENT]
     session = current_session()
     if submission_id is not None:
         submission = session.query(models.Submission) \
             .filter(models.Submission.submission_id == submission_id) \
+            .filter(models.Submission.type.in_(limit_to)) \
             .one()
     elif submission_id is None and paper_id is not None:
         submission = session.query(models.Submission) \
             .filter(models.Submission.doc_paper_id == paper_id) \
             .filter(models.Submission.version == version) \
+            .filter(models.Submission.type.in_(limit_to)) \
             .order_by(models.Submission.submission_id.desc()) \
             .first()
     else:
@@ -414,6 +426,19 @@ def _load_submission(submission_id: Optional[int] = None,
     if submission is None:
         raise NoSuchSubmission("No submission row matches those parameters")
     return submission
+
+
+def _cancel_request(event, before, after):
+    request = before.user_requests[event.request_id]
+    if isinstance(request, WithdrawalRequest):
+        row_type = models.Submission.WITHDRAWAL
+    elif isinstance(request, CrossListClassificationRequest):
+        row_type = models.Submission.CROSS_LIST
+    dbs = _load_submission(paper_id=before.arxiv_id,
+                           version=before.version,
+                           row_type=row_type)
+    dbs.status = models.Submission.USER_DELETED
+    return dbs
 
 
 def _load_document_id(paper_id: str, version: int) -> int:
@@ -503,10 +528,17 @@ def _create_jref(document_id: int, paper_id: str, version: int,
     """
     # Try to piggy-back on an existing JREF row. In the classic system, all
     # three fields can get updated on the same row.
-    most_recent_sb = _load_submission(paper_id=paper_id, version=version)
-    if most_recent_sb.is_jref() and not most_recent_sb.is_published():
-        most_recent_sb.update_from_submission(submission)
-        return most_recent_sb
+    try:
+        most_recent_sb = _load_submission(
+            paper_id=paper_id,
+            version=version,
+            row_type=models.Submission.JOURNAL_REFERENCE
+        )
+        if most_recent_sb and not most_recent_sb.is_published():
+            most_recent_sb.update_from_submission(submission)
+            return most_recent_sb
+    except NoSuchSubmission:
+        pass
 
     # Otherwise, create a new JREF row.
     dbs = models.Submission(type=models.Submission.JOURNAL_REFERENCE,

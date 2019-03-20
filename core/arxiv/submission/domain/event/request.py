@@ -65,6 +65,31 @@ class RejectRequest(Event):
 
 
 @dataclass()
+class CancelRequest(Event):
+    NAME = "cancel user request"
+    NAMED = "user request cancelled"
+
+    request_id: Optional[str] = field(default=None)
+
+    def __hash__(self) -> int:
+        """Use event ID as object hash."""
+        return hash(self.event_id)
+
+    def __eq__(self, other: Event) -> bool:
+        """Compare this event to another event."""
+        return hash(self) == hash(other)
+
+    def validate(self, submission: Submission) -> None:
+        if self.request_id not in submission.user_requests:
+            raise InvalidEvent(self, "No such request")
+
+    def project(self, submission: Submission) -> Submission:
+        submission.user_requests[self.request_id].status = \
+            UserRequest.CANCELLED
+        return submission
+
+
+@dataclass()
 class ApplyRequest(Event):
     NAME = "apply user request"
     NAMED = "user request applied"

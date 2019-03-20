@@ -439,6 +439,8 @@ class Submission(Base):    # type: ignore
         if self.is_published():
             status = domain.WithdrawalRequest.APPLIED
             submission.reason_for_withdrawal = reason
+        elif self.is_deleted():
+            status = domain.WithdrawalRequest.CANCELLED
         elif self.is_rejected():
             status = domain.WithdrawalRequest.REJECTED
         request = domain.WithdrawalRequest(
@@ -473,6 +475,8 @@ class Submission(Base):    # type: ignore
             for clsn in clsns:
                 if clsn.category not in submission.secondary_categories:
                     submission.secondary_classification.append(clsn)
+        elif self.is_deleted():
+            status = domain.CrossListClassificationRequest.CANCELLED
         elif self.is_rejected():
             status = domain.CrossListClassificationRequest.REJECTED
         return domain.CrossListClassificationRequest(
@@ -562,7 +566,6 @@ class Submission(Base):    # type: ignore
         elif self.status is None or self.status <= Submission.ON_HOLD:
             if not submission.finalized:
                 self.status = Submission.NOT_SUBMITTED
-
 
         if submission.primary_classification:
             self._update_primary(submission)

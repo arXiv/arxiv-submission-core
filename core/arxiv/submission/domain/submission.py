@@ -301,6 +301,8 @@ class UserRequest:
     APPLIED = 'applied'
     """Submission has been updated on the basis of the approved request."""
 
+    CANCELLED = 'cancelled'
+
     creator: Agent
     created: datetime = field(default_factory=get_tzaware_utc_now)
     updated: datetime = field(default_factory=get_tzaware_utc_now)
