@@ -133,9 +133,10 @@ def get_user_submissions_fast(user_id: int) -> List[Submission]:
         grouped = groupby(db_submissions, key=lambda dbs: dbs.doc_paper_id)
         submissions: List[Submission] = []
         for arxiv_id, dbss in grouped:
+            logger.debug('Handle group for arXiv ID %s: %s', arxiv_id, dbss)
             if arxiv_id is None:    # This is an unannounced submission.
                 for dbs in dbss:    # Each row represents a separate e-print.
-                    submissions.append(dbs.to_submission())
+                    submissions.append(load.to_submission(dbs))
             else:
                 dbss = sorted(dbss, key=lambda dbs: dbs.submission_id)
                 submissions.append(load.load(dbss))

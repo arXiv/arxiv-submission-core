@@ -82,7 +82,9 @@ class ClassicEventInterpolator:
         ))
 
     def _current_row_preceeds_event(self, event: Event) -> bool:
-        return self.current_row.get_updated() < event.created
+        delta = self.current_row.get_updated() - event.created
+        # Classic lacks millisecond precision.
+        return (delta).total_seconds() < -1
 
     def _should_apply_current_row(self, event: Event) -> bool:
         return self.current_row \
@@ -209,6 +211,7 @@ class ClassicEventInterpolator:
 
     def _inject(self, event_type: type, **data: Dict[str, Any]) -> None:
         created = self.current_row.get_updated()
+        logger.debug('inject %s', event_type.NAME)
         self._apply(event_type(creator=SYSTEM, created=created, committed=True,
                                submission_id=self.submission_id, **data))
 
@@ -266,4 +269,6 @@ class ClassicEventInterpolator:
             if self._can_inject_from_current_row():
                 self._inject_from_current_row()
             self._advance_to_next_row()
+        logger.debug('done; submission in state %s with %i events',
+                     self.submission.status, len(self.applied_events))
         return self.submission, self.applied_events

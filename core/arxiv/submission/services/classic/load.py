@@ -5,10 +5,14 @@ import copy
 from itertools import groupby
 
 from arxiv.license import LICENSES
+from arxiv.base import logging
 
 from ... import domain
 from . import models
 from .patch import patch_withdrawal, patch_jref, patch_cross, patch_hold
+
+logger = logging.getLogger(__name__)
+logger.propagate = False
 
 
 def load(rows: List[models.Submission]) -> domain.Submission:
@@ -16,16 +20,21 @@ def load(rows: List[models.Submission]) -> domain.Submission:
     versions: List[domain.Submission] = []
     submission_id: Optional[str] = None
 
-    # Rows should be in ascending order by creation time. This will give us
-    # ascending version numbers, and ascending creation time within versions.
-    rows = sorted(rows, key=lambda o: o.submission_id)
+    # We want to work within versions, and (secondarily) in order of creation
+    # time.
+    rows = sorted(rows, key=lambda o: o.version)
+    logger.debug('Load from rows %s', [r.submission_id for r in rows])
     for version, version_rows in groupby(rows, key=lambda o: o.version):
-        version_rows = [v for v in version_rows]   # So that we can index.
-
+        # Creation time isn't all that precise in the classic database, so
+        # we'll use submission ID instead.
+        version_rows = sorted([v for v in version_rows],
+                              key=lambda o: o.submission_id)
+        logger.debug('Version %s: %s', version, version_rows)
         # We use the original ID to track the entire lifecycle of the
         # submission in NG.
         if version == 1:
             submission_id = version_rows[0].submission_id
+            logger.debug('Submission ID: %s', submission_id)
 
         # Find the creation row. There may be some false starts that have been
         # deleted, so we need to advance to the first non-deleted 'new' or
@@ -40,27 +49,35 @@ def load(rows: List[models.Submission]) -> domain.Submission:
                     (row.type == row.NEW_SUBMISSION or not row.is_deleted()):
                 # Get the initial state of the version.
                 version_submission = to_submission(row, submission_id)
+                logger.debug('Got initial state: %s', version_submission)
 
         if version_submission is None:
+            logger.debug('Nothing to work with for this version')
             continue
+
         # If this is not the first version, carry forward any requests.
         if len(versions) > 0:
+            logger.debug('Bring user_requests forward from last version')
             version_submission.user_requests.update(versions[-1].user_requests)
 
         for row in version_rows:  # Remaining rows, since we popped the others.
+            logger.debug('Handle subsequent row: %s', row)
             # We are treating JREF submissions as though there is no approval
             # process; so we can just ignore deleted JREF rows.
             if row.is_jref() and not row.is_deleted():
+                logger.debug('JREF row')
                 # This should update doi, journal_ref, report_num.
                 version_submission = patch_jref(version_submission, row)
             # For withdrawals and cross-lists, we want to get data from
             # deleted rows since we keep track of all requests in the NG
             # submission.
             elif row.is_withdrawal():
+                logger.debug('Withdrawal row')
                 # This should update the reason_for_withdrawal (if applied),
                 # and add a WithdrawalRequest to user_requests.
                 version_submission = patch_withdrawal(version_submission, row)
             elif row.is_crosslist():
+                logger.debug('Crosslist row')
                 # This should update the secondary classifications (if applied)
                 # and add a CrossListClassificationRequest to user_requests.
                 version_submission = patch_cross(version_submission, row)

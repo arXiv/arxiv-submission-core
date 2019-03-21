@@ -443,7 +443,7 @@ class SubmissionCategory(Base):    # type: ignore
     )
     is_primary = Column(Integer, nullable=False, index=True,
                         server_default=text("'0'"))
-    is_announced = Column(Integer, index=True, server_default=text("'0'"))
+    is_published = Column(Integer, index=True, server_default=text("'0'"))
 
     # category_def = relationship('CategoryDef')
     submission = relationship('Submission', back_populates='categories')
