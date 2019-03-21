@@ -395,6 +395,13 @@ class Submission:
       them!
     - We use `arxiv_id` instead of `paper_id` to refer to the canonical arXiv
       identifier for the e-print (once it is announced).
+    - Instead of having a separate "submission" record for every change to an
+      e-print (e.g. replacement, jref, etc), we represent the entire history
+      as a single submission. Announced versions can be found in
+      :attr:`.versions`. Withdrawal and cross-list requests can be found in
+      :attr:`.user_requests`. JREFs are treated like they "just happen",
+      reflecting the forthcoming move away from storing journal ref information
+      in the core metadata record.
 
     """
 
@@ -428,8 +435,11 @@ class Submission:
     submitter_confirmed_preview: bool = field(default=False)
     license: Optional[License] = field(default=None)
     status: str = field(default=WORKING)
+    """Disposition within the submission pipeline."""
+
     arxiv_id: Optional[str] = field(default=None)
     """The announced arXiv paper ID."""
+
     version: int = field(default=1)
 
     reason_for_withdrawal: Optional[str] = field(default=None)
