@@ -36,7 +36,7 @@ from sqlalchemy.exc import DBAPIError, OperationalError
 
 from arxiv.base import logging
 from arxiv.base.globals import get_application_config, get_application_global
-from ...domain.event import Event, Publish, RequestWithdrawal, SetDOI, \
+from ...domain.event import Event, Announce, RequestWithdrawal, SetDOI, \
     SetJournalReference, SetReportNumber, Rollback, RequestCrossList, \
     ApplyRequest, RejectRequest, ApproveRequest, AddProposal, CancelRequest
 
@@ -237,12 +237,12 @@ def store_event(event: Event, before: Optional[Submission],
     - In the event domain, a submission is a single stream of events, but
       in the classic system we create new rows in the submission database
       for things like replacements, adding DOIs, and withdrawing papers.
-    - In the event domain, the only concept of the published paper is the
+    - In the event domain, the only concept of the announced paper is the
       paper ID. In the classic submission database, we also have to worry about
       the row in the Document database.
 
     We assume that the submission states passed to this function have the
-    correct paper ID and version number, if published. The submission ID on
+    correct paper ID and version number, if announced. The submission ID on
     the event and the before/after states refer to the original classic
     submission only.
 
@@ -270,10 +270,10 @@ def store_event(event: Event, before: Optional[Submission],
         else:   # Otherwise we're making an update for an existing submission.
             this_is_a_new_submission = False
 
-            # After the original submission is published, a new Document row is
+            # After the original submission is announced, a new Document row is
             #  created. This Document is shared by all subsequent Submission
             # rows.
-            if before.published:
+            if before.announced:
                 doc_id = _load_document_id(before.arxiv_id, before.version)
 
             JREFEvents = [SetDOI, SetJournalReference, SetReportNumber]
@@ -302,7 +302,7 @@ def store_event(event: Event, before: Optional[Submission],
             # Adding DOIs and citation information (so-called "journal
             # reference") also requires a new row. The version number is not
             # incremented.
-            elif before.published and type(event) in JREFEvents:
+            elif before.announced and type(event) in JREFEvents:
                 dbs = _create_jref(doc_id, before.arxiv_id, after.version,
                                    after, event.created)
 
@@ -533,7 +533,7 @@ def _create_jref(document_id: int, paper_id: str, version: int,
             version=version,
             row_type=models.Submission.JOURNAL_REFERENCE
         )
-        if most_recent_sb and not most_recent_sb.is_published():
+        if most_recent_sb and not most_recent_sb.is_announced():
             most_recent_sb.update_from_submission(submission)
             return most_recent_sb
     except NoSuchSubmission:

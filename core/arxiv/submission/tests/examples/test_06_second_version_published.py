@@ -1,4 +1,4 @@
-"""Example 6: second version of a submission is published."""
+"""Example 6: second version of a submission is announced."""
 
 from unittest import TestCase
 import tempfile
@@ -13,8 +13,8 @@ from ... import save, load, load_fast, domain, exceptions
 CCO = 'http://creativecommons.org/publicdomain/zero/1.0/'
 
 
-class TestSecondVersionIsPublished(TestCase):
-    """Submitter creates a replacement, and it is published."""
+class TestSecondVersionIsAnnounced(TestCase):
+    """Submitter creates a replacement, and it is announced."""
 
     @classmethod
     def setUpClass(cls):
@@ -67,12 +67,12 @@ class TestSecondVersionIsPublished(TestCase):
                 domain.event.FinalizeSubmission(**self.defaults)
             )
 
-        # Publish the submission.
+        # Announce the submission.
         self.paper_id = '1901.00123'
         with self.app.app_context():
             session = classic.current_session()
             db_row = session.query(classic.models.Submission).first()
-            db_row.status = classic.models.Submission.PUBLISHED
+            db_row.status = classic.models.Submission.ANNOUNCED
             dated = (datetime.now() - datetime.utcfromtimestamp(0))
             db_row.document = classic.models.Document(
                 paper_id=self.paper_id,
@@ -108,13 +108,13 @@ class TestSecondVersionIsPublished(TestCase):
                 submission_id=self.submission.submission_id
             )
 
-        # Publish second version.
+        # Announce second version.
         with self.app.app_context():
             session = classic.current_session()
             db_rows = session.query(classic.models.Submission) \
                 .order_by(classic.models.Submission.submission_id.asc()) \
                 .all()
-            db_rows[1].status = classic.models.Submission.PUBLISHED
+            db_rows[1].status = classic.models.Submission.ANNOUNCED
             session.add(db_rows[1])
             session.commit()
 
@@ -123,28 +123,28 @@ class TestSecondVersionIsPublished(TestCase):
         with self.app.app_context():
             classic.drop_all()
 
-    def test_is_in_published_state(self):
-        """The submission is now in published state."""
+    def test_is_in_announced_state(self):
+        """The submission is now in announced state."""
         # Check the submission state.
         with self.app.app_context():
             submission, events = load(self.submission.submission_id)
             self.assertEqual(submission.status,
-                             domain.submission.Submission.PUBLISHED,
+                             domain.submission.Submission.ANNOUNCED,
                              "The submission is in the publushed state")
-            self.assertIsInstance(events[-1], domain.event.Publish,
-                                  "A Publish event is inserted.")
-            p_evts = [e for e in events if isinstance(e, domain.event.Publish)]
+            self.assertIsInstance(events[-1], domain.event.Announce,
+                                  "An Announce event is inserted.")
+            p_evts = [e for e in events if isinstance(e, domain.event.Announce)]
             self.assertEqual(len(p_evts), 2, "There are two publish events.")
             self.assertEqual(len(submission.versions), 2,
-                             "There are two published versions")
+                             "There are two announced versions")
 
         with self.app.app_context():
             submission = load_fast(self.submission.submission_id)
             self.assertEqual(submission.status,
-                             domain.submission.Submission.PUBLISHED,
+                             domain.submission.Submission.ANNOUNCED,
                              "The submission is in the publushed state")
             self.assertEqual(len(submission.versions), 2,
-                             "There are two published versions")
+                             "There are two announced versions")
 
         # Check the database state.
         with self.app.app_context():
@@ -159,14 +159,14 @@ class TestSecondVersionIsPublished(TestCase):
                              classic.models.Submission.NEW_SUBMISSION,
                              "The first row has type 'new'")
             self.assertEqual(db_rows[0].status,
-                             classic.models.Submission.PUBLISHED,
-                             "The first row is published")
+                             classic.models.Submission.ANNOUNCED,
+                             "The first row is announced")
             self.assertEqual(db_rows[1].type,
                              classic.models.Submission.REPLACEMENT,
                              "The second row has type 'replacement'")
             self.assertEqual(db_rows[1].status,
-                             classic.models.Submission.PUBLISHED,
-                             "The second row is in published state")
+                             classic.models.Submission.ANNOUNCED,
+                             "The second row is in announced state")
 
     def test_can_replace_submission(self):
         """The submission can be replaced, resulting in a new version."""
@@ -185,7 +185,7 @@ class TestSecondVersionIsPublished(TestCase):
             self.assertEqual(submission.version, 3,
                              "The version number is incremented by 1")
             self.assertEqual(len(submission.versions), 2,
-                             "There are two published versions")
+                             "There are two announced versions")
 
         with self.app.app_context():
             submission = load_fast(self.submission.submission_id)
@@ -195,7 +195,7 @@ class TestSecondVersionIsPublished(TestCase):
             self.assertEqual(submission.version, 3,
                              "The version number is incremented by 1")
             self.assertEqual(len(submission.versions), 2,
-                             "There are two published versions")
+                             "There are two announced versions")
 
         # Check the database state.
         with self.app.app_context():
@@ -210,14 +210,14 @@ class TestSecondVersionIsPublished(TestCase):
                              classic.models.Submission.NEW_SUBMISSION,
                              "The first row has type 'new'")
             self.assertEqual(db_rows[0].status,
-                             classic.models.Submission.PUBLISHED,
-                             "The first row is published")
+                             classic.models.Submission.ANNOUNCED,
+                             "The first row is announced")
             self.assertEqual(db_rows[1].type,
                              classic.models.Submission.REPLACEMENT,
                              "The second row has type 'replacement'")
             self.assertEqual(db_rows[1].status,
-                             classic.models.Submission.PUBLISHED,
-                             "The second row is in published state")
+                             classic.models.Submission.ANNOUNCED,
+                             "The second row is in announced state")
             self.assertEqual(db_rows[2].type,
                              classic.models.Submission.REPLACEMENT,
                              "The third row has type 'replacement'")
@@ -239,8 +239,8 @@ class TestSecondVersionIsPublished(TestCase):
         with self.app.app_context():
             submission, events = load(self.submission.submission_id)
             self.assertEqual(submission.status,
-                             domain.submission.Submission.PUBLISHED,
-                             "The submission is published.")
+                             domain.submission.Submission.ANNOUNCED,
+                             "The submission is announced.")
             self.assertTrue(submission.has_active_requests,
                             "The submission has an active request.")
             self.assertEqual(len(submission.pending_user_requests), 1,
@@ -253,13 +253,13 @@ class TestSecondVersionIsPublished(TestCase):
                 "Withdrawal reason is set on request."
             )
             self.assertEqual(len(submission.versions), 2,
-                             "There are two published versions")
+                             "There are two announced versions")
 
         with self.app.app_context():
             submission = load_fast(self.submission.submission_id)
             self.assertEqual(submission.status,
-                             domain.submission.Submission.PUBLISHED,
-                             "The submission is published.")
+                             domain.submission.Submission.ANNOUNCED,
+                             "The submission is announced.")
             self.assertTrue(submission.has_active_requests,
                             "The submission has an active request.")
             self.assertEqual(len(submission.pending_user_requests), 1,
@@ -272,7 +272,7 @@ class TestSecondVersionIsPublished(TestCase):
                 "Withdrawal reason is set on request."
             )
             self.assertEqual(len(submission.versions), 2,
-                             "There are two published versions")
+                             "There are two announced versions")
 
         # Check the database state.
         with self.app.app_context():
@@ -287,14 +287,14 @@ class TestSecondVersionIsPublished(TestCase):
                              classic.models.Submission.NEW_SUBMISSION,
                              "The first row has type 'new'")
             self.assertEqual(db_rows[0].status,
-                             classic.models.Submission.PUBLISHED,
-                             "The first row is published")
+                             classic.models.Submission.ANNOUNCED,
+                             "The first row is announced")
             self.assertEqual(db_rows[1].type,
                              classic.models.Submission.REPLACEMENT,
                              "The second row has type 'replacement'")
             self.assertEqual(db_rows[1].status,
-                             classic.models.Submission.PUBLISHED,
-                             "The second row is in published state")
+                             classic.models.Submission.ANNOUNCED,
+                             "The second row is in announced state")
             self.assertEqual(db_rows[2].type,
                              classic.models.Submission.WITHDRAWAL,
                              "The third row has type 'withdrawal'")
@@ -312,7 +312,7 @@ class TestSecondVersionIsPublished(TestCase):
                                            **self.defaults),
                      submission_id=self.submission.submission_id)
 
-        self.test_is_in_published_state()
+        self.test_is_in_announced_state()
 
     def test_changing_doi(self):
         """Submitter can set the DOI."""
@@ -349,10 +349,10 @@ class TestSecondVersionIsPublished(TestCase):
             self.assertEqual(submission.metadata.report_num, new_report_num,
                              "The report number is updated.")
             self.assertEqual(submission.status,
-                             domain.submission.Submission.PUBLISHED,
+                             domain.submission.Submission.ANNOUNCED,
                              "The submission is in the submitted state.")
             self.assertEqual(len(submission.versions), 2,
-                             "There are two published versions")
+                             "There are two announced versions")
 
         with self.app.app_context():
             submission = load_fast(self.submission.submission_id)
@@ -363,10 +363,10 @@ class TestSecondVersionIsPublished(TestCase):
             self.assertEqual(submission.metadata.report_num, new_report_num,
                              "The report number is updated.")
             self.assertEqual(submission.status,
-                             domain.submission.Submission.PUBLISHED,
+                             domain.submission.Submission.ANNOUNCED,
                              "The submission is in the submitted state.")
             self.assertEqual(len(submission.versions), 2,
-                             "There are two published versions")
+                             "There are two announced versions")
 
         # Check the database state.
         with self.app.app_context():
@@ -381,14 +381,14 @@ class TestSecondVersionIsPublished(TestCase):
                              classic.models.Submission.NEW_SUBMISSION,
                              "The first row has type 'new'")
             self.assertEqual(db_rows[0].status,
-                             classic.models.Submission.PUBLISHED,
-                             "The first row is published")
+                             classic.models.Submission.ANNOUNCED,
+                             "The first row is announced")
             self.assertEqual(db_rows[1].type,
                              classic.models.Submission.REPLACEMENT,
                              "The second row has type 'replacement'")
             self.assertEqual(db_rows[1].status,
-                             classic.models.Submission.PUBLISHED,
-                             "The second row is in published state")
+                             classic.models.Submission.ANNOUNCED,
+                             "The second row is in announced state")
             self.assertEqual(db_rows[2].type,
                              classic.models.Submission.JOURNAL_REFERENCE,
                              "The third row has type journal ref")
@@ -404,10 +404,10 @@ class TestSecondVersionIsPublished(TestCase):
                              "The report number is updated in the database.")
 
     def test_cannot_be_unfinalized(self):
-        """The submission cannot be unfinalized, because it is published."""
+        """The submission cannot be unfinalized, because it is announced."""
         with self.app.app_context():
             with self.assertRaises(exceptions.InvalidEvent):
                 save(domain.event.UnFinalizeSubmission(**self.defaults),
                      submission_id=self.submission.submission_id)
 
-        self.test_is_in_published_state()
+        self.test_is_in_announced_state()

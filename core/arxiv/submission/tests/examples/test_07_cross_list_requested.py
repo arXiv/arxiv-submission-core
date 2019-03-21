@@ -68,12 +68,12 @@ class TestCrossListRequested(TestCase):
                 domain.event.FinalizeSubmission(**self.defaults)
             )
 
-        # Publish the submission.
+        # Announce the submission.
         self.paper_id = '1901.00123'
         with self.app.app_context():
             session = classic.current_session()
             db_row = session.query(classic.models.Submission).first()
-            db_row.status = classic.models.Submission.PUBLISHED
+            db_row.status = classic.models.Submission.ANNOUNCED
             dated = (datetime.now() - datetime.utcfromtimestamp(0))
             db_row.document = classic.models.Document(
                 document_id=1,
@@ -109,8 +109,8 @@ class TestCrossListRequested(TestCase):
         with self.app.app_context():
             submission, events = load(self.submission.submission_id)
             self.assertEqual(submission.status,
-                             domain.submission.Submission.PUBLISHED,
-                             "The submission is published.")
+                             domain.submission.Submission.ANNOUNCED,
+                             "The submission is announced.")
             self.assertTrue(submission.has_active_requests,
                             "The submission has an active request.")
             self.assertEqual(len(submission.pending_user_requests), 1,
@@ -123,13 +123,13 @@ class TestCrossListRequested(TestCase):
                           submission.pending_user_requests[0].categories,
                           "Requested category is set on request.")
             self.assertEqual(len(submission.versions), 1,
-                             "There is one published versions")
+                             "There is one announced versions")
 
         with self.app.app_context():
             submission = load_fast(self.submission.submission_id)
             self.assertEqual(submission.status,
-                             domain.submission.Submission.PUBLISHED,
-                             "The submission is published.")
+                             domain.submission.Submission.ANNOUNCED,
+                             "The submission is announced.")
             self.assertTrue(submission.has_active_requests,
                             "The submission has an active request.")
             self.assertEqual(len(submission.pending_user_requests), 1,
@@ -142,7 +142,7 @@ class TestCrossListRequested(TestCase):
                           submission.pending_user_requests[0].categories,
                           "Requested category is set on request.")
             self.assertEqual(len(submission.versions), 1,
-                             "There is one published versions")
+                             "There is one announced versions")
 
         # Check the database state.
         with self.app.app_context():
@@ -157,8 +157,8 @@ class TestCrossListRequested(TestCase):
                              classic.models.Submission.NEW_SUBMISSION,
                              "The first row has type 'new'")
             self.assertEqual(db_rows[0].status,
-                             classic.models.Submission.PUBLISHED,
-                             "The first row is published")
+                             classic.models.Submission.ANNOUNCED,
+                             "The first row is announced")
             self.assertEqual(db_rows[1].type,
                              classic.models.Submission.CROSS_LIST,
                              "The second row has type 'cross'")
@@ -206,8 +206,8 @@ class TestCrossListRequested(TestCase):
         with self.app.app_context():
             submission, events = load(self.submission.submission_id)
             self.assertEqual(submission.status,
-                             domain.submission.Submission.PUBLISHED,
-                             "The submission is published.")
+                             domain.submission.Submission.ANNOUNCED,
+                             "The submission is announced.")
             self.assertFalse(submission.has_active_requests,
                              "The submission has no active requests.")
             self.assertEqual(len(submission.pending_user_requests), 0,
@@ -227,8 +227,8 @@ class TestCrossListRequested(TestCase):
         with self.app.app_context():
             submission = load_fast(self.submission.submission_id)
             self.assertEqual(submission.status,
-                             domain.submission.Submission.PUBLISHED,
-                             "The submission is published.")
+                             domain.submission.Submission.ANNOUNCED,
+                             "The submission is announced.")
             self.assertFalse(submission.has_active_requests,
                              "The submission has no active requests.")
             self.assertEqual(len(submission.pending_user_requests), 0,
@@ -246,21 +246,21 @@ class TestCrossListRequested(TestCase):
                              "Requested category is not added to submission")
 
     def test_request_is_applied(self):
-        """If the request is published in classic, NG request is 'applied'."""
+        """If the request is announced in classic, NG request is 'applied'."""
         with self.app.app_context():
             session = classic.current_session()
             db_rows = session.query(classic.models.Submission) \
                 .order_by(classic.models.Submission.submission_id.asc()) \
                 .all()
-            db_rows[1].status = classic.models.Submission.PUBLISHED
+            db_rows[1].status = classic.models.Submission.ANNOUNCED
             session.add(db_rows[1])
             session.commit()
 
         with self.app.app_context():
             submission, events = load(self.submission.submission_id)
             self.assertEqual(submission.status,
-                             domain.submission.Submission.PUBLISHED,
-                             "The submission is published.")
+                             domain.submission.Submission.ANNOUNCED,
+                             "The submission is announced.")
             self.assertFalse(submission.has_active_requests,
                              "The submission has no active requests.")
             self.assertEqual(len(submission.pending_user_requests), 0,
@@ -280,8 +280,8 @@ class TestCrossListRequested(TestCase):
         with self.app.app_context():
             submission = load_fast(self.submission.submission_id)
             self.assertEqual(submission.status,
-                             domain.submission.Submission.PUBLISHED,
-                             "The submission is published.")
+                             domain.submission.Submission.ANNOUNCED,
+                             "The submission is announced.")
             self.assertFalse(submission.has_active_requests,
                              "The submission has no active requests.")
             self.assertEqual(len(submission.pending_user_requests), 0,
@@ -352,12 +352,12 @@ class TestCrossListApplied(TestCase):
                 domain.event.FinalizeSubmission(**self.defaults)
             )
 
-        # Publish the submission.
+        # Announce the submission.
         self.paper_id = '1901.00123'
         with self.app.app_context():
             session = classic.current_session()
             db_row = session.query(classic.models.Submission).first()
-            db_row.status = classic.models.Submission.PUBLISHED
+            db_row.status = classic.models.Submission.ANNOUNCED
             dated = (datetime.now() - datetime.utcfromtimestamp(0))
             db_row.document = classic.models.Document(
                 document_id=1,
@@ -389,7 +389,7 @@ class TestCrossListApplied(TestCase):
             db_rows = session.query(classic.models.Submission) \
                 .order_by(classic.models.Submission.submission_id.asc()) \
                 .all()
-            db_rows[1].status = classic.models.Submission.PUBLISHED
+            db_rows[1].status = classic.models.Submission.ANNOUNCED
             session.add(db_rows[1])
             session.commit()
 
@@ -403,8 +403,8 @@ class TestCrossListApplied(TestCase):
         with self.app.app_context():
             submission, events = load(self.submission.submission_id)
             self.assertEqual(submission.status,
-                             domain.submission.Submission.PUBLISHED,
-                             "The submission is published.")
+                             domain.submission.Submission.ANNOUNCED,
+                             "The submission is announced.")
             self.assertFalse(submission.has_active_requests,
                              "The submission has no active requests.")
             self.assertEqual(len(submission.applied_user_requests), 1,
@@ -417,13 +417,13 @@ class TestCrossListApplied(TestCase):
                           submission.applied_user_requests[0].categories,
                           "Requested category is set on request.")
             self.assertEqual(len(submission.versions), 1,
-                             "There is one published versions")
+                             "There is one announced versions")
 
         with self.app.app_context():
             submission = load_fast(self.submission.submission_id)
             self.assertEqual(submission.status,
-                             domain.submission.Submission.PUBLISHED,
-                             "The submission is published.")
+                             domain.submission.Submission.ANNOUNCED,
+                             "The submission is announced.")
             self.assertFalse(submission.has_active_requests,
                              "The submission has no active requests.")
             self.assertEqual(len(submission.applied_user_requests), 1,
@@ -436,7 +436,7 @@ class TestCrossListApplied(TestCase):
                           submission.applied_user_requests[0].categories,
                           "Requested category is set on request.")
             self.assertEqual(len(submission.versions), 1,
-                             "There is one published versions")
+                             "There is one announced versions")
 
         # Check the database state.
         with self.app.app_context():
@@ -451,13 +451,13 @@ class TestCrossListApplied(TestCase):
                              classic.models.Submission.NEW_SUBMISSION,
                              "The first row has type 'new'")
             self.assertEqual(db_rows[0].status,
-                             classic.models.Submission.PUBLISHED,
-                             "The first row is published")
+                             classic.models.Submission.ANNOUNCED,
+                             "The first row is announced")
             self.assertEqual(db_rows[1].type,
                              classic.models.Submission.CROSS_LIST,
                              "The second row has type 'cross'")
             self.assertEqual(db_rows[1].status,
-                             classic.models.Submission.PUBLISHED,
+                             classic.models.Submission.ANNOUNCED,
                              "The second row is in the processing submission"
                              " state.")
 
@@ -478,7 +478,7 @@ class TestCrossListApplied(TestCase):
             self.assertEqual(submission.version, 2,
                              "The version number is incremented by 1")
             self.assertEqual(len(submission.versions), 1,
-                             "There is one published versions")
+                             "There is one announced versions")
 
         with self.app.app_context():
             submission = load_fast(self.submission.submission_id)
@@ -488,7 +488,7 @@ class TestCrossListApplied(TestCase):
             self.assertEqual(submission.version, 2,
                              "The version number is incremented by 1")
             self.assertEqual(len(submission.versions), 1,
-                             "There is one published versions")
+                             "There is one announced versions")
 
         # Check the database state.
         with self.app.app_context():
@@ -503,14 +503,14 @@ class TestCrossListApplied(TestCase):
                              classic.models.Submission.NEW_SUBMISSION,
                              "The first row has type 'new'")
             self.assertEqual(db_rows[0].status,
-                             classic.models.Submission.PUBLISHED,
-                             "The first row is published")
+                             classic.models.Submission.ANNOUNCED,
+                             "The first row is announced")
             self.assertEqual(db_rows[1].type,
                              classic.models.Submission.CROSS_LIST,
                              "The second row has type 'cross'")
             self.assertEqual(db_rows[1].status,
-                             classic.models.Submission.PUBLISHED,
-                             "The second row is in the published state")
+                             classic.models.Submission.ANNOUNCED,
+                             "The second row is in the announced state")
             self.assertEqual(db_rows[2].type,
                              classic.models.Submission.REPLACEMENT,
                              "The third row has type 'replacement'")
@@ -532,8 +532,8 @@ class TestCrossListApplied(TestCase):
         with self.app.app_context():
             submission, events = load(self.submission.submission_id)
             self.assertEqual(submission.status,
-                             domain.submission.Submission.PUBLISHED,
-                             "The submission is published.")
+                             domain.submission.Submission.ANNOUNCED,
+                             "The submission is announced.")
             self.assertTrue(submission.has_active_requests,
                             "The submission has an active request.")
             self.assertEqual(len(submission.pending_user_requests), 1,
@@ -546,13 +546,13 @@ class TestCrossListApplied(TestCase):
                 "Withdrawal reason is set on request."
             )
             self.assertEqual(len(submission.versions), 1,
-                             "There is one published versions")
+                             "There is one announced versions")
 
         with self.app.app_context():
             submission = load_fast(self.submission.submission_id)
             self.assertEqual(submission.status,
-                             domain.submission.Submission.PUBLISHED,
-                             "The submission is published.")
+                             domain.submission.Submission.ANNOUNCED,
+                             "The submission is announced.")
             self.assertTrue(submission.has_active_requests,
                             "The submission has an active request.")
             self.assertEqual(len(submission.pending_user_requests), 1,
@@ -565,7 +565,7 @@ class TestCrossListApplied(TestCase):
                 "Withdrawal reason is set on request."
             )
             self.assertEqual(len(submission.versions), 1,
-                             "There is one published versions")
+                             "There is one announced versions")
 
         # Check the database state.
         with self.app.app_context():
@@ -580,14 +580,14 @@ class TestCrossListApplied(TestCase):
                              classic.models.Submission.NEW_SUBMISSION,
                              "The first row has type 'new'")
             self.assertEqual(db_rows[0].status,
-                             classic.models.Submission.PUBLISHED,
-                             "The first row is published")
+                             classic.models.Submission.ANNOUNCED,
+                             "The first row is announced")
             self.assertEqual(db_rows[1].type,
                              classic.models.Submission.CROSS_LIST,
                              "The second row has type 'cross'")
             self.assertEqual(db_rows[1].status,
-                             classic.models.Submission.PUBLISHED,
-                             "The second row is in the published state")
+                             classic.models.Submission.ANNOUNCED,
+                             "The second row is in the announced state")
             self.assertEqual(db_rows[2].type,
                              classic.models.Submission.WITHDRAWAL,
                              "The third row has type 'withdrawal'")
@@ -617,8 +617,8 @@ class TestCrossListApplied(TestCase):
         with self.app.app_context():
             submission, events = load(self.submission.submission_id)
             self.assertEqual(submission.status,
-                             domain.submission.Submission.PUBLISHED,
-                             "The submission is published.")
+                             domain.submission.Submission.ANNOUNCED,
+                             "The submission is announced.")
             self.assertTrue(submission.has_active_requests,
                             "The submission has an active request.")
             self.assertEqual(len(submission.pending_user_requests), 1,
@@ -631,13 +631,13 @@ class TestCrossListApplied(TestCase):
                           submission.pending_user_requests[0].categories,
                           "Requested category is set on request.")
             self.assertEqual(len(submission.versions), 1,
-                             "There is one published versions")
+                             "There is one announced versions")
 
         with self.app.app_context():
             submission = load_fast(self.submission.submission_id)
             self.assertEqual(submission.status,
-                             domain.submission.Submission.PUBLISHED,
-                             "The submission is published.")
+                             domain.submission.Submission.ANNOUNCED,
+                             "The submission is announced.")
             self.assertTrue(submission.has_active_requests,
                             "The submission has an active request.")
             self.assertEqual(len(submission.pending_user_requests), 1,
@@ -650,7 +650,7 @@ class TestCrossListApplied(TestCase):
                           submission.pending_user_requests[0].categories,
                           "Requested category is set on request.")
             self.assertEqual(len(submission.versions), 1,
-                             "There is one published versions")
+                             "There is one announced versions")
 
         # Check the database state.
         with self.app.app_context():
@@ -665,14 +665,14 @@ class TestCrossListApplied(TestCase):
                              classic.models.Submission.NEW_SUBMISSION,
                              "The first row has type 'new'")
             self.assertEqual(db_rows[0].status,
-                             classic.models.Submission.PUBLISHED,
-                             "The first row is published")
+                             classic.models.Submission.ANNOUNCED,
+                             "The first row is announced")
             self.assertEqual(db_rows[1].type,
                              classic.models.Submission.CROSS_LIST,
                              "The second row has type 'cross'")
             self.assertEqual(db_rows[1].status,
-                             classic.models.Submission.PUBLISHED,
-                             "The second row is in the published state")
+                             classic.models.Submission.ANNOUNCED,
+                             "The second row is in the announced state")
             self.assertEqual(db_rows[2].type,
                              classic.models.Submission.CROSS_LIST,
                              "The third row has type 'cross'")
@@ -736,12 +736,12 @@ class TestCrossListRejected(TestCase):
                 domain.event.FinalizeSubmission(**self.defaults)
             )
 
-        # Publish the submission.
+        # Announce the submission.
         self.paper_id = '1901.00123'
         with self.app.app_context():
             session = classic.current_session()
             db_row = session.query(classic.models.Submission).first()
-            db_row.status = classic.models.Submission.PUBLISHED
+            db_row.status = classic.models.Submission.ANNOUNCED
             dated = (datetime.now() - datetime.utcfromtimestamp(0))
             db_row.document = classic.models.Document(
                 document_id=1,
@@ -787,8 +787,8 @@ class TestCrossListRejected(TestCase):
         with self.app.app_context():
             submission, events = load(self.submission.submission_id)
             self.assertEqual(submission.status,
-                             domain.submission.Submission.PUBLISHED,
-                             "The submission is published.")
+                             domain.submission.Submission.ANNOUNCED,
+                             "The submission is announced.")
             self.assertFalse(submission.has_active_requests,
                              "The submission has no active requests.")
             self.assertEqual(len(submission.pending_user_requests), 0,
@@ -803,13 +803,13 @@ class TestCrossListRejected(TestCase):
                           submission.rejected_user_requests[0].categories,
                           "Requested category is set on request.")
             self.assertEqual(len(submission.versions), 1,
-                             "There is one published versions")
+                             "There is one announced versions")
 
         with self.app.app_context():
             submission = load_fast(self.submission.submission_id)
             self.assertEqual(submission.status,
-                             domain.submission.Submission.PUBLISHED,
-                             "The submission is published.")
+                             domain.submission.Submission.ANNOUNCED,
+                             "The submission is announced.")
             self.assertFalse(submission.has_active_requests,
                              "The submission has no active requests.")
             self.assertEqual(len(submission.pending_user_requests), 0,
@@ -824,7 +824,7 @@ class TestCrossListRejected(TestCase):
                           submission.rejected_user_requests[0].categories,
                           "Requested category is set on request.")
             self.assertEqual(len(submission.versions), 1,
-                             "There is one published versions")
+                             "There is one announced versions")
 
         # Check the database state.
         with self.app.app_context():
@@ -839,8 +839,8 @@ class TestCrossListRejected(TestCase):
                              classic.models.Submission.NEW_SUBMISSION,
                              "The first row has type 'new'")
             self.assertEqual(db_rows[0].status,
-                             classic.models.Submission.PUBLISHED,
-                             "The first row is published")
+                             classic.models.Submission.ANNOUNCED,
+                             "The first row is announced")
             self.assertEqual(db_rows[1].type,
                              classic.models.Submission.CROSS_LIST,
                              "The second row has type 'cross'")
@@ -865,7 +865,7 @@ class TestCrossListRejected(TestCase):
             self.assertEqual(submission.version, 2,
                              "The version number is incremented by 1")
             self.assertEqual(len(submission.versions), 1,
-                             "There is one published versions")
+                             "There is one announced versions")
 
         with self.app.app_context():
             submission = load_fast(self.submission.submission_id)
@@ -875,7 +875,7 @@ class TestCrossListRejected(TestCase):
             self.assertEqual(submission.version, 2,
                              "The version number is incremented by 1")
             self.assertEqual(len(submission.versions), 1,
-                             "There is one published versions")
+                             "There is one announced versions")
 
         # Check the database state.
         with self.app.app_context():
@@ -890,8 +890,8 @@ class TestCrossListRejected(TestCase):
                              classic.models.Submission.NEW_SUBMISSION,
                              "The first row has type 'new'")
             self.assertEqual(db_rows[0].status,
-                             classic.models.Submission.PUBLISHED,
-                             "The first row is published")
+                             classic.models.Submission.ANNOUNCED,
+                             "The first row is announced")
             self.assertEqual(db_rows[1].type,
                              classic.models.Submission.CROSS_LIST,
                              "The second row has type 'cross'")
@@ -919,8 +919,8 @@ class TestCrossListRejected(TestCase):
         with self.app.app_context():
             submission, events = load(self.submission.submission_id)
             self.assertEqual(submission.status,
-                             domain.submission.Submission.PUBLISHED,
-                             "The submission is published.")
+                             domain.submission.Submission.ANNOUNCED,
+                             "The submission is announced.")
             self.assertTrue(submission.has_active_requests,
                             "The submission has an active request.")
             self.assertEqual(len(submission.pending_user_requests), 1,
@@ -933,13 +933,13 @@ class TestCrossListRejected(TestCase):
                 "Withdrawal reason is set on request."
             )
             self.assertEqual(len(submission.versions), 1,
-                             "There is one published versions")
+                             "There is one announced versions")
 
         with self.app.app_context():
             submission = load_fast(self.submission.submission_id)
             self.assertEqual(submission.status,
-                             domain.submission.Submission.PUBLISHED,
-                             "The submission is published.")
+                             domain.submission.Submission.ANNOUNCED,
+                             "The submission is announced.")
             self.assertTrue(submission.has_active_requests,
                             "The submission has an active request.")
             self.assertEqual(len(submission.pending_user_requests), 1,
@@ -952,7 +952,7 @@ class TestCrossListRejected(TestCase):
                 "Withdrawal reason is set on request."
             )
             self.assertEqual(len(submission.versions), 1,
-                             "There is one published versions")
+                             "There is one announced versions")
 
         # Check the database state.
         with self.app.app_context():
@@ -967,8 +967,8 @@ class TestCrossListRejected(TestCase):
                              classic.models.Submission.NEW_SUBMISSION,
                              "The first row has type 'new'")
             self.assertEqual(db_rows[0].status,
-                             classic.models.Submission.PUBLISHED,
-                             "The first row is published")
+                             classic.models.Submission.ANNOUNCED,
+                             "The first row is announced")
             self.assertEqual(db_rows[1].type,
                              classic.models.Submission.CROSS_LIST,
                              "The second row has type 'cross'")
@@ -1004,8 +1004,8 @@ class TestCrossListRejected(TestCase):
         with self.app.app_context():
             submission, events = load(self.submission.submission_id)
             self.assertEqual(submission.status,
-                             domain.submission.Submission.PUBLISHED,
-                             "The submission is published.")
+                             domain.submission.Submission.ANNOUNCED,
+                             "The submission is announced.")
             self.assertTrue(submission.has_active_requests,
                             "The submission has an active request.")
             self.assertEqual(len(submission.pending_user_requests), 1,
@@ -1018,13 +1018,13 @@ class TestCrossListRejected(TestCase):
                           submission.pending_user_requests[0].categories,
                           "Requested category is set on request.")
             self.assertEqual(len(submission.versions), 1,
-                             "There is one published versions")
+                             "There is one announced versions")
 
         with self.app.app_context():
             submission = load_fast(self.submission.submission_id)
             self.assertEqual(submission.status,
-                             domain.submission.Submission.PUBLISHED,
-                             "The submission is published.")
+                             domain.submission.Submission.ANNOUNCED,
+                             "The submission is announced.")
             self.assertTrue(submission.has_active_requests,
                             "The submission has an active request.")
             self.assertEqual(len(submission.pending_user_requests), 1,
@@ -1037,7 +1037,7 @@ class TestCrossListRejected(TestCase):
                           submission.pending_user_requests[0].categories,
                           "Requested category is set on request.")
             self.assertEqual(len(submission.versions), 1,
-                             "There is one published versions")
+                             "There is one announced versions")
 
         # Check the database state.
         with self.app.app_context():
@@ -1052,8 +1052,8 @@ class TestCrossListRejected(TestCase):
                              classic.models.Submission.NEW_SUBMISSION,
                              "The first row has type 'new'")
             self.assertEqual(db_rows[0].status,
-                             classic.models.Submission.PUBLISHED,
-                             "The first row is published")
+                             classic.models.Submission.ANNOUNCED,
+                             "The first row is announced")
             self.assertEqual(db_rows[1].type,
                              classic.models.Submission.CROSS_LIST,
                              "The second row has type 'cross'")

@@ -382,14 +382,27 @@ class CrossListClassificationRequest(UserRequest):
 
 @dataclass
 class Submission:
-    """Represents an arXiv submission object."""
+    """
+    Represents an arXiv submission object.
+
+    Some notable differences between this view of submissions and the classic
+    model:
+
+    - There is no "hold" status. Status reflects where the submission is
+      in the pipeline. Holds are annotations that can be applied to the
+      submission, and may impact its ability to proceed (e.g. from submitted
+      to scheduled). Submissions that are in working status can have holds on
+      them!
+    - We use `arxiv_id` instead of `paper_id` to refer to the canonical arXiv
+      identifier for the e-print (once it is announced).
+
+    """
 
     WORKING = 'working'
     SUBMITTED = 'submitted'
-    ON_HOLD = 'hold'
     SCHEDULED = 'scheduled'
-    PUBLISHED = 'published'
-    ERROR = 'error'
+    ANNOUNCED = 'announced'
+    ERROR = 'error'     # TODO: eliminate this status.
     DELETED = 'deleted'
     WITHDRAWN = 'withdrawn'
 
@@ -416,14 +429,14 @@ class Submission:
     license: Optional[License] = field(default=None)
     status: str = field(default=WORKING)
     arxiv_id: Optional[str] = field(default=None)
-    """The published arXiv paper ID."""
+    """The announced arXiv paper ID."""
     version: int = field(default=1)
 
     reason_for_withdrawal: Optional[str] = field(default=None)
     """If an e-print is withdrawn, the submitter is asked to explain why."""
 
     versions: List['Submission'] = field(default_factory=list)
-    """Published versions of this :class:`.domain.Submission`."""
+    """Announced versions of this :class:`.domain.Submission`."""
 
     # These fields are related to moderation/quality control.
     user_requests: Dict[str, UserRequest] = field(default_factory=dict)
@@ -458,12 +471,12 @@ class Submission:
     @property
     def active(self) -> bool:
         """Actively moving through the submission workflow."""
-        return self.status not in [self.DELETED, self.PUBLISHED]
+        return self.status not in [self.DELETED, self.ANNOUNCED]
 
     @property
-    def published(self) -> bool:
+    def announced(self) -> bool:
         """The submission has been announced."""
-        return self.status == self.PUBLISHED
+        return self.status == self.ANNOUNCED
 
     @property
     def finalized(self) -> bool:
@@ -488,8 +501,8 @@ class Submission:
     def is_on_hold(self) -> bool:
         # We need to explicitly check ``status`` here because classic doesn't
         # have a representation for Hold events.
-        return len(self.hold_types - self.waiver_types) > 0 \
-            or self.status == self.ON_HOLD
+        return (self.status == self.SUBMITTED
+                and len(self.hold_types - self.waiver_types) > 0)
 
     def has_waiver_for(self, hold_type: Hold.Type) -> bool:
         return hold_type in self.waiver_types
@@ -594,7 +607,7 @@ class Submission:
             'client': self.client.to_dict() if self.client else None,
             'finalized': self.finalized,
             'deleted': self.deleted,
-            'published': self.published,
+            'announced': self.announced,
             'active': self.active
         })
         return data

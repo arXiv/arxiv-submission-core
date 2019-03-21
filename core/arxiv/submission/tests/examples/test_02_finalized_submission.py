@@ -87,7 +87,7 @@ class TestFinalizedSubmission(TestCase):
                              domain.submission.Submission.SUBMITTED,
                              "The submission is in the submitted state")
             self.assertEqual(len(submission.versions), 0,
-                             "There are no published versions")
+                             "There are no announced versions")
 
         with self.app.app_context():
             submission = load_fast(self.submission.submission_id)
@@ -95,7 +95,7 @@ class TestFinalizedSubmission(TestCase):
                              domain.submission.Submission.SUBMITTED,
                              "The submission is in the submitted state")
             self.assertEqual(len(submission.versions), 0,
-                             "There are no published versions")
+                             "There are no announced versions")
 
         # Check the database state.
         with self.app.app_context():
@@ -165,7 +165,7 @@ class TestFinalizedSubmission(TestCase):
                              domain.submission.Submission.WORKING,
                              "The submission is in the working state")
             self.assertEqual(len(submission.versions), 0,
-                             "There are no published versions")
+                             "There are no announced versions")
 
         with self.app.app_context():
             submission = load_fast(self.submission.submission_id)
@@ -173,7 +173,7 @@ class TestFinalizedSubmission(TestCase):
                              domain.submission.Submission.WORKING,
                              "The submission is in the working state")
             self.assertEqual(len(submission.versions), 0,
-                             "There are no published versions")
+                             "There are no announced versions")
 
         # Check the database state.
         with self.app.app_context():

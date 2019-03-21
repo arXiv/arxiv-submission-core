@@ -23,7 +23,7 @@ from . import models
 from ...domain.submission import Submission, UserRequest, WithdrawalRequest, \
     CrossListClassificationRequest, Hold
 from ...domain.event import Event, SetDOI, SetJournalReference, \
-    SetReportNumber, ApplyRequest, RejectRequest, Publish, AddHold, \
+    SetReportNumber, ApplyRequest, RejectRequest, Announce, AddHold, \
     CancelRequest, SetPrimaryClassification, AddSecondaryClassification, \
     SetTitle, SetAbstract, SetComments, SetMSCClassification, \
     SetACMClassification, SetAuthors
@@ -86,7 +86,7 @@ class ClassicEventInterpolator:
     def _should_apply_current_row(self, event: Event) -> bool:
         return self.current_row \
             and self._current_row_preceeds_event(event) \
-            and self.current_row.is_published()
+            and self.current_row.is_announced()
 
     def _should_advance_to_next_row(self, event: Event) -> bool:
         return self._there_are_rows_remaining() \
@@ -115,7 +115,7 @@ class ClassicEventInterpolator:
                     and not self.current_row.is_deleted()))
 
     def _should_backport(self, event: Event) -> bool:
-        """Evaluate if this event be applied to the last published version."""
+        """Evaluate if this event be applied to the last announced version."""
         return type(event) in [SetDOI, SetJournalReference, SetReportNumber] \
             and self.submission.versions \
             and self.submission.version == self.submission.versions[-1].version
@@ -131,8 +131,8 @@ class ClassicEventInterpolator:
             self._inject_metadata_if_changed()
             self._inject_jref_if_changed()
 
-            if self.current_row.is_published():
-                self._inject(Publish, arxiv_id=self.arxiv_id)
+            if self.current_row.is_announced():
+                self._inject(Announce, arxiv_id=self.arxiv_id)
         elif self.current_row.is_jref():
             self._inject_jref_if_changed()
         elif self.current_row.is_withdrawal():
@@ -188,7 +188,7 @@ class ClassicEventInterpolator:
         """
         request_id = req_type.generate_request_id(self.submission,
                                                   self.requests[req_type])
-        if self.current_row.is_published():
+        if self.current_row.is_announced():
             self._inject(ApplyRequest, request_id=request_id)
         elif self.current_row.is_deleted():
             self._inject(CancelRequest, request_id=request_id)
@@ -244,7 +244,7 @@ class ClassicEventInterpolator:
 
             self._apply(event)    # Now project the event.
 
-            # Backport JREFs to the published version to which they apply.
+            # Backport JREFs to the announced version to which they apply.
             if self._should_backport(event):
                 self._backport_event(event)
 

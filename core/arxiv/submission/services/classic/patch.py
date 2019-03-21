@@ -68,7 +68,7 @@ def _patch_request(req_type: type, data: Dict[str, Any],
                    submission: domain.Submission, row: models.Submission,
                    request_number: int = -1) -> domain.Submission:
     status = req_type.PENDING   # Will be pending if on hold, too.
-    if row.is_published():
+    if row.is_announced():
         status = req_type.APPLIED
     elif row.is_deleted():
         status = req_type.CANCELLED

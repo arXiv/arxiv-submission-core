@@ -46,11 +46,11 @@ class Submission(Base):    # type: ignore
     PROCESSING = 5
     """Scheduled for today."""
     NEEDS_EMAIL = 6
-    """Published, not yet announced."""
+    """Announced, not yet announced."""
 
-    PUBLISHED = 7
-    DELETED_PUBLISHED = 27
-    """Published and files expired."""
+    ANNOUNCED = 7
+    DELETED_ANNOUNCED = 27
+    """Announced and files expired."""
 
     PROCESSING_SUBMISSION = 8
     REMOVED = 9     # This is "rejected".
@@ -79,26 +79,6 @@ class Submission(Base):    # type: ignore
     WITHDRAWAL = 'wdr'
     CROSS_LIST = 'cross'
     WITHDRAWN_FORMAT = 'withdrawn'
-
-    # Map classic status to Submission domain status.
-    STATUS_MAP = {
-        NOT_SUBMITTED: domain.Submission.WORKING,
-        SUBMITTED: domain.Submission.SUBMITTED,
-        ON_HOLD: domain.Submission.ON_HOLD,
-        NEXT_PUBLISH_DAY: domain.Submission.SCHEDULED,
-        PROCESSING: domain.Submission.SCHEDULED,
-        PROCESSING_SUBMISSION: domain.Submission.SCHEDULED,
-        NEEDS_EMAIL: domain.Submission.SCHEDULED,
-        PUBLISHED: domain.Submission.PUBLISHED,
-        DELETED_PUBLISHED: domain.Submission.PUBLISHED,
-        USER_DELETED:  domain.Submission.DELETED,
-        DELETED_EXPIRED: domain.Submission.DELETED,
-        DELETED_ON_HOLD: domain.Submission.DELETED,
-        DELETED_PROCESSING: domain.Submission.DELETED,
-        DELETED_REMOVED: domain.Submission.DELETED,
-        DELETED_USER_EXPIRED:  domain.Submission.DELETED,
-        ERROR_STATE: domain.Submission.ERROR
-    }
 
     submission_id = Column(Integer, primary_key=True)
 
@@ -237,7 +217,7 @@ class Submission(Base):    # type: ignore
 
     def update_from_submission(self, submission: domain.Submission) -> None:
         """Update this database object from a :class:`.domain.Submission`."""
-        if self.is_published():     # Avoid doing anything. to be safe.
+        if self.is_announced():     # Avoid doing anything. to be safe.
             return
 
         self.submitter_id = submission.creator.native_id
@@ -338,8 +318,8 @@ class Submission(Base):    # type: ignore
         """Get the UTC-localized updated datetime."""
         return self.updated.replace(tzinfo=UTC)
 
-    def is_published(self) -> bool:
-        return self.status in [self.PUBLISHED, self.DELETED_PUBLISHED]
+    def is_announced(self) -> bool:
+        return self.status in [self.ANNOUNCED, self.DELETED_ANNOUNCED]
 
     def is_rejected(self) -> bool:
         return self.status == self.REMOVED
@@ -367,12 +347,6 @@ class Submission(Base):    # type: ignore
     def secondary_categories(self) -> List[str]:
         """Category names from this submission's secondary classifications."""
         return [c.category for c in self.categories if c.is_primary == 0]
-
-    def _get_status(self) -> str:
-        """Map classic status codes to :class:`.domain.Submission` status."""
-        # if self.get_arxiv_id() is not None:
-        #     return domain.Submission.PUBLISHED
-        return self.STATUS_MAP.get(self.status)
 
     def _update_submitter(self, submission: domain.Submission) -> None:
         """Update submitter information on this row."""
@@ -469,7 +443,7 @@ class SubmissionCategory(Base):    # type: ignore
     )
     is_primary = Column(Integer, nullable=False, index=True,
                         server_default=text("'0'"))
-    is_published = Column(Integer, index=True, server_default=text("'0'"))
+    is_announced = Column(Integer, index=True, server_default=text("'0'"))
 
     # category_def = relationship('CategoryDef')
     submission = relationship('Submission', back_populates='categories')
@@ -477,10 +451,10 @@ class SubmissionCategory(Base):    # type: ignore
 
 class Document(Base):    # type: ignore
     """
-    Represents a published arXiv paper.
+    Represents an announced arXiv paper.
 
     This is here so that we can look up the arXiv ID after a submission is
-    published.
+    announced.
     """
 
     __tablename__ = 'arXiv_documents'
@@ -512,7 +486,7 @@ class Document(Base):    # type: ignore
 
 
 class DocumentCategory(Base):    # type: ignore
-    """Relation between published arXiv papers and their classifications."""
+    """Relation between announced arXiv papers and their classifications."""
 
     __tablename__ = 'arXiv_document_category'
 

@@ -179,6 +179,7 @@ class AddHold(Event):
             hold_type=self.hold_type,
             hold_reason=self.hold_reason
         )
+        # submission.status = Submission.ON_HOLD
         return submission
 
     def __post_init__(self) -> None:
@@ -206,6 +207,7 @@ class RemoveHold(Event):
     def project(self, submission: Submission) -> Submission:
         """Remove the hold from the submission."""
         submission.holds.pop(self.hold_event_id)
+        # submission.status = Submission.SUBMITTED
         return submission
 
     def __post_init__(self) -> None:

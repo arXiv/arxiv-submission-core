@@ -71,7 +71,7 @@ def load(rows: List[models.Submission]) -> domain.Submission:
                 version_submission = patch_hold(version_submission, row)
         versions.append(version_submission)
     submission = copy.deepcopy(versions[-1])
-    submission.versions = [ver for ver in versions if ver and ver.published]
+    submission.versions = [ver for ver in versions if ver and ver.announced]
     return submission
 
 
@@ -93,7 +93,7 @@ def to_submission(row: models.Submission,
     :class:`.domain.Submission`
 
     """
-    status = row._get_status()
+    status = _get_status(row.status)
     primary = row.primary_classification
     if row.submitter is None:
         submitter = domain.User(native_id=row.submitter_id,
@@ -146,3 +146,31 @@ def to_submission(row: models.Submission,
     elif row.is_crosslist():
         submission = patch_cross(submission, row)
     return submission
+
+
+def _get_status(classic_status: str) -> str:
+    """Map classic status codes to :class:`.domain.Submission` status."""
+    # if self.get_arxiv_id() is not None:
+    #     return domain.Submission.ANNOUNCED
+    return STATUS_MAP.get(classic_status)
+
+
+# Map classic status to Submission domain status.
+STATUS_MAP = {
+    models.Submission.NOT_SUBMITTED: domain.Submission.WORKING,
+    models.Submission.SUBMITTED: domain.Submission.SUBMITTED,
+    models.Submission.ON_HOLD: domain.Submission.SUBMITTED,
+    models.Submission.NEXT_PUBLISH_DAY: domain.Submission.SCHEDULED,
+    models.Submission.PROCESSING: domain.Submission.SCHEDULED,
+    models.Submission.PROCESSING_SUBMISSION: domain.Submission.SCHEDULED,
+    models.Submission.NEEDS_EMAIL: domain.Submission.SCHEDULED,
+    models.Submission.ANNOUNCED: domain.Submission.ANNOUNCED,
+    models.Submission.DELETED_ANNOUNCED: domain.Submission.ANNOUNCED,
+    models.Submission.USER_DELETED:  domain.Submission.DELETED,
+    models.Submission.DELETED_EXPIRED: domain.Submission.DELETED,
+    models.Submission.DELETED_ON_HOLD: domain.Submission.DELETED,
+    models.Submission.DELETED_PROCESSING: domain.Submission.DELETED,
+    models.Submission.DELETED_REMOVED: domain.Submission.DELETED,
+    models.Submission.DELETED_USER_EXPIRED:  domain.Submission.DELETED,
+    models.Submission.ERROR_STATE: domain.Submission.ERROR
+}

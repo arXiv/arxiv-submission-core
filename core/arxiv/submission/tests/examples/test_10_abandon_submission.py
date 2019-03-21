@@ -148,12 +148,12 @@ class TestAbandonReplacement(TestCase):
                 domain.event.FinalizeSubmission(**self.defaults)
             )
 
-        # Publish the submission.
+        # Announce the submission.
         self.paper_id = '1901.00123'
         with self.app.app_context():
             session = classic.current_session()
             db_row = session.query(classic.models.Submission).first()
-            db_row.status = classic.models.Submission.PUBLISHED
+            db_row.status = classic.models.Submission.ANNOUNCED
             dated = (datetime.now() - datetime.utcfromtimestamp(0))
             db_row.document = classic.models.Document(
                 document_id=1,
@@ -192,15 +192,15 @@ class TestAbandonReplacement(TestCase):
         with self.app.app_context():
             submission, events = load(self.submission.submission_id)
             self.assertEqual(submission.status,
-                             domain.submission.Submission.PUBLISHED,
-                             "The submission is PUBLISHED.")
+                             domain.submission.Submission.ANNOUNCED,
+                             "The submission is ANNOUNCED.")
             self.assertEqual(submission.version, 1, "Back to v1")
 
         with self.app.app_context():
             submission = load_fast(self.submission.submission_id)
             self.assertEqual(submission.status,
-                             domain.submission.Submission.PUBLISHED,
-                             "The submission is PUBLISHED.")
+                             domain.submission.Submission.ANNOUNCED,
+                             "The submission is ANNOUNCED.")
             self.assertEqual(submission.version, 1, "Back to v1")
 
         # Check the database state.
@@ -216,8 +216,8 @@ class TestAbandonReplacement(TestCase):
                              classic.models.Submission.NEW_SUBMISSION,
                              "The first row has type 'new'")
             self.assertEqual(db_rows[0].status,
-                             classic.models.Submission.PUBLISHED,
-                             "The first row is PUBLISHED")
+                             classic.models.Submission.ANNOUNCED,
+                             "The first row is ANNOUNCED")
             self.assertEqual(db_rows[1].type,
                              classic.models.Submission.REPLACEMENT,
                              "The second row has type 'replacement'")
@@ -260,8 +260,8 @@ class TestAbandonReplacement(TestCase):
                              classic.models.Submission.NEW_SUBMISSION,
                              "The first row has type 'new'")
             self.assertEqual(db_rows[0].status,
-                             classic.models.Submission.PUBLISHED,
-                             "The first row is PUBLISHED")
+                             classic.models.Submission.ANNOUNCED,
+                             "The first row is ANNOUNCED")
             self.assertEqual(db_rows[1].type,
                              classic.models.Submission.REPLACEMENT,
                              "The second row has type 'replacement'")
@@ -330,12 +330,12 @@ class TestCrossListCancelled(TestCase):
                 domain.event.FinalizeSubmission(**self.defaults)
             )
 
-        # Publish the submission.
+        # Announce the submission.
         self.paper_id = '1901.00123'
         with self.app.app_context():
             session = classic.current_session()
             db_row = session.query(classic.models.Submission).first()
-            db_row.status = classic.models.Submission.PUBLISHED
+            db_row.status = classic.models.Submission.ANNOUNCED
             dated = (datetime.now() - datetime.utcfromtimestamp(0))
             db_row.document = classic.models.Document(
                 document_id=1,
@@ -379,14 +379,14 @@ class TestCrossListCancelled(TestCase):
         with self.app.app_context():
             submission, events = load(self.submission.submission_id)
             self.assertEqual(submission.status,
-                             domain.submission.Submission.PUBLISHED,
-                             "The submission is PUBLISHED.")
+                             domain.submission.Submission.ANNOUNCED,
+                             "The submission is ANNOUNCED.")
 
         with self.app.app_context():
             submission = load_fast(self.submission.submission_id)
             self.assertEqual(submission.status,
-                             domain.submission.Submission.PUBLISHED,
-                             "The submission is PUBLISHED.")
+                             domain.submission.Submission.ANNOUNCED,
+                             "The submission is ANNOUNCED.")
 
         # Check the database state.
         with self.app.app_context():
@@ -401,8 +401,8 @@ class TestCrossListCancelled(TestCase):
                              classic.models.Submission.NEW_SUBMISSION,
                              "The first row has type 'new'")
             self.assertEqual(db_rows[0].status,
-                             classic.models.Submission.PUBLISHED,
-                             "The first row is PUBLISHED")
+                             classic.models.Submission.ANNOUNCED,
+                             "The first row is ANNOUNCED")
             self.assertEqual(db_rows[1].type,
                              classic.models.Submission.CROSS_LIST,
                              "The second row has type 'cross'")
@@ -424,14 +424,14 @@ class TestCrossListCancelled(TestCase):
         with self.app.app_context():
             submission, events = load(self.submission.submission_id)
             self.assertEqual(submission.status,
-                             domain.submission.Submission.PUBLISHED,
-                             "The submission is PUBLISHED.")
+                             domain.submission.Submission.ANNOUNCED,
+                             "The submission is ANNOUNCED.")
 
         with self.app.app_context():
             submission = load_fast(self.submission.submission_id)
             self.assertEqual(submission.status,
-                             domain.submission.Submission.PUBLISHED,
-                             "The submission is PUBLISHED.")
+                             domain.submission.Submission.ANNOUNCED,
+                             "The submission is ANNOUNCED.")
 
         # Check the database state.
         with self.app.app_context():
@@ -446,8 +446,8 @@ class TestCrossListCancelled(TestCase):
                              classic.models.Submission.NEW_SUBMISSION,
                              "The first row has type 'new'")
             self.assertEqual(db_rows[0].status,
-                             classic.models.Submission.PUBLISHED,
-                             "The first row is PUBLISHED")
+                             classic.models.Submission.ANNOUNCED,
+                             "The first row is ANNOUNCED")
             self.assertEqual(db_rows[1].type,
                              classic.models.Submission.CROSS_LIST,
                              "The second row has type 'cross'")
@@ -516,12 +516,12 @@ class TestWithdrawalCancelled(TestCase):
                 domain.event.FinalizeSubmission(**self.defaults)
             )
 
-        # Publish the submission.
+        # Announce the submission.
         self.paper_id = '1901.00123'
         with self.app.app_context():
             session = classic.current_session()
             db_row = session.query(classic.models.Submission).first()
-            db_row.status = classic.models.Submission.PUBLISHED
+            db_row.status = classic.models.Submission.ANNOUNCED
             dated = (datetime.now() - datetime.utcfromtimestamp(0))
             db_row.document = classic.models.Document(
                 document_id=1,
@@ -565,14 +565,14 @@ class TestWithdrawalCancelled(TestCase):
         with self.app.app_context():
             submission, events = load(self.submission.submission_id)
             self.assertEqual(submission.status,
-                             domain.submission.Submission.PUBLISHED,
-                             "The submission is PUBLISHED.")
+                             domain.submission.Submission.ANNOUNCED,
+                             "The submission is ANNOUNCED.")
 
         with self.app.app_context():
             submission = load_fast(self.submission.submission_id)
             self.assertEqual(submission.status,
-                             domain.submission.Submission.PUBLISHED,
-                             "The submission is PUBLISHED.")
+                             domain.submission.Submission.ANNOUNCED,
+                             "The submission is ANNOUNCED.")
 
         # Check the database state.
         with self.app.app_context():
@@ -587,8 +587,8 @@ class TestWithdrawalCancelled(TestCase):
                              classic.models.Submission.NEW_SUBMISSION,
                              "The first row has type 'new'")
             self.assertEqual(db_rows[0].status,
-                             classic.models.Submission.PUBLISHED,
-                             "The first row is PUBLISHED")
+                             classic.models.Submission.ANNOUNCED,
+                             "The first row is ANNOUNCED")
             self.assertEqual(db_rows[1].type,
                              classic.models.Submission.WITHDRAWAL,
                              "The second row has type 'wdr'")
@@ -608,14 +608,14 @@ class TestWithdrawalCancelled(TestCase):
         with self.app.app_context():
             submission, events = load(self.submission.submission_id)
             self.assertEqual(submission.status,
-                             domain.submission.Submission.PUBLISHED,
-                             "The submission is PUBLISHED.")
+                             domain.submission.Submission.ANNOUNCED,
+                             "The submission is ANNOUNCED.")
 
         with self.app.app_context():
             submission = load_fast(self.submission.submission_id)
             self.assertEqual(submission.status,
-                             domain.submission.Submission.PUBLISHED,
-                             "The submission is PUBLISHED.")
+                             domain.submission.Submission.ANNOUNCED,
+                             "The submission is ANNOUNCED.")
 
         # Check the database state.
         with self.app.app_context():
@@ -630,8 +630,8 @@ class TestWithdrawalCancelled(TestCase):
                              classic.models.Submission.NEW_SUBMISSION,
                              "The first row has type 'new'")
             self.assertEqual(db_rows[0].status,
-                             classic.models.Submission.PUBLISHED,
-                             "The first row is PUBLISHED")
+                             classic.models.Submission.ANNOUNCED,
+                             "The first row is ANNOUNCED")
             self.assertEqual(db_rows[1].type,
                              classic.models.Submission.WITHDRAWAL,
                              "The second row has type 'wdr'")

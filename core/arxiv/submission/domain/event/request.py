@@ -137,8 +137,8 @@ class RequestCrossList(Event):
     def validate(self, submission: Submission) -> None:
         """Validate the cross-list request."""
         validators.no_active_requests(self, submission)
-        if not submission.published:
-            raise InvalidEvent(self, "Submission must already be published")
+        if not submission.announced:
+            raise InvalidEvent(self, "Submission must already be announced")
         for category in self.categories:
             validators.must_be_a_valid_category(self, category, submission)
             validators.cannot_be_primary(self, category, submission)
@@ -188,8 +188,8 @@ class RequestWithdrawal(Event):
             raise InvalidEvent(self, "Provide a reason for the withdrawal")
         if len(self.reason) > self.MAX_LENGTH:
             raise InvalidEvent(self, "Reason must be 400 characters or less")
-        if not submission.published:
-            raise InvalidEvent(self, "Submission must already be published")
+        if not submission.announced:
+            raise InvalidEvent(self, "Submission must already be announced")
 
     def project(self, submission: Submission) -> Submission:
         """Update the submission status and withdrawal reason."""

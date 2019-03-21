@@ -66,12 +66,12 @@ class TestReplacementSubmissionInProgress(TestCase):
                 domain.event.FinalizeSubmission(**self.defaults)
             )
 
-        # Publish the submission.
+        # Announce the submission.
         self.paper_id = '1901.00123'
         with self.app.app_context():
             session = classic.current_session()
             db_row = session.query(classic.models.Submission).first()
-            db_row.status = classic.models.Submission.PUBLISHED
+            db_row.status = classic.models.Submission.ANNOUNCED
             dated = (datetime.now() - datetime.utcfromtimestamp(0))
             db_row.document = classic.models.Document(
                 document_id=1,
@@ -107,28 +107,28 @@ class TestReplacementSubmissionInProgress(TestCase):
             self.assertEqual(submission.status,
                              domain.submission.Submission.WORKING,
                              "The submission is in the working state")
-            self.assertIsInstance(self.events[-2], domain.event.Publish,
-                                  "A Publish event is inserted.")
+            self.assertIsInstance(self.events[-2], domain.event.Announce,
+                                  "An Announce event is inserted.")
             self.assertIsInstance(self.events[-1],
                                   domain.event.CreateSubmissionVersion,
                                   "A CreateSubmissionVersion event is"
                                   " inserted.")
             self.assertEqual(len(submission.versions), 1,
-                             "There is one published versions")
+                             "There is one announced versions")
 
         with self.app.app_context():
             submission = load_fast(self.submission.submission_id)
             self.assertEqual(submission.status,
                              domain.submission.Submission.WORKING,
                              "The submission is in the working state")
-            self.assertIsInstance(self.events[-2], domain.event.Publish,
-                                  "A Publish event is inserted.")
+            self.assertIsInstance(self.events[-2], domain.event.Announce,
+                                  "An Announce event is inserted.")
             self.assertIsInstance(self.events[-1],
                                   domain.event.CreateSubmissionVersion,
                                   "A CreateSubmissionVersion event is"
                                   " inserted.")
             self.assertEqual(len(submission.versions), 1,
-                             "There is one published versions")
+                             "There is one announced versions")
 
         # Check the database state.
         with self.app.app_context():
@@ -143,8 +143,8 @@ class TestReplacementSubmissionInProgress(TestCase):
                              classic.models.Submission.NEW_SUBMISSION,
                              "The first row has type 'new'")
             self.assertEqual(db_rows[0].status,
-                             classic.models.Submission.PUBLISHED,
-                             "The first row is published")
+                             classic.models.Submission.ANNOUNCED,
+                             "The first row is announced")
             self.assertEqual(db_rows[1].type,
                              classic.models.Submission.REPLACEMENT,
                              "The second row has type 'replacement'")
@@ -192,8 +192,8 @@ class TestReplacementSubmissionInProgress(TestCase):
             self.assertEqual(submission.status,
                              domain.submission.Submission.WORKING,
                              "The submission is in the working state")
-            self.assertIsInstance(events[-3], domain.event.Publish,
-                                  "A Publish event is inserted.")
+            self.assertIsInstance(events[-3], domain.event.Announce,
+                                  "An Announce event is inserted.")
             self.assertIsInstance(events[-2],
                                   domain.event.CreateSubmissionVersion,
                                   "A CreateSubmissionVersion event is"
@@ -202,7 +202,7 @@ class TestReplacementSubmissionInProgress(TestCase):
                                   domain.event.SetTitle,
                                   "Metadata update events are reflected")
             self.assertEqual(len(submission.versions), 1,
-                             "There is one published versions")
+                             "There is one announced versions")
 
         with self.app.app_context():
             submission = load_fast(self.submission.submission_id)
@@ -211,8 +211,8 @@ class TestReplacementSubmissionInProgress(TestCase):
             self.assertEqual(submission.status,
                              domain.submission.Submission.WORKING,
                              "The submission is in the working state")
-            self.assertIsInstance(events[-3], domain.event.Publish,
-                                  "A Publish event is inserted.")
+            self.assertIsInstance(events[-3], domain.event.Announce,
+                                  "An Announce event is inserted.")
             self.assertIsInstance(events[-2],
                                   domain.event.CreateSubmissionVersion,
                                   "A CreateSubmissionVersion event is"
@@ -221,7 +221,7 @@ class TestReplacementSubmissionInProgress(TestCase):
                                   domain.event.SetTitle,
                                   "Metadata update events are reflected")
             self.assertEqual(len(submission.versions), 1,
-                             "There is one published versions")
+                             "There is one announced versions")
 
         # Check the database state.
         with self.app.app_context():
@@ -236,10 +236,10 @@ class TestReplacementSubmissionInProgress(TestCase):
                              classic.models.Submission.NEW_SUBMISSION,
                              "The first row has type 'new'")
             self.assertEqual(db_rows[0].status,
-                             classic.models.Submission.PUBLISHED,
-                             "The first row is published")
+                             classic.models.Submission.ANNOUNCED,
+                             "The first row is announced")
             self.assertEqual(db_rows[0].title, self.submission.metadata.title,
-                             "Published row is unchanged.")
+                             "Announced row is unchanged.")
             self.assertEqual(db_rows[1].type,
                              classic.models.Submission.REPLACEMENT,
                              "The second row has type 'replacement'")
@@ -287,8 +287,8 @@ class TestReplacementSubmissionInProgress(TestCase):
                              domain.submission.Submission.WORKING,
                              "The submission is in the working state.")
 
-            self.assertIsInstance(events[-5], domain.event.Publish,
-                                  "A Publish event is inserted.")
+            self.assertIsInstance(events[-5], domain.event.Announce,
+                                  "An Announce event is inserted.")
             self.assertIsInstance(events[-4],
                                   domain.event.CreateSubmissionVersion,
                                   "A CreateSubmissionVersion event is"
@@ -303,7 +303,7 @@ class TestReplacementSubmissionInProgress(TestCase):
                                   domain.event.SetReportNumber,
                                   "Metadata update events are reflected")
             self.assertEqual(len(submission.versions), 1,
-                             "There is one published versions")
+                             "There is one announced versions")
 
         with self.app.app_context():
             submission = load_fast(self.submission.submission_id)
@@ -317,7 +317,7 @@ class TestReplacementSubmissionInProgress(TestCase):
                              domain.submission.Submission.WORKING,
                              "The submission is in the working state.")
             self.assertEqual(len(submission.versions), 1,
-                             "There is one published versions")
+                             "There is one announced versions")
 
         # Check the database state.
         with self.app.app_context():
@@ -332,8 +332,8 @@ class TestReplacementSubmissionInProgress(TestCase):
                              classic.models.Submission.NEW_SUBMISSION,
                              "The first row has type 'new'")
             self.assertEqual(db_rows[0].status,
-                             classic.models.Submission.PUBLISHED,
-                             "The first row is published")
+                             classic.models.Submission.ANNOUNCED,
+                             "The first row is announced")
             self.assertEqual(db_rows[1].type,
                              classic.models.Submission.REPLACEMENT,
                              "The second row has type replacement")
@@ -356,7 +356,7 @@ class TestReplacementSubmissionInProgress(TestCase):
 
         self.test_is_in_working_state()
 
-    def test_can_revert_to_most_recent_published_version(self):
+    def test_can_revert_to_most_recent_announced_version(self):
         """Submitter can abandon changes to their replacement."""
         new_doi = "10.1000/182"
         new_journal_ref = "Baz 1993"
@@ -391,7 +391,7 @@ class TestReplacementSubmissionInProgress(TestCase):
                              self.submission.metadata.report_num,
                              "The report number is reverted.")
             self.assertEqual(len(submission.versions), 1,
-                             "There is one published versions")
+                             "There is one announced versions")
 
         with self.app.app_context():
             submission = load_fast(self.submission.submission_id)
@@ -407,7 +407,7 @@ class TestReplacementSubmissionInProgress(TestCase):
                              self.submission.metadata.report_num,
                              "The report number is reverted.")
             self.assertEqual(len(submission.versions), 1,
-                             "There is one published versions")
+                             "There is one announced versions")
 
         # Check the database state.
         with self.app.app_context():
@@ -422,8 +422,8 @@ class TestReplacementSubmissionInProgress(TestCase):
                              classic.models.Submission.NEW_SUBMISSION,
                              "The first row has type 'new'")
             self.assertEqual(db_rows[0].status,
-                             classic.models.Submission.PUBLISHED,
-                             "The first row is published")
+                             classic.models.Submission.ANNOUNCED,
+                             "The first row is announced")
             self.assertEqual(db_rows[1].type,
                              classic.models.Submission.REPLACEMENT,
                              "The second row has type replacement")
@@ -453,4 +453,4 @@ class TestReplacementSubmissionInProgress(TestCase):
                              domain.submission.Submission.WORKING,
                              "Submission is in working state")
             self.assertEqual(len(submission.versions), 1,
-                             "There is one published versions")
+                             "There is one announced versions")

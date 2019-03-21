@@ -187,9 +187,9 @@ class CreateSubmissionVersion(Event):
     NAMED = "new version created"
 
     def validate(self, submission: Submission) -> None:
-        """Only applies to published submissions."""
-        if not submission.published:
-            raise InvalidEvent(self, "Must already be published")
+        """Only applies to announced submissions."""
+        if not submission.announced:
+            raise InvalidEvent(self, "Must already be announced")
         validators.no_active_requests(self, submission)
 
     def project(self, submission: Submission) -> Submission:
@@ -212,17 +212,17 @@ class CreateSubmissionVersion(Event):
 
 @dataclass(init=False)
 class Rollback(Event):
-    """Roll back to the most recent published version, or delete."""
+    """Roll back to the most recent announced version, or delete."""
 
     NAME = "roll back or delete"
     NAMED = "rolled back or deleted"
 
     def validate(self, submission: Submission) -> None:
-        """Only applies to submissions in an unpublished state."""
-        if submission.published:
-            raise InvalidEvent(self, "Cannot already be published")
+        """Only applies to submissions in an unannounced state."""
+        if submission.announced:
+            raise InvalidEvent(self, "Cannot already be announced")
         elif submission.version > 1 and not submission.versions:
-            raise InvalidEvent(self, "No published version to which to revert")
+            raise InvalidEvent(self, "No announced version to which to revert")
 
     def project(self, submission: Submission) -> Submission:
         """Decrement the version number, and reset fields."""
@@ -231,7 +231,7 @@ class Rollback(Event):
             return submission
         submission.version -= 1
         target = submission.versions[-1]
-        # Return these to last published state.
+        # Return these to last announced state.
         submission.status = target.status
         submission.source_content = target.source_content
         submission.submitter_contact_verified = \
@@ -311,11 +311,11 @@ class SetPrimaryClassification(Event):
         """Validate the primary classification category."""
         validators.must_be_a_valid_category(self, self.category, submission)
         self._creator_must_be_endorsed(submission)
-        self._must_be_unpublished(submission)
+        self._must_be_unannounced(submission)
         validators.submission_is_not_finalized(self, submission)
         validators.cannot_be_secondary(self, self.category, submission)
 
-    def _must_be_unpublished(self, submission: Submission) -> None:
+    def _must_be_unannounced(self, submission: Submission) -> None:
         """Can only be set on the first version before publication."""
         if submission.arxiv_id is not None or submission.version > 1:
             raise InvalidEvent(self, "Can only be set on the first version,"
@@ -548,7 +548,7 @@ class SetDOI(Event):
     def validate(self, submission: Submission) -> None:
         """Validate the DOI value."""
         if submission.status == Submission.SUBMITTED \
-                and not submission.published:
+                and not submission.announced:
             raise InvalidEvent(self, 'Cannot edit a finalized submission')
         if not self.doi:    # Can be blank.
             return
@@ -989,7 +989,7 @@ class UnFinalizeSubmission(Event):
     def validate(self, submission: Submission) -> None:
         """Validate the unfinalize action."""
         self._must_be_finalized(submission)
-        if submission.published:
+        if submission.announced:
             raise InvalidEvent(self, "Cannot unfinalize an announced paper")
 
     def _must_be_finalized(self, submission: Submission) -> None:
@@ -1005,11 +1005,11 @@ class UnFinalizeSubmission(Event):
 
 
 @dataclass()
-class Publish(Event):
-    """Publish the current version of the submission."""
+class Announce(Event):
+    """Announce the current version of the submission."""
 
     NAME = "publish submission"
-    NAMED = "submission published"
+    NAMED = "submission announced"
 
     arxiv_id: Optional[str] = None
 
@@ -1031,7 +1031,7 @@ class Publish(Event):
     def project(self, submission: Submission) -> Submission:
         """Set the arXiv ID on the submission."""
         submission.arxiv_id = self.arxiv_id
-        submission.status = Submission.PUBLISHED
+        submission.status = Submission.ANNOUNCED
         submission.versions.append(copy.deepcopy(submission))
         return submission
 
