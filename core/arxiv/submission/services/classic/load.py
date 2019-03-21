@@ -93,7 +93,7 @@ def to_submission(row: models.Submission,
     :class:`.domain.Submission`
 
     """
-    status = _get_status(row.status)
+    status = status_from_classic(row.status)
     primary = row.primary_classification
     if row.submitter is None:
         submitter = domain.User(native_id=row.submitter_id,
@@ -148,7 +148,7 @@ def to_submission(row: models.Submission,
     return submission
 
 
-def _get_status(classic_status: str) -> str:
+def status_from_classic(classic_status: str) -> str:
     """Map classic status codes to :class:`.domain.Submission` status."""
     # if self.get_arxiv_id() is not None:
     #     return domain.Submission.ANNOUNCED

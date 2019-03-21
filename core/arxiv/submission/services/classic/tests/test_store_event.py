@@ -230,9 +230,8 @@ class TestStoreEvent(TestCase):
 
             # This would normally happen during a load.
             pub = Announce(creator=System(__name__), arxiv_id=paper_id,
-                          committed=True)
+                           committed=True)
             before = pub.apply(before)
-            before = db_submission.patch(before)
 
             # Now set DOI + journal ref
             doi = '10.1000/182'

@@ -667,7 +667,5 @@ class TestWithdrawalCancelled(TestCase):
                                            **self.defaults),
                 submission_id=self.submission.submission_id
             )
-            print(self.submission.user_requests)
             submission, events = load(self.submission.submission_id)
-
-            print(submission.user_requests)
+            self.assertEqual(len(submission.active_user_requests), 0)

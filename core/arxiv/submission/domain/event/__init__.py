@@ -356,7 +356,6 @@ class AddSecondaryClassification(Event):
         validators.must_be_a_valid_category(self, self.category, submission)
         validators.cannot_be_primary(self, self.category, submission)
         validators.cannot_be_secondary(self, self.category, submission)
-        validators.submission_is_not_finalized(self, submission)
 
     def project(self, submission: Submission) -> Submission:
         """Add a :class:`.Classification` as a secondary classification."""
@@ -1188,4 +1187,32 @@ class AddClassifierResults(Event):
             classifier=self.classifier,
             results=self.results
         )
+        return submission
+
+
+@dataclass()
+class Reclassify(Event):
+    """Reclassify a submission."""
+
+    NAME = "reclassify submission"
+    NAMED = "submission reclassified"
+
+    category: Optional[taxonomy.Category] = None
+
+    def validate(self, submission: Submission) -> None:
+        """Validate the primary classification category."""
+        validators.must_be_a_valid_category(self, self.category, submission)
+        self._must_be_unannounced(submission)
+        validators.cannot_be_secondary(self, self.category, submission)
+
+    def _must_be_unannounced(self, submission: Submission) -> None:
+        """Can only be set on the first version before publication."""
+        if submission.arxiv_id is not None or submission.version > 1:
+            raise InvalidEvent(self, "Can only be set on the first version,"
+                                     " before publication.")
+
+    def project(self, submission: Submission) -> Submission:
+        """Set :attr:`.domain.Submission.primary_classification`."""
+        clsn = Classification(category=self.category)
+        submission.primary_classification = clsn
         return submission

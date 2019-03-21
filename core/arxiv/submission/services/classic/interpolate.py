@@ -26,9 +26,10 @@ from ...domain.event import Event, SetDOI, SetJournalReference, \
     SetReportNumber, ApplyRequest, RejectRequest, Announce, AddHold, \
     CancelRequest, SetPrimaryClassification, AddSecondaryClassification, \
     SetTitle, SetAbstract, SetComments, SetMSCClassification, \
-    SetACMClassification, SetAuthors
+    SetACMClassification, SetAuthors, Reclassify
 
 from ...domain.agent import System, User
+from .load import status_from_classic
 
 
 logger = logging.getLogger(__name__)
@@ -126,6 +127,17 @@ class ClassicEventInterpolator:
             if self.current_row.status == models.Submission.ON_HOLD:
                 self._inject(AddHold, hold_type=Hold.Type.PATCH)
 
+            # TODO: these need some explicit event/command representations.
+            elif status_from_classic(self.current_row.status) \
+                    == Submission.SCHEDULED:
+                self.submission.status = Submission.SCHEDULED
+            elif status_from_classic(self.current_row.status) \
+                    == Submission.DELETED:
+                self.submission.status = Submission.DELETED
+            elif status_from_classic(self.current_row.status) \
+                    == Submission.ERROR:
+                self.submission.status = Submission.ERROR
+
             self._inject_primary_if_changed()
             self._inject_secondaries_if_changed()
             self._inject_metadata_if_changed()
@@ -144,7 +156,7 @@ class ClassicEventInterpolator:
         """Inject primary classification event if a change has occurred."""
         primary = self.current_row.primary_classification
         if primary and primary.category != self.submission.primary_category:
-            self._inject(SetPrimaryClassification, category=primary.category)
+            self._inject(Reclassify, category=primary.category)
 
     def _inject_secondaries_if_changed(self) -> None:
         """Inject secondary classification events if a change has occurred."""

@@ -111,7 +111,6 @@ class TestSourceSizeLimits(TestCase):
         # The submission should be on hold.
         with self.app.app_context():
             submission, events = load(self.submission.submission_id)
-            print(submission.status, submission.holds)
             self.assertGreater(len(submission.holds), 0,
                                "Has a hold; uncompressed source is huge")
 
