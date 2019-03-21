@@ -1,7 +1,7 @@
 """Commands/events related to user requests."""
 
 from typing import Optional, List
-
+import hashlib
 from dataclasses import field
 from .util import dataclass
 
@@ -109,7 +109,11 @@ class ApplyRequest(Event):
             raise InvalidEvent(self, "No such request")
 
     def project(self, submission: Submission) -> Submission:
-        submission.user_requests[self.request_id].status = UserRequest.APPLIED
+        user_request = submission.user_requests[self.request_id]
+        if hasattr(user_request, 'apply'):
+            submission = user_request.apply(submission)
+        user_request.status = UserRequest.APPLIED
+        submission.user_requests[self.request_id] = user_request
         return submission
 
 
@@ -145,13 +149,16 @@ class RequestCrossList(Event):
         classifications = [
             Classification(category=category) for category in self.categories
         ]
-        request = CrossListClassificationRequest(
+
+        req_id = CrossListClassificationRequest.generate_request_id(submission)
+        user_request = CrossListClassificationRequest(
+            request_id=req_id,
             creator=self.creator,
             created=self.created,
             status=WithdrawalRequest.PENDING,
             classifications=classifications
         )
-        submission.user_requests[request.request_id] = request
+        submission.user_requests[req_id] = user_request
         return submission
 
 
@@ -186,12 +193,14 @@ class RequestWithdrawal(Event):
 
     def project(self, submission: Submission) -> Submission:
         """Update the submission status and withdrawal reason."""
-        request = WithdrawalRequest(
+        req_id = WithdrawalRequest.generate_request_id(submission)
+        user_request = WithdrawalRequest(
+            request_id=req_id,
             creator=self.creator,
             created=self.created,
             updated=self.created,
             status=WithdrawalRequest.PENDING,
             reason_for_withdrawal=self.reason
         )
-        submission.user_requests[request.request_id] = request
+        submission.user_requests[req_id] = user_request
         return submission

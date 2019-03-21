@@ -1,20 +1,24 @@
 """SQLAlchemy ORM classes for the classic database."""
 
 import json
-from typing import Optional, List
+from typing import Optional, List, Any
 from datetime import datetime
 from pytz import UTC
 from sqlalchemy import Column, Date, DateTime, Enum, ForeignKey, Text, text, \
     ForeignKeyConstraint, Index, Integer, SmallInteger, String, Table
 from sqlalchemy.orm import relationship, joinedload, backref
-
 from sqlalchemy.ext.declarative import declarative_base
+
+from arxiv.base import logging
 from arxiv.license import LICENSES
 from arxiv import taxonomy
+
 from ... import domain
 from .util import transaction
 
 Base = declarative_base()
+
+logger = logging.getLogger(__name__)
 
 
 class Submission(Base):    # type: ignore
@@ -186,221 +190,21 @@ class Submission(Base):    # type: ignore
                               back_populates='submission', lazy='joined',
                               cascade="all, delete-orphan")
 
-    PATCHABLE = ['title', 'abstract', 'comments', 'doi', 'journal_ref',
-                 'msc_class', 'acm_class']
-
-    def patch(self, submission: domain.Submission) -> domain.Submission:
-        """
-        Patch a :class:`.domain.Submission` with data outside the event scope.
-
-        There are several fields that may change after a submission enters the
-        classic moderation and publication system, that cannot be inferred
-        from the event stack.
-
-        Parameters
-        ----------
-        submission : :class:`.domain.Submission`
-            The submission object to patch.
-
-        Returns
-        -------
-        :class:`.domain.Submission`
-            The same submission that was passed; now patched with data outside
-            the scope of the event model.
-
-        """
-        if self.is_crosslist():
-            submission = self.patch_cross(submission)
-        elif self.is_withdrawal():
-            submission = self.patch_withdrawal(submission)
-        elif self.is_jref():
-            submission = self.patch_jref(submission)
-        else:
-            # Possible reclassification.
-            primary = self.primary_classification
-            if primary:
-                submission.primary_classification = domain.Classification(
-                    category=primary.category
-                )
-            submission.secondary_classification = [
-                domain.Classification(category=db_cat.category)
-                for db_cat in self.categories
-                if db_cat.is_primary == 0
-            ]
-
-            for field in self.PATCHABLE:
-                value = getattr(self, field)
-                if getattr(submission.metadata, field) != value:
-                    setattr(submission.metadata, field, value)
-            if self.authors != submission.metadata.authors_display:
-                submission.metadata.authors_display = self.authors
-            # # Comments (admins may modify).
-            # submission.metadata.comments = self.comments
-
-            submission = self.patch_status(submission)
-            submission.created = self.get_created()
-            submission.updated = self.get_updated()
-        return submission
-
-    def patch_hold(self, submission: domain.Submission) -> domain.Submission:
-        """Patch hold-related data from this database row."""
-        if self.status == self.ON_HOLD:
-            submission.status = domain.Submission.ON_HOLD
-            created = self.get_updated()
-            creator = domain.agent.System(__name__)
-            event_id = domain.Event.get_id(created, 'AddHold', creator)
-            hold = domain.Hold(event_id=event_id, creator=creator,
-                               created=created,
-                               hold_type=domain.Hold.Type.PATCH)
-            submission.holds[event_id] = hold
-        return submission
-
-    def patch_status(self, submission: domain.Submission) -> domain.Submission:
-        """Patch status-related data from this database row."""
-        # We're phasing journal reference out as a submission
-        if self.type != Submission.JOURNAL_REFERENCE:
-            # Apply sticky status.
-            if self.sticky_status == self.ON_HOLD \
-                    or self.status == self.ON_HOLD:
-                submission = self.patch_hold(submission)
-            elif self.is_withdrawal() or self.is_crosslist():
-                pass
-            # We're going to use a Publish event instead of setting this
-            # here.
-            elif not self.is_published():
-                # Status changes.
-                submission.status = self._get_status()
-        return submission
-
-    def patch_jref(self, submission: domain.Submission) -> domain.Submission:
-        """
-        Patch a :class:`.domain.Submission` with JREF data outside the event
-        scope.
-
-        Parameters
-        ----------
-        submission : :class:`.domain.Submission`
-            The submission object to patch.
-
-        Returns
-        -------
-        :class:`.domain.Submission`
-            The same submission that was passed; now patched with JREF data
-            outside the scope of the event model.
-        """
-        submission.metadata.doi = self.doi
-        submission.metadata.journal_ref = self.journal_ref
-        submission.metadata.report_num = self.report_num
-        return submission
-
     def get_submitter(self) -> domain.User:
+        """Generate a :class:`.User` representing the submitter."""
+        extra = {}
         if self.submitter:
-            extra = dict(
-                forename=self.submitter.first_name,
-                surname=self.submitter.last_name,
-                suffix=self.submitter.suffix_name
-            )
-        else:
-            extra = {}
+            extra.update(dict(forename=self.submitter.first_name,
+                              surname=self.submitter.last_name,
+                              suffix=self.submitter.suffix_name))
+        return domain.User(native_id=self.submitter_id,
+                           email=self.submitter_email, **extra)
 
-        return domain.User(
-            native_id=self.submitter_id,
-            email=self.submitter_email,
-            **extra
-        )
-
-    def to_submission(self, submission_id: Optional[int] = None) \
-            -> domain.Submission:
-        """
-        Generate a representation of submission state from a DB instance.
-
-        Parameters
-        ----------
-        submission_id : int or None
-            If provided the database value is overridden when setting
-            :attr:`domain.Submission.submission_id`.
-
-        Returns
-        -------
-        :class:`.domain.Submission`
-
-        """
-        status = self._get_status()
-        primary = self.primary_classification
-        if self.submitter is None:
-            submitter = domain.User(
-                native_id=self.submitter_id,
-                email=self.submitter_email,
-            )
-        else:
-            submitter = self.get_submitter()
-        if submission_id is None:
-            submission_id = self.submission_id
-        submission = domain.Submission(
-            submission_id=submission_id,
-            creator=submitter,
-            owner=submitter,
-            status=status,
-            created=self.get_created(),
-            updated=self.get_updated(),
-            submitter_is_author=bool(self.is_author),
-            submitter_accepts_policy=bool(self.agree_policy),
-            submitter_contact_verified=bool(self.userinfo),
-            submitter_confirmed_preview=bool(self.viewed),
-            metadata=domain.SubmissionMetadata(
-                title=self.title,
-                abstract=self.abstract,
-                comments=self.comments,
-                report_num=self.report_num,
-                doi=self.doi,
-                msc_class=self.msc_class,
-                acm_class=self.acm_class,
-                journal_ref=self.journal_ref
-            ),
-            license=domain.License(
-                uri=self.license,
-                name=LICENSES[self.license]['label']
-            ) if self.license else None,
-            primary_classification=domain.Classification(
-                category=primary.category
-            ) if primary else None,
-            secondary_classification=[
-                domain.Classification(category=db_cat.category)
-                for db_cat in self.categories
-                if db_cat.is_primary == 0
-            ],
-            arxiv_id=self.doc_paper_id,
-            version=self.version
-        )
-        if self.sticky_status == self.ON_HOLD or self.status == self.ON_HOLD:
-            submission = self.patch_hold(submission)
-        elif self.is_withdrawal():
-            if self.status == Submission.PROCESSING_SUBMISSION:
-                wdr_status = domain.WithdrawalRequest.PENDING
-
-            elif self.is_published():
-                wdr_status = domain.WithdrawalRequest.APPLIED
-            else:
-                raise RuntimeError("Unhandled condition")
-            request = domain.WithdrawalRequest(
-                creator=domain.User(
-                    native_id=self.submitter_id,
-                    email=self.submitter_email,
-                ),
-                reason_for_withdrawal=self._get_withdrawal_reason(),
-                created=self.get_created(),
-                updated=self.get_updated(),
-                status=wdr_status
-            )
-            submission.user_requests[request.request_id] = request
-        elif self.is_crosslist():
-            request = self._get_crosslist_request(submission)
-            submission.user_requests[request.request_id] = request
-        return submission
 
     WDR_DELIMETER = '. Withdrawn: '
 
-    def _get_withdrawal_reason(self) -> Optional[str]:
+    def get_withdrawal_reason(self) -> Optional[str]:
+        """Extract the withdrawal reason from the comments field."""
         if Submission.WDR_DELIMETER not in self.comments:
             return
         return self.comments.split(Submission.WDR_DELIMETER, 1)[1]
@@ -408,6 +212,7 @@ class Submission(Base):    # type: ignore
     def update_withdrawal(self, submission: domain.Submission, reason: str,
                           paper_id: str, version: int,
                           created: datetime) -> None:
+        """Update withdrawal request information in the database."""
         self.update_from_submission(submission)
         self.created = created
         self.updated = created
@@ -419,6 +224,7 @@ class Submission(Base):    # type: ignore
     def update_cross(self, submission: domain.Submission,
                      categories: List[str], paper_id: str, version: int,
                      created: datetime) -> None:
+        """Update cross-list request information in the database."""
         self.update_from_submission(submission)
         self.created = created
         self.updated = created
@@ -428,75 +234,6 @@ class Submission(Base):    # type: ignore
             self.categories.append(
                 SubmissionCategory(submission_id=self.submission_id,
                                    category=category, is_primary=0))
-
-    def patch_withdrawal(self, submission: domain.Submission) \
-            -> domain.Submission:
-        reason = self._get_withdrawal_reason()
-        if reason is None:
-            return Submission
-        # TODO: what is rejected status?
-        status = domain.WithdrawalRequest.PENDING
-        if self.is_published():
-            status = domain.WithdrawalRequest.APPLIED
-            submission.reason_for_withdrawal = reason
-        elif self.is_deleted():
-            status = domain.WithdrawalRequest.CANCELLED
-        elif self.is_rejected():
-            status = domain.WithdrawalRequest.REJECTED
-        request = domain.WithdrawalRequest(
-            creator=domain.User(
-                native_id=self.submitter_id,
-                email=self.submitter_email,
-            ),
-            created=self.get_created(),
-            updated=self.get_updated(),
-            reason_for_withdrawal=reason,
-            status=status
-        )
-        submission.user_requests[request.request_id] = request
-        return submission
-
-    def _get_crosslist_categories(self, submission: domain.Submission) \
-            -> List[domain.Classification]:
-        cats: List[domain.Classification] = []
-        for db_cat in self.categories:
-            if db_cat.is_primary != 0:
-                continue
-            if db_cat.category not in submission.secondary_categories:
-                cats.append(domain.Classification(db_cat.category))
-        return cats
-
-    def _get_crosslist_request(self, submission: domain.Submission) \
-            -> domain.CrossListClassificationRequest:
-        status = domain.CrossListClassificationRequest.PENDING
-        clsns = self._get_crosslist_categories(submission)
-        if self.is_published():
-            status = domain.CrossListClassificationRequest.APPLIED
-            for clsn in clsns:
-                if clsn.category not in submission.secondary_categories:
-                    submission.secondary_classification.append(clsn)
-        elif self.is_deleted():
-            status = domain.CrossListClassificationRequest.CANCELLED
-        elif self.is_rejected():
-            status = domain.CrossListClassificationRequest.REJECTED
-        return domain.CrossListClassificationRequest(
-            creator=domain.User(
-                native_id=self.submitter_id,
-                email=self.submitter_email,
-            ),
-            created=self.get_created(),
-            updated=self.get_updated(),
-            classifications=clsns,
-            status=status
-        )
-
-    def patch_cross(self, submission: domain.Submission) -> domain.Submission:
-        request = self._get_crosslist_request(submission)
-        if self.is_published():
-            for classification in request.classifications:
-                submission.secondary_classification.append(classification)
-        submission.user_requests[request.request_id] = request
-        return submission
 
     def update_from_submission(self, submission: domain.Submission) -> None:
         """Update this database object from a :class:`.domain.Submission`."""
@@ -521,7 +258,7 @@ class Submission(Base):    # type: ignore
         self.acm_class = submission.metadata.acm_class
         self.journal_ref = submission.metadata.journal_ref
 
-        if submission.latest_compilation \
+        if submission.source_content and submission.latest_compilation \
                 and submission.latest_compilation.status \
                 is domain.Compilation.Status.SUCCEEDED \
                 and submission.latest_compilation.checksum \
@@ -638,11 +375,12 @@ class Submission(Base):    # type: ignore
         return self.STATUS_MAP.get(self.status)
 
     def _update_submitter(self, submission: domain.Submission) -> None:
-        """Update submitter information."""
+        """Update submitter information on this row."""
         self.submitter_id = submission.creator.native_id
+        self.submitter_email = submission.creator.email
 
     def _update_primary(self, submission: domain.Submission) -> None:
-        """Update primary classification."""
+        """Update primary classification on this row."""
         primary_category = submission.primary_classification.category
         cur_primary = self.primary_classification
 
@@ -662,7 +400,7 @@ class Submission(Base):    # type: ignore
             )
 
     def _update_secondaries(self, submission: domain.Submission) -> None:
-        """Update secondary classifications."""
+        """Update secondary classifications on this row."""
         # Remove any categories that have been removed from the Submission.
         for db_cat in self.categories:
             if db_cat.is_primary == 1:

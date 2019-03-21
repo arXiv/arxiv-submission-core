@@ -303,6 +303,7 @@ class UserRequest:
 
     CANCELLED = 'cancelled'
 
+    request_id: str
     creator: Agent
     created: datetime = field(default_factory=get_tzaware_utc_now)
     updated: datetime = field(default_factory=get_tzaware_utc_now)
@@ -313,36 +314,35 @@ class UserRequest:
         """Name (str) of the type of user request."""
         return type(self).__name__
 
-    @property
-    def request_id(self):
-        """The unique identifier for an :class:`.UserRequest` instance."""
-        return self.generate_request_id(self.created, self.request_type,
-                                        self.creator)
-
-    @staticmethod
-    def generate_request_id(created: datetime, request_type: str,
-                            creator: Agent) -> str:
-        """Generate a request ID."""
-        h = hashlib.new('sha1')
-        h.update(b'%s:%s:%s' % (created.isoformat().encode('utf-8'),
-                                request_type.encode('utf-8'),
-                                creator.agent_identifier.encode('utf-8')))
-        return h.hexdigest()
-
     def is_pending(self):
+        """Check whether the request is pending."""
         return self.status == UserRequest.PENDING
 
     def is_approved(self):
+        """Check whether the request has been approved."""
         return self.status == UserRequest.APPROVED
 
     def is_applied(self):
+        """Check whether the request has been applied."""
         return self.status == UserRequest.APPLIED
 
     def is_rejected(self):
+        """Check whether the request has been rejected."""
         return self.status == UserRequest.REJECTED
 
     def is_active(self) -> bool:
+        """Check whether the request is active."""
         return self.is_pending() or self.is_approved()
+
+    @classmethod
+    def generate_request_id(cls, submission: 'Submission', N: int = -1) -> str:
+        h = hashlib.new('sha1')
+        if N < 0:
+            N = len([rq for rq in submission.user_requests.values()
+                     if type(rq) is cls])
+        _key = '%s:%s:%s' % (submission.submission_id, cls.NAME, N)
+        h.update(_key.encode('utf-8'))
+        return h.hexdigest()
 
 
 @dataclass
@@ -354,6 +354,12 @@ class WithdrawalRequest(UserRequest):
     reason_for_withdrawal: Optional[str] = field(default=None)
     """If an e-print is withdrawn, the submitter is asked to explain why."""
 
+    def apply(self, submission: 'Submission') -> 'Submission':
+        """Apply the withdrawal."""
+        submission.reason_for_withdrawal = self.reason_for_withdrawal
+        submission.status = Submission.WITHDRAWN
+        return submission
+
 
 @dataclass
 class CrossListClassificationRequest(UserRequest):
@@ -363,8 +369,14 @@ class CrossListClassificationRequest(UserRequest):
 
     classifications: List[Classification] = field(default_factory=list)
 
+    def apply(self, submission: 'Submission') -> 'Submission':
+        """Apply the cross-list request."""
+        submission.secondary_classification.extend(self.classifications)
+        return submission
+
     @property
     def categories(self) -> List[str]:
+        """Get the requested cross-list categories."""
         return [c.category for c in self.classifications]
 
 
@@ -464,6 +476,10 @@ class Submission:
         return self.status == self.DELETED
 
     @property
+    def primary_category(self) -> str:
+        return self.primary_classification.category
+
+    @property
     def secondary_categories(self) -> List[str]:
         """Category names from secondary classifications."""
         return [c.category for c in self.secondary_classification]
@@ -528,23 +544,38 @@ class Submission:
 
     @property
     def active_user_requests(self) -> List[UserRequest]:
-        return [r for r in self.user_requests.values() if r.is_active()]
+        return sorted(
+            [r for r in self.user_requests.values() if r.is_active()],
+            key=lambda r: r.created
+        )
 
     @property
     def pending_user_requests(self) -> List[UserRequest]:
-        return [r for r in self.user_requests.values() if r.is_pending()]
+        return sorted(
+            [r for r in self.user_requests.values() if r.is_pending()],
+            key=lambda r: r.created
+        )
 
     @property
     def rejected_user_requests(self) -> List[UserRequest]:
-        return [r for r in self.user_requests.values() if r.is_rejected()]
+        return sorted(
+            [r for r in self.user_requests.values() if r.is_rejected()],
+            key=lambda r: r.created
+        )
 
     @property
     def approved_user_requests(self) -> List[UserRequest]:
-        return [r for r in self.user_requests.values() if r.is_approved()]
+        return sorted(
+            [r for r in self.user_requests.values() if r.is_approved()],
+            key=lambda r: r.created
+        )
 
     @property
     def applied_user_requests(self) -> List[UserRequest]:
-        return [r for r in self.user_requests.values() if r.is_applied()]
+        return sorted(
+            [r for r in self.user_requests.values() if r.is_applied()],
+            key=lambda r: r.created
+        )
 
     def get_user_request(self, request_id: str) -> UserRequest:
         """Retrieve a :class:`.UserRequest` by ID."""

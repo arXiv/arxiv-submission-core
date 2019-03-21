@@ -1,7 +1,7 @@
 """Core data structures for the submission and moderation system."""
 
 from .submission import Submission, License, SubmissionMetadata, \
-    Classification, Author, Hold, WithdrawalRequest, \
+    Classification, Author, Hold, WithdrawalRequest, UserRequest, \
     CrossListClassificationRequest, Compilation
 from .agent import User, System, Client, Agent, agent_factory
 from .event import event_factory, Event

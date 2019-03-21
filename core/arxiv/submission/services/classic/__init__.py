@@ -48,7 +48,7 @@ from .exceptions import ClassicBaseException, NoSuchSubmission, \
     TransactionFailed, Unavailable
 from .util import transaction, current_session, db
 from .event import DBEvent
-from . import models, util, interpolate, log, proposal
+from . import models, util, interpolate, log, proposal, load
 
 
 logger = logging.getLogger(__name__)
@@ -133,13 +133,12 @@ def get_user_submissions_fast(user_id: int) -> List[Submission]:
         grouped = groupby(db_submissions, key=lambda dbs: dbs.doc_paper_id)
         submissions: List[Submission] = []
         for arxiv_id, dbss in grouped:
-            if arxiv_id is None:
-                for dbs in dbss:
+            if arxiv_id is None:    # This is an unannounced submission.
+                for dbs in dbss:    # Each row represents a separate e-print.
                     submissions.append(dbs.to_submission())
             else:
-                dbss = sorted(dbss, key=lambda dbs: dbs.submission_id)[::-1]
-                submissions.append(_db_to_projection(dbss))
-
+                dbss = sorted(dbss, key=lambda dbs: dbs.submission_id)
+                submissions.append(load.load(dbss))
         return [s for s in submissions if not s.deleted]
 
 
@@ -168,7 +167,7 @@ def get_submission_fast(submission_id: int) -> List[Submission]:
         Raised when there are is no submission for the provided submission ID.
 
     """
-    return _db_to_projection(_get_db_submission_rows(submission_id))
+    return load.load(_get_db_submission_rows(submission_id))
 
 
 @retry(ClassicBaseException, tries=3, delay=1)
@@ -569,56 +568,6 @@ def _preserve_sticky_hold(dbs: models.Submission, before: Submission,
         return
     if dbs.is_on_hold() and after.status == Submission.WORKING:
         dbs.sticky_status = models.Submission.ON_HOLD
-
-
-def _get_head_idx(dbss: List[models.Submission]) -> int:
-    """
-    Find the most recent non-JREF row.
-
-    Assume that the rows are passed in descending order.
-    """
-    i = 0
-    while i < len(dbss):
-        # Skip any "deleted" rows that aren't the first version.
-        if not dbss[i].is_jref() \
-                and not dbss[i].is_withdrawal() \
-                and not dbss[i].is_crosslist() \
-                and not (dbss[i].is_deleted() and dbss[i].version > 1):
-            break
-        i += 1
-    return i
-
-
-def _db_to_projection(dbss: List[models.Submission]) -> Submission:
-    """
-    Transform a set of classic rows to an NG :class:`Submission`.
-
-    Here we assume that the rows are passed in descending order.
-    """
-    i = _get_head_idx(dbss)    # Get state of the most recent non-JREF row.
-    submission = dbss[i].to_submission(dbss[-1].submission_id)
-
-    # Attach and patch previous published versions.
-    for dbs in dbss[i+1:][::-1]:
-        if dbs.is_deleted():
-            continue
-        if dbs.is_new_version() and dbs.is_published():
-            logger.debug('is new published version')
-            prior_ver = dbs.to_submission(submission.submission_id)
-            submission.versions.append(prior_ver)
-        elif len(submission.versions) > 0:
-            submission.versions[-1] = dbs.patch(submission.versions[-1])
-    # If there are JREF rows more recent than the latest non-JREF row, then
-    # we want to patch the JREF fields using those rows.
-    for j in range(0, i):
-        if not dbss[j].is_deleted():
-            submission = dbss[j].patch(submission)
-
-    # If the current submission state is published, prepend into published
-    # versions.
-    if submission.published:
-        submission.versions.insert(0, copy.deepcopy(submission))
-    return submission
 
 
 def _get_db_submission_rows(submission_id: int) -> List[models.Submission]:

@@ -644,3 +644,30 @@ class TestWithdrawalCancelled(TestCase):
             self.assertEqual(db_rows[2].status,
                              classic.models.Submission.PROCESSING_SUBMISSION,
                              "The third row is PROCESSING_SUBMISSION")
+
+        with self.app.app_context():
+            request_id = self.submission.active_user_requests[-1].request_id
+            self.submission, self.events = save(
+                domain.event.CancelRequest(request_id=request_id,
+                                           **self.defaults),
+                submission_id=self.submission.submission_id
+            )
+
+        with self.app.app_context():
+            self.submission, self.events = save(
+                domain.event.RequestWithdrawal(reason='A better reason',
+                                               **self.defaults),
+                submission_id=self.submission.submission_id
+            )
+
+        with self.app.app_context():
+            request_id = self.submission.active_user_requests[-1].request_id
+            self.submission, self.events = save(
+                domain.event.CancelRequest(request_id=request_id,
+                                           **self.defaults),
+                submission_id=self.submission.submission_id
+            )
+            print(self.submission.user_requests)
+            submission, events = load(self.submission.submission_id)
+
+            print(submission.user_requests)
