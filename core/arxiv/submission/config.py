@@ -82,7 +82,8 @@ BASE_SERVER = os.environ.get('BASE_SERVER', 'arxiv.org')
 SERVER_NAME = "submit.arxiv.org"
 
 URLS = [
-    ("submission", "/<int:submission_id>", "submit.arxiv.org")
+    ("submission", "/<int:submission_id>", "submit.arxiv.org"),
+    ("confirmation", "/<int:submission_id>/confirmation", "submit.arxiv.org")
 ]
 """
 URLs for external services, for use with :func:`flask.url_for`.

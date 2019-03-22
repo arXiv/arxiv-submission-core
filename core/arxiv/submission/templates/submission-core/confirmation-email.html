@@ -2,12 +2,13 @@
 
 {% block email_title %}arXiv submission submit/{{ submission_id }}{% endblock email_title %}
 
-{% block message_title %}We have received your submission to arXiv.{% endblock message_title %}
+{% block message_title %}We have received your submission to arXiv, titled "{{ submission.metadata.title }}"{% endblock message_title %}
 
 {% block message_body %}
 <p style="margin: 0; margin-bottom: 15px;">
   Your temporary submission identifier is: <code>submit/{{ submission_id }}</code>.
-  You may update your submission at: <a href="{{ url_for("submission", submission_id=submission_id) }}">{{ url_for("submission", submission_id=submission_id) }}</a>.
+  To preview your submission, check the
+  <a href="{{ url_for('submission', submission_id=submission_id) }}">submission status page</a>.
 </p>
 
 <p style="margin: 0; margin-bottom: 15px;">
@@ -24,5 +25,4 @@
   contact <a href="mailto:{{ config.SUPPORT_EMAIL }}">{{ config.SUPPORT_EMAIL }}</a> with a
   description of the issue and reference the submission identifier.
 </p>
-
 {% endblock message_body %}
