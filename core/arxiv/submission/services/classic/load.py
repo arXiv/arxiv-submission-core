@@ -131,6 +131,19 @@ def to_submission(row: models.Submission,
     secondary_clsn = [domain.Classification(category=db_cat.category)
                       for db_cat in row.categories if not db_cat.is_primary]
 
+    content: Optional[domain.SubmissionContent] = None
+    if row.package:
+        if row.package.startswith('fm://'):
+            identifier, checksum = row.package.split('://', 1)[1].split('@', 1)
+        else:
+            identifier = row.package
+        source_format = domain.SubmissionContent.Format(row.source_format)
+        content = domain.SubmissionContent(identifier=identifier,
+                                           compressed_size=0,
+                                           uncompressed_size=row.source_size,
+                                           checksum=checksum,
+                                           source_format=source_format)
+
     submission = domain.Submission(
         submission_id=submission_id,
         creator=submitter,
@@ -138,6 +151,7 @@ def to_submission(row: models.Submission,
         status=status,
         created=row.get_created(),
         updated=row.get_updated(),
+        source_content=content,
         submitter_is_author=bool(row.is_author),
         submitter_accepts_policy=bool(row.agree_policy),
         submitter_contact_verified=bool(row.userinfo),

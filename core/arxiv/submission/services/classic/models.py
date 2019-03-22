@@ -268,6 +268,8 @@ class Submission(Base):    # type: ignore
                     submission.source_content.source_format.value
             else:
                 self.source_format = None
+            self.package = (f'fm://{submission.source_content.identifier}'
+                            f'@{submission.source_content.checksum}')
 
         # Not submitted -> Submitted.
         if submission.finalized \
