@@ -1,5 +1,5 @@
 """
-Provides :class:`ClassicEventInterpolator`.
+Inject events from outside the scope of the NG submission system.
 
 A core concept of the :mod:`arxiv.submission.domain.event` model is that
 the state of a submission can be obtained by playing forward all of the
@@ -14,14 +14,22 @@ current purview. The logic in this module will need to change as the scope
 of the NG submission data architecture expands.
 """
 
-from typing import List, Optional, Dict, Tuple
+from typing import List, Optional, Dict, Tuple, Any
+from datetime import datetime
+
 from arxiv.base import logging
+from arxiv import taxonomy
 from . import models
 from ...domain.submission import Submission, UserRequest, WithdrawalRequest, \
     CrossListClassificationRequest, Hold
 from ...domain.event import Event, SetDOI, SetJournalReference, \
-    SetReportNumber, ApplyRequest, RejectRequest, Publish, AddHold
+    SetReportNumber, ApplyRequest, RejectRequest, Announce, AddHold, \
+    CancelRequest, SetPrimaryClassification, AddSecondaryClassification, \
+    SetTitle, SetAbstract, SetComments, SetMSCClassification, \
+    SetACMClassification, SetAuthors, Reclassify
+
 from ...domain.agent import System, User
+from .load import status_from_classic
 
 
 logger = logging.getLogger(__name__)
@@ -48,27 +56,21 @@ class ClassicEventInterpolator:
         self.submission: Optional[Submission] = None
         self.arxiv_id = self.current_row.get_arxiv_id()
 
+        self.requests = {
+            WithdrawalRequest: 0,
+            CrossListClassificationRequest: 0
+        }
+
     @property
     def next_row(self) -> models.Submission:
-        """The next classic database row for this submission."""
+        """Access the next classic database row for this submission."""
         return self.db_rows[0]
-
-    def _insert_publish_event(self) -> None:
-        """Create and apply a Publish event."""
-        logger.debug('insert publish event')
-        self._apply_event(Publish(
-            creator=SYSTEM,
-            created=self.current_row.get_updated(),
-            committed=True,
-            arxiv_id=self.arxiv_id,
-            submission_id=self.submission_id
-        ))
 
     def _insert_request_event(self, rq_class: type, event_class: type) -> None:
         """Create and apply a request-related event."""
         logger.debug('insert request event, %s, %s',
                      rq_class.__name__, event_class.__name__)
-        self._apply_event(event_class(
+        self._inject(event_class(
             creator=SYSTEM,
             created=self.current_row.get_updated(),
             committed=True,
@@ -80,72 +82,140 @@ class ClassicEventInterpolator:
         ))
 
     def _current_row_preceeds_event(self, event: Event) -> bool:
-        logger.debug('current row preceeds event?')
-        return self.current_row.get_updated() < event.created
+        delta = self.current_row.get_updated() - event.created
+        # Classic lacks millisecond precision.
+        return (delta).total_seconds() < -1
 
     def _should_apply_current_row(self, event: Event) -> bool:
-        logger.debug('should apply current row?')
         return self.current_row \
             and self._current_row_preceeds_event(event) \
-            and self.current_row.is_published()
+            and self.current_row.is_announced()
 
     def _should_advance_to_next_row(self, event: Event) -> bool:
-        logger.debug('should advance to next row?')
         return self._there_are_rows_remaining() \
             and self.next_row.get_created() <= event.created
 
     def _there_are_rows_remaining(self) -> bool:
-        logger.debug('are there rows remaining? %s', len(self.db_rows) > 0)
         return len(self.db_rows) > 0
 
     def _advance_to_next_row(self) -> None:
-        logger.debug('advance to next row')
-        self.current_row = self.db_rows.pop(0)
+        if self.current_row.is_withdrawal():
+            self.requests[WithdrawalRequest] += 1
+        if self.current_row.is_crosslist():
+            self.requests[CrossListClassificationRequest] += 1
+        try:
+            self.current_row = self.db_rows.pop(0)
+        except IndexError:
+            self.current_row = None
 
-    def _can_patch_from_current_row(self) -> bool:
-        logger.debug('can we patch from the current row?')
-        return self.current_row.version == 1 \
-            or not self.current_row.is_deleted()
+    def _can_inject_from_current_row(self) -> bool:
+        return (self.current_row.version == 1
+                or (self.current_row.is_jref()
+                    and not self.current_row.is_deleted())
+                or self.current_row.is_withdrawal()
+                or self.current_row.is_crosslist()
+                or (self.current_row.is_new_version()
+                    and not self.current_row.is_deleted()))
 
-    def _apply_current_row(self) -> None:
-        logger.debug('apply the current row')
-        if self.current_row.status != models.Submission.PROCESSING_SUBMISSION \
-                and (self.current_row.is_crosslist()
-                     or self.current_row.is_withdrawal()):
-            self._insert_request_event(
-                (CrossListClassificationRequest
-                 if self.current_row.is_crosslist()
-                 else WithdrawalRequest),
-                (RejectRequest
-                 if self.current_row.is_rejected()
-                 else ApplyRequest)
-            )
-        elif self.current_row.is_new_version():
-            self._insert_publish_event()
-
-    def _should_backport_event(self, event: Event) -> bool:
-        logger.debug('should we backport this event? %s', event.NAME)
+    def _should_backport(self, event: Event) -> bool:
+        """Evaluate if this event be applied to the last announced version."""
         return type(event) in [SetDOI, SetJournalReference, SetReportNumber] \
             and self.submission.versions \
             and self.submission.version == self.submission.versions[-1].version
 
-    def _patch_from_current_row(self) -> None:
-        logger.debug('patch from the current row: %s, %s, %s',
-                     self.current_row.submission_id,
-                     self.current_row.type, self.current_row.status)
-        self.submission = self.current_row.patch(self.submission)
-        if self.current_row.status == models.Submission.ON_HOLD:
-            self.submission.status = Submission.ON_HOLD
-            # self._apply_event(AddHold(
-            #     creator=SYSTEM,
-            #     created=self.current_row.get_updated(),
-            #     committed=True,
-            #     hold_type=Hold.Type.PATCH
-            # ))
-        logger.debug('user requests: %s', self.submission.user_requests)
+    def _inject_from_current_row(self) -> None:
+        if self.current_row.is_new_version():
+            # Apply any holds created in the admin or moderation system.
+            if self.current_row.status == models.Submission.ON_HOLD:
+                self._inject(AddHold, hold_type=Hold.Type.PATCH)
 
-    def _apply_event(self, event: Event) -> None:
-        logger.debug('apply event %s', event.NAME)
+            # TODO: these need some explicit event/command representations.
+            elif status_from_classic(self.current_row.status) \
+                    == Submission.SCHEDULED:
+                self.submission.status = Submission.SCHEDULED
+            elif status_from_classic(self.current_row.status) \
+                    == Submission.DELETED:
+                self.submission.status = Submission.DELETED
+            elif status_from_classic(self.current_row.status) \
+                    == Submission.ERROR:
+                self.submission.status = Submission.ERROR
+
+            self._inject_primary_if_changed()
+            self._inject_secondaries_if_changed()
+            self._inject_metadata_if_changed()
+            self._inject_jref_if_changed()
+
+            if self.current_row.is_announced():
+                self._inject(Announce, arxiv_id=self.arxiv_id)
+        elif self.current_row.is_jref():
+            self._inject_jref_if_changed()
+        elif self.current_row.is_withdrawal():
+            self._inject_request_if_changed(WithdrawalRequest)
+        elif self.current_row.is_crosslist():
+            self._inject_request_if_changed(CrossListClassificationRequest)
+
+    def _inject_primary_if_changed(self) -> None:
+        """Inject primary classification event if a change has occurred."""
+        primary = self.current_row.primary_classification
+        if primary and primary.category != self.submission.primary_category:
+            self._inject(Reclassify, category=primary.category)
+
+    def _inject_secondaries_if_changed(self) -> None:
+        """Inject secondary classification events if a change has occurred."""
+        # Add any missing secondaries.
+        for dbc in self.current_row.categories:
+            if dbc.category not in self.submission.secondary_categories \
+                    and not dbc.is_primary:
+                self._inject(AddSecondaryClassification,
+                             category=taxonomy.Category(dbc.category))
+
+    def _inject_metadata_if_changed(self) -> None:
+        row = self.current_row  # For readability, below.
+        if self.submission.metadata.title != row.title:
+            self._inject(SetTitle, title=row.title)
+        if self.submission.metadata.abstract != row.abstract:
+            self._inject(SetAbstract, abstract=row.abstract)
+        if self.submission.metadata.comments != row.comments:
+            self._inject(SetAbstract, comments=row.comments)
+        if self.submission.metadata.msc_class != row.msc_class:
+            self._inject(SetMSCClassification, msc_class=row.msc_class)
+        if self.submission.metadata.acm_class != row.acm_class:
+            self._inject(SetACMClassification, acm_class=row.acm_class)
+        if self.submission.metadata.authors_display != row.authors:
+            self._inject(SetAuthors, authors_display=row.authors)
+
+    def _inject_jref_if_changed(self) -> None:
+        row = self.current_row  # For readability, below.
+        if self.submission.metadata.doi != self.current_row.doi:
+            self._inject(SetDOI, doi=row.doi)
+        if self.submission.metadata.journal_ref != row.journal_ref:
+            self._inject(SetJournalReference, journal_ref=row.journal_ref)
+        if self.submission.metadata.report_num != row.report_num:
+            self._inject(SetReportNumber, report_num=row.report_num)
+
+    def _inject_request_if_changed(self, req_type: type) -> None:
+        """
+        Update a request on the submission, if status changed.
+
+        We will assume that the request itself originated in the NG system,
+        so we will NOT create a new request.
+        """
+        request_id = req_type.generate_request_id(self.submission,
+                                                  self.requests[req_type])
+        if self.current_row.is_announced():
+            self._inject(ApplyRequest, request_id=request_id)
+        elif self.current_row.is_deleted():
+            self._inject(CancelRequest, request_id=request_id)
+        elif self.current_row.is_rejected():
+            self._inject(RejectRequest, request_id=request_id)
+
+    def _inject(self, event_type: type, **data: Dict[str, Any]) -> None:
+        created = self.current_row.get_updated()
+        logger.debug('inject %s', event_type.NAME)
+        self._apply(event_type(creator=SYSTEM, created=created, committed=True,
+                               submission_id=self.submission_id, **data))
+
+    def _apply(self, event: Event) -> None:
         self.submission = event.apply(self.submission)
         self.applied_events.append(event)
 
@@ -153,13 +223,6 @@ class ClassicEventInterpolator:
         logger.debug('backport event %s', event.NAME)
         self.submission.versions[-1] = \
             event.apply(self.submission.versions[-1])
-
-    def _should_apply_current_row_at_the_end(self) -> bool:
-        return (self.current_row.is_published()
-                or (self.current_row.is_withdrawal()
-                    and not self.current_row.is_deleted())
-                or (self.current_row.is_crosslist()
-                    and not self.current_row.is_deleted()))
 
     def get_submission_state(self) -> Tuple[Submission, List[Event]]:
         """
@@ -180,37 +243,32 @@ class ClassicEventInterpolator:
 
         """
         for event in self.events:
-            # If the classic submission row is published, we want to insert a
-            # Publish event in the appropriate spot in the event stack.
-            if self._should_apply_current_row(event):
-                self._apply_current_row()
-
             # As we go, look for moments where a new row in the legacy
             # submission table was created.
-            if self._should_advance_to_next_row(event):
+            if self._current_row_preceeds_event(event) \
+                    or self._should_advance_to_next_row(event):
                 # If we find one, patch the domain submission from the
                 # preceding row, and load the next row. We want to do this
                 # before projecting the event, since we are inferring that the
                 # event occurred after a change was made via the legacy system.
-                if self._can_patch_from_current_row():
-                    self._patch_from_current_row()
+                if self._can_inject_from_current_row():
+                    self._inject_from_current_row()
+
+            if self._should_advance_to_next_row(event):
                 self._advance_to_next_row()
 
-            self._apply_event(event)    # Now project the event.
+            self._apply(event)    # Now project the event.
 
-            # Backport JREFs to the published version to which they apply.
-            if self._should_backport_event(event):
+            # Backport JREFs to the announced version to which they apply.
+            if self._should_backport(event):
                 self._backport_event(event)
 
         # Finally, patch the submission with any remaining changes that may
         # have occurred via the legacy system.
         while self.current_row is not None:
-            if self._can_patch_from_current_row():
-                self._patch_from_current_row()
-                if self._should_apply_current_row_at_the_end():
-                    self._apply_current_row()
-            if self._there_are_rows_remaining():
-                self._advance_to_next_row()
-            else:
-                self.current_row = None
+            if self._can_inject_from_current_row():
+                self._inject_from_current_row()
+            self._advance_to_next_row()
+        logger.debug('done; submission in state %s with %i events',
+                     self.submission.status, len(self.applied_events))
         return self.submission, self.applied_events

@@ -36,9 +36,9 @@ from sqlalchemy.exc import DBAPIError, OperationalError
 
 from arxiv.base import logging
 from arxiv.base.globals import get_application_config, get_application_global
-from ...domain.event import Event, Publish, RequestWithdrawal, SetDOI, \
+from ...domain.event import Event, Announce, RequestWithdrawal, SetDOI, \
     SetJournalReference, SetReportNumber, Rollback, RequestCrossList, \
-    ApplyRequest, RejectRequest, ApproveRequest, AddProposal
+    ApplyRequest, RejectRequest, ApproveRequest, AddProposal, CancelRequest
 
 from ...domain.submission import License, Submission, WithdrawalRequest, \
     CrossListClassificationRequest
@@ -48,7 +48,7 @@ from .exceptions import ClassicBaseException, NoSuchSubmission, \
     TransactionFailed, Unavailable
 from .util import transaction, current_session, db
 from .event import DBEvent
-from . import models, util, interpolate, log, proposal
+from . import models, util, interpolate, log, proposal, load
 
 
 logger = logging.getLogger(__name__)
@@ -133,13 +133,13 @@ def get_user_submissions_fast(user_id: int) -> List[Submission]:
         grouped = groupby(db_submissions, key=lambda dbs: dbs.doc_paper_id)
         submissions: List[Submission] = []
         for arxiv_id, dbss in grouped:
-            if arxiv_id is None:
-                for dbs in dbss:
-                    submissions.append(dbs.to_submission())
+            logger.debug('Handle group for arXiv ID %s: %s', arxiv_id, dbss)
+            if arxiv_id is None:    # This is an unannounced submission.
+                for dbs in dbss:    # Each row represents a separate e-print.
+                    submissions.append(load.to_submission(dbs))
             else:
-                dbss = sorted(dbss, key=lambda dbs: dbs.submission_id)[::-1]
-                submissions.append(_db_to_projection(dbss))
-
+                dbss = sorted(dbss, key=lambda dbs: dbs.submission_id)
+                submissions.append(load.load(dbss))
         return [s for s in submissions if not s.deleted]
 
 
@@ -168,7 +168,7 @@ def get_submission_fast(submission_id: int) -> List[Submission]:
         Raised when there are is no submission for the provided submission ID.
 
     """
-    return _db_to_projection(_get_db_submission_rows(submission_id))
+    return load.load(_get_db_submission_rows(submission_id))
 
 
 @retry(ClassicBaseException, tries=3, delay=1)
@@ -238,12 +238,12 @@ def store_event(event: Event, before: Optional[Submission],
     - In the event domain, a submission is a single stream of events, but
       in the classic system we create new rows in the submission database
       for things like replacements, adding DOIs, and withdrawing papers.
-    - In the event domain, the only concept of the published paper is the
+    - In the event domain, the only concept of the announced paper is the
       paper ID. In the classic submission database, we also have to worry about
       the row in the Document database.
 
     We assume that the submission states passed to this function have the
-    correct paper ID and version number, if published. The submission ID on
+    correct paper ID and version number, if announced. The submission ID on
     the event and the before/after states refer to the original classic
     submission only.
 
@@ -271,10 +271,10 @@ def store_event(event: Event, before: Optional[Submission],
         else:   # Otherwise we're making an update for an existing submission.
             this_is_a_new_submission = False
 
-            # After the original submission is published, a new Document row is
+            # After the original submission is announced, a new Document row is
             #  created. This Document is shared by all subsequent Submission
             # rows.
-            if before.published:
+            if before.announced:
                 doc_id = _load_document_id(before.arxiv_id, before.version)
 
             JREFEvents = [SetDOI, SetJournalReference, SetReportNumber]
@@ -303,9 +303,12 @@ def store_event(event: Event, before: Optional[Submission],
             # Adding DOIs and citation information (so-called "journal
             # reference") also requires a new row. The version number is not
             # incremented.
-            elif before.published and type(event) in JREFEvents:
+            elif before.announced and type(event) in JREFEvents:
                 dbs = _create_jref(doc_id, before.arxiv_id, after.version,
                                    after, event.created)
+
+            elif isinstance(event, CancelRequest):
+                dbs = _cancel_request(event, before, after)
 
             # The submission has been announced.
             elif isinstance(before, Submission)  \
@@ -313,6 +316,7 @@ def store_event(event: Event, before: Optional[Submission],
                 dbs = _load_submission(paper_id=before.arxiv_id,
                                        version=before.version)
                 _preserve_sticky_hold(dbs, before, after, event)
+
                 dbs.update_from_submission(after)
 
             # The submission has not yet been announced; we're working with a
@@ -397,16 +401,24 @@ def get_titles(since: datetime) -> List[Tuple[int, str, Agent]]:
 
 def _load_submission(submission_id: Optional[int] = None,
                      paper_id: Optional[str] = None,
-                     version: Optional[int] = 1) -> models.Submission:
+                     version: Optional[int] = 1,
+                     row_type: Optional[str] = None) -> models.Submission:
+    if row_type is not None:
+        limit_to = [row_type]
+    else:
+        limit_to = [models.Submission.NEW_SUBMISSION,
+                    models.Submission.REPLACEMENT]
     session = current_session()
     if submission_id is not None:
         submission = session.query(models.Submission) \
             .filter(models.Submission.submission_id == submission_id) \
+            .filter(models.Submission.type.in_(limit_to)) \
             .one()
     elif submission_id is None and paper_id is not None:
         submission = session.query(models.Submission) \
             .filter(models.Submission.doc_paper_id == paper_id) \
             .filter(models.Submission.version == version) \
+            .filter(models.Submission.type.in_(limit_to)) \
             .order_by(models.Submission.submission_id.desc()) \
             .first()
     else:
@@ -414,6 +426,19 @@ def _load_submission(submission_id: Optional[int] = None,
     if submission is None:
         raise NoSuchSubmission("No submission row matches those parameters")
     return submission
+
+
+def _cancel_request(event, before, after):
+    request = before.user_requests[event.request_id]
+    if isinstance(request, WithdrawalRequest):
+        row_type = models.Submission.WITHDRAWAL
+    elif isinstance(request, CrossListClassificationRequest):
+        row_type = models.Submission.CROSS_LIST
+    dbs = _load_submission(paper_id=before.arxiv_id,
+                           version=before.version,
+                           row_type=row_type)
+    dbs.status = models.Submission.USER_DELETED
+    return dbs
 
 
 def _load_document_id(paper_id: str, version: int) -> int:
@@ -503,10 +528,17 @@ def _create_jref(document_id: int, paper_id: str, version: int,
     """
     # Try to piggy-back on an existing JREF row. In the classic system, all
     # three fields can get updated on the same row.
-    most_recent_sb = _load_submission(paper_id=paper_id, version=version)
-    if most_recent_sb.is_jref() and not most_recent_sb.is_published():
-        most_recent_sb.update_from_submission(submission)
-        return most_recent_sb
+    try:
+        most_recent_sb = _load_submission(
+            paper_id=paper_id,
+            version=version,
+            row_type=models.Submission.JOURNAL_REFERENCE
+        )
+        if most_recent_sb and not most_recent_sb.is_announced():
+            most_recent_sb.update_from_submission(submission)
+            return most_recent_sb
+    except NoSuchSubmission:
+        pass
 
     # Otherwise, create a new JREF row.
     dbs = models.Submission(type=models.Submission.JOURNAL_REFERENCE,
@@ -537,56 +569,6 @@ def _preserve_sticky_hold(dbs: models.Submission, before: Submission,
         return
     if dbs.is_on_hold() and after.status == Submission.WORKING:
         dbs.sticky_status = models.Submission.ON_HOLD
-
-
-def _get_head_idx(dbss: List[models.Submission]) -> int:
-    """
-    Find the most recent non-JREF row.
-
-    Assume that the rows are passed in descending order.
-    """
-    i = 0
-    while i < len(dbss):
-        # Skip any "deleted" rows that aren't the first version.
-        if not dbss[i].is_jref() \
-                and not dbss[i].is_withdrawal() \
-                and not dbss[i].is_crosslist() \
-                and not (dbss[i].is_deleted() and dbss[i].version > 1):
-            break
-        i += 1
-    return i
-
-
-def _db_to_projection(dbss: List[models.Submission]) -> Submission:
-    """
-    Transform a set of classic rows to an NG :class:`Submission`.
-
-    Here we assume that the rows are passed in descending order.
-    """
-    i = _get_head_idx(dbss)    # Get state of the most recent non-JREF row.
-    submission = dbss[i].to_submission(dbss[-1].submission_id)
-
-    # Attach and patch previous published versions.
-    for dbs in dbss[i+1:][::-1]:
-        if dbs.is_deleted():
-            continue
-        if dbs.is_new_version() and dbs.is_published():
-            logger.debug('is new published version')
-            prior_ver = dbs.to_submission(submission.submission_id)
-            submission.versions.append(prior_ver)
-        elif len(submission.versions) > 0:
-            submission.versions[-1] = dbs.patch(submission.versions[-1])
-    # If there are JREF rows more recent than the latest non-JREF row, then
-    # we want to patch the JREF fields using those rows.
-    for j in range(0, i):
-        if not dbss[j].is_deleted():
-            submission = dbss[j].patch(submission)
-
-    # If the current submission state is published, prepend into published
-    # versions.
-    if submission.published:
-        submission.versions.insert(0, copy.deepcopy(submission))
-    return submission
 
 
 def _get_db_submission_rows(submission_id: int) -> List[models.Submission]:

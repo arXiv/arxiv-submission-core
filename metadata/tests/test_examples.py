@@ -298,7 +298,7 @@ class TestPublicationIntegration(TestCase):
             classic.drop_all()
 
     def test_publication_status_is_reflected(self):
-        """The submission has been published/announced."""
+        """The submission has been announced/announced."""
         with self.app.app_context():
             from arxiv.submission.services import classic
             session = classic.current_session()
@@ -306,7 +306,7 @@ class TestPublicationIntegration(TestCase):
             # Publication agent publishes the paper.
             db_submission = session.query(classic.models.Submission)\
                 .get(self.submission_id)
-            db_submission.status = db_submission.PUBLISHED
+            db_submission.status = db_submission.ANNOUNCED
             dated = (datetime.now() - datetime.utcfromtimestamp(0))
             primary = self.submission['primary_classification']['category']
             db_submission.document = classic.models.Document(
@@ -327,15 +327,15 @@ class TestPublicationIntegration(TestCase):
             response = self.client.get(f'/{self.submission_id}/',
                                        headers=self.headers)
             submission = json.loads(response.data)
-            self.assertEqual(submission['status'], Submission.PUBLISHED,
-                             "Submission should have published status.")
+            self.assertEqual(submission['status'], Submission.ANNOUNCED,
+                             "Submission should have announced status.")
             self.assertEqual(submission['arxiv_id'], "1901.00123",
                              "arXiv paper ID should be set")
             self.assertFalse(submission['active'],
-                             "Published submission should no longer be active")
+                             "Announced submission should no longer be active")
 
     def test_publication_status_is_reflected_after_files_expire(self):
-        """The submission has been published/announced, and files expired."""
+        """The submission has been announced/announced, and files expired."""
         with self.app.app_context():
             from arxiv.submission.services import classic
             session = classic.current_session()
@@ -343,7 +343,7 @@ class TestPublicationIntegration(TestCase):
             # Publication agent publishes the paper.
             db_submission = session.query(classic.models.Submission)\
                 .get(self.submission_id)
-            db_submission.status = db_submission.DELETED_PUBLISHED
+            db_submission.status = db_submission.DELETED_ANNOUNCED
             dated = (datetime.now() - datetime.utcfromtimestamp(0))
             primary = self.submission['primary_classification']['category']
             db_submission.document = classic.models.Document(
@@ -364,12 +364,12 @@ class TestPublicationIntegration(TestCase):
             response = self.client.get(f'/{self.submission_id}/',
                                        headers=self.headers)
             submission = json.loads(response.data)
-            self.assertEqual(submission['status'], Submission.PUBLISHED,
-                             "Submission should have published status.")
+            self.assertEqual(submission['status'], Submission.ANNOUNCED,
+                             "Submission should have announced status.")
             self.assertEqual(submission['arxiv_id'], "1901.00123",
                              "arXiv paper ID should be set")
             self.assertFalse(submission['active'],
-                             "Published submission should no longer be active")
+                             "Announced submission should no longer be active")
 
     def test_scheduled_status_is_reflected(self):
         """The submission has been scheduled for publication today."""
@@ -412,7 +412,7 @@ class TestPublicationIntegration(TestCase):
                              "Submission should have scheduled status.")
 
     def test_scheduled_status_is_reflected_prior_to_announcement(self):
-        """The submission is being published; not yet announced."""
+        """The submission is being announced; not yet announced."""
         with self.app.app_context():
             from arxiv.submission.services import classic
             session = classic.current_session()
@@ -452,7 +452,7 @@ class TestPublicationIntegration(TestCase):
                              "Submission should be scheduled for tomorrow.")
 
     def test_publication_failed(self):
-        """The submission was not published successfully."""
+        """The submission was not announced successfully."""
         with self.app.app_context():
             from arxiv.submission.services import classic
             session = classic.current_session()

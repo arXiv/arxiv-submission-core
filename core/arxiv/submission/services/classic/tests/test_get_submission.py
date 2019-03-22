@@ -11,7 +11,7 @@ from ....domain.event import CreateSubmission, \
     SetLicense, SetPrimaryClassification, ConfirmPolicy, \
     ConfirmContactInformation, SetTitle, SetAbstract, SetDOI, \
     SetMSCClassification, SetACMClassification, SetJournalReference, \
-    SetComments, SetAuthors, Publish, ConfirmAuthorship, ConfirmPolicy, \
+    SetComments, SetAuthors, Announce, ConfirmAuthorship, ConfirmPolicy, \
     SetUploadPackage
 from .. import init_app, create_all, drop_all, models, DBEvent, \
     get_submission, current_session, get_licenses, exceptions, store_event
@@ -67,8 +67,8 @@ class TestGetSubmission(TestCase):
             # Moderation happens, things change outside the event model.
             db_submission = session.query(models.Submission).get(ident)
 
-            # Published!
-            db_submission.status = db_submission.PUBLISHED
+            # Announced!
+            db_submission.status = db_submission.ANNOUNCED
             db_document = models.Document(paper_id='1901.00123')
             db_submission.document = db_document
             session.add(db_submission)
@@ -83,7 +83,7 @@ class TestGetSubmission(TestCase):
                          "Event-derived metadata should be preserved.")
         self.assertEqual(submission_loaded.arxiv_id, "1901.00123",
                          "arXiv paper ID should be set")
-        self.assertEqual(submission_loaded.status, Submission.PUBLISHED,
+        self.assertEqual(submission_loaded.status, Submission.ANNOUNCED,
                          "Submission status should reflect publish action")
 
     def test_get_submission_with_hold_and_reclass(self):
@@ -145,7 +145,7 @@ class TestGetSubmission(TestCase):
                          "Primary classification should reflect the"
                          " reclassification that occurred outside the purview"
                          " of the event model.")
-        self.assertEqual(submission_loaded.status, Submission.ON_HOLD,
+        self.assertEqual(submission_loaded.status, Submission.SUBMITTED,
                          "Submission status should still be submitted.")
         self.assertTrue(submission_loaded.is_on_hold,
                         "Hold status should reflect hold action performed"

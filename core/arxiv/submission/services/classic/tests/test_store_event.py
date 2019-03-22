@@ -10,7 +10,7 @@ from ....domain.event import CreateSubmission, \
     FinalizeSubmission, SetPrimaryClassification, AddSecondaryClassification, \
     SetLicense, ConfirmPolicy, ConfirmContactInformation, SetTitle, \
     SetAbstract, SetDOI, SetMSCClassification, SetACMClassification, \
-    SetJournalReference, SetComments, SetAuthors, Publish, ConfirmAuthorship, \
+    SetJournalReference, SetComments, SetAuthors, Announce, ConfirmAuthorship, \
     SetUploadPackage
 from .. import init_app, create_all, drop_all, models, DBEvent, \
     get_submission, current_session, get_licenses, exceptions, store_event
@@ -216,11 +216,11 @@ class TestStoreEvent(TestCase):
                 events[i] = event
                 before = after
 
-            # Published!
+            # Announced!
             paper_id = '1901.00123'
             db_submission = session.query(models.Submission) \
                 .get(after.submission_id)
-            db_submission.status = db_submission.PUBLISHED
+            db_submission.status = db_submission.ANNOUNCED
             db_document = models.Document(paper_id=paper_id)
             db_submission.doc_paper_id = paper_id
             db_submission.document = db_document
@@ -229,10 +229,9 @@ class TestStoreEvent(TestCase):
             session.commit()
 
             # This would normally happen during a load.
-            pub = Publish(creator=System(__name__), arxiv_id=paper_id,
-                          committed=True)
+            pub = Announce(creator=System(__name__), arxiv_id=paper_id,
+                           committed=True)
             before = pub.apply(before)
-            before = db_submission.patch(before)
 
             # Now set DOI + journal ref
             doi = '10.1000/182'

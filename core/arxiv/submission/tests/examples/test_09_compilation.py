@@ -111,14 +111,8 @@ class TestSourceSizeLimits(TestCase):
         # The submission should be on hold.
         with self.app.app_context():
             submission, events = load(self.submission.submission_id)
-            self.assertTrue(submission.is_on_hold,
-                            "Hold! Uncompressed source is huge")
-
-            session = classic.current_session()
-            db_row = session.query(classic.models.Submission) \
-                .order_by(classic.models.Submission.submission_id.asc()) \
-                .first()
-            self.assertTrue(db_row.is_on_hold(), "Database reflects hold")
+            self.assertGreater(len(submission.holds), 0,
+                               "Has a hold; uncompressed source is huge")
 
         # Update the source; uncompressed size back to reasonable levels.
         with self.app.app_context():
@@ -134,14 +128,8 @@ class TestSourceSizeLimits(TestCase):
         # Hold is cleared.
         with self.app.app_context():
             submission, events = load(self.submission.submission_id)
-            self.assertFalse(submission.is_on_hold,
+            self.assertEqual(len(submission.holds), 0,
                              "Hold is cleared; uncompressed size is OK")
-
-            session = classic.current_session()
-            db_row = session.query(classic.models.Submission) \
-                .order_by(classic.models.Submission.submission_id.asc()) \
-                .first()
-            self.assertFalse(db_row.is_on_hold(), "Database reflects hold")
 
         # Something wonky happens, and the compressed size skyrockets.
         with self.app.app_context():
@@ -157,14 +145,8 @@ class TestSourceSizeLimits(TestCase):
         # The submission should be on hold.
         with self.app.app_context():
             submission, events = load(self.submission.submission_id)
-            self.assertTrue(submission.is_on_hold,
-                            "Hold! Ccompressed source is huge")
-
-            session = classic.current_session()
-            db_row = session.query(classic.models.Submission) \
-                .order_by(classic.models.Submission.submission_id.asc()) \
-                .first()
-            self.assertTrue(db_row.is_on_hold(), "Database reflects hold")
+            self.assertGreater(len(submission.holds), 0,
+                               "Has a hold; compressed source is huge")
 
 
 class TestSubmissionCompilation(TestCase):
@@ -339,7 +321,7 @@ class TestSubmissionCompilation(TestCase):
         # Check the classic database.
         with self.app.app_context():
             submission, events = load(self.submission.submission_id)
-            self.assertTrue(submission.is_on_hold, "On hold; PDF is huge")
+            self.assertGreater(len(submission.holds), 0, "Holds; PDF is huge")
             self.assertEqual(submission.latest_compilation.source_id,
                              self.upload_id,
                              "The compilation process is recorded")
@@ -362,8 +344,6 @@ class TestSubmissionCompilation(TestCase):
             self.assertEqual(db_row.must_process, 0,
                              "must_process flag is off because compilation was"
                              " successful and source hasn't changed")
-            self.assertTrue(db_row.is_on_hold(), "Database reflects hold status")
-
 
     def tearDown(self):
         """Clear the database after each test."""

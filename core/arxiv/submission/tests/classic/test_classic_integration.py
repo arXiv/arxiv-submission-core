@@ -373,7 +373,7 @@ class TestReplacementIntegration(TestCase):
             # Publication agent publishes the paper.
             db_submission = session.query(classic.models.Submission)\
                 .get(self.submission.submission_id)
-            db_submission.status = db_submission.PUBLISHED
+            db_submission.status = db_submission.ANNOUNCED
             dated = (datetime.now() - datetime.utcfromtimestamp(0))
             primary = self.submission.primary_classification.category
             db_submission.document = classic.models.Document(
@@ -418,8 +418,8 @@ class TestReplacementIntegration(TestCase):
         self.assertEqual(replacement.version,
                          submission_to_replace.version + 1)
         self.assertEqual(replacement.status, Submission.WORKING)
-        self.assertTrue(submission_to_replace.published)
-        self.assertFalse(replacement.published)
+        self.assertTrue(submission_to_replace.announced)
+        self.assertFalse(replacement.announced)
 
         self.assertEqual(len(replacement.compilations), 0)
         self.assertIsNone(replacement.source_content)
@@ -522,7 +522,7 @@ class TestJREFIntegration(TestCase):
             # Publication agent publishes the paper.
             db_submission = session.query(classic.models.Submission)\
                 .get(self.submission.submission_id)
-            db_submission.status = db_submission.PUBLISHED
+            db_submission.status = db_submission.ANNOUNCED
             dated = (datetime.now() - datetime.utcfromtimestamp(0))
             primary = self.submission.primary_classification.category
             db_submission.document = classic.models.Document(
@@ -571,9 +571,9 @@ class TestJREFIntegration(TestCase):
         self.assertEqual(jref_submission.arxiv_id, submission_to_jref.arxiv_id)
         self.assertEqual(jref_submission.version, submission_to_jref.version,
                          "The paper version should not change")
-        self.assertEqual(jref_submission.status, Submission.PUBLISHED)
-        self.assertTrue(submission_to_jref.published)
-        self.assertTrue(jref_submission.published)
+        self.assertEqual(jref_submission.status, Submission.ANNOUNCED)
+        self.assertTrue(submission_to_jref.announced)
+        self.assertTrue(jref_submission.announced)
 
         self.assertIsNotNone(jref_submission.source_content)
 
@@ -691,12 +691,12 @@ class TestWithdrawalIntegration(TestCase):
             )
         self.submission_id = self.submission.submission_id
 
-        # Publish.
+        # Announce.
         with self.app.app_context():
             session = classic.current_session()
             db_submission = session.query(classic.models.Submission)\
                 .get(self.submission.submission_id)
-            db_submission.status = db_submission.PUBLISHED
+            db_submission.status = db_submission.ANNOUNCED
             dated = (datetime.now() - datetime.utcfromtimestamp(0))
             primary = self.submission.primary_classification.category
             db_submission.document = classic.models.Document(
@@ -728,7 +728,7 @@ class TestWithdrawalIntegration(TestCase):
             submission, _ = save(event, submission_id=self.submission_id)
 
             submission, _ = load(self.submission_id)
-            self.assertEqual(submission.status, domain.Submission.PUBLISHED)
+            self.assertEqual(submission.status, domain.Submission.ANNOUNCED)
             request = list(submission.user_requests.values())[0]
             self.assertEqual(request.reason_for_withdrawal, event.reason)
 
@@ -837,14 +837,14 @@ class TestPublicationIntegration(TestCase):
             classic.drop_all()
 
     def test_publication_status_is_reflected(self):
-        """The submission has been published/announced."""
+        """The submission has been announced/announced."""
         with self.app.app_context():
             session = classic.current_session()
 
             # Publication agent publishes the paper.
             db_submission = session.query(classic.models.Submission)\
                 .get(self.submission.submission_id)
-            db_submission.status = db_submission.PUBLISHED
+            db_submission.status = db_submission.ANNOUNCED
             dated = (datetime.now() - datetime.utcfromtimestamp(0))
             primary = self.submission.primary_classification.category
             db_submission.document = classic.models.Document(
@@ -863,15 +863,15 @@ class TestPublicationIntegration(TestCase):
 
             # Submission state should reflect publication status.
             submission, _ = load(self.submission.submission_id)
-            self.assertEqual(submission.status, submission.PUBLISHED,
-                             "Submission should have published status.")
+            self.assertEqual(submission.status, submission.ANNOUNCED,
+                             "Submission should have announced status.")
             self.assertEqual(submission.arxiv_id, "1901.00123",
                              "arXiv paper ID should be set")
             self.assertFalse(submission.active,
-                             "Published submission should no longer be active")
+                             "Announced submission should no longer be active")
 
     def test_publication_status_is_reflected_after_files_expire(self):
-        """The submission has been published/announced, and files expired."""
+        """The submission has been announced/announced, and files expired."""
         paper_id = '1901.00123'
         with self.app.app_context():
             session = classic.current_session()
@@ -879,7 +879,7 @@ class TestPublicationIntegration(TestCase):
             # Publication agent publishes the paper.
             db_submission = session.query(classic.models.Submission)\
                 .get(self.submission.submission_id)
-            db_submission.status = db_submission.DELETED_PUBLISHED
+            db_submission.status = db_submission.DELETED_ANNOUNCED
             dated = (datetime.now() - datetime.utcfromtimestamp(0))
             primary = self.submission.primary_classification.category
             db_submission.document = classic.models.Document(
@@ -899,12 +899,12 @@ class TestPublicationIntegration(TestCase):
 
             # Submission state should reflect publication status.
             submission, _ = load(self.submission.submission_id)
-            self.assertEqual(submission.status, submission.PUBLISHED,
-                             "Submission should have published status.")
+            self.assertEqual(submission.status, submission.ANNOUNCED,
+                             "Submission should have announced status.")
             self.assertEqual(submission.arxiv_id, "1901.00123",
                              "arXiv paper ID should be set")
             self.assertFalse(submission.active,
-                             "Published submission should no longer be active")
+                             "Announced submission should no longer be active")
 
     def test_scheduled_status_is_reflected(self):
         """The submission has been scheduled for publication today."""
@@ -941,7 +941,7 @@ class TestPublicationIntegration(TestCase):
                              "Submission should have scheduled status.")
 
     def test_scheduled_status_is_reflected_prior_to_announcement(self):
-        """The submission is being published; not yet announced."""
+        """The submission is being announced; not yet announced."""
         with self.app.app_context():
             session = classic.current_session()
 
@@ -975,7 +975,7 @@ class TestPublicationIntegration(TestCase):
                              "Submission should be scheduled for tomorrow.")
 
     def test_publication_failed(self):
-        """The submission was not published successfully."""
+        """The submission was not announced successfully."""
         with self.app.app_context():
             session = classic.current_session()
 

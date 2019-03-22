@@ -301,6 +301,9 @@ class UserRequest:
     APPLIED = 'applied'
     """Submission has been updated on the basis of the approved request."""
 
+    CANCELLED = 'cancelled'
+
+    request_id: str
     creator: Agent
     created: datetime = field(default_factory=get_tzaware_utc_now)
     updated: datetime = field(default_factory=get_tzaware_utc_now)
@@ -311,36 +314,35 @@ class UserRequest:
         """Name (str) of the type of user request."""
         return type(self).__name__
 
-    @property
-    def request_id(self):
-        """The unique identifier for an :class:`.UserRequest` instance."""
-        return self.generate_request_id(self.created, self.request_type,
-                                        self.creator)
-
-    @staticmethod
-    def generate_request_id(created: datetime, request_type: str,
-                            creator: Agent) -> str:
-        """Generate a request ID."""
-        h = hashlib.new('sha1')
-        h.update(b'%s:%s:%s' % (created.isoformat().encode('utf-8'),
-                                request_type.encode('utf-8'),
-                                creator.agent_identifier.encode('utf-8')))
-        return h.hexdigest()
-
     def is_pending(self):
+        """Check whether the request is pending."""
         return self.status == UserRequest.PENDING
 
     def is_approved(self):
+        """Check whether the request has been approved."""
         return self.status == UserRequest.APPROVED
 
     def is_applied(self):
+        """Check whether the request has been applied."""
         return self.status == UserRequest.APPLIED
 
     def is_rejected(self):
+        """Check whether the request has been rejected."""
         return self.status == UserRequest.REJECTED
 
     def is_active(self) -> bool:
+        """Check whether the request is active."""
         return self.is_pending() or self.is_approved()
+
+    @classmethod
+    def generate_request_id(cls, submission: 'Submission', N: int = -1) -> str:
+        h = hashlib.new('sha1')
+        if N < 0:
+            N = len([rq for rq in submission.user_requests.values()
+                     if type(rq) is cls])
+        _key = '%s:%s:%s' % (submission.submission_id, cls.NAME, N)
+        h.update(_key.encode('utf-8'))
+        return h.hexdigest()
 
 
 @dataclass
@@ -352,6 +354,12 @@ class WithdrawalRequest(UserRequest):
     reason_for_withdrawal: Optional[str] = field(default=None)
     """If an e-print is withdrawn, the submitter is asked to explain why."""
 
+    def apply(self, submission: 'Submission') -> 'Submission':
+        """Apply the withdrawal."""
+        submission.reason_for_withdrawal = self.reason_for_withdrawal
+        submission.status = Submission.WITHDRAWN
+        return submission
+
 
 @dataclass
 class CrossListClassificationRequest(UserRequest):
@@ -361,21 +369,47 @@ class CrossListClassificationRequest(UserRequest):
 
     classifications: List[Classification] = field(default_factory=list)
 
+    def apply(self, submission: 'Submission') -> 'Submission':
+        """Apply the cross-list request."""
+        submission.secondary_classification.extend(self.classifications)
+        return submission
+
     @property
     def categories(self) -> List[str]:
+        """Get the requested cross-list categories."""
         return [c.category for c in self.classifications]
 
 
 @dataclass
 class Submission:
-    """Represents an arXiv submission object."""
+    """
+    Represents an arXiv submission object.
+
+    Some notable differences between this view of submissions and the classic
+    model:
+
+    - There is no "hold" status. Status reflects where the submission is
+      in the pipeline. Holds are annotations that can be applied to the
+      submission, and may impact its ability to proceed (e.g. from submitted
+      to scheduled). Submissions that are in working status can have holds on
+      them!
+    - We use `arxiv_id` instead of `paper_id` to refer to the canonical arXiv
+      identifier for the e-print (once it is announced).
+    - Instead of having a separate "submission" record for every change to an
+      e-print (e.g. replacement, jref, etc), we represent the entire history
+      as a single submission. Announced versions can be found in
+      :attr:`.versions`. Withdrawal and cross-list requests can be found in
+      :attr:`.user_requests`. JREFs are treated like they "just happen",
+      reflecting the forthcoming move away from storing journal ref information
+      in the core metadata record.
+
+    """
 
     WORKING = 'working'
     SUBMITTED = 'submitted'
-    ON_HOLD = 'hold'
     SCHEDULED = 'scheduled'
-    PUBLISHED = 'published'
-    ERROR = 'error'
+    ANNOUNCED = 'announced'
+    ERROR = 'error'     # TODO: eliminate this status.
     DELETED = 'deleted'
     WITHDRAWN = 'withdrawn'
 
@@ -401,15 +435,18 @@ class Submission:
     submitter_confirmed_preview: bool = field(default=False)
     license: Optional[License] = field(default=None)
     status: str = field(default=WORKING)
+    """Disposition within the submission pipeline."""
+
     arxiv_id: Optional[str] = field(default=None)
-    """The published arXiv paper ID."""
+    """The announced arXiv paper ID."""
+
     version: int = field(default=1)
 
     reason_for_withdrawal: Optional[str] = field(default=None)
     """If an e-print is withdrawn, the submitter is asked to explain why."""
 
     versions: List['Submission'] = field(default_factory=list)
-    """Published versions of this :class:`.domain.Submission`."""
+    """Announced versions of this :class:`.domain.Submission`."""
 
     # These fields are related to moderation/quality control.
     user_requests: Dict[str, UserRequest] = field(default_factory=dict)
@@ -444,12 +481,12 @@ class Submission:
     @property
     def active(self) -> bool:
         """Actively moving through the submission workflow."""
-        return self.status not in [self.DELETED, self.PUBLISHED]
+        return self.status not in [self.DELETED, self.ANNOUNCED]
 
     @property
-    def published(self) -> bool:
+    def announced(self) -> bool:
         """The submission has been announced."""
-        return self.status == self.PUBLISHED
+        return self.status == self.ANNOUNCED
 
     @property
     def finalized(self) -> bool:
@@ -462,6 +499,10 @@ class Submission:
         return self.status == self.DELETED
 
     @property
+    def primary_category(self) -> str:
+        return self.primary_classification.category
+
+    @property
     def secondary_categories(self) -> List[str]:
         """Category names from secondary classifications."""
         return [c.category for c in self.secondary_classification]
@@ -470,8 +511,8 @@ class Submission:
     def is_on_hold(self) -> bool:
         # We need to explicitly check ``status`` here because classic doesn't
         # have a representation for Hold events.
-        return len(self.hold_types - self.waiver_types) > 0 \
-            or self.status == self.ON_HOLD
+        return (self.status == self.SUBMITTED
+                and len(self.hold_types - self.waiver_types) > 0)
 
     def has_waiver_for(self, hold_type: Hold.Type) -> bool:
         return hold_type in self.waiver_types
@@ -526,23 +567,38 @@ class Submission:
 
     @property
     def active_user_requests(self) -> List[UserRequest]:
-        return [r for r in self.user_requests.values() if r.is_active()]
+        return sorted(
+            [r for r in self.user_requests.values() if r.is_active()],
+            key=lambda r: r.created
+        )
 
     @property
     def pending_user_requests(self) -> List[UserRequest]:
-        return [r for r in self.user_requests.values() if r.is_pending()]
+        return sorted(
+            [r for r in self.user_requests.values() if r.is_pending()],
+            key=lambda r: r.created
+        )
 
     @property
     def rejected_user_requests(self) -> List[UserRequest]:
-        return [r for r in self.user_requests.values() if r.is_rejected()]
+        return sorted(
+            [r for r in self.user_requests.values() if r.is_rejected()],
+            key=lambda r: r.created
+        )
 
     @property
     def approved_user_requests(self) -> List[UserRequest]:
-        return [r for r in self.user_requests.values() if r.is_approved()]
+        return sorted(
+            [r for r in self.user_requests.values() if r.is_approved()],
+            key=lambda r: r.created
+        )
 
     @property
     def applied_user_requests(self) -> List[UserRequest]:
-        return [r for r in self.user_requests.values() if r.is_applied()]
+        return sorted(
+            [r for r in self.user_requests.values() if r.is_applied()],
+            key=lambda r: r.created
+        )
 
     def get_user_request(self, request_id: str) -> UserRequest:
         """Retrieve a :class:`.UserRequest` by ID."""
@@ -561,7 +617,7 @@ class Submission:
             'client': self.client.to_dict() if self.client else None,
             'finalized': self.finalized,
             'deleted': self.deleted,
-            'published': self.published,
+            'announced': self.announced,
             'active': self.active
         })
         return data

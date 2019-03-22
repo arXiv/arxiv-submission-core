@@ -151,14 +151,15 @@ def save(*events: Event, submission_id: Optional[str] = None) \
 
     events = sorted(set(prior) | set(events), key=lambda e: e.created)
     applied: List[Event] = []
-
     for event in events:
         # Fill in event IDs, if they are missing.
         if event.submission_id is None and submission_id is not None:
             event.submission_id = submission_id
 
         # Mutation happens here; raises InvalidEvent.
+        logger.debug('Apply event %s: %s', event.event_id, event.NAME)
         after = event.apply(before)
+        logger.debug('Submission has requests: %s', after.user_requests)
         applied.append(event)
         if not event.committed:
             # TODO: <-- emit event here.

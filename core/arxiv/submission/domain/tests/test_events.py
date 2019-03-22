@@ -24,7 +24,7 @@ class TestWithdrawalSubmission(TestCase):
         )
         self.submission = submission.Submission(
             submission_id=1,
-            status=submission.Submission.PUBLISHED,
+            status=submission.Submission.ANNOUNCED,
             creator=self.user,
             owner=self.user,
             created=datetime.now(UTC),
@@ -61,10 +61,10 @@ class TestWithdrawalSubmission(TestCase):
         self.assertEqual(replacement.arxiv_id, self.submission.arxiv_id)
         self.assertEqual(replacement.version, self.submission.version)
         self.assertEqual(replacement.status,
-                         submission.Submission.PUBLISHED)
+                         submission.Submission.ANNOUNCED)
         self.assertTrue(replacement.has_active_requests)
-        self.assertTrue(self.submission.published)
-        self.assertTrue(replacement.published)
+        self.assertTrue(self.submission.announced)
+        self.assertTrue(replacement.announced)
 
     def test_request_without_a_reason(self):
         """A reason is required."""
@@ -72,11 +72,11 @@ class TestWithdrawalSubmission(TestCase):
         with self.assertRaises(event.InvalidEvent):
             e.validate(self.submission)
 
-    def test_request_without_published_submission(self):
-        """The submission must already be published."""
+    def test_request_without_announced_submission(self):
+        """The submission must already be announced."""
         e = event.RequestWithdrawal(creator=self.user, reason="no good")
         with self.assertRaises(event.InvalidEvent):
-            e.validate(mock.MagicMock(published=False))
+            e.validate(mock.MagicMock(announced=False))
 
 
 class TestReplacementSubmission(TestCase):
@@ -92,7 +92,7 @@ class TestReplacementSubmission(TestCase):
         )
         self.submission = submission.Submission(
             submission_id=1,
-            status=submission.Submission.PUBLISHED,
+            status=submission.Submission.ANNOUNCED,
             creator=self.user,
             owner=self.user,
             created=datetime.now(UTC),
@@ -128,8 +128,8 @@ class TestReplacementSubmission(TestCase):
         self.assertEqual(replacement.arxiv_id, self.submission.arxiv_id)
         self.assertEqual(replacement.version, self.submission.version + 1)
         self.assertEqual(replacement.status, submission.Submission.WORKING)
-        self.assertTrue(self.submission.published)
-        self.assertFalse(replacement.published)
+        self.assertTrue(self.submission.announced)
+        self.assertFalse(replacement.announced)
 
         self.assertEqual(len(replacement.compilations), 0)
         self.assertIsNone(replacement.source_content)
@@ -159,7 +159,7 @@ class TestReplacementSubmission(TestCase):
                          self.submission.metadata.journal_ref)
 
 
-class TestDOIorJREFAfterPublish(TestCase):
+class TestDOIorJREFAfterAnnounce(TestCase):
     """Test :class:`event.SetDOI` or :class:`event.SetJournalReference`."""
 
     def setUp(self):
@@ -172,7 +172,7 @@ class TestDOIorJREFAfterPublish(TestCase):
         )
         self.submission = submission.Submission(
             submission_id=1,
-            status=submission.Submission.PUBLISHED,
+            status=submission.Submission.ANNOUNCED,
             creator=self.user,
             owner=self.user,
             created=datetime.now(UTC),
@@ -207,9 +207,9 @@ class TestDOIorJREFAfterPublish(TestCase):
         after = e.apply(self.submission)
         self.assertEqual(after.arxiv_id, self.submission.arxiv_id)
         self.assertEqual(after.version, self.submission.version)
-        self.assertEqual(after.status, submission.Submission.PUBLISHED)
-        self.assertTrue(self.submission.published)
-        self.assertTrue(after.published)
+        self.assertEqual(after.status, submission.Submission.ANNOUNCED)
+        self.assertTrue(self.submission.announced)
+        self.assertTrue(after.announced)
 
         self.assertIsNotNone(after.submission_id)
         self.assertEqual(self.submission.submission_id, after.submission_id)
@@ -711,7 +711,7 @@ class TestSetJournalReference(TestCase):
             "Czech J Math, 60(135)(2010), 59-76.",
             "PHYSICAL REVIEW B 81, 024520 (2010)",
             "PHYSICAL REVIEW B 69, 094524 (2004)",
-            "Published on Ap&SS, Oct. 2009",
+            "Announced on Ap&SS, Oct. 2009",
             "Phys. Rev. Lett. 104, 095701 (2010)",
             "Phys. Rev. B 76, 205407 (2007).",
             "Extending Database Technology (EDBT) 2010",
