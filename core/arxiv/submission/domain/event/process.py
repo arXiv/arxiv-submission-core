@@ -29,6 +29,12 @@ class AddProcessStatus(Event):
     reason: Optional[str] = field(default=None)
     monitoring_task: Optional[str] = field(default=None)
 
+    def __post_init__(self) -> None:
+        """Make sure our enums are in order."""
+        super(AddProcessStatus, self).__post_init__()
+        self.process = self.Process(self.process)
+        self.status = self.Status(self.status)
+
     def validate(self, submission: Submission) -> None:
         """Verify that we have a :class:`.ProcessStatus`."""
         if self.process is None:
@@ -48,11 +54,3 @@ class AddProcessStatus(Event):
             monitoring_task=self.monitoring_task
         ))
         return submission
-
-    @classmethod
-    def from_dict(cls, **data: dict) -> 'AddProcessStatus':
-        if 'process' in data:
-            data['process'] = cls.Process(data['process'])
-        if 'status' in data:
-            data['status'] = cls.Status(data['status'])
-        return cls(**data)

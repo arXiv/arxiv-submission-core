@@ -163,16 +163,6 @@ class CreateSubmission(Event):
                           owner=self.creator, proxy=self.proxy,
                           client=self.client)
 
-    def to_dict(self):
-        """Generate a dict of this :class:`.CreateSubmission`."""
-        data = super(CreateSubmission, self).to_dict()
-        return data
-
-    @classmethod
-    def from_dict(cls, **data) -> 'CreateSubmission':
-        """Override the ``from_dict`` constructor to handle submission."""
-        return cls(**data)
-
 
 @dataclass(init=False)
 class CreateSubmissionVersion(Event):
@@ -431,6 +421,7 @@ class SetTitle(Event):
 
     def __post_init__(self):
         """Perform some light cleanup on the provided value."""
+        super(SetTitle, self).__post_init__()
         self.title = self.cleanup(self.title)
 
     def validate(self, submission: Submission) -> None:
@@ -490,6 +481,7 @@ class SetAbstract(Event):
 
     def __post_init__(self):
         """Perform some light cleanup on the provided value."""
+        super(SetAbstract, self).__post_init__()
         self.abstract = self.cleanup(self.abstract)
 
     def validate(self, submission: Submission) -> None:
@@ -542,6 +534,7 @@ class SetDOI(Event):
 
     def __post_init__(self):
         """Perform some light cleanup on the provided value."""
+        super(SetDOI, self).__post_init__()
         self.doi = self.cleanup(self.doi)
 
     def validate(self, submission: Submission) -> None:
@@ -585,6 +578,7 @@ class SetMSCClassification(Event):
 
     def __post_init__(self):
         """Perform some light cleanup on the provided value."""
+        super(SetMSCClassification, self).__post_init__()
         self.msc_class = self.cleanup(self.msc_class)
 
     def validate(self, submission: Submission) -> None:
@@ -625,6 +619,7 @@ class SetACMClassification(Event):
 
     def __post_init__(self):
         """Perform some light cleanup on the provided value."""
+        super(SetACMClassification, self).__post_init__()
         self.acm_class = self.cleanup(self.acm_class)
 
     def validate(self, submission: Submission) -> None:
@@ -674,6 +669,7 @@ class SetJournalReference(Event):
 
     def __post_init__(self):
         """Perform some light cleanup on the provided value."""
+        super(SetJournalReference, self).__post_init__()
         self.journal_ref = self.cleanup(self.journal_ref)
 
     def validate(self, submission: Submission) -> None:
@@ -722,6 +718,7 @@ class SetReportNumber(Event):
 
     def __post_init__(self):
         """Perform some light cleanup on the provided value."""
+        super(SetReportNumber, self).__post_init__()
         self.report_num = self.cleanup(self.report_num)
 
     def validate(self, submission: Submission) -> None:
@@ -758,6 +755,7 @@ class SetComments(Event):
 
     def __post_init__(self):
         """Perform some light cleanup on the provided value."""
+        super(SetComments, self).__post_init__()
         self.comments = self.cleanup(self.comments)
 
     def validate(self, submission: Submission) -> None:
@@ -795,6 +793,7 @@ class SetAuthors(Event):
 
     def __post_init__(self):
         """Autogenerate and/or clean display names."""
+        super(SetAuthors, self).__post_init__()
         self.authors = [Author(**a) if type(a) is dict else a
                         for a in self.authors]
         if not self.authors_display:
@@ -852,9 +851,9 @@ class SetUploadPackage(Event):
 
     def __post_init__(self) -> None:
         """Make sure that `source_format` is an enum instance."""
+        super(SetUploadPackage, self).__post_init__()
         if type(self.source_format) is str:
             self.source_format = SubmissionContent.Format(self.source_format)
-        return super(SetUploadPackage, self).__post_init__()
 
     def validate(self, submission: Submission) -> None:
         """Validate data for :class:`.SetUploadPackage`."""
@@ -891,9 +890,9 @@ class UpdateUploadPackage(Event):
 
     def __post_init__(self) -> None:
         """Make sure that `source_format` is an enum instance."""
+        super(UpdateUploadPackage, self).__post_init__()
         if type(self.source_format) is str:
             self.source_format = SubmissionContent.Format(self.source_format)
-        return super(UpdateUploadPackage, self).__post_init__()
 
     def validate(self, submission: Submission) -> None:
         """Validate data for :class:`.SetUploadPackage`."""

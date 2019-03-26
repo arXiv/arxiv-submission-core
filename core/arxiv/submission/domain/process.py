@@ -4,9 +4,9 @@ from typing import Optional
 from enum import Enum
 from datetime import datetime
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, asdict
 
-from .agent import Agent
+from .agent import Agent, agent_factory
 from .util import get_tzaware_utc_now
 
 
@@ -45,3 +45,10 @@ class ProcessStatus:
     """Optional context or explanatory details related to the status."""
     monitoring_task: Optional[str] = field(default=None)
     """identifier of the task used to monitor the status of this process."""
+
+    def __post_init__(self):
+        """Check our enums and agents."""
+        if self.creator and type(self.creator) is dict:
+            self.creator = agent_factory(**self.creator)
+        self.process = self.Process(self.process)
+        self.status = self.Status(self.status)

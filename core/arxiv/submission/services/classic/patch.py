@@ -84,7 +84,7 @@ def _patch_request(req_type: type, data: Dict[str, Any],
                                 updated=row.get_updated(),
                                 request_id=request_id, **data)
     else:
-        user_request = submission.get_user_request(request_id)
+        user_request = submission.user_requests[request_id]
         if any([setattr_changed(user_request, field, value)
                 for field, value in data.items()]):
             user_request.updated = row.get_updated()

@@ -6,6 +6,7 @@ from datetime import datetime
 import copy
 from arxiv.base import logging
 from typing import Tuple, List, Callable, Optional, Dict
+from dataclasses import asdict
 
 from flask import url_for, current_app
 from werkzeug.exceptions import NotFound, BadRequest, InternalServerError
@@ -68,7 +69,7 @@ def create_submission(data: dict, headers: dict, agents: Dict[str, Agent],
         'Location': url_for('submission.get_submission',
                             submission_id=submission.submission_id)
     }
-    return submission.to_dict(), status.CREATED, response_headers
+    return asdict(submission), status.CREATED, response_headers
 
 
 def get_submission(submission_id: int,
@@ -82,7 +83,7 @@ def get_submission(submission_id: int,
     except Exception as e:
         logger.error('Unhandled exception: (%s) %s', str(type(e)), str(e))
         raise InternalServerError('Encountered unhandled exception') from e
-    return submission.to_dict(), status.OK, {}
+    return asdict(submission), status.OK, {}
 
 
 @util.validate_request('schema/resources/submission.json')
@@ -107,4 +108,4 @@ def update_submission(data: dict, headers: dict, agents: Dict[str, Agent],
                             creator=agents['creator'].native_id,
                             submission_id=submission.submission_id)
     }
-    return submission.to_dict(), status.OK, response_headers
+    return asdict(submission), status.OK, response_headers

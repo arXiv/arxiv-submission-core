@@ -1,21 +1,20 @@
 """Data structures for submissions."""
 
-from typing import Optional, Dict, TypeVar, List, Iterable, Set
+from typing import Optional, Dict, TypeVar, List, Iterable, Set, Union
 from datetime import datetime
 from dateutil.parser import parse as parse_date
 from enum import Enum
 import hashlib
 
-from dataclasses import dataclass, field
-from dataclasses import asdict
+from dataclasses import dataclass, field, asdict
 
 from .agent import Agent, agent_factory
 from .meta import License, Classification
-from .annotation import Comment, Feature, Annotation
+from .annotation import Comment, Feature, Annotation, annotation_factory
 from .proposal import Proposal
 from .process import ProcessStatus
-from .flag import Flag
-from .util import get_tzaware_utc_now
+from .flag import Flag, flag_factory
+from .util import get_tzaware_utc_now, dict_coerce, list_coerce
 
 
 @dataclass
@@ -58,10 +57,6 @@ class Author:
         if self.affiliation:
             return "%s (%s)" % (name, self.affiliation)
         return name
-
-    def to_dict(self) -> dict:
-        """Generate a dict representation of this :class:`.Author`."""
-        return asdict(self)
 
 
 @dataclass
@@ -204,10 +199,6 @@ class SubmissionMetadata:
 
     comments: str = field(default_factory=str)
 
-    def to_dict(self) -> dict:
-        """Generate dict representation of :class:`.SubmissionMetadata`."""
-        return asdict(self)
-
 
 @dataclass
 class Delegation:
@@ -216,21 +207,19 @@ class Delegation:
     delegate: Agent
     creator: Agent
     created: datetime = field(default_factory=get_tzaware_utc_now)
+    delegation_id: str = field(default_factory=str)
 
-    @property
-    def delegation_id(self):
-        """Unique identifier for the delegation instance."""
+    def __post_init__(self):
+        """Set derivative fields."""
+        self.delegation_id = self.get_delegation_id()
+
+    def get_delegation_id(self):
+        """Generate unique identifier for the delegation instance."""
         h = hashlib.new('sha1')
         h.update(b'%s:%s:%s' % (self.delegate.agent_identifier,
                                 self.creator.agent_identifier,
                                 self.created.isodate()))
         return h.hexdigest()
-
-    def to_dict(self) -> dict:
-        """Generate a dict representation of this :class:`.Delegation`."""
-        data = asdict(self)
-        data['delegation_id'] = self.delegation_id
-        return data
 
 
 @dataclass
@@ -257,18 +246,13 @@ class Hold:
     hold_type: Type = field(default=Type.PATCH)
     hold_reason: Optional[str] = field(default_factory=str)
 
-    @classmethod
-    def from_dict(cls, data: dict) -> 'Hold':
-        creator = data['creator']
-        created = data['created']
-        if not isinstance(creator, Agent):
-            creator = agent_factory(**creator)
-        if not isinstance(created, datetime):
-            created = parse_date(created)
-        return cls(event_id=data['event_id'], creator=creator,
-                   created=created,
-                   hold_type=cls.Type(data['hold_type']),
-                   hold_reason=data.get('hold_reason', ''))
+    def __post_init__(self):
+        """Check enums and agents."""
+        if self.creator and type(self.creator) is dict:
+            self.creator = agent_factory(**self.creator)
+        self.hold_type = self.Type(self.hold_type)
+        # if not isinstance(created, datetime):
+        #     created = parse_date(created)
 
 
 @dataclass
@@ -281,6 +265,12 @@ class Waiver:
     waiver_reason: str
     created: datetime
     creator: Agent
+
+    def __post_init__(self):
+        """Check enums and agents."""
+        if self.creator and type(self.creator) is dict:
+            self.creator = agent_factory(**self.creator)
+        self.waiver_type = Hold.Type(self.waiver_type)
 
 
 # TODO: add identification mechanism; consider using mechanism similar to
@@ -308,25 +298,31 @@ class UserRequest:
     created: datetime = field(default_factory=get_tzaware_utc_now)
     updated: datetime = field(default_factory=get_tzaware_utc_now)
     status: str = field(default=PENDING)
+    request_type: str = field(default_factory=str)
 
-    @property
-    def request_type(self):
+    def __post_init__(self):
+        """Check agents."""
+        if self.creator and type(self.creator) is dict:
+            self.creator = agent_factory(**self.creator)
+        self.request_type = self.get_request_type()
+
+    def get_request_type(self) -> str:
         """Name (str) of the type of user request."""
         return type(self).__name__
 
-    def is_pending(self):
+    def is_pending(self) -> bool:
         """Check whether the request is pending."""
         return self.status == UserRequest.PENDING
 
-    def is_approved(self):
+    def is_approved(self) -> bool:
         """Check whether the request has been approved."""
         return self.status == UserRequest.APPROVED
 
-    def is_applied(self):
+    def is_applied(self) -> bool:
         """Check whether the request has been applied."""
         return self.status == UserRequest.APPLIED
 
-    def is_rejected(self):
+    def is_rejected(self) -> bool:
         """Check whether the request has been rejected."""
         return self.status == UserRequest.REJECTED
 
@@ -336,12 +332,11 @@ class UserRequest:
 
     @classmethod
     def generate_request_id(cls, submission: 'Submission', N: int = -1) -> str:
+        """Generate a unique identifier for this request."""
         h = hashlib.new('sha1')
         if N < 0:
-            N = len([rq for rq in submission.user_requests.values()
-                     if type(rq) is cls])
-        _key = '%s:%s:%s' % (submission.submission_id, cls.NAME, N)
-        h.update(_key.encode('utf-8'))
+            N = len([rq for rq in submission.iter_requests if type(rq) is cls])
+        h.update(f'{submission.submission_id}:{cls.NAME}:{N}'.encode('utf-8'))
         return h.hexdigest()
 
 
@@ -566,80 +561,75 @@ class Submission:
         return len(self.active_user_requests) > 0
 
     @property
+    def iter_requests(self) -> Iterable[UserRequest]:
+        return self.user_requests.values()
+
+    @property
     def active_user_requests(self) -> List[UserRequest]:
-        return sorted(
-            [r for r in self.user_requests.values() if r.is_active()],
-            key=lambda r: r.created
-        )
+        return sorted(filter(lambda r: r.is_active(), self.iter_requests),
+                      key=lambda r: r.created)
 
     @property
     def pending_user_requests(self) -> List[UserRequest]:
-        return sorted(
-            [r for r in self.user_requests.values() if r.is_pending()],
-            key=lambda r: r.created
-        )
+        return sorted(filter(lambda r: r.is_pending(), self.iter_requests),
+                      key=lambda r: r.created)
 
     @property
     def rejected_user_requests(self) -> List[UserRequest]:
-        return sorted(
-            [r for r in self.user_requests.values() if r.is_rejected()],
-            key=lambda r: r.created
-        )
+        return sorted(filter(lambda r: r.is_rejected(), self.iter_requests),
+                      key=lambda r: r.created)
 
     @property
     def approved_user_requests(self) -> List[UserRequest]:
-        return sorted(
-            [r for r in self.user_requests.values() if r.is_approved()],
-            key=lambda r: r.created
-        )
+        return sorted(filter(lambda r: r.is_approved(), self.iter_requests),
+                      key=lambda r: r.created)
 
     @property
     def applied_user_requests(self) -> List[UserRequest]:
-        return sorted(
-            [r for r in self.user_requests.values() if r.is_applied()],
-            key=lambda r: r.created
-        )
+        return sorted(filter(lambda r: r.is_applied(), self.iter_requests),
+                      key=lambda r: r.created)
 
-    def get_user_request(self, request_id: str) -> UserRequest:
-        """Retrieve a :class:`.UserRequest` by ID."""
-        return self.user_requests[request_id]
+    def __post_init__(self):
+        if type(self.creator) is dict:
+            self.creator = agent_factory(**self.creator)
+        if type(self.owner) is dict:
+            self.owner = agent_factory(**self.owner)
+        if self.proxy and type(self.proxy) is dict:
+            self.proxy = agent_factory(**self.proxy)
+        if self.client and type(self.client) is dict:
+            self.client = agent_factory(**self.client)
+        if type(self.created) is str:
+            self.created = parse_date(self.created)
+        if type(self.updated) is str:
+            self.updated = parse_date(self.updated)
+        if type(self.submitted) is str:
+            self.submitted = parse_date(self.submitted)
+        if type(self.source_content) is dict:
+            self.source_content = SubmissionContent(**self.source_content)
+        if type(self.primary_classification) is dict:
+            self.primary_classification = \
+                Classification(**self.primary_classification)
+        if type(self.metadata) is dict:
+            self.metadata = SubmissionMetadata(**self.metadata)
+        self.delegations = dict_coerce(Delegation, self.delegations)
+        self.secondary_classification = \
+            list_coerce(Classification, self.secondary_classification)
+        if type(self.license) is dict:
+            self.license = License(**self.license)
+        self.versions = list_coerce(Submission, self.versions)
+        self.user_requests = dict_coerce(request_factory, self.user_requests)
+        self.proposals = dict_coerce(Proposal, self.proposals)
+        self.processes = list_coerce(ProcessStatus, self.processes)
+        self.annotations = dict_coerce(annotation_factory, self.annotations)
+        self.flags = dict_coerce(flag_factory, self.flags)
+        self.comments = dict_coerce(Comment, self.comments)
+        self.holds = dict_coerce(Hold, self.holds)
+        self.waivers = dict_coerce(Waiver, self.waivers)
 
-    def to_dict(self) -> dict:
-        """Generate a dict representation of this :class:`.domain.Submission`."""
-        data = asdict(self)
-        data.update({
-            'created': self.created.isoformat(),
-            'updated': self.updated.isoformat() if self.updated else None,
-            'metadata': self.metadata.to_dict(),
-            'creator': self.creator.to_dict(),
-            'owner': self.owner.to_dict(),
-            'proxy': self.proxy.to_dict() if self.proxy else None,
-            'client': self.client.to_dict() if self.client else None,
-            'finalized': self.finalized,
-            'deleted': self.deleted,
-            'announced': self.announced,
-            'active': self.active
-        })
-        return data
 
-    @classmethod
-    def from_dict(cls, **data) -> 'Submission':
-        """Construct from a ``dict``."""
-        if not isinstance(data['created'], datetime):
-            data['created'] = parse_date(data['created'])
-        if 'updated' in data and data['updated'] is not None \
-                and not isinstance(data['updated'], datetime):
-            data['updated'] = parse_date(data['updated'])
-        if 'metadata' in data and data['metadata'] is not None:
-            data['metadata'] = SubmissionMetadata(**data['metadata'])
-        data['creator'] = agent_factory(**data['creator'])
-        data['owner'] = agent_factory(**data['owner'])
-        if 'proxy' in data and data['proxy'] is not None:
-            data['proxy'] = agent_factory(**data['proxy'])
-        if 'client' in data and data['client'] is not None:
-            data['client'] = agent_factory(**data['client'])
-        if 'holds' in data and data['holds']:
-            data['holds'] = {k: Hold.from_dict(v)
-                             for k, v in data['holds'].items()}
-        return cls(**{k: v for k, v in data.items()
-                      if k in cls.__dataclass_fields__})
+def request_factory(**data: dict) -> UserRequest:
+    """Generate a :class:`.UserRequest` from raw data."""
+    for cls in UserRequest.__subclasses__():
+        if data['request_type'] == cls.__name__:
+            return cls(**data)
+    raise ValueError('Invalid request type')

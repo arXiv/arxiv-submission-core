@@ -102,30 +102,29 @@ class Event:
     after: Optional[Submission] = None
     """The state of the submission after the event."""
 
+    event_type: str = field(default_factory=str)
+    event_version: str = field(default_factory=str)
+
     _hooks: ClassVar[Mapping[type, List[Rule]]] = defaultdict(list)
 
     def __post_init__(self):
         """Make sure data look right."""
+        self.event_type = self.get_event_type()
+        self.event_version = self.get_event_version()
         if self.client and type(self.client) is dict:
-            self.client = agent_factory(self.client.pop('agent_type'),
-                                        **self.client)
+            self.client = agent_factory(**self.client)
         if self.creator and type(self.creator) is dict:
-            self.creator = agent_factory(self.creator.pop('agent_type'),
-                                         **self.creator)
+            self.creator = agent_factory(**self.creator)
         if self.proxy and type(self.proxy) is dict:
-            self.proxy = agent_factory(self.proxy.pop('agent_type'),
-                                       **self.proxy)
+            self.proxy = agent_factory(**self.proxy)
         if self.before and type(self.before) is dict:
-            self.before = event_factory(**self.before)
+            self.before = Submission(**self.before)
+        if self.after and type(self.after) is dict:
+            self.after = Submission(**self.after)
 
     @staticmethod
-    def event_version() -> str:
+    def get_event_version() -> str:
         return get_application_config().get('CORE_VERSION', '0.0.0')
-
-    @property
-    def event_type(self) -> str:
-        """Name of the event type."""
-        return self.get_event_type()
 
     @classmethod
     def get_event_type(cls) -> str:
@@ -162,20 +161,6 @@ class Event:
         if self.submission_id is None and self.after.submission_id is not None:
             self.submission_id = self.after.submission_id
         return self.after
-
-    def to_dict(self) -> dict:
-        """Generate a dict representation of this :class:`.Event`."""
-        data = asdict(self)
-        data.update({'event_type': self.event_type,
-                     'event_version': self.event_version()})
-        data.pop('before')
-        data.pop('after')
-        data['creator'] = self.creator.to_dict()
-        if self.client:
-            data['client'] = self.client.to_dict()
-        if self.proxy:
-            data['proxy'] = self.proxy.to_dict()
-        return data
 
     @classmethod
     def bind(cls, condition: Optional[Condition] = None) -> Decorator:
@@ -338,8 +323,5 @@ def event_factory(**data: EventData) -> Event:
     if 'created' not in data:
         data['created'] = datetime.now(UTC)
     if event_type in etypes:
-        klass = etypes[event_type]
-        if hasattr(klass, 'from_dict'):
-            return klass.from_dict(**data)
         return etypes[event_type](**data)
     raise RuntimeError('Unknown event type: %s' % event_type)

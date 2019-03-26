@@ -176,7 +176,7 @@ class ClassicEventInterpolator:
         if self.submission.metadata.abstract != row.abstract:
             self._inject(SetAbstract, abstract=row.abstract)
         if self.submission.metadata.comments != row.comments:
-            self._inject(SetAbstract, comments=row.comments)
+            self._inject(SetComments, comments=row.comments)
         if self.submission.metadata.msc_class != row.msc_class:
             self._inject(SetMSCClassification, msc_class=row.msc_class)
         if self.submission.metadata.acm_class != row.acm_class:

@@ -3,6 +3,7 @@
 from typing import Any, Union, List
 import json
 from datetime import datetime, date
+from dataclasses import asdict
 from enum import Enum
 from importlib import import_module
 from .domain import Event, event_factory, Submission, Agent, agent_factory
@@ -47,13 +48,15 @@ class EventJSONEncoder(ISO8601JSONEncoder):
     def default(self, obj):
         """Look for domain objects, and use their dict-coercion methods."""
         if isinstance(obj, Event):
-            data = obj.to_dict()
+            data = asdict(obj)
             data['__type__'] = 'event'
         elif isinstance(obj, Submission):
-            data = obj.to_dict()
+            data = asdict(obj)
+            data.pop('before', None)
+            data.pop('after', None)
             data['__type__'] = 'submission'
         elif isinstance(obj, Agent):
-            data = obj.to_dict()
+            data = asdict(obj)
             data['__type__'] = 'agent'
         elif isinstance(obj, type):
             data = {}
@@ -84,9 +87,9 @@ class EventJSONDecoder(ISO8601JSONDecoder):
             if type_name == 'event':
                 return event_factory(**obj)
             elif type_name == 'submission':
-                return Submission.from_dict(**obj)
+                return Submission(**obj)
             elif type_name == 'agent':
-                return agent_factory(obj.pop('agent_type'), **obj)
+                return agent_factory(**obj)
             elif type_name == 'type':
                 # Supports deserialization of Event classes.
                 #

@@ -11,10 +11,6 @@ class Classification:
 
     category: Category
 
-    def to_dict(self) -> dict:
-        """Generate a dict representation of this :class:`.Classification`."""
-        return asdict(self)
-
 
 @dataclass
 class License:
@@ -22,7 +18,3 @@ class License:
 
     uri: str
     name: Optional[str] = None
-
-    def to_dict(self) -> dict:
-        """Generate a dict representation of this :class:`.License`."""
-        return asdict(self)

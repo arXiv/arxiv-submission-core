@@ -2,6 +2,7 @@
 
 from enum import Enum
 from typing import Optional, NamedTuple
+from dataclasses import dataclass, field
 import io
 
 
@@ -52,7 +53,8 @@ class Reason(Enum):
     NONE = None
 
 
-class CompilationStatus(NamedTuple):
+@dataclass
+class CompilationStatus:
     """The state of a compilation attempt from the :mod:`.compiler` service."""
 
     # Here are the actual slots/fields.
@@ -62,14 +64,19 @@ class CompilationStatus(NamedTuple):
     """The status of the compilation."""
     checksum: str
     """Checksum of the source package that we are compiling."""
-    output_format: Format = Format.PDF
+    output_format: Format = field(default=Format.PDF)
     """The requested output format."""
-    reason: Reason = Reason.NONE
+    reason: Reason = field(default=Reason.NONE)
     """The specific reason for the :attr:`.status`."""
-    description: Optional[str] = None
+    description: Optional[str] = field(default=None)
     """Additional detail about the :attr:`.status`."""
-    size_bytes: int = 0
+    size_bytes: int = field(default=0)
     """The size of the compilation product in bytes."""
+
+    def __post_init__(self):
+        """Check enums."""
+        self.output_format = Format(self.output_format)
+        self.reason = Reason(self.reason)
 
     @property
     def identifier(self):
@@ -86,18 +93,9 @@ class CompilationStatus(NamedTuple):
         }
         return _ctypes[self.output_format]
 
-    def to_dict(self) -> dict:
-        """Generate a dict representation of this object."""
-        return {
-            'upload_id': self.upload_id,
-            'format': self.output_format.value,
-            'checksum': self.checksum,
-            'status': self.status.value,
-            'size_bytes': self.size_bytes
-        }
 
-
-class CompilationProduct(NamedTuple):
+@dataclass
+class CompilationProduct:
     """Content of a compilation product itself."""
 
     stream: io.BytesIO
@@ -106,24 +104,35 @@ class CompilationProduct(NamedTuple):
     content_type: str
     """MIME-type of the stream."""
 
-    status: Optional[CompilationStatus] = None
+    status: Optional[CompilationStatus] = field(default=None)
     """Status information about the product."""
 
-    checksum: Optional[str] = None
+    checksum: Optional[str] = field(default=None)
     """The B64-encoded MD5 hash of the compilation product."""
 
+    def __post_init__(self):
+        """Check status."""
+        if self.status and type(self.status) is dict:
+            self.status = CompilationStatus(**self.status)
 
+
+@dataclass
 class CompilationLog(NamedTuple):
     """Content of a compilation log."""
 
     stream: io.BytesIO
     """Readable buffer with the product content."""
 
-    status: Optional[CompilationStatus] = None
+    status: Optional[CompilationStatus] = field(default=None)
     """Status information about the log."""
 
-    checksum: Optional[str] = None
+    checksum: Optional[str] = field(default=None)
     """The B64-encoded MD5 hash of the log."""
 
-    content_type: str = 'text/plain'
+    content_type: str = field(default='text/plain')
     """MIME-type of the stream."""
+
+    def __post_init__(self):
+        """Check status."""
+        if self.status and type(self.status) is dict:
+            self.status = CompilationStatus(**self.status)

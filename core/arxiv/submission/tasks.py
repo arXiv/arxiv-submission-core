@@ -5,6 +5,7 @@ from functools import wraps, partial
 
 from flask import Flask
 from celery import shared_task, Celery, Task
+from celery.result import AsyncResult
 
 from arxiv.base.globals import get_application_config, get_application_global
 from arxiv.base import logging

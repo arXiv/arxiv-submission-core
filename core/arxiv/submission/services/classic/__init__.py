@@ -29,6 +29,7 @@ from itertools import groupby
 import copy
 from functools import reduce, wraps
 from operator import ior
+from dataclasses import asdict
 
 from flask import Flask
 from sqlalchemy import or_
@@ -553,14 +554,13 @@ def _create_jref(document_id: int, paper_id: str, version: int,
 
 def _new_dbevent(event: Event) -> DBEvent:
     """Create an event entry in the database."""
-    # print(event.to_dict())
     return DBEvent(event_type=event.event_type,
                    event_id=event.event_id,
                    event_version=_get_app_version(),
-                   data=event.to_dict(),
+                   data=asdict(event),
                    created=event.created,
-                   creator=event.creator.to_dict(),
-                   proxy=event.proxy.to_dict() if event.proxy else None)
+                   creator=asdict(event.creator),
+                   proxy=asdict(event.proxy) if event.proxy else None)
 
 
 def _preserve_sticky_hold(dbs: models.Submission, before: Submission,
