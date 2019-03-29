@@ -46,7 +46,7 @@ class TestCheckForSimilarTitles(TestCase):
                                   "Generates AddMetadataFlag events")
             self.assertEqual(
                 event.flag_type,
-                MetadataFlag.FlagTypes.POSSIBLE_DUPLICATE_TITLE,
+                MetadataFlag.Type.POSSIBLE_DUPLICATE_TITLE,
                 "Flag has type POSSIBLE_DUPLICATE_TITLE"
             )
 
@@ -68,6 +68,6 @@ class TestCheckForSimilarTitles(TestCase):
                                   "Generates AddMetadataFlag events")
             self.assertEqual(
                 event.flag_type,
-                MetadataFlag.FlagTypes.POSSIBLE_DUPLICATE_TITLE,
+                MetadataFlag.Type.POSSIBLE_DUPLICATE_TITLE,
                 "Flag has type POSSIBLE_DUPLICATE_TITLE"
             )

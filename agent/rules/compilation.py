@@ -6,17 +6,19 @@ import time
 
 from arxiv.base import logging
 from arxiv.integration.api import exceptions
-from ..domain.event import Event, AddProcessStatus
-from ..domain.event.event import Condition
-from ..domain.submission import Submission
-from ..domain.flag import Flag, ContentFlag
-from ..domain.annotation import Feature
-from ..domain.agent import Agent, User
-from ..domain.process import ProcessStatus
-from ..services import plaintext
-from ..services.compiler import Compiler, CompilationFailed, split_task_id
-from ..tasks import is_async
-from ..auth import get_system_token, get_compiler_scopes
+from arxiv.submission.domain.event import Event, AddProcessStatus
+from arxiv.submission.domain.event.event import Condition
+from arxiv.submission.domain.submission import Submission
+from arxiv.submission.domain.flag import Flag, ContentFlag
+from arxiv.submission.domain.annotation import Feature
+from arxiv.submission.domain.agent import Agent, User
+from arxiv.submission.domain.process import ProcessStatus
+from arxiv.submission.services import plaintext
+from arxiv.submission.services.compiler import Compiler, CompilationFailed, split_task_id
+from arxiv.submission.auth import get_system_token, get_compiler_scopes
+
+from ..process import Process
+from ..domain import Trigger
 
 logger = logging.getLogger(__name__)
 
@@ -27,8 +29,8 @@ def when_compilation_starts(event: Event, *args, **kwargs) -> bool:
         and event.status is ProcessStatus.Status.REQUESTED
 
 
-@AddProcessStatus.bind(when_compilation_starts)
-@is_async
+# @AddProcessStatus.bind(when_compilation_starts)
+# @is_async
 def poll_compilation(event: AddProcessStatus, before: Submission,
                      after: Submission, creator: Agent,
                      task_id: Optional[str] = None,

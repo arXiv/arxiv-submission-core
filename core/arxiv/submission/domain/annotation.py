@@ -75,7 +75,7 @@ class ClassifierResults(Annotation):
 class Feature(Annotation):
     """Represents features drawn from the content of the submission."""
 
-    class FeatureTypes(Enum):
+    class Type(Enum):
         """Supported features."""
 
         CHARACTER_COUNT = "chars"
@@ -87,7 +87,7 @@ class Feature(Annotation):
     event_id: str
     created: datetime
     creator: Agent
-    feature_type: FeatureTypes
+    feature_type: Type
     proxy: Optional[Agent] = field(default=None)
     feature_value: Union[int, float] = field(default=0)
     annotation_type: str = field(default='Feature')
@@ -95,7 +95,7 @@ class Feature(Annotation):
     def __post_init__(self):
         """Check our enums."""
         super(Feature, self).__post_init__()
-        self.feature_type = self.FeatureTypes(self.feature_type)
+        self.feature_type = self.Type(self.feature_type)
 
 
 annotation_types = {

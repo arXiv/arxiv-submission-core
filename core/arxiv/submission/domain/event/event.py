@@ -30,8 +30,12 @@ Rule = Tuple[Condition, Callback]
 Store = Callable[['Event', Submission, Submission], Tuple['Event', Submission]]
 
 
+class EventType(type):
+    """Metclass for :class:`.Event`s."""
+
+
 @dataclass()
-class Event:
+class Event(metaclass=EventType):
     """
     Base class for submission-related events/commands.
 

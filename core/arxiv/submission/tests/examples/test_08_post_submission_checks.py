@@ -112,31 +112,31 @@ class TestPostSubmissionChecks(TestCase):
 
         # Check for content flags based on classifier results.
         flag_types = [flag.flag_type for flag in submission.flags.values()]
-        self.assertIn(domain.flag.ContentFlag.FlagTypes.LINE_NUMBERS,
+        self.assertIn(domain.flag.ContentFlag.Type.LINE_NUMBERS,
                       flag_types)
-        self.assertIn(domain.flag.ContentFlag.FlagTypes.LOW_STOP_PERCENT,
+        self.assertIn(domain.flag.ContentFlag.Type.LOW_STOP_PERCENT,
                       flag_types)
-        self.assertIn(domain.flag.ContentFlag.FlagTypes.LOW_STOP,
+        self.assertIn(domain.flag.ContentFlag.Type.LOW_STOP,
                       flag_types)
 
         # Check for flags based on duplicate title checks.
         self.assertIn(
-            domain.flag.MetadataFlag.FlagTypes.POSSIBLE_DUPLICATE_TITLE,
+            domain.flag.MetadataFlag.Type.POSSIBLE_DUPLICATE_TITLE,
             flag_types
         )
 
         # Check for features returned by the classifier.
         feature_types = [feature.feature_type
                          for feature in submission.features.values()]
-        self.assertIn(domain.annotation.Feature.FeatureTypes.WORD_COUNT,
+        self.assertIn(domain.annotation.Feature.Type.WORD_COUNT,
                       feature_types)
-        self.assertIn(domain.annotation.Feature.FeatureTypes.STOPWORD_COUNT,
+        self.assertIn(domain.annotation.Feature.Type.STOPWORD_COUNT,
                       feature_types)
-        self.assertIn(domain.annotation.Feature.FeatureTypes.STOPWORD_PERCENT,
+        self.assertIn(domain.annotation.Feature.Type.STOPWORD_PERCENT,
                       feature_types)
-        self.assertIn(domain.annotation.Feature.FeatureTypes.CHARACTER_COUNT,
+        self.assertIn(domain.annotation.Feature.Type.CHARACTER_COUNT,
                       feature_types)
-        self.assertIn(domain.annotation.Feature.FeatureTypes.PAGE_COUNT,
+        self.assertIn(domain.annotation.Feature.Type.PAGE_COUNT,
                       feature_types)
 
         # Check the classic database.

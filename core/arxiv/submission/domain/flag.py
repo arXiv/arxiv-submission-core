@@ -40,7 +40,7 @@ class Flag:
 class ContentFlag(Flag):
     """A flag related to the content of the submission."""
 
-    class FlagTypes(Enum):
+    class Type(Enum):
         """Supported content flags."""
 
         LOW_STOP = 'low stopwords'
@@ -59,7 +59,7 @@ class ContentFlag(Flag):
 class MetadataFlag(Flag):
     """A flag related to the submission metadata."""
 
-    class FlagTypes(Enum):
+    class Type(Enum):
         """Supported metadata flags."""
 
         POSSIBLE_DUPLICATE_TITLE = 'possible duplicate title'
@@ -71,7 +71,7 @@ class MetadataFlag(Flag):
 class UserFlag(Flag):
     """A flag related to the submitter."""
 
-    class FlagTypes(Enum):
+    class Type(Enum):
         """Supported user flags."""
 
         RATE = 'rate'
@@ -86,6 +86,6 @@ flag_datatypes = {
 
 def flag_factory(**data) -> Flag:
     cls = flag_datatypes[data.pop('flag_datatype')]
-    if not isinstance(data['flag_type'], cls.FlagTypes):
-        data['flag_type'] = cls.FlagTypes(data['flag_type'])
+    if not isinstance(data['flag_type'], cls.Type):
+        data['flag_type'] = cls.Type(data['flag_type'])
     return cls(**data)

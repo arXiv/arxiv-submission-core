@@ -87,7 +87,7 @@ class TestDumpLoad(TestCase):
                     event_id='asdf123543',
                     created=datetime.now(UTC),
                     creator=system,
-                    feature_type=Feature.FeatureTypes.PAGE_COUNT,
+                    feature_type=Feature.Type.PAGE_COUNT,
                     feature_value=12345678.32
                 )
             },
@@ -96,7 +96,7 @@ class TestDumpLoad(TestCase):
                     event_id='fooflag1',
                     creator=system,
                     created=datetime.now(UTC),
-                    flag_type=ContentFlag.FlagTypes.LOW_STOP,
+                    flag_type=ContentFlag.Type.LOW_STOP,
                     flag_data=25,
                     comment='no comment'
                 )

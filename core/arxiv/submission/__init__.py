@@ -190,7 +190,6 @@ from .core import *
 from .domain.submission import Submission, SubmissionMetadata, Author
 from .domain.agent import Agent, User, System, Client
 from .services import classic
-from . import rules
 
 
 def init_app(app: Flask) -> None:

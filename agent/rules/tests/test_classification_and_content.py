@@ -292,7 +292,7 @@ class TestCheckStopwordCount(TestCase):
     def test_check_stop_count(self):
         """A stopword count feature is added, and we check its value."""
         event = AddFeature(creator=self.creator,
-                           feature_type=Feature.FeatureTypes.STOPWORD_COUNT,
+                           feature_type=Feature.Type.STOPWORD_COUNT,
                            feature_value=5)
         before, after = self.submission, event.apply(self.submission)
 
@@ -304,7 +304,7 @@ class TestCheckStopwordCount(TestCase):
         self.assertIsInstance(events[0], AddContentFlag,
                               "Generates AddContentFlag event")
         self.assertEqual(events[0].flag_type,
-                         ContentFlag.FlagTypes.LOW_STOP,
+                         ContentFlag.Type.LOW_STOP,
                          "Adds a low stopword count flag")
         self.assertEqual(events[0].flag_data,
                          event.feature_value,
@@ -319,7 +319,7 @@ class TestCheckStopwordCount(TestCase):
     def test_check_stop_count_is_ok(self):
         """The stopword count is high enough for comfort."""
         event = AddFeature(creator=self.creator,
-                           feature_type=Feature.FeatureTypes.STOPWORD_COUNT,
+                           feature_type=Feature.Type.STOPWORD_COUNT,
                            feature_value=25)
         before, after = self.submission, event.apply(self.submission)
 
@@ -355,7 +355,7 @@ class TestCheckStopwordPercent(TestCase):
     def test_check_stop_count(self):
         """A stopword count feature is added, and we check its value."""
         event = AddFeature(creator=self.creator,
-                           feature_type=Feature.FeatureTypes.STOPWORD_PERCENT,
+                           feature_type=Feature.Type.STOPWORD_PERCENT,
                            feature_value=0.01)
         before, after = self.submission, event.apply(self.submission)
 
@@ -367,7 +367,7 @@ class TestCheckStopwordPercent(TestCase):
         self.assertIsInstance(events[0], AddContentFlag,
                               "Generates AddContentFlag event")
         self.assertEqual(events[0].flag_type,
-                         ContentFlag.FlagTypes.LOW_STOP_PERCENT,
+                         ContentFlag.Type.LOW_STOP_PERCENT,
                          "Adds a low stopword percent flag")
         self.assertEqual(events[0].flag_data,
                          event.feature_value,
@@ -382,7 +382,7 @@ class TestCheckStopwordPercent(TestCase):
     def test_check_stop_percent_is_ok(self):
         """The stopword count is high enough for comfort."""
         event = AddFeature(creator=self.creator,
-                           feature_type=Feature.FeatureTypes.STOPWORD_PERCENT,
+                           feature_type=Feature.Type.STOPWORD_PERCENT,
                            feature_value=0.06)
         before, after = self.submission, event.apply(self.submission)
 

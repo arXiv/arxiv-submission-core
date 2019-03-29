@@ -129,7 +129,7 @@ from ..annotation import Comment, Feature, ClassifierResults, \
 
 from ...exceptions import InvalidEvent
 from ..util import get_tzaware_utc_now
-from .event import Event, event_factory
+from .event import Event, event_factory, EventType
 from .request import RequestCrossList, RequestWithdrawal, ApplyRequest, \
     RejectRequest, ApproveRequest, CancelRequest
 from . import validators
@@ -1136,14 +1136,14 @@ class AddFeature(Event):
     NAME = "add feature metadata"
     NAMED = "feature metadata added"
 
-    feature_type: Feature.FeatureTypes = \
-        field(default=Feature.FeatureTypes.WORD_COUNT)
+    feature_type: Feature.Type = \
+        field(default=Feature.Type.WORD_COUNT)
     feature_value: Union[float, int] = field(default=0)
 
     def validate(self, submission: Submission) -> None:
         """Verify that the feature type is a known value."""
-        if self.feature_type not in Feature.FeatureTypes:
-            valid_types = ", ".join([ft.value for ft in Feature.FeatureTypes])
+        if self.feature_type not in Feature.Type:
+            valid_types = ", ".join([ft.value for ft in Feature.Type])
             raise InvalidEvent(self, "Must be one of %s" % valid_types)
 
     def project(self, submission: Submission) -> Submission:
