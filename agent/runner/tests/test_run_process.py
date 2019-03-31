@@ -2,8 +2,8 @@
 
 from unittest import TestCase, mock
 
-from .. import process
-from ..runner import base, async
+from ... import process
+from ...runner import base, async
 
 
 class TestProcess(TestCase):
@@ -32,7 +32,7 @@ class TestProcess(TestCase):
             'event': mock.MagicMock(submission_id=self.submission_id),
         }
 
-    @mock.patch(f'{process.__name__}.AddProcessStatus', mock.MagicMock)
+    @mock.patch(f'{process.__name__}.base.AddProcessStatus', mock.MagicMock)
     @mock.patch(f'{base.__name__}.save')
     def test_call(self, mock_save):
         """Calling the process runs all steps in order."""
@@ -66,7 +66,7 @@ class TestProcess(TestCase):
         self.assertEqual(saved_events[3][0].step, 'step_c')
         self.assertEqual(saved_events[3][1], self.submission_id)
 
-    @mock.patch(f'{process.__name__}.AddProcessStatus', mock.MagicMock)
+    @mock.patch(f'{process.__name__}.base.AddProcessStatus', mock.MagicMock)
     @mock.patch(f'{base.__name__}.save')
     def test_failing_process(self, mock_save):
         """Calling the process runs all steps in order, but one fails."""
