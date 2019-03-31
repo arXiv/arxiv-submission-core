@@ -80,7 +80,7 @@ class ProposeReclassification(Process):
         if len(results) == 0:    # Nothing to do.
             return
 
-        if self._skip(self, trigger):
+        if self._skip(trigger):
             return
 
         user_primary = trigger.after.primary_classification.category
@@ -89,7 +89,7 @@ class ProposeReclassification(Process):
         # probability < 0.5 (logodds < 0) and there is an alternative, propose
         # the alternatve (preference for within-archive). otherwise make no
         # proposal
-        if self._user_category_ranks_highly():
+        if self._user_category_ranks_highly(trigger):
             return
 
         # the best alternative is the suggestion with the highest probability

@@ -2,6 +2,7 @@
 
 from .base import Process, ProcessType, step, Recoverable, Failed, Retry
 from .classification_and_content import \
+    PlainTextExtraction, \
     RunAutoclassifier, \
     CheckStopwordPercent, \
     CheckStopwordCount

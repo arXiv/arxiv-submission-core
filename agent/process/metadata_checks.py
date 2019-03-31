@@ -53,6 +53,7 @@ class CheckForSimilarTitles(Process):
     Add an annotation to the submission if a title is more similar to the
     current submission's title than a configurable threshold.
     """
+
     def _get_title(self, trigger: Trigger) -> str:
         try:
             return trigger.after.metadata.title
@@ -106,15 +107,27 @@ class CheckTitleForUnicodeAbuse(Process):
     This rule adds a flag if the ratio of non-ASCII to ASCII characters
     is too high.
     """
+
     def _get_title(self, trigger: Trigger) -> str:
         try:
+            if trigger.after.metadata.title is None:
+                self.fail(message='Missing title or post-event state')
             return trigger.after.metadata.title
         except AttributeError as exc:
             self.fail(exc, 'Missing title or post-event state')
 
+    def _clear_previous_flags(self, trigger: Trigger, emit: Callable) -> None:
+        for flag_id, flag in trigger.after.flags.items():
+            if isinstance(flag, MetadataFlag) and \
+                    flag.flag_type is MetadataFlag.Type.CHARACTER_SET and \
+                    flag.field == 'title':
+                emit(RemoveFlag(creator=self.agent, flag_id=flag_id))
+
     @step()
     def check_title(self, previous: Optional, trigger: Trigger,
                     emit: Callable) -> None:
+        """Check title for low ASCII content."""
+        self._clear_previous_flags(trigger, emit)
         level = proportion_ascii(self._get_title(trigger))
         if level < trigger.params['METADATA_ASCII_THRESHOLD']:
             comment = 'Possible excessive use of non-ASCII characters.'
@@ -134,15 +147,27 @@ class CheckAbstractForUnicodeAbuse(Process):
     This rule adds a flag if the ratio of non-ASCII to ASCII characters
     is too high.
     """
+
     def _get_abstract(self, trigger: Trigger) -> str:
         try:
+            if trigger.after.metadata.abstract is None:
+                self.fail(message='Missing abstract or post-event state')
             return trigger.after.metadata.abstract
         except AttributeError as exc:
             self.fail(exc, 'Missing abstract or post-event state')
 
+    def _clear_previous_flags(self, trigger: Trigger, emit: Callable) -> None:
+        for flag_id, flag in trigger.after.flags.items():
+            if isinstance(flag, MetadataFlag) and \
+                    flag.flag_type is MetadataFlag.Type.CHARACTER_SET and \
+                    flag.field == 'abstract':
+                emit(RemoveFlag(creator=self.agent, flag_id=flag_id))
+
     @step()
     def check_abstract(self, previous: Optional, trigger: Trigger,
                        emit: Callable) -> None:
+        """Check abstract for low ASCII content."""
+        self._clear_previous_flags(trigger, emit)
         level = proportion_ascii(self._get_abstract(trigger))
         if level < trigger.params['METADATA_ASCII_THRESHOLD']:
             comment = 'Possible excessive use of non-ASCII characters.'

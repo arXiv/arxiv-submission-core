@@ -13,8 +13,8 @@ from sqlalchemy import BigInteger, Column, DateTime, Enum, ForeignKey, \
 from sqlalchemy.dialects.mysql import DATETIME
 
 from arxiv.submission.domain.event import AddProcessStatus
-from .rules import Rule
-from .process import Process
+from ..rules import Rule
+from ..process import Process
 
 db: SQLAlchemy = SQLAlchemy()
 

@@ -5,6 +5,7 @@ from itertools import count
 import time
 from datetime import datetime
 from pytz import UTC
+from contextlib import contextmanager
 
 from arxiv.taxonomy import CATEGORIES, Category
 from arxiv.integration.api import exceptions
@@ -24,9 +25,6 @@ from ..domain import Trigger
 class PlainTextExtraction(Process):
     """Extract plain text from a compiled PDF."""
 
-    recoverable = (exceptions.BadResponse, exceptions.ConnectionFailed,
-                   exceptions.SecurityException)
-
     def source_id(self, trigger: Trigger) -> int:
         """Get the source ID for the submission content."""
         try:
@@ -34,16 +32,29 @@ class PlainTextExtraction(Process):
         except AttributeError as exc:
             self.fail(exc, 'No source content identifier on post-event state')
 
+    def handle_plaintext_exception(self, exc: Exception) -> None:
+        """Handle exceptions raised when calling the plain text service."""
+        exc_type = type(exc)
+
+        if exc_type in (exceptions.BadResponse, exceptions.ConnectionFailed):
+            raise Recoverable('Encountered %s; try again' % exc) from exc
+        elif exc_type is ExtractionFailed:
+            self.fail(exc, 'Extraction service failed to extract text')
+        elif exc_type is exceptions.RequestFailed:
+            if exc.status_code >= 500:
+                msg = 'Extraction service choked: %i' % exc.status_code
+                raise Recoverable(msg) from exc
+            self.fail(exc, 'Unrecoverable exception: %i' % exc.status_code)
+        self.fail(exc, 'Unhandled exception')
+
     @step(max_retries=None)
     def start_extraction(self, previous: Optional, trigger: Trigger,
                          emit: Callable) -> None:
         """Request extraction by the plain text service."""
         try:
             PlainTextService.request_extraction(self.source_id(trigger))
-        except self.recoverable as exc:
-            raise Recoverable('Encountered %s; try again' % exc) from exc
-        except ExtractionFailed as exc:
-            self.fail(exc, 'Extraction service failed to extract text')
+        except Exception as exc:
+            self.handle_plaintext_exception(exc)
 
     @step(max_retries=None, delay=1, backoff=1, jitter=(0, 1))
     def poll_extraction(self, previous: Optional, trigger: Trigger,
@@ -52,12 +63,8 @@ class PlainTextExtraction(Process):
         source_id = self.source_id(trigger)
         try:
             complete = PlainTextService.extraction_is_complete(source_id)
-        except ExtractionFailed as exc:
-            self.fail(exc, 'Extraction service failed to extract text')
-        except self.recoverable as exc:
-            raise Recoverable('Encountered %s; try again' % exc) from exc
         except Exception as exc:
-            self.fail(exc, 'Encountered unrecoverable request error')
+            self.handle_plaintext_exception(exc)
         if not complete:
             raise Retry('Not complete; try again')
 
@@ -68,10 +75,8 @@ class PlainTextExtraction(Process):
         source_id = self.source_id(trigger)
         try:
             return PlainTextService.retrieve_content(source_id)
-        except self.recoverable as exc:
-            raise Recoverable('Encountered %s; try again' % exc) from exc
         except Exception as exc:
-            self.fail(exc, 'Encountered unrecoverable request error')
+            self.handle_plaintext_exception(exc)
 
 
 class RunAutoclassifier(PlainTextExtraction):
@@ -91,6 +96,19 @@ class RunAutoclassifier(PlainTextExtraction):
         'linenos': ContentFlag.Type.LINE_NUMBERS
     }
 
+    def handle_classifier_exception(self, exc: Exception) -> None:
+        """Handle exceptions raised when calling the classifier service."""
+        exc_type = type(exc)
+
+        if exc_type in (exceptions.BadResponse, exceptions.ConnectionFailed):
+            raise Recoverable('Encountered %s; try again' % exc) from exc
+        elif exc_type is exceptions.RequestFailed:
+            if exc.status_code >= 500:
+                msg = 'Classifier service choked: %i' % exc.status_code
+                raise Recoverable(msg) from exc
+            self.fail(exc, 'Unrecoverable exception: %i' % exc.status_code)
+        self.fail(exc, 'Unhandled exception')
+
     @step(max_retries=None)
     def call_classifier(self, content: bytes, trigger: Trigger,
                         emit: Callable) -> None:
@@ -98,10 +116,8 @@ class RunAutoclassifier(PlainTextExtraction):
         try:
             # The autoclassifier runs synchronously; it's pretty fast.
             self.process_result(Classifier.classify(content), trigger, emit)
-        except self.recoverable as exc:
-            raise Recoverable('Encountered %s; try again' % exc) from exc
         except Exception as exc:
-            self.fail(exc, 'Encountered unrecoverable request error')
+            self.handle_classifier_exception(exc)
 
     def process_result(self, result: Tuple, trigger: Trigger,
                        emit: Callable) -> None:
@@ -110,7 +126,7 @@ class RunAutoclassifier(PlainTextExtraction):
         results = [{'category': suggestion.category,
                    'probability': suggestion.probability}
                    for suggestion in suggestions]
-        emit(AddClassifierResults(creator=trigger.creator, results=results))
+        emit(AddClassifierResults(creator=self.agent, results=results))
 
         for flag in flags:
             now = datetime.now(UTC).isoformat()
@@ -142,7 +158,7 @@ class CheckStopwordPercent(Process):
     """Check the submission content for too low percentage of stopwords."""
 
     @step()
-    def check_stop_percent(self, content: bytes, trigger: Trigger,
+    def check_stop_percent(self, previous: Optional, trigger: Trigger,
                            emit: Callable) -> None:
         """Flag the submission if the percentage of stopwords is too low."""
         feats = [feature for feature in trigger.after.features.values()
@@ -163,13 +179,13 @@ class CheckStopwordCount(Process):
     """Check the submission content for too low stopword count."""
 
     @step()
-    def check_stop_count(self, content: bytes, trigger: Trigger,
+    def check_stop_count(self, previous: Optional, trigger: Trigger,
                          emit: Callable) -> None:
         """Flag the submission if the number of stopwords is too low."""
         feats = [feature for feature in trigger.after.features.values()
                  if feature.feature_type is Feature.Type.STOPWORD_COUNT]
         if not feats:
-            self.fail(message='No stopword percentage feature on submission')
+            self.fail(message='No stopword count feature on submission')
 
         # TODO: we are assuming that there is only one. Is that ever not true?
         if feats[0].feature_value < trigger.params['LOW_STOP']:

@@ -5,6 +5,7 @@ from typing import Iterable, Optional, Callable
 from flask import render_template
 
 from arxiv import mail
+from arxiv.base import logging
 from arxiv.base.globals import get_application_config
 
 from arxiv.submission.domain.event import Event, FinalizeSubmission
@@ -14,6 +15,8 @@ from arxiv.submission import schedule
 
 from ..process import Process, step
 from ..domain import Trigger
+
+logger = logging.getLogger(__name__)
 
 
 class SendConfirmationEmail(Process):
@@ -27,6 +30,7 @@ class SendConfirmationEmail(Process):
             submission_id = trigger.after.submission_id
             recipient = trigger.event.creator
         except AttributeError as exc:
+            logger.error('Missing event or post-event submission state')
             self.fail(exc, 'Missing event or post-event submission state')
 
         context = {
@@ -37,6 +41,8 @@ class SendConfirmationEmail(Process):
                 schedule.next_announcement_time(trigger.after.submitted),
             'freeze_time': schedule.next_freeze_time(trigger.after.submitted),
         }
+        logger.info('Sending confirmation email to %s for submission %i',
+                    recipient.email, submission_id)
         mail.send(recipient.email,
                   "Submission to arXiv received",
                   render_template("submission-core/confirmation-email.txt",

@@ -7,33 +7,33 @@ from pytz import UTC, timezone
 from flask import Flask
 
 from arxiv import mail
-from arxiv.base import Base
-from ... import init_app, config
-from ...domain.event import FinalizeSubmission
-from ...domain.agent import User, System
-from ...domain.submission import Submission, SubmissionContent, \
+from arxiv.submission.domain.event import FinalizeSubmission
+from arxiv.submission.domain.agent import User, System
+from arxiv.submission.domain.submission import Submission, SubmissionContent, \
     SubmissionMetadata, Classification
-from ..email_notifications import confirm_submission
+
+from .. import SendConfirmationEmail
+from .. import email_notifications
+from .. import Failed
+from ...domain import Trigger
+from ...runner import ProcessRunner
+from ...factory import create_app
 
 sys = System(__name__)
 eastern = timezone('US/Eastern')
 
 
-class TestSendEmailOnSubmission(TestCase):
-    """Tests for :mod:`.email_notifications`."""
+class TestSendConfirmationEmail(TestCase):
+    """Test the :class:`.SendConfirmationEmail` process."""
 
     def setUp(self):
         """We have a submission."""
+        self.app = create_app()
         self.creator = User(native_id=1234, email='something@else.com',
                             forename='Ross', surname='Perot')
-        self.app = Flask(__name__)
-        self.app.config.from_object(config)
-        Base(self.app)
-        mail.init_app(self.app)
-        init_app(self.app)
-
+        self.submission_id = 12345
         self.before = mock.MagicMock(
-            submission_id=12345,
+            submission_id=self.submission_id,
             metadata=mock.MagicMock(
                 title="The best title",
                 authors_display="Frank Underwood (POTUS)",
@@ -78,28 +78,29 @@ class TestSendEmailOnSubmission(TestCase):
             submitted=datetime(2018, 3, 4, 19, 34, 2, tzinfo=UTC),
             finalized=True
         )
+        self.event = FinalizeSubmission(creator=self.creator,
+                                        created=datetime.now(UTC))
+        self.process = SendConfirmationEmail(self.submission_id)
 
-    @mock.patch(f'{mail.__name__}.mail.smtplib.SMTP')
-    def test_email_confirmation(self, mock_SMTP):
-        """Confirmation email should be sent to the submitter."""
-        mock_SMTP_instance = mock.MagicMock()
-        mock_SMTP.return_value.__enter__.return_value = mock_SMTP_instance
-
-        event = mock.MagicMock(creator=self.creator, created=datetime.now(UTC))
-
+    @mock.patch(f'{email_notifications.__name__}.mail')
+    def test_bad_trigger(self, mock_mail):
+        """The trigger lacks sufficient data to send an email."""
+        trigger = Trigger()
+        events = []
         with self.app.app_context():
-            events = confirm_submission(event, self.before, self.after, sys)
+            with self.assertRaises(Failed):     # The process explicitly fails.
+                self.process.send(None, trigger, events.append)
 
-        self.assertEqual(len(list(events)), 0, "Does not produce any events")
+    @mock.patch(f'{email_notifications.__name__}.mail')
+    def test_email_confirmation(self, mock_mail):
+        """Confirmation email should be sent to the submitter."""
+        trigger = Trigger(event=self.event, actor=self.creator,
+                          before=self.before, after=self.after)
+        events = []
+        with self.app.app_context():
+            self.process.send(None, trigger, events.append)
 
-        msg = mock_SMTP_instance.send_message.call_args[0][0]
-        content = str(msg.get_body(preferencelist=('plain')))
-
-        self.assertEqual(msg['From'], 'noreply@arxiv.org')
-        self.assertEqual(msg['To'], self.after.creator.email)
-
-        self.assertIn('Content-Type: text/plain; charset="utf-8"', content,
-                      'Content-type header is set')
+        recipient, subject, content, html = mock_mail.send.call_args[0]
         self.assertIn('We have received your submission to arXiv.', content)
         self.assertIn('Your article is scheduled to be announced at Mon, 5 Mar'
                       ' 2018 20:00:00 ET', content)
@@ -113,8 +114,10 @@ class TestSendEmailOnSubmission(TestCase):
         self.assertIn(f'Title: {self.after.metadata.title}', content)
         self.assertIn(f'Authors: {self.after.metadata.authors_display}',
                       content)
-        self.assertIn(f'Categories: {self.after.primary_classification.category}',
-                      content)
+        self.assertIn(
+            f'Categories: {self.after.primary_classification.category}',
+            content
+        )
         self.assertIn(f'MSC classes: {self.after.metadata.msc_class}', content)
         self.assertIn(f'ACM classes: {self.after.metadata.acm_class}', content)
         self.assertIn(f'Journal reference: {self.after.metadata.journal_ref}',

@@ -31,10 +31,6 @@ class Counts(NamedTuple):
     words: int
 
 
-class RequestFailed(ConnectionError):
-    """The request to the classifier service failed."""
-
-
 class Classifier(service.HTTPIntegration):
     """Represents an interface to the classifier service."""
 

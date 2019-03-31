@@ -3,21 +3,30 @@
 from unittest import TestCase, mock
 from datetime import datetime
 from pytz import UTC
+import copy
 
-from ...domain.event import AddClassifierResults, SetPrimaryClassification, \
-    AddSecondaryClassification, AddProposal, FinalizeSubmission, AcceptProposal
-from ...domain.agent import User, System
-from ...domain.submission import Submission, SubmissionContent, \
+from arxiv.submission.domain.event import AddClassifierResults, \
+    SetPrimaryClassification, AddSecondaryClassification, AddProposal, \
+    FinalizeSubmission, AcceptProposal
+from arxiv.submission.domain.agent import User, System
+from arxiv.submission.domain.submission import Submission, SubmissionContent, \
     Classification, License, SubmissionMetadata
+from arxiv.submission.domain.proposal import Proposal
+from arxiv.submission.domain.annotation import ClassifierResults
 
-from ...services.classifier.classifier import Classifier
-from ..import reclassification
+from arxiv.submission.services.classifier.classifier import Classifier
+
+from ..import reclassification, ProposeReclassification, \
+    ProposeCrossListFromPrimaryCategory, AcceptSystemCrossListProposals
+from ...domain import Trigger
+from ...factory import create_app
+from ... import config
 
 prob = Classifier.probability
 sys = System(__name__)
 
 
-class TestProposeFromClassifierResults(TestCase):
+class TestProposeReclassification(TestCase):
     """We use classifier results to propose reclassification."""
 
     # These test cases are ported from
@@ -77,19 +86,35 @@ class TestProposeFromClassifierResults(TestCase):
                 compressed_size=58493
             )
         )
+        self.process = ProposeReclassification(self.submission.submission_id)
 
     def test_suggestions(self):
         """Test suggestions using :const:`.CASES`."""
+        before = copy.deepcopy(self.submission)
         for case in self.CASES:
             self.submission.primary_classification \
                 = Classification(category=case['primary_category'])
+            self.submission.annotations = {
+                'asdf1234': ClassifierResults(
+                    event_id='asdf1234',
+                    creator=self.creator,
+                    created=datetime.now(UTC),
+                    results=case['results']
+                )
+            }
+            events = []
+            params = {
+                'NO_RECLASSIFY_ARCHIVES': config.NO_RECLASSIFY_ARCHIVES,
+                'NO_RECLASSIFY_CATEGORIES': config.NO_RECLASSIFY_CATEGORIES,
+                'RECLASSIFY_PROPOSAL_THRESHOLD':
+                    config.RECLASSIFY_PROPOSAL_THRESHOLD
+            }
             event = AddClassifierResults(creator=self.creator,
                                          results=case['results'])
-            before, after = self.submission, event.apply(self.submission)
-
-            events = [
-                e for e in reclassification.propose(event, before, after, sys)
-            ]
+            trigger = Trigger(event=event, actor=self.creator,
+                              before=before, after=self.submission,
+                              params=params)
+            self.process.propose_primary(None, trigger, events.append)
 
             if case['expected_category'] is None:
                 self.assertEqual(len(events), 0, "No proposals are made")
@@ -131,19 +156,20 @@ class TestProposeCrossFromPrimary(TestCase):
             abstract='oof',
             authors_display='Bloggs, J'
         )
+        self.process = \
+            ProposeCrossListFromPrimaryCategory(self.submission.submission_id)
 
-    @mock.patch(f'{reclassification.__name__}.PRIMARY_TO_SECONDARY',
-                {'cs.AI': 'math.GM'})
     def test_propose_cross(self):
         """Propose a cross-list category based on primary."""
         self.submission.primary_classification = Classification('cs.AI')
         event = FinalizeSubmission(creator=self.creator)
-        before, after = self.submission, event.apply(self.submission)
+        events = []
+        params = {'AUTO_CROSS_FOR_PRIMARY': {'cs.AI': 'math.GM'}}
+        trigger = Trigger(event=event, actor=self.creator,
+                          before=self.submission, after=self.submission,
+                          params=params)
+        self.process.propose(None, trigger, events.append)
 
-        events = list(
-            reclassification.propose_cross_from_primary(event, before, after,
-                                                        sys)
-        )
         self.assertIsInstance(events[0], AddProposal,
                               'Adds a proposal')
         self.assertEqual(events[0].proposed_event_type,
@@ -153,33 +179,29 @@ class TestProposeCrossFromPrimary(TestCase):
                          'Proposes cross-list category')
         self.assertEqual(events[0].comment, 'cs.AI is primary')
 
-    @mock.patch(f'{reclassification.__name__}.PRIMARY_TO_SECONDARY',
-                {'cs.AI': 'math.GM'})
     def test_no_rule_exists(self):
         """Propose a cross-list category based on primary."""
         self.submission.primary_classification = Classification('cs.DL')
         event = FinalizeSubmission(creator=self.creator)
-        before, after = self.submission, event.apply(self.submission)
-
-        events = list(
-            reclassification.propose_cross_from_primary(event, before, after,
-                                                        sys)
-        )
+        events = []
+        params = {'AUTO_CROSS_FOR_PRIMARY': {'cs.AI': 'math.GM'}}
+        trigger = Trigger(event=event, actor=self.creator,
+                          before=self.submission, after=self.submission,
+                          params=params)
+        self.process.propose(None, trigger, events.append)
         self.assertEqual(len(events), 0, 'No proposals are made')
 
-    @mock.patch(f'{reclassification.__name__}.PRIMARY_TO_SECONDARY',
-                {'cs.AI': 'math.GM'})
     def test_cross_already_set(self):
         """The cross-list category is already present."""
         self.submission.primary_classification = Classification('cs.AI')
         self.submission.secondary_classification = [Classification('math.GM')]
         event = FinalizeSubmission(creator=self.creator)
-        before, after = self.submission, event.apply(self.submission)
-
-        events = list(
-            reclassification.propose_cross_from_primary(event, before, after,
-                                                        sys)
-        )
+        events = []
+        params = {'AUTO_CROSS_FOR_PRIMARY': {'cs.AI': 'math.GM'}}
+        trigger = Trigger(event=event, actor=self.creator,
+                          before=self.submission, after=self.submission,
+                          params=params)
+        self.process.propose(None, trigger, events.append)
         self.assertEqual(len(events), 0, 'No proposals are made')
 
 
@@ -202,18 +224,24 @@ class TestAcceptSystemCrossProposal(TestCase):
                 compressed_size=58493
             )
         )
+        self.process = \
+            AcceptSystemCrossListProposals(self.submission.submission_id)
 
     def test_system_cross_proposal(self):
         """A cross-list proposal is generated by the system."""
         event = AddProposal(creator=sys,
                             proposed_event_type=AddSecondaryClassification,
                             proposed_event_data={'category': 'cs.DL'})
-        before, after = self.submission, event.apply(self.submission)
-
-        events = list(
-            reclassification.accept_system_cross_proposal(event, before, after,
-                                                          sys)
+        self.submission.proposals[event.event_id] = Proposal(
+            event_id=event.event_id,
+            creator=sys,
+            proposed_event_type=AddSecondaryClassification,
+            proposed_event_data={'category': 'cs.DL'}
         )
+        events = []
+        trigger = Trigger(event=event, actor=sys, before=self.submission,
+                          after=self.submission, params={})
+        self.process.accept(None, trigger, events.append)
         self.assertIsInstance(events[0], AcceptProposal,
                               'The proposal is accepted')
         self.assertEqual(events[0].proposal_id, event.event_id,
@@ -224,10 +252,15 @@ class TestAcceptSystemCrossProposal(TestCase):
         event = AddProposal(creator=self.creator,
                             proposed_event_type=AddSecondaryClassification,
                             proposed_event_data={'category': 'cs.DL'})
-        before, after = self.submission, event.apply(self.submission)
-
-        events = list(
-            reclassification.accept_system_cross_proposal(event, before, after,
-                                                          sys)
+        self.submission.proposals[event.event_id] = Proposal(
+            event_id=event.event_id,
+            creator=self.creator,
+            proposed_event_type=AddSecondaryClassification,
+            proposed_event_data={'category': 'cs.DL'}
         )
+        events = []
+        trigger = Trigger(event=event, actor=self.creator,
+                          before=self.submission,
+                          after=self.submission, params={})
+        self.process.accept(None, trigger, events.append)
         self.assertEqual(len(events), 0, 'No proposal is generated')

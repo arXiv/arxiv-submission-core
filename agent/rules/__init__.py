@@ -43,7 +43,7 @@ def evaluate(event: Event, before: Submission, after: Submission) -> None:
         if rule.condition(event, before, after):
             params = rule.params(event, before, after)
             trigger = Trigger(event=event, before=before, after=after,
-                              agent=event.creator, params=params)
+                              actor=event.creator, params=params)
             process = rule.process(event.submission_id)
             runner = AsyncProcessRunner(process)
             runner.run(trigger)

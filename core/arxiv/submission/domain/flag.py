@@ -59,6 +59,8 @@ class ContentFlag(Flag):
 class MetadataFlag(Flag):
     """A flag related to the submission metadata."""
 
+    field: Optional[str] = field(default=None)
+
     class Type(Enum):
         """Supported metadata flags."""
 

@@ -30,6 +30,7 @@ def create_app() -> Flask:
 
     wrap(app, [request_logs.ClassicLogsMiddleware])
 
-    if not database.tables_exist():
-        database.create_all()
     return app
+
+# if not database.tables_exist():
+#     database.create_all()

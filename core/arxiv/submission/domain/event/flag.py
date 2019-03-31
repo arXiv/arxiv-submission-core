@@ -113,7 +113,8 @@ class AddMetadataFlag(AddFlag):
             proxy=self.proxy,
             flag_type=self.flag_type,
             flag_data=self.flag_data,
-            comment=self.comment
+            comment=self.comment,
+            field=self.field
         )
         return submission
 
