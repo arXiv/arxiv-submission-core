@@ -15,6 +15,7 @@ from .proposal import Proposal
 from .process import ProcessStatus
 from .flag import Flag, flag_factory
 from .util import get_tzaware_utc_now, dict_coerce, list_coerce
+from .compilation import Compilation
 
 
 @dataclass
@@ -94,90 +95,90 @@ class SubmissionContent:
 
 
 # TODO: revisit start_time
-@dataclass
-class Compilation:
-    """Represents a submission compilation."""
-
-    class Status(Enum):      # type: ignore
-        """Represents the status of a requested compilation."""
-
-        IN_PROGRESS = "in_progress"
-        """Compilation has been requested."""
-
-        SUCCEEDED = "succeeded"
-        """Compilation successfully completed."""
-
-        FAILED = "failed"
-        """Compilation failed."""
-
-    source_id: str
-    """This is the ID of the source upload workspace."""
-    checksum: str
-    """The checksum of the source package to compile."""
-    output_format: str
-    """Compilation target format."""
-    start_time: datetime
-    end_time: Optional[datetime]
-    status: Status = field(default=Status.IN_PROGRESS)
-
-    def __post_init__(self):
-        """Make sure that :attr:`.status` is a :class:`.Status`."""
-        if self.status and type(self.status) is str:
-            self.status = self.Status(self.status)
-
-    @property
-    def identifier(self) -> str:
-        return f"{self.source_id}/{self.checksum}/{self.output_format}"
-
-    @classmethod
-    def from_processes(cls, processes: List[ProcessStatus]) -> 'Compilation':
-        """
-        Get a :class:`.Compilation` from :attr:`.Submission.processes`.
-
-        Parameters
-        ----------
-        processes : list
-            List of :class:`.ProcessStatus` instances from a submission.
-
-        Returns
-        -------
-        :class:`.Compilation`
-            Static representation of the compilation attempt.
-
-        """
-        processes = sorted((p for p in processes
-                            if p.process is ProcessStatus.Process.COMPILATION),
-                           key=lambda p: p.created)
-        if not processes:
-            return None
-        finished_states = [ProcessStatus.Status.SUCCEEDED,
-                           ProcessStatus.Status.FAILED]
-        latest = processes[-1]
-        source_id, checksum, output_format = \
-            latest.process_identifier.split("/")
-        if latest.status in finished_states:
-            end_time = latest.created
-            for proc in processes[::-1]:
-                if proc.process_identifier == latest.process_identifier \
-                        and proc.status is ProcessStatus.Status.REQUESTED:
-                    start_time = proc.created
-                    break
-        else:
-            start_time = latest.created
-            end_time = None
-        status_map = {
-            ProcessStatus.Status.REQUESTED: cls.Status.IN_PROGRESS,
-            ProcessStatus.Status.SUCCEEDED: cls.Status.SUCCEEDED,
-            ProcessStatus.Status.FAILED: cls.Status.FAILED,
-        }
-        return Compilation(
-            source_id=source_id,
-            checksum=checksum,
-            output_format=output_format,
-            start_time=start_time,
-            end_time=end_time,
-            status=status_map[latest.status]
-        )
+# @dataclass
+# class Compilation:
+#     """Represents a submission compilation."""
+#
+#     class Status(Enum):      # type: ignore
+#         """Represents the status of a requested compilation."""
+#
+#         IN_PROGRESS = "in_progress"
+#         """Compilation has been requested."""
+#
+#         SUCCEEDED = "succeeded"
+#         """Compilation successfully completed."""
+#
+#         FAILED = "failed"
+#         """Compilation failed."""
+#
+#     source_id: str
+#     """This is the ID of the source upload workspace."""
+#     checksum: str
+#     """The checksum of the source package to compile."""
+#     output_format: str
+#     """Compilation target format."""
+#     start_time: datetime
+#     end_time: Optional[datetime]
+#     status: Status = field(default=Status.IN_PROGRESS)
+#
+#     def __post_init__(self):
+#         """Make sure that :attr:`.status` is a :class:`.Status`."""
+#         if self.status and type(self.status) is str:
+#             self.status = self.Status(self.status)
+#
+#     @property
+#     def identifier(self) -> str:
+#         return f"{self.source_id}/{self.checksum}/{self.output_format}"
+#
+#     @classmethod
+#     def from_processes(cls, processes: List[ProcessStatus]) -> 'Compilation':
+#         """
+#         Get a :class:`.Compilation` from :attr:`.Submission.processes`.
+#
+#         Parameters
+#         ----------
+#         processes : list
+#             List of :class:`.ProcessStatus` instances from a submission.
+#
+#         Returns
+#         -------
+#         :class:`.Compilation`
+#             Static representation of the compilation attempt.
+#
+#         """
+#         processes = sorted((p for p in processes
+#                             if p.process is ProcessStatus.Process.COMPILATION),
+#                            key=lambda p: p.created)
+#         if not processes:
+#             return None
+#         finished_states = [ProcessStatus.Status.SUCCEEDED,
+#                            ProcessStatus.Status.FAILED]
+#         latest = processes[-1]
+#         source_id, checksum, output_format = \
+#             latest.process_identifier.split("/")
+#         if latest.status in finished_states:
+#             end_time = latest.created
+#             for proc in processes[::-1]:
+#                 if proc.process_identifier == latest.process_identifier \
+#                         and proc.status is ProcessStatus.Status.REQUESTED:
+#                     start_time = proc.created
+#                     break
+#         else:
+#             start_time = latest.created
+#             end_time = None
+#         status_map = {
+#             ProcessStatus.Status.REQUESTED: cls.Status.IN_PROGRESS,
+#             ProcessStatus.Status.SUCCEEDED: cls.Status.SUCCEEDED,
+#             ProcessStatus.Status.FAILED: cls.Status.FAILED,
+#         }
+#         return Compilation(
+#             source_id=source_id,
+#             checksum=checksum,
+#             output_format=output_format,
+#             start_time=start_time,
+#             end_time=end_time,
+#             status=status_map[latest.status]
+#         )
 
 
 @dataclass
@@ -410,18 +411,17 @@ class Submission:
 
     creator: Agent
     owner: Agent
+    proxy: Optional[Agent] = field(default=None)
+    client: Optional[Agent] = field(default=None)
     created: Optional[datetime] = field(default=None)
     updated: Optional[datetime] = field(default=None)
     submitted: Optional[datetime] = field(default=None)
+    submission_id: Optional[int] = field(default=None)
 
     source_content: Optional[SubmissionContent] = field(default=None)
-    primary_classification: Optional[Classification] = field(default=None)
-    delegations: Dict[str, Delegation] = field(default_factory=dict)
-    proxy: Optional[Agent] = field(default=None)
-    client: Optional[Agent] = field(default=None)
-    submission_id: Optional[int] = field(default=None)
+    latest_compilation: Optional[Compilation] = field(default=None)
     metadata: SubmissionMetadata = field(default_factory=SubmissionMetadata)
-
+    primary_classification: Optional[Classification] = field(default=None)
     secondary_classification: List[Classification] = \
         field(default_factory=list)
     submitter_contact_verified: bool = field(default=False)
@@ -467,6 +467,8 @@ class Submission:
 
     waivers: Dict[str, Waiver] = field(default_factory=dict)
     """Quality control waivers."""
+
+    # delegations: Dict[str, Delegation] = field(default_factory=dict)
 
     @property
     def features(self) -> Dict[str, Feature]:
@@ -520,41 +522,41 @@ class Submission:
     def waiver_types(self) -> Set[Hold.Type]:
         return set([waiver.hold_type for waiver in self.waivers.values()])
 
-    @property
-    def latest_compilation(self) -> Optional[Compilation]:
-        """
-        Get data about the latest compilation attempt.
-
-        Returns
-        -------
-        :class:`.Compilation` or None
-
-        """
-        return Compilation.from_processes(self.processes)
-
-    @property
-    def compilations(self) -> List[Compilation]:
-        return list(self.get_compilations())
-
-    def get_compilations(self) -> Iterable[Compilation]:
-        """Get all of the compilation attempts for this submission."""
-        on_deck = []
-        finished_states = [ProcessStatus.Status.SUCCEEDED,
-                           ProcessStatus.Status.FAILED]
-        for process in sorted(self.processes, key=lambda p: p.created):
-
-            if process.process is not ProcessStatus.Process.COMPILATION:
-                continue
-            if on_deck:
-                identifier = process.process_identifier
-                finished = on_deck[-1].status in finished_states
-                new_process = identifier != on_deck[-1].process_identifier
-                if finished or new_process:
-                    yield Compilation.from_processes(on_deck)
-                    on_deck.clear()     # Next attempt.
-            on_deck.append(process)
-        if on_deck:     # Whatever is left.
-            yield Compilation.from_processes(on_deck)
+    # @property
+    # def latest_compilation(self) -> Optional[Compilation]:
+    #     """
+    #     Get data about the latest compilation attempt.
+    #
+    #     Returns
+    #     -------
+    #     :class:`.Compilation` or None
+    #
+    #     """
+    #     return Compilation.from_processes(self.processes)
+    #
+    # @property
+    # def compilations(self) -> List[Compilation]:
+    #     return list(self.get_compilations())
+    #
+    # def get_compilations(self) -> Iterable[Compilation]:
+    #     """Get all of the compilation attempts for this submission."""
+    #     on_deck = []
+    #     finished_states = [ProcessStatus.Status.SUCCEEDED,
+    #                        ProcessStatus.Status.FAILED]
+    #     for process in sorted(self.processes, key=lambda p: p.created):
+    #
+    #         if process.process is not ProcessStatus.Process.COMPILATION:
+    #             continue
+    #         if on_deck:
+    #             identifier = process.process_identifier
+    #             finished = on_deck[-1].status in finished_states
+    #             new_process = identifier != on_deck[-1].process_identifier
+    #             if finished or new_process:
+    #                 yield Compilation.from_processes(on_deck)
+    #                 on_deck.clear()     # Next attempt.
+    #         on_deck.append(process)
+    #     if on_deck:     # Whatever is left.
+    #         yield Compilation.from_processes(on_deck)
 
     @property
     def has_active_requests(self) -> bool:
@@ -611,7 +613,7 @@ class Submission:
                 Classification(**self.primary_classification)
         if type(self.metadata) is dict:
             self.metadata = SubmissionMetadata(**self.metadata)
-        self.delegations = dict_coerce(Delegation, self.delegations)
+        # self.delegations = dict_coerce(Delegation, self.delegations)
         self.secondary_classification = \
             list_coerce(Classification, self.secondary_classification)
         if type(self.license) is dict:

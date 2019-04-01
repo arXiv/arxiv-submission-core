@@ -26,10 +26,10 @@ class TestPlainTextService(TestCase):
             )
         )
         mock_Session.return_value = mock.MagicMock(post=mock_post)
-        upload_id = '132456'
+        source_id = '132456'
         service = plaintext.PlainTextService('http://foohost:8123')
         with self.assertRaises(plaintext.ExtractionInProgress):
-            service.request_extraction(upload_id)
+            service.request_extraction(source_id)
 
     @mock.patch('arxiv.integration.api.service.current_app', mock_app)
     @mock.patch('arxiv.integration.api.service.requests.Session')
@@ -56,9 +56,9 @@ class TestPlainTextService(TestCase):
             )
         })
         mock_Session.return_value = mock_session
-        upload_id = '132456'
+        source_id = '132456'
         service = plaintext.PlainTextService('http://foohost:8123')
-        self.assertIsNone(service.request_extraction(upload_id))
+        self.assertIsNone(service.request_extraction(source_id))
         self.assertEqual(
             mock_session.post.call_args[0][0],
             'http://foohost:8123/submission/132456'
@@ -78,10 +78,10 @@ class TestPlainTextService(TestCase):
                 )
             )
         )
-        upload_id = '132456'
+        source_id = '132456'
         service = plaintext.PlainTextService('foohost', 8000)
         with self.assertRaises(exceptions.BadRequest):
-            service.request_extraction(upload_id)
+            service.request_extraction(source_id)
 
     @mock.patch('arxiv.integration.api.service.current_app', mock_app)
     @mock.patch('arxiv.integration.api.service.requests.Session')
@@ -97,10 +97,10 @@ class TestPlainTextService(TestCase):
                 )
             )
         )
-        upload_id = '132456'
+        source_id = '132456'
         service = plaintext.PlainTextService('foohost', 8000)
         with self.assertRaises(exceptions.RequestFailed):
-            service.request_extraction(upload_id)
+            service.request_extraction(source_id)
 
     @mock.patch('arxiv.integration.api.service.current_app', mock_app)
     @mock.patch('arxiv.integration.api.service.requests.Session')
@@ -116,10 +116,10 @@ class TestPlainTextService(TestCase):
                 )
             )
         )
-        upload_id = '132456'
+        source_id = '132456'
         service = plaintext.PlainTextService('foohost', 8000)
         with self.assertRaises(exceptions.RequestUnauthorized):
-            service.request_extraction(upload_id)
+            service.request_extraction(source_id)
 
     @mock.patch('arxiv.integration.api.service.current_app', mock_app)
     @mock.patch('arxiv.integration.api.service.requests.Session')
@@ -135,10 +135,10 @@ class TestPlainTextService(TestCase):
                 )
             )
         )
-        upload_id = '132456'
+        source_id = '132456'
         service = plaintext.PlainTextService('foohost', 8000)
         with self.assertRaises(exceptions.RequestForbidden):
-            service.request_extraction(upload_id)
+            service.request_extraction(source_id)
 
     @mock.patch('arxiv.integration.api.service.current_app', mock_app)
     @mock.patch('arxiv.integration.api.service.requests.Session')
@@ -152,9 +152,9 @@ class TestPlainTextService(TestCase):
             )
         )
         mock_Session.return_value = mock.MagicMock(get=mock_get)
-        upload_id = '132456'
+        source_id = '132456'
         service = plaintext.PlainTextService('http://foohost:8123')
-        self.assertTrue(service.extraction_is_complete(upload_id))
+        self.assertTrue(service.extraction_is_complete(source_id))
         self.assertEqual(
             mock_get.call_args[0][0],
             'http://foohost:8123/submission/132456/status'
@@ -171,9 +171,9 @@ class TestPlainTextService(TestCase):
             )
         )
         mock_Session.return_value = mock.MagicMock(get=mock_get)
-        upload_id = '132456'
+        source_id = '132456'
         service = plaintext.PlainTextService('http://foohost:8123')
-        self.assertFalse(service.extraction_is_complete(upload_id))
+        self.assertFalse(service.extraction_is_complete(source_id))
         self.assertEqual(
             mock_get.call_args[0][0],
             'http://foohost:8123/submission/132456/status'
@@ -190,10 +190,10 @@ class TestPlainTextService(TestCase):
             )
         )
         mock_Session.return_value = mock.MagicMock(get=mock_get)
-        upload_id = '132456'
+        source_id = '132456'
         service = plaintext.PlainTextService('http://foohost:8123')
         with self.assertRaises(plaintext.ExtractionFailed):
-            self.assertFalse(service.extraction_is_complete(upload_id))
+            self.assertFalse(service.extraction_is_complete(source_id))
 
     @mock.patch('arxiv.integration.api.service.current_app', mock_app)
     @mock.patch('arxiv.integration.api.service.requests.Session')
@@ -209,10 +209,10 @@ class TestPlainTextService(TestCase):
                 )
             )
         )
-        upload_id = '132456'
+        source_id = '132456'
         service = plaintext.PlainTextService('foohost', 8000)
         with self.assertRaises(exceptions.RequestUnauthorized):
-            service.extraction_is_complete(upload_id)
+            service.extraction_is_complete(source_id)
 
     @mock.patch('arxiv.integration.api.service.current_app', mock_app)
     @mock.patch('arxiv.integration.api.service.requests.Session')
@@ -228,10 +228,10 @@ class TestPlainTextService(TestCase):
                 )
             )
         )
-        upload_id = '132456'
+        source_id = '132456'
         service = plaintext.PlainTextService('foohost', 8000)
         with self.assertRaises(exceptions.RequestForbidden):
-            service.extraction_is_complete(upload_id)
+            service.extraction_is_complete(source_id)
 
     @mock.patch('arxiv.integration.api.service.current_app', mock_app)
     @mock.patch('arxiv.integration.api.service.requests.Session')
@@ -247,10 +247,10 @@ class TestPlainTextService(TestCase):
                 )
             )
         )
-        upload_id = '132456'
+        source_id = '132456'
         service = plaintext.PlainTextService('foohost', 8000)
         with self.assertRaises(exceptions.RequestUnauthorized):
-            service.retrieve_content(upload_id)
+            service.retrieve_content(source_id)
 
     @mock.patch('arxiv.integration.api.service.current_app', mock_app)
     @mock.patch('arxiv.integration.api.service.requests.Session')
@@ -266,10 +266,10 @@ class TestPlainTextService(TestCase):
                 )
             )
         )
-        upload_id = '132456'
+        source_id = '132456'
         service = plaintext.PlainTextService('foohost', 8000)
         with self.assertRaises(exceptions.RequestForbidden):
-            service.retrieve_content(upload_id)
+            service.retrieve_content(source_id)
 
     @mock.patch('arxiv.integration.api.service.current_app', mock_app)
     @mock.patch('arxiv.integration.api.service.requests.Session')
@@ -283,9 +283,9 @@ class TestPlainTextService(TestCase):
             )
         )
         mock_Session.return_value = mock.MagicMock(get=mock_get)
-        upload_id = '132456'
+        source_id = '132456'
         service = plaintext.PlainTextService('http://foohost:8123')
-        self.assertEqual(service.retrieve_content(upload_id), content,
+        self.assertEqual(service.retrieve_content(source_id), content,
                          "Returns binary content as received")
         self.assertEqual(
             mock_get.call_args[0][0],
@@ -303,10 +303,10 @@ class TestPlainTextService(TestCase):
             )
         )
         mock_Session.return_value = mock.MagicMock(get=mock_get)
-        upload_id = '132456'
+        source_id = '132456'
         service = plaintext.PlainTextService('http://foohost:8123')
         with self.assertRaises(exceptions.NotFound):
-            service.retrieve_content(upload_id)
+            service.retrieve_content(source_id)
 
     @mock.patch('arxiv.integration.api.service.current_app', mock_app)
     @mock.patch('arxiv.integration.api.service.requests.Session')
@@ -320,10 +320,10 @@ class TestPlainTextService(TestCase):
             )
         )
         mock_Session.return_value = mock.MagicMock(get=mock_get)
-        upload_id = '132456'
+        source_id = '132456'
         service = plaintext.PlainTextService('http://foohost:8123')
         with self.assertRaises(plaintext.ExtractionInProgress):
-            service.retrieve_content(upload_id)
+            service.retrieve_content(source_id)
 
 
 class TestPlainTextServiceModule(TestCase):
@@ -355,9 +355,9 @@ class TestPlainTextServiceModule(TestCase):
             headers={'Location': '...'}
         )
 
-        upload_id = '132456'
+        source_id = '132456'
         with self.assertRaises(plaintext.ExtractionInProgress):
-            plaintext.PlainTextService.request_extraction(upload_id)
+            plaintext.PlainTextService.request_extraction(source_id)
 
     @mock.patch('arxiv.integration.api.service.current_app', mock_app)
     @mock.patch('arxiv.integration.api.service.requests.Session')
@@ -384,9 +384,9 @@ class TestPlainTextServiceModule(TestCase):
             )
         })
         mock_Session.return_value = mock_session
-        upload_id = '132456'
+        source_id = '132456'
         self.assertIsNone(
-            plaintext.PlainTextService.request_extraction(upload_id)
+            plaintext.PlainTextService.request_extraction(source_id)
         )
         self.assertEqual(mock_session.post.call_args[0][0],
                          'http://foohost:5432/submission/132456')
@@ -400,9 +400,9 @@ class TestPlainTextServiceModule(TestCase):
             method='post',
             json={'reason': 'something is not quite right'}
         )
-        upload_id = '132456'
+        source_id = '132456'
         with self.assertRaises(exceptions.BadRequest):
-            plaintext.PlainTextService.request_extraction(upload_id)
+            plaintext.PlainTextService.request_extraction(source_id)
 
     @mock.patch('arxiv.integration.api.service.current_app', mock_app)
     @mock.patch('arxiv.integration.api.service.requests.Session')
@@ -413,9 +413,9 @@ class TestPlainTextServiceModule(TestCase):
             method='post',
             json={'reason': 'something is not quite right'}
         )
-        upload_id = '132456'
+        source_id = '132456'
         with self.assertRaises(exceptions.RequestFailed):
-            plaintext.PlainTextService.request_extraction(upload_id)
+            plaintext.PlainTextService.request_extraction(source_id)
 
     @mock.patch('arxiv.integration.api.service.current_app', mock_app)
     @mock.patch('arxiv.integration.api.service.requests.Session')
@@ -426,9 +426,9 @@ class TestPlainTextServiceModule(TestCase):
             method='post',
             json={'reason': 'who are you'}
         )
-        upload_id = '132456'
+        source_id = '132456'
         with self.assertRaises(exceptions.RequestUnauthorized):
-            plaintext.PlainTextService.request_extraction(upload_id)
+            plaintext.PlainTextService.request_extraction(source_id)
 
     @mock.patch('arxiv.integration.api.service.current_app', mock_app)
     @mock.patch('arxiv.integration.api.service.requests.Session')
@@ -439,9 +439,9 @@ class TestPlainTextServiceModule(TestCase):
             method='post',
             json={'reason': 'you do not have sufficient authz'}
         )
-        upload_id = '132456'
+        source_id = '132456'
         with self.assertRaises(exceptions.RequestForbidden):
-            plaintext.PlainTextService.request_extraction(upload_id)
+            plaintext.PlainTextService.request_extraction(source_id)
 
     @mock.patch('arxiv.integration.api.service.current_app', mock_app)
     @mock.patch('arxiv.integration.api.service.requests.Session')
@@ -452,8 +452,8 @@ class TestPlainTextServiceModule(TestCase):
             headers={'Location': '...'}
         )
         mock_Session.return_value = mock_session
-        upload_id = '132456'
-        self.assertTrue(plaintext.PlainTextService.extraction_is_complete(upload_id))
+        source_id = '132456'
+        self.assertTrue(plaintext.PlainTextService.extraction_is_complete(source_id))
         self.assertEqual(mock_session.get.call_args[0][0],
                          'http://foohost:5432/submission/132456/status')
 
@@ -465,8 +465,8 @@ class TestPlainTextServiceModule(TestCase):
             json={'status': 'in_progress'}
         )
         mock_Session.return_value = mock_session
-        upload_id = '132456'
-        self.assertFalse(plaintext.PlainTextService.extraction_is_complete(upload_id))
+        source_id = '132456'
+        self.assertFalse(plaintext.PlainTextService.extraction_is_complete(source_id))
         self.assertEqual(mock_session.get.call_args[0][0],
                          'http://foohost:5432/submission/132456/status')
 
@@ -475,9 +475,9 @@ class TestPlainTextServiceModule(TestCase):
     def test_extraction_failed(self, mock_Session):
         """Extraction failed."""
         mock_Session.return_value = self.session(json={'status': 'failed'})
-        upload_id = '132456'
+        source_id = '132456'
         with self.assertRaises(plaintext.ExtractionFailed):
-            self.assertFalse(plaintext.PlainTextService.extraction_is_complete(upload_id))
+            self.assertFalse(plaintext.PlainTextService.extraction_is_complete(source_id))
 
     @mock.patch('arxiv.integration.api.service.current_app', mock_app)
     @mock.patch('arxiv.integration.api.service.requests.Session')
@@ -487,9 +487,9 @@ class TestPlainTextServiceModule(TestCase):
             status_code=status.UNAUTHORIZED,
             json={'reason': 'who are you'}
         )
-        upload_id = '132456'
+        source_id = '132456'
         with self.assertRaises(exceptions.RequestUnauthorized):
-            plaintext.PlainTextService.extraction_is_complete(upload_id)
+            plaintext.PlainTextService.extraction_is_complete(source_id)
 
     @mock.patch('arxiv.integration.api.service.current_app', mock_app)
     @mock.patch('arxiv.integration.api.service.requests.Session')
@@ -499,9 +499,9 @@ class TestPlainTextServiceModule(TestCase):
             status_code=status.FORBIDDEN,
             json={'reason': 'you do not have sufficient authz'}
         )
-        upload_id = '132456'
+        source_id = '132456'
         with self.assertRaises(exceptions.RequestForbidden):
-            plaintext.PlainTextService.extraction_is_complete(upload_id)
+            plaintext.PlainTextService.extraction_is_complete(source_id)
 
     @mock.patch('arxiv.integration.api.service.current_app', mock_app)
     @mock.patch('arxiv.integration.api.service.requests.Session')
@@ -511,9 +511,9 @@ class TestPlainTextServiceModule(TestCase):
             status_code=status.UNAUTHORIZED,
             json={'reason': 'who are you'}
         )
-        upload_id = '132456'
+        source_id = '132456'
         with self.assertRaises(exceptions.RequestUnauthorized):
-            plaintext.PlainTextService.retrieve_content(upload_id)
+            plaintext.PlainTextService.retrieve_content(source_id)
 
     @mock.patch('arxiv.integration.api.service.current_app', mock_app)
     @mock.patch('arxiv.integration.api.service.requests.Session')
@@ -523,9 +523,9 @@ class TestPlainTextServiceModule(TestCase):
             status_code=status.FORBIDDEN,
             json={'reason': 'you do not have sufficient authz'}
         )
-        upload_id = '132456'
+        source_id = '132456'
         with self.assertRaises(exceptions.RequestForbidden):
-            plaintext.PlainTextService.retrieve_content(upload_id)
+            plaintext.PlainTextService.retrieve_content(source_id)
 
     @mock.patch('arxiv.integration.api.service.current_app', mock_app)
     @mock.patch('arxiv.integration.api.service.requests.Session')
@@ -539,9 +539,9 @@ class TestPlainTextServiceModule(TestCase):
             )
         )
         mock_Session.return_value = mock.MagicMock(get=mock_get)
-        upload_id = '132456'
+        source_id = '132456'
         self.assertEqual(
-            plaintext.PlainTextService.retrieve_content(upload_id),
+            plaintext.PlainTextService.retrieve_content(source_id),
             content,
             "Returns binary content as received"
         )
@@ -556,9 +556,9 @@ class TestPlainTextServiceModule(TestCase):
             status_code=status.NOT_FOUND,
             json={'reason': 'no such thing'}
         )
-        upload_id = '132456'
+        source_id = '132456'
         with self.assertRaises(exceptions.NotFound):
-            plaintext.PlainTextService.retrieve_content(upload_id)
+            plaintext.PlainTextService.retrieve_content(source_id)
 
     @mock.patch('arxiv.integration.api.service.current_app', mock_app)
     @mock.patch('arxiv.integration.api.service.requests.Session')
@@ -568,6 +568,6 @@ class TestPlainTextServiceModule(TestCase):
             status_code=status.SEE_OTHER,
             headers={'Location': '...'}
         )
-        upload_id = '132456'
+        source_id = '132456'
         with self.assertRaises(plaintext.ExtractionInProgress):
-            plaintext.PlainTextService.retrieve_content(upload_id)
+            plaintext.PlainTextService.retrieve_content(source_id)

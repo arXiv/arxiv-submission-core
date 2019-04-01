@@ -1089,44 +1089,44 @@ class DeleteComment(Event):
         return submission
 
 
-@dataclass()
-class AddDelegate(Event):
-    """Owner delegates authority to another agent."""
-
-    delegate: Optional[Agent] = None
-
-    def validate(self, submission: Submission) -> None:
-        """The event creator must be the owner of the submission."""
-        if not self.creator == submission.owner:
-            raise InvalidEvent(self, 'Event creator must be submission owner')
-
-    def project(self, submission: Submission) -> Submission:
-        """Add the delegate to the submission."""
-        delegation = Delegation(
-            creator=self.creator,
-            delegate=self.delegate,
-            created=self.created
-        )
-        submission.delegations[delegation.delegation_id] = delegation
-        return submission
-
-
-@dataclass()
-class RemoveDelegate(Event):
-    """Owner revokes authority from another agent."""
-
-    delegation_id: str = field(default_factory=str)
-
-    def validate(self, submission: Submission) -> None:
-        """The event creator must be the owner of the submission."""
-        if not self.creator == submission.owner:
-            raise InvalidEvent(self, 'Event creator must be submission owner')
-
-    def project(self, submission: Submission) -> Submission:
-        """Remove the delegate from the submission."""
-        if self.delegation_id in submission.delegations:
-            del submission.delegations[self.delegation_id]
-        return submission
+# @dataclass()
+# class AddDelegate(Event):
+#     """Owner delegates authority to another agent."""
+#
+#     delegate: Optional[Agent] = None
+#
+#     def validate(self, submission: Submission) -> None:
+#         """The event creator must be the owner of the submission."""
+#         if not self.creator == submission.owner:
+#             raise InvalidEvent(self, 'Event creator must be submission owner')
+#
+#     def project(self, submission: Submission) -> Submission:
+#         """Add the delegate to the submission."""
+#         delegation = Delegation(
+#             creator=self.creator,
+#             delegate=self.delegate,
+#             created=self.created
+#         )
+#         submission.delegations[delegation.delegation_id] = delegation
+#         return submission
+#
+#
+# @dataclass()
+# class RemoveDelegate(Event):
+#     """Owner revokes authority from another agent."""
+#
+#     delegation_id: str = field(default_factory=str)
+#
+#     def validate(self, submission: Submission) -> None:
+#         """The event creator must be the owner of the submission."""
+#         if not self.creator == submission.owner:
+#             raise InvalidEvent(self, 'Event creator must be submission owner')
+#
+#     def project(self, submission: Submission) -> Submission:
+#         """Remove the delegate from the submission."""
+#         if self.delegation_id in submission.delegations:
+#             del submission.delegations[self.delegation_id]
+#         return submission
 
 
 @dataclass()

@@ -41,7 +41,7 @@ class TestSourceSizeLimits(TestCase):
 
             title = 'cool title, bro'
             self.doi = "10.01234/56789"
-            self.upload_id = '123'
+            self.source_id = '123'
             self.checksum = "a9s9k342900ks03330029"
             self.output_format = domain.compilation.Format.PDF
             self.submission, self.events = save(
@@ -77,7 +77,7 @@ class TestSourceSizeLimits(TestCase):
             submission, events = save(
                 domain.event.SetUploadPackage(checksum=self.checksum,
                                               source_format=TEX,
-                                              identifier=self.upload_id,
+                                              identifier=self.source_id,
                                               uncompressed_size=2_593_992,
                                               compressed_size=30_992,
                                               **self.defaults),
@@ -101,7 +101,7 @@ class TestSourceSizeLimits(TestCase):
             submission, events = save(
                 domain.event.SetUploadPackage(checksum=self.checksum,
                                               source_format=TEX,
-                                              identifier=self.upload_id,
+                                              identifier=self.source_id,
                                               uncompressed_size=2_392_593_992,
                                               compressed_size=30_992,
                                               **self.defaults),
@@ -175,7 +175,7 @@ class TestSubmissionCompilation(TestCase):
 
             title = 'cool title, bro'
             self.doi = "10.01234/56789"
-            self.upload_id = '123'
+            self.source_id = '123'
             self.checksum = "a9s9k342900ks03330029"
             self.output_format = domain.compilation.Format.PDF
             self.submission, self.events = save(
@@ -200,7 +200,7 @@ class TestSubmissionCompilation(TestCase):
                                         **self.defaults),
                 domain.event.SetUploadPackage(checksum=self.checksum,
                                               source_format=TEX,
-                                              identifier=self.upload_id,
+                                              identifier=self.source_id,
                                               uncompressed_size=593992,
                                               compressed_size=593992,
                                               **self.defaults)
@@ -225,15 +225,15 @@ class TestSubmissionCompilation(TestCase):
             False,
             True
         ]
-        mock_get_status.return_value = domain.compilation.CompilationStatus(
-            upload_id=self.upload_id,
+        mock_get_status.return_value = domain.compilation.Compilation(
+            source_id=self.source_id,
             status=domain.compilation.Status.SUCCEEDED,
             checksum=self.checksum,
             output_format=self.output_format,
             size_bytes=5_030_930,
         )
         with self.app.app_context():
-            task_id = compiler.get_task_id(self.upload_id, self.checksum,
+            task_id = compiler.get_task_id(self.source_id, self.checksum,
                                            self.output_format)
             submission, events = save(
                 domain.event.AddProcessStatus(
@@ -254,7 +254,7 @@ class TestSubmissionCompilation(TestCase):
             submission, events = load(self.submission.submission_id)
             self.assertFalse(submission.is_on_hold, "No hold; PDF size is OK")
             self.assertEqual(submission.latest_compilation.source_id,
-                             self.upload_id,
+                             self.source_id,
                              "The compilation process is recorded")
             self.assertEqual(submission.latest_compilation.checksum,
                              self.checksum,
@@ -294,15 +294,15 @@ class TestSubmissionCompilation(TestCase):
             api_exceptions.NotFound('nope', mock.MagicMock()),
             True
         ]
-        mock_get_status.return_value = domain.compilation.CompilationStatus(
-            upload_id=self.upload_id,
+        mock_get_status.return_value = domain.compilation.Compilation(
+            source_id=self.source_id,
             status=domain.compilation.Status.SUCCEEDED,
             checksum=self.checksum,
             output_format=self.output_format,
             size_bytes=5_000_030_930,   # That's a big PDF.
         )
         with self.app.app_context():
-            task_id = compiler.get_task_id(self.upload_id, self.checksum,
+            task_id = compiler.get_task_id(self.source_id, self.checksum,
                                            self.output_format)
             submission, events = save(
                 domain.event.AddProcessStatus(
@@ -323,7 +323,7 @@ class TestSubmissionCompilation(TestCase):
             submission, events = load(self.submission.submission_id)
             self.assertGreater(len(submission.holds), 0, "Holds; PDF is huge")
             self.assertEqual(submission.latest_compilation.source_id,
-                             self.upload_id,
+                             self.source_id,
                              "The compilation process is recorded")
             self.assertEqual(submission.latest_compilation.checksum,
                              self.checksum,

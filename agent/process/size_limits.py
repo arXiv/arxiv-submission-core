@@ -8,7 +8,7 @@ from arxiv.submission.domain.event import Event, SetUploadPackage, \
     UpdateUploadPackage, AddHold, RemoveHold, AddProcessStatus
 from arxiv.submission.domain.event.event import Condition
 from arxiv.submission.domain.submission import Submission, SubmissionContent, \
-    Hold
+    Hold, Compilation
 from arxiv.submission.domain.flag import Flag, ContentFlag
 from arxiv.submission.domain.annotation import Feature
 from arxiv.submission.domain.agent import Agent, User
@@ -65,8 +65,18 @@ class CheckSubmissionSourceSize(Process):
 class CheckPDFSize(Process):
     """When a PDF is compiled, check for oversize."""
 
-    recoverable = (exceptions.BadResponse, exceptions.ConnectionFailed,
-                   exceptions.SecurityException)
+    def handle_compiler_exception(self, exc: Exception) -> None:
+        """Handle exceptions raised when calling the compiler service."""
+        exc_type = type(exc)
+
+        if exc_type in (exceptions.BadResponse, exceptions.ConnectionFailed):
+            raise Recoverable('Encountered %s; try again' % exc) from exc
+        elif exc_type is exceptions.RequestFailed:
+            if exc.status_code >= 500:
+                msg = 'Compiler service choked: %i' % exc.status_code
+                raise Recoverable(msg) from exc
+            self.fail(exc, 'Unrecoverable exception: %i' % exc.status_code)
+        self.fail(exc, 'Unhandled exception')
 
     @step(max_retries=None)
     def get_size(self, previous: Optional, trigger: Trigger,
@@ -88,10 +98,12 @@ class CheckPDFSize(Process):
             stat = compiler.Compiler.get_status(compilation.source_id,
                                                 compilation.checksum, token,
                                                 compilation.output_format)
-        except self.recoverable as exc:
-            raise Recoverable('Encountered %s; try again' % exc) from exc
         except Exception as exc:
-            self.fail(exc, message='Encountered unrecoverable request error')
+            self.handle_compiler_exception(exc)
+        if stat.status is Compilation.Status.IN_PROGRESS:
+            raise Recoverable('Compilation is stil in progress; try again')
+        elif stat.status is Compilation.Status.FAILED:
+            self.fail(message='Compilation failed; cannot get size of PDF')
         return stat.size_bytes
 
     @step()

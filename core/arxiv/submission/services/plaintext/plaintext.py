@@ -50,27 +50,27 @@ class PlainTextService(service.HTTPIntegration):
     def _base_endpoint(self) -> str:
         return f'{self._scheme}://{self._host}:{self._port}'
 
-    def endpoint(self, upload_id: str):
+    def endpoint(self, source_id: str):
         """Get the URL of the classifier endpoint."""
-        return f'/submission/{upload_id}'
+        return f'/submission/{source_id}'
 
-    def status_endpoint(self, upload_id: str):
+    def status_endpoint(self, source_id: str):
         """Get the URL of the classifier endpoint."""
-        return f'/submission/{upload_id}/status'
+        return f'/submission/{source_id}/status'
 
-    def request_extraction(self, upload_id: str) -> None:
+    def request_extraction(self, source_id: str) -> None:
         """
         Make a request for plaintext extraction using the submission upload ID.
 
         Parameters
         ----------
-        upload_id : str
+        source_id : str
             ID of the submission upload workspace.
 
         """
         expected_code = [status.OK, status.ACCEPTED,
                          status.SEE_OTHER]
-        response = self.request('post', self.endpoint(upload_id),
+        response = self.request('post', self.endpoint(source_id),
                                 expected_code=expected_code)
         if response.status_code == status.SEE_OTHER:
             raise ExtractionInProgress('Extraction already exists', response)
@@ -78,13 +78,13 @@ class PlainTextService(service.HTTPIntegration):
             raise exceptions.RequestFailed('Unexpected status', response)
         return
 
-    def extraction_is_complete(self, upload_id: str) -> bool:
+    def extraction_is_complete(self, source_id: str) -> bool:
         """
         Check the status of an extraction task by submission upload ID.
 
         Parameters
         ----------
-        upload_id : str
+        source_id : str
             ID of the submission upload workspace.
 
         Returns
@@ -98,7 +98,7 @@ class PlainTextService(service.HTTPIntegration):
             is encountered.
 
         """
-        endpoint = self.status_endpoint(upload_id)
+        endpoint = self.status_endpoint(source_id)
         expected_code = [status.OK, status.SEE_OTHER]
         response = self.request('get', endpoint, allow_redirects=False,
                                 expected_code=expected_code)
@@ -111,13 +111,13 @@ class PlainTextService(service.HTTPIntegration):
             raise ExtractionFailed('Extraction failed', response)
         raise ExtractionFailed('Unexpected state', response)
 
-    def retrieve_content(self, upload_id: str) -> bytes:
+    def retrieve_content(self, source_id: str) -> bytes:
         """
         Retrieve plain text content by submission upload ID.
 
         Parameters
         ----------
-        upload_id : str
+        source_id : str
             ID of the submission upload workspace.
 
         Returns
@@ -134,7 +134,7 @@ class PlainTextService(service.HTTPIntegration):
 
         """
         expected_code = [status.OK, status.SEE_OTHER]
-        response = self.request('get', self.endpoint(upload_id),
+        response = self.request('get', self.endpoint(source_id),
                                 expected_code=expected_code)
         if response.status_code == status.SEE_OTHER:
             raise ExtractionInProgress('Extraction is in progress', response)

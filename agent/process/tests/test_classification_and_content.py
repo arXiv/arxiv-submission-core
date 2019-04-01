@@ -22,14 +22,10 @@ from .. import classification_and_content as c_and_c
 from ...domain import Trigger
 from ...runner import ProcessRunner
 from ...factory import create_app
+from .util import raise_http_exception
 
 sys = System(__name__)
 
-
-def raise_http_exception(exc, code: int, msg='argle bargle'):
-    def side_effect(*args, **kwargs):
-        raise exc(msg, mock.MagicMock(status_code=code))
-    return side_effect
 
 
 class TestRequestPlainTextContentExtraction(TestCase):
