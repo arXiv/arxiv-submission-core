@@ -131,7 +131,6 @@ class TestReplacementSubmission(TestCase):
         self.assertTrue(self.submission.announced)
         self.assertFalse(replacement.announced)
 
-        self.assertIsNone(replacement.latest_compilation)
         self.assertIsNone(replacement.source_content)
 
         # The user is asked to reaffirm these points.

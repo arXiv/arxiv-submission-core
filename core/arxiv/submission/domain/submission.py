@@ -519,42 +519,6 @@ class Submission:
     def waiver_types(self) -> Set[Hold.Type]:
         return set([waiver.hold_type for waiver in self.waivers.values()])
 
-    # @property
-    # def latest_compilation(self) -> Optional[Compilation]:
-    #     """
-    #     Get data about the latest compilation attempt.
-    #
-    #     Returns
-    #     -------
-    #     :class:`.Compilation` or None
-    #
-    #     """
-    #     return Compilation.from_processes(self.processes)
-    #
-    # @property
-    # def compilations(self) -> List[Compilation]:
-    #     return list(self.get_compilations())
-    #
-    # def get_compilations(self) -> Iterable[Compilation]:
-    #     """Get all of the compilation attempts for this submission."""
-    #     on_deck = []
-    #     finished_states = [ProcessStatus.Status.SUCCEEDED,
-    #                        ProcessStatus.Status.FAILED]
-    #     for process in sorted(self.processes, key=lambda p: p.created):
-    #
-    #         if process.process is not ProcessStatus.Process.COMPILATION:
-    #             continue
-    #         if on_deck:
-    #             identifier = process.process_identifier
-    #             finished = on_deck[-1].status in finished_states
-    #             new_process = identifier != on_deck[-1].process_identifier
-    #             if finished or new_process:
-    #                 yield Compilation.from_processes(on_deck)
-    #                 on_deck.clear()     # Next attempt.
-    #         on_deck.append(process)
-    #     if on_deck:     # Whatever is left.
-    #         yield Compilation.from_processes(on_deck)
-
     @property
     def has_active_requests(self) -> bool:
         return len(self.active_user_requests) > 0
