@@ -83,21 +83,17 @@ class CheckPDFSize(Process):
                  emit: Callable) -> int:
         """Get the size of the compilation from the compiler service."""
         try:
-            compilation = trigger.after.latest_compilation
+            source_id = trigger.after.source_content.identifier
             source_state = trigger.after.source_content.checksum
         except AttributeError as exc:
             self.fail(exc, message='Missing compilation or post-event state')
-        if compilation is None or compilation.checksum != source_state:
-            self.fail(message='No recent compilation to evaluate')
-
-        # upload_id, checksum, fmt = compiler.split_task_id(event.identifier)
-        token = get_system_token(__name__, self.agent,
-                                 get_compiler_scopes(compilation.identifier))
+        compilation_id = Compilation.get_identifier(source_id, source_state)
+        scopes = get_compiler_scopes(compilation_id)
+        token = get_system_token(__name__, self.agent, scopes)
 
         try:
-            stat = compiler.Compiler.get_status(compilation.source_id,
-                                                compilation.checksum, token,
-                                                compilation.output_format)
+            stat = compiler.Compiler.get_status(source_id, source_state, token,
+                                                Compilation.Format.PDF)
         except Exception as exc:
             self.handle_compiler_exception(exc)
         if stat.status is Compilation.Status.IN_PROGRESS:

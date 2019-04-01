@@ -79,7 +79,13 @@ class Compilation:
     @property
     def identifier(self):
         """Get the task identifier."""
-        return f"{self.source_id}/{self.checksum}/{self.output_format.value}"
+        return self.get_identifier(self.source_id, self.checksum,
+                                   self.output_format)
+
+    @staticmethod
+    def get_identifier(source_id: str, checksum: str,
+                       output_format: Format = Format.PDF) -> str:
+        return f"{source_id}/{checksum}/{output_format.value}"
 
     @property
     def content_type(self):

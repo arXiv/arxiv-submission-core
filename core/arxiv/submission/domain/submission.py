@@ -419,7 +419,6 @@ class Submission:
     submission_id: Optional[int] = field(default=None)
 
     source_content: Optional[SubmissionContent] = field(default=None)
-    latest_compilation: Optional[Compilation] = field(default=None)
     metadata: SubmissionMetadata = field(default_factory=SubmissionMetadata)
     primary_classification: Optional[Classification] = field(default=None)
     secondary_classification: List[Classification] = \

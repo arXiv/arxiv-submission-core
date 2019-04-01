@@ -160,14 +160,6 @@ class TestPDFGetSize(TestCase):
         )
         self.process = CheckPDFSize(self.submission.submission_id)
 
-    def test_get_size_no_compilation(self):
-        """The submission has no compilations."""
-        events = []
-        trigger = Trigger(before=self.submission, after=self.submission,
-                          actor=self.creator)
-        with self.assertRaises(Failed):
-            self.process.get_size(None, trigger, events.append)
-
     def test_get_size_no_source(self):
         """The submission has no source content."""
         self.submission.source_content = None
@@ -185,13 +177,6 @@ class TestPDFGetSize(TestCase):
         mock_get_status.side_effect = \
             raise_http_exception(exceptions.RequestFailed, 500)
         events = []
-        self.submission.latest_compilation = Compilation(
-            source_id=self.submission.source_content.identifier,
-            checksum=self.submission.source_content.checksum,
-            output_format='pdf',
-            start_time=datetime.now(UTC),
-            status=Compilation.Status.SUCCEEDED
-        )
         trigger = Trigger(before=self.submission, after=self.submission,
                           actor=self.creator)
         with self.assertRaises(Recoverable):
@@ -207,13 +192,6 @@ class TestPDFGetSize(TestCase):
         )
 
         events = []
-        self.submission.latest_compilation = Compilation(
-            source_id=self.submission.source_content.identifier,
-            checksum=self.submission.source_content.checksum,
-            output_format='pdf',
-            start_time=datetime.now(UTC),
-            status=Compilation.Status.IN_PROGRESS
-        )
         trigger = Trigger(before=self.submission, after=self.submission,
                           actor=self.creator)
         with self.assertRaises(Recoverable):
@@ -229,13 +207,6 @@ class TestPDFGetSize(TestCase):
         )
 
         events = []
-        self.submission.latest_compilation = Compilation(
-            source_id=self.submission.source_content.identifier,
-            checksum=self.submission.source_content.checksum,
-            output_format='pdf',
-            start_time=datetime.now(UTC),
-            status=Compilation.Status.IN_PROGRESS
-        )
         trigger = Trigger(before=self.submission, after=self.submission,
                           actor=self.creator)
         with self.assertRaises(Failed):
@@ -253,13 +224,6 @@ class TestPDFGetSize(TestCase):
         )
 
         events = []
-        self.submission.latest_compilation = Compilation(
-            source_id=self.submission.source_content.identifier,
-            checksum=self.submission.source_content.checksum,
-            output_format='pdf',
-            start_time=datetime.now(UTC),
-            status=Compilation.Status.SUCCEEDED
-        )
         trigger = Trigger(before=self.submission, after=self.submission,
                           actor=self.creator)
 
