@@ -1,6 +1,6 @@
 """Example 5: submission is being replaced."""
 
-from unittest import TestCase
+from unittest import TestCase, mock
 import tempfile
 from datetime import datetime
 from pytz import UTC
@@ -8,7 +8,7 @@ from pytz import UTC
 from flask import Flask
 
 from ...services import classic
-from ... import save, load, load_fast, domain, exceptions
+from ... import save, load, load_fast, domain, exceptions, core
 
 CCO = 'http://creativecommons.org/publicdomain/zero/1.0/'
 
@@ -27,6 +27,7 @@ class TestReplacementSubmissionInProgress(TestCase):
         with cls.app.app_context():
             classic.init_app(cls.app)
 
+    @mock.patch(f'{core.__name__}.StreamPublisher', mock.MagicMock())
     def setUp(self):
         """Create, complete, and publish the submission."""
         self.submitter = domain.agent.User(1234, email='j.user@somewhere.edu',
@@ -99,6 +100,7 @@ class TestReplacementSubmissionInProgress(TestCase):
         with self.app.app_context():
             classic.drop_all()
 
+    @mock.patch(f'{core.__name__}.StreamPublisher', mock.MagicMock())
     def test_is_in_working_state(self):
         """The submission is now in working state."""
         # Check the submission state.
@@ -152,6 +154,7 @@ class TestReplacementSubmissionInProgress(TestCase):
                              classic.models.Submission.NOT_SUBMITTED,
                              "The second row is in not submitted state")
 
+    @mock.patch(f'{core.__name__}.StreamPublisher', mock.MagicMock())
     def test_cannot_replace_submission_again(self):
         """The submission cannot be replaced again while in working state."""
         with self.app.app_context():
@@ -163,6 +166,7 @@ class TestReplacementSubmissionInProgress(TestCase):
 
         self.test_is_in_working_state()
 
+    @mock.patch(f'{core.__name__}.StreamPublisher', mock.MagicMock())
     def test_cannot_withdraw_submission(self):
         """The submitter cannot request withdrawal of the submission."""
         with self.app.app_context():
@@ -175,6 +179,7 @@ class TestReplacementSubmissionInProgress(TestCase):
 
         self.test_is_in_working_state()
 
+    @mock.patch(f'{core.__name__}.StreamPublisher', mock.MagicMock())
     def test_can_edit_submission_metadata(self):
         """The submission metadata can now be changed."""
         new_title = "A better title"
@@ -249,6 +254,7 @@ class TestReplacementSubmissionInProgress(TestCase):
             self.assertEqual(db_rows[1].title, new_title,
                              "Replacement row reflects the change.")
 
+    @mock.patch(f'{core.__name__}.StreamPublisher', mock.MagicMock())
     def test_changing_doi(self):
         """Submitter can set the DOI as part of the new version."""
         new_doi = "10.1000/182"
@@ -347,6 +353,7 @@ class TestReplacementSubmissionInProgress(TestCase):
             self.assertEqual(db_rows[1].report_num, new_report_num,
                              "The report number is updated in the database.")
 
+    @mock.patch(f'{core.__name__}.StreamPublisher', mock.MagicMock())
     def test_cannot_be_unfinalized(self):
         """The submission cannot be unfinalized, as it is not finalized."""
         with self.app.app_context():
@@ -356,6 +363,7 @@ class TestReplacementSubmissionInProgress(TestCase):
 
         self.test_is_in_working_state()
 
+    @mock.patch(f'{core.__name__}.StreamPublisher', mock.MagicMock())
     def test_can_revert_to_most_recent_announced_version(self):
         """Submitter can abandon changes to their replacement."""
         new_doi = "10.1000/182"
@@ -431,6 +439,7 @@ class TestReplacementSubmissionInProgress(TestCase):
                              classic.models.Submission.USER_DELETED,
                              "The second row is in the user deleted state.")
 
+    @mock.patch(f'{core.__name__}.StreamPublisher', mock.MagicMock())
     def test_can_start_a_new_replacement_after_reverting(self):
         """Submitter can start a new replacement after reverting."""
         with self.app.app_context():

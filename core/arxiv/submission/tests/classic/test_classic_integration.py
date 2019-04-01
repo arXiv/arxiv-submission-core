@@ -40,6 +40,7 @@ class TestClassicUIWorkflow(TestCase):
                                              forename='大', surname='用户',
                                              endorsements=['cs.DL', 'cs.IR'])
 
+    @mock.patch(f'{core.__name__}.StreamPublisher', mock.MagicMock())
     def test_classic_workflow(self, submitter=None, metadata=None,
                               authors=None):
         """Submitter proceeds through workflow in a linear fashion."""
@@ -156,8 +157,8 @@ class TestClassicUIWorkflow(TestCase):
                              "Seven commands have been executed in total.")
             db_submission = session.query(classic.models.Submission)\
                 .get(submission.submission_id)
-            self.assertEqual(db_submission.must_process, 0,
-                             "Processing status is set correctly in database")
+            self.assertEqual(db_submission.must_process, 1,
+                             "There is no compilation yet")
             self.assertEqual(db_submission.source_size, 593992,
                              "Source package size set correctly in database")
             self.assertEqual(db_submission.source_format, 'tex',
@@ -298,6 +299,7 @@ class TestReplacementIntegration(TestCase):
         with cls.app.app_context():
             classic.init_app(cls.app)
 
+    @mock.patch(f'{core.__name__}.StreamPublisher', mock.MagicMock())
     def setUp(self):
         """An arXiv user is submitting a new paper."""
         self.submitter = domain.User(1234, email='j.user@somewhere.edu',
@@ -396,6 +398,7 @@ class TestReplacementIntegration(TestCase):
         with self.app.app_context():
             classic.drop_all()
 
+    @mock.patch(f'{core.__name__}.StreamPublisher', mock.MagicMock())
     def test_replacement(self):
         """User has started a replacement submission."""
         with self.app.app_context():
@@ -451,6 +454,7 @@ class TestJREFIntegration(TestCase):
         with cls.app.app_context():
             classic.init_app(cls.app)
 
+    @mock.patch(f'{core.__name__}.StreamPublisher', mock.MagicMock())
     def setUp(self):
         """An arXiv user is submitting a new paper."""
         self.submitter = domain.User(1234, email='j.user@somewhere.edu',
@@ -544,6 +548,7 @@ class TestJREFIntegration(TestCase):
         with self.app.app_context():
             classic.drop_all()
 
+    @mock.patch(f'{core.__name__}.StreamPublisher', mock.MagicMock())
     def test_jref(self):
         """User has started a JREF submission."""
         with self.app.app_context():
@@ -592,7 +597,6 @@ class TestJREFIntegration(TestCase):
                          jref_submission.creator.native_id)
 
 
-
 class TestWithdrawalIntegration(TestCase):
     """
     Test integration with the classic database concerning withdrawals.
@@ -621,6 +625,7 @@ class TestWithdrawalIntegration(TestCase):
         with cls.app.app_context():
             classic.init_app(cls.app)
 
+    @mock.patch(f'{core.__name__}.StreamPublisher', mock.MagicMock())
     def setUp(self):
         """An arXiv user is submitting a new paper."""
         self.submitter = domain.User(1234, email='j.user@somewhere.edu',
@@ -718,6 +723,7 @@ class TestWithdrawalIntegration(TestCase):
         with self.app.app_context():
             classic.drop_all()
 
+    @mock.patch(f'{core.__name__}.StreamPublisher', mock.MagicMock())
     def test_request_withdrawal(self):
         """Request a withdrawal."""
         with self.app.app_context():
@@ -761,6 +767,7 @@ class TestPublicationIntegration(TestCase):
         with cls.app.app_context():
             classic.init_app(cls.app)
 
+    @mock.patch(f'{core.__name__}.StreamPublisher', mock.MagicMock())
     def setUp(self):
         """An arXiv user is submitting a new paper."""
         self.submitter = domain.User(1234, email='j.user@somewhere.edu',
@@ -835,6 +842,7 @@ class TestPublicationIntegration(TestCase):
         with self.app.app_context():
             classic.drop_all()
 
+    @mock.patch(f'{core.__name__}.StreamPublisher', mock.MagicMock())
     def test_publication_status_is_reflected(self):
         """The submission has been announced/announced."""
         with self.app.app_context():
@@ -869,6 +877,7 @@ class TestPublicationIntegration(TestCase):
             self.assertFalse(submission.active,
                              "Announced submission should no longer be active")
 
+    @mock.patch(f'{core.__name__}.StreamPublisher', mock.MagicMock())
     def test_publication_status_is_reflected_after_files_expire(self):
         """The submission has been announced/announced, and files expired."""
         paper_id = '1901.00123'
@@ -905,6 +914,7 @@ class TestPublicationIntegration(TestCase):
             self.assertFalse(submission.active,
                              "Announced submission should no longer be active")
 
+    @mock.patch(f'{core.__name__}.StreamPublisher', mock.MagicMock())
     def test_scheduled_status_is_reflected(self):
         """The submission has been scheduled for publication today."""
         with self.app.app_context():
@@ -922,6 +932,7 @@ class TestPublicationIntegration(TestCase):
             self.assertEqual(submission.status, submission.SCHEDULED,
                              "Submission should have scheduled status.")
 
+    @mock.patch(f'{core.__name__}.StreamPublisher', mock.MagicMock())
     def test_scheduled_status_is_reflected_processing_submission(self):
         """The submission has been scheduled for publication today."""
         with self.app.app_context():
@@ -939,6 +950,7 @@ class TestPublicationIntegration(TestCase):
             self.assertEqual(submission.status, submission.SCHEDULED,
                              "Submission should have scheduled status.")
 
+    @mock.patch(f'{core.__name__}.StreamPublisher', mock.MagicMock())
     def test_scheduled_status_is_reflected_prior_to_announcement(self):
         """The submission is being announced; not yet announced."""
         with self.app.app_context():
@@ -956,6 +968,7 @@ class TestPublicationIntegration(TestCase):
             self.assertEqual(submission.status, submission.SCHEDULED,
                              "Submission should have scheduled status.")
 
+    @mock.patch(f'{core.__name__}.StreamPublisher', mock.MagicMock())
     def test_scheduled_tomorrow_status_is_reflected(self):
         """The submission has been scheduled for publication tomorrow."""
         with self.app.app_context():
@@ -973,6 +986,7 @@ class TestPublicationIntegration(TestCase):
             self.assertEqual(submission.status, submission.SCHEDULED,
                              "Submission should be scheduled for tomorrow.")
 
+    @mock.patch(f'{core.__name__}.StreamPublisher', mock.MagicMock())
     def test_publication_failed(self):
         """The submission was not announced successfully."""
         with self.app.app_context():
@@ -990,6 +1004,7 @@ class TestPublicationIntegration(TestCase):
             self.assertEqual(submission.status, submission.ERROR,
                              "Submission should have error status.")
 
+    @mock.patch(f'{core.__name__}.StreamPublisher', mock.MagicMock())
     def test_deleted(self):
         """The submission was deleted by the classic system."""
         with self.app.app_context():
@@ -1008,6 +1023,7 @@ class TestPublicationIntegration(TestCase):
                 self.assertEqual(submission.status, submission.DELETED,
                                  "Submission should have deleted status.")
 
+    @mock.patch(f'{core.__name__}.StreamPublisher', mock.MagicMock())
     def test_deleted_in_ng(self):
         """The submission was deleted in this package."""
         with self.app.app_context():

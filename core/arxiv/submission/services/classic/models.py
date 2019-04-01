@@ -252,7 +252,6 @@ class Submission(Base):    # type: ignore
             self.license = submission.license.uri
 
         if submission.source_content is not None:
-            self.must_process = 0
             self.source_size = submission.source_content.uncompressed_size
             if submission.source_content.source_format is not None:
                 self.source_format = \
@@ -262,6 +261,11 @@ class Submission(Base):    # type: ignore
             self.package = (f'fm://{submission.source_content.identifier}'
                             f'@{submission.source_content.checksum}')
 
+        if submission.submitter_compiled_preview:
+            self.must_process = 0
+        else:
+            self.must_process = 1
+            
         # Not submitted -> Submitted.
         if submission.finalized \
                 and self.status in [Submission.NOT_SUBMITTED, None]:

@@ -189,10 +189,11 @@ from .domain.event import *
 from .core import *
 from .domain.submission import Submission, SubmissionMetadata, Author
 from .domain.agent import Agent, User, System, Client
-from .services import classic
+from .services import classic, StreamPublisher
 
 
 def init_app(app: Flask) -> None:
+    StreamPublisher.init_app(app)
     template_folder = os.path.join(os.path.dirname(os.path.realpath(__file__)),
                                    'templates')
     app.register_blueprint(

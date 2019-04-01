@@ -1,6 +1,6 @@
 """Example 10: abandoning submissions and requests."""
 
-from unittest import TestCase
+from unittest import TestCase, mock
 import tempfile
 from datetime import datetime
 from pytz import UTC
@@ -8,7 +8,7 @@ from pytz import UTC
 from flask import Flask
 
 from ...services import classic
-from ... import save, load, load_fast, domain, exceptions
+from ... import save, load, load_fast, domain, exceptions, core
 
 CCO = 'http://creativecommons.org/publicdomain/zero/1.0/'
 TEX = domain.submission.SubmissionContent.Format('tex')
@@ -28,6 +28,7 @@ class TestAbandonSubmission(TestCase):
         with cls.app.app_context():
             classic.init_app(cls.app)
 
+    @mock.patch(f'{core.__name__}.StreamPublisher', mock.MagicMock())
     def setUp(self):
         """Create, complete, and publish the submission."""
         self.submitter = domain.agent.User(1234, email='j.user@somewhere.edu',
@@ -57,6 +58,7 @@ class TestAbandonSubmission(TestCase):
         with self.app.app_context():
             classic.drop_all()
 
+    @mock.patch(f'{core.__name__}.StreamPublisher', mock.MagicMock())
     def test_abandon_new_submission(self):
         """Submitter abandons new submission."""
         with self.app.app_context():
@@ -108,6 +110,7 @@ class TestAbandonReplacement(TestCase):
         with cls.app.app_context():
             classic.init_app(cls.app)
 
+    @mock.patch(f'{core.__name__}.StreamPublisher', mock.MagicMock())
     def setUp(self):
         """Create, complete, and publish the submission."""
         self.submitter = domain.agent.User(1234, email='j.user@somewhere.edu',
@@ -187,6 +190,7 @@ class TestAbandonReplacement(TestCase):
         with self.app.app_context():
             classic.drop_all()
 
+    @mock.patch(f'{core.__name__}.StreamPublisher', mock.MagicMock())
     def test_abandon_replacement_submission(self):
         """The replacement is cancelled."""
         with self.app.app_context():
@@ -225,6 +229,7 @@ class TestAbandonReplacement(TestCase):
                              classic.models.Submission.USER_DELETED,
                              "The second row is USER_DELETED")
 
+    @mock.patch(f'{core.__name__}.StreamPublisher', mock.MagicMock())
     def test_can_start_new_replacement(self):
         """The user can start a new replacement."""
         with self.app.app_context():
@@ -290,6 +295,7 @@ class TestCrossListCancelled(TestCase):
         with cls.app.app_context():
             classic.init_app(cls.app)
 
+    @mock.patch(f'{core.__name__}.StreamPublisher', mock.MagicMock())
     def setUp(self):
         """Create, complete, and publish the submission."""
         self.submitter = domain.agent.User(1234, email='j.user@somewhere.edu',
@@ -374,6 +380,7 @@ class TestCrossListCancelled(TestCase):
         with self.app.app_context():
             classic.drop_all()
 
+    @mock.patch(f'{core.__name__}.StreamPublisher', mock.MagicMock())
     def test_request_is_cancelled(self):
         """Submitter has cancelled the cross-list request."""
         with self.app.app_context():
@@ -410,6 +417,7 @@ class TestCrossListCancelled(TestCase):
                              classic.models.Submission.USER_DELETED,
                              "The second row is USER_DELETED")
 
+    @mock.patch(f'{core.__name__}.StreamPublisher', mock.MagicMock())
     def test_user_can_make_another_request(self):
         """User can now make another request."""
         # Request cross-list classification
@@ -476,6 +484,7 @@ class TestWithdrawalCancelled(TestCase):
         with cls.app.app_context():
             classic.init_app(cls.app)
 
+    @mock.patch(f'{core.__name__}.StreamPublisher', mock.MagicMock())
     def setUp(self):
         """Create, complete, and publish the submission."""
         self.submitter = domain.agent.User(1234, email='j.user@somewhere.edu',
@@ -560,6 +569,7 @@ class TestWithdrawalCancelled(TestCase):
         with self.app.app_context():
             classic.drop_all()
 
+    @mock.patch(f'{core.__name__}.StreamPublisher', mock.MagicMock())
     def test_request_is_cancelled(self):
         """Submitter has cancelled the withdrawal request."""
         with self.app.app_context():
@@ -596,6 +606,7 @@ class TestWithdrawalCancelled(TestCase):
                              classic.models.Submission.USER_DELETED,
                              "The second row is USER_DELETED")
 
+    @mock.patch(f'{core.__name__}.StreamPublisher', mock.MagicMock())
     def test_user_can_make_another_request(self):
         """User can now make another request."""
         with self.app.app_context():

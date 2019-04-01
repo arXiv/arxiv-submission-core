@@ -29,9 +29,9 @@ class Compilation:
         def content_type(self):
             """Get the MIME type for the compilation product."""
             _ctypes = {
-                self.Format.PDF: 'application/pdf',
-                self.Format.DVI: 'application/x-dvi',
-                self.Format.PS: 'application/postscript'
+                self.PDF: 'application/pdf',
+                self.DVI: 'application/x-dvi',
+                self.PS: 'application/postscript'
             }
             return _ctypes[self]
 
@@ -116,7 +116,7 @@ class CompilationProduct:
 
 
 @dataclass
-class CompilationLog(NamedTuple):
+class CompilationLog:
     """Content of a compilation log."""
 
     stream: io.BytesIO

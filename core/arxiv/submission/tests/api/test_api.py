@@ -6,7 +6,7 @@ from collections import defaultdict
 from datetime import datetime, timedelta
 from flask import Flask
 from pytz import UTC
-from ... import save, load, Submission, User, Event, \
+from ... import save, load, core, Submission, User, Event, \
     CreateComment, SubmissionMetadata, CreateSubmission, SetAuthors, Author, \
     SetTitle, SetAbstract
 from ...exceptions import NoSuchSubmission, InvalidEvent
@@ -53,8 +53,9 @@ class TestLoad(TestCase):
 class TestSave(TestCase):
     """Test :func:`.save`."""
 
+    @mock.patch(f'{core.__name__}.StreamPublisher')
     @mock.patch('submission.core.classic')
-    def test_save_creation_event(self, mock_database):
+    def test_save_creation_event(self, mock_database, mock_publisher):
         """A :class:`.CreationEvent` is passed."""
         mock_database.store_event = mock_store_event
         user = User(12345, 'joe@joe.joe')
@@ -69,8 +70,13 @@ class TestSave(TestCase):
         self.assertIsNotNone(submission.submission_id,
                              "Submission ID should be set.")
 
+        self.assertEqual(mock_publisher.put.call_count, 1)
+        args = event, None, submission
+        self.assertTrue(mock_publisher.put.called_with(*args))
+
+    @mock.patch(f'{core.__name__}.StreamPublisher')
     @mock.patch('submission.core.classic')
-    def test_save_events_from_scratch(self, mock_database):
+    def test_save_events_from_scratch(self, mock_database, mock_publisher):
         """Save multiple events for a nonexistant submission."""
         mock_database.store_event = mock_store_event
         user = User(12345, 'joe@joe.joe')
@@ -82,8 +88,13 @@ class TestSave(TestCase):
         self.assertIsInstance(submission.submission_id, int)
         self.assertEqual(submission.created, e.created)
 
+        self.assertEqual(mock_publisher.put.call_count, 2)
+        self.assertEqual(mock_publisher.put.mock_calls[0][1][0], e)
+        self.assertEqual(mock_publisher.put.mock_calls[1][1][0], e2)
+
+    @mock.patch(f'{core.__name__}.StreamPublisher')
     @mock.patch('submission.core.classic')
-    def test_create_and_update_authors(self, mock_database):
+    def test_create_and_update_authors(self, mock_database, mock_publisher):
         """Save multiple events for a nonexistant submission."""
         mock_database.store_event = mock_store_event
         user = User(12345, 'joe@joe.joe')
@@ -94,6 +105,11 @@ class TestSave(TestCase):
         submission, events = save(e, e2)
         self.assertIsInstance(submission.metadata.authors[0], Author)
 
+        self.assertEqual(mock_publisher.put.call_count, 2)
+        self.assertEqual(mock_publisher.put.mock_calls[0][1][0], e)
+        self.assertEqual(mock_publisher.put.mock_calls[1][1][0], e2)
+
+    @mock.patch(f'{core.__name__}.StreamPublisher', mock.MagicMock())
     @mock.patch('submission.core.classic')
     def test_save_from_scratch_without_creation_event(self, mock_database):
         """An exception is raised when there is no creation event."""
@@ -103,8 +119,9 @@ class TestSave(TestCase):
         with self.assertRaises(NoSuchSubmission):
             save(e2)
 
+    @mock.patch(f'{core.__name__}.StreamPublisher')
     @mock.patch('submission.core.classic')
-    def test_save_events_on_existing_submission(self, mock_db):
+    def test_save_events_on_existing_submission(self, mock_db, mock_publisher):
         """Save multiple sets of events in separate calls to :func:`.save`."""
         cache = {}
 
@@ -152,3 +169,8 @@ class TestSave(TestCase):
                          " original creation date.")
         self.assertEqual(submission2.submission_id, submission_id,
                          "The submission ID should remain the same.")
+
+        self.assertEqual(mock_publisher.put.call_count, 3)
+        self.assertEqual(mock_publisher.put.mock_calls[0][1][0], e)
+        self.assertEqual(mock_publisher.put.mock_calls[1][1][0], e2)
+        self.assertEqual(mock_publisher.put.mock_calls[2][1][0], e3)

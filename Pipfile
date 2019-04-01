@@ -39,6 +39,8 @@ mimesis = "*"
 sphinx = "*"
 sphinx-autodoc-typehints = "*"
 pydocstyle = "==3.0.0"
+pytest = "*"
+pytest-cov = "*"
 
 [pipenv]
 allow_prereleases = true

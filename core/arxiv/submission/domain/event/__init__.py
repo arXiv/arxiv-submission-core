@@ -924,6 +924,38 @@ class UnsetUploadPackage(Event):
 
 
 @dataclass()
+class ConfirmCompiledPreview(Event):
+    """Confirm that the submitter successfully compiled a preview."""
+
+    NAME = "confirm submission preview is compiled"
+    NAMED = "confirmed that submission preview was compiled"
+
+    def validate(self, submission: Submission) -> None:
+        return
+
+    def project(self, submission: Submission) -> Submission:
+        """Set :attr:`Submission.submitter_compiled_preview`."""
+        submission.submitter_compiled_preview = True
+        return submission
+
+
+@dataclass()
+class UnConfirmCompiledPreview(Event):
+    """Unconfirm that the submitter successfully compiled a preview."""
+
+    NAME = "unconfirm submission preview is compiled"
+    NAMED = "unconfirmed that submission preview was compiled"
+
+    def validate(self, submission: Submission) -> None:
+        return
+
+    def project(self, submission: Submission) -> Submission:
+        """Set :attr:`Submission.submitter_compiled_preview`."""
+        submission.submitter_compiled_preview = False
+        return submission
+
+
+@dataclass()
 class ConfirmPreview(Event):
     """Confirm that the paper and abstract previews are acceptable."""
 
@@ -935,7 +967,7 @@ class ConfirmPreview(Event):
         validators.submission_is_not_finalized(self, submission)
 
     def project(self, submission: Submission) -> Submission:
-        """Set :attr:`Submission.return submission`."""
+        """Set :attr:`Submission.submitter_confirmed_preview`."""
         submission.submitter_confirmed_preview = True
         return submission
 

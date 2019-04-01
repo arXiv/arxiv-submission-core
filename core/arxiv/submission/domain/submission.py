@@ -426,6 +426,7 @@ class Submission:
     submitter_contact_verified: bool = field(default=False)
     submitter_is_author: Optional[bool] = field(default=None)
     submitter_accepts_policy: Optional[bool] = field(default=None)
+    submitter_compiled_preview: bool = field(default=False)
     submitter_confirmed_preview: bool = field(default=False)
     license: Optional[License] = field(default=None)
     status: str = field(default=WORKING)

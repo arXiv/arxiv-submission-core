@@ -12,7 +12,7 @@ from arxiv.base.globals import get_application_config, get_application_global
 from .domain.submission import Submission, SubmissionMetadata, Author
 from .domain.agent import Agent, User, System, Client
 from .domain.event import *
-from .services import classic
+from .services import classic, StreamPublisher
 from .exceptions import InvalidEvent, InvalidStack, NoSuchSubmission, \
     SaveError, NothingToDo
 
@@ -162,8 +162,8 @@ def save(*events: Event, submission_id: Optional[str] = None) \
         logger.debug('Submission has requests: %s', after.user_requests)
         applied.append(event)
         if not event.committed:
-            # TODO: <-- emit event here.
             after, consequent_events = event.commit(classic.store_event)
+            StreamPublisher.put(event, before, after)
             applied += consequent_events
 
         before = after
@@ -173,5 +173,6 @@ def save(*events: Event, submission_id: Optional[str] = None) \
 def init_app(app: Flask) -> None:
     """Set default configuration parameters for an application instance."""
     classic.init_app(app)
+    StreamPublisher.init_app(app)
     app.config.setdefault('ENABLE_CALLBACKS', 0)
     app.config.setdefault('ENABLE_ASYNC', 0)

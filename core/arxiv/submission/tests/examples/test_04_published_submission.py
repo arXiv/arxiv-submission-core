@@ -1,6 +1,6 @@
 """Example 4: submission is announced."""
 
-from unittest import TestCase
+from unittest import TestCase, mock
 import tempfile
 from datetime import datetime
 from pytz import UTC
@@ -8,7 +8,7 @@ from pytz import UTC
 from flask import Flask
 
 from ...services import classic
-from ... import save, load, load_fast, domain, exceptions
+from ... import save, load, load_fast, domain, exceptions, core
 
 CCO = 'http://creativecommons.org/publicdomain/zero/1.0/'
 
@@ -27,6 +27,7 @@ class TestAnnouncedSubmission(TestCase):
         with cls.app.app_context():
             classic.init_app(cls.app)
 
+    @mock.patch(f'{core.__name__}.StreamPublisher', mock.MagicMock())
     def setUp(self):
         """Create, complete, and publish the submission."""
         self.submitter = domain.agent.User(1234, email='j.user@somewhere.edu',
@@ -93,6 +94,7 @@ class TestAnnouncedSubmission(TestCase):
         with self.app.app_context():
             classic.drop_all()
 
+    @mock.patch(f'{core.__name__}.StreamPublisher', mock.MagicMock())
     def test_is_in_announced_state(self):
         """The submission is now announced."""
         # Check the submission state.
@@ -130,6 +132,7 @@ class TestAnnouncedSubmission(TestCase):
                              "The classic submission is in the ANNOUNCED"
                              " state")
 
+    @mock.patch(f'{core.__name__}.StreamPublisher', mock.MagicMock())
     def test_can_replace_submission(self):
         """The submission can be replaced, resulting in a new version."""
         with self.app.app_context():
@@ -181,6 +184,7 @@ class TestAnnouncedSubmission(TestCase):
                              classic.models.Submission.NOT_SUBMITTED,
                              "The second row is in not submitted state")
 
+    @mock.patch(f'{core.__name__}.StreamPublisher', mock.MagicMock())
     def test_can_withdraw_submission(self):
         """The submitter can request withdrawal of the submission."""
         withdrawal_reason = "the best reason"
@@ -260,6 +264,7 @@ class TestAnnouncedSubmission(TestCase):
                                                     **self.defaults),
                      submission_id=self.submission.submission_id)
 
+    @mock.patch(f'{core.__name__}.StreamPublisher', mock.MagicMock())
     def test_can_request_crosslist(self):
         """The submitter can request cross-list classification."""
         category = "cs.IR"
@@ -346,6 +351,7 @@ class TestAnnouncedSubmission(TestCase):
                                                     **self.defaults),
                      submission_id=self.submission.submission_id)
 
+    @mock.patch(f'{core.__name__}.StreamPublisher', mock.MagicMock())
     def test_cannot_edit_submission_metadata(self):
         """The submission metadata cannot be changed without a new version."""
         with self.app.app_context():
@@ -357,6 +363,7 @@ class TestAnnouncedSubmission(TestCase):
 
         self.test_is_in_announced_state()
 
+    @mock.patch(f'{core.__name__}.StreamPublisher', mock.MagicMock())
     def test_changing_doi(self):
         """Submitter can set the DOI."""
         new_doi = "10.1000/182"
@@ -441,6 +448,7 @@ class TestAnnouncedSubmission(TestCase):
             self.assertEqual(db_rows[1].report_num, new_report_num,
                              "The report number is updated in the database.")
 
+    @mock.patch(f'{core.__name__}.StreamPublisher', mock.MagicMock())
     def test_cannot_be_unfinalized(self):
         """The submission cannot be unfinalized, because it is announced."""
         with self.app.app_context():
@@ -450,6 +458,7 @@ class TestAnnouncedSubmission(TestCase):
 
         self.test_is_in_announced_state()
 
+    @mock.patch(f'{core.__name__}.StreamPublisher', mock.MagicMock())
     def test_rolling_back_does_not_clobber_jref_changes(self):
         """If user submits a JREF, rolling back does not clobber changes."""
         # These changes result in what we consider a "JREF submission" in

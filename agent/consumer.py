@@ -100,6 +100,8 @@ def start_agent() -> None:
     """Start the record processor."""
     app = create_app()
     with app.app_context():
+        if not database.tables_exist():
+            database.create_all()
         process_stream(app)
 
 
