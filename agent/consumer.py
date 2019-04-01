@@ -8,6 +8,9 @@ from typing import List, Any, Optional, Dict
 from flask import Flask
 from retry import retry
 
+from botocore.exceptions import WaiterError, NoCredentialsError, \
+    PartialCredentialsError, BotoCoreError, ClientError
+
 from arxiv.base import logging
 from arxiv.integration.kinesis import consumer
 from arxiv.submission.serializer import loads
@@ -37,7 +40,7 @@ class SubmissionEventConsumer(consumer.BaseConsumer):
         sub_sequence_number : int
 
         """
-        logger.info(f'Processing record {record["SequenceNumber"]}')
+        logger.info(f'Processing record %s', record["SequenceNumber"])
         try:
             data = loads(record['Data'].decode('utf-8'))
         except json.decoder.JSONDecodeError as exc:
@@ -46,17 +49,54 @@ class SubmissionEventConsumer(consumer.BaseConsumer):
             raise exc
 
         if type(data['event']) is AddProcessStatus:
+            logger.debug('Storing event %s', data['event'])
             self._store_event(data['event'])
+            logger.debug('..stored.')
+        logger.debug('Evaluating event %s', data['event'].event_id)
         self._evaluate(data['event'], data['before'], data['after'])
+        logger.debug('Done processing record %s', record["SequenceNumber"])
 
-        @retry(backoff=2, jitter=(0, 1))
-        def _store_event(self, event: AddProcessStatus) -> None:
-            database.store_event(data['event'])
+    @retry(backoff=2, jitter=(0, 1), logger=logger)
+    def _store_event(self, event: AddProcessStatus) -> None:
+        database.store_event(event)
 
-        @retry(backoff=2, jitter=(0, 1))
-        def _evaluate(self, event: Event, before: Submission,
-                      after: Submission) -> None:
-            rules.evalute(event, before, after)
+    @retry(backoff=2, jitter=(0, 1), logger=logger)
+    def _evaluate(self, event: Event, before: Submission,
+                  after: Submission) -> None:
+        rules.evaluate(event, before, after)
+
+    def wait_for_stream(self) -> None:
+        """
+        Wait for the stream to become available.
+
+        If the stream becomes available, returns ``None``. Otherwise, raises
+        a :class:`.StreamNotAvailable` exception.
+
+        Raises
+        ------
+        :class:`.StreamNotAvailable`
+            Raised when the stream could not be reached.
+
+        """
+        waiter = self.client.get_waiter('stream_exists')
+        try:
+            logger.error(f'Waiting for stream {self.stream_name}')
+            waiter.wait(
+                StreamName=self.stream_name,
+                Limit=1,
+                ExclusiveStartShardId=self.shard_id
+            )
+        except WaiterError as e:
+            logger.error('Failed to get stream while waiting')
+            raise consumer.exceptions.StreamNotAvailable('Could not connect to stream') from e
+        except (PartialCredentialsError, NoCredentialsError) as e:
+            logger.error('Credentials missing or incomplete: %s', e.msg)
+            raise consumer.exceptions.ConfigurationError('Credentials missing') from e
+        logger.debug('Done waiting')
+
+    def go(self) -> None:
+        logger.debug('Go!')
+        super(SubmissionEventConsumer, self).go()
 
 
 class DatabaseCheckpointManager:
@@ -67,7 +107,7 @@ class DatabaseCheckpointManager:
     def __init__(self, shard_id: str) -> None:
         """Get the last checkpoint."""
         self.shard_id = shard_id
-        self.position = database.get_latest_position(self.shar_id)
+        self.position = database.get_latest_position(self.shard_id)
 
     def checkpoint(self, position: str) -> None:
         """Checkpoint at ``position``."""
@@ -100,6 +140,7 @@ def start_agent() -> None:
     """Start the record processor."""
     app = create_app()
     with app.app_context():
+        database.await_connection()
         if not database.tables_exist():
             database.create_all()
         process_stream(app)

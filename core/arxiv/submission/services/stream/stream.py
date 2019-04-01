@@ -62,7 +62,7 @@ class StreamPublisher(metaclass=MetaIntegration):
 
     def put(self, event: Event, before: Submission, after: Submission) -> None:
         """Put an :class:`.Event` on the stream."""
-        payload = {'event': event, before: 'before', after: 'after'}
+        payload = {'event': event, 'before': before, 'after': after}
         data = bytes(dumps(payload), encoding='utf-8')
         self.client.put_record(StreamName=self.stream, Data=data,
                                PartitionKey=self.partition_key)

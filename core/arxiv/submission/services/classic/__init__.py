@@ -53,6 +53,7 @@ from . import models, util, interpolate, log, proposal, load
 
 
 logger = logging.getLogger(__name__)
+logger.propagate = False
 
 
 def handle_operational_errors(func):
@@ -229,7 +230,8 @@ def get_submission(submission_id: int) -> Tuple[Submission, List[Event]]:
 @retry(ClassicBaseException, tries=3, delay=1)
 @handle_operational_errors
 def store_event(event: Event, before: Optional[Submission],
-                after: Optional[Submission]) -> Tuple[Event, Submission]:
+                after: Optional[Submission],
+                *call: List[Callable]) -> Tuple[Event, Submission]:
     """
     Store an event, and update submission state.
 
@@ -255,11 +257,16 @@ def store_event(event: Event, before: Optional[Submission],
         The state of the submission before the event occurred.
     after : :class:`Submission`
         The state of the submission after the event occurred.
+    call : list
+        Items are callables that accept args ``Event, Submission, Submission``.
+        These are called within the transaction context; if an exception is
+        raised, the transaction is rolled back.
 
     """
     with transaction() as session:
         if event.committed:
             raise TransactionFailed('%s already committed', event.event_id)
+        logger.debug('store event %s', event.event_id)
 
         doc_id: Optional[int] = None
 
@@ -334,6 +341,9 @@ def store_event(event: Event, before: Optional[Submission],
         session.add(db_event)
 
         log.handle(event, before, after)   # Create admin log entry.
+        for func in call:
+            logger.debug('call %s with event %s', func, event.event_id)
+            func(event, before, after)
         if isinstance(event, AddProposal):
             proposal.add(event, before, after)
 

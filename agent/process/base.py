@@ -7,6 +7,7 @@ from contextlib import contextmanager
 from collections import OrderedDict
 
 from arxiv.submission import Event, AddProcessStatus, Agent, Submission, System
+from arxiv.submission.domain.process import ProcessStatus
 from ..domain import Trigger
 
 
@@ -68,21 +69,7 @@ def is_step(func: Callable) -> bool:
 
 
 class Process(metaclass=ProcessType):
-    class Status(Enum):
-        PENDING = 'pending'
-        """The process is waiting to start."""
-        IN_PROGRESS = 'in_progress'
-        """Process has started, and is running remotely."""
-        FAILED_TO_START = 'failed_to_start'
-        """Could not start the process."""
-        FAILED = 'failed'
-        """The process failed while running."""
-        FAILED_TO_END = 'failed_to_end'
-        """The process ran, but failed to end gracefully."""
-        SUCCEEDED = 'succeeded'
-        """The process ended successfully."""
-        TERMINATED = 'terminated'
-        """The process was terminated, e.g. cancelled by operator."""
+    Status = ProcessStatus.Status
 
     def __init__(self, submission_id: int) -> None:
         self.submission_id = submission_id
@@ -116,15 +103,18 @@ class Process(metaclass=ProcessType):
 
     def before_start(self, trigger: Trigger, emit: Callable, *args, **kwargs):
         """Emit a pending status before the process starts."""
-        emit(AddProcessStatus(status=Process.Status.PENDING))
+        emit(AddProcessStatus(creator=self.agent, process=self.name,
+                              status=Process.Status.PENDING))
 
     def on_failure(self, step_name: str, trigger: Trigger,
                    emit: Callable) -> None:
         """Emit a failure status when the process fails."""
-        emit(AddProcessStatus(status=Process.Status.FAILED, step=step_name))
+        emit(AddProcessStatus(creator=self.agent, process=self.name,
+                              step=step_name, status=Process.Status.FAILED))
 
     def on_success(self, step_name: str, trigger: Trigger,
                    emit: Callable) -> None:
         """Emit a success state when a step is completed."""
-        emit(AddProcessStatus(status=self._success_status(step_name),
-                              step=step_name))
+        emit(AddProcessStatus(creator=self.agent, process=self.name,
+                              step=step_name,
+                              status=self._success_status(step_name)))

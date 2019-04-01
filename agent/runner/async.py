@@ -126,7 +126,7 @@ def make_task(app: Celery, Proc: ProcessType, step: Callable) -> Callable:
         previous = data.get_last_result() if data.results else None
         try:
             inst = Proc(data.submission_id)
-            data.add_result(step(inst, previous, events.append))
+            data.add_result(step(inst, previous, data.trigger, events.append))
         except Failed as exc:
             raise exc   # This is a deliberately unrecoverable failure.
         except Exception as exc:
@@ -162,8 +162,8 @@ def register_process(Proc: ProcessType) -> Callable:
     on_failure = make_failure_task(app, Proc)
 
     def execute_chain(submission_id: int, trigger: Trigger):
-        logger.debug('Execute chain %s for submission %s with trigger %s',
-                     Proc.__name__, submission_id, trigger)
+        logger.debug('Execute chain %s for submission %s',
+                     Proc.__name__, submission_id)
         process.apply_async((ProcessData(submission_id, trigger, []),),
                             link_error=on_failure.s())
     return execute_chain

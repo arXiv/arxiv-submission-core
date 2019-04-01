@@ -28,7 +28,7 @@ crashes, meteor strike), it can be retried without discarding expensive results
 from previous steps.
 
 """
-from . import process, rules, runner, consumer
+from . import process, rules, runner
 
 
 # Prepare all Process types for asynchronous execution.

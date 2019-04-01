@@ -162,12 +162,18 @@ def save(*events: Event, submission_id: Optional[str] = None) \
         logger.debug('Submission has requests: %s', after.user_requests)
         applied.append(event)
         if not event.committed:
-            after, consequent_events = event.commit(classic.store_event)
-            StreamPublisher.put(event, before, after)
+            after, consequent_events = event.commit(_store_event)
             applied += consequent_events
 
         before = after
     return after, list(sorted(set(applied), key=lambda e: e.created))
+
+
+def _store_event(event, before, after) -> Tuple[Event, Submission]:
+    try:
+        return classic.store_event(event, before, after, StreamPublisher.put)
+    except classic.exceptions.TransactionFailed as e:
+        raise SaveError('Failed to persist event') from e
 
 
 def init_app(app: Flask) -> None:

@@ -3,6 +3,7 @@
 from typing import Optional
 from datetime import datetime
 from pytz import UTC
+import time
 
 from werkzeug.local import LocalProxy
 from flask_sqlalchemy import SQLAlchemy
@@ -12,11 +13,14 @@ from sqlalchemy import BigInteger, Column, DateTime, Enum, ForeignKey, \
     Integer, SmallInteger, String, Table, text, Text
 from sqlalchemy.dialects.mysql import DATETIME
 
+from arxiv.base import logging
 from arxiv.submission.domain.event import AddProcessStatus
 from ..rules import Rule
 from ..process import Process
 
 db: SQLAlchemy = SQLAlchemy()
+logger = logging.getLogger(__name__)
+logger.propagate = False
 
 
 class Checkpoint(db.Model):
@@ -69,10 +73,13 @@ def tables_exist() -> bool:
 
 def get_latest_position(shard_id: str) -> str:
     """Get the latest checkpointed position."""
-    position, = db.session.query(Checkpoint.position) \
+    result = db.session.query(Checkpoint.position) \
         .filter(Checkpoint.shard_id == shard_id) \
         .order_by(Checkpoint.id.desc()) \
         .first()
+    if result is None:
+        return
+    position, = result
     return position
 
 
@@ -96,3 +103,20 @@ def store_event(event: AddProcessStatus) -> None:
         agent_id=event.creator.native_id
     ))
     db.session.commit()
+
+
+def await_connection(max_wait: int = -1) -> None:
+    logger.info('Waiting for database server to be available')
+    wait = 2
+    start = time.time()
+    while True:
+        if max_wait > 0 and time.time() - start >= max_wait:
+            raise RuntimeError('Failed to connect in %i seconds', max_wait)
+        try:
+            db.session.execute('SELECT 1')
+            break
+        except Exception as e:
+            logger.info(e)
+            logger.info(f'...waiting {wait} seconds...')
+            time.sleep(wait)
+            wait *= 2

@@ -19,21 +19,16 @@ class AddProcessStatus(Event):
     NAMED = "added status of a process"
 
     Status = ProcessStatus.Status
-    Process = ProcessStatus.Process
 
-    status: Status = field(default=Status.REQUESTED)
-    process: Process = field(default=Process.NONE)
-    service: Optional[str] = field(default=None)
-    version: Optional[str] = field(default=None)
-    identifier: Optional[str] = field(default=None)
+    process: Optional[str] = field(default=None)
+    step: Optional[str] = field(default=None)
+    status: Status = field(default=Status.PENDING)
     reason: Optional[str] = field(default=None)
-    monitoring_task: Optional[str] = field(default=None)
 
     def __post_init__(self) -> None:
         """Make sure our enums are in order."""
         super(AddProcessStatus, self).__post_init__()
         self.process = self.Process(self.process)
-        self.status = self.Status(self.status)
 
     def validate(self, submission: Submission) -> None:
         """Verify that we have a :class:`.ProcessStatus`."""
@@ -46,11 +41,8 @@ class AddProcessStatus(Event):
             creator=self.creator,
             created=self.created,
             process=self.process,
+            step=self.step,
             status=self.status,
-            process_service=self.service,
-            process_version=self.version,
-            process_identifier=self.identifier,
-            reason=self.reason,
-            monitoring_task=self.monitoring_task
+            reason=self.reason
         ))
         return submission

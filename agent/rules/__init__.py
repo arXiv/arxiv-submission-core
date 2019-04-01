@@ -39,12 +39,15 @@ logger = logging.getLogger(__name__)
 
 def evaluate(event: Event, before: Submission, after: Submission) -> None:
     """Evaluate an event against known rules."""
+    logger.debug('evaluate event %s (%s)', event.event_id, type(event))
     for rule in REGISTRY[type(event)]:
         if rule.condition(event, before, after):
+            logger.debug('event %s matches rule %s', event.event_id, rule.name)
             params = rule.params(event, before, after)
             trigger = Trigger(event=event, before=before, after=after,
                               actor=event.creator, params=params)
             process = rule.process(event.submission_id)
+            logger.debug('starting process %s', process.name)
             runner = AsyncProcessRunner(process)
             runner.run(trigger)
             logger.info('Event %s on submission %s caused %s with params %s',

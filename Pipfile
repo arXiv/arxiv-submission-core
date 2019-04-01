@@ -27,6 +27,7 @@ retry = "*"
 backports-datetime-fromisoformat = "*"
 arxiv-base = "==0.15.3rc8"
 arxiv-submission-core = {path = "./core"}
+alembic = "*"
 
 [dev-packages]
 "nose2" = "*"
