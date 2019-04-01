@@ -468,8 +468,6 @@ class Submission:
     waivers: Dict[str, Waiver] = field(default_factory=dict)
     """Quality control waivers."""
 
-    # delegations: Dict[str, Delegation] = field(default_factory=dict)
-
     @property
     def features(self) -> Dict[str, Feature]:
         return {k: v for k, v in self.annotations.items()

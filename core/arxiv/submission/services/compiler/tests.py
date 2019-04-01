@@ -23,7 +23,7 @@ class TestRequestCompilation(TestCase):
         """Request compilation of an upload workspace."""
         source_id = 42
         checksum = 'asdf1234='
-        output_format = domain.compilation.Format.PDF
+        output_format = domain.compilation.Compilation.Format.PDF
         location = f'http://asdf/{source_id}/{checksum}/{output_format.value}'
         mock_session = mock.MagicMock(
             post=mock.MagicMock(
@@ -33,7 +33,7 @@ class TestRequestCompilation(TestCase):
                         'source_id': source_id,
                         'checksum': checksum,
                         'output_format': output_format.value,
-                        'status': domain.compilation.Status.IN_PROGRESS.value
+                        'status': domain.compilation.Compilation.Status.IN_PROGRESS.value
                     }),
                     headers={'Location': location}
                 )
@@ -45,7 +45,7 @@ class TestRequestCompilation(TestCase):
                         'source_id': source_id,
                         'checksum': checksum,
                         'output_format': output_format.value,
-                        'status': domain.compilation.Status.IN_PROGRESS.value
+                        'status': domain.compilation.Compilation.Status.IN_PROGRESS.value
                     }),
                     headers={'Location': location}
                 )
@@ -58,7 +58,7 @@ class TestRequestCompilation(TestCase):
         self.assertEqual(comp_status.identifier,
                          f"{source_id}/{checksum}/{output_format.value}")
         self.assertEqual(comp_status.status,
-                         domain.compilation.Status.IN_PROGRESS)
+                         domain.compilation.Compilation.Status.IN_PROGRESS)
         self.assertEqual(mock_session.post.call_count, 1)
 
     @mock.patch('arxiv.integration.api.service.current_app', mock_app)
@@ -67,7 +67,7 @@ class TestRequestCompilation(TestCase):
         """Request compilation of an upload workspace already processing."""
         source_id = 42
         checksum = 'asdf1234='
-        output_format = domain.compilation.Format.PDF
+        output_format = domain.compilation.Compilation.Format.PDF
 
         location = f'http://asdf/{source_id}/{checksum}/{output_format.value}'
         mock_session = mock.MagicMock(
@@ -79,7 +79,7 @@ class TestRequestCompilation(TestCase):
                             'source_id': source_id,
                             'checksum': checksum,
                             'output_format': output_format.value,
-                            'status': domain.compilation.Status.IN_PROGRESS.value
+                            'status': domain.compilation.Compilation.Status.IN_PROGRESS.value
                         }
                     )
                 )
@@ -92,7 +92,7 @@ class TestRequestCompilation(TestCase):
         self.assertEqual(comp_status.identifier,
                          f"{source_id}/{checksum}/{output_format.value}")
         self.assertEqual(comp_status.status,
-                         domain.compilation.Status.IN_PROGRESS)
+                         domain.compilation.Compilation.Status.IN_PROGRESS)
         self.assertEqual(mock_session.post.call_count, 1)
 
 
@@ -105,7 +105,7 @@ class TestGetTaskStatus(TestCase):
         """Get the status of a failed task."""
         source_id = 42
         checksum = 'asdf1234='
-        output_format = domain.compilation.Format.PDF
+        output_format = domain.compilation.Compilation.Format.PDF
 
         mock_session = mock.MagicMock(
             get=mock.MagicMock(
@@ -116,7 +116,7 @@ class TestGetTaskStatus(TestCase):
                             'source_id': source_id,
                             'checksum': checksum,
                             'output_format': output_format.value,
-                            'status': domain.compilation.Status.FAILED.value
+                            'status': domain.compilation.Compilation.Status.FAILED.value
                         }
                     )
                 )
@@ -128,7 +128,7 @@ class TestGetTaskStatus(TestCase):
         self.assertEqual(comp_status.source_id, source_id)
         self.assertEqual(comp_status.identifier,
                          f"{source_id}/{checksum}/{output_format.value}")
-        self.assertEqual(comp_status.status, domain.compilation.Status.FAILED)
+        self.assertEqual(comp_status.status, domain.compilation.Compilation.Status.FAILED)
         self.assertEqual(mock_session.get.call_count, 1)
 
     @mock.patch('arxiv.integration.api.service.current_app', mock_app)
@@ -137,7 +137,7 @@ class TestGetTaskStatus(TestCase):
         """Get the status of an in-progress task."""
         source_id = 42
         checksum = 'asdf1234='
-        output_format = domain.compilation.Format.PDF
+        output_format = domain.compilation.Compilation.Format.PDF
         mock_session = mock.MagicMock(
             get=mock.MagicMock(
                 return_value=mock.MagicMock(
@@ -147,7 +147,7 @@ class TestGetTaskStatus(TestCase):
                             'source_id': source_id,
                             'checksum': checksum,
                             'output_format': output_format.value,
-                            'status': domain.compilation.Status.IN_PROGRESS.value
+                            'status': domain.compilation.Compilation.Status.IN_PROGRESS.value
                         }
                     )
                 )
@@ -159,7 +159,7 @@ class TestGetTaskStatus(TestCase):
         self.assertEqual(comp_status.source_id, source_id)
         self.assertEqual(comp_status.identifier,
                          f"{source_id}/{checksum}/{output_format.value}")
-        self.assertEqual(comp_status.status, domain.compilation.Status.IN_PROGRESS)
+        self.assertEqual(comp_status.status, domain.compilation.Compilation.Status.IN_PROGRESS)
         self.assertEqual(mock_session.get.call_count, 1)
 
     @mock.patch('arxiv.integration.api.service.current_app', mock_app)
@@ -168,7 +168,7 @@ class TestGetTaskStatus(TestCase):
         """Get the status of a completed task."""
         source_id = 42
         checksum = 'asdf1234='
-        output_format = domain.compilation.Format.PDF
+        output_format = domain.compilation.Compilation.Format.PDF
 
         mock_session = mock.MagicMock(
             get=mock.MagicMock(
@@ -179,7 +179,7 @@ class TestGetTaskStatus(TestCase):
                             'source_id': source_id,
                             'checksum': checksum,
                             'output_format': output_format.value,
-                            'status': domain.compilation.Status.SUCCEEDED.value
+                            'status': domain.compilation.Compilation.Status.SUCCEEDED.value
                         }
                     )
                 )
@@ -191,7 +191,7 @@ class TestGetTaskStatus(TestCase):
         self.assertEqual(comp_status.source_id, source_id)
         self.assertEqual(comp_status.identifier,
                          f"{source_id}/{checksum}/{output_format.value}")
-        self.assertEqual(comp_status.status, domain.compilation.Status.SUCCEEDED)
+        self.assertEqual(comp_status.status, domain.compilation.Compilation.Status.SUCCEEDED)
         self.assertEqual(mock_session.get.call_count, 1)
 
     @mock.patch('arxiv.integration.api.service.current_app', mock_app)
@@ -200,7 +200,7 @@ class TestGetTaskStatus(TestCase):
         """Get the status of a task that does not exist."""
         source_id = 42
         checksum = 'asdf1234='
-        output_format = domain.compilation.Format.PDF
+        output_format = domain.compilation.Compilation.Format.PDF
         mock_session = mock.MagicMock(
             get=mock.MagicMock(
                 return_value=mock.MagicMock(
