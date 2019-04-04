@@ -12,7 +12,7 @@ python:
 script:
   - pip install pipenv
   - pipenv install --dev
-  - pipenv install ./core --skip-lock
+  - pipenv install ./core
   - pipenv run pytest --cov=agent/agent --cov=core/arxiv --cov-report=term-missing agent/agent core/arxiv
 after_success:
   - coveralls
