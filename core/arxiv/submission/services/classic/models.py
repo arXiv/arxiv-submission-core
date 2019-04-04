@@ -216,7 +216,7 @@ class Submission(Base):    # type: ignore
                                    category=category, is_primary=0))
 
     def update_from_submission(self, submission: domain.Submission) -> None:
-        """Update this database object from a :class:`.domain.Submission`."""
+        """Update this database object from a :class:`.domain.submission.Submission`."""
         if self.is_announced():     # Avoid doing anything. to be safe.
             return
 
@@ -227,7 +227,7 @@ class Submission(Base):    # type: ignore
         self.agree_policy = 1 if submission.submitter_accepts_policy else 0
         self.userinfo = 1 if submission.submitter_contact_verified else 0
         self.viewed = 1 if submission.submitter_confirmed_preview else 0
-        self.updated = datetime.now(UTC)
+        self.updated = submission.updated
         self.title = submission.metadata.title
         self.abstract = submission.metadata.abstract
         self.authors = submission.metadata.authors_display
@@ -265,7 +265,7 @@ class Submission(Base):    # type: ignore
             self.must_process = 0
         else:
             self.must_process = 1
-            
+
         # Not submitted -> Submitted.
         if submission.finalized \
                 and self.status in [Submission.NOT_SUBMITTED, None]:

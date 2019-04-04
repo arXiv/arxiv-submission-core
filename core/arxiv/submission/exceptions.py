@@ -16,19 +16,6 @@ class InvalidEvent(ValueError):
         super(InvalidEvent, self).__init__(r)
 
 
-class InvalidStack(ValueError):
-    """Raised when an invalid event is encountered."""
-
-    def __init__(self, event_exceptions: List[InvalidEvent],
-                 extra: str='') -> None:
-        """Use the :class:`.Event` to build an error message."""
-        self.event_exceptions: List[InvalidEvent] = event_exceptions
-        self.message = 'Invalid Stack:'
-        for ex in self.event_exceptions:
-            self.message += f"\n\t{ex.message}"
-        super(InvalidStack, self).__init__(self.message)
-
-
 class NoSuchSubmission(Exception):
     """An operation was performed on/for a submission that does not exist."""
 

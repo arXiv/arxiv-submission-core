@@ -76,10 +76,7 @@ class TestDumpLoad(TestCase):
                     creator=system,
                     created=datetime.now(UTC),
                     status=ProcessStatus.Status.SUCCEEDED,
-                    process=ProcessStatus.Process.COMPILATION,
-                    process_service='fooservice',
-                    process_version='fooversion',
-                    process_identifier='fooidentifier'
+                    process='FooProcess'
                 )
             ],
             annotations={

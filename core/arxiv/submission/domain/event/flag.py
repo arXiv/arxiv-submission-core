@@ -5,7 +5,7 @@ from typing import Optional, Union
 from dataclasses import field
 
 from .util import dataclass
-from .event import Event
+from .base import Event
 from ..flag import Flag, ContentFlag, MetadataFlag, UserFlag
 from ..submission import Submission, SubmissionMetadata, Hold, Waiver
 from ...exceptions import InvalidEvent

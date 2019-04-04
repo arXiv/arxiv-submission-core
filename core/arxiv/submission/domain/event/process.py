@@ -7,7 +7,7 @@ from dataclasses import field
 from ...exceptions import InvalidEvent
 from ..submission import Submission
 from ..process import ProcessStatus
-from .event import Event
+from .base import Event
 from .util import dataclass
 
 
@@ -28,7 +28,7 @@ class AddProcessStatus(Event):
     def __post_init__(self) -> None:
         """Make sure our enums are in order."""
         super(AddProcessStatus, self).__post_init__()
-        self.process = self.Process(self.process)
+        self.status = self.Status(self.status)
 
     def validate(self, submission: Submission) -> None:
         """Verify that we have a :class:`.ProcessStatus`."""

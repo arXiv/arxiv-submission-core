@@ -2,7 +2,7 @@
 
 from unittest import TestCase, mock
 from dataclasses import dataclass, field
-from ..event import Event
+from ..base import Event
 from ...agent import System
 
 

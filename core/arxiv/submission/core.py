@@ -13,8 +13,7 @@ from .domain.submission import Submission, SubmissionMetadata, Author
 from .domain.agent import Agent, User, System, Client
 from .domain.event import *
 from .services import classic, StreamPublisher
-from .exceptions import InvalidEvent, InvalidStack, NoSuchSubmission, \
-    SaveError, NothingToDo
+from .exceptions import InvalidEvent, NoSuchSubmission, SaveError, NothingToDo
 
 
 logger = logging.getLogger(__name__)
@@ -34,7 +33,7 @@ def load(submission_id: int) -> Tuple[Submission, List[Event]]:
 
     Returns
     -------
-    :class:`.domain.Submission`
+    :class:`.domain.submission.Submission`
         The current state of the submission.
     list
         Items are :class:`.Event` instances, in order of their occurrence.
@@ -52,7 +51,7 @@ def load(submission_id: int) -> Tuple[Submission, List[Event]]:
 
 def load_submissions_for_user(user_id: int) -> List[Submission]:
     """
-    Load active :class:`.domain.Submission` instances for a specific user.
+    Load active :class:`.domain.submission.Submission` instances for a specific user.
 
     Parameters
     ----------
@@ -62,7 +61,7 @@ def load_submissions_for_user(user_id: int) -> List[Submission]:
     Returns
     -------
     list
-        Items are :class:`.domain.Submission` instances.
+        Items are :class:`.domain.submission.Submission` instances.
 
     """
     return classic.get_user_submissions_fast(user_id)
@@ -70,7 +69,7 @@ def load_submissions_for_user(user_id: int) -> List[Submission]:
 
 def load_fast(submission_id: int) -> Submission:
     """
-    Load a :class:`.domain.Submission` from its last projected state.
+    Load a :class:`.domain.submission.Submission` from its last projected state.
 
     This does not load and apply past events. The most recent stored submission
     state is loaded directly from the database.
@@ -82,7 +81,7 @@ def load_fast(submission_id: int) -> Submission:
 
     Returns
     -------
-    :class:`.domain.Submission`
+    :class:`.domain.submission.Submission`
         The current state of the submission.
 
     """

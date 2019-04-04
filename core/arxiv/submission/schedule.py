@@ -4,13 +4,15 @@ Policies for announcement scheduling.
 Submissions to arXiv are normally made public on Sunday through Thursday, with
 no announcements Friday or Saturday.
 
++-----------------------+----------------+------------------------------------+
 | Received Between (ET) | Announced (ET) | Mailed                             |
-|-----------------------|----------------|------------------------------------|
++=======================+================+====================================+
 | Mon 14:00 - Tue 14:00 | Tue 20:00      | Tuesday Night / Wednesday Morning  |
 | Tue 14:00 - Wed 14:00 | Wed 20:00      | Wednesday Night / Thursday Morning |
 | Wed 14:00 - Thu 14:00 | Thu 20:00      | Thursday Night / Friday Morning    |
 | Thu 14:00 - Fri 14:00 | Sun 20:00      | Sunday Night / Monday Morning      |
 | Fri 14:00 - Mon 14:00 | Mon 20:00      | Monday Night / Tuesday Morning     |
++-----------------------+----------------+------------------------------------+
 
 """
 

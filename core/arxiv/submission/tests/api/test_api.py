@@ -13,10 +13,11 @@ from ...exceptions import NoSuchSubmission, InvalidEvent
 from ...services import classic
 
 
-def mock_store_event(event, before, after):
+def mock_store_event(event, before, after, emit):
     event.submission_id = 1
     after.submission_id = 1
     event.committed = True
+    emit(event)
     return event, after
 
 
@@ -58,6 +59,7 @@ class TestSave(TestCase):
     def test_save_creation_event(self, mock_database, mock_publisher):
         """A :class:`.CreationEvent` is passed."""
         mock_database.store_event = mock_store_event
+        mock_database.exceptions = classic.exceptions
         user = User(12345, 'joe@joe.joe')
         event = CreateSubmission(creator=user)
         submission, events = save(event)
@@ -79,6 +81,7 @@ class TestSave(TestCase):
     def test_save_events_from_scratch(self, mock_database, mock_publisher):
         """Save multiple events for a nonexistant submission."""
         mock_database.store_event = mock_store_event
+        mock_database.exceptions = classic.exceptions
         user = User(12345, 'joe@joe.joe')
         e = CreateSubmission(creator=user)
         e2 = SetTitle(creator=user, title='footitle')
@@ -97,6 +100,7 @@ class TestSave(TestCase):
     def test_create_and_update_authors(self, mock_database, mock_publisher):
         """Save multiple events for a nonexistant submission."""
         mock_database.store_event = mock_store_event
+        mock_database.exceptions = classic.exceptions
         user = User(12345, 'joe@joe.joe')
         e = CreateSubmission(creator=user)
         e2 = SetAuthors(creator=user, authors=[
@@ -123,9 +127,10 @@ class TestSave(TestCase):
     @mock.patch('submission.core.classic')
     def test_save_events_on_existing_submission(self, mock_db, mock_publisher):
         """Save multiple sets of events in separate calls to :func:`.save`."""
+        mock_db.exceptions = classic.exceptions
         cache = {}
 
-        def mock_store_event_with_cache(event, before, after):
+        def mock_store_event_with_cache(event, before, after, emit):
             if after.submission_id is None:
                 if before is not None:
                     before.submission_id = 1
@@ -138,6 +143,7 @@ class TestSave(TestCase):
             cache[event.submission_id] = (
                 after, cache[event.submission_id][1] + [event]
             )
+            emit(event)
             return event, after
 
         def mock_get_events(submission_id):

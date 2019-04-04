@@ -13,7 +13,7 @@ Overview
 ========
 
 Event types are defined in :mod:`.domain.event`. The base class for all events
-is :class:`.domain.event.event.Event`. Each event type defines additional
+is :class:`.domain.event.base.Event`. Each event type defines additional
 required data, and have ``validate`` and ``project`` methods that implement its
 logic. Events operate on :class:`.domain.submission.Submission` instances.
 
@@ -54,27 +54,11 @@ automatically when specific events are committed, using
        yield SetTitle(creator=creator, title=f"(╯°□°）╯︵ ┻━┻ {event.title}")
 
 
-Quality control processes and policies are defined in :mod:`.rules` using
-bound callbacks. This includes things like calling the auto-classifier,
-checking titles for weirdness, etc.
-
-Some callbacks take too long to perform in the context of an HTTP request, and
-so we perform them concurrently in the :ref:`submission-worker`. Callbacks
-that should be run by the worker are decorated with :func:`.tasks.is_async`.
-This registers the callback by name with the worker, and performs magic so that
-when the callback is executed a task is dispatched the worker queue rather than
-running the callback in the current thread. See also :mod:`.worker`.
-
-.. code-block:: python
-
-   from ..tasks import is_async
-
-   @SetTitle.bind()
-   @is_async
-   def flip_title(event: SetTitle, before: Submissionm, after: Submission,
-                  creator: Agent) -> Iterable[SetTitle]:
-       time.sleep(30)    # *yawn*
-       yield SetTitle(creator=creator, title=f"(╯°□°）╯︵ ┻━┻ {event.title}")
+.. note:
+   Callbacks should **only** be used for actions that are specific to the
+   domain/concerns of the service in which they are implemented. For processes
+   that apply to all submissions, including asynchronous processes,
+   see :mod:`agent`.
 
 
 Finally, :mod:`.services.classic` provides integration with the classic
@@ -176,10 +160,24 @@ This happens on the fly, in :func:`.domain.event.event_factory`.
 
 Integration with the legacy system
 ==================================
-The :mod:`classic` service module provides integration with the classic
+The :mod:`.classic` service module provides integration with the classic
 database. See the documentation for that module for details. As we migrate
 off of the classic database, we will swap in a new service module with the
 same API.
+
+Until all legacy components that read from or write to the classic database are
+replaced, we will not be able to move entirely away from the legacy submission
+database. Particularly in the submission and moderation UIs, design has assumed
+immediate consistency, which means a conventional read/write interaction with
+the database. Hence the classic integration module assumes that we are reading
+and writing events and submission state from/to the same database.
+
+As development proceeds, we will look for opportunities to decouple from the
+classic database, and focus on more localized projections of submission events
+that are specific to a service/application. For example, the moderation UI/API
+need not maintain or have access to the complete representation of the
+submission; instead, it may track the subset of events relevant to its
+operation (e.g. pertaining to metadata, classification, proposals, holds, etc).
 
 """
 import os
@@ -189,11 +187,15 @@ from .domain.event import *
 from .core import *
 from .domain.submission import Submission, SubmissionMetadata, Author
 from .domain.agent import Agent, User, System, Client
-from .services import classic, StreamPublisher
+from .services import classic, StreamPublisher, Compiler, PlainTextService,\
+    Classifier
 
 
 def init_app(app: Flask) -> None:
     StreamPublisher.init_app(app)
+    Classifier.init_app(app)
+    Compiler.init_app(app)
+    PlainTextService.init_app(app)
     template_folder = os.path.join(os.path.dirname(os.path.realpath(__file__)),
                                    'templates')
     app.register_blueprint(

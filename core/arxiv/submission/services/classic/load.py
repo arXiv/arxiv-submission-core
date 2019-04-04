@@ -100,14 +100,14 @@ def to_submission(row: models.Submission,
     Parameters
     ----------
     row : :class:`.models.Submission`
-        Database row representing a :class:`.domain.Submission`.
+        Database row representing a :class:`.domain.submission.Submission`.
     submission_id : int or None
         If provided the database value is overridden when setting
         :attr:`domain.Submission.submission_id`.
 
     Returns
     -------
-    :class:`.domain.Submission`
+    :class:`.domain.submission.Submission`
 
     """
     status = status_from_classic(row.status)
@@ -181,7 +181,7 @@ def to_submission(row: models.Submission,
 
 
 def status_from_classic(classic_status: str) -> str:
-    """Map classic status codes to :class:`.domain.Submission` status."""
+    """Map classic status codes to :class:`.domain.submission.Submission` status."""
     # if self.get_arxiv_id() is not None:
     #     return domain.Submission.ANNOUNCED
     return STATUS_MAP.get(classic_status)

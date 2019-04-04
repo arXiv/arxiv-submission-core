@@ -183,7 +183,7 @@ class SubmissionContent:
 
 @dataclass
 class SubmissionMetadata:
-    """Metadata about a :class:`.domain.Submission` instance."""
+    """Metadata about a :class:`.domain.submission.Submission` instance."""
 
     title: Optional[str] = None
     abstract: Optional[str] = None
@@ -441,7 +441,7 @@ class Submission:
     """If an e-print is withdrawn, the submitter is asked to explain why."""
 
     versions: List['Submission'] = field(default_factory=list)
-    """Announced versions of this :class:`.domain.Submission`."""
+    """Announced versions of this :class:`.domain.submission.Submission`."""
 
     # These fields are related to moderation/quality control.
     user_requests: Dict[str, UserRequest] = field(default_factory=dict)

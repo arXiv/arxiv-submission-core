@@ -235,7 +235,7 @@ class ClassicEventInterpolator:
 
         Returns
         -------
-        :class:`.domain.Submission`
+        :class:`.domain.submission.Submission`
             The most recent state of the submission given the provided events
             and database rows.
         list

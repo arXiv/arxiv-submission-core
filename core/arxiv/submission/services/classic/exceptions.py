@@ -15,3 +15,7 @@ class TransactionFailed(ClassicBaseException):
 
 class Unavailable(ClassicBaseException):
     """The classic data store is not available."""
+
+
+class ConsistencyError(ClassicBaseException):
+    """Attempted to persist stale or inconsistent state."""

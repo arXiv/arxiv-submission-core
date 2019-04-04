@@ -24,7 +24,7 @@ from ..annotation import Comment
 
 from ...exceptions import InvalidEvent
 from ..util import get_tzaware_utc_now
-from .event import Event
+from .base import Event
 from .request import RequestCrossList, RequestWithdrawal, ApplyRequest, \
     RejectRequest, ApproveRequest
 from . import validators

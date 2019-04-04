@@ -18,7 +18,10 @@ It should:
   ``validate(self, submission: Submission) -> None`` (see below).
 - Implement a projection method with the signature
   ``project(self, submission: Submission) -> Submission:`` that mutates
-  the passed :class:`.domain.Submission` instance.
+  the passed :class:`.domain.submission.Submission` instance.
+  The projection *must not* generate side-effects, because it will be called
+  any time we are generating the state of a submission. If you need to
+  generate a side-effect, see :ref:`callbacks`\.
 - Be fully documented. Be sure that the class docstring fully describes the
   meaning of the event/command, and that both public and private methods have
   at least a summary docstring.
@@ -43,6 +46,8 @@ See :class:`.SetPrimaryClassification` for an example.
 We could consider standalone validation functions for validation checks that
 are performed on several event types (instead of just private instance
 methods).
+
+.. _callbacks:
 
 Registering event callbacks
 ===========================
@@ -87,13 +92,7 @@ When do things actually happen?
 -------------------------------
 Callbacks are triggered when the :func:`.commit` method is called,
 usually by :func:`.core.save`. Normally, any event instances returned
-by the callback are applied and committed right away, in order. If the
-callback is asynchronous (see :func:`.tasks.is_async`), it will be
-executed whenever the :mod:`.worker` gets around to it, and any events
-it returns will be applied and stored in order at that time.
-
-Note that setting :mod:`.config.ENABLE_ASYNC=0` will cause async tasks
-to be executed in the current thread.
+by the callback are applied and committed right away, in order.
 
 Setting :mod:`.config.ENABLE_CALLBACKS=0` will disable callbacks
 entirely.
@@ -129,7 +128,7 @@ from ..annotation import Comment, Feature, ClassifierResults, \
 
 from ...exceptions import InvalidEvent
 from ..util import get_tzaware_utc_now
-from .event import Event, event_factory, EventType
+from .base import Event, event_factory, EventType
 from .request import RequestCrossList, RequestWithdrawal, ApplyRequest, \
     RejectRequest, ApproveRequest, CancelRequest
 from . import validators
@@ -148,7 +147,7 @@ logger = logging.getLogger(__name__)
 
 @dataclass()
 class CreateSubmission(Event):
-    """Creation of a new :class:`.domain.Submission`."""
+    """Creation of a new :class:`.domain.submission.Submission`."""
 
     NAME = "create submission"
     NAMED = "submission created"
@@ -158,7 +157,7 @@ class CreateSubmission(Event):
         return
 
     def project(self, submission: None = None) -> Submission:
-        """Create a new :class:`.domain.Submission`."""
+        """Create a new :class:`.domain.submission.Submission`."""
         return Submission(creator=self.creator, created=self.created,
                           owner=self.creator, proxy=self.proxy,
                           client=self.client)
@@ -435,7 +434,7 @@ class SetTitle(Event):
         self._check_for_html(submission)
 
     def project(self, submission: Submission) -> Submission:
-        """Update the title on a :class:`.domain.Submission`."""
+        """Update the title on a :class:`.domain.submission.Submission`."""
         submission.metadata.title = self.title
         return submission
 
@@ -490,7 +489,7 @@ class SetAbstract(Event):
         self._acceptable_length(submission)
 
     def project(self, submission: Submission) -> Submission:
-        """Update the abstract on a :class:`.domain.Submission`."""
+        """Update the abstract on a :class:`.domain.submission.Submission`."""
         submission.metadata.abstract = self.abstract
         return submission
 
@@ -549,7 +548,7 @@ class SetDOI(Event):
                 raise InvalidEvent(self, f"Invalid DOI: {value}")
 
     def project(self, submission: Submission) -> Submission:
-        """Update the doi on a :class:`.domain.Submission`."""
+        """Update the doi on a :class:`.domain.submission.Submission`."""
         submission.metadata.doi = self.doi
         return submission
 
@@ -588,7 +587,7 @@ class SetMSCClassification(Event):
             return
 
     def project(self, submission: Submission) -> Submission:
-        """Update the MSC classification on a :class:`.domain.Submission`."""
+        """Update the MSC classification on a :class:`.domain.submission.Submission`."""
         submission.metadata.msc_class = self.msc_class
         return submission
 
@@ -630,7 +629,7 @@ class SetACMClassification(Event):
         self._valid_acm_class(submission)
 
     def project(self, submission: Submission) -> Submission:
-        """Update the ACM classification on a :class:`.domain.Submission`."""
+        """Update the ACM classification on a :class:`.domain.submission.Submission`."""
         submission.metadata.acm_class = self.acm_class
         return submission
 
@@ -680,7 +679,7 @@ class SetJournalReference(Event):
         self._contains_valid_year(submission)
 
     def project(self, submission: Submission) -> Submission:
-        """Update the journal reference on a :class:`.domain.Submission`."""
+        """Update the journal reference on a :class:`.domain.submission.Submission`."""
         submission.metadata.journal_ref = self.journal_ref
         return submission
 
@@ -730,7 +729,7 @@ class SetReportNumber(Event):
                                      " consecutive digits")
 
     def project(self, submission: Submission) -> Submission:
-        """Update the report number on a :class:`.domain.Submission`."""
+        """Update the report number on a :class:`.domain.submission.Submission`."""
         submission.metadata.report_num = self.report_num
         return submission
 
@@ -768,7 +767,7 @@ class SetComments(Event):
                                      f" {self.MAX_LENGTH} characters long")
 
     def project(self, submission: Submission) -> Submission:
-        """Update the comments on a :class:`.domain.Submission`."""
+        """Update the comments on a :class:`.domain.submission.Submission`."""
         submission.metadata.comments = self.comments
         return submission
 
@@ -782,7 +781,7 @@ class SetComments(Event):
 
 @dataclass()
 class SetAuthors(Event):
-    """Update the authors on a :class:`.domain.Submission`."""
+    """Update the authors on a :class:`.domain.submission.Submission`."""
 
     NAME = "update authors"
     NAMED = "authors updated"
@@ -1071,7 +1070,7 @@ class Announce(Event):
 
 @dataclass()
 class CreateComment(Event):
-    """Creation of a :class:`.Comment` on a :class:`.domain.Submission`."""
+    """Creation of a :class:`.Comment` on a :class:`.domain.submission.Submission`."""
 
     read_scope = 'submission:moderate'
     write_scope = 'submission:moderate'
@@ -1099,7 +1098,7 @@ class CreateComment(Event):
 
 @dataclass()
 class DeleteComment(Event):
-    """Deletion of a :class:`.Comment` on a :class:`.domain.Submission`."""
+    """Deletion of a :class:`.Comment` on a :class:`.domain.submission.Submission`."""
 
     read_scope = 'submission:moderate'
     write_scope = 'submission:moderate'
