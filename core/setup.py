@@ -9,7 +9,7 @@ setup(
               in find_packages('arxiv')],
     zip_safe=False,
     install_requires=[
-        'arxiv-base>=0.15.3rc7',
+        'arxiv-base>=0.15.3rc8',
         'arxiv-auth>=0.3.2rc3',
         'flask',
         'mysqlclient',
