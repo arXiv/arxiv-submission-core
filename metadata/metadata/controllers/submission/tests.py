@@ -9,8 +9,7 @@ from arxiv.integration.api import status
 from arxiv.submission.domain import User, Submission, Author, Client
 from arxiv.submission import CreateSubmission, SaveError, \
     InvalidEvent, NoSuchSubmission, SetPrimaryClassification, \
-    SetUploadPackage, SetAuthors, InvalidStack, \
-    SetTitle, SetAbstract, SetDOI, \
+    SetUploadPackage, SetAuthors, SetTitle, SetAbstract, SetDOI, \
     SetMSCClassification, SetACMClassification, SetJournalReference,  \
     SetComments
 from metadata.controllers import submission
@@ -20,7 +19,6 @@ def preserve_exceptions_and_events(mock_events):
     """Add real exceptions back to the mock."""
     mock_events.SaveError = SaveError
     mock_events.InvalidEvent = InvalidEvent
-    mock_events.InvalidStack = InvalidStack
     mock_events.NoSuchSubmission = NoSuchSubmission
     mock_events.SetTitle = SetTitle
     mock_events.SetAbstract = SetAbstract

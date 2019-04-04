@@ -16,7 +16,7 @@ def emit(event: Event, submission: Submission) -> None:
     Parameters
     ----------
     event : :class:`.domain.Event`
-    submission : :class:`.domain.Submission`
+    submission : :class:`.domain.submission.Submission`
 
     Raises
     ------

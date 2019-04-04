@@ -10,6 +10,7 @@ subsystem.
    architecture
    announcement_process
    submission_api_context
-   containers/core/arxiv.submission
+   arxiv.submission/arxiv.submission
+   containers/agent/agent
    containers/metadata/metadata
    background

@@ -2,7 +2,9 @@
 
 from typing import Any, Union, List
 import json
+from json.decoder import JSONDecodeError
 from datetime import datetime, date
+from dataclasses import asdict
 from enum import Enum
 from importlib import import_module
 from .domain import Event, event_factory, Submission, Agent, agent_factory
@@ -47,13 +49,15 @@ class EventJSONEncoder(ISO8601JSONEncoder):
     def default(self, obj):
         """Look for domain objects, and use their dict-coercion methods."""
         if isinstance(obj, Event):
-            data = obj.to_dict()
+            data = asdict(obj)
             data['__type__'] = 'event'
         elif isinstance(obj, Submission):
-            data = obj.to_dict()
+            data = asdict(obj)
+            data.pop('before', None)
+            data.pop('after', None)
             data['__type__'] = 'submission'
         elif isinstance(obj, Agent):
-            data = obj.to_dict()
+            data = asdict(obj)
             data['__type__'] = 'agent'
         elif isinstance(obj, type):
             data = {}
@@ -80,14 +84,16 @@ class EventJSONDecoder(ISO8601JSONDecoder):
         obj = super(EventJSONDecoder, self).object_hook(obj, **extra)
 
         if '__type__' in obj:
-            type_name = obj.pop('__type__')
-            if type_name == 'event':
+            if obj['__type__'] == 'event':
+                obj.pop('__type__')
                 return event_factory(**obj)
-            elif type_name == 'submission':
-                return Submission.from_dict(**obj)
-            elif type_name == 'agent':
-                return agent_factory(obj.pop('agent_type'), **obj)
-            elif type_name == 'type':
+            elif obj['__type__'] == 'submission':
+                obj.pop('__type__')
+                return Submission(**obj)
+            elif obj['__type__'] == 'agent':
+                obj.pop('__type__')
+                return agent_factory(**obj)
+            elif obj['__type__'] == 'type':
                 # Supports deserialization of Event classes.
                 #
                 # This is fairly dangerous, since we are importing and calling
@@ -97,10 +103,10 @@ class EventJSONDecoder(ISO8601JSONDecoder):
                 module_name = obj['__module__']
                 if not (module_name.startswith('arxiv.submission')
                         or module_name.startswith('submission')):
-                    raise json.decoder.JSONDecodeError(module_name, pos=0)
+                    raise JSONDecodeError(module_name, '', pos=0)
                 cls = getattr(import_module(module_name), obj['__name__'])
                 if Event not in cls.mro():
-                    raise json.decoder.JSONDecodeError(obj['__name__'], pos=0)
+                    raise JSONDecodeError(obj['__name__'], '', pos=0)
                 return cls
         return obj
 

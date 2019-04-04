@@ -4,9 +4,9 @@ from typing import Optional
 from enum import Enum
 from datetime import datetime
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, asdict
 
-from .agent import Agent
+from .agent import Agent, agent_factory
 from .util import get_tzaware_utc_now
 
 
@@ -17,31 +17,32 @@ class ProcessStatus:
     class Status(Enum):
         """Supported statuses."""
 
-        REQUESTED = "requested"
-        SUCCEEDED = "succeeded"
-        FAILED = "failed"
-
-    class Process(Enum):
-        """Supported processes."""
-
-        NONE = None
-        COMPILATION = 'compilation'
-        PLAIN_TEXT_EXTRACTION = 'plaintext'
-        CLASSIFICATION = 'classification'
-        OVERLAP_DETECTION = 'overlap'
+        PENDING = 'pending'
+        """The process is waiting to start."""
+        IN_PROGRESS = 'in_progress'
+        """Process has started, and is running remotely."""
+        FAILED_TO_START = 'failed_to_start'
+        """Could not start the process."""
+        FAILED = 'failed'
+        """The process failed while running."""
+        FAILED_TO_END = 'failed_to_end'
+        """The process ran, but failed to end gracefully."""
+        SUCCEEDED = 'succeeded'
+        """The process ended successfully."""
+        TERMINATED = 'terminated'
+        """The process was terminated, e.g. cancelled by operator."""
 
     creator: Agent
     created: datetime
     """Time when the process status was created (not the process itself)."""
-    process: Process
-    status: Status = field(default=Status.REQUESTED)
-    process_service: Optional[str] = field(default=None)
-    """The service running the process."""
-    process_version: Optional[str] = field(default=None)
-    """The version of the service running the process."""
-    process_identifier: Optional[str] = field(default=None)
-    """Unique identifier in the context of the service running the process."""
+    process: str
+    step: Optional[str] = field(default=None)
+    status: Status = field(default=Status.PENDING)
     reason: Optional[str] = field(default=None)
     """Optional context or explanatory details related to the status."""
-    monitoring_task: Optional[str] = field(default=None)
-    """identifier of the task used to monitor the status of this process."""
+
+    def __post_init__(self):
+        """Check our enums and agents."""
+        if self.creator and type(self.creator) is dict:
+            self.creator = agent_factory(**self.creator)
+        self.status = self.Status(self.status)

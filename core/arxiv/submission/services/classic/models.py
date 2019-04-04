@@ -216,7 +216,7 @@ class Submission(Base):    # type: ignore
                                    category=category, is_primary=0))
 
     def update_from_submission(self, submission: domain.Submission) -> None:
-        """Update this database object from a :class:`.domain.Submission`."""
+        """Update this database object from a :class:`.domain.submission.Submission`."""
         if self.is_announced():     # Avoid doing anything. to be safe.
             return
 
@@ -227,7 +227,7 @@ class Submission(Base):    # type: ignore
         self.agree_policy = 1 if submission.submitter_accepts_policy else 0
         self.userinfo = 1 if submission.submitter_contact_verified else 0
         self.viewed = 1 if submission.submitter_confirmed_preview else 0
-        self.updated = datetime.now(UTC)
+        self.updated = submission.updated
         self.title = submission.metadata.title
         self.abstract = submission.metadata.abstract
         self.authors = submission.metadata.authors_display
@@ -237,15 +237,6 @@ class Submission(Base):    # type: ignore
         self.msc_class = submission.metadata.msc_class
         self.acm_class = submission.metadata.acm_class
         self.journal_ref = submission.metadata.journal_ref
-
-        if submission.source_content and submission.latest_compilation \
-                and submission.latest_compilation.status \
-                is domain.Compilation.Status.SUCCEEDED \
-                and submission.latest_compilation.checksum \
-                == submission.source_content.checksum:
-            self.must_process = 0
-        else:
-            self.must_process = 1
 
         self.version = submission.version   # Numeric version.
         self.doc_paper_id = submission.arxiv_id     # arXiv canonical ID.
@@ -261,13 +252,19 @@ class Submission(Base):    # type: ignore
             self.license = submission.license.uri
 
         if submission.source_content is not None:
-            self.must_process = 0
             self.source_size = submission.source_content.uncompressed_size
             if submission.source_content.source_format is not None:
                 self.source_format = \
                     submission.source_content.source_format.value
             else:
                 self.source_format = None
+            self.package = (f'fm://{submission.source_content.identifier}'
+                            f'@{submission.source_content.checksum}')
+
+        if submission.submitter_compiled_preview:
+            self.must_process = 0
+        else:
+            self.must_process = 1
 
         # Not submitted -> Submitted.
         if submission.finalized \

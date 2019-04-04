@@ -5,7 +5,7 @@ from typing import Optional, Union
 from dataclasses import field
 
 from .util import dataclass
-from .event import Event
+from .base import Event
 from ..flag import Flag, ContentFlag, MetadataFlag, UserFlag
 from ..submission import Submission, SubmissionMetadata, Hold, Waiver
 from ...exceptions import InvalidEvent
@@ -59,11 +59,11 @@ class AddContentFlag(AddFlag):
     NAME = "add content flag"
     NAMED = "content flag added"
 
-    flag_type: Optional[ContentFlag.FlagTypes] = None
+    flag_type: Optional[ContentFlag.Type] = None
 
     def validate(self, submission: Submission) -> None:
         """Verify that we have a known flag."""
-        if self.flag_type not in ContentFlag.FlagTypes:
+        if self.flag_type not in ContentFlag.Type:
             raise InvalidEvent(self, f"Unknown content flag: {self.flag_type}")
 
     def project(self, submission: Submission) -> Submission:
@@ -82,7 +82,7 @@ class AddContentFlag(AddFlag):
     def __post_init__(self) -> None:
         """Make sure that `flag_type` is an enum instance."""
         if type(self.flag_type) is str:
-            self.flag_type = ContentFlag.FlagTypes(self.flag_type)
+            self.flag_type = ContentFlag.Type(self.flag_type)
         super(AddContentFlag, self).__post_init__()
 
 
@@ -93,13 +93,13 @@ class AddMetadataFlag(AddFlag):
     NAME = "add metadata flag"
     NAMED = "metadata flag added"
 
-    flag_type: Optional[MetadataFlag.FlagTypes] = field(default=None)
+    flag_type: Optional[MetadataFlag.Type] = field(default=None)
     field: Optional[str] = field(default=None)
     """Name of the metadata field to which the flag applies."""
 
     def validate(self, submission: Submission) -> None:
         """Verify that we have a known flag and metadata field."""
-        if self.flag_type not in MetadataFlag.FlagTypes:
+        if self.flag_type not in MetadataFlag.Type:
             raise InvalidEvent(self, f"Unknown meta flag: {self.flag_type}")
         if not hasattr(SubmissionMetadata, self.field):
             raise InvalidEvent(self, "Not a valid metadata field")
@@ -113,14 +113,15 @@ class AddMetadataFlag(AddFlag):
             proxy=self.proxy,
             flag_type=self.flag_type,
             flag_data=self.flag_data,
-            comment=self.comment
+            comment=self.comment,
+            field=self.field
         )
         return submission
 
     def __post_init__(self) -> None:
         """Make sure that `flag_type` is an enum instance."""
         if type(self.flag_type) is str:
-            self.flag_type = MetadataFlag.FlagTypes(self.flag_type)
+            self.flag_type = MetadataFlag.Type(self.flag_type)
         super(AddMetadataFlag, self).__post_init__()
 
 
@@ -131,11 +132,11 @@ class AddUserFlag(AddFlag):
     NAME = "add user flag"
     NAMED = "user flag added"
 
-    flag_type: Optional[UserFlag.FlagTypes] = field(default=None)
+    flag_type: Optional[UserFlag.Type] = field(default=None)
 
     def validate(self, submission: Submission) -> None:
         """Verify that we have a known flag."""
-        if self.flag_type not in MetadataFlag.FlagTypes:
+        if self.flag_type not in MetadataFlag.Type:
             raise InvalidEvent(self, f"Unknown user flag: {self.flag_type}")
 
     def project(self, submission: Submission) -> Submission:
@@ -153,7 +154,7 @@ class AddUserFlag(AddFlag):
     def __post_init__(self) -> None:
         """Make sure that `flag_type` is an enum instance."""
         if type(self.flag_type) is str:
-            self.flag_type = UserFlag.FlagTypes(self.flag_type)
+            self.flag_type = UserFlag.Type(self.flag_type)
         super(AddUserFlag, self).__post_init__()
 
 

@@ -10,7 +10,8 @@ service module must therefore do three main things:
 2. Keep the classic database tables up to date so that "downstream" components
    can continue to operate. Since classic components work directly on
    submission tables, persisting events and resulting submission state must
-   occur in the same transaction.
+   occur in the same transaction. We must also verify that we are not storing
+   events that are stale with respect to the current state of the submission.
 3. Patch NG submission data with state changes that occur in the classic
    system. Those changes will be made directly to submission tables and not
    involve event-generation. See :func:`get_submission` for details.
@@ -18,6 +19,8 @@ service module must therefore do three main things:
 ORM representations of the classic database tables involved in submission
 are located in :mod:`.classic.models`. An additional model, :class:`.DBEvent`,
 is defined in :mod:`.classic.event`.
+
+See also :ref:`legacy-integration`.
 
 """
 
@@ -29,6 +32,7 @@ from itertools import groupby
 import copy
 from functools import reduce, wraps
 from operator import ior
+from dataclasses import asdict
 
 from flask import Flask
 from sqlalchemy import or_
@@ -45,13 +49,14 @@ from ...domain.submission import License, Submission, WithdrawalRequest, \
 from ...domain.agent import Agent, User
 from .models import Base
 from .exceptions import ClassicBaseException, NoSuchSubmission, \
-    TransactionFailed, Unavailable
+    TransactionFailed, Unavailable, ConsistencyError
 from .util import transaction, current_session, db
 from .event import DBEvent
 from . import models, util, interpolate, log, proposal, load
 
 
 logger = logging.getLogger(__name__)
+logger.propagate = False
 
 
 def handle_operational_errors(func):
@@ -121,7 +126,7 @@ def get_user_submissions_fast(user_id: int) -> List[Submission]:
     Returns
     -------
     list
-        Items are the user's :class:`.domain.Submission` instances.
+        Items are the user's :class:`.domain.submission.Submission` instances.
 
     """
     with transaction() as session:
@@ -160,7 +165,7 @@ def get_submission_fast(submission_id: int) -> List[Submission]:
 
     Returns
     -------
-    :class:`.domain.Submission`
+    :class:`.domain.submission.Submission`
 
     Raises
     ------
@@ -175,7 +180,7 @@ def get_submission_fast(submission_id: int) -> List[Submission]:
 @handle_operational_errors
 def get_submission(submission_id: int) -> Tuple[Submission, List[Event]]:
     """
-    Get the current state of a :class:`.domain.Submission` from the database.
+    Get the current state of a :class:`.domain.submission.Submission` from the database.
 
     In the medium term, services that use this package will need to
     play well with legacy services that integrate with the classic
@@ -195,7 +200,7 @@ def get_submission(submission_id: int) -> Tuple[Submission, List[Event]]:
 
     Returns
     -------
-    :class:`.domain.Submission`
+    :class:`.domain.submission.Submission`
     list
         Items are :class:`Event` instances.
 
@@ -228,7 +233,8 @@ def get_submission(submission_id: int) -> Tuple[Submission, List[Event]]:
 @retry(ClassicBaseException, tries=3, delay=1)
 @handle_operational_errors
 def store_event(event: Event, before: Optional[Submission],
-                after: Optional[Submission]) -> Tuple[Event, Submission]:
+                after: Optional[Submission],
+                *call: List[Callable]) -> Tuple[Event, Submission]:
     """
     Store an event, and update submission state.
 
@@ -254,11 +260,16 @@ def store_event(event: Event, before: Optional[Submission],
         The state of the submission before the event occurred.
     after : :class:`Submission`
         The state of the submission after the event occurred.
+    call : list
+        Items are callables that accept args ``Event, Submission, Submission``.
+        These are called within the transaction context; if an exception is
+        raised, the transaction is rolled back.
 
     """
     with transaction() as session:
         if event.committed:
             raise TransactionFailed('%s already committed', event.event_id)
+        logger.debug('store event %s', event.event_id)
 
         doc_id: Optional[int] = None
 
@@ -313,8 +324,8 @@ def store_event(event: Event, before: Optional[Submission],
             # The submission has been announced.
             elif isinstance(before, Submission)  \
                     and before.arxiv_id is not None:
-                dbs = _load_submission(paper_id=before.arxiv_id,
-                                       version=before.version)
+                dbs = _load(paper_id=before.arxiv_id, version=before.version)
+                _check_consistency(dbs, event.created)
                 _preserve_sticky_hold(dbs, before, after, event)
 
                 dbs.update_from_submission(after)
@@ -322,7 +333,8 @@ def store_event(event: Event, before: Optional[Submission],
             # The submission has not yet been announced; we're working with a
             # single row.
             elif isinstance(before, Submission) and before.submission_id:
-                dbs = _load_submission(before.submission_id)
+                dbs = _load(before.submission_id)
+                _check_consistency(dbs, event.created)
                 _preserve_sticky_hold(dbs, before, after, event)
                 dbs.update_from_submission(after)
             else:
@@ -333,6 +345,9 @@ def store_event(event: Event, before: Optional[Submission],
         session.add(db_event)
 
         log.handle(event, before, after)   # Create admin log entry.
+        for func in call:
+            logger.debug('call %s with event %s', func, event.event_id)
+            func(event, before, after)
         if isinstance(event, AddProposal):
             proposal.add(event, before, after)
 
@@ -390,19 +405,18 @@ def get_titles(since: datetime) -> List[Tuple[int, str, Agent]]:
         ]
 
 
-# def init_app(app: object = None) -> None:
-#     """Set default configuration parameters for an application instance."""
-#     config = get_application_config(app)
-#     config.setdefault('CLASSIC_DATABASE_URI', 'sqlite://')
-
-
 # Private functions down here.
 
+def _check_consistency(row: models.Submission, created: datetime) -> None:
+    """Verify that the database row is not fresher than the current event."""
+    if row.get_updated() > created:
+        lag = (row.get_updated() - created).total_seconds()
+        raise ConsistencyError('Event is stale by %s seconds' % lag)
 
-def _load_submission(submission_id: Optional[int] = None,
-                     paper_id: Optional[str] = None,
-                     version: Optional[int] = 1,
-                     row_type: Optional[str] = None) -> models.Submission:
+
+def _load(submission_id: Optional[int] = None, paper_id: Optional[str] = None,
+          version: Optional[int] = 1, row_type: Optional[str] = None) \
+        -> models.Submission:
     if row_type is not None:
         limit_to = [row_type]
     else:
@@ -434,9 +448,9 @@ def _cancel_request(event, before, after):
         row_type = models.Submission.WITHDRAWAL
     elif isinstance(request, CrossListClassificationRequest):
         row_type = models.Submission.CROSS_LIST
-    dbs = _load_submission(paper_id=before.arxiv_id,
-                           version=before.version,
-                           row_type=row_type)
+    dbs = _load(paper_id=before.arxiv_id, version=before.version,
+                row_type=row_type)
+    _check_consistency(dbs, event.created)
     dbs.status = models.Submission.USER_DELETED
     return dbs
 
@@ -529,11 +543,9 @@ def _create_jref(document_id: int, paper_id: str, version: int,
     # Try to piggy-back on an existing JREF row. In the classic system, all
     # three fields can get updated on the same row.
     try:
-        most_recent_sb = _load_submission(
-            paper_id=paper_id,
-            version=version,
-            row_type=models.Submission.JOURNAL_REFERENCE
-        )
+        most_recent_sb = _load(paper_id=paper_id, version=version,
+                               row_type=models.Submission.JOURNAL_REFERENCE)
+        _check_consistency(most_recent_sb, created)
         if most_recent_sb and not most_recent_sb.is_announced():
             most_recent_sb.update_from_submission(submission)
             return most_recent_sb
@@ -553,14 +565,13 @@ def _create_jref(document_id: int, paper_id: str, version: int,
 
 def _new_dbevent(event: Event) -> DBEvent:
     """Create an event entry in the database."""
-    # print(event.to_dict())
     return DBEvent(event_type=event.event_type,
                    event_id=event.event_id,
                    event_version=_get_app_version(),
-                   data=event.to_dict(),
+                   data=asdict(event),
                    created=event.created,
-                   creator=event.creator.to_dict(),
-                   proxy=event.proxy.to_dict() if event.proxy else None)
+                   creator=asdict(event.creator),
+                   proxy=asdict(event.proxy) if event.proxy else None)
 
 
 def _preserve_sticky_hold(dbs: models.Submission, before: Submission,

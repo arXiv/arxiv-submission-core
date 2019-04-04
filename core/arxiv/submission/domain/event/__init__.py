@@ -18,7 +18,10 @@ It should:
   ``validate(self, submission: Submission) -> None`` (see below).
 - Implement a projection method with the signature
   ``project(self, submission: Submission) -> Submission:`` that mutates
-  the passed :class:`.domain.Submission` instance.
+  the passed :class:`.domain.submission.Submission` instance.
+  The projection *must not* generate side-effects, because it will be called
+  any time we are generating the state of a submission. If you need to
+  generate a side-effect, see :ref:`callbacks`\.
 - Be fully documented. Be sure that the class docstring fully describes the
   meaning of the event/command, and that both public and private methods have
   at least a summary docstring.
@@ -43,6 +46,8 @@ See :class:`.SetPrimaryClassification` for an example.
 We could consider standalone validation functions for validation checks that
 are performed on several event types (instead of just private instance
 methods).
+
+.. _callbacks:
 
 Registering event callbacks
 ===========================
@@ -87,13 +92,7 @@ When do things actually happen?
 -------------------------------
 Callbacks are triggered when the :func:`.commit` method is called,
 usually by :func:`.core.save`. Normally, any event instances returned
-by the callback are applied and committed right away, in order. If the
-callback is asynchronous (see :func:`.tasks.is_async`), it will be
-executed whenever the :mod:`.worker` gets around to it, and any events
-it returns will be applied and stored in order at that time.
-
-Note that setting :mod:`.config.ENABLE_ASYNC=0` will cause async tasks
-to be executed in the current thread.
+by the callback are applied and committed right away, in order.
 
 Setting :mod:`.config.ENABLE_CALLBACKS=0` will disable callbacks
 entirely.
@@ -129,7 +128,7 @@ from ..annotation import Comment, Feature, ClassifierResults, \
 
 from ...exceptions import InvalidEvent
 from ..util import get_tzaware_utc_now
-from .event import Event, event_factory
+from .base import Event, event_factory, EventType
 from .request import RequestCrossList, RequestWithdrawal, ApplyRequest, \
     RejectRequest, ApproveRequest, CancelRequest
 from . import validators
@@ -148,7 +147,7 @@ logger = logging.getLogger(__name__)
 
 @dataclass()
 class CreateSubmission(Event):
-    """Creation of a new :class:`.domain.Submission`."""
+    """Creation of a new :class:`.domain.submission.Submission`."""
 
     NAME = "create submission"
     NAMED = "submission created"
@@ -158,20 +157,10 @@ class CreateSubmission(Event):
         return
 
     def project(self, submission: None = None) -> Submission:
-        """Create a new :class:`.domain.Submission`."""
+        """Create a new :class:`.domain.submission.Submission`."""
         return Submission(creator=self.creator, created=self.created,
                           owner=self.creator, proxy=self.proxy,
                           client=self.client)
-
-    def to_dict(self):
-        """Generate a dict of this :class:`.CreateSubmission`."""
-        data = super(CreateSubmission, self).to_dict()
-        return data
-
-    @classmethod
-    def from_dict(cls, **data) -> 'CreateSubmission':
-        """Override the ``from_dict`` constructor to handle submission."""
-        return cls(**data)
 
 
 @dataclass(init=False)
@@ -431,6 +420,7 @@ class SetTitle(Event):
 
     def __post_init__(self):
         """Perform some light cleanup on the provided value."""
+        super(SetTitle, self).__post_init__()
         self.title = self.cleanup(self.title)
 
     def validate(self, submission: Submission) -> None:
@@ -444,7 +434,7 @@ class SetTitle(Event):
         self._check_for_html(submission)
 
     def project(self, submission: Submission) -> Submission:
-        """Update the title on a :class:`.domain.Submission`."""
+        """Update the title on a :class:`.domain.submission.Submission`."""
         submission.metadata.title = self.title
         return submission
 
@@ -490,6 +480,7 @@ class SetAbstract(Event):
 
     def __post_init__(self):
         """Perform some light cleanup on the provided value."""
+        super(SetAbstract, self).__post_init__()
         self.abstract = self.cleanup(self.abstract)
 
     def validate(self, submission: Submission) -> None:
@@ -498,7 +489,7 @@ class SetAbstract(Event):
         self._acceptable_length(submission)
 
     def project(self, submission: Submission) -> Submission:
-        """Update the abstract on a :class:`.domain.Submission`."""
+        """Update the abstract on a :class:`.domain.submission.Submission`."""
         submission.metadata.abstract = self.abstract
         return submission
 
@@ -542,6 +533,7 @@ class SetDOI(Event):
 
     def __post_init__(self):
         """Perform some light cleanup on the provided value."""
+        super(SetDOI, self).__post_init__()
         self.doi = self.cleanup(self.doi)
 
     def validate(self, submission: Submission) -> None:
@@ -556,7 +548,7 @@ class SetDOI(Event):
                 raise InvalidEvent(self, f"Invalid DOI: {value}")
 
     def project(self, submission: Submission) -> Submission:
-        """Update the doi on a :class:`.domain.Submission`."""
+        """Update the doi on a :class:`.domain.submission.Submission`."""
         submission.metadata.doi = self.doi
         return submission
 
@@ -585,6 +577,7 @@ class SetMSCClassification(Event):
 
     def __post_init__(self):
         """Perform some light cleanup on the provided value."""
+        super(SetMSCClassification, self).__post_init__()
         self.msc_class = self.cleanup(self.msc_class)
 
     def validate(self, submission: Submission) -> None:
@@ -594,7 +587,7 @@ class SetMSCClassification(Event):
             return
 
     def project(self, submission: Submission) -> Submission:
-        """Update the MSC classification on a :class:`.domain.Submission`."""
+        """Update the MSC classification on a :class:`.domain.submission.Submission`."""
         submission.metadata.msc_class = self.msc_class
         return submission
 
@@ -625,6 +618,7 @@ class SetACMClassification(Event):
 
     def __post_init__(self):
         """Perform some light cleanup on the provided value."""
+        super(SetACMClassification, self).__post_init__()
         self.acm_class = self.cleanup(self.acm_class)
 
     def validate(self, submission: Submission) -> None:
@@ -635,7 +629,7 @@ class SetACMClassification(Event):
         self._valid_acm_class(submission)
 
     def project(self, submission: Submission) -> Submission:
-        """Update the ACM classification on a :class:`.domain.Submission`."""
+        """Update the ACM classification on a :class:`.domain.submission.Submission`."""
         submission.metadata.acm_class = self.acm_class
         return submission
 
@@ -674,6 +668,7 @@ class SetJournalReference(Event):
 
     def __post_init__(self):
         """Perform some light cleanup on the provided value."""
+        super(SetJournalReference, self).__post_init__()
         self.journal_ref = self.cleanup(self.journal_ref)
 
     def validate(self, submission: Submission) -> None:
@@ -684,7 +679,7 @@ class SetJournalReference(Event):
         self._contains_valid_year(submission)
 
     def project(self, submission: Submission) -> Submission:
-        """Update the journal reference on a :class:`.domain.Submission`."""
+        """Update the journal reference on a :class:`.domain.submission.Submission`."""
         submission.metadata.journal_ref = self.journal_ref
         return submission
 
@@ -722,6 +717,7 @@ class SetReportNumber(Event):
 
     def __post_init__(self):
         """Perform some light cleanup on the provided value."""
+        super(SetReportNumber, self).__post_init__()
         self.report_num = self.cleanup(self.report_num)
 
     def validate(self, submission: Submission) -> None:
@@ -733,7 +729,7 @@ class SetReportNumber(Event):
                                      " consecutive digits")
 
     def project(self, submission: Submission) -> Submission:
-        """Update the report number on a :class:`.domain.Submission`."""
+        """Update the report number on a :class:`.domain.submission.Submission`."""
         submission.metadata.report_num = self.report_num
         return submission
 
@@ -758,6 +754,7 @@ class SetComments(Event):
 
     def __post_init__(self):
         """Perform some light cleanup on the provided value."""
+        super(SetComments, self).__post_init__()
         self.comments = self.cleanup(self.comments)
 
     def validate(self, submission: Submission) -> None:
@@ -770,7 +767,7 @@ class SetComments(Event):
                                      f" {self.MAX_LENGTH} characters long")
 
     def project(self, submission: Submission) -> Submission:
-        """Update the comments on a :class:`.domain.Submission`."""
+        """Update the comments on a :class:`.domain.submission.Submission`."""
         submission.metadata.comments = self.comments
         return submission
 
@@ -784,7 +781,7 @@ class SetComments(Event):
 
 @dataclass()
 class SetAuthors(Event):
-    """Update the authors on a :class:`.domain.Submission`."""
+    """Update the authors on a :class:`.domain.submission.Submission`."""
 
     NAME = "update authors"
     NAMED = "authors updated"
@@ -795,6 +792,7 @@ class SetAuthors(Event):
 
     def __post_init__(self):
         """Autogenerate and/or clean display names."""
+        super(SetAuthors, self).__post_init__()
         self.authors = [Author(**a) if type(a) is dict else a
                         for a in self.authors]
         if not self.authors_display:
@@ -852,9 +850,9 @@ class SetUploadPackage(Event):
 
     def __post_init__(self) -> None:
         """Make sure that `source_format` is an enum instance."""
+        super(SetUploadPackage, self).__post_init__()
         if type(self.source_format) is str:
             self.source_format = SubmissionContent.Format(self.source_format)
-        return super(SetUploadPackage, self).__post_init__()
 
     def validate(self, submission: Submission) -> None:
         """Validate data for :class:`.SetUploadPackage`."""
@@ -891,9 +889,9 @@ class UpdateUploadPackage(Event):
 
     def __post_init__(self) -> None:
         """Make sure that `source_format` is an enum instance."""
+        super(UpdateUploadPackage, self).__post_init__()
         if type(self.source_format) is str:
             self.source_format = SubmissionContent.Format(self.source_format)
-        return super(UpdateUploadPackage, self).__post_init__()
 
     def validate(self, submission: Submission) -> None:
         """Validate data for :class:`.SetUploadPackage`."""
@@ -925,6 +923,38 @@ class UnsetUploadPackage(Event):
 
 
 @dataclass()
+class ConfirmCompiledPreview(Event):
+    """Confirm that the submitter successfully compiled a preview."""
+
+    NAME = "confirm submission preview is compiled"
+    NAMED = "confirmed that submission preview was compiled"
+
+    def validate(self, submission: Submission) -> None:
+        return
+
+    def project(self, submission: Submission) -> Submission:
+        """Set :attr:`Submission.submitter_compiled_preview`."""
+        submission.submitter_compiled_preview = True
+        return submission
+
+
+@dataclass()
+class UnConfirmCompiledPreview(Event):
+    """Unconfirm that the submitter successfully compiled a preview."""
+
+    NAME = "unconfirm submission preview is compiled"
+    NAMED = "unconfirmed that submission preview was compiled"
+
+    def validate(self, submission: Submission) -> None:
+        return
+
+    def project(self, submission: Submission) -> Submission:
+        """Set :attr:`Submission.submitter_compiled_preview`."""
+        submission.submitter_compiled_preview = False
+        return submission
+
+
+@dataclass()
 class ConfirmPreview(Event):
     """Confirm that the paper and abstract previews are acceptable."""
 
@@ -936,7 +966,7 @@ class ConfirmPreview(Event):
         validators.submission_is_not_finalized(self, submission)
 
     def project(self, submission: Submission) -> Submission:
-        """Set :attr:`Submission.return submission`."""
+        """Set :attr:`Submission.submitter_confirmed_preview`."""
         submission.submitter_confirmed_preview = True
         return submission
 
@@ -1040,7 +1070,7 @@ class Announce(Event):
 
 @dataclass()
 class CreateComment(Event):
-    """Creation of a :class:`.Comment` on a :class:`.domain.Submission`."""
+    """Creation of a :class:`.Comment` on a :class:`.domain.submission.Submission`."""
 
     read_scope = 'submission:moderate'
     write_scope = 'submission:moderate'
@@ -1068,7 +1098,7 @@ class CreateComment(Event):
 
 @dataclass()
 class DeleteComment(Event):
-    """Deletion of a :class:`.Comment` on a :class:`.domain.Submission`."""
+    """Deletion of a :class:`.Comment` on a :class:`.domain.submission.Submission`."""
 
     read_scope = 'submission:moderate'
     write_scope = 'submission:moderate'
@@ -1090,44 +1120,44 @@ class DeleteComment(Event):
         return submission
 
 
-@dataclass()
-class AddDelegate(Event):
-    """Owner delegates authority to another agent."""
-
-    delegate: Optional[Agent] = None
-
-    def validate(self, submission: Submission) -> None:
-        """The event creator must be the owner of the submission."""
-        if not self.creator == submission.owner:
-            raise InvalidEvent(self, 'Event creator must be submission owner')
-
-    def project(self, submission: Submission) -> Submission:
-        """Add the delegate to the submission."""
-        delegation = Delegation(
-            creator=self.creator,
-            delegate=self.delegate,
-            created=self.created
-        )
-        submission.delegations[delegation.delegation_id] = delegation
-        return submission
-
-
-@dataclass()
-class RemoveDelegate(Event):
-    """Owner revokes authority from another agent."""
-
-    delegation_id: str = field(default_factory=str)
-
-    def validate(self, submission: Submission) -> None:
-        """The event creator must be the owner of the submission."""
-        if not self.creator == submission.owner:
-            raise InvalidEvent(self, 'Event creator must be submission owner')
-
-    def project(self, submission: Submission) -> Submission:
-        """Remove the delegate from the submission."""
-        if self.delegation_id in submission.delegations:
-            del submission.delegations[self.delegation_id]
-        return submission
+# @dataclass()
+# class AddDelegate(Event):
+#     """Owner delegates authority to another agent."""
+#
+#     delegate: Optional[Agent] = None
+#
+#     def validate(self, submission: Submission) -> None:
+#         """The event creator must be the owner of the submission."""
+#         if not self.creator == submission.owner:
+#             raise InvalidEvent(self, 'Event creator must be submission owner')
+#
+#     def project(self, submission: Submission) -> Submission:
+#         """Add the delegate to the submission."""
+#         delegation = Delegation(
+#             creator=self.creator,
+#             delegate=self.delegate,
+#             created=self.created
+#         )
+#         submission.delegations[delegation.delegation_id] = delegation
+#         return submission
+#
+#
+# @dataclass()
+# class RemoveDelegate(Event):
+#     """Owner revokes authority from another agent."""
+#
+#     delegation_id: str = field(default_factory=str)
+#
+#     def validate(self, submission: Submission) -> None:
+#         """The event creator must be the owner of the submission."""
+#         if not self.creator == submission.owner:
+#             raise InvalidEvent(self, 'Event creator must be submission owner')
+#
+#     def project(self, submission: Submission) -> Submission:
+#         """Remove the delegate from the submission."""
+#         if self.delegation_id in submission.delegations:
+#             del submission.delegations[self.delegation_id]
+#         return submission
 
 
 @dataclass()
@@ -1137,14 +1167,14 @@ class AddFeature(Event):
     NAME = "add feature metadata"
     NAMED = "feature metadata added"
 
-    feature_type: Feature.FeatureTypes = \
-        field(default=Feature.FeatureTypes.WORD_COUNT)
+    feature_type: Feature.Type = \
+        field(default=Feature.Type.WORD_COUNT)
     feature_value: Union[float, int] = field(default=0)
 
     def validate(self, submission: Submission) -> None:
         """Verify that the feature type is a known value."""
-        if self.feature_type not in Feature.FeatureTypes:
-            valid_types = ", ".join([ft.value for ft in Feature.FeatureTypes])
+        if self.feature_type not in Feature.Type:
+            valid_types = ", ".join([ft.value for ft in Feature.Type])
             raise InvalidEvent(self, "Must be one of %s" % valid_types)
 
     def project(self, submission: Submission) -> Submission:

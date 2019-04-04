@@ -25,16 +25,16 @@ def patch_hold(submission: domain.Submission,
 def patch_jref(submission: domain.Submission,
                row: models.Submission) -> domain.Submission:
     """
-    Patch a :class:`.domain.Submission` with JREF data outside the event scope.
+    Patch a :class:`.domain.submission.Submission` with JREF data outside the event scope.
 
     Parameters
     ----------
-    submission : :class:`.domain.Submission`
+    submission : :class:`.domain.submission.Submission`
         The submission object to patch.
 
     Returns
     -------
-    :class:`.domain.Submission`
+    :class:`.domain.submission.Submission`
         The same submission that was passed; now patched with JREF data
         outside the scope of the event model.
 
@@ -84,7 +84,7 @@ def _patch_request(req_type: type, data: Dict[str, Any],
                                 updated=row.get_updated(),
                                 request_id=request_id, **data)
     else:
-        user_request = submission.get_user_request(request_id)
+        user_request = submission.user_requests[request_id]
         if any([setattr_changed(user_request, field, value)
                 for field, value in data.items()]):
             user_request.updated = row.get_updated()

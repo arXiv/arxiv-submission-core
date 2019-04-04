@@ -31,7 +31,7 @@ from arxiv.submission import save, domain, CreateSubmission, ConfirmAuthorship,\
 from arxiv.submission.domain.submission import Submission
 from arxiv.submission.services import classic
 
-from arxiv.submission.exceptions import InvalidStack, InvalidEvent
+from arxiv.submission.exceptions import InvalidEvent
 
 INVALID_STATUSES = ['0', '20', '29', '30']
 
@@ -67,7 +67,7 @@ def process_csv(tsvfile, session):
             try:
                 submission_id = process_submission(submission)
                 verify_submission(submission, submission_id)
-            except (InvalidStack, InvalidEvent) as e:
+            except InvalidEvent as e:
                 logging.error('{}: {}'.format(submission['submission_id'], e))
 
 

@@ -1,12 +1,13 @@
 """Example 1: working submission."""
 
-from unittest import TestCase
+from unittest import TestCase, mock
 import tempfile
 
 from flask import Flask
 
 from ...services import classic
 from ... import save, load, load_fast, domain, exceptions
+from ... import core
 
 
 class TestWorkingSubmission(TestCase):
@@ -29,6 +30,7 @@ class TestWorkingSubmission(TestCase):
         with cls.app.app_context():
             classic.init_app(cls.app)
 
+    @mock.patch(f'{core.__name__}.StreamPublisher', mock.MagicMock())
     def setUp(self):
         """Create and partially complete the submission."""
         self.submitter = domain.agent.User(1234, email='j.user@somewhere.edu',
@@ -50,6 +52,7 @@ class TestWorkingSubmission(TestCase):
         with self.app.app_context():
             classic.drop_all()
 
+    @mock.patch(f'{core.__name__}.StreamPublisher', mock.MagicMock())
     def test_is_in_working_state(self):
         """The submission in in the working state."""
         # Check the submission state.
@@ -85,6 +88,7 @@ class TestWorkingSubmission(TestCase):
                              "The classic submission is in the not submitted"
                              " state")
 
+    @mock.patch(f'{core.__name__}.StreamPublisher', mock.MagicMock())
     def test_can_delete(self):
         """The submission can be deleted."""
         with self.app.app_context():
@@ -126,6 +130,7 @@ class TestWorkingSubmission(TestCase):
                              classic.models.Submission.USER_DELETED,
                              "The classic submission is in the DELETED state")
 
+    @mock.patch(f'{core.__name__}.StreamPublisher', mock.MagicMock())
     def test_cannot_finalize_submission(self):
         """The submission cannot be finalized."""
         with self.app.app_context():
@@ -137,6 +142,7 @@ class TestWorkingSubmission(TestCase):
 
         self.test_is_in_working_state()
 
+    @mock.patch(f'{core.__name__}.StreamPublisher', mock.MagicMock())
     def test_cannot_replace_submission(self):
         """The submission cannot be replaced."""
         with self.app.app_context():
@@ -148,6 +154,7 @@ class TestWorkingSubmission(TestCase):
 
         self.test_is_in_working_state()
 
+    @mock.patch(f'{core.__name__}.StreamPublisher', mock.MagicMock())
     def test_cannot_withdraw_submission(self):
         """The submission cannot be withdrawn."""
         with self.app.app_context():
@@ -160,6 +167,7 @@ class TestWorkingSubmission(TestCase):
 
         self.test_is_in_working_state()
 
+    @mock.patch(f'{core.__name__}.StreamPublisher', mock.MagicMock())
     def test_cannot_be_unfinalized(self):
         """The submission cannot be unfinalized."""
         with self.app.app_context():

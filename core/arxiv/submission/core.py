@@ -12,9 +12,8 @@ from arxiv.base.globals import get_application_config, get_application_global
 from .domain.submission import Submission, SubmissionMetadata, Author
 from .domain.agent import Agent, User, System, Client
 from .domain.event import *
-from .services import classic
-from .exceptions import InvalidEvent, InvalidStack, NoSuchSubmission, \
-    SaveError, NothingToDo
+from .services import classic, StreamPublisher
+from .exceptions import InvalidEvent, NoSuchSubmission, SaveError, NothingToDo
 
 
 logger = logging.getLogger(__name__)
@@ -34,7 +33,7 @@ def load(submission_id: int) -> Tuple[Submission, List[Event]]:
 
     Returns
     -------
-    :class:`.domain.Submission`
+    :class:`.domain.submission.Submission`
         The current state of the submission.
     list
         Items are :class:`.Event` instances, in order of their occurrence.
@@ -52,7 +51,7 @@ def load(submission_id: int) -> Tuple[Submission, List[Event]]:
 
 def load_submissions_for_user(user_id: int) -> List[Submission]:
     """
-    Load active :class:`.domain.Submission` instances for a specific user.
+    Load active :class:`.domain.submission.Submission` instances for a specific user.
 
     Parameters
     ----------
@@ -62,7 +61,7 @@ def load_submissions_for_user(user_id: int) -> List[Submission]:
     Returns
     -------
     list
-        Items are :class:`.domain.Submission` instances.
+        Items are :class:`.domain.submission.Submission` instances.
 
     """
     return classic.get_user_submissions_fast(user_id)
@@ -70,7 +69,7 @@ def load_submissions_for_user(user_id: int) -> List[Submission]:
 
 def load_fast(submission_id: int) -> Submission:
     """
-    Load a :class:`.domain.Submission` from its last projected state.
+    Load a :class:`.domain.submission.Submission` from its last projected state.
 
     This does not load and apply past events. The most recent stored submission
     state is loaded directly from the database.
@@ -82,7 +81,7 @@ def load_fast(submission_id: int) -> Submission:
 
     Returns
     -------
-    :class:`.domain.Submission`
+    :class:`.domain.submission.Submission`
         The current state of the submission.
 
     """
@@ -162,16 +161,23 @@ def save(*events: Event, submission_id: Optional[str] = None) \
         logger.debug('Submission has requests: %s', after.user_requests)
         applied.append(event)
         if not event.committed:
-            # TODO: <-- emit event here.
-            after, consequent_events = event.commit(classic.store_event)
+            after, consequent_events = event.commit(_store_event)
             applied += consequent_events
 
         before = after
     return after, list(sorted(set(applied), key=lambda e: e.created))
 
 
+def _store_event(event, before, after) -> Tuple[Event, Submission]:
+    try:
+        return classic.store_event(event, before, after, StreamPublisher.put)
+    except classic.exceptions.TransactionFailed as e:
+        raise SaveError('Failed to persist event') from e
+
+
 def init_app(app: Flask) -> None:
     """Set default configuration parameters for an application instance."""
     classic.init_app(app)
+    StreamPublisher.init_app(app)
     app.config.setdefault('ENABLE_CALLBACKS', 0)
     app.config.setdefault('ENABLE_ASYNC', 0)

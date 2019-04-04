@@ -8,7 +8,7 @@ from .util import dataclass
 from arxiv import taxonomy
 
 from . import validators
-from .event import Event
+from .base import Event
 from ..submission import Submission, Classification, WithdrawalRequest, \
     CrossListClassificationRequest, UserRequest
 from ...exceptions import InvalidEvent

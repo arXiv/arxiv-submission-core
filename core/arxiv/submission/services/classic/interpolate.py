@@ -26,7 +26,7 @@ from ...domain.event import Event, SetDOI, SetJournalReference, \
     SetReportNumber, ApplyRequest, RejectRequest, Announce, AddHold, \
     CancelRequest, SetPrimaryClassification, AddSecondaryClassification, \
     SetTitle, SetAbstract, SetComments, SetMSCClassification, \
-    SetACMClassification, SetAuthors, Reclassify
+    SetACMClassification, SetAuthors, Reclassify, ConfirmCompiledPreview
 
 from ...domain.agent import System, User
 from .load import status_from_classic
@@ -145,6 +145,9 @@ class ClassicEventInterpolator:
             self._inject_metadata_if_changed()
             self._inject_jref_if_changed()
 
+            if self.current_row.must_process == 0:
+                self._inject(ConfirmCompiledPreview)
+
             if self.current_row.is_announced():
                 self._inject(Announce, arxiv_id=self.arxiv_id)
         elif self.current_row.is_jref():
@@ -176,7 +179,7 @@ class ClassicEventInterpolator:
         if self.submission.metadata.abstract != row.abstract:
             self._inject(SetAbstract, abstract=row.abstract)
         if self.submission.metadata.comments != row.comments:
-            self._inject(SetAbstract, comments=row.comments)
+            self._inject(SetComments, comments=row.comments)
         if self.submission.metadata.msc_class != row.msc_class:
             self._inject(SetMSCClassification, msc_class=row.msc_class)
         if self.submission.metadata.acm_class != row.acm_class:
@@ -232,7 +235,7 @@ class ClassicEventInterpolator:
 
         Returns
         -------
-        :class:`.domain.Submission`
+        :class:`.domain.submission.Submission`
             The most recent state of the submission given the provided events
             and database rows.
         list

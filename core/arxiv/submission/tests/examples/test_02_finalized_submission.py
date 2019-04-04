@@ -1,12 +1,14 @@
 """Example 2: finalized submission."""
 
-from unittest import TestCase
+from unittest import TestCase, mock
 import tempfile
 
 from flask import Flask
 
-from ...services import classic
+from ...services import classic, StreamPublisher
+
 from ... import save, load, load_fast, domain, exceptions
+from ... import core
 
 CCO = 'http://creativecommons.org/publicdomain/zero/1.0/'
 
@@ -30,6 +32,7 @@ class TestFinalizedSubmission(TestCase):
         with cls.app.app_context():
             classic.init_app(cls.app)
 
+    @mock.patch(f'{core.__name__}.StreamPublisher', mock.MagicMock())
     def setUp(self):
         """Create, and complete the submission."""
         self.submitter = domain.agent.User(1234, email='j.user@somewhere.edu',
@@ -73,6 +76,7 @@ class TestFinalizedSubmission(TestCase):
         with self.app.app_context():
             classic.drop_all()
 
+    @mock.patch(f'{core.__name__}.StreamPublisher', mock.MagicMock())
     def test_is_in_submitted_state(self):
         """
         The submission is now submitted.
@@ -113,6 +117,7 @@ class TestFinalizedSubmission(TestCase):
                              "The classic submission is in the SUBMITTED"
                              " state")
 
+    @mock.patch(f'{core.__name__}.StreamPublisher', mock.MagicMock())
     def test_cannot_replace_submission(self):
         """The submission cannot be replaced: it hasn't yet been announced."""
         with self.app.app_context():
@@ -124,6 +129,7 @@ class TestFinalizedSubmission(TestCase):
 
         self.test_is_in_submitted_state()
 
+    @mock.patch(f'{core.__name__}.StreamPublisher', mock.MagicMock())
     def test_cannot_withdraw_submission(self):
         """The submission cannot be withdrawn: it hasn't yet been announced."""
         with self.app.app_context():
@@ -136,6 +142,7 @@ class TestFinalizedSubmission(TestCase):
 
         self.test_is_in_submitted_state()
 
+    @mock.patch(f'{core.__name__}.StreamPublisher', mock.MagicMock())
     def test_cannot_edit_submission(self):
         """The submission cannot be changed: it hasn't yet been announced."""
         with self.app.app_context():
@@ -152,6 +159,7 @@ class TestFinalizedSubmission(TestCase):
 
         self.test_is_in_submitted_state()
 
+    @mock.patch(f'{core.__name__}.StreamPublisher', mock.MagicMock())
     def test_can_be_unfinalized(self):
         """The submission can be unfinalized."""
         with self.app.app_context():

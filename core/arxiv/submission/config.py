@@ -82,7 +82,8 @@ BASE_SERVER = os.environ.get('BASE_SERVER', 'arxiv.org')
 SERVER_NAME = "submit.arxiv.org"
 
 URLS = [
-    ("submission", "/<int:submission_id>", "submit.arxiv.org")
+    ("submission", "/<int:submission_id>", "submit.arxiv.org"),
+    ("confirmation", "/<int:submission_id>/confirmation", "submit.arxiv.org")
 ]
 """
 URLs for external services, for use with :func:`flask.url_for`.
@@ -91,3 +92,14 @@ if these pages seem relevant to other services.
 
 For details, see :mod:`arxiv.base.urls`.
 """
+
+AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID', 'nope')
+AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY', 'nope')
+AWS_REGION = os.environ.get('AWS_REGION', 'us-east-1')
+KINESIS_STREAM = os.environ.get("KINESIS_STREAM", "SubmissionMetadata")
+KINESIS_SHARD_ID = os.environ.get("KINESIS_SHARD_ID", "0")
+KINESIS_START_TYPE = os.environ.get("KINESIS_START_TYPE", "TRIM_HORIZON")
+KINESIS_ENDPOINT = os.environ.get("KINESIS_ENDPOINT", None)
+KINESIS_VERIFY = bool(int(os.environ.get("KINESIS_VERIFY", "1")))
+
+LOGLEVEL = int(os.environ.get('LOGLEVEL', '40'))

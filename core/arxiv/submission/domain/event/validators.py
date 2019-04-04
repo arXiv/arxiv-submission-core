@@ -4,7 +4,7 @@ import re
 
 from arxiv import taxonomy, identifier
 
-from .event import Event
+from .base import Event
 from ..submission import Submission
 from ...exceptions import InvalidEvent
 
@@ -16,7 +16,7 @@ def submission_is_not_finalized(event: Event, submission: Submission) -> None:
     Parameters
     ----------
     event : :class:`.Event`
-    submission : :class:`.domain.Submission`
+    submission : :class:`.domain.submission.Submission`
 
     Raises
     ------

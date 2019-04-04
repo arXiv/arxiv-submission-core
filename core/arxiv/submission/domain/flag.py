@@ -5,9 +5,9 @@ from typing import Optional, Union
 from enum import Enum
 
 from mypy_extensions import TypedDict
-from dataclasses import field, dataclass
+from dataclasses import field, dataclass, asdict
 
-from .agent import Agent
+from .agent import Agent, agent_factory
 
 
 PossibleDuplicate = TypedDict('PossibleDuplicate',
@@ -25,13 +25,22 @@ class Flag:
     flag_data: Optional[Union[int, str, float, dict, list]]
     comment: str
     proxy: Optional[Agent] = field(default=None)
+    flag_datatype: str = field(default_factory=str)
+
+    def __post_init__(self):
+        """Set derivative fields."""
+        self.flag_datatype = self.__class__.__name__
+        if self.creator and type(self.creator) is dict:
+            self.creator = agent_factory(**self.creator)
+        if self.proxy and type(self.proxy) is dict:
+            self.proxy = agent_factory(**self.proxy)
 
 
 @dataclass
 class ContentFlag(Flag):
     """A flag related to the content of the submission."""
 
-    class FlagTypes(Enum):
+    class Type(Enum):
         """Supported content flags."""
 
         LOW_STOP = 'low stopwords'
@@ -50,7 +59,9 @@ class ContentFlag(Flag):
 class MetadataFlag(Flag):
     """A flag related to the submission metadata."""
 
-    class FlagTypes(Enum):
+    field: Optional[str] = field(default=None)
+
+    class Type(Enum):
         """Supported metadata flags."""
 
         POSSIBLE_DUPLICATE_TITLE = 'possible duplicate title'
@@ -62,7 +73,21 @@ class MetadataFlag(Flag):
 class UserFlag(Flag):
     """A flag related to the submitter."""
 
-    class FlagTypes(Enum):
+    class Type(Enum):
         """Supported user flags."""
 
         RATE = 'rate'
+
+
+flag_datatypes = {
+    'ContentFlag': ContentFlag,
+    'MetadataFlag': MetadataFlag,
+    'UserFlag': UserFlag
+}
+
+
+def flag_factory(**data) -> Flag:
+    cls = flag_datatypes[data.pop('flag_datatype')]
+    if not isinstance(data['flag_type'], cls.Type):
+        data['flag_type'] = cls.Type(data['flag_type'])
+    return cls(**data)

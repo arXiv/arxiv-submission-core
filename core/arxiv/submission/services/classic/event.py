@@ -13,7 +13,7 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.mysql import DATETIME as DateTime
 
 from ...domain.event import Event, event_factory
-from ...domain.agent import User, Client, Agent, System
+from ...domain.agent import User, Client, Agent, System, agent_factory
 from .models import Base
 from .util import transaction, current_session, FriendlyJSON
 
@@ -62,9 +62,9 @@ class DBEvent(Base):  # type: ignore
         return event_factory(
             event_version=self.event_version,
             event_type=self.event_type,
-            creator=Agent.from_dict(self.creator),
-            proxy=Agent.from_dict(self.proxy) if self.proxy else None,
-            client=Agent.from_dict(self.client) if self.client else None,
+            creator=agent_factory(**self.creator),
+            proxy=agent_factory(**self.proxy) if self.proxy else None,
+            client=agent_factory(**self.client) if self.client else None,
             submission_id=self.submission_id,
             created=self.get_created(),
             **data

@@ -18,7 +18,7 @@ from arxiv.taxonomy import Category
 
 from .annotation import Comment
 from .util import get_tzaware_utc_now
-from .agent import Agent
+from .agent import Agent, agent_factory
 
 
 @dataclass
@@ -46,11 +46,13 @@ class Proposal:
         """Name (str) of the type of annotation."""
         return self.proposed_event_type.__name__
 
-    def to_dict(self) -> dict:
-        """Generate a dict representation of this :class:`.Proposal`."""
-        data = asdict(self)
-        data['proposal_type'] = self.proposal_type
-        return data
+    def __post_init__(self):
+        """Check our enums and agents."""
+        if self.creator and type(self.creator) is dict:
+            self.creator = agent_factory(**self.creator)
+        if self.proxy and type(self.proxy) is dict:
+            self.proxy = agent_factory(**self.proxy)
+        self.status = self.Status(self.status)
 
     def is_rejected(self):
         return self.status == self.Status.REJECTED

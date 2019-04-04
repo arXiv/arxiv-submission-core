@@ -25,18 +25,19 @@ class TestSaveProposal(TestCase):
 
     def test_save_reclassification_proposal(self):
         """A submission has a new reclassification proposal."""
-        event = AddProposal(
-            creator=self.user,
-            proposed_event_type=SetPrimaryClassification,
-            proposed_event_data={
-                'category': taxonomy.Category('cs.DL'),
-            },
-            comment='foo'
-        )
         with in_memory_db() as session:
             create = CreateSubmission(creator=self.user)
             before, after = None, create.apply(None)
             create, before = store_event(create, before, after)
+
+            event = AddProposal(
+                creator=self.user,
+                proposed_event_type=SetPrimaryClassification,
+                proposed_event_data={
+                    'category': taxonomy.Category('cs.DL'),
+                },
+                comment='foo'
+            )
             after = event.apply(before)
             event, after = store_event(event, before, after)
 
@@ -62,18 +63,19 @@ class TestSaveProposal(TestCase):
 
     def test_save_secondary_proposal(self):
         """A submission has a new cross-list proposal."""
-        event = AddProposal(
-            creator=self.user,
-            proposed_event_type=AddSecondaryClassification,
-            proposed_event_data={
-                'category': taxonomy.Category('cs.DL'),
-            },
-            comment='foo'
-        )
         with in_memory_db() as session:
             create = CreateSubmission(creator=self.user)
             before, after = None, create.apply(None)
             create, before = store_event(create, before, after)
+
+            event = AddProposal(
+                creator=self.user,
+                proposed_event_type=AddSecondaryClassification,
+                proposed_event_data={
+                    'category': taxonomy.Category('cs.DL'),
+                },
+                comment='foo'
+            )
             after = event.apply(before)
             event, after = store_event(event, before, after)
 
@@ -99,17 +101,17 @@ class TestSaveProposal(TestCase):
 
     def test_save_title_proposal(self):
         """A submission has a new SetTitle proposal."""
-        event = AddProposal(
-            creator=self.user,
-            proposed_event_type=SetTitle,
-            proposed_event_data={'title': 'the foo title'},
-            comment='foo'
-        )
-
         with in_memory_db() as session:
             create = CreateSubmission(creator=self.user)
             before, after = None, create.apply(None)
             create, before = store_event(create, before, after)
+
+            event = AddProposal(
+                creator=self.user,
+                proposed_event_type=SetTitle,
+                proposed_event_data={'title': 'the foo title'},
+                comment='foo'
+            )
             after = event.apply(before)
             event, after = store_event(event, before, after)
 

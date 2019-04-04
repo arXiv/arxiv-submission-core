@@ -39,7 +39,7 @@ def log_accept_system_cross(event: AcceptProposal, before: Submission,
 def log_stopwords(event: AddContentFlag, before: Submission,
                   after: Submission) -> None:
     """Create a log entry when there is a problem with stopword content."""
-    if event.flag_type is ContentFlag.FlagTypes.LOW_STOP:
+    if event.flag_type is ContentFlag.Type.LOW_STOP:
         admin_log(event.creator.username, "admin comment",
                   event.comment,
                   username="system",
@@ -80,9 +80,9 @@ def handle(event: Event, before: Submission, after: Submission) -> None:
     ----------
     event : :class:`event.Event`
         The event being committed.
-    before : :class:`.domain.Submission`
+    before : :class:`.domain.submission.Submission`
         State of the submission before the event.
-    after : :class:`.domain.Submission`
+    after : :class:`.domain.submission.Submission`
         State of the submission after the event.
 
     """

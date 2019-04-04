@@ -1,6 +1,6 @@
 """Example 7: cross-list request."""
 
-from unittest import TestCase
+from unittest import TestCase, mock
 import tempfile
 from datetime import datetime
 from pytz import UTC
@@ -8,7 +8,7 @@ from pytz import UTC
 from flask import Flask
 
 from ...services import classic
-from ... import save, load, load_fast, domain, exceptions
+from ... import save, load, load_fast, domain, exceptions, core
 
 CCO = 'http://creativecommons.org/publicdomain/zero/1.0/'
 TEX = domain.submission.SubmissionContent.Format('tex')
@@ -28,6 +28,7 @@ class TestCrossListRequested(TestCase):
         with cls.app.app_context():
             classic.init_app(cls.app)
 
+    @mock.patch(f'{core.__name__}.StreamPublisher', mock.MagicMock())
     def setUp(self):
         """Create, complete, and publish the submission."""
         self.submitter = domain.agent.User(1234, email='j.user@somewhere.edu',
@@ -104,6 +105,7 @@ class TestCrossListRequested(TestCase):
         with self.app.app_context():
             classic.drop_all()
 
+    @mock.patch(f'{core.__name__}.StreamPublisher', mock.MagicMock())
     def test_has_pending_requests(self):
         """The submission has an outstanding publication."""
         with self.app.app_context():
@@ -167,6 +169,7 @@ class TestCrossListRequested(TestCase):
                              "The second row is in the processing submission"
                              " state.")
 
+    @mock.patch(f'{core.__name__}.StreamPublisher', mock.MagicMock())
     def test_cannot_replace_submission(self):
         """The submission cannot be replaced."""
         with self.app.app_context():
@@ -174,6 +177,7 @@ class TestCrossListRequested(TestCase):
                 save(domain.event.CreateSubmissionVersion(**self.defaults),
                      submission_id=self.submission.submission_id)
 
+    @mock.patch(f'{core.__name__}.StreamPublisher', mock.MagicMock())
     def test_cannot_withdraw_submission(self):
         """The submitter cannot request withdrawal."""
         withdrawal_reason = "the best reason"
@@ -183,6 +187,7 @@ class TestCrossListRequested(TestCase):
                                                     **self.defaults),
                      submission_id=self.submission.submission_id)
 
+    @mock.patch(f'{core.__name__}.StreamPublisher', mock.MagicMock())
     def test_cannot_request_another_crosslist(self):
         """The submitter cannot request a second cross-list."""
         # Cannot submit another cross-list request while one is pending.
@@ -192,6 +197,7 @@ class TestCrossListRequested(TestCase):
                                                    **self.defaults),
                      submission_id=self.submission.submission_id)
 
+    @mock.patch(f'{core.__name__}.StreamPublisher', mock.MagicMock())
     def test_request_is_rejected(self):
         """If the request is 'removed' in classic, NG request is rejected."""
         with self.app.app_context():
@@ -245,6 +251,7 @@ class TestCrossListRequested(TestCase):
             self.assertNotIn(self.category, submission.secondary_categories,
                              "Requested category is not added to submission")
 
+    @mock.patch(f'{core.__name__}.StreamPublisher', mock.MagicMock())
     def test_request_is_applied(self):
         """If the request is announced in classic, NG request is 'applied'."""
         with self.app.app_context():
@@ -313,6 +320,7 @@ class TestCrossListApplied(TestCase):
         with cls.app.app_context():
             classic.init_app(cls.app)
 
+    @mock.patch(f'{core.__name__}.StreamPublisher', mock.MagicMock())
     def setUp(self):
         """Create, complete, and publish the submission."""
         self.submitter = domain.agent.User(1234, email='j.user@somewhere.edu',
@@ -398,6 +406,7 @@ class TestCrossListApplied(TestCase):
         with self.app.app_context():
             classic.drop_all()
 
+    @mock.patch(f'{core.__name__}.StreamPublisher', mock.MagicMock())
     def test_has_applied_requests(self):
         """The submission has an applied request."""
         with self.app.app_context():
@@ -461,6 +470,7 @@ class TestCrossListApplied(TestCase):
                              "The second row is in the processing submission"
                              " state.")
 
+    @mock.patch(f'{core.__name__}.StreamPublisher', mock.MagicMock())
     def test_can_replace_submission(self):
         """The submission can be replaced, resulting in a new version."""
         with self.app.app_context():
@@ -518,6 +528,7 @@ class TestCrossListApplied(TestCase):
                              classic.models.Submission.NOT_SUBMITTED,
                              "The third row is in not submitted state")
 
+    @mock.patch(f'{core.__name__}.StreamPublisher', mock.MagicMock())
     def test_can_withdraw_submission(self):
         """The submitter can request withdrawal of the submission."""
         withdrawal_reason = "the best reason"
@@ -603,6 +614,7 @@ class TestCrossListApplied(TestCase):
                                                     **self.defaults),
                      submission_id=self.submission.submission_id)
 
+    @mock.patch(f'{core.__name__}.StreamPublisher', mock.MagicMock())
     def test_can_request_crosslist(self):
         """The submitter can request cross-list classification."""
         category = "cs.LO"
@@ -696,6 +708,7 @@ class TestCrossListRejected(TestCase):
         with cls.app.app_context():
             classic.init_app(cls.app)
 
+    @mock.patch(f'{core.__name__}.StreamPublisher', mock.MagicMock())
     def setUp(self):
         """Create, complete, and publish the submission."""
         self.submitter = domain.agent.User(1234, email='j.user@somewhere.edu',
@@ -782,6 +795,7 @@ class TestCrossListRejected(TestCase):
         with self.app.app_context():
             classic.drop_all()
 
+    @mock.patch(f'{core.__name__}.StreamPublisher', mock.MagicMock())
     def test_has_rejected_request(self):
         """The submission has a rejected request."""
         with self.app.app_context():
@@ -848,6 +862,7 @@ class TestCrossListRejected(TestCase):
                              classic.models.Submission.REMOVED,
                              "The second row is in the removed state.")
 
+    @mock.patch(f'{core.__name__}.StreamPublisher', mock.MagicMock())
     def test_can_replace_submission(self):
         """The submission can be replaced, resulting in a new version."""
         with self.app.app_context():
@@ -905,6 +920,7 @@ class TestCrossListRejected(TestCase):
                              classic.models.Submission.NOT_SUBMITTED,
                              "The third row is in not submitted state")
 
+    @mock.patch(f'{core.__name__}.StreamPublisher', mock.MagicMock())
     def test_can_withdraw_submission(self):
         """The submitter can request withdrawal of the submission."""
         withdrawal_reason = "the best reason"
@@ -990,6 +1006,7 @@ class TestCrossListRejected(TestCase):
                                                     **self.defaults),
                      submission_id=self.submission.submission_id)
 
+    @mock.patch(f'{core.__name__}.StreamPublisher', mock.MagicMock())
     def test_can_request_crosslist(self):
         """The submitter can request cross-list classification."""
         category = "cs.LO"

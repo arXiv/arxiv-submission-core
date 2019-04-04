@@ -17,11 +17,10 @@ RUN pipenv install
 
 ADD core/ /opt/arxiv/core/
 RUN pipenv install /opt/arxiv/core/
+ADD agent/ /opt/arxiv/agent/
 
 ENV JWT_SECRET "foo"
 EXPOSE 8000
 
-#CMD /bin/bash
-
 ENTRYPOINT ["pipenv", "run", "celery", "worker"]
-CMD ["-A", "arxiv.submission.worker.worker_app", "--loglevel=INFO", "-E", "--concurrency=2"]
+CMD ["-A", "agent.worker.worker_app", "--loglevel=INFO", "-E", "--concurrency=2"]
