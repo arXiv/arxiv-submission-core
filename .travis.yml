@@ -2,7 +2,7 @@ language: python
 sudo: required
 services:
   - docker
-cache: pip
+#cache: pip
 env:
   MIN_PYLINT_SCORE: 8
 os:
