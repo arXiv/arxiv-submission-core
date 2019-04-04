@@ -1,0 +1,183 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>arxiv.submission.tests.examples.test_04_published_submission module &#8212; arXiv submission &amp; moderation 0.1 documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="module-arxiv.submission.tests.examples.test_04_published_submission">
+<span id="arxiv-submission-tests-examples-test-04-published-submission-module"></span><h1>arxiv.submission.tests.examples.test_04_published_submission module<a class="headerlink" href="#module-arxiv.submission.tests.examples.test_04_published_submission" title="Permalink to this headline">¶</a></h1>
+<p>Example 4: submission is announced.</p>
+<dl class="class">
+<dt id="arxiv.submission.tests.examples.test_04_published_submission.TestAnnouncedSubmission">
+<em class="property">class </em><code class="descclassname">arxiv.submission.tests.examples.test_04_published_submission.</code><code class="descname">TestAnnouncedSubmission</code><span class="sig-paren">(</span><em>methodName='runTest'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/tests/examples/test_04_published_submission.html#TestAnnouncedSubmission"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.tests.examples.test_04_published_submission.TestAnnouncedSubmission" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">unittest.case.TestCase</span></code></p>
+<p>Submitter finalizes a new submission, and it is eventually announced.</p>
+<dl class="method">
+<dt id="arxiv.submission.tests.examples.test_04_published_submission.TestAnnouncedSubmission.setUp">
+<code class="descname">setUp</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/tests/examples/test_04_published_submission.html#TestAnnouncedSubmission.setUp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.tests.examples.test_04_published_submission.TestAnnouncedSubmission.setUp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create, complete, and publish the submission.</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="arxiv.submission.tests.examples.test_04_published_submission.TestAnnouncedSubmission.setUpClass">
+<em class="property">classmethod </em><code class="descname">setUpClass</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/tests/examples/test_04_published_submission.html#TestAnnouncedSubmission.setUpClass"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.tests.examples.test_04_published_submission.TestAnnouncedSubmission.setUpClass" title="Permalink to this definition">¶</a></dt>
+<dd><p>Instantiate an app for use with a SQLite database.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.tests.examples.test_04_published_submission.TestAnnouncedSubmission.tearDown">
+<code class="descname">tearDown</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/tests/examples/test_04_published_submission.html#TestAnnouncedSubmission.tearDown"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.tests.examples.test_04_published_submission.TestAnnouncedSubmission.tearDown" title="Permalink to this definition">¶</a></dt>
+<dd><p>Clear the database after each test.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.tests.examples.test_04_published_submission.TestAnnouncedSubmission.test_can_replace_submission">
+<code class="descname">test_can_replace_submission</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/tests/examples/test_04_published_submission.html#TestAnnouncedSubmission.test_can_replace_submission"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.tests.examples.test_04_published_submission.TestAnnouncedSubmission.test_can_replace_submission" title="Permalink to this definition">¶</a></dt>
+<dd><p>The submission can be replaced, resulting in a new version.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.tests.examples.test_04_published_submission.TestAnnouncedSubmission.test_can_request_crosslist">
+<code class="descname">test_can_request_crosslist</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/tests/examples/test_04_published_submission.html#TestAnnouncedSubmission.test_can_request_crosslist"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.tests.examples.test_04_published_submission.TestAnnouncedSubmission.test_can_request_crosslist" title="Permalink to this definition">¶</a></dt>
+<dd><p>The submitter can request cross-list classification.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.tests.examples.test_04_published_submission.TestAnnouncedSubmission.test_can_withdraw_submission">
+<code class="descname">test_can_withdraw_submission</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/tests/examples/test_04_published_submission.html#TestAnnouncedSubmission.test_can_withdraw_submission"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.tests.examples.test_04_published_submission.TestAnnouncedSubmission.test_can_withdraw_submission" title="Permalink to this definition">¶</a></dt>
+<dd><p>The submitter can request withdrawal of the submission.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.tests.examples.test_04_published_submission.TestAnnouncedSubmission.test_cannot_be_unfinalized">
+<code class="descname">test_cannot_be_unfinalized</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/tests/examples/test_04_published_submission.html#TestAnnouncedSubmission.test_cannot_be_unfinalized"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.tests.examples.test_04_published_submission.TestAnnouncedSubmission.test_cannot_be_unfinalized" title="Permalink to this definition">¶</a></dt>
+<dd><p>The submission cannot be unfinalized, because it is announced.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.tests.examples.test_04_published_submission.TestAnnouncedSubmission.test_cannot_edit_submission_metadata">
+<code class="descname">test_cannot_edit_submission_metadata</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/tests/examples/test_04_published_submission.html#TestAnnouncedSubmission.test_cannot_edit_submission_metadata"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.tests.examples.test_04_published_submission.TestAnnouncedSubmission.test_cannot_edit_submission_metadata" title="Permalink to this definition">¶</a></dt>
+<dd><p>The submission metadata cannot be changed without a new version.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.tests.examples.test_04_published_submission.TestAnnouncedSubmission.test_changing_doi">
+<code class="descname">test_changing_doi</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/tests/examples/test_04_published_submission.html#TestAnnouncedSubmission.test_changing_doi"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.tests.examples.test_04_published_submission.TestAnnouncedSubmission.test_changing_doi" title="Permalink to this definition">¶</a></dt>
+<dd><p>Submitter can set the DOI.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.tests.examples.test_04_published_submission.TestAnnouncedSubmission.test_is_in_announced_state">
+<code class="descname">test_is_in_announced_state</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/tests/examples/test_04_published_submission.html#TestAnnouncedSubmission.test_is_in_announced_state"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.tests.examples.test_04_published_submission.TestAnnouncedSubmission.test_is_in_announced_state" title="Permalink to this definition">¶</a></dt>
+<dd><p>The submission is now announced.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.tests.examples.test_04_published_submission.TestAnnouncedSubmission.test_rolling_back_does_not_clobber_jref_changes">
+<code class="descname">test_rolling_back_does_not_clobber_jref_changes</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/tests/examples/test_04_published_submission.html#TestAnnouncedSubmission.test_rolling_back_does_not_clobber_jref_changes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.tests.examples.test_04_published_submission.TestAnnouncedSubmission.test_rolling_back_does_not_clobber_jref_changes" title="Permalink to this definition">¶</a></dt>
+<dd><p>If user submits a JREF, rolling back does not clobber changes.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">arXiv submission & moderation</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../architecture.html">Submission &amp; moderation subsystem architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../announcement_process.html">Submission &amp; announcement Process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../submission_api_context.html">Submission API: Context</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../containers/agent/agent.html">agent package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../containers/metadata/metadata.html">metadata package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../background.html">Background</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, arXiv.org.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.0.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/arxiv.submission/arxiv.submission.tests.examples.test_04_published_submission.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

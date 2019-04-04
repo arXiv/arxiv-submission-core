@@ -1,0 +1,252 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>arxiv.submission.domain.flag module &#8212; arXiv submission &amp; moderation 0.1 documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="arxiv.submission.domain.meta module" href="arxiv.submission.domain.meta.html" />
+    <link rel="prev" title="arxiv.submission.domain.compilation module" href="arxiv.submission.domain.compilation.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="module-arxiv.submission.domain.flag">
+<span id="arxiv-submission-domain-flag-module"></span><h1>arxiv.submission.domain.flag module<a class="headerlink" href="#module-arxiv.submission.domain.flag" title="Permalink to this headline">¶</a></h1>
+<p>Data structures related to QA.</p>
+<dl class="class">
+<dt id="arxiv.submission.domain.flag.ContentFlag">
+<em class="property">class </em><code class="descclassname">arxiv.submission.domain.flag.</code><code class="descname">ContentFlag</code><span class="sig-paren">(</span><em>event_id</em>, <em>creator</em>, <em>created</em>, <em>flag_type</em>, <em>flag_data</em>, <em>comment</em>, <em>proxy=None</em>, <em>flag_datatype=&lt;factory&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/flag.html#ContentFlag"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.flag.ContentFlag" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#arxiv.submission.domain.flag.Flag" title="arxiv.submission.domain.flag.Flag"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.submission.domain.flag.Flag</span></code></a></p>
+<p>A flag related to the content of the submission.</p>
+<dl class="class">
+<dt id="arxiv.submission.domain.flag.ContentFlag.Type">
+<em class="property">class </em><code class="descname">Type</code><a class="reference internal" href="../_modules/arxiv/submission/domain/flag.html#ContentFlag.Type"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.flag.ContentFlag.Type" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.6/library/enum.html#enum.Enum" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">enum.Enum</span></code></a></p>
+<p>Supported content flags.</p>
+<dl class="attribute">
+<dt id="arxiv.submission.domain.flag.ContentFlag.Type.CHARACTER_SET">
+<code class="descname">CHARACTER_SET</code><em class="property"> = 'character set'</em><a class="headerlink" href="#arxiv.submission.domain.flag.ContentFlag.Type.CHARACTER_SET" title="Permalink to this definition">¶</a></dt>
+<dd><p>Possibly excessive use of non-ASCII characters.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.flag.ContentFlag.Type.LANGUAGE">
+<code class="descname">LANGUAGE</code><em class="property"> = 'language'</em><a class="headerlink" href="#arxiv.submission.domain.flag.ContentFlag.Type.LANGUAGE" title="Permalink to this definition">¶</a></dt>
+<dd><p>Possibly not English language.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.flag.ContentFlag.Type.LINE_NUMBERS">
+<code class="descname">LINE_NUMBERS</code><em class="property"> = 'line numbers'</em><a class="headerlink" href="#arxiv.submission.domain.flag.ContentFlag.Type.LINE_NUMBERS" title="Permalink to this definition">¶</a></dt>
+<dd><p>Content has line numbers.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.flag.ContentFlag.Type.LOW_STOP">
+<code class="descname">LOW_STOP</code><em class="property"> = 'low stopwords'</em><a class="headerlink" href="#arxiv.submission.domain.flag.ContentFlag.Type.LOW_STOP" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of stopwords is abnormally low.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.flag.ContentFlag.Type.LOW_STOP_PERCENT">
+<code class="descname">LOW_STOP_PERCENT</code><em class="property"> = 'low stopword percentage'</em><a class="headerlink" href="#arxiv.submission.domain.flag.ContentFlag.Type.LOW_STOP_PERCENT" title="Permalink to this definition">¶</a></dt>
+<dd><p>Frequency of stopwords is abnormally low.</p>
+</dd></dl>
+
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.submission.domain.flag.Flag">
+<em class="property">class </em><code class="descclassname">arxiv.submission.domain.flag.</code><code class="descname">Flag</code><span class="sig-paren">(</span><em>event_id</em>, <em>creator</em>, <em>created</em>, <em>flag_type</em>, <em>flag_data</em>, <em>comment</em>, <em>proxy=None</em>, <em>flag_datatype=&lt;factory&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/flag.html#Flag"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.flag.Flag" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.6/library/functions.html#object" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Base class for flags.</p>
+<dl class="attribute">
+<dt id="arxiv.submission.domain.flag.Flag.proxy">
+<code class="descname">proxy</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.submission.domain.flag.Flag.proxy" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.submission.domain.flag.MetadataFlag">
+<em class="property">class </em><code class="descclassname">arxiv.submission.domain.flag.</code><code class="descname">MetadataFlag</code><span class="sig-paren">(</span><em>event_id</em>, <em>creator</em>, <em>created</em>, <em>flag_type</em>, <em>flag_data</em>, <em>comment</em>, <em>proxy=None</em>, <em>flag_datatype=&lt;factory&gt;</em>, <em>field=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/flag.html#MetadataFlag"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.flag.MetadataFlag" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#arxiv.submission.domain.flag.Flag" title="arxiv.submission.domain.flag.Flag"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.submission.domain.flag.Flag</span></code></a></p>
+<p>A flag related to the submission metadata.</p>
+<dl class="class">
+<dt id="arxiv.submission.domain.flag.MetadataFlag.Type">
+<em class="property">class </em><code class="descname">Type</code><a class="reference internal" href="../_modules/arxiv/submission/domain/flag.html#MetadataFlag.Type"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.flag.MetadataFlag.Type" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.6/library/enum.html#enum.Enum" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">enum.Enum</span></code></a></p>
+<p>Supported metadata flags.</p>
+<dl class="attribute">
+<dt id="arxiv.submission.domain.flag.MetadataFlag.Type.CHARACTER_SET">
+<code class="descname">CHARACTER_SET</code><em class="property"> = 'character_set'</em><a class="headerlink" href="#arxiv.submission.domain.flag.MetadataFlag.Type.CHARACTER_SET" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.flag.MetadataFlag.Type.LANGUAGE">
+<code class="descname">LANGUAGE</code><em class="property"> = 'language'</em><a class="headerlink" href="#arxiv.submission.domain.flag.MetadataFlag.Type.LANGUAGE" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.flag.MetadataFlag.Type.POSSIBLE_DUPLICATE_TITLE">
+<code class="descname">POSSIBLE_DUPLICATE_TITLE</code><em class="property"> = 'possible duplicate title'</em><a class="headerlink" href="#arxiv.submission.domain.flag.MetadataFlag.Type.POSSIBLE_DUPLICATE_TITLE" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.flag.MetadataFlag.field">
+<code class="descname">field</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.submission.domain.flag.MetadataFlag.field" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.submission.domain.flag.PossibleDuplicate">
+<em class="property">class </em><code class="descclassname">arxiv.submission.domain.flag.</code><code class="descname">PossibleDuplicate</code><a class="headerlink" href="#arxiv.submission.domain.flag.PossibleDuplicate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#dict" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.submission.domain.flag.UserFlag">
+<em class="property">class </em><code class="descclassname">arxiv.submission.domain.flag.</code><code class="descname">UserFlag</code><span class="sig-paren">(</span><em>event_id</em>, <em>creator</em>, <em>created</em>, <em>flag_type</em>, <em>flag_data</em>, <em>comment</em>, <em>proxy=None</em>, <em>flag_datatype=&lt;factory&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/flag.html#UserFlag"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.flag.UserFlag" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#arxiv.submission.domain.flag.Flag" title="arxiv.submission.domain.flag.Flag"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.submission.domain.flag.Flag</span></code></a></p>
+<p>A flag related to the submitter.</p>
+<dl class="class">
+<dt id="arxiv.submission.domain.flag.UserFlag.Type">
+<em class="property">class </em><code class="descname">Type</code><a class="reference internal" href="../_modules/arxiv/submission/domain/flag.html#UserFlag.Type"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.flag.UserFlag.Type" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.6/library/enum.html#enum.Enum" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">enum.Enum</span></code></a></p>
+<p>Supported user flags.</p>
+<dl class="attribute">
+<dt id="arxiv.submission.domain.flag.UserFlag.Type.RATE">
+<code class="descname">RATE</code><em class="property"> = 'rate'</em><a class="headerlink" href="#arxiv.submission.domain.flag.UserFlag.Type.RATE" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="arxiv.submission.domain.flag.flag_factory">
+<code class="descclassname">arxiv.submission.domain.flag.</code><code class="descname">flag_factory</code><span class="sig-paren">(</span><em>**data</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/flag.html#flag_factory"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.flag.flag_factory" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#arxiv.submission.domain.flag.Flag" title="arxiv.submission.domain.flag.Flag"><code class="xref py py-class docutils literal notranslate"><span class="pre">Flag</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">arXiv submission & moderation</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../architecture.html">Submission &amp; moderation subsystem architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../announcement_process.html">Submission &amp; announcement Process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../submission_api_context.html">Submission API: Context</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="arxiv.submission.html">arxiv.submission package</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="arxiv.submission.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.submission.html#using-commands-events">Using commands/events</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.submission.html#versioning-events">Versioning events</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.submission.html#integration-with-the-legacy-system">Integration with the legacy system</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="arxiv.submission.html#subpackages">Subpackages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.submission.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../containers/agent/agent.html">agent package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../containers/metadata/metadata.html">metadata package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../background.html">Background</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="arxiv.submission.html">arxiv.submission package</a><ul>
+  <li><a href="arxiv.submission.domain.html">arxiv.submission.domain package</a><ul>
+      <li>Previous: <a href="arxiv.submission.domain.compilation.html" title="previous chapter">arxiv.submission.domain.compilation module</a></li>
+      <li>Next: <a href="arxiv.submission.domain.meta.html" title="next chapter">arxiv.submission.domain.meta module</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, arXiv.org.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.0.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/arxiv.submission/arxiv.submission.domain.flag.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

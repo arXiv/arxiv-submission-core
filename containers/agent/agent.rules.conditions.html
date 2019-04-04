@@ -1,0 +1,169 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>agent.rules.conditions module &#8212; arXiv submission &amp; moderation 0.1 documentation</title>
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="agent.rules.params module" href="agent.rules.params.html" />
+    <link rel="prev" title="agent.rules.base module" href="agent.rules.base.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="module-agent.rules.conditions">
+<span id="agent-rules-conditions-module"></span><h1>agent.rules.conditions module<a class="headerlink" href="#module-agent.rules.conditions" title="Permalink to this headline">¶</a></h1>
+<p>Rule condition helpers.</p>
+<dl class="function">
+<dt id="agent.rules.conditions.always">
+<code class="descclassname">agent.rules.conditions.</code><code class="descname">always</code><span class="sig-paren">(</span><em>event</em>, <em>before</em>, <em>after</em><span class="sig-paren">)</span><a class="headerlink" href="#agent.rules.conditions.always" title="Permalink to this definition">¶</a></dt>
+<dd><p>Always means always.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/functions.html#bool" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="agent.rules.conditions.feature_type_is">
+<code class="descclassname">agent.rules.conditions.</code><code class="descname">feature_type_is</code><span class="sig-paren">(</span><em>feature_type</em><span class="sig-paren">)</span><a class="headerlink" href="#agent.rules.conditions.feature_type_is" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate a condition based on feature type.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Callable" title="(in Python v3.6)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code></a>[[<a class="reference internal" href="../../arxiv.submission/arxiv.submission.domain.event.base.html#arxiv.submission.domain.event.base.Event" title="arxiv.submission.domain.event.base.Event"><code class="xref py py-class docutils literal notranslate"><span class="pre">Event</span></code></a>, <a class="reference internal" href="../../arxiv.submission/arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.Submission" title="arxiv.submission.domain.submission.Submission"><code class="xref py py-class docutils literal notranslate"><span class="pre">Submission</span></code></a>, <a class="reference internal" href="../../arxiv.submission/arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.Submission" title="arxiv.submission.domain.submission.Submission"><code class="xref py py-class docutils literal notranslate"><span class="pre">Submission</span></code></a>], <a class="reference external" href="https://docs.python.org/3.6/library/functions.html#bool" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="agent.rules.conditions.system_event">
+<code class="descclassname">agent.rules.conditions.</code><code class="descname">system_event</code><span class="sig-paren">(</span><em>event</em>, <em>before</em>, <em>after</em><span class="sig-paren">)</span><a class="headerlink" href="#agent.rules.conditions.system_event" title="Permalink to this definition">¶</a></dt>
+<dd><p>Only for system-created events.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/functions.html#bool" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="agent.rules.conditions.user_event">
+<code class="descclassname">agent.rules.conditions.</code><code class="descname">user_event</code><span class="sig-paren">(</span><em>event</em>, <em>before</em>, <em>after</em><span class="sig-paren">)</span><a class="headerlink" href="#agent.rules.conditions.user_event" title="Permalink to this definition">¶</a></dt>
+<dd><p>Only for user-created events.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/functions.html#bool" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">arXiv submission & moderation</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../architecture.html">Submission &amp; moderation subsystem architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../announcement_process.html">Submission &amp; announcement Process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../submission_api_context.html">Submission API: Context</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../arxiv.submission/arxiv.submission.html">arxiv.submission package</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="agent.html">agent package</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="agent.html#conceptual-overview">Conceptual overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="agent.html#architectural-overview">Architectural overview</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="agent.html#subpackages">Subpackages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="agent.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../metadata/metadata.html">metadata package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../background.html">Background</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="agent.html">agent package</a><ul>
+  <li><a href="agent.rules.html">agent.rules package</a><ul>
+      <li>Previous: <a href="agent.rules.base.html" title="previous chapter">agent.rules.base module</a></li>
+      <li>Next: <a href="agent.rules.params.html" title="next chapter">agent.rules.params module</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, arXiv.org.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.0.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../../_sources/containers/agent/agent.rules.conditions.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

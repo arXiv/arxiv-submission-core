@@ -76,14 +76,14 @@ Solution Strategy
 
   - Defines the commands that are available in the submission system, and
     provide a Python API for executing those commands.
-  - Provides a framework for defining rules and conditional operations based
-    on those commands.
   - Provides integration with the :ref:`submission-database`.
 
 - A set of :ref:`core submission interface services <interface-services>`
   built on top of the :ref:`core submission package
   <submission-core-events-package>` provide UIs and APIs to support submission
   and moderation workflows.
+- The :mod:`agent` provides a framework for defining rules and conditional
+  processes based on submission vents.
 
 
 Context
@@ -151,20 +151,17 @@ Services & Building Blocks
 
 The submission & moderation subsystem is comprised of the following parts:
 
-1. The :ref:`sumission-core-database`, which houses a detailed record of
+1. The :ref:`submission-database`, which houses a detailed record of
    submission data events and projections.
 2. A collection of submission, moderation, and administrative
    :ref:`interface-services`. These include form-based user interfaces and
    RESTful APIs for external users/clients. Those interfaces interact with the
    core database via a shared library, which guarantees consistent mutations
-   of submission data and application of business logic/rules. These services
-   also use that shared library to dispatch asynchronous tasks, e.g. QA/QC
-   processes that take too long to execute in the context of an HTTP request.
+   of submission data and application of business logic/rules.
 3. A collection of :ref:`utility-services`, including services for compiling
    submissions to PDF, sanitizing uploads, and automated classification.
-4. A :ref:`submission-worker` application, which carries out the tasks
-   dispatched by submission and moderation interfaces, and also executes
-   periodic tasks and checks on submissions.
+4. The :ref:`submission-agent`, which monitors submission events and runs
+   backend processes (such as QA checks) based on a set of configurable rules.
 5. A :ref:`web-hook-service` that disseminates submission-related events
    to authorized clients via HTTP requests.
 
@@ -203,20 +200,37 @@ Submission core package
 This package provides an event-based Python API for mutating submissions, and
 is the *only* mechanism for writing submission data to the
 :ref:`submission-database`. This package is used by both the
-:ref:`interface-services` and the :ref:`submission-worker`.
+:ref:`interface-services` and the :ref:`submission-agent`.
 
 - Provides a set of commands (events) that canonicalize operations on
   submissions, and are used as the basis for composing rule-based processing
   tasks for quality control.
-- Provides integration with a task queue (Redis) for dispatching those
-  processing tasks to the :ref:`submission-worker` for asynchronous execution,
-  using `Celery <http://www.celeryproject.org/>`_.
 - Provides service integration modules for working with utility services (e.g.
   :ref:`utility-services`)
 - Provides integration with a notification broker (Kinesis) for disseminating
-  events to other parts of the system (e.g. :ref:`web-hook-service`).
+  events to other parts of the system (e.g. :ref:`submission-agent`).
 
 Detailed package documentation can be found in :mod:`arxiv.submission`.
+
+.. _submission-agent:
+
+Submission agent
+-----------------
+The :mod:`agent` orchestrates backend processes based on rules triggered by
+submission events.
+
+The primary concerns of the agent are:
+
+- Orchestrating automated processes in support of submission and moderation.
+- Keeping track of what processes have been carried out on a submission, and
+  the outcomes of those processes.
+- Providing a framework for defining conditions under which processes should be
+  carried out.
+
+Processes are carried out asynchronously, and may generate additional events
+which are emitted via the notification broker. Relies on a task queue (Redis)
+implemented using `Celery <http://www.celeryproject.org/>`_.
+
 
 .. _interface-services:
 
@@ -226,12 +240,6 @@ These services provide the core submission, moderation, and administrative
 interfaces for the arXiv submission subsystem. Each of these services integrates
 with the :ref:`submission-database` to modify submission state, via the
 :ref:`submission-core-events-package`.
-
-Asynchronous operations (e.g. to execute rule-based logic) are performed by a
-:ref:`submission-worker` process. Communication between the interface services
-and the worker is mediated by a task queue (Redis). Tasks passed on the queue
-are implemented in the :ref:`submission-core-events-package` using
-`Celery <http://www.celeryproject.org/>`_.
 
 These core interface services integrate with other services in the submission
 subsystem (e.g. :ref:`file-management-service`, :ref:`compilation-service`) via
@@ -355,16 +363,6 @@ in response to submission subsystem events. Provides UIs for end-user and
 administrator configuration.
 
 
-.. _submission-worker:
-
-Submission worker
------------------
-The submission worker is a Celery process that executes tasks defined in the
-:ref:`submission-core-events-package` and dispatched via a Redis queue by core
-interface services. This allows us to implement rule processing asynchronously,
-if needed for longer-running operations.
-
-
 .. _web-hook-service:
 
 Web-hook notification service
@@ -372,3 +370,71 @@ Web-hook notification service
 Provides mechanisms for API clients to register callbacks for submission
 events. Event consumer is implemented using the Kinesis Consumer Library and
 MultiLangDaemon [refs].
+
+
+
+Open problems/future development
+================================
+
+The current implementation of the :ref:`core submission package
+<submission-core-events-package>` is a step toward an event-sourcing framework
+for the submission system. One of the core concepts of event-sourcing is that
+we are able to generate the current state of an object (in this case, a
+submission) from all of the events that have occurred. Until we are able to
+jettison legacy submission components, however, this will not be true: legacy
+components will make direct mutations to rows in the legacy submission
+database without generating events. Those changes must be inferred, which is
+achieved in :mod:`arxiv.submission.services.classic.interpolate`.
+
+A related problem is avoiding race conditions on the event stream. We must
+take care not to persist events that are inconsistent with the current state
+of the submission. In the long run, we will achieve this via an
+optimistic lock, e.g. by versioning the state of the submission and including
+the expected version with an event that we wish to persist. This will entail
+placing an event controller between event-generating applications and the
+event store, which will reject events for which there is a version mismatch.
+Since (as above) we are continuing to deal with legacy components that make
+direct writes to submission state, in the interim we will rely on the atomic
+transactions afforded by the legacy MySQL database, and ensure consistency
+by rejecting events that were instantiated prior to the most recent change on
+the submission being mutated. This is implemented in
+:func:`arxiv.submission.services.classic.store_event`\.
+
+Finally, we ultimately want to avoid placing the responsibility for updating
+the projected submission state on the applications that are generating events.
+This is not possible in the short term for the reasons outlined above.
+Currently, the event-generating application must read the submission state and
+events from the legacy database, write both events and submission state to  the
+legacy database, and propagate events via the event stream. This is handled by
+:func:`arxiv.submission.core.save`\, and is implemented in a way that
+preserves the atomicity of the write.
+
+.. _figure-submission-events-interim:
+
+.. figure:: _static/diagrams/submission-events-interim.png
+   :width: 600px
+
+   Current implementation of submission events in the submission system,
+   constrained by support for legacy integrations with the database.
+   Applications that produce events must handle persistence (including
+   consistency checks), updating the submission state, and propagating event
+   notifications.
+
+
+Once those constraints are lifted, however, applications generating events
+should only be reading the submission state from the/a submission database, and
+writing events to the event stream (e.g. by putting them to the event
+controller).
+
+
+.. _figure-submission-events-goals:
+
+.. figure:: _static/diagrams/submission-events-goal.png
+   :width: 600px
+
+   Eventual implementation of submission events in the submission system,
+   when legacy integrations with the database are no longer required. An
+   event controller service assumes responsibility for ensuring the consistency
+   of events, persisting/propagating the event stream, and updating the read
+   database. All other applications use the database for reads only, and
+   produce events via the event controller.

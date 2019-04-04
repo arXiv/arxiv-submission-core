@@ -1,0 +1,327 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>arxiv.submission.services.compiler.compiler module &#8212; arXiv submission &amp; moderation 0.1 documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="arxiv.submission.services.plaintext package" href="arxiv.submission.services.plaintext.html" />
+    <link rel="prev" title="arxiv.submission.services.compiler package" href="arxiv.submission.services.compiler.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="module-arxiv.submission.services.compiler.compiler">
+<span id="arxiv-submission-services-compiler-compiler-module"></span><h1>arxiv.submission.services.compiler.compiler module<a class="headerlink" href="#module-arxiv.submission.services.compiler.compiler" title="Permalink to this headline">¶</a></h1>
+<p>Integration with the compiler service API.</p>
+<p>The compiler is responsible for building PDF, DVI, and other goodies from
+LaTeX sources. In the submission UI, we specifically want to build a PDF so
+that the user can preview their submission. Additionally, we want to show the
+submitter the TeX log so that they can identify any potential problems with
+their sources.</p>
+<dl class="exception">
+<dt id="arxiv.submission.services.compiler.compiler.CompilationFailed">
+<em class="property">exception </em><code class="descclassname">arxiv.submission.services.compiler.compiler.</code><code class="descname">CompilationFailed</code><a class="reference internal" href="../_modules/arxiv/submission/services/compiler/compiler.html#CompilationFailed"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.services.compiler.compiler.CompilationFailed" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.6/library/exceptions.html#RuntimeError" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">RuntimeError</span></code></a></p>
+<p>The compilation service failed to compile the source package.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.submission.services.compiler.compiler.Compiler">
+<em class="property">class </em><code class="descclassname">arxiv.submission.services.compiler.compiler.</code><code class="descname">Compiler</code><span class="sig-paren">(</span><em>verify=True</em>, <em>headers={}</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/services/compiler/compiler.html#Compiler"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.services.compiler.compiler.Compiler" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.integration.api.service.HTTPIntegration</span></code></p>
+<p>Encapsulates a connection with the compiler service.</p>
+<dl class="class">
+<dt id="arxiv.submission.services.compiler.compiler.Compiler.Meta">
+<em class="property">class </em><code class="descname">Meta</code><a class="reference internal" href="../_modules/arxiv/submission/services/compiler/compiler.html#Compiler.Meta"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.services.compiler.compiler.Compiler.Meta" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.6/library/functions.html#object" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Configuration for <code class="xref py py-class docutils literal notranslate"><span class="pre">Classifier</span></code>.</p>
+<dl class="attribute">
+<dt id="arxiv.submission.services.compiler.compiler.Compiler.Meta.service_name">
+<code class="descname">service_name</code><em class="property"> = 'compiler'</em><a class="headerlink" href="#arxiv.submission.services.compiler.compiler.Compiler.Meta.service_name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.services.compiler.compiler.Compiler.NAME">
+<code class="descname">NAME</code><em class="property"> = 'arxiv-compiler'</em><a class="headerlink" href="#arxiv.submission.services.compiler.compiler.Compiler.NAME" title="Permalink to this definition">¶</a></dt>
+<dd><p>Name of the compiler service with which we are integrating.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.services.compiler.compiler.Compiler.VERSION">
+<code class="descname">VERSION</code><em class="property"> = '0.1'</em><a class="headerlink" href="#arxiv.submission.services.compiler.compiler.Compiler.VERSION" title="Permalink to this definition">¶</a></dt>
+<dd><p>Verison of the compiler service with which we are integrating.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.services.compiler.compiler.Compiler.compilation_is_complete">
+<code class="descname">compilation_is_complete</code><span class="sig-paren">(</span><em>checksum</em>, <em>token</em>, <em>output_format</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/services/compiler/compiler.html#Compiler.compilation_is_complete"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.services.compiler.compiler.Compiler.compilation_is_complete" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check whether compilation has completed successfully.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/functions.html#bool" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.services.compiler.compiler.Compiler.compile">
+<code class="descname">compile</code><span class="sig-paren">(</span><em>checksum</em>, <em>token</em>, <em>compiler=None</em>, <em>output_format=&lt;Format.PDF: 'pdf'&gt;</em>, <em>force=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/services/compiler/compiler.html#Compiler.compile"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.services.compiler.compiler.Compiler.compile" title="Permalink to this definition">¶</a></dt>
+<dd><p>Request compilation for an upload workspace.</p>
+<p>Unless <code class="docutils literal notranslate"><span class="pre">force</span></code> is <code class="docutils literal notranslate"><span class="pre">True</span></code>, the compiler service will only attempt
+to compile a source ID + checksum + format combo once. If there is
+already a compilation underway or complete for the parameters in this
+request, the service will redirect to the corresponding status URI.
+Hence the data returned by this function may be from the response to
+the initial POST request, or from the status endpoint after being
+redirected.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>source_id</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/functions.html#int" title="(in Python v3.6)"><em>int</em></a>) – Unique identifier for the upload workspace.</p></li>
+<li><p><strong>checksum</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a>) – State up of the upload workspace.</p></li>
+<li><p><strong>compiler</strong> (<a class="reference internal" href="#arxiv.submission.services.compiler.compiler.Compiler" title="arxiv.submission.services.compiler.compiler.Compiler"><code class="xref py py-class docutils literal notranslate"><span class="pre">Compiler</span></code></a> or None) – Name of the preferred compiler.</p></li>
+<li><p><strong>output_format</strong> (<a class="reference internal" href="arxiv.submission.domain.compilation.html#arxiv.submission.domain.compilation.Compilation.Format" title="arxiv.submission.domain.compilation.Compilation.Format"><code class="xref py py-class docutils literal notranslate"><span class="pre">Format</span></code></a>) – Defaults to <a class="reference internal" href="arxiv.submission.domain.compilation.html#arxiv.submission.domain.compilation.Compilation.Format.PDF" title="arxiv.submission.domain.compilation.Compilation.Format.PDF"><code class="xref py py-attr docutils literal notranslate"><span class="pre">Format.PDF</span></code></a>.</p></li>
+<li><p><strong>force</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/functions.html#bool" title="(in Python v3.6)"><em>bool</em></a>) – If True, compilation will be forced even if it has been attempted
+with these parameters previously. Default is <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="arxiv.submission.domain.compilation.html#arxiv.submission.domain.compilation.Compilation" title="arxiv.submission.domain.compilation.Compilation"><code class="xref py py-class docutils literal notranslate"><span class="pre">Compilation</span></code></a></p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">Compilation</span></code> – The current state of the compilation.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.services.compiler.compiler.Compiler.get_log">
+<code class="descname">get_log</code><span class="sig-paren">(</span><em>checksum</em>, <em>token</em>, <em>output_format=&lt;Format.PDF: 'pdf'&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/services/compiler/compiler.html#Compiler.get_log"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.services.compiler.compiler.Compiler.get_log" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the compilation log for an upload workspace, if it exists.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>source_id</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/functions.html#int" title="(in Python v3.6)"><em>int</em></a>) – Unique identifier for the upload workspace.</p></li>
+<li><p><strong>checksum</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a>) – State up of the upload workspace.</p></li>
+<li><p><strong>output_format</strong> (<a class="reference internal" href="arxiv.submission.domain.compilation.html#arxiv.submission.domain.compilation.Compilation.Format" title="arxiv.submission.domain.compilation.Compilation.Format"><code class="xref py py-class docutils literal notranslate"><span class="pre">Format</span></code></a>) – Defaults to <a class="reference internal" href="arxiv.submission.domain.compilation.html#arxiv.submission.domain.compilation.Compilation.Format.PDF" title="arxiv.submission.domain.compilation.Compilation.Format.PDF"><code class="xref py py-attr docutils literal notranslate"><span class="pre">Format.PDF</span></code></a>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="arxiv.submission.domain.compilation.html#arxiv.submission.domain.compilation.CompilationLog" title="arxiv.submission.domain.compilation.CompilationLog"><code class="xref py py-class docutils literal notranslate"><span class="pre">CompilationLog</span></code></a></p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">CompilationProduct</span></code> – The compilation product itself.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.services.compiler.compiler.Compiler.get_product">
+<code class="descname">get_product</code><span class="sig-paren">(</span><em>checksum</em>, <em>token</em>, <em>output_format=&lt;Format.PDF: 'pdf'&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/services/compiler/compiler.html#Compiler.get_product"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.services.compiler.compiler.Compiler.get_product" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the compilation product for an upload workspace, if it exists.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>source_id</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/functions.html#int" title="(in Python v3.6)"><em>int</em></a>) – Unique identifier for the upload workspace.</p></li>
+<li><p><strong>checksum</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a>) – State up of the upload workspace.</p></li>
+<li><p><strong>output_format</strong> (<a class="reference internal" href="arxiv.submission.domain.compilation.html#arxiv.submission.domain.compilation.Compilation.Format" title="arxiv.submission.domain.compilation.Compilation.Format"><code class="xref py py-class docutils literal notranslate"><span class="pre">Format</span></code></a>) – Defaults to <a class="reference internal" href="arxiv.submission.domain.compilation.html#arxiv.submission.domain.compilation.Compilation.Format.PDF" title="arxiv.submission.domain.compilation.Compilation.Format.PDF"><code class="xref py py-attr docutils literal notranslate"><span class="pre">Format.PDF</span></code></a>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="arxiv.submission.domain.compilation.html#arxiv.submission.domain.compilation.CompilationProduct" title="arxiv.submission.domain.compilation.CompilationProduct"><code class="xref py py-class docutils literal notranslate"><span class="pre">CompilationProduct</span></code></a></p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">CompilationProduct</span></code> – The compilation product itself.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.services.compiler.compiler.Compiler.get_service_status">
+<code class="descname">get_service_status</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/services/compiler/compiler.html#Compiler.get_service_status"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.services.compiler.compiler.Compiler.get_service_status" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the status of the compiler service.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#dict" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.services.compiler.compiler.Compiler.get_status">
+<code class="descname">get_status</code><span class="sig-paren">(</span><em>checksum</em>, <em>token</em>, <em>output_format=&lt;Format.PDF: 'pdf'&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/services/compiler/compiler.html#Compiler.get_status"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.services.compiler.compiler.Compiler.get_status" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the status of a compilation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>source_id</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/functions.html#int" title="(in Python v3.6)"><em>int</em></a>) – Unique identifier for the upload workspace.</p></li>
+<li><p><strong>checksum</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a>) – State up of the upload workspace.</p></li>
+<li><p><strong>output_format</strong> (<a class="reference internal" href="arxiv.submission.domain.compilation.html#arxiv.submission.domain.compilation.Compilation.Format" title="arxiv.submission.domain.compilation.Compilation.Format"><code class="xref py py-class docutils literal notranslate"><span class="pre">Format</span></code></a>) – Defaults to <a class="reference internal" href="arxiv.submission.domain.compilation.html#arxiv.submission.domain.compilation.Compilation.Format.PDF" title="arxiv.submission.domain.compilation.Compilation.Format.PDF"><code class="xref py py-attr docutils literal notranslate"><span class="pre">Format.PDF</span></code></a>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="arxiv.submission.domain.compilation.html#arxiv.submission.domain.compilation.Compilation" title="arxiv.submission.domain.compilation.Compilation"><code class="xref py py-class docutils literal notranslate"><span class="pre">Compilation</span></code></a></p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">Compilation</span></code> – The current state of the compilation.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.submission.services.compiler.compiler.Download">
+<em class="property">class </em><code class="descclassname">arxiv.submission.services.compiler.compiler.</code><code class="descname">Download</code><span class="sig-paren">(</span><em>response</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/services/compiler/compiler.html#Download"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.services.compiler.compiler.Download" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.6/library/functions.html#object" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Wrapper around response content.</p>
+<dl class="method">
+<dt id="arxiv.submission.services.compiler.compiler.Download.read">
+<code class="descname">read</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/services/compiler/compiler.html#Download.read"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.services.compiler.compiler.Download.read" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read response content.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#bytes" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="arxiv.submission.services.compiler.compiler.get_task_id">
+<code class="descclassname">arxiv.submission.services.compiler.compiler.</code><code class="descname">get_task_id</code><span class="sig-paren">(</span><em>source_id</em>, <em>checksum</em>, <em>output_format</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/services/compiler/compiler.html#get_task_id"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.services.compiler.compiler.get_task_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate a key for a /checksum/format combination.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="arxiv.submission.services.compiler.compiler.split_task_id">
+<code class="descclassname">arxiv.submission.services.compiler.compiler.</code><code class="descname">split_task_id</code><span class="sig-paren">(</span><em>task_id</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/services/compiler/compiler.html#split_task_id"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.services.compiler.compiler.split_task_id" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">Tuple</span></code>[<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference internal" href="arxiv.submission.domain.compilation.html#arxiv.submission.domain.compilation.Compilation.Format" title="arxiv.submission.domain.compilation.Compilation.Format"><code class="xref py py-class docutils literal notranslate"><span class="pre">Format</span></code></a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">arXiv submission & moderation</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../architecture.html">Submission &amp; moderation subsystem architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../announcement_process.html">Submission &amp; announcement Process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../submission_api_context.html">Submission API: Context</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="arxiv.submission.html">arxiv.submission package</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="arxiv.submission.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.submission.html#using-commands-events">Using commands/events</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.submission.html#versioning-events">Versioning events</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.submission.html#integration-with-the-legacy-system">Integration with the legacy system</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="arxiv.submission.html#subpackages">Subpackages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.submission.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../containers/agent/agent.html">agent package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../containers/metadata/metadata.html">metadata package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../background.html">Background</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="arxiv.submission.html">arxiv.submission package</a><ul>
+  <li><a href="arxiv.submission.services.html">arxiv.submission.services package</a><ul>
+  <li><a href="arxiv.submission.services.compiler.html">arxiv.submission.services.compiler package</a><ul>
+      <li>Previous: <a href="arxiv.submission.services.compiler.html" title="previous chapter">arxiv.submission.services.compiler package</a></li>
+      <li>Next: <a href="arxiv.submission.services.plaintext.html" title="next chapter">arxiv.submission.services.plaintext package</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, arXiv.org.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.0.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/arxiv.submission/arxiv.submission.services.compiler.compiler.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

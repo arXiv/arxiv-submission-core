@@ -1,0 +1,377 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>arxiv.submission.domain.event.request module &#8212; arXiv submission &amp; moderation 0.1 documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="arxiv.submission.domain.event.util module" href="arxiv.submission.domain.event.util.html" />
+    <link rel="prev" title="arxiv.submission.domain.event.proposal module" href="arxiv.submission.domain.event.proposal.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="module-arxiv.submission.domain.event.request">
+<span id="arxiv-submission-domain-event-request-module"></span><h1>arxiv.submission.domain.event.request module<a class="headerlink" href="#module-arxiv.submission.domain.event.request" title="Permalink to this headline">¶</a></h1>
+<p>Commands/events related to user requests.</p>
+<dl class="class">
+<dt id="arxiv.submission.domain.event.request.ApplyRequest">
+<em class="property">class </em><code class="descclassname">arxiv.submission.domain.event.request.</code><code class="descname">ApplyRequest</code><span class="sig-paren">(</span><em>creator</em>, <em>created=&lt;factory&gt;</em>, <em>proxy=None</em>, <em>client=None</em>, <em>submission_id=None</em>, <em>committed=False</em>, <em>before=None</em>, <em>after=None</em>, <em>event_type=&lt;factory&gt;</em>, <em>event_version=&lt;factory&gt;</em>, <em>request_id=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/event/request.html#ApplyRequest"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.request.ApplyRequest" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="arxiv.submission.domain.event.base.html#arxiv.submission.domain.event.base.Event" title="arxiv.submission.domain.event.base.Event"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.submission.domain.event.base.Event</span></code></a></p>
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.request.ApplyRequest.NAME">
+<code class="descname">NAME</code><em class="property"> = 'apply user request'</em><a class="headerlink" href="#arxiv.submission.domain.event.request.ApplyRequest.NAME" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.request.ApplyRequest.NAMED">
+<code class="descname">NAMED</code><em class="property"> = 'user request applied'</em><a class="headerlink" href="#arxiv.submission.domain.event.request.ApplyRequest.NAMED" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.event.request.ApplyRequest.project">
+<code class="descname">project</code><span class="sig-paren">(</span><em>submission</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/event/request.html#ApplyRequest.project"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.request.ApplyRequest.project" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.Submission" title="arxiv.submission.domain.submission.Submission"><code class="xref py py-class docutils literal notranslate"><span class="pre">Submission</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.request.ApplyRequest.request_id">
+<code class="descname">request_id</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.submission.domain.event.request.ApplyRequest.request_id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.event.request.ApplyRequest.validate">
+<code class="descname">validate</code><span class="sig-paren">(</span><em>submission</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/event/request.html#ApplyRequest.validate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.request.ApplyRequest.validate" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.submission.domain.event.request.ApproveRequest">
+<em class="property">class </em><code class="descclassname">arxiv.submission.domain.event.request.</code><code class="descname">ApproveRequest</code><span class="sig-paren">(</span><em>creator</em>, <em>created=&lt;factory&gt;</em>, <em>proxy=None</em>, <em>client=None</em>, <em>submission_id=None</em>, <em>committed=False</em>, <em>before=None</em>, <em>after=None</em>, <em>event_type=&lt;factory&gt;</em>, <em>event_version=&lt;factory&gt;</em>, <em>request_id=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/event/request.html#ApproveRequest"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.request.ApproveRequest" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="arxiv.submission.domain.event.base.html#arxiv.submission.domain.event.base.Event" title="arxiv.submission.domain.event.base.Event"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.submission.domain.event.base.Event</span></code></a></p>
+<p>Approve a user request.</p>
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.request.ApproveRequest.NAME">
+<code class="descname">NAME</code><em class="property"> = 'approve user request'</em><a class="headerlink" href="#arxiv.submission.domain.event.request.ApproveRequest.NAME" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.request.ApproveRequest.NAMED">
+<code class="descname">NAMED</code><em class="property"> = 'user request approved'</em><a class="headerlink" href="#arxiv.submission.domain.event.request.ApproveRequest.NAMED" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.event.request.ApproveRequest.project">
+<code class="descname">project</code><span class="sig-paren">(</span><em>submission</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/event/request.html#ApproveRequest.project"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.request.ApproveRequest.project" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.Submission" title="arxiv.submission.domain.submission.Submission"><code class="xref py py-class docutils literal notranslate"><span class="pre">Submission</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.request.ApproveRequest.request_id">
+<code class="descname">request_id</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.submission.domain.event.request.ApproveRequest.request_id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.event.request.ApproveRequest.validate">
+<code class="descname">validate</code><span class="sig-paren">(</span><em>submission</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/event/request.html#ApproveRequest.validate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.request.ApproveRequest.validate" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.submission.domain.event.request.CancelRequest">
+<em class="property">class </em><code class="descclassname">arxiv.submission.domain.event.request.</code><code class="descname">CancelRequest</code><span class="sig-paren">(</span><em>creator</em>, <em>created=&lt;factory&gt;</em>, <em>proxy=None</em>, <em>client=None</em>, <em>submission_id=None</em>, <em>committed=False</em>, <em>before=None</em>, <em>after=None</em>, <em>event_type=&lt;factory&gt;</em>, <em>event_version=&lt;factory&gt;</em>, <em>request_id=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/event/request.html#CancelRequest"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.request.CancelRequest" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="arxiv.submission.domain.event.base.html#arxiv.submission.domain.event.base.Event" title="arxiv.submission.domain.event.base.Event"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.submission.domain.event.base.Event</span></code></a></p>
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.request.CancelRequest.NAME">
+<code class="descname">NAME</code><em class="property"> = 'cancel user request'</em><a class="headerlink" href="#arxiv.submission.domain.event.request.CancelRequest.NAME" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.request.CancelRequest.NAMED">
+<code class="descname">NAMED</code><em class="property"> = 'user request cancelled'</em><a class="headerlink" href="#arxiv.submission.domain.event.request.CancelRequest.NAMED" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.event.request.CancelRequest.project">
+<code class="descname">project</code><span class="sig-paren">(</span><em>submission</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/event/request.html#CancelRequest.project"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.request.CancelRequest.project" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.Submission" title="arxiv.submission.domain.submission.Submission"><code class="xref py py-class docutils literal notranslate"><span class="pre">Submission</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.request.CancelRequest.request_id">
+<code class="descname">request_id</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.submission.domain.event.request.CancelRequest.request_id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.event.request.CancelRequest.validate">
+<code class="descname">validate</code><span class="sig-paren">(</span><em>submission</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/event/request.html#CancelRequest.validate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.request.CancelRequest.validate" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.submission.domain.event.request.RejectRequest">
+<em class="property">class </em><code class="descclassname">arxiv.submission.domain.event.request.</code><code class="descname">RejectRequest</code><span class="sig-paren">(</span><em>creator</em>, <em>created=&lt;factory&gt;</em>, <em>proxy=None</em>, <em>client=None</em>, <em>submission_id=None</em>, <em>committed=False</em>, <em>before=None</em>, <em>after=None</em>, <em>event_type=&lt;factory&gt;</em>, <em>event_version=&lt;factory&gt;</em>, <em>request_id=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/event/request.html#RejectRequest"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.request.RejectRequest" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="arxiv.submission.domain.event.base.html#arxiv.submission.domain.event.base.Event" title="arxiv.submission.domain.event.base.Event"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.submission.domain.event.base.Event</span></code></a></p>
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.request.RejectRequest.NAME">
+<code class="descname">NAME</code><em class="property"> = 'reject user request'</em><a class="headerlink" href="#arxiv.submission.domain.event.request.RejectRequest.NAME" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.request.RejectRequest.NAMED">
+<code class="descname">NAMED</code><em class="property"> = 'user request rejected'</em><a class="headerlink" href="#arxiv.submission.domain.event.request.RejectRequest.NAMED" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.event.request.RejectRequest.project">
+<code class="descname">project</code><span class="sig-paren">(</span><em>submission</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/event/request.html#RejectRequest.project"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.request.RejectRequest.project" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.Submission" title="arxiv.submission.domain.submission.Submission"><code class="xref py py-class docutils literal notranslate"><span class="pre">Submission</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.request.RejectRequest.request_id">
+<code class="descname">request_id</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.submission.domain.event.request.RejectRequest.request_id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.event.request.RejectRequest.validate">
+<code class="descname">validate</code><span class="sig-paren">(</span><em>submission</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/event/request.html#RejectRequest.validate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.request.RejectRequest.validate" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.submission.domain.event.request.RequestCrossList">
+<em class="property">class </em><code class="descclassname">arxiv.submission.domain.event.request.</code><code class="descname">RequestCrossList</code><span class="sig-paren">(</span><em>creator</em>, <em>created=&lt;factory&gt;</em>, <em>proxy=None</em>, <em>client=None</em>, <em>submission_id=None</em>, <em>committed=False</em>, <em>before=None</em>, <em>after=None</em>, <em>event_type=&lt;factory&gt;</em>, <em>event_version=&lt;factory&gt;</em>, <em>categories=&lt;factory&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/event/request.html#RequestCrossList"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.request.RequestCrossList" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="arxiv.submission.domain.event.base.html#arxiv.submission.domain.event.base.Event" title="arxiv.submission.domain.event.base.Event"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.submission.domain.event.base.Event</span></code></a></p>
+<p>Request that a secondary classification be added after announcement.</p>
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.request.RequestCrossList.NAME">
+<code class="descname">NAME</code><em class="property"> = 'request cross-list classification'</em><a class="headerlink" href="#arxiv.submission.domain.event.request.RequestCrossList.NAME" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.request.RequestCrossList.NAMED">
+<code class="descname">NAMED</code><em class="property"> = 'cross-list classification requested'</em><a class="headerlink" href="#arxiv.submission.domain.event.request.RequestCrossList.NAMED" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.event.request.RequestCrossList.project">
+<code class="descname">project</code><span class="sig-paren">(</span><em>submission</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/event/request.html#RequestCrossList.project"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.request.RequestCrossList.project" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a cross-list request.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.Submission" title="arxiv.submission.domain.submission.Submission"><code class="xref py py-class docutils literal notranslate"><span class="pre">Submission</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.event.request.RequestCrossList.validate">
+<code class="descname">validate</code><span class="sig-paren">(</span><em>submission</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/event/request.html#RequestCrossList.validate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.request.RequestCrossList.validate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Validate the cross-list request.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.submission.domain.event.request.RequestWithdrawal">
+<em class="property">class </em><code class="descclassname">arxiv.submission.domain.event.request.</code><code class="descname">RequestWithdrawal</code><span class="sig-paren">(</span><em>creator</em>, <em>created=&lt;factory&gt;</em>, <em>proxy=None</em>, <em>client=None</em>, <em>submission_id=None</em>, <em>committed=False</em>, <em>before=None</em>, <em>after=None</em>, <em>event_type=&lt;factory&gt;</em>, <em>event_version=&lt;factory&gt;</em>, <em>reason=&lt;factory&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/event/request.html#RequestWithdrawal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.request.RequestWithdrawal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="arxiv.submission.domain.event.base.html#arxiv.submission.domain.event.base.Event" title="arxiv.submission.domain.event.base.Event"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.submission.domain.event.base.Event</span></code></a></p>
+<p>Request that a paper be withdrawn.</p>
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.request.RequestWithdrawal.MAX_LENGTH">
+<code class="descname">MAX_LENGTH</code><em class="property"> = 400</em><a class="headerlink" href="#arxiv.submission.domain.event.request.RequestWithdrawal.MAX_LENGTH" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.request.RequestWithdrawal.NAME">
+<code class="descname">NAME</code><em class="property"> = 'request withdrawal'</em><a class="headerlink" href="#arxiv.submission.domain.event.request.RequestWithdrawal.NAME" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.request.RequestWithdrawal.NAMED">
+<code class="descname">NAMED</code><em class="property"> = 'withdrawal requested'</em><a class="headerlink" href="#arxiv.submission.domain.event.request.RequestWithdrawal.NAMED" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.event.request.RequestWithdrawal.project">
+<code class="descname">project</code><span class="sig-paren">(</span><em>submission</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/event/request.html#RequestWithdrawal.project"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.request.RequestWithdrawal.project" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update the submission status and withdrawal reason.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.Submission" title="arxiv.submission.domain.submission.Submission"><code class="xref py py-class docutils literal notranslate"><span class="pre">Submission</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.event.request.RequestWithdrawal.validate">
+<code class="descname">validate</code><span class="sig-paren">(</span><em>submission</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/event/request.html#RequestWithdrawal.validate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.request.RequestWithdrawal.validate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make sure that a reason was provided.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">arXiv submission & moderation</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../architecture.html">Submission &amp; moderation subsystem architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../announcement_process.html">Submission &amp; announcement Process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../submission_api_context.html">Submission API: Context</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="arxiv.submission.html">arxiv.submission package</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="arxiv.submission.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.submission.html#using-commands-events">Using commands/events</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.submission.html#versioning-events">Versioning events</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.submission.html#integration-with-the-legacy-system">Integration with the legacy system</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="arxiv.submission.html#subpackages">Subpackages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.submission.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../containers/agent/agent.html">agent package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../containers/metadata/metadata.html">metadata package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../background.html">Background</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="arxiv.submission.html">arxiv.submission package</a><ul>
+  <li><a href="arxiv.submission.domain.html">arxiv.submission.domain package</a><ul>
+  <li><a href="arxiv.submission.domain.event.html">arxiv.submission.domain.event package</a><ul>
+      <li>Previous: <a href="arxiv.submission.domain.event.proposal.html" title="previous chapter">arxiv.submission.domain.event.proposal module</a></li>
+      <li>Next: <a href="arxiv.submission.domain.event.util.html" title="next chapter">arxiv.submission.domain.event.util module</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, arXiv.org.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.0.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/arxiv.submission/arxiv.submission.domain.event.request.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

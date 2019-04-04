@@ -1,0 +1,213 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>arxiv.submission.domain.event.versioning.tests.test_versioning module &#8212; arXiv submission &amp; moderation 0.1 documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="module-arxiv.submission.domain.event.versioning.tests.test_versioning">
+<span id="arxiv-submission-domain-event-versioning-tests-test-versioning-module"></span><h1>arxiv.submission.domain.event.versioning.tests.test_versioning module<a class="headerlink" href="#module-arxiv.submission.domain.event.versioning.tests.test_versioning" title="Permalink to this headline">¶</a></h1>
+<p>Test versioning of event data.</p>
+<dl class="class">
+<dt id="arxiv.submission.domain.event.versioning.tests.test_versioning.TestVersionMapping">
+<em class="property">class </em><code class="descclassname">arxiv.submission.domain.event.versioning.tests.test_versioning.</code><code class="descname">TestVersionMapping</code><span class="sig-paren">(</span><em>methodName='runTest'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/event/versioning/tests/test_versioning.html#TestVersionMapping"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.versioning.tests.test_versioning.TestVersionMapping" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">unittest.case.TestCase</span></code></p>
+<p>Tests for <a class="reference internal" href="arxiv.submission.domain.event.versioning.html#arxiv.submission.domain.event.versioning.map_to_version" title="arxiv.submission.domain.event.versioning.map_to_version"><code class="xref py py-func docutils literal notranslate"><span class="pre">map_to_version()</span></code></a>.</p>
+<dl class="method">
+<dt id="arxiv.submission.domain.event.versioning.tests.test_versioning.TestVersionMapping.test_data_is_up_to_date">
+<code class="descname">test_data_is_up_to_date</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/event/versioning/tests/test_versioning.html#TestVersionMapping.test_data_is_up_to_date"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.versioning.tests.test_versioning.TestVersionMapping.test_data_is_up_to_date" title="Permalink to this definition">¶</a></dt>
+<dd><p>We have data that is 100% current.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.event.versioning.tests.test_versioning.TestVersionMapping.test_map_to_version">
+<code class="descname">test_map_to_version</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/event/versioning/tests/test_versioning.html#TestVersionMapping.test_map_to_version"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.versioning.tests.test_versioning.TestVersionMapping.test_map_to_version" title="Permalink to this definition">¶</a></dt>
+<dd><p>We have data from a previous version and an intermediate mapping.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.event.versioning.tests.test_versioning.TestVersionMapping.test_map_to_version_no_intermediate">
+<code class="descname">test_map_to_version_no_intermediate</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/event/versioning/tests/test_versioning.html#TestVersionMapping.test_map_to_version_no_intermediate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.versioning.tests.test_versioning.TestVersionMapping.test_map_to_version_no_intermediate" title="Permalink to this definition">¶</a></dt>
+<dd><p>We have data from a previous version and no intermediate mapping.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.submission.domain.event.versioning.tests.test_versioning.TestVersionMappingTests">
+<em class="property">class </em><code class="descclassname">arxiv.submission.domain.event.versioning.tests.test_versioning.</code><code class="descname">TestVersionMappingTests</code><span class="sig-paren">(</span><em>methodName='runTest'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/event/versioning/tests/test_versioning.html#TestVersionMappingTests"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.versioning.tests.test_versioning.TestVersionMappingTests" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">unittest.case.TestCase</span></code></p>
+<p>Tests defined in metadata can be run, with the expected result.</p>
+<dl class="method">
+<dt id="arxiv.submission.domain.event.versioning.tests.test_versioning.TestVersionMappingTests.test_event_type_is_present">
+<code class="descname">test_event_type_is_present</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/event/versioning/tests/test_versioning.html#TestVersionMappingTests.test_event_type_is_present"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.versioning.tests.test_versioning.TestVersionMappingTests.test_event_type_is_present" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tests check that event_type is specified.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.event.versioning.tests.test_versioning.TestVersionMappingTests.test_test">
+<code class="descname">test_test</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/event/versioning/tests/test_versioning.html#TestVersionMappingTests.test_test"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.versioning.tests.test_versioning.TestVersionMappingTests.test_test" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run tests in mapping metadata.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.event.versioning.tests.test_versioning.TestVersionMappingTests.test_version_is_present">
+<code class="descname">test_version_is_present</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/event/versioning/tests/test_versioning.html#TestVersionMappingTests.test_version_is_present"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.versioning.tests.test_versioning.TestVersionMappingTests.test_version_is_present" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tests check that version is specified.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.event.versioning.tests.test_versioning.TestVersionMappingTests.test_version_is_valid">
+<code class="descname">test_version_is_valid</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/event/versioning/tests/test_versioning.html#TestVersionMappingTests.test_version_is_valid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.versioning.tests.test_versioning.TestVersionMappingTests.test_version_is_valid" title="Permalink to this definition">¶</a></dt>
+<dd><p>Tests check that version is a valid semver.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.submission.domain.event.versioning.tests.test_versioning.TestVersioningModule">
+<em class="property">class </em><code class="descclassname">arxiv.submission.domain.event.versioning.tests.test_versioning.</code><code class="descname">TestVersioningModule</code><span class="sig-paren">(</span><em>methodName='runTest'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/event/versioning/tests/test_versioning.html#TestVersioningModule"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.versioning.tests.test_versioning.TestVersioningModule" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">unittest.case.TestCase</span></code></p>
+<dl class="method">
+<dt id="arxiv.submission.domain.event.versioning.tests.test_versioning.TestVersioningModule.test_loads_mappings">
+<code class="descname">test_loads_mappings</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/event/versioning/tests/test_versioning.html#TestVersioningModule.test_loads_mappings"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.versioning.tests.test_versioning.TestVersioningModule.test_loads_mappings" title="Permalink to this definition">¶</a></dt>
+<dd><p>Loading a version mapping module installs those mappings.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.submission.domain.event.versioning.tests.test_versioning.TitleIsNowCoolTitle">
+<em class="property">class </em><code class="descclassname">arxiv.submission.domain.event.versioning.tests.test_versioning.</code><code class="descname">TitleIsNowCoolTitle</code><a class="reference internal" href="../_modules/arxiv/submission/domain/event/versioning/tests/test_versioning.html#TitleIsNowCoolTitle"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.versioning.tests.test_versioning.TitleIsNowCoolTitle" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.submission.domain.event.versioning._base.BaseVersionMapping</span></code></p>
+<p>Changes the <code class="docutils literal notranslate"><span class="pre">title</span></code> field to <code class="docutils literal notranslate"><span class="pre">cool_title</span></code>.</p>
+<dl class="class">
+<dt id="arxiv.submission.domain.event.versioning.tests.test_versioning.TitleIsNowCoolTitle.Meta">
+<em class="property">class </em><code class="descname">Meta</code><a class="reference internal" href="../_modules/arxiv/submission/domain/event/versioning/tests/test_versioning.html#TitleIsNowCoolTitle.Meta"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.versioning.tests.test_versioning.TitleIsNowCoolTitle.Meta" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.6/library/functions.html#object" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Metadata for this mapping.</p>
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.versioning.tests.test_versioning.TitleIsNowCoolTitle.Meta.event_type">
+<code class="descname">event_type</code><em class="property"> = 'SetTitle'</em><a class="headerlink" href="#arxiv.submission.domain.event.versioning.tests.test_versioning.TitleIsNowCoolTitle.Meta.event_type" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.versioning.tests.test_versioning.TitleIsNowCoolTitle.Meta.event_version">
+<code class="descname">event_version</code><em class="property"> = '0.3.5'</em><a class="headerlink" href="#arxiv.submission.domain.event.versioning.tests.test_versioning.TitleIsNowCoolTitle.Meta.event_version" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.versioning.tests.test_versioning.TitleIsNowCoolTitle.Meta.tests">
+<code class="descname">tests</code><em class="property"> = [({'event_version': '0.1.1', 'title': 'olde'}, {'event_version': '0.3.5', 'cool_title': 'olde'})]</em><a class="headerlink" href="#arxiv.submission.domain.event.versioning.tests.test_versioning.TitleIsNowCoolTitle.Meta.tests" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.event.versioning.tests.test_versioning.TitleIsNowCoolTitle.transform_title">
+<code class="descname">transform_title</code><span class="sig-paren">(</span><em>original</em>, <em>key</em>, <em>value</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/event/versioning/tests/test_versioning.html#TitleIsNowCoolTitle.transform_title"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.versioning.tests.test_versioning.TitleIsNowCoolTitle.transform_title" title="Permalink to this definition">¶</a></dt>
+<dd><p>Rename the <cite>title</cite> field to <cite>cool_title</cite>.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">arXiv submission & moderation</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../architecture.html">Submission &amp; moderation subsystem architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../announcement_process.html">Submission &amp; announcement Process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../submission_api_context.html">Submission API: Context</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../containers/agent/agent.html">agent package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../containers/metadata/metadata.html">metadata package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../background.html">Background</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, arXiv.org.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.0.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/arxiv.submission/arxiv.submission.domain.event.versioning.tests.test_versioning.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

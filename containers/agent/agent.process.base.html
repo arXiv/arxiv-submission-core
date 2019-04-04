@@ -1,0 +1,295 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>agent.process.base module &#8212; arXiv submission &amp; moderation 0.1 documentation</title>
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="agent.process.classification_and_content module" href="agent.process.classification_and_content.html" />
+    <link rel="prev" title="agent.process package" href="agent.process.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="module-agent.process.base">
+<span id="agent-process-base-module"></span><h1>agent.process.base module<a class="headerlink" href="#module-agent.process.base" title="Permalink to this headline">¶</a></h1>
+<p>Provides the bas representation of a process.</p>
+<dl class="exception">
+<dt id="agent.process.base.Failed">
+<em class="property">exception </em><code class="descclassname">agent.process.base.</code><code class="descname">Failed</code><span class="sig-paren">(</span><em>msg</em>, <em>step_name=None</em><span class="sig-paren">)</span><a class="headerlink" href="#agent.process.base.Failed" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.6/library/exceptions.html#RuntimeError" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">RuntimeError</span></code></a></p>
+<p>The process has failed and cannot recover.</p>
+<p>This exception should be raised when all recourse to recover has been
+exhausted, and no further retries are possible or desired.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="agent.process.base.Process">
+<em class="property">class </em><code class="descclassname">agent.process.base.</code><code class="descname">Process</code><span class="sig-paren">(</span><em>submission_id</em><span class="sig-paren">)</span><a class="headerlink" href="#agent.process.base.Process" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.6/library/functions.html#object" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<dl class="class">
+<dt id="agent.process.base.Process.Status">
+<em class="property">class </em><code class="descname">Status</code><a class="headerlink" href="#agent.process.base.Process.Status" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.6/library/enum.html#enum.Enum" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">enum.Enum</span></code></a></p>
+<p>Supported statuses.</p>
+<dl class="attribute">
+<dt id="agent.process.base.Process.Status.FAILED">
+<code class="descname">FAILED</code><em class="property"> = 'failed'</em><a class="headerlink" href="#agent.process.base.Process.Status.FAILED" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="agent.process.base.Process.Status.FAILED_TO_END">
+<code class="descname">FAILED_TO_END</code><em class="property"> = 'failed_to_end'</em><a class="headerlink" href="#agent.process.base.Process.Status.FAILED_TO_END" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="agent.process.base.Process.Status.FAILED_TO_START">
+<code class="descname">FAILED_TO_START</code><em class="property"> = 'failed_to_start'</em><a class="headerlink" href="#agent.process.base.Process.Status.FAILED_TO_START" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="agent.process.base.Process.Status.IN_PROGRESS">
+<code class="descname">IN_PROGRESS</code><em class="property"> = 'in_progress'</em><a class="headerlink" href="#agent.process.base.Process.Status.IN_PROGRESS" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="agent.process.base.Process.Status.PENDING">
+<code class="descname">PENDING</code><em class="property"> = 'pending'</em><a class="headerlink" href="#agent.process.base.Process.Status.PENDING" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="agent.process.base.Process.Status.SUCCEEDED">
+<code class="descname">SUCCEEDED</code><em class="property"> = 'succeeded'</em><a class="headerlink" href="#agent.process.base.Process.Status.SUCCEEDED" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="agent.process.base.Process.Status.TERMINATED">
+<code class="descname">TERMINATED</code><em class="property"> = 'terminated'</em><a class="headerlink" href="#agent.process.base.Process.Status.TERMINATED" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="attribute">
+<dt id="agent.process.base.Process.agent">
+<code class="descname">agent</code><a class="headerlink" href="#agent.process.base.Process.agent" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="../../arxiv.submission/arxiv.submission.domain.agent.html#arxiv.submission.domain.agent.Agent" title="arxiv.submission.domain.agent.Agent"><code class="xref py py-class docutils literal notranslate"><span class="pre">Agent</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="agent.process.base.Process.before_start">
+<code class="descname">before_start</code><span class="sig-paren">(</span><em>trigger</em>, <em>emit</em>, <em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#agent.process.base.Process.before_start" title="Permalink to this definition">¶</a></dt>
+<dd><p>Emit a pending status before the process starts.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="agent.process.base.Process.fail">
+<code class="descname">fail</code><span class="sig-paren">(</span><em>exception=None</em>, <em>message=None</em><span class="sig-paren">)</span><a class="headerlink" href="#agent.process.base.Process.fail" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fail and make no further attempt to recover.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="agent.process.base.Process.name">
+<code class="descname">name</code><a class="headerlink" href="#agent.process.base.Process.name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="agent.process.base.Process.on_failure">
+<code class="descname">on_failure</code><span class="sig-paren">(</span><em>step_name</em>, <em>trigger</em>, <em>emit</em><span class="sig-paren">)</span><a class="headerlink" href="#agent.process.base.Process.on_failure" title="Permalink to this definition">¶</a></dt>
+<dd><p>Emit a failure status when the process fails.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="agent.process.base.Process.on_success">
+<code class="descname">on_success</code><span class="sig-paren">(</span><em>step_name</em>, <em>trigger</em>, <em>emit</em><span class="sig-paren">)</span><a class="headerlink" href="#agent.process.base.Process.on_success" title="Permalink to this definition">¶</a></dt>
+<dd><p>Emit a success state when a step is completed.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="agent.process.base.Process.step_names">
+<code class="descname">step_names</code><a class="headerlink" href="#agent.process.base.Process.step_names" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="agent.process.base.Process.steps">
+<code class="descname">steps</code><em class="property"> = []</em><a class="headerlink" href="#agent.process.base.Process.steps" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="agent.process.base.ProcessType">
+<em class="property">class </em><code class="descclassname">agent.process.base.</code><code class="descname">ProcessType</code><a class="headerlink" href="#agent.process.base.ProcessType" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.6/library/functions.html#type" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">type</span></code></a></p>
+<p>Metaclass for <a class="reference internal" href="#agent.process.base.Process" title="agent.process.base.Process"><code class="xref py py-class docutils literal notranslate"><span class="pre">Process</span></code></a>.</p>
+<p>The goal is to preserve the order of steps based on the order in which they
+are defined on a <a class="reference internal" href="#agent.process.base.Process" title="agent.process.base.Process"><code class="xref py py-class docutils literal notranslate"><span class="pre">Process</span></code></a> subclass.</p>
+<p>Adds a property called <code class="docutils literal notranslate"><span class="pre">steps</span></code> to the class, which is a list of instance
+methods that should be called in order to carry out the process.</p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="agent.process.base.Recoverable">
+<em class="property">exception </em><code class="descclassname">agent.process.base.</code><code class="descname">Recoverable</code><a class="headerlink" href="#agent.process.base.Recoverable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.6/library/exceptions.html#RuntimeError" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">RuntimeError</span></code></a></p>
+<p>The process failed, but there is some hope of recovery if retried.</p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="agent.process.base.Retry">
+<em class="property">exception </em><code class="descclassname">agent.process.base.</code><code class="descname">Retry</code><a class="headerlink" href="#agent.process.base.Retry" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.6/library/exceptions.html#RuntimeError" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">RuntimeError</span></code></a></p>
+<p>The process should be retried.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="agent.process.base.is_step">
+<code class="descclassname">agent.process.base.</code><code class="descname">is_step</code><span class="sig-paren">(</span><em>func</em><span class="sig-paren">)</span><a class="headerlink" href="#agent.process.base.is_step" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/functions.html#bool" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="agent.process.base.step">
+<code class="descclassname">agent.process.base.</code><code class="descname">step</code><span class="sig-paren">(</span><em>max_retries=3</em>, <em>delay=2</em>, <em>backoff=2</em>, <em>max_delay=None</em>, <em>jitter=0</em><span class="sig-paren">)</span><a class="headerlink" href="#agent.process.base.step" title="Permalink to this definition">¶</a></dt>
+<dd><p>Mark an instance method as a step, and configure its retry characteristics.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>max_retries</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/functions.html#int" title="(in Python v3.6)"><em>int</em></a>) – If provided, the maximum number of times to retry the step.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Callable" title="(in Python v3.6)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">arXiv submission & moderation</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../architecture.html">Submission &amp; moderation subsystem architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../announcement_process.html">Submission &amp; announcement Process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../submission_api_context.html">Submission API: Context</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../arxiv.submission/arxiv.submission.html">arxiv.submission package</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="agent.html">agent package</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="agent.html#conceptual-overview">Conceptual overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="agent.html#architectural-overview">Architectural overview</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="agent.html#subpackages">Subpackages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="agent.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../metadata/metadata.html">metadata package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../background.html">Background</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="agent.html">agent package</a><ul>
+  <li><a href="agent.process.html">agent.process package</a><ul>
+      <li>Previous: <a href="agent.process.html" title="previous chapter">agent.process package</a></li>
+      <li>Next: <a href="agent.process.classification_and_content.html" title="next chapter">agent.process.classification_and_content module</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, arXiv.org.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.0.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../../_sources/containers/agent/agent.process.base.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

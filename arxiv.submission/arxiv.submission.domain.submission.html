@@ -1,0 +1,919 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>arxiv.submission.domain.submission module &#8212; arXiv submission &amp; moderation 0.1 documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="arxiv.submission.domain.util module" href="arxiv.submission.domain.util.html" />
+    <link rel="prev" title="arxiv.submission.domain.proposal module" href="arxiv.submission.domain.proposal.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="module-arxiv.submission.domain.submission">
+<span id="arxiv-submission-domain-submission-module"></span><h1>arxiv.submission.domain.submission module<a class="headerlink" href="#module-arxiv.submission.domain.submission" title="Permalink to this headline">¶</a></h1>
+<p>Data structures for submissions.</p>
+<dl class="class">
+<dt id="arxiv.submission.domain.submission.Author">
+<em class="property">class </em><code class="descclassname">arxiv.submission.domain.submission.</code><code class="descname">Author</code><span class="sig-paren">(</span><em>order=0</em>, <em>forename=&lt;factory&gt;</em>, <em>surname=&lt;factory&gt;</em>, <em>initials=&lt;factory&gt;</em>, <em>affiliation=&lt;factory&gt;</em>, <em>email=&lt;factory&gt;</em>, <em>identifier=None</em>, <em>display=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/submission.html#Author"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.submission.Author" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.6/library/functions.html#object" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Represents an author of a submission.</p>
+<dl class="attribute">
+<dt id="arxiv.submission.domain.submission.Author.canonical">
+<code class="descname">canonical</code><a class="headerlink" href="#arxiv.submission.domain.submission.Author.canonical" title="Permalink to this definition">¶</a></dt>
+<dd><p>Canonical representation of the author name.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.submission.Author.display">
+<code class="descname">display</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.submission.domain.submission.Author.display" title="Permalink to this definition">¶</a></dt>
+<dd><p>Submitter may include a preferred display name for each author.</p>
+<p>If not provided, will be automatically generated from the other fields.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.submission.Author.identifier">
+<code class="descname">identifier</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.submission.domain.submission.Author.identifier" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.submission.Author.order">
+<code class="descname">order</code><em class="property"> = 0</em><a class="headerlink" href="#arxiv.submission.domain.submission.Author.order" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.submission.domain.submission.CrossListClassificationRequest">
+<em class="property">class </em><code class="descclassname">arxiv.submission.domain.submission.</code><code class="descname">CrossListClassificationRequest</code><span class="sig-paren">(</span><em>request_id</em>, <em>creator</em>, <em>created=&lt;factory&gt;</em>, <em>updated=&lt;factory&gt;</em>, <em>status='pending'</em>, <em>request_type=&lt;factory&gt;</em>, <em>classifications=&lt;factory&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/submission.html#CrossListClassificationRequest"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.submission.CrossListClassificationRequest" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#arxiv.submission.domain.submission.UserRequest" title="arxiv.submission.domain.submission.UserRequest"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.submission.domain.submission.UserRequest</span></code></a></p>
+<p>Represents a request to add secondary classifications.</p>
+<dl class="attribute">
+<dt id="arxiv.submission.domain.submission.CrossListClassificationRequest.NAME">
+<code class="descname">NAME</code><em class="property"> = 'Cross-list'</em><a class="headerlink" href="#arxiv.submission.domain.submission.CrossListClassificationRequest.NAME" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.submission.CrossListClassificationRequest.apply">
+<code class="descname">apply</code><span class="sig-paren">(</span><em>submission</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/submission.html#CrossListClassificationRequest.apply"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.submission.CrossListClassificationRequest.apply" title="Permalink to this definition">¶</a></dt>
+<dd><p>Apply the cross-list request.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#arxiv.submission.domain.submission.Submission" title="arxiv.submission.domain.submission.Submission"><code class="xref py py-class docutils literal notranslate"><span class="pre">Submission</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.submission.CrossListClassificationRequest.categories">
+<code class="descname">categories</code><a class="headerlink" href="#arxiv.submission.domain.submission.CrossListClassificationRequest.categories" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the requested cross-list categories.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.List" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.submission.domain.submission.Delegation">
+<em class="property">class </em><code class="descclassname">arxiv.submission.domain.submission.</code><code class="descname">Delegation</code><span class="sig-paren">(</span><em>delegate</em>, <em>creator</em>, <em>created=&lt;factory&gt;</em>, <em>delegation_id=&lt;factory&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/submission.html#Delegation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.submission.Delegation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.6/library/functions.html#object" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Delegation of editing privileges to a non-owning <a class="reference internal" href="arxiv.submission.domain.agent.html#arxiv.submission.domain.agent.Agent" title="arxiv.submission.domain.agent.Agent"><code class="xref py py-class docutils literal notranslate"><span class="pre">Agent</span></code></a>.</p>
+<dl class="method">
+<dt id="arxiv.submission.domain.submission.Delegation.get_delegation_id">
+<code class="descname">get_delegation_id</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/submission.html#Delegation.get_delegation_id"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.submission.Delegation.get_delegation_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate unique identifier for the delegation instance.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.submission.domain.submission.Hold">
+<em class="property">class </em><code class="descclassname">arxiv.submission.domain.submission.</code><code class="descname">Hold</code><span class="sig-paren">(</span><em>event_id</em>, <em>creator</em>, <em>created=&lt;factory&gt;</em>, <em>hold_type=&lt;Type.PATCH: 'patch'&gt;</em>, <em>hold_reason=&lt;factory&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/submission.html#Hold"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.submission.Hold" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.6/library/functions.html#object" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Represents a block on announcement, usually for QA/QC purposes.</p>
+<dl class="class">
+<dt id="arxiv.submission.domain.submission.Hold.Type">
+<em class="property">class </em><code class="descname">Type</code><a class="reference internal" href="../_modules/arxiv/submission/domain/submission.html#Hold.Type"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.submission.Hold.Type" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.6/library/enum.html#enum.Enum" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">enum.Enum</span></code></a></p>
+<p>Supported holds in the submission system.</p>
+<dl class="attribute">
+<dt id="arxiv.submission.domain.submission.Hold.Type.PATCH">
+<code class="descname">PATCH</code><em class="property"> = 'patch'</em><a class="headerlink" href="#arxiv.submission.domain.submission.Hold.Type.PATCH" title="Permalink to this definition">¶</a></dt>
+<dd><p>A hold generated from the classic submission system.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.submission.Hold.Type.PDF_OVERSIZE">
+<code class="descname">PDF_OVERSIZE</code><em class="property"> = 'pdf_oversize'</em><a class="headerlink" href="#arxiv.submission.domain.submission.Hold.Type.PDF_OVERSIZE" title="Permalink to this definition">¶</a></dt>
+<dd><p>The submission PDF is oversize.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.submission.Hold.Type.SOURCE_OVERSIZE">
+<code class="descname">SOURCE_OVERSIZE</code><em class="property"> = 'source_oversize'</em><a class="headerlink" href="#arxiv.submission.domain.submission.Hold.Type.SOURCE_OVERSIZE" title="Permalink to this definition">¶</a></dt>
+<dd><p>The submission source is oversize.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.submission.Hold.event_id">
+<code class="descname">event_id</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.submission.domain.submission.Hold.event_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>The event that created the hold.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.submission.Hold.hold_type">
+<code class="descname">hold_type</code><em class="property"> = 'patch'</em><a class="headerlink" href="#arxiv.submission.domain.submission.Hold.hold_type" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.submission.domain.submission.Submission">
+<em class="property">class </em><code class="descclassname">arxiv.submission.domain.submission.</code><code class="descname">Submission</code><span class="sig-paren">(</span><em>creator</em>, <em>owner</em>, <em>proxy=None</em>, <em>client=None</em>, <em>created=None</em>, <em>updated=None</em>, <em>submitted=None</em>, <em>submission_id=None</em>, <em>source_content=None</em>, <em>metadata=&lt;factory&gt;</em>, <em>primary_classification=None</em>, <em>secondary_classification=&lt;factory&gt;</em>, <em>submitter_contact_verified=False</em>, <em>submitter_is_author=None</em>, <em>submitter_accepts_policy=None</em>, <em>submitter_compiled_preview=False</em>, <em>submitter_confirmed_preview=False</em>, <em>license=None</em>, <em>status='working'</em>, <em>arxiv_id=None</em>, <em>version=1</em>, <em>reason_for_withdrawal=None</em>, <em>versions=&lt;factory&gt;</em>, <em>user_requests=&lt;factory&gt;</em>, <em>proposals=&lt;factory&gt;</em>, <em>processes=&lt;factory&gt;</em>, <em>annotations=&lt;factory&gt;</em>, <em>flags=&lt;factory&gt;</em>, <em>comments=&lt;factory&gt;</em>, <em>holds=&lt;factory&gt;</em>, <em>waivers=&lt;factory&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/submission.html#Submission"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.submission.Submission" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.6/library/functions.html#object" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Represents an arXiv submission object.</p>
+<p>Some notable differences between this view of submissions and the classic
+model:</p>
+<ul class="simple">
+<li><p>There is no “hold” status. Status reflects where the submission is
+in the pipeline. Holds are annotations that can be applied to the
+submission, and may impact its ability to proceed (e.g. from submitted
+to scheduled). Submissions that are in working status can have holds on
+them!</p></li>
+<li><p>We use <cite>arxiv_id</cite> instead of <cite>paper_id</cite> to refer to the canonical arXiv
+identifier for the e-print (once it is announced).</p></li>
+<li><p>Instead of having a separate “submission” record for every change to an
+e-print (e.g. replacement, jref, etc), we represent the entire history
+as a single submission. Announced versions can be found in
+<a class="reference internal" href="#arxiv.submission.domain.submission.Submission.versions" title="arxiv.submission.domain.submission.Submission.versions"><code class="xref py py-attr docutils literal notranslate"><span class="pre">versions</span></code></a>. Withdrawal and cross-list requests can be found in
+<a class="reference internal" href="#arxiv.submission.domain.submission.Submission.user_requests" title="arxiv.submission.domain.submission.Submission.user_requests"><code class="xref py py-attr docutils literal notranslate"><span class="pre">user_requests</span></code></a>. JREFs are treated like they “just happen”,
+reflecting the forthcoming move away from storing journal ref information
+in the core metadata record.</p></li>
+</ul>
+<dl class="attribute">
+<dt id="arxiv.submission.domain.submission.Submission.ANNOUNCED">
+<code class="descname">ANNOUNCED</code><em class="property"> = 'announced'</em><a class="headerlink" href="#arxiv.submission.domain.submission.Submission.ANNOUNCED" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.submission.Submission.DELETED">
+<code class="descname">DELETED</code><em class="property"> = 'deleted'</em><a class="headerlink" href="#arxiv.submission.domain.submission.Submission.DELETED" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.submission.Submission.ERROR">
+<code class="descname">ERROR</code><em class="property"> = 'error'</em><a class="headerlink" href="#arxiv.submission.domain.submission.Submission.ERROR" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.submission.Submission.SCHEDULED">
+<code class="descname">SCHEDULED</code><em class="property"> = 'scheduled'</em><a class="headerlink" href="#arxiv.submission.domain.submission.Submission.SCHEDULED" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.submission.Submission.SUBMITTED">
+<code class="descname">SUBMITTED</code><em class="property"> = 'submitted'</em><a class="headerlink" href="#arxiv.submission.domain.submission.Submission.SUBMITTED" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.submission.Submission.WITHDRAWN">
+<code class="descname">WITHDRAWN</code><em class="property"> = 'withdrawn'</em><a class="headerlink" href="#arxiv.submission.domain.submission.Submission.WITHDRAWN" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.submission.Submission.WORKING">
+<code class="descname">WORKING</code><em class="property"> = 'working'</em><a class="headerlink" href="#arxiv.submission.domain.submission.Submission.WORKING" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.submission.Submission.active">
+<code class="descname">active</code><a class="headerlink" href="#arxiv.submission.domain.submission.Submission.active" title="Permalink to this definition">¶</a></dt>
+<dd><p>Actively moving through the submission workflow.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/functions.html#bool" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.submission.Submission.active_user_requests">
+<code class="descname">active_user_requests</code><a class="headerlink" href="#arxiv.submission.domain.submission.Submission.active_user_requests" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.List" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference internal" href="#arxiv.submission.domain.submission.UserRequest" title="arxiv.submission.domain.submission.UserRequest"><code class="xref py py-class docutils literal notranslate"><span class="pre">UserRequest</span></code></a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.submission.Submission.annotations">
+<code class="descname">annotations</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.submission.domain.submission.Submission.annotations" title="Permalink to this definition">¶</a></dt>
+<dd><p>Quality control annotations.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.submission.Submission.announced">
+<code class="descname">announced</code><a class="headerlink" href="#arxiv.submission.domain.submission.Submission.announced" title="Permalink to this definition">¶</a></dt>
+<dd><p>The submission has been announced.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/functions.html#bool" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.submission.Submission.applied_user_requests">
+<code class="descname">applied_user_requests</code><a class="headerlink" href="#arxiv.submission.domain.submission.Submission.applied_user_requests" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.List" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference internal" href="#arxiv.submission.domain.submission.UserRequest" title="arxiv.submission.domain.submission.UserRequest"><code class="xref py py-class docutils literal notranslate"><span class="pre">UserRequest</span></code></a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.submission.Submission.approved_user_requests">
+<code class="descname">approved_user_requests</code><a class="headerlink" href="#arxiv.submission.domain.submission.Submission.approved_user_requests" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.List" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference internal" href="#arxiv.submission.domain.submission.UserRequest" title="arxiv.submission.domain.submission.UserRequest"><code class="xref py py-class docutils literal notranslate"><span class="pre">UserRequest</span></code></a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.submission.Submission.arxiv_id">
+<code class="descname">arxiv_id</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.submission.domain.submission.Submission.arxiv_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>The announced arXiv paper ID.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.submission.Submission.client">
+<code class="descname">client</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.submission.domain.submission.Submission.client" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.submission.Submission.comments">
+<code class="descname">comments</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.submission.domain.submission.Submission.comments" title="Permalink to this definition">¶</a></dt>
+<dd><p>Moderation/administrative comments.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.submission.Submission.created">
+<code class="descname">created</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.submission.domain.submission.Submission.created" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.submission.Submission.deleted">
+<code class="descname">deleted</code><a class="headerlink" href="#arxiv.submission.domain.submission.Submission.deleted" title="Permalink to this definition">¶</a></dt>
+<dd><p>Submission is removed.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/functions.html#bool" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.submission.Submission.features">
+<code class="descname">features</code><a class="headerlink" href="#arxiv.submission.domain.submission.Submission.features" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Dict" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference internal" href="arxiv.submission.domain.annotation.html#arxiv.submission.domain.annotation.Feature" title="arxiv.submission.domain.annotation.Feature"><code class="xref py py-class docutils literal notranslate"><span class="pre">Feature</span></code></a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.submission.Submission.finalized">
+<code class="descname">finalized</code><a class="headerlink" href="#arxiv.submission.domain.submission.Submission.finalized" title="Permalink to this definition">¶</a></dt>
+<dd><p>Submitter has indicated submission is ready for publication.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/functions.html#bool" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.submission.Submission.flags">
+<code class="descname">flags</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.submission.domain.submission.Submission.flags" title="Permalink to this definition">¶</a></dt>
+<dd><p>Quality control flags.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.submission.Submission.has_active_requests">
+<code class="descname">has_active_requests</code><a class="headerlink" href="#arxiv.submission.domain.submission.Submission.has_active_requests" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/functions.html#bool" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.submission.Submission.has_waiver_for">
+<code class="descname">has_waiver_for</code><span class="sig-paren">(</span><em>hold_type</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/submission.html#Submission.has_waiver_for"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.submission.Submission.has_waiver_for" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/functions.html#bool" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.submission.Submission.hold_types">
+<code class="descname">hold_types</code><a class="headerlink" href="#arxiv.submission.domain.submission.Submission.hold_types" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Set" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Set</span></code></a>[<a class="reference internal" href="#arxiv.submission.domain.submission.Hold.Type" title="arxiv.submission.domain.submission.Hold.Type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Type</span></code></a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.submission.Submission.holds">
+<code class="descname">holds</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.submission.domain.submission.Submission.holds" title="Permalink to this definition">¶</a></dt>
+<dd><p>Quality control holds.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.submission.Submission.is_on_hold">
+<code class="descname">is_on_hold</code><a class="headerlink" href="#arxiv.submission.domain.submission.Submission.is_on_hold" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/functions.html#bool" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.submission.Submission.iter_requests">
+<code class="descname">iter_requests</code><a class="headerlink" href="#arxiv.submission.domain.submission.Submission.iter_requests" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Iterable" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code></a>[<a class="reference internal" href="#arxiv.submission.domain.submission.UserRequest" title="arxiv.submission.domain.submission.UserRequest"><code class="xref py py-class docutils literal notranslate"><span class="pre">UserRequest</span></code></a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.submission.Submission.license">
+<code class="descname">license</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.submission.domain.submission.Submission.license" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.submission.Submission.pending_user_requests">
+<code class="descname">pending_user_requests</code><a class="headerlink" href="#arxiv.submission.domain.submission.Submission.pending_user_requests" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.List" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference internal" href="#arxiv.submission.domain.submission.UserRequest" title="arxiv.submission.domain.submission.UserRequest"><code class="xref py py-class docutils literal notranslate"><span class="pre">UserRequest</span></code></a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.submission.Submission.primary_category">
+<code class="descname">primary_category</code><a class="headerlink" href="#arxiv.submission.domain.submission.Submission.primary_category" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.submission.Submission.primary_classification">
+<code class="descname">primary_classification</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.submission.domain.submission.Submission.primary_classification" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.submission.Submission.processes">
+<code class="descname">processes</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.submission.domain.submission.Submission.processes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Information about automated processes.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.submission.Submission.proposals">
+<code class="descname">proposals</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.submission.domain.submission.Submission.proposals" title="Permalink to this definition">¶</a></dt>
+<dd><p>Proposed changes to the submission, e.g. reclassification.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.submission.Submission.proxy">
+<code class="descname">proxy</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.submission.domain.submission.Submission.proxy" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.submission.Submission.reason_for_withdrawal">
+<code class="descname">reason_for_withdrawal</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.submission.domain.submission.Submission.reason_for_withdrawal" title="Permalink to this definition">¶</a></dt>
+<dd><p>If an e-print is withdrawn, the submitter is asked to explain why.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.submission.Submission.rejected_user_requests">
+<code class="descname">rejected_user_requests</code><a class="headerlink" href="#arxiv.submission.domain.submission.Submission.rejected_user_requests" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.List" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference internal" href="#arxiv.submission.domain.submission.UserRequest" title="arxiv.submission.domain.submission.UserRequest"><code class="xref py py-class docutils literal notranslate"><span class="pre">UserRequest</span></code></a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.submission.Submission.secondary_categories">
+<code class="descname">secondary_categories</code><a class="headerlink" href="#arxiv.submission.domain.submission.Submission.secondary_categories" title="Permalink to this definition">¶</a></dt>
+<dd><p>Category names from secondary classifications.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.List" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.submission.Submission.source_content">
+<code class="descname">source_content</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.submission.domain.submission.Submission.source_content" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.submission.Submission.status">
+<code class="descname">status</code><em class="property"> = 'working'</em><a class="headerlink" href="#arxiv.submission.domain.submission.Submission.status" title="Permalink to this definition">¶</a></dt>
+<dd><p>Disposition within the submission pipeline.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.submission.Submission.submission_id">
+<code class="descname">submission_id</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.submission.domain.submission.Submission.submission_id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.submission.Submission.submitted">
+<code class="descname">submitted</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.submission.domain.submission.Submission.submitted" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.submission.Submission.submitter_accepts_policy">
+<code class="descname">submitter_accepts_policy</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.submission.domain.submission.Submission.submitter_accepts_policy" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.submission.Submission.submitter_compiled_preview">
+<code class="descname">submitter_compiled_preview</code><em class="property"> = False</em><a class="headerlink" href="#arxiv.submission.domain.submission.Submission.submitter_compiled_preview" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.submission.Submission.submitter_confirmed_preview">
+<code class="descname">submitter_confirmed_preview</code><em class="property"> = False</em><a class="headerlink" href="#arxiv.submission.domain.submission.Submission.submitter_confirmed_preview" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.submission.Submission.submitter_contact_verified">
+<code class="descname">submitter_contact_verified</code><em class="property"> = False</em><a class="headerlink" href="#arxiv.submission.domain.submission.Submission.submitter_contact_verified" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.submission.Submission.submitter_is_author">
+<code class="descname">submitter_is_author</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.submission.domain.submission.Submission.submitter_is_author" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.submission.Submission.updated">
+<code class="descname">updated</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.submission.domain.submission.Submission.updated" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.submission.Submission.user_requests">
+<code class="descname">user_requests</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.submission.domain.submission.Submission.user_requests" title="Permalink to this definition">¶</a></dt>
+<dd><p>Requests from the owner for changes that require approval.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.submission.Submission.version">
+<code class="descname">version</code><em class="property"> = 1</em><a class="headerlink" href="#arxiv.submission.domain.submission.Submission.version" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.submission.Submission.versions">
+<code class="descname">versions</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.submission.domain.submission.Submission.versions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Announced versions of this <a class="reference internal" href="#arxiv.submission.domain.submission.Submission" title="arxiv.submission.domain.submission.Submission"><code class="xref py py-class docutils literal notranslate"><span class="pre">domain.submission.Submission</span></code></a>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.submission.Submission.waiver_types">
+<code class="descname">waiver_types</code><a class="headerlink" href="#arxiv.submission.domain.submission.Submission.waiver_types" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Set" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Set</span></code></a>[<a class="reference internal" href="#arxiv.submission.domain.submission.Hold.Type" title="arxiv.submission.domain.submission.Hold.Type"><code class="xref py py-class docutils literal notranslate"><span class="pre">Type</span></code></a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.submission.Submission.waivers">
+<code class="descname">waivers</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.submission.domain.submission.Submission.waivers" title="Permalink to this definition">¶</a></dt>
+<dd><p>Quality control waivers.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.submission.domain.submission.SubmissionContent">
+<em class="property">class </em><code class="descclassname">arxiv.submission.domain.submission.</code><code class="descname">SubmissionContent</code><span class="sig-paren">(</span><em>identifier</em>, <em>checksum</em>, <em>uncompressed_size</em>, <em>compressed_size</em>, <em>source_format=&lt;Format.UNKNOWN: None&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/submission.html#SubmissionContent"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.submission.SubmissionContent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.6/library/functions.html#object" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Metadata about the submission source package.</p>
+<dl class="class">
+<dt id="arxiv.submission.domain.submission.SubmissionContent.Format">
+<em class="property">class </em><code class="descname">Format</code><a class="reference internal" href="../_modules/arxiv/submission/domain/submission.html#SubmissionContent.Format"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.submission.SubmissionContent.Format" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.6/library/enum.html#enum.Enum" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">enum.Enum</span></code></a></p>
+<p>Supported source formats.</p>
+<dl class="attribute">
+<dt id="arxiv.submission.domain.submission.SubmissionContent.Format.HTML">
+<code class="descname">HTML</code><em class="property"> = 'html'</em><a class="headerlink" href="#arxiv.submission.domain.submission.SubmissionContent.Format.HTML" title="Permalink to this definition">¶</a></dt>
+<dd><p>An HTML source.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.submission.SubmissionContent.Format.INVALID">
+<code class="descname">INVALID</code><em class="property"> = 'invalid'</em><a class="headerlink" href="#arxiv.submission.domain.submission.SubmissionContent.Format.INVALID" title="Permalink to this definition">¶</a></dt>
+<dd><p>We are able to infer the source format, and it is not supported.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.submission.SubmissionContent.Format.PDF">
+<code class="descname">PDF</code><em class="property"> = 'pdf'</em><a class="headerlink" href="#arxiv.submission.domain.submission.SubmissionContent.Format.PDF" title="Permalink to this definition">¶</a></dt>
+<dd><p>A PDF-only source.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.submission.SubmissionContent.Format.PDFTEX">
+<code class="descname">PDFTEX</code><em class="property"> = 'pdftex'</em><a class="headerlink" href="#arxiv.submission.domain.submission.SubmissionContent.Format.PDFTEX" title="Permalink to this definition">¶</a></dt>
+<dd><p>A PDF derived from TeX.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.submission.SubmissionContent.Format.POSTSCRIPT">
+<code class="descname">POSTSCRIPT</code><em class="property"> = 'ps'</em><a class="headerlink" href="#arxiv.submission.domain.submission.SubmissionContent.Format.POSTSCRIPT" title="Permalink to this definition">¶</a></dt>
+<dd><p>A postscript source.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.submission.SubmissionContent.Format.TEX">
+<code class="descname">TEX</code><em class="property"> = 'tex'</em><a class="headerlink" href="#arxiv.submission.domain.submission.SubmissionContent.Format.TEX" title="Permalink to this definition">¶</a></dt>
+<dd><p>A flavor of TeX.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.submission.SubmissionContent.Format.UNKNOWN">
+<code class="descname">UNKNOWN</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.submission.domain.submission.SubmissionContent.Format.UNKNOWN" title="Permalink to this definition">¶</a></dt>
+<dd><p>We could not determine the source format.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.submission.SubmissionContent.source_format">
+<code class="descname">source_format</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.submission.domain.submission.SubmissionContent.source_format" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.submission.domain.submission.SubmissionMetadata">
+<em class="property">class </em><code class="descclassname">arxiv.submission.domain.submission.</code><code class="descname">SubmissionMetadata</code><span class="sig-paren">(</span><em>title=None</em>, <em>abstract=None</em>, <em>authors=&lt;factory&gt;</em>, <em>authors_display=&lt;factory&gt;</em>, <em>doi=None</em>, <em>msc_class=None</em>, <em>acm_class=None</em>, <em>report_num=None</em>, <em>journal_ref=None</em>, <em>comments=&lt;factory&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/submission.html#SubmissionMetadata"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.submission.SubmissionMetadata" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.6/library/functions.html#object" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Metadata about a <a class="reference internal" href="#arxiv.submission.domain.submission.Submission" title="arxiv.submission.domain.submission.Submission"><code class="xref py py-class docutils literal notranslate"><span class="pre">domain.submission.Submission</span></code></a> instance.</p>
+<dl class="attribute">
+<dt id="arxiv.submission.domain.submission.SubmissionMetadata.abstract">
+<code class="descname">abstract</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.submission.domain.submission.SubmissionMetadata.abstract" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.submission.SubmissionMetadata.acm_class">
+<code class="descname">acm_class</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.submission.domain.submission.SubmissionMetadata.acm_class" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.submission.SubmissionMetadata.authors_display">
+<code class="descname">authors_display</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.submission.domain.submission.SubmissionMetadata.authors_display" title="Permalink to this definition">¶</a></dt>
+<dd><p>The canonical arXiv author string.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.submission.SubmissionMetadata.doi">
+<code class="descname">doi</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.submission.domain.submission.SubmissionMetadata.doi" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.submission.SubmissionMetadata.journal_ref">
+<code class="descname">journal_ref</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.submission.domain.submission.SubmissionMetadata.journal_ref" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.submission.SubmissionMetadata.msc_class">
+<code class="descname">msc_class</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.submission.domain.submission.SubmissionMetadata.msc_class" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.submission.SubmissionMetadata.report_num">
+<code class="descname">report_num</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.submission.domain.submission.SubmissionMetadata.report_num" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.submission.SubmissionMetadata.title">
+<code class="descname">title</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.submission.domain.submission.SubmissionMetadata.title" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.submission.domain.submission.UserRequest">
+<em class="property">class </em><code class="descclassname">arxiv.submission.domain.submission.</code><code class="descname">UserRequest</code><span class="sig-paren">(</span><em>request_id</em>, <em>creator</em>, <em>created=&lt;factory&gt;</em>, <em>updated=&lt;factory&gt;</em>, <em>status='pending'</em>, <em>request_type=&lt;factory&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/submission.html#UserRequest"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.submission.UserRequest" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.6/library/functions.html#object" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Represents a user request related to a submission.</p>
+<dl class="attribute">
+<dt id="arxiv.submission.domain.submission.UserRequest.APPLIED">
+<code class="descname">APPLIED</code><em class="property"> = 'applied'</em><a class="headerlink" href="#arxiv.submission.domain.submission.UserRequest.APPLIED" title="Permalink to this definition">¶</a></dt>
+<dd><p>Submission has been updated on the basis of the approved request.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.submission.UserRequest.APPROVED">
+<code class="descname">APPROVED</code><em class="property"> = 'approved'</em><a class="headerlink" href="#arxiv.submission.domain.submission.UserRequest.APPROVED" title="Permalink to this definition">¶</a></dt>
+<dd><p>Request has been approved.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.submission.UserRequest.CANCELLED">
+<code class="descname">CANCELLED</code><em class="property"> = 'cancelled'</em><a class="headerlink" href="#arxiv.submission.domain.submission.UserRequest.CANCELLED" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.submission.UserRequest.PENDING">
+<code class="descname">PENDING</code><em class="property"> = 'pending'</em><a class="headerlink" href="#arxiv.submission.domain.submission.UserRequest.PENDING" title="Permalink to this definition">¶</a></dt>
+<dd><p>Request is pending approval.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.submission.UserRequest.REJECTED">
+<code class="descname">REJECTED</code><em class="property"> = 'rejected'</em><a class="headerlink" href="#arxiv.submission.domain.submission.UserRequest.REJECTED" title="Permalink to this definition">¶</a></dt>
+<dd><p>Request has been rejected.</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="arxiv.submission.domain.submission.UserRequest.generate_request_id">
+<em class="property">classmethod </em><code class="descname">generate_request_id</code><span class="sig-paren">(</span><em>submission</em>, <em>N=-1</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/submission.html#UserRequest.generate_request_id"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.submission.UserRequest.generate_request_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate a unique identifier for this request.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.submission.UserRequest.get_request_type">
+<code class="descname">get_request_type</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/submission.html#UserRequest.get_request_type"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.submission.UserRequest.get_request_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>Name (str) of the type of user request.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.submission.UserRequest.is_active">
+<code class="descname">is_active</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/submission.html#UserRequest.is_active"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.submission.UserRequest.is_active" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check whether the request is active.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/functions.html#bool" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.submission.UserRequest.is_applied">
+<code class="descname">is_applied</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/submission.html#UserRequest.is_applied"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.submission.UserRequest.is_applied" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check whether the request has been applied.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/functions.html#bool" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.submission.UserRequest.is_approved">
+<code class="descname">is_approved</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/submission.html#UserRequest.is_approved"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.submission.UserRequest.is_approved" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check whether the request has been approved.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/functions.html#bool" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.submission.UserRequest.is_pending">
+<code class="descname">is_pending</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/submission.html#UserRequest.is_pending"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.submission.UserRequest.is_pending" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check whether the request is pending.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/functions.html#bool" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.submission.UserRequest.is_rejected">
+<code class="descname">is_rejected</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/submission.html#UserRequest.is_rejected"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.submission.UserRequest.is_rejected" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check whether the request has been rejected.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/functions.html#bool" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.submission.UserRequest.status">
+<code class="descname">status</code><em class="property"> = 'pending'</em><a class="headerlink" href="#arxiv.submission.domain.submission.UserRequest.status" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.submission.domain.submission.Waiver">
+<em class="property">class </em><code class="descclassname">arxiv.submission.domain.submission.</code><code class="descname">Waiver</code><span class="sig-paren">(</span><em>event_id</em>, <em>waiver_type</em>, <em>waiver_reason</em>, <em>created</em>, <em>creator</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/submission.html#Waiver"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.submission.Waiver" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.6/library/functions.html#object" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Represents an exception or override.</p>
+<dl class="attribute">
+<dt id="arxiv.submission.domain.submission.Waiver.event_id">
+<code class="descname">event_id</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.submission.domain.submission.Waiver.event_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>The identifier of the event that produced this waiver.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.submission.domain.submission.WithdrawalRequest">
+<em class="property">class </em><code class="descclassname">arxiv.submission.domain.submission.</code><code class="descname">WithdrawalRequest</code><span class="sig-paren">(</span><em>request_id</em>, <em>creator</em>, <em>created=&lt;factory&gt;</em>, <em>updated=&lt;factory&gt;</em>, <em>status='pending'</em>, <em>request_type=&lt;factory&gt;</em>, <em>reason_for_withdrawal=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/submission.html#WithdrawalRequest"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.submission.WithdrawalRequest" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#arxiv.submission.domain.submission.UserRequest" title="arxiv.submission.domain.submission.UserRequest"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.submission.domain.submission.UserRequest</span></code></a></p>
+<p>Represents a request ot withdraw a submission.</p>
+<dl class="attribute">
+<dt id="arxiv.submission.domain.submission.WithdrawalRequest.NAME">
+<code class="descname">NAME</code><em class="property"> = 'Withdrawal'</em><a class="headerlink" href="#arxiv.submission.domain.submission.WithdrawalRequest.NAME" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.submission.WithdrawalRequest.apply">
+<code class="descname">apply</code><span class="sig-paren">(</span><em>submission</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/submission.html#WithdrawalRequest.apply"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.submission.WithdrawalRequest.apply" title="Permalink to this definition">¶</a></dt>
+<dd><p>Apply the withdrawal.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#arxiv.submission.domain.submission.Submission" title="arxiv.submission.domain.submission.Submission"><code class="xref py py-class docutils literal notranslate"><span class="pre">Submission</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.submission.WithdrawalRequest.reason_for_withdrawal">
+<code class="descname">reason_for_withdrawal</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.submission.domain.submission.WithdrawalRequest.reason_for_withdrawal" title="Permalink to this definition">¶</a></dt>
+<dd><p>If an e-print is withdrawn, the submitter is asked to explain why.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="arxiv.submission.domain.submission.request_factory">
+<code class="descclassname">arxiv.submission.domain.submission.</code><code class="descname">request_factory</code><span class="sig-paren">(</span><em>**data</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/submission.html#request_factory"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.submission.request_factory" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate a <a class="reference internal" href="#arxiv.submission.domain.submission.UserRequest" title="arxiv.submission.domain.submission.UserRequest"><code class="xref py py-class docutils literal notranslate"><span class="pre">UserRequest</span></code></a> from raw data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#arxiv.submission.domain.submission.UserRequest" title="arxiv.submission.domain.submission.UserRequest"><code class="xref py py-class docutils literal notranslate"><span class="pre">UserRequest</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">arXiv submission & moderation</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../architecture.html">Submission &amp; moderation subsystem architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../announcement_process.html">Submission &amp; announcement Process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../submission_api_context.html">Submission API: Context</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="arxiv.submission.html">arxiv.submission package</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="arxiv.submission.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.submission.html#using-commands-events">Using commands/events</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.submission.html#versioning-events">Versioning events</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.submission.html#integration-with-the-legacy-system">Integration with the legacy system</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="arxiv.submission.html#subpackages">Subpackages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.submission.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../containers/agent/agent.html">agent package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../containers/metadata/metadata.html">metadata package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../background.html">Background</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="arxiv.submission.html">arxiv.submission package</a><ul>
+  <li><a href="arxiv.submission.domain.html">arxiv.submission.domain package</a><ul>
+      <li>Previous: <a href="arxiv.submission.domain.proposal.html" title="previous chapter">arxiv.submission.domain.proposal module</a></li>
+      <li>Next: <a href="arxiv.submission.domain.util.html" title="next chapter">arxiv.submission.domain.util module</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, arXiv.org.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.0.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/arxiv.submission/arxiv.submission.domain.submission.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

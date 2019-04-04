@@ -1,11 +1,9 @@
 
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE html>
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta charset="utf-8" />
     <title>arxiv.submission.services.classic.exceptions &#8212; arXiv submission &amp; moderation 0.1 documentation</title>
     <link rel="stylesheet" href="../../../../../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../../../../../_static/pygments.css" type="text/css" />
@@ -37,16 +35,24 @@
 <span></span><span class="sd">&quot;&quot;&quot;Exceptions raised by :mod:`arxiv.submission.services.classic`.&quot;&quot;&quot;</span>
 
 
-<div class="viewcode-block" id="ClassicBaseException"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.services.classic.exceptions.html#arxiv.submission.services.classic.exceptions.ClassicBaseException">[docs]</a><span class="k">class</span> <span class="nc">ClassicBaseException</span><span class="p">(</span><span class="ne">RuntimeError</span><span class="p">):</span>
+<div class="viewcode-block" id="ClassicBaseException"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.services.classic.exceptions.html#arxiv.submission.services.classic.exceptions.ClassicBaseException">[docs]</a><span class="k">class</span> <span class="nc">ClassicBaseException</span><span class="p">(</span><span class="ne">RuntimeError</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Base for classic service exceptions.&quot;&quot;&quot;</span></div>
 
 
-<div class="viewcode-block" id="NoSuchSubmission"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.services.classic.exceptions.html#arxiv.submission.services.classic.exceptions.NoSuchSubmission">[docs]</a><span class="k">class</span> <span class="nc">NoSuchSubmission</span><span class="p">(</span><span class="n">ClassicBaseException</span><span class="p">):</span>
+<div class="viewcode-block" id="NoSuchSubmission"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.services.classic.exceptions.html#arxiv.submission.services.classic.exceptions.NoSuchSubmission">[docs]</a><span class="k">class</span> <span class="nc">NoSuchSubmission</span><span class="p">(</span><span class="n">ClassicBaseException</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;A request was made for a submission that does not exist.&quot;&quot;&quot;</span></div>
 
 
-<div class="viewcode-block" id="CommitFailed"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.services.classic.exceptions.html#arxiv.submission.services.classic.exceptions.CommitFailed">[docs]</a><span class="k">class</span> <span class="nc">CommitFailed</span><span class="p">(</span><span class="n">ClassicBaseException</span><span class="p">):</span>
+<div class="viewcode-block" id="TransactionFailed"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.services.classic.exceptions.html#arxiv.submission.services.classic.exceptions.TransactionFailed">[docs]</a><span class="k">class</span> <span class="nc">TransactionFailed</span><span class="p">(</span><span class="n">ClassicBaseException</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Raised when there was a problem committing changes to the database.&quot;&quot;&quot;</span></div>
+
+
+<div class="viewcode-block" id="Unavailable"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.services.classic.exceptions.html#arxiv.submission.services.classic.exceptions.Unavailable">[docs]</a><span class="k">class</span> <span class="nc">Unavailable</span><span class="p">(</span><span class="n">ClassicBaseException</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The classic data store is not available.&quot;&quot;&quot;</span></div>
+
+
+<div class="viewcode-block" id="ConsistencyError"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.services.classic.exceptions.html#arxiv.submission.services.classic.exceptions.ConsistencyError">[docs]</a><span class="k">class</span> <span class="nc">ConsistencyError</span><span class="p">(</span><span class="n">ClassicBaseException</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Attempted to persist stale or inconsistent state.&quot;&quot;&quot;</span></div>
 </pre></div>
 
           </div>
@@ -69,7 +75,8 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../../architecture.html">Submission &amp; moderation subsystem architecture</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../announcement_process.html">Submission &amp; announcement Process</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../submission_api_context.html">Submission API: Context</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../../containers/core/arxiv.submission.html">arxiv.submission package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../arxiv.submission/arxiv.submission.html">arxiv.submission package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../containers/agent/agent.html">agent package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../containers/metadata/metadata.html">metadata package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../background.html">Background</a></li>
 </ul>
@@ -79,7 +86,9 @@
 <ul>
   <li><a href="../../../../../index.html">Documentation overview</a><ul>
   <li><a href="../../../../index.html">Module code</a><ul>
+  <li><a href="../../../submission.html">arxiv.submission</a><ul>
   <li><a href="../classic.html">arxiv.submission.services.classic</a><ul>
+  </ul></li>
   </ul></li>
   </ul></li>
   </ul></li>
@@ -91,8 +100,6 @@
     <form class="search" action="../../../../../search.html" method="get">
       <input type="text" name="q" />
       <input type="submit" value="Go" />
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
     </form>
     </div>
 </div>
@@ -113,7 +120,7 @@
       &copy;2017, arXiv.org.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.3</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.0.0</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
     </div>

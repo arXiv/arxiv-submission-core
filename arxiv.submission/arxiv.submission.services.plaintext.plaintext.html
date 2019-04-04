@@ -1,0 +1,271 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>arxiv.submission.services.plaintext.plaintext module &#8212; arXiv submission &amp; moderation 0.1 documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="arxiv.submission.services.stream package" href="arxiv.submission.services.stream.html" />
+    <link rel="prev" title="arxiv.submission.services.plaintext package" href="arxiv.submission.services.plaintext.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="module-arxiv.submission.services.plaintext.plaintext">
+<span id="arxiv-submission-services-plaintext-plaintext-module"></span><h1>arxiv.submission.services.plaintext.plaintext module<a class="headerlink" href="#module-arxiv.submission.services.plaintext.plaintext" title="Permalink to this headline">¶</a></h1>
+<p>Provides integration with the plaintext extraction service.</p>
+<p>This integration is focused on usage patterns required by the submission
+system. Specifically:</p>
+<ol class="arabic simple">
+<li><p>Must be able to request an extraction for a compiled submission.</p></li>
+<li><p>Must be able to poll whether the extraction has completed.</p></li>
+<li><p>Must be able to retrieve the raw binary content from when the extraction
+has finished successfully.</p></li>
+<li><p>Encounter an informative exception if something goes wrong.</p></li>
+</ol>
+<p>This represents only a subset of the functionality provided by the plaintext
+service itself.</p>
+<dl class="exception">
+<dt id="arxiv.submission.services.plaintext.plaintext.ExtractionFailed">
+<em class="property">exception </em><code class="descclassname">arxiv.submission.services.plaintext.plaintext.</code><code class="descname">ExtractionFailed</code><span class="sig-paren">(</span><em>msg</em>, <em>response</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/services/plaintext/plaintext.html#ExtractionFailed"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.services.plaintext.plaintext.ExtractionFailed" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.integration.api.exceptions.RequestFailed</span></code></p>
+<p>The plain text extraction service failed to extract text.</p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="arxiv.submission.services.plaintext.plaintext.ExtractionInProgress">
+<em class="property">exception </em><code class="descclassname">arxiv.submission.services.plaintext.plaintext.</code><code class="descname">ExtractionInProgress</code><span class="sig-paren">(</span><em>msg</em>, <em>response</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/services/plaintext/plaintext.html#ExtractionInProgress"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.services.plaintext.plaintext.ExtractionInProgress" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.integration.api.exceptions.RequestFailed</span></code></p>
+<p>An extraction is already in progress.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.submission.services.plaintext.plaintext.PlainTextService">
+<em class="property">class </em><code class="descclassname">arxiv.submission.services.plaintext.plaintext.</code><code class="descname">PlainTextService</code><span class="sig-paren">(</span><em>verify=True</em>, <em>headers={}</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/services/plaintext/plaintext.html#PlainTextService"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.services.plaintext.plaintext.PlainTextService" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.integration.api.service.HTTPIntegration</span></code></p>
+<p>Represents an interface to the plain text extraction service.</p>
+<dl class="class">
+<dt id="arxiv.submission.services.plaintext.plaintext.PlainTextService.Meta">
+<em class="property">class </em><code class="descname">Meta</code><a class="reference internal" href="../_modules/arxiv/submission/services/plaintext/plaintext.html#PlainTextService.Meta"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.services.plaintext.plaintext.PlainTextService.Meta" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.6/library/functions.html#object" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Configuration for <code class="xref py py-class docutils literal notranslate"><span class="pre">Classifier</span></code>.</p>
+<dl class="attribute">
+<dt id="arxiv.submission.services.plaintext.plaintext.PlainTextService.Meta.service_name">
+<code class="descname">service_name</code><em class="property"> = 'plaintext'</em><a class="headerlink" href="#arxiv.submission.services.plaintext.plaintext.PlainTextService.Meta.service_name" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.submission.services.plaintext.plaintext.PlainTextService.Status">
+<em class="property">class </em><code class="descname">Status</code><a class="reference internal" href="../_modules/arxiv/submission/services/plaintext/plaintext.html#PlainTextService.Status"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.services.plaintext.plaintext.PlainTextService.Status" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.6/library/enum.html#enum.Enum" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">enum.Enum</span></code></a></p>
+<p>Task statuses.</p>
+<dl class="attribute">
+<dt id="arxiv.submission.services.plaintext.plaintext.PlainTextService.Status.FAILED">
+<code class="descname">FAILED</code><em class="property"> = 'failed'</em><a class="headerlink" href="#arxiv.submission.services.plaintext.plaintext.PlainTextService.Status.FAILED" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.services.plaintext.plaintext.PlainTextService.Status.IN_PROGRESS">
+<code class="descname">IN_PROGRESS</code><em class="property"> = 'in_progress'</em><a class="headerlink" href="#arxiv.submission.services.plaintext.plaintext.PlainTextService.Status.IN_PROGRESS" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.services.plaintext.plaintext.PlainTextService.Status.SUCCEEDED">
+<code class="descname">SUCCEEDED</code><em class="property"> = 'succeeded'</em><a class="headerlink" href="#arxiv.submission.services.plaintext.plaintext.PlainTextService.Status.SUCCEEDED" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.services.plaintext.plaintext.PlainTextService.VERSION">
+<code class="descname">VERSION</code><em class="property"> = 0.3</em><a class="headerlink" href="#arxiv.submission.services.plaintext.plaintext.PlainTextService.VERSION" title="Permalink to this definition">¶</a></dt>
+<dd><p>Version of the service for which this module is implemented.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.services.plaintext.plaintext.PlainTextService.endpoint">
+<code class="descname">endpoint</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/services/plaintext/plaintext.html#PlainTextService.endpoint"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.services.plaintext.plaintext.PlainTextService.endpoint" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the URL of the classifier endpoint.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.services.plaintext.plaintext.PlainTextService.extraction_is_complete">
+<code class="descname">extraction_is_complete</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/services/plaintext/plaintext.html#PlainTextService.extraction_is_complete"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.services.plaintext.plaintext.PlainTextService.extraction_is_complete" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check the status of an extraction task by submission upload ID.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>source_id</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a>) – ID of the submission upload workspace.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.6/library/functions.html#bool" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><em>bool</em></p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><a class="reference internal" href="#arxiv.submission.services.plaintext.plaintext.ExtractionFailed" title="arxiv.submission.services.plaintext.plaintext.ExtractionFailed"><strong>ExtractionFailed</strong></a> – Raised if the task is in a failed state, or an unexpected condition
+    is encountered.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.services.plaintext.plaintext.PlainTextService.request_extraction">
+<code class="descname">request_extraction</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/services/plaintext/plaintext.html#PlainTextService.request_extraction"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.services.plaintext.plaintext.PlainTextService.request_extraction" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make a request for plaintext extraction using the submission upload ID.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>source_id</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a>) – ID of the submission upload workspace.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.services.plaintext.plaintext.PlainTextService.retrieve_content">
+<code class="descname">retrieve_content</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/services/plaintext/plaintext.html#PlainTextService.retrieve_content"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.services.plaintext.plaintext.PlainTextService.retrieve_content" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieve plain text content by submission upload ID.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>source_id</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a>) – ID of the submission upload workspace.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#bytes" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bytes</span></code></a></p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><em>bytes</em> – Raw text content.</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>RequestFailed</strong> – Raised if an unexpected status was encountered.</p></li>
+<li><p><a class="reference internal" href="#arxiv.submission.services.plaintext.plaintext.ExtractionInProgress" title="arxiv.submission.services.plaintext.plaintext.ExtractionInProgress"><strong>ExtractionInProgress</strong></a> – Raised if an extraction is currently in progress</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.services.plaintext.plaintext.PlainTextService.status_endpoint">
+<code class="descname">status_endpoint</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/services/plaintext/plaintext.html#PlainTextService.status_endpoint"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.services.plaintext.plaintext.PlainTextService.status_endpoint" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the URL of the classifier endpoint.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">arXiv submission & moderation</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../architecture.html">Submission &amp; moderation subsystem architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../announcement_process.html">Submission &amp; announcement Process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../submission_api_context.html">Submission API: Context</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="arxiv.submission.html">arxiv.submission package</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="arxiv.submission.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.submission.html#using-commands-events">Using commands/events</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.submission.html#versioning-events">Versioning events</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.submission.html#integration-with-the-legacy-system">Integration with the legacy system</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="arxiv.submission.html#subpackages">Subpackages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.submission.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../containers/agent/agent.html">agent package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../containers/metadata/metadata.html">metadata package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../background.html">Background</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="arxiv.submission.html">arxiv.submission package</a><ul>
+  <li><a href="arxiv.submission.services.html">arxiv.submission.services package</a><ul>
+  <li><a href="arxiv.submission.services.plaintext.html">arxiv.submission.services.plaintext package</a><ul>
+      <li>Previous: <a href="arxiv.submission.services.plaintext.html" title="previous chapter">arxiv.submission.services.plaintext package</a></li>
+      <li>Next: <a href="arxiv.submission.services.stream.html" title="next chapter">arxiv.submission.services.stream package</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, arXiv.org.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.0.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/arxiv.submission/arxiv.submission.services.plaintext.plaintext.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

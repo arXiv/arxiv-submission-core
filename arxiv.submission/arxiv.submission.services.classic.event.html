@@ -1,0 +1,226 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>arxiv.submission.services.classic.event module &#8212; arXiv submission &amp; moderation 0.1 documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="arxiv.submission.services.classic.exceptions module" href="arxiv.submission.services.classic.exceptions.html" />
+    <link rel="prev" title="arxiv.submission.services.classic.bootstrap module" href="arxiv.submission.services.classic.bootstrap.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="module-arxiv.submission.services.classic.event">
+<span id="arxiv-submission-services-classic-event-module"></span><h1>arxiv.submission.services.classic.event module<a class="headerlink" href="#module-arxiv.submission.services.classic.event" title="Permalink to this headline">¶</a></h1>
+<p>Persistence for NG events in the classic database.</p>
+<dl class="class">
+<dt id="arxiv.submission.services.classic.event.DBEvent">
+<em class="property">class </em><code class="descclassname">arxiv.submission.services.classic.event.</code><code class="descname">DBEvent</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/services/classic/event.html#DBEvent"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.services.classic.event.DBEvent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">sqlalchemy.ext.declarative.api.Base</span></code></p>
+<p>Database representation of an <a class="reference internal" href="arxiv.submission.domain.event.base.html#arxiv.submission.domain.event.base.Event" title="arxiv.submission.domain.event.base.Event"><code class="xref py py-class docutils literal notranslate"><span class="pre">Event</span></code></a>.</p>
+<dl class="attribute">
+<dt id="arxiv.submission.services.classic.event.DBEvent.client">
+<code class="descname">client</code><a class="headerlink" href="#arxiv.submission.services.classic.event.DBEvent.client" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.services.classic.event.DBEvent.client_id">
+<code class="descname">client_id</code><a class="headerlink" href="#arxiv.submission.services.classic.event.DBEvent.client_id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.services.classic.event.DBEvent.created">
+<code class="descname">created</code><a class="headerlink" href="#arxiv.submission.services.classic.event.DBEvent.created" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.services.classic.event.DBEvent.creator">
+<code class="descname">creator</code><a class="headerlink" href="#arxiv.submission.services.classic.event.DBEvent.creator" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.services.classic.event.DBEvent.creator_id">
+<code class="descname">creator_id</code><a class="headerlink" href="#arxiv.submission.services.classic.event.DBEvent.creator_id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.services.classic.event.DBEvent.data">
+<code class="descname">data</code><a class="headerlink" href="#arxiv.submission.services.classic.event.DBEvent.data" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.services.classic.event.DBEvent.event_id">
+<code class="descname">event_id</code><a class="headerlink" href="#arxiv.submission.services.classic.event.DBEvent.event_id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.services.classic.event.DBEvent.event_type">
+<code class="descname">event_type</code><a class="headerlink" href="#arxiv.submission.services.classic.event.DBEvent.event_type" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.services.classic.event.DBEvent.event_version">
+<code class="descname">event_version</code><a class="headerlink" href="#arxiv.submission.services.classic.event.DBEvent.event_version" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.services.classic.event.DBEvent.get_created">
+<code class="descname">get_created</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/services/classic/event.html#DBEvent.get_created"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.services.classic.event.DBEvent.get_created" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the UTC-localized creation time for this event.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/datetime.html#datetime.datetime" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">datetime</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.services.classic.event.DBEvent.proxy">
+<code class="descname">proxy</code><a class="headerlink" href="#arxiv.submission.services.classic.event.DBEvent.proxy" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.services.classic.event.DBEvent.proxy_id">
+<code class="descname">proxy_id</code><a class="headerlink" href="#arxiv.submission.services.classic.event.DBEvent.proxy_id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.services.classic.event.DBEvent.submission">
+<code class="descname">submission</code><a class="headerlink" href="#arxiv.submission.services.classic.event.DBEvent.submission" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.services.classic.event.DBEvent.submission_id">
+<code class="descname">submission_id</code><a class="headerlink" href="#arxiv.submission.services.classic.event.DBEvent.submission_id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.services.classic.event.DBEvent.to_event">
+<code class="descname">to_event</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/services/classic/event.html#DBEvent.to_event"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.services.classic.event.DBEvent.to_event" title="Permalink to this definition">¶</a></dt>
+<dd><p>Instantiate an <a class="reference internal" href="arxiv.submission.domain.event.base.html#arxiv.submission.domain.event.base.Event" title="arxiv.submission.domain.event.base.Event"><code class="xref py py-class docutils literal notranslate"><span class="pre">Event</span></code></a> using event data from this instance.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="arxiv.submission.domain.event.base.html#arxiv.submission.domain.event.base.Event" title="arxiv.submission.domain.event.base.Event"><code class="xref py py-class docutils literal notranslate"><span class="pre">Event</span></code></a></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><a class="reference internal" href="arxiv.submission.domain.event.base.html#arxiv.submission.domain.event.base.Event" title="arxiv.submission.domain.event.base.Event"><code class="xref py py-class docutils literal notranslate"><span class="pre">Event</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">arXiv submission & moderation</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../architecture.html">Submission &amp; moderation subsystem architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../announcement_process.html">Submission &amp; announcement Process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../submission_api_context.html">Submission API: Context</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="arxiv.submission.html">arxiv.submission package</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="arxiv.submission.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.submission.html#using-commands-events">Using commands/events</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.submission.html#versioning-events">Versioning events</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.submission.html#integration-with-the-legacy-system">Integration with the legacy system</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="arxiv.submission.html#subpackages">Subpackages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.submission.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../containers/agent/agent.html">agent package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../containers/metadata/metadata.html">metadata package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../background.html">Background</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="arxiv.submission.html">arxiv.submission package</a><ul>
+  <li><a href="arxiv.submission.services.html">arxiv.submission.services package</a><ul>
+  <li><a href="arxiv.submission.services.classic.html">arxiv.submission.services.classic package</a><ul>
+      <li>Previous: <a href="arxiv.submission.services.classic.bootstrap.html" title="previous chapter">arxiv.submission.services.classic.bootstrap module</a></li>
+      <li>Next: <a href="arxiv.submission.services.classic.exceptions.html" title="next chapter">arxiv.submission.services.classic.exceptions module</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, arXiv.org.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.0.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/arxiv.submission/arxiv.submission.services.classic.event.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

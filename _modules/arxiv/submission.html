@@ -1,0 +1,310 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>arxiv.submission &#8212; arXiv submission &amp; moderation 0.1 documentation</title>
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for arxiv.submission</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Core event-centric data abstraction for the submission &amp; moderation subsystem.</span>
+
+<span class="sd">This package provides an event-based API for mutating submissions. Instead of</span>
+<span class="sd">representing submissions as objects and mutating them directly in web</span>
+<span class="sd">controllers and other places, we represent a submission as a stream of commands</span>
+<span class="sd">or events. This ensures that we have a precise and complete record of</span>
+<span class="sd">activities concerning submissions, and provides an explicit and consistent</span>
+<span class="sd">definition of operations that can be performed within the arXiv submission</span>
+<span class="sd">system.</span>
+
+<span class="sd">Overview</span>
+<span class="sd">========</span>
+
+<span class="sd">Event types are defined in :mod:`.domain.event`. The base class for all events</span>
+<span class="sd">is :class:`.domain.event.base.Event`. Each event type defines additional</span>
+<span class="sd">required data, and have ``validate`` and ``project`` methods that implement its</span>
+<span class="sd">logic. Events operate on :class:`.domain.submission.Submission` instances.</span>
+
+<span class="sd">.. code-block:: python</span>
+
+<span class="sd">   from arxiv.submission import CreateSubmission, User, Submission</span>
+<span class="sd">   user = User(1345, &#39;foo@user.com&#39;)</span>
+<span class="sd">   creation = CreateSubmission(creator=user)</span>
+
+
+<span class="sd">:mod:`.core` defines the persistence API for submission data.</span>
+<span class="sd">:func:`.core.save` is used to commit new events. :func:`.core.load` retrieves</span>
+<span class="sd">events for a submission and plays them forward to get the current state,</span>
+<span class="sd">whereas :func:`.core.load_fast` retrieves the latest projected state of the</span>
+<span class="sd">submission (faster, theoretically less reliable).</span>
+
+<span class="sd">.. code-block:: python</span>
+
+<span class="sd">   from arxiv.submission import save, SetTitle</span>
+<span class="sd">   submission, events = save(creation, SetTitle(creator=user, title=&#39;Title!&#39;))</span>
+
+
+<span class="sd">Watch out for :class:`.exceptions.InvalidEvent` to catch validation-related</span>
+<span class="sd">problems (e.g. bad data, submission in wrong state). Watch for</span>
+<span class="sd">:class:`.SaveError` to catch problems with persisting events.</span>
+
+<span class="sd">Callbacks can be attached to event types in order to execute routines</span>
+<span class="sd">automatically when specific events are committed, using</span>
+<span class="sd">:func:`.domain.Event.bind`.</span>
+
+<span class="sd">.. code-block:: python</span>
+
+<span class="sd">   from typing import Iterable</span>
+
+<span class="sd">   @SetTitle.bind()</span>
+<span class="sd">   def flip_title(event: SetTitle, before: Submissionm, after: Submission,</span>
+<span class="sd">                  creator: Agent) -&gt; Iterable[SetTitle]:</span>
+<span class="sd">       yield SetTitle(creator=creator, title=f&quot;(╯°□°）╯︵ ┻━┻ {event.title}&quot;)</span>
+
+
+<span class="sd">.. note:</span>
+<span class="sd">   Callbacks should **only** be used for actions that are specific to the</span>
+<span class="sd">   domain/concerns of the service in which they are implemented. For processes</span>
+<span class="sd">   that apply to all submissions, including asynchronous processes,</span>
+<span class="sd">   see :mod:`agent`.</span>
+
+
+<span class="sd">Finally, :mod:`.services.classic` provides integration with the classic</span>
+<span class="sd">submission database. We use the classic database to store events (new table),</span>
+<span class="sd">and also keep its legacy tables up to date so that other legacy components</span>
+<span class="sd">continue to work as expected.</span>
+
+
+<span class="sd">Using commands/events</span>
+<span class="sd">=====================</span>
+
+<span class="sd">Command/event classes are defined in :mod:`arxiv.submission.domain.event`, and</span>
+<span class="sd">are accessible from the root namespace of this package. Each event type defines</span>
+<span class="sd">a transformation/operation on a single submission, and defines the data</span>
+<span class="sd">required to perform that operation. Events are played forward, in order, to</span>
+<span class="sd">derive the state of a submission. For more information about how event types</span>
+<span class="sd">are defined, see :class:`arxiv.submission.domain.event.Event`.</span>
+
+<span class="sd">.. note::</span>
+
+<span class="sd">   One major difference between the event stream and the classic submission</span>
+<span class="sd">   database table is that in the former model, there is only one submission id</span>
+<span class="sd">   for all versions/mutations. In the legacy system, new rows are created in</span>
+<span class="sd">   the submission table for things like creating a replacement, adding a DOI,</span>
+<span class="sd">   or requesting a withdrawal. The :ref:`legacy-integration` handles the</span>
+<span class="sd">   interchange between these two models.</span>
+
+<span class="sd">Commands/events types are `PEP 557 data classes</span>
+<span class="sd">&lt;https://www.python.org/dev/peps/pep-0557/&gt;`_. Each command/event inherits from</span>
+<span class="sd">:class:`.Event`, and may add additional fields. See :class:`.Event` for more</span>
+<span class="sd">information about common fields.</span>
+
+<span class="sd">To create a new command/event, initialize the class with the relevant</span>
+<span class="sd">data, and commit it using :func:`.save`. For example:</span>
+
+<span class="sd">.. code-block:: python</span>
+
+<span class="sd">   &gt;&gt;&gt; from arxiv.submission import User, SetTitle, save</span>
+<span class="sd">   &gt;&gt;&gt; user = User(123, &quot;joe@bloggs.com&quot;)</span>
+<span class="sd">   &gt;&gt;&gt; update = SetTitle(creator=user, title=&#39;A new theory of foo&#39;)</span>
+<span class="sd">   &gt;&gt;&gt; submission = save(creation, submission_id=12345)</span>
+
+
+<span class="sd">If the commands/events are for a submission that already exists, the latest</span>
+<span class="sd">state of that submission will be obtained by playing forward past events. New</span>
+<span class="sd">events will be validated and applied to the submission in the order that they</span>
+<span class="sd">were passed to :func:`.save`.</span>
+
+<span class="sd">- If an event is invalid (e.g. the submission is not in an appropriate state</span>
+<span class="sd">  for the operation), an :class:`.InvalidEvent` exception will be raised.</span>
+<span class="sd">  Note that at this point nothing has been changed in the database; the</span>
+<span class="sd">  attempt is simply abandoned.</span>
+<span class="sd">- The command/event is stored, as is the latest state of the</span>
+<span class="sd">  submission. Events and the resulting state of the submission are stored</span>
+<span class="sd">  atomically.</span>
+<span class="sd">- If the notification service is configured, a message about the event is</span>
+<span class="sd">  propagated as a Kinesis event on the configured stream. See</span>
+<span class="sd">  :mod:`arxiv.submission.services.notification` for details.</span>
+
+<span class="sd">Special case: creation</span>
+<span class="sd">----------------------</span>
+<span class="sd">Note that if the first event is a :class:`.CreateSubmission` the</span>
+<span class="sd">submission ID need not be provided, as we won&#39;t know what it is yet. For</span>
+<span class="sd">example:</span>
+
+<span class="sd">.. code-block:: python</span>
+
+<span class="sd">   from arxiv.submission import User, CreateSubmission, SetTitle, save</span>
+
+<span class="sd">   &gt;&gt;&gt; user = User(123, &quot;joe@bloggs.com&quot;)</span>
+<span class="sd">   &gt;&gt;&gt; creation = CreateSubmission(creator=user)</span>
+<span class="sd">   &gt;&gt;&gt; update = SetTitle(creator=user, title=&#39;A new theory of foo&#39;)</span>
+<span class="sd">   &gt;&gt;&gt; submission, events = save(creation, update)</span>
+<span class="sd">   &gt;&gt;&gt; submission.submission_id</span>
+<span class="sd">   40032</span>
+
+
+<span class="sd">.. _versioning-overview:</span>
+
+<span class="sd">Versioning events</span>
+<span class="sd">=================</span>
+<span class="sd">Handling changes to this software in a way that does not break past data is a</span>
+<span class="sd">non-trivial problem. In a traditional relational database arrangement we would</span>
+<span class="sd">leverage a database migration tool to do things like apply ``ALTER`` statements</span>
+<span class="sd">to tables when upgrading software versions. The premise of the event data</span>
+<span class="sd">model, however, is that events are immutable -- we won&#39;t be going back to</span>
+<span class="sd">modify past events whenever we make a change to the software.</span>
+
+<span class="sd">The strategy for version management around event data is implemented in</span>
+<span class="sd">:mod:`arxiv.submission.domain.events.versioning`. When event data is stored,</span>
+<span class="sd">it is tagged with the current version of this software. When</span>
+<span class="sd">event data are loaded from the store in this software, prior to instantiating</span>
+<span class="sd">the appropriate :class:`.Event` subclass, the data are mapped to the current</span>
+<span class="sd">software version using any defined version mappings for that event type.</span>
+<span class="sd">This happens on the fly, in :func:`.domain.event.event_factory`.</span>
+
+
+<span class="sd">.. _legacy-integration:</span>
+
+<span class="sd">Integration with the legacy system</span>
+<span class="sd">==================================</span>
+<span class="sd">The :mod:`.classic` service module provides integration with the classic</span>
+<span class="sd">database. See the documentation for that module for details. As we migrate</span>
+<span class="sd">off of the classic database, we will swap in a new service module with the</span>
+<span class="sd">same API.</span>
+
+<span class="sd">Until all legacy components that read from or write to the classic database are</span>
+<span class="sd">replaced, we will not be able to move entirely away from the legacy submission</span>
+<span class="sd">database. Particularly in the submission and moderation UIs, design has assumed</span>
+<span class="sd">immediate consistency, which means a conventional read/write interaction with</span>
+<span class="sd">the database. Hence the classic integration module assumes that we are reading</span>
+<span class="sd">and writing events and submission state from/to the same database.</span>
+
+<span class="sd">As development proceeds, we will look for opportunities to decouple from the</span>
+<span class="sd">classic database, and focus on more localized projections of submission events</span>
+<span class="sd">that are specific to a service/application. For example, the moderation UI/API</span>
+<span class="sd">need not maintain or have access to the complete representation of the</span>
+<span class="sd">submission; instead, it may track the subset of events relevant to its</span>
+<span class="sd">operation (e.g. pertaining to metadata, classification, proposals, holds, etc).</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">from</span> <span class="nn">flask</span> <span class="k">import</span> <span class="n">Flask</span><span class="p">,</span> <span class="n">Blueprint</span>
+
+<span class="kn">from</span> <span class="nn">.domain.event</span> <span class="k">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">.core</span> <span class="k">import</span> <span class="o">*</span>
+<span class="kn">from</span> <span class="nn">.domain.submission</span> <span class="k">import</span> <span class="n">Submission</span><span class="p">,</span> <span class="n">SubmissionMetadata</span><span class="p">,</span> <span class="n">Author</span>
+<span class="kn">from</span> <span class="nn">.domain.agent</span> <span class="k">import</span> <span class="n">Agent</span><span class="p">,</span> <span class="n">User</span><span class="p">,</span> <span class="n">System</span><span class="p">,</span> <span class="n">Client</span>
+<span class="kn">from</span> <span class="nn">.services</span> <span class="k">import</span> <span class="n">classic</span><span class="p">,</span> <span class="n">StreamPublisher</span><span class="p">,</span> <span class="n">Compiler</span><span class="p">,</span> <span class="n">PlainTextService</span><span class="p">,</span>\
+    <span class="n">Classifier</span>
+
+
+<div class="viewcode-block" id="init_app"><a class="viewcode-back" href="../../arxiv.submission/arxiv.submission.html#arxiv.submission.init_app">[docs]</a><span class="k">def</span> <span class="nf">init_app</span><span class="p">(</span><span class="n">app</span><span class="p">:</span> <span class="n">Flask</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="n">StreamPublisher</span><span class="o">.</span><span class="n">init_app</span><span class="p">(</span><span class="n">app</span><span class="p">)</span>
+    <span class="n">Classifier</span><span class="o">.</span><span class="n">init_app</span><span class="p">(</span><span class="n">app</span><span class="p">)</span>
+    <span class="n">Compiler</span><span class="o">.</span><span class="n">init_app</span><span class="p">(</span><span class="n">app</span><span class="p">)</span>
+    <span class="n">PlainTextService</span><span class="o">.</span><span class="n">init_app</span><span class="p">(</span><span class="n">app</span><span class="p">)</span>
+    <span class="n">template_folder</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">realpath</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)),</span>
+                                   <span class="s1">&#39;templates&#39;</span><span class="p">)</span>
+    <span class="n">app</span><span class="o">.</span><span class="n">register_blueprint</span><span class="p">(</span>
+        <span class="n">Blueprint</span><span class="p">(</span><span class="s1">&#39;submission-core&#39;</span><span class="p">,</span> <span class="vm">__name__</span><span class="p">,</span> <span class="n">template_folder</span><span class="o">=</span><span class="n">template_folder</span><span class="p">)</span>
+    <span class="p">)</span></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">arXiv submission & moderation</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../architecture.html">Submission &amp; moderation subsystem architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../announcement_process.html">Submission &amp; announcement Process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../submission_api_context.html">Submission API: Context</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../arxiv.submission/arxiv.submission.html">arxiv.submission package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../containers/agent/agent.html">agent package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../containers/metadata/metadata.html">metadata package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../background.html">Background</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, arXiv.org.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.0.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

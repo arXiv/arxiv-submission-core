@@ -1,0 +1,319 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>arxiv.submission.services.classic.load &#8212; arXiv submission &amp; moderation 0.1 documentation</title>
+    <link rel="stylesheet" href="../../../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/graphviz.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../../../../" src="../../../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for arxiv.submission.services.classic.load</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Supports loading :class:`.Submission` directly from classic data.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span>
+<span class="kn">import</span> <span class="nn">copy</span>
+<span class="kn">from</span> <span class="nn">itertools</span> <span class="k">import</span> <span class="n">groupby</span>
+
+<span class="kn">from</span> <span class="nn">arxiv.license</span> <span class="k">import</span> <span class="n">LICENSES</span>
+<span class="kn">from</span> <span class="nn">arxiv.base</span> <span class="k">import</span> <span class="n">logging</span>
+
+<span class="kn">from</span> <span class="nn">...</span> <span class="k">import</span> <span class="n">domain</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">models</span>
+<span class="kn">from</span> <span class="nn">.patch</span> <span class="k">import</span> <span class="n">patch_withdrawal</span><span class="p">,</span> <span class="n">patch_jref</span><span class="p">,</span> <span class="n">patch_cross</span><span class="p">,</span> <span class="n">patch_hold</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+<span class="n">logger</span><span class="o">.</span><span class="n">propagate</span> <span class="o">=</span> <span class="kc">False</span>
+
+
+<div class="viewcode-block" id="load"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.services.classic.load.html#arxiv.submission.services.classic.load.load">[docs]</a><span class="k">def</span> <span class="nf">load</span><span class="p">(</span><span class="n">rows</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">domain</span><span class="o">.</span><span class="n">Submission</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Load a submission entirely from its classic database rows.&quot;&quot;&quot;</span>
+    <span class="n">versions</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">domain</span><span class="o">.</span><span class="n">Submission</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">submission_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="c1"># We want to work within versions, and (secondarily) in order of creation</span>
+    <span class="c1"># time.</span>
+    <span class="n">rows</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">o</span><span class="p">:</span> <span class="n">o</span><span class="o">.</span><span class="n">version</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Load from rows </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="p">[</span><span class="n">r</span><span class="o">.</span><span class="n">submission_id</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">rows</span><span class="p">])</span>
+    <span class="k">for</span> <span class="n">version</span><span class="p">,</span> <span class="n">version_rows</span> <span class="ow">in</span> <span class="n">groupby</span><span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">o</span><span class="p">:</span> <span class="n">o</span><span class="o">.</span><span class="n">version</span><span class="p">):</span>
+        <span class="c1"># Creation time isn&#39;t all that precise in the classic database, so</span>
+        <span class="c1"># we&#39;ll use submission ID instead.</span>
+        <span class="n">version_rows</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">([</span><span class="n">v</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">version_rows</span><span class="p">],</span>
+                              <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">o</span><span class="p">:</span> <span class="n">o</span><span class="o">.</span><span class="n">submission_id</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Version </span><span class="si">%s</span><span class="s1">: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">version</span><span class="p">,</span> <span class="n">version_rows</span><span class="p">)</span>
+        <span class="c1"># We use the original ID to track the entire lifecycle of the</span>
+        <span class="c1"># submission in NG.</span>
+        <span class="k">if</span> <span class="n">version</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">submission_id</span> <span class="o">=</span> <span class="n">version_rows</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">submission_id</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Submission ID: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">submission_id</span><span class="p">)</span>
+
+        <span class="c1"># Find the creation row. There may be some false starts that have been</span>
+        <span class="c1"># deleted, so we need to advance to the first non-deleted &#39;new&#39; or</span>
+        <span class="c1"># &#39;replacement&#39; row.</span>
+        <span class="n">version_submission</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">domain</span><span class="o">.</span><span class="n">Submission</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">while</span> <span class="n">version_submission</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">row</span> <span class="o">=</span> <span class="n">version_rows</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
+                <span class="k">break</span>
+            <span class="k">if</span> <span class="n">row</span><span class="o">.</span><span class="n">is_new_version</span><span class="p">()</span> <span class="ow">and</span> \
+                    <span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="n">row</span><span class="o">.</span><span class="n">NEW_SUBMISSION</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">row</span><span class="o">.</span><span class="n">is_deleted</span><span class="p">()):</span>
+                <span class="c1"># Get the initial state of the version.</span>
+                <span class="n">version_submission</span> <span class="o">=</span> <span class="n">to_submission</span><span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">submission_id</span><span class="p">)</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Got initial state: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">version_submission</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">version_submission</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Nothing to work with for this version&#39;</span><span class="p">)</span>
+            <span class="k">continue</span>
+
+        <span class="c1"># If this is not the first version, carry forward any requests.</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">versions</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Bring user_requests forward from last version&#39;</span><span class="p">)</span>
+            <span class="n">version_submission</span><span class="o">.</span><span class="n">user_requests</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">versions</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">user_requests</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">version_rows</span><span class="p">:</span>  <span class="c1"># Remaining rows, since we popped the others.</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Handle subsequent row: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">row</span><span class="p">)</span>
+            <span class="c1"># We are treating JREF submissions as though there is no approval</span>
+            <span class="c1"># process; so we can just ignore deleted JREF rows.</span>
+            <span class="k">if</span> <span class="n">row</span><span class="o">.</span><span class="n">is_jref</span><span class="p">()</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">row</span><span class="o">.</span><span class="n">is_deleted</span><span class="p">():</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;JREF row&#39;</span><span class="p">)</span>
+                <span class="c1"># This should update doi, journal_ref, report_num.</span>
+                <span class="n">version_submission</span> <span class="o">=</span> <span class="n">patch_jref</span><span class="p">(</span><span class="n">version_submission</span><span class="p">,</span> <span class="n">row</span><span class="p">)</span>
+            <span class="c1"># For withdrawals and cross-lists, we want to get data from</span>
+            <span class="c1"># deleted rows since we keep track of all requests in the NG</span>
+            <span class="c1"># submission.</span>
+            <span class="k">elif</span> <span class="n">row</span><span class="o">.</span><span class="n">is_withdrawal</span><span class="p">():</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Withdrawal row&#39;</span><span class="p">)</span>
+                <span class="c1"># This should update the reason_for_withdrawal (if applied),</span>
+                <span class="c1"># and add a WithdrawalRequest to user_requests.</span>
+                <span class="n">version_submission</span> <span class="o">=</span> <span class="n">patch_withdrawal</span><span class="p">(</span><span class="n">version_submission</span><span class="p">,</span> <span class="n">row</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">row</span><span class="o">.</span><span class="n">is_crosslist</span><span class="p">():</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Crosslist row&#39;</span><span class="p">)</span>
+                <span class="c1"># This should update the secondary classifications (if applied)</span>
+                <span class="c1"># and add a CrossListClassificationRequest to user_requests.</span>
+                <span class="n">version_submission</span> <span class="o">=</span> <span class="n">patch_cross</span><span class="p">(</span><span class="n">version_submission</span><span class="p">,</span> <span class="n">row</span><span class="p">)</span>
+
+            <span class="c1"># We want hold information represented as a Hold on the submission</span>
+            <span class="c1"># object, not just the status.</span>
+            <span class="k">if</span> <span class="n">version_submission</span><span class="o">.</span><span class="n">is_on_hold</span><span class="p">:</span>
+                <span class="n">version_submission</span> <span class="o">=</span> <span class="n">patch_hold</span><span class="p">(</span><span class="n">version_submission</span><span class="p">,</span> <span class="n">row</span><span class="p">)</span>
+        <span class="n">versions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">version_submission</span><span class="p">)</span>
+    <span class="n">submission</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">versions</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+    <span class="n">submission</span><span class="o">.</span><span class="n">versions</span> <span class="o">=</span> <span class="p">[</span><span class="n">ver</span> <span class="k">for</span> <span class="n">ver</span> <span class="ow">in</span> <span class="n">versions</span> <span class="k">if</span> <span class="n">ver</span> <span class="ow">and</span> <span class="n">ver</span><span class="o">.</span><span class="n">announced</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">submission</span></div>
+
+
+<div class="viewcode-block" id="to_submission"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.services.classic.load.html#arxiv.submission.services.classic.load.to_submission">[docs]</a><span class="k">def</span> <span class="nf">to_submission</span><span class="p">(</span><span class="n">row</span><span class="p">:</span> <span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="p">,</span>
+                  <span class="n">submission_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">domain</span><span class="o">.</span><span class="n">Submission</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generate a representation of submission state from a DB instance.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    row : :class:`.models.Submission`</span>
+<span class="sd">        Database row representing a :class:`.domain.submission.Submission`.</span>
+<span class="sd">    submission_id : int or None</span>
+<span class="sd">        If provided the database value is overridden when setting</span>
+<span class="sd">        :attr:`domain.Submission.submission_id`.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    :class:`.domain.submission.Submission`</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">status</span> <span class="o">=</span> <span class="n">status_from_classic</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">status</span><span class="p">)</span>
+    <span class="n">primary</span> <span class="o">=</span> <span class="n">row</span><span class="o">.</span><span class="n">primary_classification</span>
+    <span class="k">if</span> <span class="n">row</span><span class="o">.</span><span class="n">submitter</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">submitter</span> <span class="o">=</span> <span class="n">domain</span><span class="o">.</span><span class="n">User</span><span class="p">(</span><span class="n">native_id</span><span class="o">=</span><span class="n">row</span><span class="o">.</span><span class="n">submitter_id</span><span class="p">,</span>
+                                <span class="n">email</span><span class="o">=</span><span class="n">row</span><span class="o">.</span><span class="n">submitter_email</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">submitter</span> <span class="o">=</span> <span class="n">row</span><span class="o">.</span><span class="n">get_submitter</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">submission_id</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">submission_id</span> <span class="o">=</span> <span class="n">row</span><span class="o">.</span><span class="n">submission_id</span>
+
+    <span class="n">license</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">domain</span><span class="o">.</span><span class="n">License</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">row</span><span class="o">.</span><span class="n">license</span><span class="p">:</span>
+        <span class="n">label</span> <span class="o">=</span> <span class="n">LICENSES</span><span class="p">[</span><span class="n">row</span><span class="o">.</span><span class="n">license</span><span class="p">][</span><span class="s1">&#39;label&#39;</span><span class="p">]</span>
+        <span class="n">license</span> <span class="o">=</span> <span class="n">domain</span><span class="o">.</span><span class="n">License</span><span class="p">(</span><span class="n">uri</span><span class="o">=</span><span class="n">row</span><span class="o">.</span><span class="n">license</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">label</span><span class="p">)</span>
+
+    <span class="n">primary_clsn</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">domain</span><span class="o">.</span><span class="n">Classification</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">primary</span> <span class="ow">and</span> <span class="n">primary</span><span class="o">.</span><span class="n">category</span><span class="p">:</span>
+        <span class="n">primary_clsn</span> <span class="o">=</span> <span class="n">domain</span><span class="o">.</span><span class="n">Classification</span><span class="p">(</span><span class="n">category</span><span class="o">=</span><span class="n">primary</span><span class="o">.</span><span class="n">category</span><span class="p">)</span>
+    <span class="n">secondary_clsn</span> <span class="o">=</span> <span class="p">[</span><span class="n">domain</span><span class="o">.</span><span class="n">Classification</span><span class="p">(</span><span class="n">category</span><span class="o">=</span><span class="n">db_cat</span><span class="o">.</span><span class="n">category</span><span class="p">)</span>
+                      <span class="k">for</span> <span class="n">db_cat</span> <span class="ow">in</span> <span class="n">row</span><span class="o">.</span><span class="n">categories</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">db_cat</span><span class="o">.</span><span class="n">is_primary</span><span class="p">]</span>
+
+    <span class="n">content</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">domain</span><span class="o">.</span><span class="n">SubmissionContent</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">row</span><span class="o">.</span><span class="n">package</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">row</span><span class="o">.</span><span class="n">package</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;fm://&#39;</span><span class="p">):</span>
+            <span class="n">identifier</span><span class="p">,</span> <span class="n">checksum</span> <span class="o">=</span> <span class="n">row</span><span class="o">.</span><span class="n">package</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;://&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;@&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">identifier</span> <span class="o">=</span> <span class="n">row</span><span class="o">.</span><span class="n">package</span>
+        <span class="n">source_format</span> <span class="o">=</span> <span class="n">domain</span><span class="o">.</span><span class="n">SubmissionContent</span><span class="o">.</span><span class="n">Format</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">source_format</span><span class="p">)</span>
+        <span class="n">content</span> <span class="o">=</span> <span class="n">domain</span><span class="o">.</span><span class="n">SubmissionContent</span><span class="p">(</span><span class="n">identifier</span><span class="o">=</span><span class="n">identifier</span><span class="p">,</span>
+                                           <span class="n">compressed_size</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                                           <span class="n">uncompressed_size</span><span class="o">=</span><span class="n">row</span><span class="o">.</span><span class="n">source_size</span><span class="p">,</span>
+                                           <span class="n">checksum</span><span class="o">=</span><span class="n">checksum</span><span class="p">,</span>
+                                           <span class="n">source_format</span><span class="o">=</span><span class="n">source_format</span><span class="p">)</span>
+
+    <span class="n">submission</span> <span class="o">=</span> <span class="n">domain</span><span class="o">.</span><span class="n">Submission</span><span class="p">(</span>
+        <span class="n">submission_id</span><span class="o">=</span><span class="n">submission_id</span><span class="p">,</span>
+        <span class="n">creator</span><span class="o">=</span><span class="n">submitter</span><span class="p">,</span>
+        <span class="n">owner</span><span class="o">=</span><span class="n">submitter</span><span class="p">,</span>
+        <span class="n">status</span><span class="o">=</span><span class="n">status</span><span class="p">,</span>
+        <span class="n">created</span><span class="o">=</span><span class="n">row</span><span class="o">.</span><span class="n">get_created</span><span class="p">(),</span>
+        <span class="n">updated</span><span class="o">=</span><span class="n">row</span><span class="o">.</span><span class="n">get_updated</span><span class="p">(),</span>
+        <span class="n">source_content</span><span class="o">=</span><span class="n">content</span><span class="p">,</span>
+        <span class="n">submitter_is_author</span><span class="o">=</span><span class="nb">bool</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">is_author</span><span class="p">),</span>
+        <span class="n">submitter_accepts_policy</span><span class="o">=</span><span class="nb">bool</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">agree_policy</span><span class="p">),</span>
+        <span class="n">submitter_contact_verified</span><span class="o">=</span><span class="nb">bool</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">userinfo</span><span class="p">),</span>
+        <span class="n">submitter_compiled_preview</span><span class="o">=</span><span class="ow">not</span> <span class="nb">bool</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">must_process</span><span class="p">),</span>
+        <span class="n">submitter_confirmed_preview</span><span class="o">=</span><span class="nb">bool</span><span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">viewed</span><span class="p">),</span>
+        <span class="n">metadata</span><span class="o">=</span><span class="n">domain</span><span class="o">.</span><span class="n">SubmissionMetadata</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="n">row</span><span class="o">.</span><span class="n">title</span><span class="p">,</span>
+                                           <span class="n">abstract</span><span class="o">=</span><span class="n">row</span><span class="o">.</span><span class="n">abstract</span><span class="p">,</span>
+                                           <span class="n">comments</span><span class="o">=</span><span class="n">row</span><span class="o">.</span><span class="n">comments</span><span class="p">,</span>
+                                           <span class="n">report_num</span><span class="o">=</span><span class="n">row</span><span class="o">.</span><span class="n">report_num</span><span class="p">,</span>
+                                           <span class="n">doi</span><span class="o">=</span><span class="n">row</span><span class="o">.</span><span class="n">doi</span><span class="p">,</span>
+                                           <span class="n">msc_class</span><span class="o">=</span><span class="n">row</span><span class="o">.</span><span class="n">msc_class</span><span class="p">,</span>
+                                           <span class="n">acm_class</span><span class="o">=</span><span class="n">row</span><span class="o">.</span><span class="n">acm_class</span><span class="p">,</span>
+                                           <span class="n">journal_ref</span><span class="o">=</span><span class="n">row</span><span class="o">.</span><span class="n">journal_ref</span><span class="p">),</span>
+        <span class="n">license</span><span class="o">=</span><span class="n">license</span><span class="p">,</span>
+        <span class="n">primary_classification</span><span class="o">=</span><span class="n">primary_clsn</span><span class="p">,</span>
+        <span class="n">secondary_classification</span><span class="o">=</span><span class="n">secondary_clsn</span><span class="p">,</span>
+        <span class="n">arxiv_id</span><span class="o">=</span><span class="n">row</span><span class="o">.</span><span class="n">doc_paper_id</span><span class="p">,</span>
+        <span class="n">version</span><span class="o">=</span><span class="n">row</span><span class="o">.</span><span class="n">version</span>
+    <span class="p">)</span>
+    <span class="k">if</span> <span class="n">row</span><span class="o">.</span><span class="n">sticky_status</span> <span class="o">==</span> <span class="n">row</span><span class="o">.</span><span class="n">ON_HOLD</span> <span class="ow">or</span> <span class="n">row</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="n">row</span><span class="o">.</span><span class="n">ON_HOLD</span><span class="p">:</span>
+        <span class="n">submission</span> <span class="o">=</span> <span class="n">patch_hold</span><span class="p">(</span><span class="n">submission</span><span class="p">,</span> <span class="n">row</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">row</span><span class="o">.</span><span class="n">is_withdrawal</span><span class="p">():</span>
+        <span class="n">submission</span> <span class="o">=</span> <span class="n">patch_withdrawal</span><span class="p">(</span><span class="n">submission</span><span class="p">,</span> <span class="n">row</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">row</span><span class="o">.</span><span class="n">is_crosslist</span><span class="p">():</span>
+        <span class="n">submission</span> <span class="o">=</span> <span class="n">patch_cross</span><span class="p">(</span><span class="n">submission</span><span class="p">,</span> <span class="n">row</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">submission</span></div>
+
+
+<div class="viewcode-block" id="status_from_classic"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.services.classic.load.html#arxiv.submission.services.classic.load.status_from_classic">[docs]</a><span class="k">def</span> <span class="nf">status_from_classic</span><span class="p">(</span><span class="n">classic_status</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Map classic status codes to :class:`.domain.submission.Submission` status.&quot;&quot;&quot;</span>
+    <span class="c1"># if self.get_arxiv_id() is not None:</span>
+    <span class="c1">#     return domain.Submission.ANNOUNCED</span>
+    <span class="k">return</span> <span class="n">STATUS_MAP</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">classic_status</span><span class="p">)</span></div>
+
+
+<span class="c1"># Map classic status to Submission domain status.</span>
+<span class="n">STATUS_MAP</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">NOT_SUBMITTED</span><span class="p">:</span> <span class="n">domain</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">WORKING</span><span class="p">,</span>
+    <span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">SUBMITTED</span><span class="p">:</span> <span class="n">domain</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">SUBMITTED</span><span class="p">,</span>
+    <span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">ON_HOLD</span><span class="p">:</span> <span class="n">domain</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">SUBMITTED</span><span class="p">,</span>
+    <span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">NEXT_PUBLISH_DAY</span><span class="p">:</span> <span class="n">domain</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">SCHEDULED</span><span class="p">,</span>
+    <span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">PROCESSING</span><span class="p">:</span> <span class="n">domain</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">SCHEDULED</span><span class="p">,</span>
+    <span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">PROCESSING_SUBMISSION</span><span class="p">:</span> <span class="n">domain</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">SCHEDULED</span><span class="p">,</span>
+    <span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">NEEDS_EMAIL</span><span class="p">:</span> <span class="n">domain</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">SCHEDULED</span><span class="p">,</span>
+    <span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">ANNOUNCED</span><span class="p">:</span> <span class="n">domain</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">ANNOUNCED</span><span class="p">,</span>
+    <span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">DELETED_ANNOUNCED</span><span class="p">:</span> <span class="n">domain</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">ANNOUNCED</span><span class="p">,</span>
+    <span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">USER_DELETED</span><span class="p">:</span>  <span class="n">domain</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">DELETED</span><span class="p">,</span>
+    <span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">DELETED_EXPIRED</span><span class="p">:</span> <span class="n">domain</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">DELETED</span><span class="p">,</span>
+    <span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">DELETED_ON_HOLD</span><span class="p">:</span> <span class="n">domain</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">DELETED</span><span class="p">,</span>
+    <span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">DELETED_PROCESSING</span><span class="p">:</span> <span class="n">domain</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">DELETED</span><span class="p">,</span>
+    <span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">DELETED_REMOVED</span><span class="p">:</span> <span class="n">domain</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">DELETED</span><span class="p">,</span>
+    <span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">DELETED_USER_EXPIRED</span><span class="p">:</span>  <span class="n">domain</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">DELETED</span><span class="p">,</span>
+    <span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">ERROR_STATE</span><span class="p">:</span> <span class="n">domain</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">ERROR</span>
+<span class="p">}</span>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../../index.html">arXiv submission & moderation</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../architecture.html">Submission &amp; moderation subsystem architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../announcement_process.html">Submission &amp; announcement Process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../submission_api_context.html">Submission API: Context</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../arxiv.submission/arxiv.submission.html">arxiv.submission package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../containers/agent/agent.html">agent package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../containers/metadata/metadata.html">metadata package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../background.html">Background</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../../index.html">Module code</a><ul>
+  <li><a href="../../../submission.html">arxiv.submission</a><ul>
+  <li><a href="../classic.html">arxiv.submission.services.classic</a><ul>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, arXiv.org.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.0.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

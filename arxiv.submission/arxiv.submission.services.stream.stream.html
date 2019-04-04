@@ -1,0 +1,178 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>arxiv.submission.services.stream.stream module &#8212; arXiv submission &amp; moderation 0.1 documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="arxiv.submission.services.notification module" href="arxiv.submission.services.notification.html" />
+    <link rel="prev" title="arxiv.submission.services.stream package" href="arxiv.submission.services.stream.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="module-arxiv.submission.services.stream.stream">
+<span id="arxiv-submission-services-stream-stream-module"></span><h1>arxiv.submission.services.stream.stream module<a class="headerlink" href="#module-arxiv.submission.services.stream.stream" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="arxiv.submission.services.stream.stream.StreamPublisher">
+<em class="property">class </em><code class="descclassname">arxiv.submission.services.stream.stream.</code><code class="descname">StreamPublisher</code><span class="sig-paren">(</span><em>partition_key</em>, <em>aws_access_key_id</em>, <em>aws_secret_access_key</em>, <em>region_name</em>, <em>endpoint_url=None</em>, <em>verify=True</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/services/stream/stream.html#StreamPublisher"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.services.stream.stream.StreamPublisher" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.6/library/functions.html#object" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<dl class="classmethod">
+<dt id="arxiv.submission.services.stream.stream.StreamPublisher.current_session">
+<em class="property">classmethod </em><code class="descname">current_session</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/services/stream/stream.html#StreamPublisher.current_session"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.services.stream.stream.StreamPublisher.current_session" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get/create <a class="reference internal" href="#arxiv.submission.services.stream.stream.StreamPublisher" title="arxiv.submission.services.stream.stream.StreamPublisher"><code class="xref py py-class docutils literal notranslate"><span class="pre">StreamPublisher</span></code></a> for this context.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#arxiv.submission.services.stream.stream.StreamPublisher" title="arxiv.submission.services.stream.stream.StreamPublisher"><code class="xref py py-class docutils literal notranslate"><span class="pre">StreamPublisher</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="arxiv.submission.services.stream.stream.StreamPublisher.get_session">
+<em class="property">classmethod </em><code class="descname">get_session</code><span class="sig-paren">(</span><em>app=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/services/stream/stream.html#StreamPublisher.get_session"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.services.stream.stream.StreamPublisher.get_session" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a new session with the stream.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#arxiv.submission.services.stream.stream.StreamPublisher" title="arxiv.submission.services.stream.stream.StreamPublisher"><code class="xref py py-class docutils literal notranslate"><span class="pre">StreamPublisher</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="arxiv.submission.services.stream.stream.StreamPublisher.init_app">
+<em class="property">classmethod </em><code class="descname">init_app</code><span class="sig-paren">(</span><em>app=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/services/stream/stream.html#StreamPublisher.init_app"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.services.stream.stream.StreamPublisher.init_app" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set default configuration params for an application instance.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.services.stream.stream.StreamPublisher.put">
+<code class="descname">put</code><span class="sig-paren">(</span><em>before</em>, <em>after</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/services/stream/stream.html#StreamPublisher.put"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.services.stream.stream.StreamPublisher.put" title="Permalink to this definition">¶</a></dt>
+<dd><p>Put an <a class="reference internal" href="arxiv.submission.domain.event.base.html#arxiv.submission.domain.event.base.Event" title="arxiv.submission.domain.event.base.Event"><code class="xref py py-class docutils literal notranslate"><span class="pre">Event</span></code></a> on the stream.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">arXiv submission & moderation</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../architecture.html">Submission &amp; moderation subsystem architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../announcement_process.html">Submission &amp; announcement Process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../submission_api_context.html">Submission API: Context</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="arxiv.submission.html">arxiv.submission package</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="arxiv.submission.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.submission.html#using-commands-events">Using commands/events</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.submission.html#versioning-events">Versioning events</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.submission.html#integration-with-the-legacy-system">Integration with the legacy system</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="arxiv.submission.html#subpackages">Subpackages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.submission.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../containers/agent/agent.html">agent package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../containers/metadata/metadata.html">metadata package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../background.html">Background</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="arxiv.submission.html">arxiv.submission package</a><ul>
+  <li><a href="arxiv.submission.services.html">arxiv.submission.services package</a><ul>
+  <li><a href="arxiv.submission.services.stream.html">arxiv.submission.services.stream package</a><ul>
+      <li>Previous: <a href="arxiv.submission.services.stream.html" title="previous chapter">arxiv.submission.services.stream package</a></li>
+      <li>Next: <a href="arxiv.submission.services.notification.html" title="next chapter">arxiv.submission.services.notification module</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, arXiv.org.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.0.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/arxiv.submission/arxiv.submission.services.stream.stream.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

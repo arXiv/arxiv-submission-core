@@ -1,11 +1,9 @@
 
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE html>
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta charset="utf-8" />
     <title>arxiv.submission.domain.submission &#8212; arXiv submission &amp; moderation 0.1 documentation</title>
     <link rel="stylesheet" href="../../../../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
@@ -36,24 +34,25 @@
   <h1>Source code for arxiv.submission.domain.submission</h1><div class="highlight"><pre>
 <span></span><span class="sd">&quot;&quot;&quot;Data structures for submissions.&quot;&quot;&quot;</span>
 
-<span class="kn">import</span> <span class="nn">hashlib</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">TypeVar</span><span class="p">,</span> <span class="n">List</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">TypeVar</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Set</span><span class="p">,</span> <span class="n">Union</span>
 <span class="kn">from</span> <span class="nn">datetime</span> <span class="k">import</span> <span class="n">datetime</span>
 <span class="kn">from</span> <span class="nn">dateutil.parser</span> <span class="k">import</span> <span class="n">parse</span> <span class="k">as</span> <span class="n">parse_date</span>
+<span class="kn">from</span> <span class="nn">enum</span> <span class="k">import</span> <span class="n">Enum</span>
+<span class="kn">import</span> <span class="nn">hashlib</span>
 
-<span class="kn">from</span> <span class="nn">dataclasses</span> <span class="k">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">field</span>
-<span class="kn">from</span> <span class="nn">dataclasses</span> <span class="k">import</span> <span class="n">asdict</span>
+<span class="kn">from</span> <span class="nn">dataclasses</span> <span class="k">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">field</span><span class="p">,</span> <span class="n">asdict</span>
 
 <span class="kn">from</span> <span class="nn">.agent</span> <span class="k">import</span> <span class="n">Agent</span><span class="p">,</span> <span class="n">agent_factory</span>
 <span class="kn">from</span> <span class="nn">.meta</span> <span class="k">import</span> <span class="n">License</span><span class="p">,</span> <span class="n">Classification</span>
-<span class="kn">from</span> <span class="nn">.annotation</span> <span class="k">import</span> <span class="n">Comment</span><span class="p">,</span> <span class="n">Feature</span><span class="p">,</span> <span class="n">Annotation</span>
+<span class="kn">from</span> <span class="nn">.annotation</span> <span class="k">import</span> <span class="n">Comment</span><span class="p">,</span> <span class="n">Feature</span><span class="p">,</span> <span class="n">Annotation</span><span class="p">,</span> <span class="n">annotation_factory</span>
 <span class="kn">from</span> <span class="nn">.proposal</span> <span class="k">import</span> <span class="n">Proposal</span>
 <span class="kn">from</span> <span class="nn">.process</span> <span class="k">import</span> <span class="n">ProcessStatus</span>
-<span class="kn">from</span> <span class="nn">.flag</span> <span class="k">import</span> <span class="n">Flag</span>
-<span class="kn">from</span> <span class="nn">.util</span> <span class="k">import</span> <span class="n">get_tzaware_utc_now</span>
+<span class="kn">from</span> <span class="nn">.flag</span> <span class="k">import</span> <span class="n">Flag</span><span class="p">,</span> <span class="n">flag_factory</span>
+<span class="kn">from</span> <span class="nn">.util</span> <span class="k">import</span> <span class="n">get_tzaware_utc_now</span><span class="p">,</span> <span class="n">dict_coerce</span><span class="p">,</span> <span class="n">list_coerce</span>
+<span class="kn">from</span> <span class="nn">.compilation</span> <span class="k">import</span> <span class="n">Compilation</span>
 
 
-<div class="viewcode-block" id="Author"><a class="viewcode-back" href="../../../../containers/core/arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.Author">[docs]</a><span class="nd">@dataclass</span>
+<div class="viewcode-block" id="Author"><a class="viewcode-back" href="../../../../arxiv.submission/arxiv.submission.domain.submission.html#arxiv.submission.domain.event.Author">[docs]</a><span class="nd">@dataclass</span>
 <span class="k">class</span> <span class="nc">Author</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;Represents an author of a submission.&quot;&quot;&quot;</span>
 
@@ -92,36 +91,133 @@
         <span class="n">name</span> <span class="o">=</span> <span class="n">name</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;  &#39;</span><span class="p">,</span> <span class="s1">&#39; &#39;</span><span class="p">)</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">affiliation</span><span class="p">:</span>
             <span class="k">return</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2"> (</span><span class="si">%s</span><span class="s2">)&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">affiliation</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">name</span>
-
-<div class="viewcode-block" id="Author.to_dict"><a class="viewcode-back" href="../../../../containers/core/arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.Author.to_dict">[docs]</a>    <span class="k">def</span> <span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Generate a dict representation of this :class:`.Author`.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">asdict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div></div>
+        <span class="k">return</span> <span class="n">name</span></div>
 
 
-<div class="viewcode-block" id="SubmissionContent"><a class="viewcode-back" href="../../../../containers/core/arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.SubmissionContent">[docs]</a><span class="nd">@dataclass</span>
+<div class="viewcode-block" id="SubmissionContent"><a class="viewcode-back" href="../../../../arxiv.submission/arxiv.submission.domain.submission.html#arxiv.submission.domain.event.SubmissionContent">[docs]</a><span class="nd">@dataclass</span>
 <span class="k">class</span> <span class="nc">SubmissionContent</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;Metadata about the submission source package.&quot;&quot;&quot;</span>
 
+<div class="viewcode-block" id="SubmissionContent.Format"><a class="viewcode-back" href="../../../../arxiv.submission/arxiv.submission.domain.submission.html#arxiv.submission.domain.event.SubmissionContent.Format">[docs]</a>    <span class="k">class</span> <span class="nc">Format</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Supported source formats.&quot;&quot;&quot;</span>
+
+        <span class="n">UNKNOWN</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="sd">&quot;&quot;&quot;We could not determine the source format.&quot;&quot;&quot;</span>
+        <span class="n">INVALID</span> <span class="o">=</span> <span class="s2">&quot;invalid&quot;</span>
+        <span class="sd">&quot;&quot;&quot;We are able to infer the source format, and it is not supported.&quot;&quot;&quot;</span>
+        <span class="n">TEX</span> <span class="o">=</span> <span class="s2">&quot;tex&quot;</span>
+        <span class="sd">&quot;&quot;&quot;A flavor of TeX.&quot;&quot;&quot;</span>
+        <span class="n">PDFTEX</span> <span class="o">=</span> <span class="s2">&quot;pdftex&quot;</span>
+        <span class="sd">&quot;&quot;&quot;A PDF derived from TeX.&quot;&quot;&quot;</span>
+        <span class="n">POSTSCRIPT</span> <span class="o">=</span> <span class="s2">&quot;ps&quot;</span>
+        <span class="sd">&quot;&quot;&quot;A postscript source.&quot;&quot;&quot;</span>
+        <span class="n">HTML</span> <span class="o">=</span> <span class="s2">&quot;html&quot;</span>
+        <span class="sd">&quot;&quot;&quot;An HTML source.&quot;&quot;&quot;</span>
+        <span class="n">PDF</span> <span class="o">=</span> <span class="s2">&quot;pdf&quot;</span>
+        <span class="sd">&quot;&quot;&quot;A PDF-only source.&quot;&quot;&quot;</span></div>
+
     <span class="n">identifier</span><span class="p">:</span> <span class="nb">str</span>
-    <span class="nb">format</span><span class="p">:</span> <span class="nb">str</span>
     <span class="n">checksum</span><span class="p">:</span> <span class="nb">str</span>
-    <span class="n">size</span><span class="p">:</span> <span class="nb">int</span></div>
+    <span class="n">uncompressed_size</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">compressed_size</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">source_format</span><span class="p">:</span> <span class="n">Format</span> <span class="o">=</span> <span class="n">Format</span><span class="o">.</span><span class="n">UNKNOWN</span>
+
+    <span class="k">def</span> <span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Make sure that :attr:`.source_format` is a :class:`.Format`.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">source_format</span> <span class="ow">and</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">source_format</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">str</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">source_format</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">source_format</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="SubmissionCompiled"><a class="viewcode-back" href="../../../../containers/core/arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.SubmissionCompiled">[docs]</a><span class="nd">@dataclass</span>
-<span class="k">class</span> <span class="nc">SubmissionCompiled</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;Metadata about a submission compilation product.&quot;&quot;&quot;</span>
+<span class="c1"># TODO: revisit start_time</span>
+<span class="c1"># @dataclass</span>
+<span class="c1"># class Compilation:</span>
+<span class="c1">#     &quot;&quot;&quot;Represents a submission compilation.&quot;&quot;&quot;</span>
+<span class="c1">#</span>
+<span class="c1">#     class Status(Enum):      # type: ignore</span>
+<span class="c1">#         &quot;&quot;&quot;Represents the status of a requested compilation.&quot;&quot;&quot;</span>
+<span class="c1">#</span>
+<span class="c1">#         IN_PROGRESS = &quot;in_progress&quot;</span>
+<span class="c1">#         &quot;&quot;&quot;Compilation has been requested.&quot;&quot;&quot;</span>
+<span class="c1">#</span>
+<span class="c1">#         SUCCEEDED = &quot;succeeded&quot;</span>
+<span class="c1">#         &quot;&quot;&quot;Compilation successfully completed.&quot;&quot;&quot;</span>
+<span class="c1">#</span>
+<span class="c1">#         FAILED = &quot;failed&quot;</span>
+<span class="c1">#         &quot;&quot;&quot;Compilation failed.&quot;&quot;&quot;</span>
+<span class="c1">#</span>
+<span class="c1">#     source_id: str</span>
+<span class="c1">#     &quot;&quot;&quot;This is the ID of the source upload workspace.&quot;&quot;&quot;</span>
+<span class="c1">#     checksum: str</span>
+<span class="c1">#     &quot;&quot;&quot;The checksum of the source package to compile.&quot;&quot;&quot;</span>
+<span class="c1">#     output_format: str</span>
+<span class="c1">#     &quot;&quot;&quot;Compilation target format.&quot;&quot;&quot;</span>
+<span class="c1">#     start_time: datetime</span>
+<span class="c1">#     end_time: Optional[datetime]</span>
+<span class="c1">#     status: Status = field(default=Status.IN_PROGRESS)</span>
+<span class="c1">#</span>
+<span class="c1">#     def __post_init__(self):</span>
+<span class="c1">#         &quot;&quot;&quot;Make sure that :attr:`.status` is a :class:`.Status`.&quot;&quot;&quot;</span>
+<span class="c1">#         if self.status and type(self.status) is str:</span>
+<span class="c1">#             self.status = self.Status(self.status)</span>
+<span class="c1">#</span>
+<span class="c1">#     @property</span>
+<span class="c1">#     def identifier(self) -&gt; str:</span>
+<span class="c1">#         return f&quot;{self.source_id}/{self.checksum}/{self.output_format}&quot;</span>
+<span class="c1">#</span>
+<span class="c1">#     @classmethod</span>
+<span class="c1">#     def from_processes(cls, processes: List[ProcessStatus]) -&gt; &#39;Compilation&#39;:</span>
+<span class="c1">#         &quot;&quot;&quot;</span>
+<span class="c1">#         Get a :class:`.Compilation` from :attr:`.Submission.processes`.</span>
+<span class="c1">#</span>
+<span class="c1">#         Parameters</span>
+<span class="c1">#         ----------</span>
+<span class="c1">#         processes : list</span>
+<span class="c1">#             List of :class:`.ProcessStatus` instances from a submission.</span>
+<span class="c1">#</span>
+<span class="c1">#         Returns</span>
+<span class="c1">#         -------</span>
+<span class="c1">#         :class:`.Compilation`</span>
+<span class="c1">#             Static representation of the compilation attempt.</span>
+<span class="c1">#</span>
+<span class="c1">#         &quot;&quot;&quot;</span>
+<span class="c1">#         processes = sorted((p for p in processes</span>
+<span class="c1">#                             if p.process is ProcessStatus.Process.COMPILATION),</span>
+<span class="c1">#                            key=lambda p: p.created)</span>
+<span class="c1">#         if not processes:</span>
+<span class="c1">#             return None</span>
+<span class="c1">#         finished_states = [ProcessStatus.Status.SUCCEEDED,</span>
+<span class="c1">#                            ProcessStatus.Status.FAILED]</span>
+<span class="c1">#         latest = processes[-1]</span>
+<span class="c1">#         source_id, checksum, output_format = \</span>
+<span class="c1">#             latest.process_identifier.split(&quot;/&quot;)</span>
+<span class="c1">#         if latest.status in finished_states:</span>
+<span class="c1">#             end_time = latest.created</span>
+<span class="c1">#             for proc in processes[::-1]:</span>
+<span class="c1">#                 if proc.process_identifier == latest.process_identifier \</span>
+<span class="c1">#                         and proc.status is ProcessStatus.Status.REQUESTED:</span>
+<span class="c1">#                     start_time = proc.created</span>
+<span class="c1">#                     break</span>
+<span class="c1">#         else:</span>
+<span class="c1">#             start_time = latest.created</span>
+<span class="c1">#             end_time = None</span>
+<span class="c1">#         status_map = {</span>
+<span class="c1">#             ProcessStatus.Status.REQUESTED: cls.Status.IN_PROGRESS,</span>
+<span class="c1">#             ProcessStatus.Status.SUCCEEDED: cls.Status.SUCCEEDED,</span>
+<span class="c1">#             ProcessStatus.Status.FAILED: cls.Status.FAILED,</span>
+<span class="c1">#         }</span>
+<span class="c1">#         return Compilation(</span>
+<span class="c1">#             source_id=source_id,</span>
+<span class="c1">#             checksum=checksum,</span>
+<span class="c1">#             output_format=output_format,</span>
+<span class="c1">#             start_time=start_time,</span>
+<span class="c1">#             end_time=end_time,</span>
+<span class="c1">#             status=status_map[latest.status]</span>
+<span class="c1">#         )</span>
 
-    <span class="n">identifier</span><span class="p">:</span> <span class="nb">str</span>
-    <span class="nb">format</span><span class="p">:</span> <span class="nb">str</span>
-    <span class="n">checksum</span><span class="p">:</span> <span class="nb">str</span>
-    <span class="n">size</span><span class="p">:</span> <span class="nb">int</span></div>
 
-
-<div class="viewcode-block" id="SubmissionMetadata"><a class="viewcode-back" href="../../../../containers/core/arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.SubmissionMetadata">[docs]</a><span class="nd">@dataclass</span>
+<div class="viewcode-block" id="SubmissionMetadata"><a class="viewcode-back" href="../../../../arxiv.submission/arxiv.submission.domain.submission.html#arxiv.submission.domain.event.SubmissionMetadata">[docs]</a><span class="nd">@dataclass</span>
 <span class="k">class</span> <span class="nc">SubmissionMetadata</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;Metadata about a :class:`.domain.Submission` instance.&quot;&quot;&quot;</span>
+    <span class="sd">&quot;&quot;&quot;Metadata about a :class:`.domain.submission.Submission` instance.&quot;&quot;&quot;</span>
 
     <span class="n">title</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">abstract</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
@@ -136,53 +232,85 @@
     <span class="n">report_num</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">journal_ref</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
 
-    <span class="n">comments</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">str</span><span class="p">)</span>
-
-<div class="viewcode-block" id="SubmissionMetadata.to_dict"><a class="viewcode-back" href="../../../../containers/core/arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.SubmissionMetadata.to_dict">[docs]</a>    <span class="k">def</span> <span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Generate dict representation of :class:`.SubmissionMetadata`.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">asdict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div></div>
+    <span class="n">comments</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">str</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="Delegation"><a class="viewcode-back" href="../../../../containers/core/arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.Delegation">[docs]</a><span class="nd">@dataclass</span>
+<div class="viewcode-block" id="Delegation"><a class="viewcode-back" href="../../../../arxiv.submission/arxiv.submission.domain.submission.html#arxiv.submission.domain.event.Delegation">[docs]</a><span class="nd">@dataclass</span>
 <span class="k">class</span> <span class="nc">Delegation</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;Delegation of editing privileges to a non-owning :class:`.Agent`.&quot;&quot;&quot;</span>
 
     <span class="n">delegate</span><span class="p">:</span> <span class="n">Agent</span>
     <span class="n">creator</span><span class="p">:</span> <span class="n">Agent</span>
     <span class="n">created</span><span class="p">:</span> <span class="n">datetime</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="n">get_tzaware_utc_now</span><span class="p">)</span>
+    <span class="n">delegation_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">str</span><span class="p">)</span>
 
-    <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">delegation_id</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Unique identifier for the delegation instance.&quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Set derivative fields.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">delegation_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_delegation_id</span><span class="p">()</span>
+
+<div class="viewcode-block" id="Delegation.get_delegation_id"><a class="viewcode-back" href="../../../../arxiv.submission/arxiv.submission.domain.submission.html#arxiv.submission.domain.event.Delegation.get_delegation_id">[docs]</a>    <span class="k">def</span> <span class="nf">get_delegation_id</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Generate unique identifier for the delegation instance.&quot;&quot;&quot;</span>
         <span class="n">h</span> <span class="o">=</span> <span class="n">hashlib</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="s1">&#39;sha1&#39;</span><span class="p">)</span>
         <span class="n">h</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="sa">b</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1">:</span><span class="si">%s</span><span class="s1">:</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">delegate</span><span class="o">.</span><span class="n">agent_identifier</span><span class="p">,</span>
                                 <span class="bp">self</span><span class="o">.</span><span class="n">creator</span><span class="o">.</span><span class="n">agent_identifier</span><span class="p">,</span>
                                 <span class="bp">self</span><span class="o">.</span><span class="n">created</span><span class="o">.</span><span class="n">isodate</span><span class="p">()))</span>
-        <span class="k">return</span> <span class="n">h</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()</span>
-
-<div class="viewcode-block" id="Delegation.to_dict"><a class="viewcode-back" href="../../../../containers/core/arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.Delegation.to_dict">[docs]</a>    <span class="k">def</span> <span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Generate a dict representation of this :class:`.Delegation`.&quot;&quot;&quot;</span>
-        <span class="n">data</span> <span class="o">=</span> <span class="n">asdict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
-        <span class="n">data</span><span class="p">[</span><span class="s1">&#39;delegation_id&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">delegation_id</span>
-        <span class="k">return</span> <span class="n">data</span></div></div>
+        <span class="k">return</span> <span class="n">h</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()</span></div></div>
 
 
-<div class="viewcode-block" id="Hold"><a class="viewcode-back" href="../../../../containers/core/arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.Hold">[docs]</a><span class="nd">@dataclass</span>
+<div class="viewcode-block" id="Hold"><a class="viewcode-back" href="../../../../arxiv.submission/arxiv.submission.domain.submission.html#arxiv.submission.domain.event.Hold">[docs]</a><span class="nd">@dataclass</span>
 <span class="k">class</span> <span class="nc">Hold</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;Represents a block on announcement, usually for QA/QC purposes.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="Hold.Type"><a class="viewcode-back" href="../../../../arxiv.submission/arxiv.submission.domain.submission.html#arxiv.submission.domain.event.Hold.Type">[docs]</a>    <span class="k">class</span> <span class="nc">Type</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Supported holds in the submission system.&quot;&quot;&quot;</span>
+
+        <span class="n">PATCH</span> <span class="o">=</span> <span class="s1">&#39;patch&#39;</span>
+        <span class="sd">&quot;&quot;&quot;A hold generated from the classic submission system.&quot;&quot;&quot;</span>
+
+        <span class="n">SOURCE_OVERSIZE</span> <span class="o">=</span> <span class="s2">&quot;source_oversize&quot;</span>
+        <span class="sd">&quot;&quot;&quot;The submission source is oversize.&quot;&quot;&quot;</span>
+
+        <span class="n">PDF_OVERSIZE</span> <span class="o">=</span> <span class="s2">&quot;pdf_oversize&quot;</span>
+        <span class="sd">&quot;&quot;&quot;The submission PDF is oversize.&quot;&quot;&quot;</span></div>
 
     <span class="n">event_id</span><span class="p">:</span> <span class="nb">str</span>
     <span class="sd">&quot;&quot;&quot;The event that created the hold.&quot;&quot;&quot;</span>
 
     <span class="n">creator</span><span class="p">:</span> <span class="n">Agent</span>
     <span class="n">created</span><span class="p">:</span> <span class="n">datetime</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="n">get_tzaware_utc_now</span><span class="p">)</span>
-    <span class="n">hold_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">str</span><span class="p">)</span>
-    <span class="n">hold_reason</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span></div>
+    <span class="n">hold_type</span><span class="p">:</span> <span class="n">Type</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">Type</span><span class="o">.</span><span class="n">PATCH</span><span class="p">)</span>
+    <span class="n">hold_reason</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">str</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Check enums and agents.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">creator</span> <span class="ow">and</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">creator</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">dict</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">creator</span> <span class="o">=</span> <span class="n">agent_factory</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">creator</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hold_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hold_type</span><span class="p">)</span></div>
+        <span class="c1"># if not isinstance(created, datetime):</span>
+        <span class="c1">#     created = parse_date(created)</span>
+
+
+<div class="viewcode-block" id="Waiver"><a class="viewcode-back" href="../../../../arxiv.submission/arxiv.submission.domain.submission.html#arxiv.submission.domain.event.Waiver">[docs]</a><span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">Waiver</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Represents an exception or override.&quot;&quot;&quot;</span>
+
+    <span class="n">event_id</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="sd">&quot;&quot;&quot;The identifier of the event that produced this waiver.&quot;&quot;&quot;</span>
+    <span class="n">waiver_type</span><span class="p">:</span> <span class="n">Hold</span><span class="o">.</span><span class="n">Type</span>
+    <span class="n">waiver_reason</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">created</span><span class="p">:</span> <span class="n">datetime</span>
+    <span class="n">creator</span><span class="p">:</span> <span class="n">Agent</span>
+
+    <span class="k">def</span> <span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Check enums and agents.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">creator</span> <span class="ow">and</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">creator</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">dict</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">creator</span> <span class="o">=</span> <span class="n">agent_factory</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">creator</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">waiver_type</span> <span class="o">=</span> <span class="n">Hold</span><span class="o">.</span><span class="n">Type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">waiver_type</span><span class="p">)</span></div>
 
 
 <span class="c1"># TODO: add identification mechanism; consider using mechanism similar to</span>
 <span class="c1"># comments, below.</span>
-<div class="viewcode-block" id="UserRequest"><a class="viewcode-back" href="../../../../containers/core/arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.UserRequest">[docs]</a><span class="nd">@dataclass</span>
+<div class="viewcode-block" id="UserRequest"><a class="viewcode-back" href="../../../../arxiv.submission/arxiv.submission.domain.submission.html#arxiv.submission.domain.event.UserRequest">[docs]</a><span class="nd">@dataclass</span>
 <span class="k">class</span> <span class="nc">UserRequest</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;Represents a user request related to a submission.&quot;&quot;&quot;</span>
 
@@ -198,59 +326,72 @@
     <span class="n">APPLIED</span> <span class="o">=</span> <span class="s1">&#39;applied&#39;</span>
     <span class="sd">&quot;&quot;&quot;Submission has been updated on the basis of the approved request.&quot;&quot;&quot;</span>
 
+    <span class="n">CANCELLED</span> <span class="o">=</span> <span class="s1">&#39;cancelled&#39;</span>
+
+    <span class="n">request_id</span><span class="p">:</span> <span class="nb">str</span>
     <span class="n">creator</span><span class="p">:</span> <span class="n">Agent</span>
     <span class="n">created</span><span class="p">:</span> <span class="n">datetime</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="n">get_tzaware_utc_now</span><span class="p">)</span>
     <span class="n">updated</span><span class="p">:</span> <span class="n">datetime</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="n">get_tzaware_utc_now</span><span class="p">)</span>
     <span class="n">status</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">PENDING</span><span class="p">)</span>
+    <span class="n">request_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">str</span><span class="p">)</span>
 
-    <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">request_type</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Check agents.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">creator</span> <span class="ow">and</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">creator</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">dict</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">creator</span> <span class="o">=</span> <span class="n">agent_factory</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">creator</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">request_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_request_type</span><span class="p">()</span>
+
+<div class="viewcode-block" id="UserRequest.get_request_type"><a class="viewcode-back" href="../../../../arxiv.submission/arxiv.submission.domain.submission.html#arxiv.submission.domain.event.UserRequest.get_request_type">[docs]</a>    <span class="k">def</span> <span class="nf">get_request_type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Name (str) of the type of user request.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span>
+        <span class="k">return</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span></div>
 
-    <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">request_id</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;The unique identifier for an :class:`.UserRequest` instance.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">generate_request_id</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">created</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">request_type</span><span class="p">,</span>
-                                        <span class="bp">self</span><span class="o">.</span><span class="n">creator</span><span class="p">)</span>
-
-<div class="viewcode-block" id="UserRequest.generate_request_id"><a class="viewcode-back" href="../../../../containers/core/arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.UserRequest.generate_request_id">[docs]</a>    <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">generate_request_id</span><span class="p">(</span><span class="n">created</span><span class="p">:</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">request_type</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-                            <span class="n">creator</span><span class="p">:</span> <span class="n">Agent</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Generate a request ID.&quot;&quot;&quot;</span>
-        <span class="n">h</span> <span class="o">=</span> <span class="n">hashlib</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="s1">&#39;sha1&#39;</span><span class="p">)</span>
-        <span class="n">h</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="sa">b</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1">:</span><span class="si">%s</span><span class="s1">:</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">created</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">),</span>
-                                <span class="n">request_type</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">),</span>
-                                <span class="n">creator</span><span class="o">.</span><span class="n">agent_identifier</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)))</span>
-        <span class="k">return</span> <span class="n">h</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()</span></div>
-
-<div class="viewcode-block" id="UserRequest.is_pending"><a class="viewcode-back" href="../../../../containers/core/arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.UserRequest.is_pending">[docs]</a>    <span class="k">def</span> <span class="nf">is_pending</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="UserRequest.is_pending"><a class="viewcode-back" href="../../../../arxiv.submission/arxiv.submission.domain.submission.html#arxiv.submission.domain.event.UserRequest.is_pending">[docs]</a>    <span class="k">def</span> <span class="nf">is_pending</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Check whether the request is pending.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="n">UserRequest</span><span class="o">.</span><span class="n">PENDING</span></div>
 
-<div class="viewcode-block" id="UserRequest.is_approved"><a class="viewcode-back" href="../../../../containers/core/arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.UserRequest.is_approved">[docs]</a>    <span class="k">def</span> <span class="nf">is_approved</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="UserRequest.is_approved"><a class="viewcode-back" href="../../../../arxiv.submission/arxiv.submission.domain.submission.html#arxiv.submission.domain.event.UserRequest.is_approved">[docs]</a>    <span class="k">def</span> <span class="nf">is_approved</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Check whether the request has been approved.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="n">UserRequest</span><span class="o">.</span><span class="n">APPROVED</span></div>
 
-<div class="viewcode-block" id="UserRequest.is_applied"><a class="viewcode-back" href="../../../../containers/core/arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.UserRequest.is_applied">[docs]</a>    <span class="k">def</span> <span class="nf">is_applied</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="UserRequest.is_applied"><a class="viewcode-back" href="../../../../arxiv.submission/arxiv.submission.domain.submission.html#arxiv.submission.domain.event.UserRequest.is_applied">[docs]</a>    <span class="k">def</span> <span class="nf">is_applied</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Check whether the request has been applied.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="n">UserRequest</span><span class="o">.</span><span class="n">APPLIED</span></div>
 
-<div class="viewcode-block" id="UserRequest.is_rejected"><a class="viewcode-back" href="../../../../containers/core/arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.UserRequest.is_rejected">[docs]</a>    <span class="k">def</span> <span class="nf">is_rejected</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="UserRequest.is_rejected"><a class="viewcode-back" href="../../../../arxiv.submission/arxiv.submission.domain.submission.html#arxiv.submission.domain.event.UserRequest.is_rejected">[docs]</a>    <span class="k">def</span> <span class="nf">is_rejected</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Check whether the request has been rejected.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="n">UserRequest</span><span class="o">.</span><span class="n">REJECTED</span></div>
 
-<div class="viewcode-block" id="UserRequest.is_active"><a class="viewcode-back" href="../../../../containers/core/arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.UserRequest.is_active">[docs]</a>    <span class="k">def</span> <span class="nf">is_active</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_pending</span><span class="p">()</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_approved</span><span class="p">()</span></div></div>
+<div class="viewcode-block" id="UserRequest.is_active"><a class="viewcode-back" href="../../../../arxiv.submission/arxiv.submission.domain.submission.html#arxiv.submission.domain.event.UserRequest.is_active">[docs]</a>    <span class="k">def</span> <span class="nf">is_active</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Check whether the request is active.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_pending</span><span class="p">()</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_approved</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="UserRequest.generate_request_id"><a class="viewcode-back" href="../../../../arxiv.submission/arxiv.submission.domain.submission.html#arxiv.submission.domain.event.UserRequest.generate_request_id">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">generate_request_id</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="s1">&#39;Submission&#39;</span><span class="p">,</span> <span class="n">N</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Generate a unique identifier for this request.&quot;&quot;&quot;</span>
+        <span class="n">h</span> <span class="o">=</span> <span class="n">hashlib</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="s1">&#39;sha1&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">N</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">N</span> <span class="o">=</span> <span class="nb">len</span><span class="p">([</span><span class="n">rq</span> <span class="k">for</span> <span class="n">rq</span> <span class="ow">in</span> <span class="n">submission</span><span class="o">.</span><span class="n">iter_requests</span> <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">rq</span><span class="p">)</span> <span class="ow">is</span> <span class="bp">cls</span><span class="p">])</span>
+        <span class="n">h</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;</span><span class="si">{submission.submission_id}</span><span class="s1">:</span><span class="si">{cls.NAME}</span><span class="s1">:</span><span class="si">{N}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">h</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()</span></div></div>
 
 
-<div class="viewcode-block" id="WithdrawalRequest"><a class="viewcode-back" href="../../../../containers/core/arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.WithdrawalRequest">[docs]</a><span class="nd">@dataclass</span>
+<div class="viewcode-block" id="WithdrawalRequest"><a class="viewcode-back" href="../../../../arxiv.submission/arxiv.submission.domain.submission.html#arxiv.submission.domain.event.WithdrawalRequest">[docs]</a><span class="nd">@dataclass</span>
 <span class="k">class</span> <span class="nc">WithdrawalRequest</span><span class="p">(</span><span class="n">UserRequest</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Represents a request ot withdraw a submission.&quot;&quot;&quot;</span>
 
     <span class="n">NAME</span> <span class="o">=</span> <span class="s2">&quot;Withdrawal&quot;</span>
 
     <span class="n">reason_for_withdrawal</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
-    <span class="sd">&quot;&quot;&quot;If an e-print is withdrawn, the submitter is asked to explain why.&quot;&quot;&quot;</span></div>
+    <span class="sd">&quot;&quot;&quot;If an e-print is withdrawn, the submitter is asked to explain why.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="WithdrawalRequest.apply"><a class="viewcode-back" href="../../../../arxiv.submission/arxiv.submission.domain.submission.html#arxiv.submission.domain.event.WithdrawalRequest.apply">[docs]</a>    <span class="k">def</span> <span class="nf">apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="s1">&#39;Submission&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;Submission&#39;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Apply the withdrawal.&quot;&quot;&quot;</span>
+        <span class="n">submission</span><span class="o">.</span><span class="n">reason_for_withdrawal</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reason_for_withdrawal</span>
+        <span class="n">submission</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="n">Submission</span><span class="o">.</span><span class="n">WITHDRAWN</span>
+        <span class="k">return</span> <span class="n">submission</span></div></div>
 
 
-<div class="viewcode-block" id="CrossListClassificationRequest"><a class="viewcode-back" href="../../../../containers/core/arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.CrossListClassificationRequest">[docs]</a><span class="nd">@dataclass</span>
+<div class="viewcode-block" id="CrossListClassificationRequest"><a class="viewcode-back" href="../../../../arxiv.submission/arxiv.submission.domain.submission.html#arxiv.submission.domain.event.CrossListClassificationRequest">[docs]</a><span class="nd">@dataclass</span>
 <span class="k">class</span> <span class="nc">CrossListClassificationRequest</span><span class="p">(</span><span class="n">UserRequest</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Represents a request to add secondary classifications.&quot;&quot;&quot;</span>
 
@@ -258,56 +399,83 @@
 
     <span class="n">classifications</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Classification</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
 
+<div class="viewcode-block" id="CrossListClassificationRequest.apply"><a class="viewcode-back" href="../../../../arxiv.submission/arxiv.submission.domain.submission.html#arxiv.submission.domain.event.CrossListClassificationRequest.apply">[docs]</a>    <span class="k">def</span> <span class="nf">apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="s1">&#39;Submission&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;Submission&#39;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Apply the cross-list request.&quot;&quot;&quot;</span>
+        <span class="n">submission</span><span class="o">.</span><span class="n">secondary_classification</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">classifications</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">submission</span></div>
+
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">categories</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Get the requested cross-list categories.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="p">[</span><span class="n">c</span><span class="o">.</span><span class="n">category</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">classifications</span><span class="p">]</span></div>
 
 
-<div class="viewcode-block" id="Submission"><a class="viewcode-back" href="../../../../containers/core/arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.Submission">[docs]</a><span class="nd">@dataclass</span>
+<div class="viewcode-block" id="Submission"><a class="viewcode-back" href="../../../../arxiv.submission/arxiv.submission.domain.submission.html#arxiv.submission.domain.event.Submission">[docs]</a><span class="nd">@dataclass</span>
 <span class="k">class</span> <span class="nc">Submission</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;Represents an arXiv submission object.&quot;&quot;&quot;</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Represents an arXiv submission object.</span>
+
+<span class="sd">    Some notable differences between this view of submissions and the classic</span>
+<span class="sd">    model:</span>
+
+<span class="sd">    - There is no &quot;hold&quot; status. Status reflects where the submission is</span>
+<span class="sd">      in the pipeline. Holds are annotations that can be applied to the</span>
+<span class="sd">      submission, and may impact its ability to proceed (e.g. from submitted</span>
+<span class="sd">      to scheduled). Submissions that are in working status can have holds on</span>
+<span class="sd">      them!</span>
+<span class="sd">    - We use `arxiv_id` instead of `paper_id` to refer to the canonical arXiv</span>
+<span class="sd">      identifier for the e-print (once it is announced).</span>
+<span class="sd">    - Instead of having a separate &quot;submission&quot; record for every change to an</span>
+<span class="sd">      e-print (e.g. replacement, jref, etc), we represent the entire history</span>
+<span class="sd">      as a single submission. Announced versions can be found in</span>
+<span class="sd">      :attr:`.versions`. Withdrawal and cross-list requests can be found in</span>
+<span class="sd">      :attr:`.user_requests`. JREFs are treated like they &quot;just happen&quot;,</span>
+<span class="sd">      reflecting the forthcoming move away from storing journal ref information</span>
+<span class="sd">      in the core metadata record.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">WORKING</span> <span class="o">=</span> <span class="s1">&#39;working&#39;</span>
     <span class="n">SUBMITTED</span> <span class="o">=</span> <span class="s1">&#39;submitted&#39;</span>
-    <span class="n">ON_HOLD</span> <span class="o">=</span> <span class="s1">&#39;hold&#39;</span>
     <span class="n">SCHEDULED</span> <span class="o">=</span> <span class="s1">&#39;scheduled&#39;</span>
-    <span class="n">PUBLISHED</span> <span class="o">=</span> <span class="s1">&#39;published&#39;</span>
-    <span class="n">ERROR</span> <span class="o">=</span> <span class="s1">&#39;error&#39;</span>
+    <span class="n">ANNOUNCED</span> <span class="o">=</span> <span class="s1">&#39;announced&#39;</span>
+    <span class="n">ERROR</span> <span class="o">=</span> <span class="s1">&#39;error&#39;</span>     <span class="c1"># TODO: eliminate this status.</span>
     <span class="n">DELETED</span> <span class="o">=</span> <span class="s1">&#39;deleted&#39;</span>
     <span class="n">WITHDRAWN</span> <span class="o">=</span> <span class="s1">&#39;withdrawn&#39;</span>
 
     <span class="n">creator</span><span class="p">:</span> <span class="n">Agent</span>
     <span class="n">owner</span><span class="p">:</span> <span class="n">Agent</span>
-    <span class="n">created</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">datetime</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
-    <span class="n">updated</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">datetime</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
-
-    <span class="n">source_content</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">SubmissionContent</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
-    <span class="n">compiled_content</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">SubmissionCompiled</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
-
-    <span class="n">primary_classification</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Classification</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
-    <span class="n">delegations</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Delegation</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span>
     <span class="n">proxy</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Agent</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
     <span class="n">client</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Agent</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">created</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">datetime</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">updated</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">datetime</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">submitted</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">datetime</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
     <span class="n">submission_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
-    <span class="n">metadata</span><span class="p">:</span> <span class="n">SubmissionMetadata</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="n">SubmissionMetadata</span><span class="p">)</span>
 
+    <span class="n">source_content</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">SubmissionContent</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">metadata</span><span class="p">:</span> <span class="n">SubmissionMetadata</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="n">SubmissionMetadata</span><span class="p">)</span>
+    <span class="n">primary_classification</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Classification</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
     <span class="n">secondary_classification</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Classification</span><span class="p">]</span> <span class="o">=</span> \
         <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
     <span class="n">submitter_contact_verified</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
     <span class="n">submitter_is_author</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
     <span class="n">submitter_accepts_policy</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">bool</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">submitter_compiled_preview</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
     <span class="n">submitter_confirmed_preview</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
     <span class="n">license</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">License</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
     <span class="n">status</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">WORKING</span><span class="p">)</span>
+    <span class="sd">&quot;&quot;&quot;Disposition within the submission pipeline.&quot;&quot;&quot;</span>
+
     <span class="n">arxiv_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
-    <span class="sd">&quot;&quot;&quot;The published arXiv paper ID.&quot;&quot;&quot;</span>
+    <span class="sd">&quot;&quot;&quot;The announced arXiv paper ID.&quot;&quot;&quot;</span>
+
     <span class="n">version</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 
     <span class="n">reason_for_withdrawal</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
     <span class="sd">&quot;&quot;&quot;If an e-print is withdrawn, the submitter is asked to explain why.&quot;&quot;&quot;</span>
 
     <span class="n">versions</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="s1">&#39;Submission&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
-    <span class="sd">&quot;&quot;&quot;Published versions of this :class:`.domain.Submission`.&quot;&quot;&quot;</span>
+    <span class="sd">&quot;&quot;&quot;Announced versions of this :class:`.domain.submission.Submission`.&quot;&quot;&quot;</span>
 
     <span class="c1"># These fields are related to moderation/quality control.</span>
     <span class="n">user_requests</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">UserRequest</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span>
@@ -331,6 +499,9 @@
     <span class="n">holds</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Hold</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span>
     <span class="sd">&quot;&quot;&quot;Quality control holds.&quot;&quot;&quot;</span>
 
+    <span class="n">waivers</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Waiver</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">dict</span><span class="p">)</span>
+    <span class="sd">&quot;&quot;&quot;Quality control waivers.&quot;&quot;&quot;</span>
+
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">features</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Feature</span><span class="p">]:</span>
         <span class="k">return</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">annotations</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
@@ -339,12 +510,12 @@
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">active</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Actively moving through the submission workflow.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">DELETED</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">PUBLISHED</span><span class="p">]</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">DELETED</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ANNOUNCED</span><span class="p">]</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">published</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">announced</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;The submission has been announced.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">PUBLISHED</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">ANNOUNCED</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">finalized</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
@@ -357,76 +528,109 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">DELETED</span>
 
     <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">primary_category</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">primary_classification</span><span class="o">.</span><span class="n">category</span>
+
+    <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">secondary_categories</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
         <span class="sd">&quot;&quot;&quot;Category names from secondary classifications.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="p">[</span><span class="n">c</span><span class="o">.</span><span class="n">category</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">secondary_classification</span><span class="p">]</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">is_on_hold</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">holds</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">ON_HOLD</span>
+        <span class="c1"># We need to explicitly check ``status`` here because classic doesn&#39;t</span>
+        <span class="c1"># have a representation for Hold events.</span>
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">SUBMITTED</span>
+                <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hold_types</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">waiver_types</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Submission.has_waiver_for"><a class="viewcode-back" href="../../../../arxiv.submission/arxiv.submission.domain.submission.html#arxiv.submission.domain.event.Submission.has_waiver_for">[docs]</a>    <span class="k">def</span> <span class="nf">has_waiver_for</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hold_type</span><span class="p">:</span> <span class="n">Hold</span><span class="o">.</span><span class="n">Type</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">hold_type</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">waiver_types</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">hold_types</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Set</span><span class="p">[</span><span class="n">Hold</span><span class="o">.</span><span class="n">Type</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="nb">set</span><span class="p">([</span><span class="n">hold</span><span class="o">.</span><span class="n">hold_type</span> <span class="k">for</span> <span class="n">hold</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">holds</span><span class="o">.</span><span class="n">values</span><span class="p">()])</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">waiver_types</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Set</span><span class="p">[</span><span class="n">Hold</span><span class="o">.</span><span class="n">Type</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="nb">set</span><span class="p">([</span><span class="n">waiver</span><span class="o">.</span><span class="n">hold_type</span> <span class="k">for</span> <span class="n">waiver</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">waivers</span><span class="o">.</span><span class="n">values</span><span class="p">()])</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">has_active_requests</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">active_user_requests</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span>
 
     <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">iter_requests</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">UserRequest</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">user_requests</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
+
+    <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">active_user_requests</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">UserRequest</span><span class="p">]:</span>
-        <span class="k">return</span> <span class="p">[</span><span class="n">r</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">user_requests</span><span class="o">.</span><span class="n">values</span><span class="p">()</span> <span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">is_active</span><span class="p">()]</span>
+        <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">filter</span><span class="p">(</span><span class="k">lambda</span> <span class="n">r</span><span class="p">:</span> <span class="n">r</span><span class="o">.</span><span class="n">is_active</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">iter_requests</span><span class="p">),</span>
+                      <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">r</span><span class="p">:</span> <span class="n">r</span><span class="o">.</span><span class="n">created</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">pending_user_requests</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">UserRequest</span><span class="p">]:</span>
-        <span class="k">return</span> <span class="p">[</span><span class="n">r</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">user_requests</span><span class="o">.</span><span class="n">values</span><span class="p">()</span> <span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">is_pending</span><span class="p">()]</span>
+        <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">filter</span><span class="p">(</span><span class="k">lambda</span> <span class="n">r</span><span class="p">:</span> <span class="n">r</span><span class="o">.</span><span class="n">is_pending</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">iter_requests</span><span class="p">),</span>
+                      <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">r</span><span class="p">:</span> <span class="n">r</span><span class="o">.</span><span class="n">created</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">rejected_user_requests</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">UserRequest</span><span class="p">]:</span>
-        <span class="k">return</span> <span class="p">[</span><span class="n">r</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">user_requests</span><span class="o">.</span><span class="n">values</span><span class="p">()</span> <span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">is_rejected</span><span class="p">()]</span>
+        <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">filter</span><span class="p">(</span><span class="k">lambda</span> <span class="n">r</span><span class="p">:</span> <span class="n">r</span><span class="o">.</span><span class="n">is_rejected</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">iter_requests</span><span class="p">),</span>
+                      <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">r</span><span class="p">:</span> <span class="n">r</span><span class="o">.</span><span class="n">created</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">approved_user_requests</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">UserRequest</span><span class="p">]:</span>
-        <span class="k">return</span> <span class="p">[</span><span class="n">r</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">user_requests</span><span class="o">.</span><span class="n">values</span><span class="p">()</span> <span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">is_approved</span><span class="p">()]</span>
+        <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">filter</span><span class="p">(</span><span class="k">lambda</span> <span class="n">r</span><span class="p">:</span> <span class="n">r</span><span class="o">.</span><span class="n">is_approved</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">iter_requests</span><span class="p">),</span>
+                      <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">r</span><span class="p">:</span> <span class="n">r</span><span class="o">.</span><span class="n">created</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">applied_user_requests</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">UserRequest</span><span class="p">]:</span>
-        <span class="k">return</span> <span class="p">[</span><span class="n">r</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">user_requests</span><span class="o">.</span><span class="n">values</span><span class="p">()</span> <span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">is_applied</span><span class="p">()]</span>
+        <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">filter</span><span class="p">(</span><span class="k">lambda</span> <span class="n">r</span><span class="p">:</span> <span class="n">r</span><span class="o">.</span><span class="n">is_applied</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">iter_requests</span><span class="p">),</span>
+                      <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">r</span><span class="p">:</span> <span class="n">r</span><span class="o">.</span><span class="n">created</span><span class="p">)</span>
 
-<div class="viewcode-block" id="Submission.get_user_request"><a class="viewcode-back" href="../../../../containers/core/arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.Submission.get_user_request">[docs]</a>    <span class="k">def</span> <span class="nf">get_user_request</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">UserRequest</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Retrieve a :class:`.UserRequest` by ID.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">user_requests</span><span class="p">[</span><span class="n">request_id</span><span class="p">]</span></div>
+    <span class="k">def</span> <span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">creator</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">dict</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">creator</span> <span class="o">=</span> <span class="n">agent_factory</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">creator</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">owner</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">dict</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">owner</span> <span class="o">=</span> <span class="n">agent_factory</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">owner</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">proxy</span> <span class="ow">and</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">proxy</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">dict</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">proxy</span> <span class="o">=</span> <span class="n">agent_factory</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">proxy</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">client</span> <span class="ow">and</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">dict</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">client</span> <span class="o">=</span> <span class="n">agent_factory</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">created</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">str</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">created</span> <span class="o">=</span> <span class="n">parse_date</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">created</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">updated</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">str</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">updated</span> <span class="o">=</span> <span class="n">parse_date</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">updated</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">submitted</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">str</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">submitted</span> <span class="o">=</span> <span class="n">parse_date</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">submitted</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">source_content</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">dict</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">source_content</span> <span class="o">=</span> <span class="n">SubmissionContent</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">source_content</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">primary_classification</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">dict</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">primary_classification</span> <span class="o">=</span> \
+                <span class="n">Classification</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">primary_classification</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">dict</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span> <span class="o">=</span> <span class="n">SubmissionMetadata</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="p">)</span>
+        <span class="c1"># self.delegations = dict_coerce(Delegation, self.delegations)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">secondary_classification</span> <span class="o">=</span> \
+            <span class="n">list_coerce</span><span class="p">(</span><span class="n">Classification</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">secondary_classification</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">license</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">dict</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">license</span> <span class="o">=</span> <span class="n">License</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">license</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">versions</span> <span class="o">=</span> <span class="n">list_coerce</span><span class="p">(</span><span class="n">Submission</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">versions</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">user_requests</span> <span class="o">=</span> <span class="n">dict_coerce</span><span class="p">(</span><span class="n">request_factory</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">user_requests</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">proposals</span> <span class="o">=</span> <span class="n">dict_coerce</span><span class="p">(</span><span class="n">Proposal</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">proposals</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">processes</span> <span class="o">=</span> <span class="n">list_coerce</span><span class="p">(</span><span class="n">ProcessStatus</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">processes</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">annotations</span> <span class="o">=</span> <span class="n">dict_coerce</span><span class="p">(</span><span class="n">annotation_factory</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">annotations</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">flags</span> <span class="o">=</span> <span class="n">dict_coerce</span><span class="p">(</span><span class="n">flag_factory</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">flags</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">comments</span> <span class="o">=</span> <span class="n">dict_coerce</span><span class="p">(</span><span class="n">Comment</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">comments</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">holds</span> <span class="o">=</span> <span class="n">dict_coerce</span><span class="p">(</span><span class="n">Hold</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">holds</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">waivers</span> <span class="o">=</span> <span class="n">dict_coerce</span><span class="p">(</span><span class="n">Waiver</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">waivers</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="Submission.to_dict"><a class="viewcode-back" href="../../../../containers/core/arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.Submission.to_dict">[docs]</a>    <span class="k">def</span> <span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Generate a dict representation of this :class:`.domain.Submission`.&quot;&quot;&quot;</span>
-        <span class="n">data</span> <span class="o">=</span> <span class="n">asdict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
-        <span class="n">data</span><span class="o">.</span><span class="n">update</span><span class="p">({</span>
-            <span class="s1">&#39;created&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">created</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
-            <span class="s1">&#39;updated&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">updated</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">updated</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
-            <span class="s1">&#39;metadata&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">to_dict</span><span class="p">(),</span>
-            <span class="s1">&#39;creator&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">creator</span><span class="o">.</span><span class="n">to_dict</span><span class="p">(),</span>
-            <span class="s1">&#39;owner&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">owner</span><span class="o">.</span><span class="n">to_dict</span><span class="p">(),</span>
-            <span class="s1">&#39;proxy&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">proxy</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">proxy</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
-            <span class="s1">&#39;client&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">client</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
-            <span class="s1">&#39;finalized&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">finalized</span><span class="p">,</span>
-            <span class="s1">&#39;deleted&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">deleted</span><span class="p">,</span>
-            <span class="s1">&#39;published&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">published</span><span class="p">,</span>
-            <span class="s1">&#39;active&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">active</span>
-        <span class="p">})</span>
-        <span class="k">return</span> <span class="n">data</span></div>
 
-<div class="viewcode-block" id="Submission.from_dict"><a class="viewcode-back" href="../../../../containers/core/arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.Submission.from_dict">[docs]</a>    <span class="nd">@classmethod</span>
-    <span class="k">def</span> <span class="nf">from_dict</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="o">**</span><span class="n">data</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;Submission&#39;</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Construct from a ``dict``.&quot;&quot;&quot;</span>
-        <span class="n">data</span><span class="p">[</span><span class="s1">&#39;created&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">parse_date</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;created&#39;</span><span class="p">])</span>
-        <span class="k">if</span> <span class="s1">&#39;updated&#39;</span> <span class="ow">in</span> <span class="n">data</span> <span class="ow">and</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;updated&#39;</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">data</span><span class="p">[</span><span class="s1">&#39;updated&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">parse_date</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;updated&#39;</span><span class="p">])</span>
-        <span class="k">if</span> <span class="s1">&#39;metadata&#39;</span> <span class="ow">in</span> <span class="n">data</span> <span class="ow">and</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;metadata&#39;</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">data</span><span class="p">[</span><span class="s1">&#39;metadata&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">SubmissionMetadata</span><span class="p">(</span><span class="o">**</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;metadata&#39;</span><span class="p">])</span>
-        <span class="n">data</span><span class="p">[</span><span class="s1">&#39;creator&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">agent_factory</span><span class="p">(</span><span class="o">**</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;creator&#39;</span><span class="p">])</span>
-        <span class="n">data</span><span class="p">[</span><span class="s1">&#39;owner&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">agent_factory</span><span class="p">(</span><span class="o">**</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;owner&#39;</span><span class="p">])</span>
-        <span class="k">if</span> <span class="s1">&#39;proxy&#39;</span> <span class="ow">in</span> <span class="n">data</span> <span class="ow">and</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;proxy&#39;</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">data</span><span class="p">[</span><span class="s1">&#39;proxy&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">agent_factory</span><span class="p">(</span><span class="o">**</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;proxy&#39;</span><span class="p">])</span>
-        <span class="k">if</span> <span class="s1">&#39;client&#39;</span> <span class="ow">in</span> <span class="n">data</span> <span class="ow">and</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;client&#39;</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">data</span><span class="p">[</span><span class="s1">&#39;client&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">agent_factory</span><span class="p">(</span><span class="o">**</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;client&#39;</span><span class="p">])</span>
-        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="o">**</span><span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
-                      <span class="k">if</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">cls</span><span class="o">.</span><span class="n">__dataclass_fields__</span><span class="p">})</span></div></div>
+<div class="viewcode-block" id="request_factory"><a class="viewcode-back" href="../../../../arxiv.submission/arxiv.submission.domain.submission.html#arxiv.submission.domain.event.request_factory">[docs]</a><span class="k">def</span> <span class="nf">request_factory</span><span class="p">(</span><span class="o">**</span><span class="n">data</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">UserRequest</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Generate a :class:`.UserRequest` from raw data.&quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="bp">cls</span> <span class="ow">in</span> <span class="n">UserRequest</span><span class="o">.</span><span class="n">__subclasses__</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;request_type&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="bp">cls</span><span class="o">.</span><span class="vm">__name__</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="o">**</span><span class="n">data</span><span class="p">)</span>
+    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Invalid request type&#39;</span><span class="p">)</span></div>
 </pre></div>
 
           </div>
@@ -449,7 +653,8 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../architecture.html">Submission &amp; moderation subsystem architecture</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../announcement_process.html">Submission &amp; announcement Process</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../submission_api_context.html">Submission API: Context</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../containers/core/arxiv.submission.html">arxiv.submission package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../arxiv.submission/arxiv.submission.html">arxiv.submission package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../containers/agent/agent.html">agent package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../containers/metadata/metadata.html">metadata package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../background.html">Background</a></li>
 </ul>
@@ -459,6 +664,8 @@
 <ul>
   <li><a href="../../../../index.html">Documentation overview</a><ul>
   <li><a href="../../../index.html">Module code</a><ul>
+  <li><a href="../../submission.html">arxiv.submission</a><ul>
+  </ul></li>
   </ul></li>
   </ul></li>
 </ul>
@@ -469,8 +676,6 @@
     <form class="search" action="../../../../search.html" method="get">
       <input type="text" name="q" />
       <input type="submit" value="Go" />
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
     </form>
     </div>
 </div>
@@ -491,7 +696,7 @@
       &copy;2017, arXiv.org.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.3</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.0.0</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
     </div>

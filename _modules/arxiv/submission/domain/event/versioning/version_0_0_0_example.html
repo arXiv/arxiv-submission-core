@@ -1,0 +1,154 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>arxiv.submission.domain.event.versioning.version_0_0_0_example &#8212; arXiv submission &amp; moderation 0.1 documentation</title>
+    <link rel="stylesheet" href="../../../../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../../../../../_static/graphviz.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../../../../../" src="../../../../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for arxiv.submission.domain.event.versioning.version_0_0_0_example</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">An example version mapping module.</span>
+
+<span class="sd">This module gathers together all event mappings for version 0.0.0.</span>
+
+<span class="sd">The mappings in this module will never be used, since there are no</span>
+<span class="sd">data prior to version 0.0.0.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Tuple</span>
+<span class="kn">from</span> <span class="nn">._base</span> <span class="k">import</span> <span class="n">BaseVersionMapping</span><span class="p">,</span> <span class="n">EventData</span>
+
+<span class="n">VERSION</span> <span class="o">=</span> <span class="s1">&#39;0.0.0&#39;</span>
+
+
+<div class="viewcode-block" id="SetTitleExample"><a class="viewcode-back" href="../../../../../../arxiv.submission/arxiv.submission.domain.event.versioning.version_0_0_0_example.html#arxiv.submission.domain.event.versioning.version_0_0_0_example.SetTitleExample">[docs]</a><span class="k">class</span> <span class="nc">SetTitleExample</span><span class="p">(</span><span class="n">BaseVersionMapping</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Perform no changes whatsoever to the `title` field.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="SetTitleExample.Meta"><a class="viewcode-back" href="../../../../../../arxiv.submission/arxiv.submission.domain.event.versioning.version_0_0_0_example.html#arxiv.submission.domain.event.versioning.version_0_0_0_example.SetTitleExample.Meta">[docs]</a>    <span class="k">class</span> <span class="nc">Meta</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Metadata about this mapping.&quot;&quot;&quot;</span>
+
+        <span class="n">event_version</span> <span class="o">=</span> <span class="n">VERSION</span>
+        <span class="sd">&quot;&quot;&quot;All of the mappings in this module are for the same version.&quot;&quot;&quot;</span>
+
+        <span class="n">event_type</span> <span class="o">=</span> <span class="s1">&#39;SetTitle&#39;</span>
+        <span class="sd">&quot;&quot;&quot;This mapping applies to :class:`.domain.event.SetTitle`.&quot;&quot;&quot;</span>
+
+        <span class="n">tests</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="p">({</span><span class="s1">&#39;event_version&#39;</span><span class="p">:</span> <span class="s1">&#39;0.0.0&#39;</span><span class="p">,</span> <span class="s1">&#39;title&#39;</span><span class="p">:</span> <span class="s1">&#39;The title&#39;</span><span class="p">},</span>
+             <span class="p">{</span><span class="s1">&#39;event_version&#39;</span><span class="p">:</span> <span class="s1">&#39;0.0.0&#39;</span><span class="p">,</span> <span class="s1">&#39;title&#39;</span><span class="p">:</span> <span class="s1">&#39;The best title!!&#39;</span><span class="p">})</span>
+        <span class="p">]</span>
+        <span class="sd">&quot;&quot;&quot;Expected changes to the ``title`` field.&quot;&quot;&quot;</span></div>
+
+<div class="viewcode-block" id="SetTitleExample.transform_title"><a class="viewcode-back" href="../../../../../../arxiv.submission/arxiv.submission.domain.event.versioning.version_0_0_0_example.html#arxiv.submission.domain.event.versioning.version_0_0_0_example.SetTitleExample.transform_title">[docs]</a>    <span class="k">def</span> <span class="nf">transform_title</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">orig</span><span class="p">:</span> <span class="n">EventData</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">val</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> \
+            <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Make the title the best.&quot;&quot;&quot;</span>
+        <span class="n">parts</span> <span class="o">=</span> <span class="n">val</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">key</span><span class="p">,</span> <span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">parts</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s2">&quot;best&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="n">parts</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span></div>
+
+<div class="viewcode-block" id="SetTitleExample.transform"><a class="viewcode-back" href="../../../../../../arxiv.submission/arxiv.submission.domain.event.versioning.version_0_0_0_example.html#arxiv.submission.domain.event.versioning.version_0_0_0_example.SetTitleExample.transform">[docs]</a>    <span class="k">def</span> <span class="nf">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">orig</span><span class="p">:</span> <span class="n">EventData</span><span class="p">,</span> <span class="n">xf</span><span class="p">:</span> <span class="n">EventData</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">EventData</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Add some emphasis.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">f</span><span class="s2">&quot;</span><span class="si">{v}</span><span class="s2">!!&quot;</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">xf</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">str</span><span class="p">}</span></div></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../../../index.html">arXiv submission & moderation</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../architecture.html">Submission &amp; moderation subsystem architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../announcement_process.html">Submission &amp; announcement Process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../submission_api_context.html">Submission API: Context</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../arxiv.submission/arxiv.submission.html">arxiv.submission package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../containers/agent/agent.html">agent package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../containers/metadata/metadata.html">metadata package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../background.html">Background</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../../../index.html">Module code</a><ul>
+  <li><a href="../../../../submission.html">arxiv.submission</a><ul>
+  <li><a href="../../event.html">arxiv.submission.domain.event</a><ul>
+  <li><a href="../versioning.html">arxiv.submission.domain.event.versioning</a><ul>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, arXiv.org.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.0.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

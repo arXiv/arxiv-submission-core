@@ -1,0 +1,148 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>agent.process.email_notifications module &#8212; arXiv submission &amp; moderation 0.1 documentation</title>
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="agent.process.metadata_checks module" href="agent.process.metadata_checks.html" />
+    <link rel="prev" title="agent.process.classification_and_content module" href="agent.process.classification_and_content.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="module-agent.process.email_notifications">
+<span id="agent-process-email-notifications-module"></span><h1>agent.process.email_notifications module<a class="headerlink" href="#module-agent.process.email_notifications" title="Permalink to this headline">¶</a></h1>
+<p>Rules for sending e-mail notifications.</p>
+<dl class="class">
+<dt id="agent.process.email_notifications.SendConfirmationEmail">
+<em class="property">class </em><code class="descclassname">agent.process.email_notifications.</code><code class="descname">SendConfirmationEmail</code><span class="sig-paren">(</span><em>submission_id</em><span class="sig-paren">)</span><a class="headerlink" href="#agent.process.email_notifications.SendConfirmationEmail" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="agent.process.base.html#agent.process.base.Process" title="agent.process.base.Process"><code class="xref py py-class docutils literal notranslate"><span class="pre">agent.process.base.Process</span></code></a></p>
+<p>Send a confirmation e-mail to the submitter.</p>
+<dl class="method">
+<dt id="agent.process.email_notifications.SendConfirmationEmail.send">
+<code class="descname">send</code><span class="sig-paren">(</span><em>previous</em>, <em>trigger</em>, <em>emit</em><span class="sig-paren">)</span><a class="headerlink" href="#agent.process.email_notifications.SendConfirmationEmail.send" title="Permalink to this definition">¶</a></dt>
+<dd><p>Send the e-mail.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="agent.process.email_notifications.SendConfirmationEmail.steps">
+<code class="descname">steps</code><em class="property"> = [&lt;function SendConfirmationEmail.send&gt;]</em><a class="headerlink" href="#agent.process.email_notifications.SendConfirmationEmail.steps" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">arXiv submission & moderation</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../architecture.html">Submission &amp; moderation subsystem architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../announcement_process.html">Submission &amp; announcement Process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../submission_api_context.html">Submission API: Context</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../arxiv.submission/arxiv.submission.html">arxiv.submission package</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="agent.html">agent package</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="agent.html#conceptual-overview">Conceptual overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="agent.html#architectural-overview">Architectural overview</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="agent.html#subpackages">Subpackages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="agent.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../metadata/metadata.html">metadata package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../background.html">Background</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="agent.html">agent package</a><ul>
+  <li><a href="agent.process.html">agent.process package</a><ul>
+      <li>Previous: <a href="agent.process.classification_and_content.html" title="previous chapter">agent.process.classification_and_content module</a></li>
+      <li>Next: <a href="agent.process.metadata_checks.html" title="next chapter">agent.process.metadata_checks module</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, arXiv.org.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.0.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../../_sources/containers/agent/agent.process.email_notifications.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

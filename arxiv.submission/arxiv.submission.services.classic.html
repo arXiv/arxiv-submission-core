@@ -1,0 +1,357 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>arxiv.submission.services.classic package &#8212; arXiv submission &amp; moderation 0.1 documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="arxiv.submission.services.classic.bootstrap module" href="arxiv.submission.services.classic.bootstrap.html" />
+    <link rel="prev" title="arxiv.submission.services package" href="arxiv.submission.services.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="module-arxiv.submission.services.classic">
+<span id="arxiv-submission-services-classic-package"></span><h1>arxiv.submission.services.classic package<a class="headerlink" href="#module-arxiv.submission.services.classic" title="Permalink to this headline">¶</a></h1>
+<p>Integration with the classic database to persist events and submission state.</p>
+<p>As part of the classic renewal strategy, development of new submission
+interfaces must maintain data interoperability with classic components. This
+service module must therefore do three main things:</p>
+<ol class="arabic simple">
+<li><p>Store and provide access to event data generated during the submission
+process,</p></li>
+<li><p>Keep the classic database tables up to date so that “downstream” components
+can continue to operate. Since classic components work directly on
+submission tables, persisting events and resulting submission state must
+occur in the same transaction. We must also verify that we are not storing
+events that are stale with respect to the current state of the submission.</p></li>
+<li><p>Patch NG submission data with state changes that occur in the classic
+system. Those changes will be made directly to submission tables and not
+involve event-generation. See <a class="reference internal" href="#arxiv.submission.services.classic.get_submission" title="arxiv.submission.services.classic.get_submission"><code class="xref py py-func docutils literal notranslate"><span class="pre">get_submission()</span></code></a> for details.</p></li>
+</ol>
+<p>ORM representations of the classic database tables involved in submission
+are located in <a class="reference internal" href="arxiv.submission.services.classic.models.html#module-arxiv.submission.services.classic.models" title="arxiv.submission.services.classic.models"><code class="xref py py-mod docutils literal notranslate"><span class="pre">classic.models</span></code></a>. An additional model, <a class="reference internal" href="arxiv.submission.services.classic.event.html#arxiv.submission.services.classic.event.DBEvent" title="arxiv.submission.services.classic.event.DBEvent"><code class="xref py py-class docutils literal notranslate"><span class="pre">DBEvent</span></code></a>,
+is defined in <a class="reference internal" href="arxiv.submission.services.classic.event.html#module-arxiv.submission.services.classic.event" title="arxiv.submission.services.classic.event"><code class="xref py py-mod docutils literal notranslate"><span class="pre">classic.event</span></code></a>.</p>
+<p>See also <a class="reference internal" href="arxiv.submission.html#legacy-integration"><span class="std std-ref">Integration with the legacy system</span></a>.</p>
+<dl class="function">
+<dt id="arxiv.submission.services.classic.create_all">
+<code class="descclassname">arxiv.submission.services.classic.</code><code class="descname">create_all</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/services/classic.html#create_all"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.services.classic.create_all" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create all tables in the database.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="arxiv.submission.services.classic.drop_all">
+<code class="descclassname">arxiv.submission.services.classic.</code><code class="descname">drop_all</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/services/classic.html#drop_all"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.services.classic.drop_all" title="Permalink to this definition">¶</a></dt>
+<dd><p>Drop all tables in the database.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="arxiv.submission.services.classic.get_events">
+<code class="descclassname">arxiv.submission.services.classic.</code><code class="descname">get_events</code><span class="sig-paren">(</span><em>submission_id</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/services/classic.html#get_events"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.services.classic.get_events" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load events from the classic database.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>submission_id</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/functions.html#int" title="(in Python v3.6)"><em>int</em></a>) – </p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.List" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference internal" href="arxiv.submission.domain.event.base.html#arxiv.submission.domain.event.base.Event" title="arxiv.submission.domain.event.base.Event"><code class="xref py py-class docutils literal notranslate"><span class="pre">Event</span></code></a>]</p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><em>list</em> – Items are <a class="reference internal" href="arxiv.submission.domain.event.base.html#arxiv.submission.domain.event.base.Event" title="arxiv.submission.domain.event.base.Event"><code class="xref py py-class docutils literal notranslate"><span class="pre">Event</span></code></a> instances loaded from the class DB.</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><a class="reference internal" href="arxiv.submission.services.classic.exceptions.html#arxiv.submission.services.classic.exceptions.NoSuchSubmission" title="arxiv.submission.services.classic.exceptions.NoSuchSubmission"><strong>classic.exceptions.NoSuchSubmission</strong></a> – Raised when there are no events for the provided submission ID.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="arxiv.submission.services.classic.get_licenses">
+<code class="descclassname">arxiv.submission.services.classic.</code><code class="descname">get_licenses</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/services/classic.html#get_licenses"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.services.classic.get_licenses" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a list of <code class="xref py py-class docutils literal notranslate"><span class="pre">domain.License</span></code> instances available.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.List" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference internal" href="arxiv.submission.domain.meta.html#arxiv.submission.domain.meta.License" title="arxiv.submission.domain.meta.License"><code class="xref py py-class docutils literal notranslate"><span class="pre">License</span></code></a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="arxiv.submission.services.classic.get_submission">
+<code class="descclassname">arxiv.submission.services.classic.</code><code class="descname">get_submission</code><span class="sig-paren">(</span><em>submission_id</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/services/classic.html#get_submission"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.services.classic.get_submission" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the current state of a <a class="reference internal" href="arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.Submission" title="arxiv.submission.domain.submission.Submission"><code class="xref py py-class docutils literal notranslate"><span class="pre">domain.submission.Submission</span></code></a> from the database.</p>
+<p>In the medium term, services that use this package will need to
+play well with legacy services that integrate with the classic
+database. For example, the moderation system does not use the event
+model implemented here, and will therefore cause direct changes to the
+submission tables that must be reflected in our representation of the
+submission.</p>
+<p>Until those legacy components are replaced, this function loads both the
+event stack and the current DB state of the submission, and uses the DB
+state to patch fields that may have changed outside the purview of the
+event model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>submission_id</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/functions.html#int" title="(in Python v3.6)"><em>int</em></a>) – </p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">Tuple</span></code>[<a class="reference internal" href="arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.Submission" title="arxiv.submission.domain.submission.Submission"><code class="xref py py-class docutils literal notranslate"><span class="pre">Submission</span></code></a>, <a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.List" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference internal" href="arxiv.submission.domain.event.base.html#arxiv.submission.domain.event.base.Event" title="arxiv.submission.domain.event.base.Event"><code class="xref py py-class docutils literal notranslate"><span class="pre">Event</span></code></a>]]</p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><ul class="simple">
+<li><p><a class="reference internal" href="arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.Submission" title="arxiv.submission.domain.submission.Submission"><code class="xref py py-class docutils literal notranslate"><span class="pre">domain.submission.Submission</span></code></a></p></li>
+<li><p><em>list</em> – Items are <code class="xref py py-class docutils literal notranslate"><span class="pre">Event</span></code> instances.</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="arxiv.submission.services.classic.get_submission_fast">
+<code class="descclassname">arxiv.submission.services.classic.</code><code class="descname">get_submission_fast</code><span class="sig-paren">(</span><em>submission_id</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/services/classic.html#get_submission_fast"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.services.classic.get_submission_fast" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the projection of the submission directly.</p>
+<p>Instead of playing events forward, we grab the most recent snapshot of the
+submission in the database. Since classic represents the submission using
+several rows, we have to grab all of them and transform/patch as
+appropriate.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>submission_id</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/functions.html#int" title="(in Python v3.6)"><em>int</em></a>) – </p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.List" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference internal" href="arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.Submission" title="arxiv.submission.domain.submission.Submission"><code class="xref py py-class docutils literal notranslate"><span class="pre">Submission</span></code></a>]</p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><a class="reference internal" href="arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.Submission" title="arxiv.submission.domain.submission.Submission"><code class="xref py py-class docutils literal notranslate"><span class="pre">domain.submission.Submission</span></code></a></p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><a class="reference internal" href="arxiv.submission.services.classic.exceptions.html#arxiv.submission.services.classic.exceptions.NoSuchSubmission" title="arxiv.submission.services.classic.exceptions.NoSuchSubmission"><strong>classic.exceptions.NoSuchSubmission</strong></a> – Raised when there are is no submission for the provided submission ID.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="arxiv.submission.services.classic.get_titles">
+<code class="descclassname">arxiv.submission.services.classic.</code><code class="descname">get_titles</code><span class="sig-paren">(</span><em>since</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/services/classic.html#get_titles"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.services.classic.get_titles" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get titles from submissions created on or after a particular date.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.List" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Tuple</span></code>[<a class="reference external" href="https://docs.python.org/3.6/library/functions.html#int" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>, <a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference internal" href="arxiv.submission.domain.agent.html#arxiv.submission.domain.agent.Agent" title="arxiv.submission.domain.agent.Agent"><code class="xref py py-class docutils literal notranslate"><span class="pre">Agent</span></code></a>]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="arxiv.submission.services.classic.get_user_submissions_fast">
+<code class="descclassname">arxiv.submission.services.classic.</code><code class="descname">get_user_submissions_fast</code><span class="sig-paren">(</span><em>user_id</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/services/classic.html#get_user_submissions_fast"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.services.classic.get_user_submissions_fast" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get all active submissions for a user.</p>
+<p>Uses the same approach as <a class="reference internal" href="#arxiv.submission.services.classic.get_submission_fast" title="arxiv.submission.services.classic.get_submission_fast"><code class="xref py py-func docutils literal notranslate"><span class="pre">get_submission_fast()</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>submission_id</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/functions.html#int" title="(in Python v3.6)"><em>int</em></a>) – </p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.List" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference internal" href="arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.Submission" title="arxiv.submission.domain.submission.Submission"><code class="xref py py-class docutils literal notranslate"><span class="pre">Submission</span></code></a>]</p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><em>list</em> – Items are the user’s <a class="reference internal" href="arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.Submission" title="arxiv.submission.domain.submission.Submission"><code class="xref py py-class docutils literal notranslate"><span class="pre">domain.submission.Submission</span></code></a> instances.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="arxiv.submission.services.classic.handle_operational_errors">
+<code class="descclassname">arxiv.submission.services.classic.</code><code class="descname">handle_operational_errors</code><span class="sig-paren">(</span><em>func</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/services/classic.html#handle_operational_errors"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.services.classic.handle_operational_errors" title="Permalink to this definition">¶</a></dt>
+<dd><p>Catch SQLAlchemy OperationalErrors and raise <a class="reference internal" href="arxiv.submission.services.classic.exceptions.html#arxiv.submission.services.classic.exceptions.Unavailable" title="arxiv.submission.services.classic.exceptions.Unavailable"><code class="xref py py-class docutils literal notranslate"><span class="pre">Unavailable</span></code></a>.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="arxiv.submission.services.classic.init_app">
+<code class="descclassname">arxiv.submission.services.classic.</code><code class="descname">init_app</code><span class="sig-paren">(</span><em>app</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/services/classic.html#init_app"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.services.classic.init_app" title="Permalink to this definition">¶</a></dt>
+<dd><p>Register the SQLAlchemy extension to an application.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="arxiv.submission.services.classic.store_event">
+<code class="descclassname">arxiv.submission.services.classic.</code><code class="descname">store_event</code><span class="sig-paren">(</span><em>event</em>, <em>before</em>, <em>after</em>, <em>*call</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/services/classic.html#store_event"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.services.classic.store_event" title="Permalink to this definition">¶</a></dt>
+<dd><p>Store an event, and update submission state.</p>
+<p>This is where we map the NG event domain onto the classic database. The
+main differences are that:</p>
+<ul class="simple">
+<li><p>In the event domain, a submission is a single stream of events, but
+in the classic system we create new rows in the submission database
+for things like replacements, adding DOIs, and withdrawing papers.</p></li>
+<li><p>In the event domain, the only concept of the announced paper is the
+paper ID. In the classic submission database, we also have to worry about
+the row in the Document database.</p></li>
+</ul>
+<p>We assume that the submission states passed to this function have the
+correct paper ID and version number, if announced. The submission ID on
+the event and the before/after states refer to the original classic
+submission only.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>event</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Event</span></code>) – </p></li>
+<li><p><strong>before</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Submission</span></code>) – The state of the submission before the event occurred.</p></li>
+<li><p><strong>after</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">Submission</span></code>) – The state of the submission after the event occurred.</p></li>
+<li><p><strong>call</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#list" title="(in Python v3.6)"><em>list</em></a>) – Items are callables that accept args <code class="docutils literal notranslate"><span class="pre">Event,</span> <span class="pre">Submission,</span> <span class="pre">Submission</span></code>.
+These are called within the transaction context; if an exception is
+raised, the transaction is rolled back.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">Tuple</span></code>[<a class="reference internal" href="arxiv.submission.domain.event.base.html#arxiv.submission.domain.event.base.Event" title="arxiv.submission.domain.event.base.Event"><code class="xref py py-class docutils literal notranslate"><span class="pre">Event</span></code></a>, <a class="reference internal" href="arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.Submission" title="arxiv.submission.domain.submission.Submission"><code class="xref py py-class docutils literal notranslate"><span class="pre">Submission</span></code></a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<div class="section" id="subpackages">
+<h2>Subpackages<a class="headerlink" href="#subpackages" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+</div>
+</div>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="arxiv.submission.services.classic.bootstrap.html">arxiv.submission.services.classic.bootstrap module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="arxiv.submission.services.classic.event.html">arxiv.submission.services.classic.event module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="arxiv.submission.services.classic.exceptions.html">arxiv.submission.services.classic.exceptions module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="arxiv.submission.services.classic.interpolate.html">arxiv.submission.services.classic.interpolate module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="arxiv.submission.services.classic.load.html">arxiv.submission.services.classic.load module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="arxiv.submission.services.classic.log.html">arxiv.submission.services.classic.log module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="arxiv.submission.services.classic.models.html">arxiv.submission.services.classic.models module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="arxiv.submission.services.classic.patch.html">arxiv.submission.services.classic.patch module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="arxiv.submission.services.classic.proposal.html">arxiv.submission.services.classic.proposal module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="arxiv.submission.services.classic.util.html">arxiv.submission.services.classic.util module</a></li>
+</ul>
+</div>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">arXiv submission & moderation</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../architecture.html">Submission &amp; moderation subsystem architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../announcement_process.html">Submission &amp; announcement Process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../submission_api_context.html">Submission API: Context</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="arxiv.submission.html">arxiv.submission package</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="arxiv.submission.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.submission.html#using-commands-events">Using commands/events</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.submission.html#versioning-events">Versioning events</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.submission.html#integration-with-the-legacy-system">Integration with the legacy system</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="arxiv.submission.html#subpackages">Subpackages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.submission.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../containers/agent/agent.html">agent package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../containers/metadata/metadata.html">metadata package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../background.html">Background</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="arxiv.submission.html">arxiv.submission package</a><ul>
+  <li><a href="arxiv.submission.services.html">arxiv.submission.services package</a><ul>
+      <li>Previous: <a href="arxiv.submission.services.html" title="previous chapter">arxiv.submission.services package</a></li>
+      <li>Next: <a href="arxiv.submission.services.classic.bootstrap.html" title="next chapter">arxiv.submission.services.classic.bootstrap module</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, arXiv.org.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.0.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/arxiv.submission/arxiv.submission.services.classic.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

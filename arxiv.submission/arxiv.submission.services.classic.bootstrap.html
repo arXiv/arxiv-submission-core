@@ -1,0 +1,173 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>arxiv.submission.services.classic.bootstrap module &#8212; arXiv submission &amp; moderation 0.1 documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="arxiv.submission.services.classic.event module" href="arxiv.submission.services.classic.event.html" />
+    <link rel="prev" title="arxiv.submission.services.classic package" href="arxiv.submission.services.classic.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="module-arxiv.submission.services.classic.bootstrap">
+<span id="arxiv-submission-services-classic-bootstrap-module"></span><h1>arxiv.submission.services.classic.bootstrap module<a class="headerlink" href="#module-arxiv.submission.services.classic.bootstrap" title="Permalink to this headline">¶</a></h1>
+<p>Generate synthetic data for testing and development purposes.</p>
+<dl class="function">
+<dt id="arxiv.submission.services.classic.bootstrap.categories">
+<code class="descclassname">arxiv.submission.services.classic.bootstrap.</code><code class="descname">categories</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/services/classic/bootstrap.html#categories"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.services.classic.bootstrap.categories" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate data for current arXiv categories.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.List" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference internal" href="arxiv.submission.services.classic.models.html#arxiv.submission.services.classic.models.CategoryDef" title="arxiv.submission.services.classic.models.CategoryDef"><code class="xref py py-class docutils literal notranslate"><span class="pre">CategoryDef</span></code></a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="arxiv.submission.services.classic.bootstrap.licenses">
+<code class="descclassname">arxiv.submission.services.classic.bootstrap.</code><code class="descname">licenses</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/services/classic/bootstrap.html#licenses"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.services.classic.bootstrap.licenses" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate licenses.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.List" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference internal" href="arxiv.submission.services.classic.models.html#arxiv.submission.services.classic.models.License" title="arxiv.submission.services.classic.models.License"><code class="xref py py-class docutils literal notranslate"><span class="pre">License</span></code></a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="arxiv.submission.services.classic.bootstrap.policy_classes">
+<code class="descclassname">arxiv.submission.services.classic.bootstrap.</code><code class="descname">policy_classes</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/services/classic/bootstrap.html#policy_classes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.services.classic.bootstrap.policy_classes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate policy classes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.List" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference internal" href="arxiv.submission.services.classic.models.html#arxiv.submission.services.classic.models.PolicyClass" title="arxiv.submission.services.classic.models.PolicyClass"><code class="xref py py-class docutils literal notranslate"><span class="pre">PolicyClass</span></code></a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="arxiv.submission.services.classic.bootstrap.users">
+<code class="descclassname">arxiv.submission.services.classic.bootstrap.</code><code class="descname">users</code><span class="sig-paren">(</span><em>count=500</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/services/classic/bootstrap.html#users"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.services.classic.bootstrap.users" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate a bunch of random users.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.List" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference internal" href="arxiv.submission.services.classic.models.html#arxiv.submission.services.classic.models.User" title="arxiv.submission.services.classic.models.User"><code class="xref py py-class docutils literal notranslate"><span class="pre">User</span></code></a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">arXiv submission & moderation</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../architecture.html">Submission &amp; moderation subsystem architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../announcement_process.html">Submission &amp; announcement Process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../submission_api_context.html">Submission API: Context</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="arxiv.submission.html">arxiv.submission package</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="arxiv.submission.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.submission.html#using-commands-events">Using commands/events</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.submission.html#versioning-events">Versioning events</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.submission.html#integration-with-the-legacy-system">Integration with the legacy system</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="arxiv.submission.html#subpackages">Subpackages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.submission.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../containers/agent/agent.html">agent package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../containers/metadata/metadata.html">metadata package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../background.html">Background</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="arxiv.submission.html">arxiv.submission package</a><ul>
+  <li><a href="arxiv.submission.services.html">arxiv.submission.services package</a><ul>
+  <li><a href="arxiv.submission.services.classic.html">arxiv.submission.services.classic package</a><ul>
+      <li>Previous: <a href="arxiv.submission.services.classic.html" title="previous chapter">arxiv.submission.services.classic package</a></li>
+      <li>Next: <a href="arxiv.submission.services.classic.event.html" title="next chapter">arxiv.submission.services.classic.event module</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, arXiv.org.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.0.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/arxiv.submission/arxiv.submission.services.classic.bootstrap.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

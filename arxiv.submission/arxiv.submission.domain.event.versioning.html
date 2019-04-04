@@ -1,0 +1,243 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>arxiv.submission.domain.event.versioning package &#8212; arXiv submission &amp; moderation 0.1 documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="arxiv.submission.domain.event.versioning.version_0_0_0_example module" href="arxiv.submission.domain.event.versioning.version_0_0_0_example.html" />
+    <link rel="prev" title="arxiv.submission.domain.event package" href="arxiv.submission.domain.event.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="module-arxiv.submission.domain.event.versioning">
+<span id="arxiv-submission-domain-event-versioning-package"></span><h1>arxiv.submission.domain.event.versioning package<a class="headerlink" href="#module-arxiv.submission.domain.event.versioning" title="Permalink to this headline">¶</a></h1>
+<p>Provides on-the-fly versioned migrations for event data.</p>
+<p>The purpose of this module is to facilitate backwards-compatible changes to
+the structure of <code class="xref py py-class docutils literal notranslate"><span class="pre">domain.event.Event</span></code> classes. This problem is similar
+to database migrations, except that the “meat” of the event data are dicts
+stored as JSON and thus ALTER commands won’t get us all that far.</p>
+<div class="section" id="writing-version-mappings">
+<h2>Writing version mappings<a class="headerlink" href="#writing-version-mappings" title="Permalink to this headline">¶</a></h2>
+<p>Any new version of this software that includes changes to existing
+event/command classes that would break events from earlier versions <strong>MUST</strong>
+include a version mapping module. The module should include a mapping class
+(a subclass of <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseVersionMapping</span></code>) for each event type for which
+there are relevant changes.</p>
+<p>See <a class="reference internal" href="arxiv.submission.domain.event.versioning.version_0_0_0_example.html#module-arxiv.submission.domain.event.versioning.version_0_0_0_example" title="arxiv.submission.domain.event.versioning.version_0_0_0_example"><code class="xref py py-mod docutils literal notranslate"><span class="pre">versioning.version_0_0_0_example</span></code></a> for an example.</p>
+<p>Each such class must include an internal <code class="docutils literal notranslate"><span class="pre">Meta</span></code> class with its software
+version and the name of the event type to which it applies. For example:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">._base</span> <span class="kn">import</span> <span class="n">BaseVersionMapping</span>
+
+<span class="k">class</span> <span class="nc">SetAbstractMigration</span><span class="p">(</span><span class="n">BaseVersionMapping</span><span class="p">):</span>
+    <span class="k">class</span> <span class="nc">Meta</span><span class="p">:</span>
+        <span class="n">event_version</span> <span class="o">=</span> <span class="s2">&quot;0.2.12&quot;</span>     <span class="c1"># Must be a semver.</span>
+        <span class="n">event_type</span> <span class="o">=</span> <span class="s2">&quot;SetAbstract&quot;</span>
+</pre></div>
+</div>
+<p>In addition, it’s a good idea to include some test data that can be used to
+verify the behavior of the migration. You can do this by adding a <code class="docutils literal notranslate"><span class="pre">tests</span></code>
+attribute to <code class="docutils literal notranslate"><span class="pre">Meta</span></code> that includes tuples of the form
+<code class="docutils literal notranslate"><span class="pre">(original:</span> <span class="pre">EventData,</span> <span class="pre">expected:</span> <span class="pre">EventData)</span></code>. For example:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">._base</span> <span class="kn">import</span> <span class="n">BaseVersionMapping</span>
+
+<span class="k">class</span> <span class="nc">SetAbstractMigration</span><span class="p">(</span><span class="n">BaseVersionMapping</span><span class="p">):</span>
+    <span class="k">class</span> <span class="nc">Meta</span><span class="p">:</span>
+        <span class="n">event_version</span> <span class="o">=</span> <span class="s2">&quot;0.2.12&quot;</span>     <span class="c1"># Must be a semver.</span>
+        <span class="n">event_type</span> <span class="o">=</span> <span class="s2">&quot;SetAbstract&quot;</span>
+        <span class="n">tests</span> <span class="o">=</span> <span class="p">[({</span><span class="s2">&quot;event_version&quot;</span><span class="p">:</span> <span class="s2">&quot;0.2.11&quot;</span><span class="p">,</span> <span class="s2">&quot;abstract&quot;</span><span class="p">:</span> <span class="s2">&quot;very abstract&quot;</span><span class="p">},</span>
+                  <span class="p">{</span><span class="s2">&quot;event_version&quot;</span><span class="p">:</span> <span class="s2">&quot;0.2.12&quot;</span><span class="p">,</span> <span class="s2">&quot;abstract&quot;</span><span class="p">:</span> <span class="s2">&quot;more abstract&quot;</span><span class="p">})]</span>
+</pre></div>
+</div>
+<p>Transformation logic can be implemented for individual fields, or for the event
+datum as a whole.</p>
+<div class="section" id="transforming-individual-fields">
+<h3>Transforming individual fields<a class="headerlink" href="#transforming-individual-fields" title="Permalink to this headline">¶</a></h3>
+<p>Transformers for individual fields may be implemented by
+defining instance methods with the name <code class="docutils literal notranslate"><span class="pre">transform_{field}</span></code> and the signature
+<code class="docutils literal notranslate"><span class="pre">(self,</span> <span class="pre">original:</span> <span class="pre">EventData,</span> <span class="pre">key:</span> <span class="pre">str,</span> <span class="pre">value:</span> <span class="pre">Any)</span> <span class="pre">-&gt;</span> <span class="pre">Tuple[str,</span> <span class="pre">Any]</span></code>.
+The return value is the field name and transformed value. Note that the field
+name may be altered here, and the original field name will be omitted from the
+final transformed representation of the event datum.</p>
+</div>
+<div class="section" id="transforming-the-datum-as-a-whole">
+<h3>Transforming the datum as a whole<a class="headerlink" href="#transforming-the-datum-as-a-whole" title="Permalink to this headline">¶</a></h3>
+<p>A transformer for the datum as a whole may be implemented by defining an
+instance method named <code class="docutils literal notranslate"><span class="pre">transform</span></code> with the signature
+<code class="docutils literal notranslate"><span class="pre">(self,</span> <span class="pre">original:</span> <span class="pre">EventData,</span> <span class="pre">transformed:</span> <span class="pre">EventData)</span> <span class="pre">-&gt;</span> <span class="pre">EventData</span></code>. This is
+called <strong>after</strong> the transformers for individual fields; the second positional
+argument is the state of the datum at that point, and the first positional
+argument is the state of the datum before transformations were applied.</p>
+<dl class="function">
+<dt id="arxiv.submission.domain.event.versioning.map_to_current_version">
+<code class="descclassname">arxiv.submission.domain.event.versioning.</code><code class="descname">map_to_current_version</code><span class="sig-paren">(</span><em>original</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/event/versioning.html#map_to_current_version"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.versioning.map_to_current_version" title="Permalink to this definition">¶</a></dt>
+<dd><p>Map raw event data to the current software version.</p>
+<p>Relies on the <code class="docutils literal notranslate"><span class="pre">CORE_VERSION</span></code> parameter in the application configuration.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>original</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#dict" title="(in Python v3.6)"><em>dict</em></a>) – Original event data.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">EventData</span></code></p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><em>dict</em> – Data from <code class="docutils literal notranslate"><span class="pre">original</span></code> transformed into a representation suitable for
+use in the current software version.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="arxiv.submission.domain.event.versioning.map_to_version">
+<code class="descclassname">arxiv.submission.domain.event.versioning.</code><code class="descname">map_to_version</code><span class="sig-paren">(</span><em>original</em>, <em>target</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/event/versioning.html#map_to_version"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.versioning.map_to_version" title="Permalink to this definition">¶</a></dt>
+<dd><p>Map raw event data to a later version.</p>
+<p>Loads all version mappings for the original event type subsequent to the
+version of the software at which the data was created, up to and
+includiong the <code class="docutils literal notranslate"><span class="pre">target</span></code> version.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>original</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#dict" title="(in Python v3.6)"><em>dict</em></a>) – Original event data.</p></li>
+<li><p><strong>target</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><em>str</em></a>) – The target software version. Must be a valid semantic version, i.e.
+with major, minor, and patch components.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">EventData</span></code></p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><em>dict</em> – Data from <code class="docutils literal notranslate"><span class="pre">original</span></code> transformed into a representation suitable for
+use in the target software version.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="subpackages">
+<h2>Subpackages<a class="headerlink" href="#subpackages" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+</div>
+</div>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="arxiv.submission.domain.event.versioning.version_0_0_0_example.html">arxiv.submission.domain.event.versioning.version_0_0_0_example module</a></li>
+</ul>
+</div>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">arXiv submission & moderation</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../architecture.html">Submission &amp; moderation subsystem architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../announcement_process.html">Submission &amp; announcement Process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../submission_api_context.html">Submission API: Context</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="arxiv.submission.html">arxiv.submission package</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="arxiv.submission.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.submission.html#using-commands-events">Using commands/events</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.submission.html#versioning-events">Versioning events</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.submission.html#integration-with-the-legacy-system">Integration with the legacy system</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="arxiv.submission.html#subpackages">Subpackages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.submission.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../containers/agent/agent.html">agent package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../containers/metadata/metadata.html">metadata package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../background.html">Background</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="arxiv.submission.html">arxiv.submission package</a><ul>
+  <li><a href="arxiv.submission.domain.html">arxiv.submission.domain package</a><ul>
+  <li><a href="arxiv.submission.domain.event.html">arxiv.submission.domain.event package</a><ul>
+      <li>Previous: <a href="arxiv.submission.domain.event.html" title="previous chapter">arxiv.submission.domain.event package</a></li>
+      <li>Next: <a href="arxiv.submission.domain.event.versioning.version_0_0_0_example.html" title="next chapter">arxiv.submission.domain.event.versioning.version_0_0_0_example module</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, arXiv.org.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.0.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/arxiv.submission/arxiv.submission.domain.event.versioning.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

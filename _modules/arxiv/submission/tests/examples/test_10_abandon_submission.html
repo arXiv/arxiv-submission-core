@@ -1,0 +1,791 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>arxiv.submission.tests.examples.test_10_abandon_submission &#8212; arXiv submission &amp; moderation 0.1 documentation</title>
+    <link rel="stylesheet" href="../../../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/graphviz.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../../../../" src="../../../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for arxiv.submission.tests.examples.test_10_abandon_submission</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Example 10: abandoning submissions and requests.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">unittest</span> <span class="k">import</span> <span class="n">TestCase</span><span class="p">,</span> <span class="n">mock</span>
+<span class="kn">import</span> <span class="nn">tempfile</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="k">import</span> <span class="n">datetime</span>
+<span class="kn">from</span> <span class="nn">pytz</span> <span class="k">import</span> <span class="n">UTC</span>
+
+<span class="kn">from</span> <span class="nn">flask</span> <span class="k">import</span> <span class="n">Flask</span>
+
+<span class="kn">from</span> <span class="nn">...services</span> <span class="k">import</span> <span class="n">classic</span>
+<span class="kn">from</span> <span class="nn">...</span> <span class="k">import</span> <span class="n">save</span><span class="p">,</span> <span class="n">load</span><span class="p">,</span> <span class="n">load_fast</span><span class="p">,</span> <span class="n">domain</span><span class="p">,</span> <span class="n">exceptions</span><span class="p">,</span> <span class="n">core</span>
+
+<span class="n">CCO</span> <span class="o">=</span> <span class="s1">&#39;http://creativecommons.org/publicdomain/zero/1.0/&#39;</span>
+<span class="n">TEX</span> <span class="o">=</span> <span class="n">domain</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">SubmissionContent</span><span class="o">.</span><span class="n">Format</span><span class="p">(</span><span class="s1">&#39;tex&#39;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="TestAbandonSubmission"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.tests.examples.test_10_abandon_submission.html#arxiv.submission.tests.examples.test_10_abandon_submission.TestAbandonSubmission">[docs]</a><span class="k">class</span> <span class="nc">TestAbandonSubmission</span><span class="p">(</span><span class="n">TestCase</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Submitter has started a submission.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="TestAbandonSubmission.setUpClass"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.tests.examples.test_10_abandon_submission.html#arxiv.submission.tests.examples.test_10_abandon_submission.TestAbandonSubmission.setUpClass">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">setUpClass</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Instantiate an app for use with a SQLite database.&quot;&quot;&quot;</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">db</span> <span class="o">=</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">mkstemp</span><span class="p">(</span><span class="n">suffix</span><span class="o">=</span><span class="s1">&#39;.sqlite&#39;</span><span class="p">)</span>
+        <span class="bp">cls</span><span class="o">.</span><span class="n">app</span> <span class="o">=</span> <span class="n">Flask</span><span class="p">(</span><span class="s1">&#39;foo&#39;</span><span class="p">)</span>
+        <span class="bp">cls</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;CLASSIC_DATABASE_URI&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;sqlite:///</span><span class="si">{db}</span><span class="s1">&#39;</span>
+        <span class="bp">cls</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;SQLALCHEMY_TRACK_MODIFICATIONS&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="k">with</span> <span class="bp">cls</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">app_context</span><span class="p">():</span>
+            <span class="n">classic</span><span class="o">.</span><span class="n">init_app</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">app</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestAbandonSubmission.setUp"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.tests.examples.test_10_abandon_submission.html#arxiv.submission.tests.examples.test_10_abandon_submission.TestAbandonSubmission.setUp">[docs]</a>    <span class="nd">@mock</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;</span><span class="si">{core.__name__}</span><span class="s1">.StreamPublisher&#39;</span><span class="p">,</span> <span class="n">mock</span><span class="o">.</span><span class="n">MagicMock</span><span class="p">())</span>
+    <span class="k">def</span> <span class="nf">setUp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Create, complete, and publish the submission.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">submitter</span> <span class="o">=</span> <span class="n">domain</span><span class="o">.</span><span class="n">agent</span><span class="o">.</span><span class="n">User</span><span class="p">(</span><span class="mi">1234</span><span class="p">,</span> <span class="n">email</span><span class="o">=</span><span class="s1">&#39;j.user@somewhere.edu&#39;</span><span class="p">,</span>
+                                           <span class="n">forename</span><span class="o">=</span><span class="s1">&#39;Jane&#39;</span><span class="p">,</span> <span class="n">surname</span><span class="o">=</span><span class="s1">&#39;User&#39;</span><span class="p">,</span>
+                                           <span class="n">endorsements</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;cs.DL&#39;</span><span class="p">,</span> <span class="s1">&#39;cs.IR&#39;</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">defaults</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;creator&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">submitter</span><span class="p">}</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">app_context</span><span class="p">():</span>
+            <span class="n">classic</span><span class="o">.</span><span class="n">create_all</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">title</span> <span class="o">=</span> <span class="s2">&quot;the best title&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">doi</span> <span class="o">=</span> <span class="s2">&quot;10.01234/56789&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">category</span> <span class="o">=</span> <span class="s2">&quot;cs.DL&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">events</span> <span class="o">=</span> <span class="n">save</span><span class="p">(</span>
+                <span class="n">domain</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">CreateSubmission</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">defaults</span><span class="p">),</span>
+                <span class="n">domain</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">ConfirmContactInformation</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">defaults</span><span class="p">),</span>
+                <span class="n">domain</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">ConfirmAuthorship</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">defaults</span><span class="p">),</span>
+                <span class="n">domain</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">ConfirmPolicy</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">defaults</span><span class="p">),</span>
+                <span class="n">domain</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">SetTitle</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">title</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">defaults</span><span class="p">),</span>
+                <span class="n">domain</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">SetLicense</span><span class="p">(</span><span class="n">license_uri</span><span class="o">=</span><span class="n">CCO</span><span class="p">,</span>
+                                        <span class="n">license_name</span><span class="o">=</span><span class="s2">&quot;CC0 1.0&quot;</span><span class="p">,</span>
+                                        <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">defaults</span><span class="p">),</span>
+                <span class="n">domain</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">SetPrimaryClassification</span><span class="p">(</span><span class="n">category</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">category</span><span class="p">,</span>
+                                                      <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">defaults</span><span class="p">)</span>
+            <span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestAbandonSubmission.tearDown"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.tests.examples.test_10_abandon_submission.html#arxiv.submission.tests.examples.test_10_abandon_submission.TestAbandonSubmission.tearDown">[docs]</a>    <span class="k">def</span> <span class="nf">tearDown</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Clear the database after each test.&quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">app_context</span><span class="p">():</span>
+            <span class="n">classic</span><span class="o">.</span><span class="n">drop_all</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="TestAbandonSubmission.test_abandon_new_submission"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.tests.examples.test_10_abandon_submission.html#arxiv.submission.tests.examples.test_10_abandon_submission.TestAbandonSubmission.test_abandon_new_submission">[docs]</a>    <span class="nd">@mock</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;</span><span class="si">{core.__name__}</span><span class="s1">.StreamPublisher&#39;</span><span class="p">,</span> <span class="n">mock</span><span class="o">.</span><span class="n">MagicMock</span><span class="p">())</span>
+    <span class="k">def</span> <span class="nf">test_abandon_new_submission</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Submitter abandons new submission.&quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">app_context</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">events</span> <span class="o">=</span> <span class="n">save</span><span class="p">(</span>
+                <span class="n">domain</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">Rollback</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">defaults</span><span class="p">),</span>
+                <span class="n">submission_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">submission_id</span>
+            <span class="p">)</span>
+
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">app_context</span><span class="p">():</span>
+            <span class="n">submission</span><span class="p">,</span> <span class="n">events</span> <span class="o">=</span> <span class="n">load</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">submission_id</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">submission</span><span class="o">.</span><span class="n">status</span><span class="p">,</span>
+                             <span class="n">domain</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">DELETED</span><span class="p">,</span>
+                             <span class="s2">&quot;The submission is DELETED.&quot;</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">app_context</span><span class="p">():</span>
+            <span class="n">submission</span> <span class="o">=</span> <span class="n">load_fast</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">submission_id</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">submission</span><span class="o">.</span><span class="n">status</span><span class="p">,</span>
+                             <span class="n">domain</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">DELETED</span><span class="p">,</span>
+                             <span class="s2">&quot;The submission is DELETED.&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Check the database state.</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">app_context</span><span class="p">():</span>
+            <span class="n">session</span> <span class="o">=</span> <span class="n">classic</span><span class="o">.</span><span class="n">current_session</span><span class="p">()</span>
+            <span class="n">db_rows</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">classic</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="p">)</span> \
+                <span class="o">.</span><span class="n">order_by</span><span class="p">(</span><span class="n">classic</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">submission_id</span><span class="o">.</span><span class="n">asc</span><span class="p">())</span> \
+                <span class="o">.</span><span class="n">all</span><span class="p">()</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">db_rows</span><span class="p">),</span> <span class="mi">1</span><span class="p">,</span>
+                             <span class="s2">&quot;There are one rows in the submission table&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">db_rows</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">type</span><span class="p">,</span>
+                             <span class="n">classic</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">NEW_SUBMISSION</span><span class="p">,</span>
+                             <span class="s2">&quot;The first row has type &#39;new&#39;&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">db_rows</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">status</span><span class="p">,</span>
+                             <span class="n">classic</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">USER_DELETED</span><span class="p">,</span>
+                             <span class="s2">&quot;The first row is USER_DELETED&quot;</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="TestAbandonReplacement"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.tests.examples.test_10_abandon_submission.html#arxiv.submission.tests.examples.test_10_abandon_submission.TestAbandonReplacement">[docs]</a><span class="k">class</span> <span class="nc">TestAbandonReplacement</span><span class="p">(</span><span class="n">TestCase</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Submitter has started a replacement and then rolled it back.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="TestAbandonReplacement.setUpClass"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.tests.examples.test_10_abandon_submission.html#arxiv.submission.tests.examples.test_10_abandon_submission.TestAbandonReplacement.setUpClass">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">setUpClass</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Instantiate an app for use with a SQLite database.&quot;&quot;&quot;</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">db</span> <span class="o">=</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">mkstemp</span><span class="p">(</span><span class="n">suffix</span><span class="o">=</span><span class="s1">&#39;.sqlite&#39;</span><span class="p">)</span>
+        <span class="bp">cls</span><span class="o">.</span><span class="n">app</span> <span class="o">=</span> <span class="n">Flask</span><span class="p">(</span><span class="s1">&#39;foo&#39;</span><span class="p">)</span>
+        <span class="bp">cls</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;CLASSIC_DATABASE_URI&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;sqlite:///</span><span class="si">{db}</span><span class="s1">&#39;</span>
+        <span class="bp">cls</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;SQLALCHEMY_TRACK_MODIFICATIONS&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="k">with</span> <span class="bp">cls</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">app_context</span><span class="p">():</span>
+            <span class="n">classic</span><span class="o">.</span><span class="n">init_app</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">app</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestAbandonReplacement.setUp"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.tests.examples.test_10_abandon_submission.html#arxiv.submission.tests.examples.test_10_abandon_submission.TestAbandonReplacement.setUp">[docs]</a>    <span class="nd">@mock</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;</span><span class="si">{core.__name__}</span><span class="s1">.StreamPublisher&#39;</span><span class="p">,</span> <span class="n">mock</span><span class="o">.</span><span class="n">MagicMock</span><span class="p">())</span>
+    <span class="k">def</span> <span class="nf">setUp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Create, complete, and publish the submission.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">submitter</span> <span class="o">=</span> <span class="n">domain</span><span class="o">.</span><span class="n">agent</span><span class="o">.</span><span class="n">User</span><span class="p">(</span><span class="mi">1234</span><span class="p">,</span> <span class="n">email</span><span class="o">=</span><span class="s1">&#39;j.user@somewhere.edu&#39;</span><span class="p">,</span>
+                                           <span class="n">forename</span><span class="o">=</span><span class="s1">&#39;Jane&#39;</span><span class="p">,</span> <span class="n">surname</span><span class="o">=</span><span class="s1">&#39;User&#39;</span><span class="p">,</span>
+                                           <span class="n">endorsements</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;cs.DL&#39;</span><span class="p">,</span> <span class="s1">&#39;cs.IR&#39;</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">defaults</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;creator&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">submitter</span><span class="p">}</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">app_context</span><span class="p">():</span>
+            <span class="n">classic</span><span class="o">.</span><span class="n">create_all</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">title</span> <span class="o">=</span> <span class="s2">&quot;the best title&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">doi</span> <span class="o">=</span> <span class="s2">&quot;10.01234/56789&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">category</span> <span class="o">=</span> <span class="s2">&quot;cs.DL&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">events</span> <span class="o">=</span> <span class="n">save</span><span class="p">(</span>
+                <span class="n">domain</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">CreateSubmission</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">defaults</span><span class="p">),</span>
+                <span class="n">domain</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">ConfirmContactInformation</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">defaults</span><span class="p">),</span>
+                <span class="n">domain</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">ConfirmAuthorship</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">defaults</span><span class="p">),</span>
+                <span class="n">domain</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">ConfirmPolicy</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">defaults</span><span class="p">),</span>
+                <span class="n">domain</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">SetTitle</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">title</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">defaults</span><span class="p">),</span>
+                <span class="n">domain</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">SetLicense</span><span class="p">(</span><span class="n">license_uri</span><span class="o">=</span><span class="n">CCO</span><span class="p">,</span>
+                                        <span class="n">license_name</span><span class="o">=</span><span class="s2">&quot;CC0 1.0&quot;</span><span class="p">,</span>
+                                        <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">defaults</span><span class="p">),</span>
+                <span class="n">domain</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">SetPrimaryClassification</span><span class="p">(</span><span class="n">category</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">category</span><span class="p">,</span>
+                                                      <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">defaults</span><span class="p">),</span>
+                <span class="n">domain</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">SetUploadPackage</span><span class="p">(</span><span class="n">checksum</span><span class="o">=</span><span class="s2">&quot;a9s9k342900ks03330029&quot;</span><span class="p">,</span>
+                                              <span class="n">source_format</span><span class="o">=</span><span class="n">TEX</span><span class="p">,</span>
+                                              <span class="n">identifier</span><span class="o">=</span><span class="mi">123</span><span class="p">,</span>
+                                              <span class="n">uncompressed_size</span><span class="o">=</span><span class="mi">593992</span><span class="p">,</span>
+                                              <span class="n">compressed_size</span><span class="o">=</span><span class="mi">593992</span><span class="p">,</span>
+                                              <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">defaults</span><span class="p">),</span>
+                <span class="n">domain</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">SetAbstract</span><span class="p">(</span><span class="n">abstract</span><span class="o">=</span><span class="s2">&quot;Very abstract &quot;</span> <span class="o">*</span> <span class="mi">20</span><span class="p">,</span>
+                                         <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">defaults</span><span class="p">),</span>
+                <span class="n">domain</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">SetComments</span><span class="p">(</span><span class="n">comments</span><span class="o">=</span><span class="s2">&quot;Fine indeed &quot;</span> <span class="o">*</span> <span class="mi">10</span><span class="p">,</span>
+                                         <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">defaults</span><span class="p">),</span>
+                <span class="n">domain</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">SetJournalReference</span><span class="p">(</span><span class="n">journal_ref</span><span class="o">=</span><span class="s2">&quot;Foo 1992&quot;</span><span class="p">,</span>
+                                                 <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">defaults</span><span class="p">),</span>
+                <span class="n">domain</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">SetDOI</span><span class="p">(</span><span class="n">doi</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">doi</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">defaults</span><span class="p">),</span>
+                <span class="n">domain</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">SetAuthors</span><span class="p">(</span><span class="n">authors_display</span><span class="o">=</span><span class="s1">&#39;Robert Paulson (FC)&#39;</span><span class="p">,</span>
+                                        <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">defaults</span><span class="p">),</span>
+                <span class="n">domain</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">FinalizeSubmission</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">defaults</span><span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Announce the submission.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">paper_id</span> <span class="o">=</span> <span class="s1">&#39;1901.00123&#39;</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">app_context</span><span class="p">():</span>
+            <span class="n">session</span> <span class="o">=</span> <span class="n">classic</span><span class="o">.</span><span class="n">current_session</span><span class="p">()</span>
+            <span class="n">db_row</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">classic</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+            <span class="n">db_row</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="n">classic</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">ANNOUNCED</span>
+            <span class="n">dated</span> <span class="o">=</span> <span class="p">(</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span> <span class="o">-</span> <span class="n">datetime</span><span class="o">.</span><span class="n">utcfromtimestamp</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
+            <span class="n">db_row</span><span class="o">.</span><span class="n">document</span> <span class="o">=</span> <span class="n">classic</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Document</span><span class="p">(</span>
+                <span class="n">document_id</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                <span class="n">paper_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">paper_id</span><span class="p">,</span>
+                <span class="n">title</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">title</span><span class="p">,</span>
+                <span class="n">authors</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">authors_display</span><span class="p">,</span>
+                <span class="n">dated</span><span class="o">=</span><span class="n">dated</span><span class="o">.</span><span class="n">total_seconds</span><span class="p">(),</span>
+                <span class="n">primary_subject_class</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">category</span><span class="p">,</span>
+                <span class="n">created</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">UTC</span><span class="p">),</span>
+                <span class="n">submitter_email</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">creator</span><span class="o">.</span><span class="n">email</span><span class="p">,</span>
+                <span class="n">submitter_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">creator</span><span class="o">.</span><span class="n">native_id</span>
+            <span class="p">)</span>
+            <span class="n">db_row</span><span class="o">.</span><span class="n">doc_paper_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">paper_id</span>
+            <span class="n">session</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">db_row</span><span class="p">)</span>
+            <span class="n">session</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">app_context</span><span class="p">():</span>
+            <span class="n">submission</span><span class="p">,</span> <span class="n">events</span> <span class="o">=</span> <span class="n">save</span><span class="p">(</span>
+                <span class="n">domain</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">CreateSubmissionVersion</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">defaults</span><span class="p">),</span>
+                <span class="n">submission_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">submission_id</span>
+            <span class="p">)</span>
+
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">app_context</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">events</span> <span class="o">=</span> <span class="n">save</span><span class="p">(</span>
+                <span class="n">domain</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">Rollback</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">defaults</span><span class="p">),</span>
+                <span class="n">submission_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">submission_id</span>
+            <span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestAbandonReplacement.tearDown"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.tests.examples.test_10_abandon_submission.html#arxiv.submission.tests.examples.test_10_abandon_submission.TestAbandonReplacement.tearDown">[docs]</a>    <span class="k">def</span> <span class="nf">tearDown</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Clear the database after each test.&quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">app_context</span><span class="p">():</span>
+            <span class="n">classic</span><span class="o">.</span><span class="n">drop_all</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="TestAbandonReplacement.test_abandon_replacement_submission"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.tests.examples.test_10_abandon_submission.html#arxiv.submission.tests.examples.test_10_abandon_submission.TestAbandonReplacement.test_abandon_replacement_submission">[docs]</a>    <span class="nd">@mock</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;</span><span class="si">{core.__name__}</span><span class="s1">.StreamPublisher&#39;</span><span class="p">,</span> <span class="n">mock</span><span class="o">.</span><span class="n">MagicMock</span><span class="p">())</span>
+    <span class="k">def</span> <span class="nf">test_abandon_replacement_submission</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The replacement is cancelled.&quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">app_context</span><span class="p">():</span>
+            <span class="n">submission</span><span class="p">,</span> <span class="n">events</span> <span class="o">=</span> <span class="n">load</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">submission_id</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">submission</span><span class="o">.</span><span class="n">status</span><span class="p">,</span>
+                             <span class="n">domain</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">ANNOUNCED</span><span class="p">,</span>
+                             <span class="s2">&quot;The submission is ANNOUNCED.&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">submission</span><span class="o">.</span><span class="n">version</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;Back to v1&quot;</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">app_context</span><span class="p">():</span>
+            <span class="n">submission</span> <span class="o">=</span> <span class="n">load_fast</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">submission_id</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">submission</span><span class="o">.</span><span class="n">status</span><span class="p">,</span>
+                             <span class="n">domain</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">ANNOUNCED</span><span class="p">,</span>
+                             <span class="s2">&quot;The submission is ANNOUNCED.&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">submission</span><span class="o">.</span><span class="n">version</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;Back to v1&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Check the database state.</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">app_context</span><span class="p">():</span>
+            <span class="n">session</span> <span class="o">=</span> <span class="n">classic</span><span class="o">.</span><span class="n">current_session</span><span class="p">()</span>
+            <span class="n">db_rows</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">classic</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="p">)</span> \
+                <span class="o">.</span><span class="n">order_by</span><span class="p">(</span><span class="n">classic</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">submission_id</span><span class="o">.</span><span class="n">asc</span><span class="p">())</span> \
+                <span class="o">.</span><span class="n">all</span><span class="p">()</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">db_rows</span><span class="p">),</span> <span class="mi">2</span><span class="p">,</span>
+                             <span class="s2">&quot;There are two rows in the submission table&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">db_rows</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">type</span><span class="p">,</span>
+                             <span class="n">classic</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">NEW_SUBMISSION</span><span class="p">,</span>
+                             <span class="s2">&quot;The first row has type &#39;new&#39;&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">db_rows</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">status</span><span class="p">,</span>
+                             <span class="n">classic</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">ANNOUNCED</span><span class="p">,</span>
+                             <span class="s2">&quot;The first row is ANNOUNCED&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">db_rows</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">type</span><span class="p">,</span>
+                             <span class="n">classic</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">REPLACEMENT</span><span class="p">,</span>
+                             <span class="s2">&quot;The second row has type &#39;replacement&#39;&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">db_rows</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">status</span><span class="p">,</span>
+                             <span class="n">classic</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">USER_DELETED</span><span class="p">,</span>
+                             <span class="s2">&quot;The second row is USER_DELETED&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestAbandonReplacement.test_can_start_new_replacement"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.tests.examples.test_10_abandon_submission.html#arxiv.submission.tests.examples.test_10_abandon_submission.TestAbandonReplacement.test_can_start_new_replacement">[docs]</a>    <span class="nd">@mock</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;</span><span class="si">{core.__name__}</span><span class="s1">.StreamPublisher&#39;</span><span class="p">,</span> <span class="n">mock</span><span class="o">.</span><span class="n">MagicMock</span><span class="p">())</span>
+    <span class="k">def</span> <span class="nf">test_can_start_new_replacement</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The user can start a new replacement.&quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">app_context</span><span class="p">():</span>
+            <span class="n">submission</span><span class="p">,</span> <span class="n">events</span> <span class="o">=</span> <span class="n">save</span><span class="p">(</span>
+                <span class="n">domain</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">CreateSubmissionVersion</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">defaults</span><span class="p">),</span>
+                <span class="n">submission_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">submission_id</span>
+            <span class="p">)</span>
+
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">app_context</span><span class="p">():</span>
+            <span class="n">submission</span><span class="p">,</span> <span class="n">events</span> <span class="o">=</span> <span class="n">load</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">submission_id</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">submission</span><span class="o">.</span><span class="n">status</span><span class="p">,</span>
+                             <span class="n">domain</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">WORKING</span><span class="p">,</span>
+                             <span class="s2">&quot;The submission is WORKING.&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">submission</span><span class="o">.</span><span class="n">version</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="s2">&quot;On to v2&quot;</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">app_context</span><span class="p">():</span>
+            <span class="n">submission</span> <span class="o">=</span> <span class="n">load_fast</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">submission_id</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">submission</span><span class="o">.</span><span class="n">status</span><span class="p">,</span>
+                             <span class="n">domain</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">WORKING</span><span class="p">,</span>
+                             <span class="s2">&quot;The submission is WORKING.&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">submission</span><span class="o">.</span><span class="n">version</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="s2">&quot;On to v2&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Check the database state.</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">app_context</span><span class="p">():</span>
+            <span class="n">session</span> <span class="o">=</span> <span class="n">classic</span><span class="o">.</span><span class="n">current_session</span><span class="p">()</span>
+            <span class="n">db_rows</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">classic</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="p">)</span> \
+                <span class="o">.</span><span class="n">order_by</span><span class="p">(</span><span class="n">classic</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">submission_id</span><span class="o">.</span><span class="n">asc</span><span class="p">())</span> \
+                <span class="o">.</span><span class="n">all</span><span class="p">()</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">db_rows</span><span class="p">),</span> <span class="mi">3</span><span class="p">,</span>
+                             <span class="s2">&quot;There are three rows in the submission table&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">db_rows</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">type</span><span class="p">,</span>
+                             <span class="n">classic</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">NEW_SUBMISSION</span><span class="p">,</span>
+                             <span class="s2">&quot;The first row has type &#39;new&#39;&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">db_rows</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">status</span><span class="p">,</span>
+                             <span class="n">classic</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">ANNOUNCED</span><span class="p">,</span>
+                             <span class="s2">&quot;The first row is ANNOUNCED&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">db_rows</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">type</span><span class="p">,</span>
+                             <span class="n">classic</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">REPLACEMENT</span><span class="p">,</span>
+                             <span class="s2">&quot;The second row has type &#39;replacement&#39;&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">db_rows</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">status</span><span class="p">,</span>
+                             <span class="n">classic</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">USER_DELETED</span><span class="p">,</span>
+                             <span class="s2">&quot;The second row is USER_DELETED&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">db_rows</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">type</span><span class="p">,</span>
+                             <span class="n">classic</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">REPLACEMENT</span><span class="p">,</span>
+                             <span class="s2">&quot;The third row has type &#39;replacement&#39;&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">db_rows</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">status</span><span class="p">,</span>
+                             <span class="n">classic</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">NOT_SUBMITTED</span><span class="p">,</span>
+                             <span class="s2">&quot;The third row is NOT_SUBMITTED&quot;</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="TestCrossListCancelled"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.tests.examples.test_10_abandon_submission.html#arxiv.submission.tests.examples.test_10_abandon_submission.TestCrossListCancelled">[docs]</a><span class="k">class</span> <span class="nc">TestCrossListCancelled</span><span class="p">(</span><span class="n">TestCase</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Submitter has created and cancelled a cross-list request.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="TestCrossListCancelled.setUpClass"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.tests.examples.test_10_abandon_submission.html#arxiv.submission.tests.examples.test_10_abandon_submission.TestCrossListCancelled.setUpClass">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">setUpClass</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Instantiate an app for use with a SQLite database.&quot;&quot;&quot;</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">db</span> <span class="o">=</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">mkstemp</span><span class="p">(</span><span class="n">suffix</span><span class="o">=</span><span class="s1">&#39;.sqlite&#39;</span><span class="p">)</span>
+        <span class="bp">cls</span><span class="o">.</span><span class="n">app</span> <span class="o">=</span> <span class="n">Flask</span><span class="p">(</span><span class="s1">&#39;foo&#39;</span><span class="p">)</span>
+        <span class="bp">cls</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;CLASSIC_DATABASE_URI&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;sqlite:///</span><span class="si">{db}</span><span class="s1">&#39;</span>
+        <span class="bp">cls</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;SQLALCHEMY_TRACK_MODIFICATIONS&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="k">with</span> <span class="bp">cls</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">app_context</span><span class="p">():</span>
+            <span class="n">classic</span><span class="o">.</span><span class="n">init_app</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">app</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestCrossListCancelled.setUp"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.tests.examples.test_10_abandon_submission.html#arxiv.submission.tests.examples.test_10_abandon_submission.TestCrossListCancelled.setUp">[docs]</a>    <span class="nd">@mock</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;</span><span class="si">{core.__name__}</span><span class="s1">.StreamPublisher&#39;</span><span class="p">,</span> <span class="n">mock</span><span class="o">.</span><span class="n">MagicMock</span><span class="p">())</span>
+    <span class="k">def</span> <span class="nf">setUp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Create, complete, and publish the submission.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">submitter</span> <span class="o">=</span> <span class="n">domain</span><span class="o">.</span><span class="n">agent</span><span class="o">.</span><span class="n">User</span><span class="p">(</span><span class="mi">1234</span><span class="p">,</span> <span class="n">email</span><span class="o">=</span><span class="s1">&#39;j.user@somewhere.edu&#39;</span><span class="p">,</span>
+                                           <span class="n">forename</span><span class="o">=</span><span class="s1">&#39;Jane&#39;</span><span class="p">,</span> <span class="n">surname</span><span class="o">=</span><span class="s1">&#39;User&#39;</span><span class="p">,</span>
+                                           <span class="n">endorsements</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;cs.DL&#39;</span><span class="p">,</span> <span class="s1">&#39;cs.IR&#39;</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">defaults</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;creator&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">submitter</span><span class="p">}</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">app_context</span><span class="p">():</span>
+            <span class="n">classic</span><span class="o">.</span><span class="n">create_all</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">title</span> <span class="o">=</span> <span class="s2">&quot;the best title&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">doi</span> <span class="o">=</span> <span class="s2">&quot;10.01234/56789&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">category</span> <span class="o">=</span> <span class="s2">&quot;cs.DL&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">events</span> <span class="o">=</span> <span class="n">save</span><span class="p">(</span>
+                <span class="n">domain</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">CreateSubmission</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">defaults</span><span class="p">),</span>
+                <span class="n">domain</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">ConfirmContactInformation</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">defaults</span><span class="p">),</span>
+                <span class="n">domain</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">ConfirmAuthorship</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">defaults</span><span class="p">),</span>
+                <span class="n">domain</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">ConfirmPolicy</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">defaults</span><span class="p">),</span>
+                <span class="n">domain</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">SetTitle</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">title</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">defaults</span><span class="p">),</span>
+                <span class="n">domain</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">SetLicense</span><span class="p">(</span><span class="n">license_uri</span><span class="o">=</span><span class="n">CCO</span><span class="p">,</span>
+                                        <span class="n">license_name</span><span class="o">=</span><span class="s2">&quot;CC0 1.0&quot;</span><span class="p">,</span>
+                                        <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">defaults</span><span class="p">),</span>
+                <span class="n">domain</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">SetPrimaryClassification</span><span class="p">(</span><span class="n">category</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">category</span><span class="p">,</span>
+                                                      <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">defaults</span><span class="p">),</span>
+                <span class="n">domain</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">SetUploadPackage</span><span class="p">(</span><span class="n">checksum</span><span class="o">=</span><span class="s2">&quot;a9s9k342900ks03330029&quot;</span><span class="p">,</span>
+                                              <span class="n">source_format</span><span class="o">=</span><span class="n">TEX</span><span class="p">,</span>
+                                              <span class="n">identifier</span><span class="o">=</span><span class="mi">123</span><span class="p">,</span>
+                                              <span class="n">uncompressed_size</span><span class="o">=</span><span class="mi">593992</span><span class="p">,</span>
+                                              <span class="n">compressed_size</span><span class="o">=</span><span class="mi">593992</span><span class="p">,</span>
+                                              <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">defaults</span><span class="p">),</span>
+                <span class="n">domain</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">SetAbstract</span><span class="p">(</span><span class="n">abstract</span><span class="o">=</span><span class="s2">&quot;Very abstract &quot;</span> <span class="o">*</span> <span class="mi">20</span><span class="p">,</span>
+                                         <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">defaults</span><span class="p">),</span>
+                <span class="n">domain</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">SetComments</span><span class="p">(</span><span class="n">comments</span><span class="o">=</span><span class="s2">&quot;Fine indeed &quot;</span> <span class="o">*</span> <span class="mi">10</span><span class="p">,</span>
+                                         <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">defaults</span><span class="p">),</span>
+                <span class="n">domain</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">SetJournalReference</span><span class="p">(</span><span class="n">journal_ref</span><span class="o">=</span><span class="s2">&quot;Foo 1992&quot;</span><span class="p">,</span>
+                                                 <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">defaults</span><span class="p">),</span>
+                <span class="n">domain</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">SetDOI</span><span class="p">(</span><span class="n">doi</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">doi</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">defaults</span><span class="p">),</span>
+                <span class="n">domain</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">SetAuthors</span><span class="p">(</span><span class="n">authors_display</span><span class="o">=</span><span class="s1">&#39;Robert Paulson (FC)&#39;</span><span class="p">,</span>
+                                        <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">defaults</span><span class="p">),</span>
+                <span class="n">domain</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">FinalizeSubmission</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">defaults</span><span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Announce the submission.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">paper_id</span> <span class="o">=</span> <span class="s1">&#39;1901.00123&#39;</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">app_context</span><span class="p">():</span>
+            <span class="n">session</span> <span class="o">=</span> <span class="n">classic</span><span class="o">.</span><span class="n">current_session</span><span class="p">()</span>
+            <span class="n">db_row</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">classic</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+            <span class="n">db_row</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="n">classic</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">ANNOUNCED</span>
+            <span class="n">dated</span> <span class="o">=</span> <span class="p">(</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span> <span class="o">-</span> <span class="n">datetime</span><span class="o">.</span><span class="n">utcfromtimestamp</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
+            <span class="n">db_row</span><span class="o">.</span><span class="n">document</span> <span class="o">=</span> <span class="n">classic</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Document</span><span class="p">(</span>
+                <span class="n">document_id</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                <span class="n">paper_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">paper_id</span><span class="p">,</span>
+                <span class="n">title</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">title</span><span class="p">,</span>
+                <span class="n">authors</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">authors_display</span><span class="p">,</span>
+                <span class="n">dated</span><span class="o">=</span><span class="n">dated</span><span class="o">.</span><span class="n">total_seconds</span><span class="p">(),</span>
+                <span class="n">primary_subject_class</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">category</span><span class="p">,</span>
+                <span class="n">created</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">UTC</span><span class="p">),</span>
+                <span class="n">submitter_email</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">creator</span><span class="o">.</span><span class="n">email</span><span class="p">,</span>
+                <span class="n">submitter_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">creator</span><span class="o">.</span><span class="n">native_id</span>
+            <span class="p">)</span>
+            <span class="n">db_row</span><span class="o">.</span><span class="n">doc_paper_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">paper_id</span>
+            <span class="n">session</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">db_row</span><span class="p">)</span>
+            <span class="n">session</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+
+        <span class="c1"># Request cross-list classification</span>
+        <span class="n">category</span> <span class="o">=</span> <span class="s2">&quot;cs.IR&quot;</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">app_context</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">events</span> <span class="o">=</span> <span class="n">save</span><span class="p">(</span>
+                <span class="n">domain</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">RequestCrossList</span><span class="p">(</span><span class="n">categories</span><span class="o">=</span><span class="p">[</span><span class="n">category</span><span class="p">],</span>
+                                              <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">defaults</span><span class="p">),</span>
+                <span class="n">submission_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">submission_id</span>
+            <span class="p">)</span>
+
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">app_context</span><span class="p">():</span>
+            <span class="n">request_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">active_user_requests</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">request_id</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">events</span> <span class="o">=</span> <span class="n">save</span><span class="p">(</span>
+                <span class="n">domain</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">CancelRequest</span><span class="p">(</span><span class="n">request_id</span><span class="o">=</span><span class="n">request_id</span><span class="p">,</span>
+                                           <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">defaults</span><span class="p">),</span>
+                <span class="n">submission_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">submission_id</span>
+            <span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestCrossListCancelled.tearDown"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.tests.examples.test_10_abandon_submission.html#arxiv.submission.tests.examples.test_10_abandon_submission.TestCrossListCancelled.tearDown">[docs]</a>    <span class="k">def</span> <span class="nf">tearDown</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Clear the database after each test.&quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">app_context</span><span class="p">():</span>
+            <span class="n">classic</span><span class="o">.</span><span class="n">drop_all</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="TestCrossListCancelled.test_request_is_cancelled"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.tests.examples.test_10_abandon_submission.html#arxiv.submission.tests.examples.test_10_abandon_submission.TestCrossListCancelled.test_request_is_cancelled">[docs]</a>    <span class="nd">@mock</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;</span><span class="si">{core.__name__}</span><span class="s1">.StreamPublisher&#39;</span><span class="p">,</span> <span class="n">mock</span><span class="o">.</span><span class="n">MagicMock</span><span class="p">())</span>
+    <span class="k">def</span> <span class="nf">test_request_is_cancelled</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Submitter has cancelled the cross-list request.&quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">app_context</span><span class="p">():</span>
+            <span class="n">submission</span><span class="p">,</span> <span class="n">events</span> <span class="o">=</span> <span class="n">load</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">submission_id</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">submission</span><span class="o">.</span><span class="n">status</span><span class="p">,</span>
+                             <span class="n">domain</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">ANNOUNCED</span><span class="p">,</span>
+                             <span class="s2">&quot;The submission is ANNOUNCED.&quot;</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">app_context</span><span class="p">():</span>
+            <span class="n">submission</span> <span class="o">=</span> <span class="n">load_fast</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">submission_id</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">submission</span><span class="o">.</span><span class="n">status</span><span class="p">,</span>
+                             <span class="n">domain</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">ANNOUNCED</span><span class="p">,</span>
+                             <span class="s2">&quot;The submission is ANNOUNCED.&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Check the database state.</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">app_context</span><span class="p">():</span>
+            <span class="n">session</span> <span class="o">=</span> <span class="n">classic</span><span class="o">.</span><span class="n">current_session</span><span class="p">()</span>
+            <span class="n">db_rows</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">classic</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="p">)</span> \
+                <span class="o">.</span><span class="n">order_by</span><span class="p">(</span><span class="n">classic</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">submission_id</span><span class="o">.</span><span class="n">asc</span><span class="p">())</span> \
+                <span class="o">.</span><span class="n">all</span><span class="p">()</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">db_rows</span><span class="p">),</span> <span class="mi">2</span><span class="p">,</span>
+                             <span class="s2">&quot;There are two rows in the submission table&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">db_rows</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">type</span><span class="p">,</span>
+                             <span class="n">classic</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">NEW_SUBMISSION</span><span class="p">,</span>
+                             <span class="s2">&quot;The first row has type &#39;new&#39;&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">db_rows</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">status</span><span class="p">,</span>
+                             <span class="n">classic</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">ANNOUNCED</span><span class="p">,</span>
+                             <span class="s2">&quot;The first row is ANNOUNCED&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">db_rows</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">type</span><span class="p">,</span>
+                             <span class="n">classic</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">CROSS_LIST</span><span class="p">,</span>
+                             <span class="s2">&quot;The second row has type &#39;cross&#39;&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">db_rows</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">status</span><span class="p">,</span>
+                             <span class="n">classic</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">USER_DELETED</span><span class="p">,</span>
+                             <span class="s2">&quot;The second row is USER_DELETED&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestCrossListCancelled.test_user_can_make_another_request"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.tests.examples.test_10_abandon_submission.html#arxiv.submission.tests.examples.test_10_abandon_submission.TestCrossListCancelled.test_user_can_make_another_request">[docs]</a>    <span class="nd">@mock</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;</span><span class="si">{core.__name__}</span><span class="s1">.StreamPublisher&#39;</span><span class="p">,</span> <span class="n">mock</span><span class="o">.</span><span class="n">MagicMock</span><span class="p">())</span>
+    <span class="k">def</span> <span class="nf">test_user_can_make_another_request</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;User can now make another request.&quot;&quot;&quot;</span>
+        <span class="c1"># Request cross-list classification</span>
+        <span class="n">category</span> <span class="o">=</span> <span class="s2">&quot;cs.IR&quot;</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">app_context</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">events</span> <span class="o">=</span> <span class="n">save</span><span class="p">(</span>
+                <span class="n">domain</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">RequestCrossList</span><span class="p">(</span><span class="n">categories</span><span class="o">=</span><span class="p">[</span><span class="n">category</span><span class="p">],</span>
+                                              <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">defaults</span><span class="p">),</span>
+                <span class="n">submission_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">submission_id</span>
+            <span class="p">)</span>
+
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">app_context</span><span class="p">():</span>
+            <span class="n">submission</span><span class="p">,</span> <span class="n">events</span> <span class="o">=</span> <span class="n">load</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">submission_id</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">submission</span><span class="o">.</span><span class="n">status</span><span class="p">,</span>
+                             <span class="n">domain</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">ANNOUNCED</span><span class="p">,</span>
+                             <span class="s2">&quot;The submission is ANNOUNCED.&quot;</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">app_context</span><span class="p">():</span>
+            <span class="n">submission</span> <span class="o">=</span> <span class="n">load_fast</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">submission_id</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">submission</span><span class="o">.</span><span class="n">status</span><span class="p">,</span>
+                             <span class="n">domain</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">ANNOUNCED</span><span class="p">,</span>
+                             <span class="s2">&quot;The submission is ANNOUNCED.&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Check the database state.</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">app_context</span><span class="p">():</span>
+            <span class="n">session</span> <span class="o">=</span> <span class="n">classic</span><span class="o">.</span><span class="n">current_session</span><span class="p">()</span>
+            <span class="n">db_rows</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">classic</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="p">)</span> \
+                <span class="o">.</span><span class="n">order_by</span><span class="p">(</span><span class="n">classic</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">submission_id</span><span class="o">.</span><span class="n">asc</span><span class="p">())</span> \
+                <span class="o">.</span><span class="n">all</span><span class="p">()</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">db_rows</span><span class="p">),</span> <span class="mi">3</span><span class="p">,</span>
+                             <span class="s2">&quot;There are two rows in the submission table&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">db_rows</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">type</span><span class="p">,</span>
+                             <span class="n">classic</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">NEW_SUBMISSION</span><span class="p">,</span>
+                             <span class="s2">&quot;The first row has type &#39;new&#39;&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">db_rows</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">status</span><span class="p">,</span>
+                             <span class="n">classic</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">ANNOUNCED</span><span class="p">,</span>
+                             <span class="s2">&quot;The first row is ANNOUNCED&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">db_rows</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">type</span><span class="p">,</span>
+                             <span class="n">classic</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">CROSS_LIST</span><span class="p">,</span>
+                             <span class="s2">&quot;The second row has type &#39;cross&#39;&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">db_rows</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">status</span><span class="p">,</span>
+                             <span class="n">classic</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">USER_DELETED</span><span class="p">,</span>
+                             <span class="s2">&quot;The second row is USER_DELETED&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">db_rows</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">type</span><span class="p">,</span>
+                             <span class="n">classic</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">CROSS_LIST</span><span class="p">,</span>
+                             <span class="s2">&quot;The third row has type &#39;cross&#39;&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">db_rows</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">status</span><span class="p">,</span>
+                             <span class="n">classic</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">PROCESSING_SUBMISSION</span><span class="p">,</span>
+                             <span class="s2">&quot;The third row is PROCESSING_SUBMISSION&quot;</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="TestWithdrawalCancelled"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.tests.examples.test_10_abandon_submission.html#arxiv.submission.tests.examples.test_10_abandon_submission.TestWithdrawalCancelled">[docs]</a><span class="k">class</span> <span class="nc">TestWithdrawalCancelled</span><span class="p">(</span><span class="n">TestCase</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Submitter has created and cancelled a withdrawal request.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="TestWithdrawalCancelled.setUpClass"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.tests.examples.test_10_abandon_submission.html#arxiv.submission.tests.examples.test_10_abandon_submission.TestWithdrawalCancelled.setUpClass">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">setUpClass</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Instantiate an app for use with a SQLite database.&quot;&quot;&quot;</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">db</span> <span class="o">=</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">mkstemp</span><span class="p">(</span><span class="n">suffix</span><span class="o">=</span><span class="s1">&#39;.sqlite&#39;</span><span class="p">)</span>
+        <span class="bp">cls</span><span class="o">.</span><span class="n">app</span> <span class="o">=</span> <span class="n">Flask</span><span class="p">(</span><span class="s1">&#39;foo&#39;</span><span class="p">)</span>
+        <span class="bp">cls</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;CLASSIC_DATABASE_URI&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;sqlite:///</span><span class="si">{db}</span><span class="s1">&#39;</span>
+        <span class="bp">cls</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;SQLALCHEMY_TRACK_MODIFICATIONS&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="k">with</span> <span class="bp">cls</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">app_context</span><span class="p">():</span>
+            <span class="n">classic</span><span class="o">.</span><span class="n">init_app</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">app</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestWithdrawalCancelled.setUp"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.tests.examples.test_10_abandon_submission.html#arxiv.submission.tests.examples.test_10_abandon_submission.TestWithdrawalCancelled.setUp">[docs]</a>    <span class="nd">@mock</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;</span><span class="si">{core.__name__}</span><span class="s1">.StreamPublisher&#39;</span><span class="p">,</span> <span class="n">mock</span><span class="o">.</span><span class="n">MagicMock</span><span class="p">())</span>
+    <span class="k">def</span> <span class="nf">setUp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Create, complete, and publish the submission.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">submitter</span> <span class="o">=</span> <span class="n">domain</span><span class="o">.</span><span class="n">agent</span><span class="o">.</span><span class="n">User</span><span class="p">(</span><span class="mi">1234</span><span class="p">,</span> <span class="n">email</span><span class="o">=</span><span class="s1">&#39;j.user@somewhere.edu&#39;</span><span class="p">,</span>
+                                           <span class="n">forename</span><span class="o">=</span><span class="s1">&#39;Jane&#39;</span><span class="p">,</span> <span class="n">surname</span><span class="o">=</span><span class="s1">&#39;User&#39;</span><span class="p">,</span>
+                                           <span class="n">endorsements</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;cs.DL&#39;</span><span class="p">,</span> <span class="s1">&#39;cs.IR&#39;</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">defaults</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;creator&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">submitter</span><span class="p">}</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">app_context</span><span class="p">():</span>
+            <span class="n">classic</span><span class="o">.</span><span class="n">create_all</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">title</span> <span class="o">=</span> <span class="s2">&quot;the best title&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">doi</span> <span class="o">=</span> <span class="s2">&quot;10.01234/56789&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">category</span> <span class="o">=</span> <span class="s2">&quot;cs.DL&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">events</span> <span class="o">=</span> <span class="n">save</span><span class="p">(</span>
+                <span class="n">domain</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">CreateSubmission</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">defaults</span><span class="p">),</span>
+                <span class="n">domain</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">ConfirmContactInformation</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">defaults</span><span class="p">),</span>
+                <span class="n">domain</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">ConfirmAuthorship</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">defaults</span><span class="p">),</span>
+                <span class="n">domain</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">ConfirmPolicy</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">defaults</span><span class="p">),</span>
+                <span class="n">domain</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">SetTitle</span><span class="p">(</span><span class="n">title</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">title</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">defaults</span><span class="p">),</span>
+                <span class="n">domain</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">SetLicense</span><span class="p">(</span><span class="n">license_uri</span><span class="o">=</span><span class="n">CCO</span><span class="p">,</span>
+                                        <span class="n">license_name</span><span class="o">=</span><span class="s2">&quot;CC0 1.0&quot;</span><span class="p">,</span>
+                                        <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">defaults</span><span class="p">),</span>
+                <span class="n">domain</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">SetPrimaryClassification</span><span class="p">(</span><span class="n">category</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">category</span><span class="p">,</span>
+                                                      <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">defaults</span><span class="p">),</span>
+                <span class="n">domain</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">SetUploadPackage</span><span class="p">(</span><span class="n">checksum</span><span class="o">=</span><span class="s2">&quot;a9s9k342900ks03330029&quot;</span><span class="p">,</span>
+                                              <span class="n">source_format</span><span class="o">=</span><span class="n">TEX</span><span class="p">,</span>
+                                              <span class="n">identifier</span><span class="o">=</span><span class="mi">123</span><span class="p">,</span>
+                                              <span class="n">uncompressed_size</span><span class="o">=</span><span class="mi">593992</span><span class="p">,</span>
+                                              <span class="n">compressed_size</span><span class="o">=</span><span class="mi">593992</span><span class="p">,</span>
+                                              <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">defaults</span><span class="p">),</span>
+                <span class="n">domain</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">SetAbstract</span><span class="p">(</span><span class="n">abstract</span><span class="o">=</span><span class="s2">&quot;Very abstract &quot;</span> <span class="o">*</span> <span class="mi">20</span><span class="p">,</span>
+                                         <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">defaults</span><span class="p">),</span>
+                <span class="n">domain</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">SetComments</span><span class="p">(</span><span class="n">comments</span><span class="o">=</span><span class="s2">&quot;Fine indeed &quot;</span> <span class="o">*</span> <span class="mi">10</span><span class="p">,</span>
+                                         <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">defaults</span><span class="p">),</span>
+                <span class="n">domain</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">SetJournalReference</span><span class="p">(</span><span class="n">journal_ref</span><span class="o">=</span><span class="s2">&quot;Foo 1992&quot;</span><span class="p">,</span>
+                                                 <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">defaults</span><span class="p">),</span>
+                <span class="n">domain</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">SetDOI</span><span class="p">(</span><span class="n">doi</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">doi</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">defaults</span><span class="p">),</span>
+                <span class="n">domain</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">SetAuthors</span><span class="p">(</span><span class="n">authors_display</span><span class="o">=</span><span class="s1">&#39;Robert Paulson (FC)&#39;</span><span class="p">,</span>
+                                        <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">defaults</span><span class="p">),</span>
+                <span class="n">domain</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">FinalizeSubmission</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">defaults</span><span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Announce the submission.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">paper_id</span> <span class="o">=</span> <span class="s1">&#39;1901.00123&#39;</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">app_context</span><span class="p">():</span>
+            <span class="n">session</span> <span class="o">=</span> <span class="n">classic</span><span class="o">.</span><span class="n">current_session</span><span class="p">()</span>
+            <span class="n">db_row</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">classic</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+            <span class="n">db_row</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="n">classic</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">ANNOUNCED</span>
+            <span class="n">dated</span> <span class="o">=</span> <span class="p">(</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span> <span class="o">-</span> <span class="n">datetime</span><span class="o">.</span><span class="n">utcfromtimestamp</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
+            <span class="n">db_row</span><span class="o">.</span><span class="n">document</span> <span class="o">=</span> <span class="n">classic</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Document</span><span class="p">(</span>
+                <span class="n">document_id</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                <span class="n">paper_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">paper_id</span><span class="p">,</span>
+                <span class="n">title</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">title</span><span class="p">,</span>
+                <span class="n">authors</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">authors_display</span><span class="p">,</span>
+                <span class="n">dated</span><span class="o">=</span><span class="n">dated</span><span class="o">.</span><span class="n">total_seconds</span><span class="p">(),</span>
+                <span class="n">primary_subject_class</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">category</span><span class="p">,</span>
+                <span class="n">created</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">UTC</span><span class="p">),</span>
+                <span class="n">submitter_email</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">creator</span><span class="o">.</span><span class="n">email</span><span class="p">,</span>
+                <span class="n">submitter_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">creator</span><span class="o">.</span><span class="n">native_id</span>
+            <span class="p">)</span>
+            <span class="n">db_row</span><span class="o">.</span><span class="n">doc_paper_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">paper_id</span>
+            <span class="n">session</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">db_row</span><span class="p">)</span>
+            <span class="n">session</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+
+        <span class="c1"># Request cross-list classification</span>
+        <span class="n">category</span> <span class="o">=</span> <span class="s2">&quot;cs.IR&quot;</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">app_context</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">events</span> <span class="o">=</span> <span class="n">save</span><span class="p">(</span>
+                <span class="n">domain</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">RequestWithdrawal</span><span class="p">(</span><span class="n">reason</span><span class="o">=</span><span class="s1">&#39;A good reason&#39;</span><span class="p">,</span>
+                                               <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">defaults</span><span class="p">),</span>
+                <span class="n">submission_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">submission_id</span>
+            <span class="p">)</span>
+
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">app_context</span><span class="p">():</span>
+            <span class="n">request_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">active_user_requests</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">request_id</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">events</span> <span class="o">=</span> <span class="n">save</span><span class="p">(</span>
+                <span class="n">domain</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">CancelRequest</span><span class="p">(</span><span class="n">request_id</span><span class="o">=</span><span class="n">request_id</span><span class="p">,</span>
+                                           <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">defaults</span><span class="p">),</span>
+                <span class="n">submission_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">submission_id</span>
+            <span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestWithdrawalCancelled.tearDown"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.tests.examples.test_10_abandon_submission.html#arxiv.submission.tests.examples.test_10_abandon_submission.TestWithdrawalCancelled.tearDown">[docs]</a>    <span class="k">def</span> <span class="nf">tearDown</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Clear the database after each test.&quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">app_context</span><span class="p">():</span>
+            <span class="n">classic</span><span class="o">.</span><span class="n">drop_all</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="TestWithdrawalCancelled.test_request_is_cancelled"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.tests.examples.test_10_abandon_submission.html#arxiv.submission.tests.examples.test_10_abandon_submission.TestWithdrawalCancelled.test_request_is_cancelled">[docs]</a>    <span class="nd">@mock</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;</span><span class="si">{core.__name__}</span><span class="s1">.StreamPublisher&#39;</span><span class="p">,</span> <span class="n">mock</span><span class="o">.</span><span class="n">MagicMock</span><span class="p">())</span>
+    <span class="k">def</span> <span class="nf">test_request_is_cancelled</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Submitter has cancelled the withdrawal request.&quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">app_context</span><span class="p">():</span>
+            <span class="n">submission</span><span class="p">,</span> <span class="n">events</span> <span class="o">=</span> <span class="n">load</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">submission_id</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">submission</span><span class="o">.</span><span class="n">status</span><span class="p">,</span>
+                             <span class="n">domain</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">ANNOUNCED</span><span class="p">,</span>
+                             <span class="s2">&quot;The submission is ANNOUNCED.&quot;</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">app_context</span><span class="p">():</span>
+            <span class="n">submission</span> <span class="o">=</span> <span class="n">load_fast</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">submission_id</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">submission</span><span class="o">.</span><span class="n">status</span><span class="p">,</span>
+                             <span class="n">domain</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">ANNOUNCED</span><span class="p">,</span>
+                             <span class="s2">&quot;The submission is ANNOUNCED.&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Check the database state.</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">app_context</span><span class="p">():</span>
+            <span class="n">session</span> <span class="o">=</span> <span class="n">classic</span><span class="o">.</span><span class="n">current_session</span><span class="p">()</span>
+            <span class="n">db_rows</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">classic</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="p">)</span> \
+                <span class="o">.</span><span class="n">order_by</span><span class="p">(</span><span class="n">classic</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">submission_id</span><span class="o">.</span><span class="n">asc</span><span class="p">())</span> \
+                <span class="o">.</span><span class="n">all</span><span class="p">()</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">db_rows</span><span class="p">),</span> <span class="mi">2</span><span class="p">,</span>
+                             <span class="s2">&quot;There are two rows in the submission table&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">db_rows</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">type</span><span class="p">,</span>
+                             <span class="n">classic</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">NEW_SUBMISSION</span><span class="p">,</span>
+                             <span class="s2">&quot;The first row has type &#39;new&#39;&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">db_rows</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">status</span><span class="p">,</span>
+                             <span class="n">classic</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">ANNOUNCED</span><span class="p">,</span>
+                             <span class="s2">&quot;The first row is ANNOUNCED&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">db_rows</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">type</span><span class="p">,</span>
+                             <span class="n">classic</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">WITHDRAWAL</span><span class="p">,</span>
+                             <span class="s2">&quot;The second row has type &#39;wdr&#39;&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">db_rows</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">status</span><span class="p">,</span>
+                             <span class="n">classic</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">USER_DELETED</span><span class="p">,</span>
+                             <span class="s2">&quot;The second row is USER_DELETED&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestWithdrawalCancelled.test_user_can_make_another_request"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.tests.examples.test_10_abandon_submission.html#arxiv.submission.tests.examples.test_10_abandon_submission.TestWithdrawalCancelled.test_user_can_make_another_request">[docs]</a>    <span class="nd">@mock</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;</span><span class="si">{core.__name__}</span><span class="s1">.StreamPublisher&#39;</span><span class="p">,</span> <span class="n">mock</span><span class="o">.</span><span class="n">MagicMock</span><span class="p">())</span>
+    <span class="k">def</span> <span class="nf">test_user_can_make_another_request</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;User can now make another request.&quot;&quot;&quot;</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">app_context</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">events</span> <span class="o">=</span> <span class="n">save</span><span class="p">(</span>
+                <span class="n">domain</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">RequestWithdrawal</span><span class="p">(</span><span class="n">reason</span><span class="o">=</span><span class="s1">&#39;A better reason&#39;</span><span class="p">,</span>
+                                               <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">defaults</span><span class="p">),</span>
+                <span class="n">submission_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">submission_id</span>
+            <span class="p">)</span>
+
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">app_context</span><span class="p">():</span>
+            <span class="n">submission</span><span class="p">,</span> <span class="n">events</span> <span class="o">=</span> <span class="n">load</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">submission_id</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">submission</span><span class="o">.</span><span class="n">status</span><span class="p">,</span>
+                             <span class="n">domain</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">ANNOUNCED</span><span class="p">,</span>
+                             <span class="s2">&quot;The submission is ANNOUNCED.&quot;</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">app_context</span><span class="p">():</span>
+            <span class="n">submission</span> <span class="o">=</span> <span class="n">load_fast</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">submission_id</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">submission</span><span class="o">.</span><span class="n">status</span><span class="p">,</span>
+                             <span class="n">domain</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">ANNOUNCED</span><span class="p">,</span>
+                             <span class="s2">&quot;The submission is ANNOUNCED.&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Check the database state.</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">app_context</span><span class="p">():</span>
+            <span class="n">session</span> <span class="o">=</span> <span class="n">classic</span><span class="o">.</span><span class="n">current_session</span><span class="p">()</span>
+            <span class="n">db_rows</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">classic</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="p">)</span> \
+                <span class="o">.</span><span class="n">order_by</span><span class="p">(</span><span class="n">classic</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">submission_id</span><span class="o">.</span><span class="n">asc</span><span class="p">())</span> \
+                <span class="o">.</span><span class="n">all</span><span class="p">()</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">db_rows</span><span class="p">),</span> <span class="mi">3</span><span class="p">,</span>
+                             <span class="s2">&quot;There are two rows in the submission table&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">db_rows</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">type</span><span class="p">,</span>
+                             <span class="n">classic</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">NEW_SUBMISSION</span><span class="p">,</span>
+                             <span class="s2">&quot;The first row has type &#39;new&#39;&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">db_rows</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">status</span><span class="p">,</span>
+                             <span class="n">classic</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">ANNOUNCED</span><span class="p">,</span>
+                             <span class="s2">&quot;The first row is ANNOUNCED&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">db_rows</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">type</span><span class="p">,</span>
+                             <span class="n">classic</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">WITHDRAWAL</span><span class="p">,</span>
+                             <span class="s2">&quot;The second row has type &#39;wdr&#39;&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">db_rows</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">status</span><span class="p">,</span>
+                             <span class="n">classic</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">USER_DELETED</span><span class="p">,</span>
+                             <span class="s2">&quot;The second row is USER_DELETED&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">db_rows</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">type</span><span class="p">,</span>
+                             <span class="n">classic</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">WITHDRAWAL</span><span class="p">,</span>
+                             <span class="s2">&quot;The third row has type &#39;wdr&#39;&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">db_rows</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">status</span><span class="p">,</span>
+                             <span class="n">classic</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">PROCESSING_SUBMISSION</span><span class="p">,</span>
+                             <span class="s2">&quot;The third row is PROCESSING_SUBMISSION&quot;</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">app_context</span><span class="p">():</span>
+            <span class="n">request_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">active_user_requests</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">request_id</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">events</span> <span class="o">=</span> <span class="n">save</span><span class="p">(</span>
+                <span class="n">domain</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">CancelRequest</span><span class="p">(</span><span class="n">request_id</span><span class="o">=</span><span class="n">request_id</span><span class="p">,</span>
+                                           <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">defaults</span><span class="p">),</span>
+                <span class="n">submission_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">submission_id</span>
+            <span class="p">)</span>
+
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">app_context</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">events</span> <span class="o">=</span> <span class="n">save</span><span class="p">(</span>
+                <span class="n">domain</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">RequestWithdrawal</span><span class="p">(</span><span class="n">reason</span><span class="o">=</span><span class="s1">&#39;A better reason&#39;</span><span class="p">,</span>
+                                               <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">defaults</span><span class="p">),</span>
+                <span class="n">submission_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">submission_id</span>
+            <span class="p">)</span>
+
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">app_context</span><span class="p">():</span>
+            <span class="n">request_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">active_user_requests</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">request_id</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">events</span> <span class="o">=</span> <span class="n">save</span><span class="p">(</span>
+                <span class="n">domain</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">CancelRequest</span><span class="p">(</span><span class="n">request_id</span><span class="o">=</span><span class="n">request_id</span><span class="p">,</span>
+                                           <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">defaults</span><span class="p">),</span>
+                <span class="n">submission_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">submission_id</span>
+            <span class="p">)</span>
+            <span class="n">submission</span><span class="p">,</span> <span class="n">events</span> <span class="o">=</span> <span class="n">load</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">submission_id</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">submission</span><span class="o">.</span><span class="n">active_user_requests</span><span class="p">),</span> <span class="mi">0</span><span class="p">)</span></div></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../../index.html">arXiv submission & moderation</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../architecture.html">Submission &amp; moderation subsystem architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../announcement_process.html">Submission &amp; announcement Process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../submission_api_context.html">Submission API: Context</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../arxiv.submission/arxiv.submission.html">arxiv.submission package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../containers/agent/agent.html">agent package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../containers/metadata/metadata.html">metadata package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../background.html">Background</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../../index.html">Module code</a><ul>
+  <li><a href="../../../submission.html">arxiv.submission</a><ul>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, arXiv.org.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.0.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

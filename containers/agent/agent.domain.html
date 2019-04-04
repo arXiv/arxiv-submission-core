@@ -1,0 +1,182 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>agent.domain module &#8212; arXiv submission &amp; moderation 0.1 documentation</title>
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="agent.factory module" href="agent.factory.html" />
+    <link rel="prev" title="agent.consumer module" href="agent.consumer.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="module-agent.domain">
+<span id="agent-domain-module"></span><h1>agent.domain module<a class="headerlink" href="#module-agent.domain" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="agent.domain.ProcessData">
+<em class="property">class </em><code class="descclassname">agent.domain.</code><code class="descname">ProcessData</code><span class="sig-paren">(</span><em>submission_id</em>, <em>trigger</em>, <em>results</em><span class="sig-paren">)</span><a class="headerlink" href="#agent.domain.ProcessData" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.6/library/functions.html#object" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Represents data associated with a (possibly multi-step) process.</p>
+<p>As steps are completed, their return values are appended to
+<code class="xref py py-attr docutils literal notranslate"><span class="pre">results</span></code>.</p>
+<dl class="method">
+<dt id="agent.domain.ProcessData.add_result">
+<code class="descname">add_result</code><span class="sig-paren">(</span><em>result</em><span class="sig-paren">)</span><a class="headerlink" href="#agent.domain.ProcessData.add_result" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add a result from a successful step.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="agent.domain.ProcessData.get_last_result">
+<code class="descname">get_last_result</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#agent.domain.ProcessData.get_last_result" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the result of the most recent successful step.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Any" title="(in Python v3.6)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="agent.domain.Trigger">
+<em class="property">class </em><code class="descclassname">agent.domain.</code><code class="descname">Trigger</code><span class="sig-paren">(</span><em>event=None</em>, <em>before=None</em>, <em>after=None</em>, <em>actor=None</em>, <em>params=&lt;factory&gt;</em><span class="sig-paren">)</span><a class="headerlink" href="#agent.domain.Trigger" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.6/library/functions.html#object" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Represents a trigger for a process.</p>
+<p>This will usually be an <a class="reference internal" href="../../arxiv.submission/arxiv.submission.domain.event.base.html#arxiv.submission.domain.event.base.Event" title="arxiv.submission.domain.event.base.Event"><code class="xref py py-class docutils literal notranslate"><span class="pre">Event</span></code></a>, but may also be directly triggered
+by an actor (e.g. manually starting a process via an UI).</p>
+<dl class="attribute">
+<dt id="agent.domain.Trigger.actor">
+<code class="descname">actor</code><em class="property"> = None</em><a class="headerlink" href="#agent.domain.Trigger.actor" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="agent.domain.Trigger.after">
+<code class="descname">after</code><em class="property"> = None</em><a class="headerlink" href="#agent.domain.Trigger.after" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="agent.domain.Trigger.before">
+<code class="descname">before</code><em class="property"> = None</em><a class="headerlink" href="#agent.domain.Trigger.before" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="agent.domain.Trigger.event">
+<code class="descname">event</code><em class="property"> = None</em><a class="headerlink" href="#agent.domain.Trigger.event" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">arXiv submission & moderation</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../architecture.html">Submission &amp; moderation subsystem architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../announcement_process.html">Submission &amp; announcement Process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../submission_api_context.html">Submission API: Context</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../arxiv.submission/arxiv.submission.html">arxiv.submission package</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="agent.html">agent package</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="agent.html#conceptual-overview">Conceptual overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="agent.html#architectural-overview">Architectural overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="agent.html#subpackages">Subpackages</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="agent.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../metadata/metadata.html">metadata package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../background.html">Background</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="agent.html">agent package</a><ul>
+      <li>Previous: <a href="agent.consumer.html" title="previous chapter">agent.consumer module</a></li>
+      <li>Next: <a href="agent.factory.html" title="next chapter">agent.factory module</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, arXiv.org.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.0.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../../_sources/containers/agent/agent.domain.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

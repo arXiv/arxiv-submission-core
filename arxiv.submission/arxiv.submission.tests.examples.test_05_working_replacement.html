@@ -1,0 +1,183 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>arxiv.submission.tests.examples.test_05_working_replacement module &#8212; arXiv submission &amp; moderation 0.1 documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="module-arxiv.submission.tests.examples.test_05_working_replacement">
+<span id="arxiv-submission-tests-examples-test-05-working-replacement-module"></span><h1>arxiv.submission.tests.examples.test_05_working_replacement module<a class="headerlink" href="#module-arxiv.submission.tests.examples.test_05_working_replacement" title="Permalink to this headline">¶</a></h1>
+<p>Example 5: submission is being replaced.</p>
+<dl class="class">
+<dt id="arxiv.submission.tests.examples.test_05_working_replacement.TestReplacementSubmissionInProgress">
+<em class="property">class </em><code class="descclassname">arxiv.submission.tests.examples.test_05_working_replacement.</code><code class="descname">TestReplacementSubmissionInProgress</code><span class="sig-paren">(</span><em>methodName='runTest'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/tests/examples/test_05_working_replacement.html#TestReplacementSubmissionInProgress"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.tests.examples.test_05_working_replacement.TestReplacementSubmissionInProgress" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">unittest.case.TestCase</span></code></p>
+<p>Submitter creates a replacement, and is working on updates.</p>
+<dl class="method">
+<dt id="arxiv.submission.tests.examples.test_05_working_replacement.TestReplacementSubmissionInProgress.setUp">
+<code class="descname">setUp</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/tests/examples/test_05_working_replacement.html#TestReplacementSubmissionInProgress.setUp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.tests.examples.test_05_working_replacement.TestReplacementSubmissionInProgress.setUp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create, complete, and publish the submission.</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="arxiv.submission.tests.examples.test_05_working_replacement.TestReplacementSubmissionInProgress.setUpClass">
+<em class="property">classmethod </em><code class="descname">setUpClass</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/tests/examples/test_05_working_replacement.html#TestReplacementSubmissionInProgress.setUpClass"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.tests.examples.test_05_working_replacement.TestReplacementSubmissionInProgress.setUpClass" title="Permalink to this definition">¶</a></dt>
+<dd><p>Instantiate an app for use with a SQLite database.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.tests.examples.test_05_working_replacement.TestReplacementSubmissionInProgress.tearDown">
+<code class="descname">tearDown</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/tests/examples/test_05_working_replacement.html#TestReplacementSubmissionInProgress.tearDown"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.tests.examples.test_05_working_replacement.TestReplacementSubmissionInProgress.tearDown" title="Permalink to this definition">¶</a></dt>
+<dd><p>Clear the database after each test.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.tests.examples.test_05_working_replacement.TestReplacementSubmissionInProgress.test_can_edit_submission_metadata">
+<code class="descname">test_can_edit_submission_metadata</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/tests/examples/test_05_working_replacement.html#TestReplacementSubmissionInProgress.test_can_edit_submission_metadata"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.tests.examples.test_05_working_replacement.TestReplacementSubmissionInProgress.test_can_edit_submission_metadata" title="Permalink to this definition">¶</a></dt>
+<dd><p>The submission metadata can now be changed.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.tests.examples.test_05_working_replacement.TestReplacementSubmissionInProgress.test_can_revert_to_most_recent_announced_version">
+<code class="descname">test_can_revert_to_most_recent_announced_version</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/tests/examples/test_05_working_replacement.html#TestReplacementSubmissionInProgress.test_can_revert_to_most_recent_announced_version"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.tests.examples.test_05_working_replacement.TestReplacementSubmissionInProgress.test_can_revert_to_most_recent_announced_version" title="Permalink to this definition">¶</a></dt>
+<dd><p>Submitter can abandon changes to their replacement.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.tests.examples.test_05_working_replacement.TestReplacementSubmissionInProgress.test_can_start_a_new_replacement_after_reverting">
+<code class="descname">test_can_start_a_new_replacement_after_reverting</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/tests/examples/test_05_working_replacement.html#TestReplacementSubmissionInProgress.test_can_start_a_new_replacement_after_reverting"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.tests.examples.test_05_working_replacement.TestReplacementSubmissionInProgress.test_can_start_a_new_replacement_after_reverting" title="Permalink to this definition">¶</a></dt>
+<dd><p>Submitter can start a new replacement after reverting.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.tests.examples.test_05_working_replacement.TestReplacementSubmissionInProgress.test_cannot_be_unfinalized">
+<code class="descname">test_cannot_be_unfinalized</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/tests/examples/test_05_working_replacement.html#TestReplacementSubmissionInProgress.test_cannot_be_unfinalized"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.tests.examples.test_05_working_replacement.TestReplacementSubmissionInProgress.test_cannot_be_unfinalized" title="Permalink to this definition">¶</a></dt>
+<dd><p>The submission cannot be unfinalized, as it is not finalized.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.tests.examples.test_05_working_replacement.TestReplacementSubmissionInProgress.test_cannot_replace_submission_again">
+<code class="descname">test_cannot_replace_submission_again</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/tests/examples/test_05_working_replacement.html#TestReplacementSubmissionInProgress.test_cannot_replace_submission_again"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.tests.examples.test_05_working_replacement.TestReplacementSubmissionInProgress.test_cannot_replace_submission_again" title="Permalink to this definition">¶</a></dt>
+<dd><p>The submission cannot be replaced again while in working state.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.tests.examples.test_05_working_replacement.TestReplacementSubmissionInProgress.test_cannot_withdraw_submission">
+<code class="descname">test_cannot_withdraw_submission</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/tests/examples/test_05_working_replacement.html#TestReplacementSubmissionInProgress.test_cannot_withdraw_submission"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.tests.examples.test_05_working_replacement.TestReplacementSubmissionInProgress.test_cannot_withdraw_submission" title="Permalink to this definition">¶</a></dt>
+<dd><p>The submitter cannot request withdrawal of the submission.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.tests.examples.test_05_working_replacement.TestReplacementSubmissionInProgress.test_changing_doi">
+<code class="descname">test_changing_doi</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/tests/examples/test_05_working_replacement.html#TestReplacementSubmissionInProgress.test_changing_doi"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.tests.examples.test_05_working_replacement.TestReplacementSubmissionInProgress.test_changing_doi" title="Permalink to this definition">¶</a></dt>
+<dd><p>Submitter can set the DOI as part of the new version.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.tests.examples.test_05_working_replacement.TestReplacementSubmissionInProgress.test_is_in_working_state">
+<code class="descname">test_is_in_working_state</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/tests/examples/test_05_working_replacement.html#TestReplacementSubmissionInProgress.test_is_in_working_state"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.tests.examples.test_05_working_replacement.TestReplacementSubmissionInProgress.test_is_in_working_state" title="Permalink to this definition">¶</a></dt>
+<dd><p>The submission is now in working state.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">arXiv submission & moderation</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../architecture.html">Submission &amp; moderation subsystem architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../announcement_process.html">Submission &amp; announcement Process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../submission_api_context.html">Submission API: Context</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../containers/agent/agent.html">agent package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../containers/metadata/metadata.html">metadata package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../background.html">Background</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, arXiv.org.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.0.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/arxiv.submission/arxiv.submission.tests.examples.test_05_working_replacement.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

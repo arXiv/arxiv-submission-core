@@ -1,0 +1,164 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>arxiv.submission.services.classic.exceptions module &#8212; arXiv submission &amp; moderation 0.1 documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="arxiv.submission.services.classic.interpolate module" href="arxiv.submission.services.classic.interpolate.html" />
+    <link rel="prev" title="arxiv.submission.services.classic.event module" href="arxiv.submission.services.classic.event.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="module-arxiv.submission.services.classic.exceptions">
+<span id="arxiv-submission-services-classic-exceptions-module"></span><h1>arxiv.submission.services.classic.exceptions module<a class="headerlink" href="#module-arxiv.submission.services.classic.exceptions" title="Permalink to this headline">¶</a></h1>
+<p>Exceptions raised by <a class="reference internal" href="arxiv.submission.services.classic.html#module-arxiv.submission.services.classic" title="arxiv.submission.services.classic"><code class="xref py py-mod docutils literal notranslate"><span class="pre">arxiv.submission.services.classic</span></code></a>.</p>
+<dl class="exception">
+<dt id="arxiv.submission.services.classic.exceptions.ClassicBaseException">
+<em class="property">exception </em><code class="descclassname">arxiv.submission.services.classic.exceptions.</code><code class="descname">ClassicBaseException</code><a class="reference internal" href="../_modules/arxiv/submission/services/classic/exceptions.html#ClassicBaseException"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.services.classic.exceptions.ClassicBaseException" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.6/library/exceptions.html#RuntimeError" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">RuntimeError</span></code></a></p>
+<p>Base for classic service exceptions.</p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="arxiv.submission.services.classic.exceptions.ConsistencyError">
+<em class="property">exception </em><code class="descclassname">arxiv.submission.services.classic.exceptions.</code><code class="descname">ConsistencyError</code><a class="reference internal" href="../_modules/arxiv/submission/services/classic/exceptions.html#ConsistencyError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.services.classic.exceptions.ConsistencyError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#arxiv.submission.services.classic.exceptions.ClassicBaseException" title="arxiv.submission.services.classic.exceptions.ClassicBaseException"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.submission.services.classic.exceptions.ClassicBaseException</span></code></a></p>
+<p>Attempted to persist stale or inconsistent state.</p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="arxiv.submission.services.classic.exceptions.NoSuchSubmission">
+<em class="property">exception </em><code class="descclassname">arxiv.submission.services.classic.exceptions.</code><code class="descname">NoSuchSubmission</code><a class="reference internal" href="../_modules/arxiv/submission/services/classic/exceptions.html#NoSuchSubmission"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.services.classic.exceptions.NoSuchSubmission" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#arxiv.submission.services.classic.exceptions.ClassicBaseException" title="arxiv.submission.services.classic.exceptions.ClassicBaseException"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.submission.services.classic.exceptions.ClassicBaseException</span></code></a></p>
+<p>A request was made for a submission that does not exist.</p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="arxiv.submission.services.classic.exceptions.TransactionFailed">
+<em class="property">exception </em><code class="descclassname">arxiv.submission.services.classic.exceptions.</code><code class="descname">TransactionFailed</code><a class="reference internal" href="../_modules/arxiv/submission/services/classic/exceptions.html#TransactionFailed"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.services.classic.exceptions.TransactionFailed" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#arxiv.submission.services.classic.exceptions.ClassicBaseException" title="arxiv.submission.services.classic.exceptions.ClassicBaseException"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.submission.services.classic.exceptions.ClassicBaseException</span></code></a></p>
+<p>Raised when there was a problem committing changes to the database.</p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="arxiv.submission.services.classic.exceptions.Unavailable">
+<em class="property">exception </em><code class="descclassname">arxiv.submission.services.classic.exceptions.</code><code class="descname">Unavailable</code><a class="reference internal" href="../_modules/arxiv/submission/services/classic/exceptions.html#Unavailable"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.services.classic.exceptions.Unavailable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#arxiv.submission.services.classic.exceptions.ClassicBaseException" title="arxiv.submission.services.classic.exceptions.ClassicBaseException"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.submission.services.classic.exceptions.ClassicBaseException</span></code></a></p>
+<p>The classic data store is not available.</p>
+</dd></dl>
+
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">arXiv submission & moderation</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../architecture.html">Submission &amp; moderation subsystem architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../announcement_process.html">Submission &amp; announcement Process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../submission_api_context.html">Submission API: Context</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="arxiv.submission.html">arxiv.submission package</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="arxiv.submission.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.submission.html#using-commands-events">Using commands/events</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.submission.html#versioning-events">Versioning events</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.submission.html#integration-with-the-legacy-system">Integration with the legacy system</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="arxiv.submission.html#subpackages">Subpackages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.submission.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../containers/agent/agent.html">agent package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../containers/metadata/metadata.html">metadata package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../background.html">Background</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="arxiv.submission.html">arxiv.submission package</a><ul>
+  <li><a href="arxiv.submission.services.html">arxiv.submission.services package</a><ul>
+  <li><a href="arxiv.submission.services.classic.html">arxiv.submission.services.classic package</a><ul>
+      <li>Previous: <a href="arxiv.submission.services.classic.event.html" title="previous chapter">arxiv.submission.services.classic.event module</a></li>
+      <li>Next: <a href="arxiv.submission.services.classic.interpolate.html" title="next chapter">arxiv.submission.services.classic.interpolate module</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, arXiv.org.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.0.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/arxiv.submission/arxiv.submission.services.classic.exceptions.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

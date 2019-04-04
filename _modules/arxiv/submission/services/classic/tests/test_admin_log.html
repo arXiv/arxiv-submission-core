@@ -1,11 +1,9 @@
 
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE html>
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta charset="utf-8" />
     <title>arxiv.submission.services.classic.tests.test_admin_log &#8212; arXiv submission &amp; moderation 0.1 documentation</title>
     <link rel="stylesheet" href="../../../../../../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../../../../../../_static/pygments.css" type="text/css" />
@@ -52,10 +50,10 @@
 <span class="kn">from</span> <span class="nn">.util</span> <span class="k">import</span> <span class="n">in_memory_db</span>
 
 
-<div class="viewcode-block" id="TestAdminLog"><a class="viewcode-back" href="../../../../../../containers/core/arxiv.submission.services.classic.tests.test_admin_log.html#arxiv.submission.services.classic.tests.test_admin_log.TestAdminLog">[docs]</a><span class="k">class</span> <span class="nc">TestAdminLog</span><span class="p">(</span><span class="n">TestCase</span><span class="p">):</span>
+<div class="viewcode-block" id="TestAdminLog"><a class="viewcode-back" href="../../../../../../arxiv.submission/arxiv.submission.services.classic.tests.test_admin_log.html#arxiv.submission.services.classic.tests.test_admin_log.TestAdminLog">[docs]</a><span class="k">class</span> <span class="nc">TestAdminLog</span><span class="p">(</span><span class="n">TestCase</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Test adding an admin long entry with :func:`.log.admin_log`.&quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="TestAdminLog.test_add_admin_log_entry"><a class="viewcode-back" href="../../../../../../containers/core/arxiv.submission.services.classic.tests.test_admin_log.html#arxiv.submission.services.classic.tests.test_admin_log.TestAdminLog.test_add_admin_log_entry">[docs]</a>    <span class="k">def</span> <span class="nf">test_add_admin_log_entry</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="TestAdminLog.test_add_admin_log_entry"><a class="viewcode-back" href="../../../../../../arxiv.submission/arxiv.submission.services.classic.tests.test_admin_log.html#arxiv.submission.services.classic.tests.test_admin_log.TestAdminLog.test_add_admin_log_entry">[docs]</a>    <span class="k">def</span> <span class="nf">test_add_admin_log_entry</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Add a log entry.&quot;&quot;&quot;</span>
         <span class="k">with</span> <span class="n">in_memory_db</span><span class="p">()</span> <span class="k">as</span> <span class="n">session</span><span class="p">:</span>
             <span class="n">log</span><span class="o">.</span><span class="n">admin_log</span><span class="p">(</span>
@@ -81,10 +79,10 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">assertIsNone</span><span class="p">(</span><span class="n">logs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">document_id</span><span class="p">)</span></div></div>
 
 
-<div class="viewcode-block" id="TestOnEvent"><a class="viewcode-back" href="../../../../../../containers/core/arxiv.submission.services.classic.tests.test_admin_log.html#arxiv.submission.services.classic.tests.test_admin_log.TestOnEvent">[docs]</a><span class="k">class</span> <span class="nc">TestOnEvent</span><span class="p">(</span><span class="n">TestCase</span><span class="p">):</span>
+<div class="viewcode-block" id="TestOnEvent"><a class="viewcode-back" href="../../../../../../arxiv.submission/arxiv.submission.services.classic.tests.test_admin_log.html#arxiv.submission.services.classic.tests.test_admin_log.TestOnEvent">[docs]</a><span class="k">class</span> <span class="nc">TestOnEvent</span><span class="p">(</span><span class="n">TestCase</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Functions in :const:`.log.ON_EVENT` are called.&quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="TestOnEvent.test_on_event"><a class="viewcode-back" href="../../../../../../containers/core/arxiv.submission.services.classic.tests.test_admin_log.html#arxiv.submission.services.classic.tests.test_admin_log.TestOnEvent.test_on_event">[docs]</a>    <span class="k">def</span> <span class="nf">test_on_event</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="TestOnEvent.test_on_event"><a class="viewcode-back" href="../../../../../../arxiv.submission/arxiv.submission.services.classic.tests.test_admin_log.html#arxiv.submission.services.classic.tests.test_admin_log.TestOnEvent.test_on_event">[docs]</a>    <span class="k">def</span> <span class="nf">test_on_event</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Function in :const:`.log.ON_EVENT` is called.&quot;&quot;&quot;</span>
         <span class="n">mock_handler</span> <span class="o">=</span> <span class="n">mock</span><span class="o">.</span><span class="n">MagicMock</span><span class="p">()</span>
         <span class="n">log</span><span class="o">.</span><span class="n">ON_EVENT</span><span class="p">[</span><span class="n">ConfirmPolicy</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">mock_handler</span><span class="p">]</span>
@@ -97,7 +95,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">mock_handler</span><span class="o">.</span><span class="n">call_count</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span>
                          <span class="s2">&quot;Handler registered for ConfirmPolicy is called&quot;</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="TestOnEvent.test_on_event_is_specific"><a class="viewcode-back" href="../../../../../../containers/core/arxiv.submission.services.classic.tests.test_admin_log.html#arxiv.submission.services.classic.tests.test_admin_log.TestOnEvent.test_on_event_is_specific">[docs]</a>    <span class="k">def</span> <span class="nf">test_on_event_is_specific</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="TestOnEvent.test_on_event_is_specific"><a class="viewcode-back" href="../../../../../../arxiv.submission/arxiv.submission.services.classic.tests.test_admin_log.html#arxiv.submission.services.classic.tests.test_admin_log.TestOnEvent.test_on_event_is_specific">[docs]</a>    <span class="k">def</span> <span class="nf">test_on_event_is_specific</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Function in :const:`.log.ON_EVENT` are specific.&quot;&quot;&quot;</span>
         <span class="n">mock_handler</span> <span class="o">=</span> <span class="n">mock</span><span class="o">.</span><span class="n">MagicMock</span><span class="p">()</span>
         <span class="n">log</span><span class="o">.</span><span class="n">ON_EVENT</span><span class="p">[</span><span class="n">ConfirmPolicy</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">mock_handler</span><span class="p">]</span>
@@ -111,10 +109,10 @@
                          <span class="s2">&quot;Handler registered for ConfirmPolicy is not called&quot;</span><span class="p">)</span></div></div>
 
 
-<div class="viewcode-block" id="TestStoreEvent"><a class="viewcode-back" href="../../../../../../containers/core/arxiv.submission.services.classic.tests.test_admin_log.html#arxiv.submission.services.classic.tests.test_admin_log.TestStoreEvent">[docs]</a><span class="k">class</span> <span class="nc">TestStoreEvent</span><span class="p">(</span><span class="n">TestCase</span><span class="p">):</span>
+<div class="viewcode-block" id="TestStoreEvent"><a class="viewcode-back" href="../../../../../../arxiv.submission/arxiv.submission.services.classic.tests.test_admin_log.html#arxiv.submission.services.classic.tests.test_admin_log.TestStoreEvent">[docs]</a><span class="k">class</span> <span class="nc">TestStoreEvent</span><span class="p">(</span><span class="n">TestCase</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Test log integration when storing event.&quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="TestStoreEvent.test_store_event"><a class="viewcode-back" href="../../../../../../containers/core/arxiv.submission.services.classic.tests.test_admin_log.html#arxiv.submission.services.classic.tests.test_admin_log.TestStoreEvent.test_store_event">[docs]</a>    <span class="k">def</span> <span class="nf">test_store_event</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="TestStoreEvent.test_store_event"><a class="viewcode-back" href="../../../../../../arxiv.submission/arxiv.submission.services.classic.tests.test_admin_log.html#arxiv.submission.services.classic.tests.test_admin_log.TestStoreEvent.test_store_event">[docs]</a>    <span class="k">def</span> <span class="nf">test_store_event</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Log handler is called when an event is stored.&quot;&quot;&quot;</span>
         <span class="n">mock_handler</span> <span class="o">=</span> <span class="n">mock</span><span class="o">.</span><span class="n">MagicMock</span><span class="p">()</span>
         <span class="n">log</span><span class="o">.</span><span class="n">ON_EVENT</span><span class="p">[</span><span class="n">CreateSubmission</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">mock_handler</span><span class="p">]</span>
@@ -151,7 +149,8 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../../../architecture.html">Submission &amp; moderation subsystem architecture</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../../announcement_process.html">Submission &amp; announcement Process</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../../submission_api_context.html">Submission API: Context</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../../../containers/core/arxiv.submission.html">arxiv.submission package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../arxiv.submission/arxiv.submission.html">arxiv.submission package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../containers/agent/agent.html">agent package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../../containers/metadata/metadata.html">metadata package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../../background.html">Background</a></li>
 </ul>
@@ -161,7 +160,9 @@
 <ul>
   <li><a href="../../../../../../index.html">Documentation overview</a><ul>
   <li><a href="../../../../../index.html">Module code</a><ul>
+  <li><a href="../../../../submission.html">arxiv.submission</a><ul>
   <li><a href="../../classic.html">arxiv.submission.services.classic</a><ul>
+  </ul></li>
   </ul></li>
   </ul></li>
   </ul></li>
@@ -173,8 +174,6 @@
     <form class="search" action="../../../../../../search.html" method="get">
       <input type="text" name="q" />
       <input type="submit" value="Go" />
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
     </form>
     </div>
 </div>
@@ -195,7 +194,7 @@
       &copy;2017, arXiv.org.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.3</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.0.0</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
     </div>

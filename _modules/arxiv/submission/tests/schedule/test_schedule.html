@@ -1,0 +1,171 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>arxiv.submission.tests.schedule.test_schedule &#8212; arXiv submission &amp; moderation 0.1 documentation</title>
+    <link rel="stylesheet" href="../../../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/graphviz.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../../../../" src="../../../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for arxiv.submission.tests.schedule.test_schedule</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Tests for :mod:`.schedule`.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">unittest</span> <span class="k">import</span> <span class="n">TestCase</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="k">import</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">timedelta</span>
+<span class="kn">from</span> <span class="nn">pytz</span> <span class="k">import</span> <span class="n">timezone</span><span class="p">,</span> <span class="n">UTC</span>
+<span class="kn">from</span> <span class="nn">...</span> <span class="k">import</span> <span class="n">schedule</span>
+
+<span class="n">ET</span> <span class="o">=</span> <span class="n">timezone</span><span class="p">(</span><span class="s1">&#39;US/Eastern&#39;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="TestSchedule"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.tests.schedule.test_schedule.html#arxiv.submission.tests.schedule.test_schedule.TestSchedule">[docs]</a><span class="k">class</span> <span class="nc">TestSchedule</span><span class="p">(</span><span class="n">TestCase</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Verify that scheduling functions work as expected.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="TestSchedule.test_monday_morning"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.tests.schedule.test_schedule.html#arxiv.submission.tests.schedule.test_schedule.TestSchedule.test_monday_morning">[docs]</a>    <span class="k">def</span> <span class="nf">test_monday_morning</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;E-print was submitted on Monday morning.&quot;&quot;&quot;</span>
+        <span class="n">submitted</span> <span class="o">=</span> <span class="n">ET</span><span class="o">.</span><span class="n">localize</span><span class="p">(</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2019</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">18</span><span class="p">,</span> <span class="mi">9</span><span class="p">,</span> <span class="mi">47</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">schedule</span><span class="o">.</span><span class="n">next_announcement_time</span><span class="p">(</span><span class="n">submitted</span><span class="p">),</span>
+                         <span class="n">ET</span><span class="o">.</span><span class="n">localize</span><span class="p">(</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2019</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">18</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)),</span>
+                         <span class="s2">&quot;Will be announced at 8pm this evening&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">schedule</span><span class="o">.</span><span class="n">next_freeze_time</span><span class="p">(</span><span class="n">submitted</span><span class="p">),</span>
+                         <span class="n">ET</span><span class="o">.</span><span class="n">localize</span><span class="p">(</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2019</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">18</span><span class="p">,</span> <span class="mi">14</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)),</span>
+                         <span class="s2">&quot;Freeze time is 2pm this afternoon&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestSchedule.test_monday_late_afternoon"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.tests.schedule.test_schedule.html#arxiv.submission.tests.schedule.test_schedule.TestSchedule.test_monday_late_afternoon">[docs]</a>    <span class="k">def</span> <span class="nf">test_monday_late_afternoon</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;E-print was submitted on Monday in the late afternoon.&quot;&quot;&quot;</span>
+        <span class="n">submitted</span> <span class="o">=</span> <span class="n">ET</span><span class="o">.</span><span class="n">localize</span><span class="p">(</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2019</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">18</span><span class="p">,</span> <span class="mi">15</span><span class="p">,</span> <span class="mi">32</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">schedule</span><span class="o">.</span><span class="n">next_announcement_time</span><span class="p">(</span><span class="n">submitted</span><span class="p">),</span>
+                         <span class="n">ET</span><span class="o">.</span><span class="n">localize</span><span class="p">(</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2019</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">19</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)),</span>
+                         <span class="s2">&quot;Will be announced at 8pm tomorrow evening&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">schedule</span><span class="o">.</span><span class="n">next_freeze_time</span><span class="p">(</span><span class="n">submitted</span><span class="p">),</span>
+                         <span class="n">ET</span><span class="o">.</span><span class="n">localize</span><span class="p">(</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2019</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">19</span><span class="p">,</span> <span class="mi">14</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)),</span>
+                         <span class="s2">&quot;Freeze time is 2pm tomorrow afternoon&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestSchedule.test_monday_evening"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.tests.schedule.test_schedule.html#arxiv.submission.tests.schedule.test_schedule.TestSchedule.test_monday_evening">[docs]</a>    <span class="k">def</span> <span class="nf">test_monday_evening</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;E-print was submitted on Monday in the evening.&quot;&quot;&quot;</span>
+        <span class="n">submitted</span> <span class="o">=</span> <span class="n">ET</span><span class="o">.</span><span class="n">localize</span><span class="p">(</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2019</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">18</span><span class="p">,</span> <span class="mi">22</span><span class="p">,</span> <span class="mi">32</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">schedule</span><span class="o">.</span><span class="n">next_announcement_time</span><span class="p">(</span><span class="n">submitted</span><span class="p">),</span>
+                         <span class="n">ET</span><span class="o">.</span><span class="n">localize</span><span class="p">(</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2019</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">19</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)),</span>
+                         <span class="s2">&quot;Will be announced at 8pm tomorrow evening&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">schedule</span><span class="o">.</span><span class="n">next_freeze_time</span><span class="p">(</span><span class="n">submitted</span><span class="p">),</span>
+                         <span class="n">ET</span><span class="o">.</span><span class="n">localize</span><span class="p">(</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2019</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">19</span><span class="p">,</span> <span class="mi">14</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)),</span>
+                         <span class="s2">&quot;Freeze time is 2pm tomorrow afternoon&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestSchedule.test_saturday"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.tests.schedule.test_schedule.html#arxiv.submission.tests.schedule.test_schedule.TestSchedule.test_saturday">[docs]</a>    <span class="k">def</span> <span class="nf">test_saturday</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;E-print was submitted on a Saturday.&quot;&quot;&quot;</span>
+        <span class="n">submitted</span> <span class="o">=</span> <span class="n">ET</span><span class="o">.</span><span class="n">localize</span><span class="p">(</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2019</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">23</span><span class="p">,</span> <span class="mi">22</span><span class="p">,</span> <span class="mi">32</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">schedule</span><span class="o">.</span><span class="n">next_announcement_time</span><span class="p">(</span><span class="n">submitted</span><span class="p">),</span>
+                         <span class="n">ET</span><span class="o">.</span><span class="n">localize</span><span class="p">(</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2019</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">25</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)),</span>
+                         <span class="s2">&quot;Will be announced at 8pm next Monday&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">schedule</span><span class="o">.</span><span class="n">next_freeze_time</span><span class="p">(</span><span class="n">submitted</span><span class="p">),</span>
+                         <span class="n">ET</span><span class="o">.</span><span class="n">localize</span><span class="p">(</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2019</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">25</span><span class="p">,</span> <span class="mi">14</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)),</span>
+                         <span class="s2">&quot;Freeze time is 2pm next Monday&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestSchedule.test_friday_afternoon"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.tests.schedule.test_schedule.html#arxiv.submission.tests.schedule.test_schedule.TestSchedule.test_friday_afternoon">[docs]</a>    <span class="k">def</span> <span class="nf">test_friday_afternoon</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;E-print was submitted on a Friday in the early afternoon.&quot;&quot;&quot;</span>
+        <span class="n">submitted</span> <span class="o">=</span> <span class="n">ET</span><span class="o">.</span><span class="n">localize</span><span class="p">(</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2019</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">22</span><span class="p">,</span> <span class="mi">13</span><span class="p">,</span> <span class="mi">32</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">schedule</span><span class="o">.</span><span class="n">next_announcement_time</span><span class="p">(</span><span class="n">submitted</span><span class="p">),</span>
+                         <span class="n">ET</span><span class="o">.</span><span class="n">localize</span><span class="p">(</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2019</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">24</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)),</span>
+                         <span class="s2">&quot;Will be announced at 8pm on Sunday&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">schedule</span><span class="o">.</span><span class="n">next_freeze_time</span><span class="p">(</span><span class="n">submitted</span><span class="p">),</span>
+                         <span class="n">ET</span><span class="o">.</span><span class="n">localize</span><span class="p">(</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2019</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">22</span><span class="p">,</span> <span class="mi">14</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)),</span>
+                         <span class="s2">&quot;Freeze time is 2pm that same day&quot;</span><span class="p">)</span></div></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../../index.html">arXiv submission & moderation</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../architecture.html">Submission &amp; moderation subsystem architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../announcement_process.html">Submission &amp; announcement Process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../submission_api_context.html">Submission API: Context</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../arxiv.submission/arxiv.submission.html">arxiv.submission package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../containers/agent/agent.html">agent package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../containers/metadata/metadata.html">metadata package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../background.html">Background</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../../index.html">Module code</a><ul>
+  <li><a href="../../../submission.html">arxiv.submission</a><ul>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, arXiv.org.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.0.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

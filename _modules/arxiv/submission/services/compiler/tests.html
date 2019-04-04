@@ -1,0 +1,326 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>arxiv.submission.services.compiler.tests &#8212; arXiv submission &amp; moderation 0.1 documentation</title>
+    <link rel="stylesheet" href="../../../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/graphviz.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../../../../" src="../../../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for arxiv.submission.services.compiler.tests</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Tests for :mod:`.compiler`.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">unittest</span> <span class="k">import</span> <span class="n">TestCase</span><span class="p">,</span> <span class="n">mock</span>
+
+<span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">compiler</span>
+<span class="kn">from</span> <span class="nn">...</span> <span class="k">import</span> <span class="n">domain</span>
+
+<span class="kn">from</span> <span class="nn">arxiv.integration.api</span> <span class="k">import</span> <span class="n">status</span><span class="p">,</span> <span class="n">exceptions</span>
+
+
+<span class="n">mock_app</span> <span class="o">=</span> <span class="n">mock</span><span class="o">.</span><span class="n">MagicMock</span><span class="p">(</span><span class="n">config</span><span class="o">=</span><span class="p">{</span>
+    <span class="s1">&#39;COMPILER_ENDPOINT&#39;</span><span class="p">:</span> <span class="s1">&#39;http://foohost:1234&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;COMPILER_VERIFY&#39;</span><span class="p">:</span> <span class="kc">False</span>
+<span class="p">})</span>
+
+
+<div class="viewcode-block" id="TestRequestCompilation"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.services.compiler.tests.html#arxiv.submission.services.compiler.tests.TestRequestCompilation">[docs]</a><span class="k">class</span> <span class="nc">TestRequestCompilation</span><span class="p">(</span><span class="n">TestCase</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Tests for :mod:`compiler.compile` with mocked responses.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="TestRequestCompilation.test_compile"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.services.compiler.tests.html#arxiv.submission.services.compiler.tests.TestRequestCompilation.test_compile">[docs]</a>    <span class="nd">@mock</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="s1">&#39;arxiv.integration.api.service.current_app&#39;</span><span class="p">,</span> <span class="n">mock_app</span><span class="p">)</span>
+    <span class="nd">@mock</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="s1">&#39;arxiv.integration.api.service.requests.Session&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">test_compile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mock_Session</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Request compilation of an upload workspace.&quot;&quot;&quot;</span>
+        <span class="n">source_id</span> <span class="o">=</span> <span class="mi">42</span>
+        <span class="n">checksum</span> <span class="o">=</span> <span class="s1">&#39;asdf1234=&#39;</span>
+        <span class="n">output_format</span> <span class="o">=</span> <span class="n">domain</span><span class="o">.</span><span class="n">compilation</span><span class="o">.</span><span class="n">Compilation</span><span class="o">.</span><span class="n">Format</span><span class="o">.</span><span class="n">PDF</span>
+        <span class="n">location</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;http://asdf/</span><span class="si">{source_id}</span><span class="s1">/</span><span class="si">{checksum}</span><span class="s1">/</span><span class="si">{output_format.value}</span><span class="s1">&#39;</span>
+        <span class="n">mock_session</span> <span class="o">=</span> <span class="n">mock</span><span class="o">.</span><span class="n">MagicMock</span><span class="p">(</span>
+            <span class="n">post</span><span class="o">=</span><span class="n">mock</span><span class="o">.</span><span class="n">MagicMock</span><span class="p">(</span>
+                <span class="n">return_value</span><span class="o">=</span><span class="n">mock</span><span class="o">.</span><span class="n">MagicMock</span><span class="p">(</span>
+                    <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">ACCEPTED</span><span class="p">,</span>
+                    <span class="n">json</span><span class="o">=</span><span class="n">mock</span><span class="o">.</span><span class="n">MagicMock</span><span class="p">(</span><span class="n">return_value</span><span class="o">=</span><span class="p">{</span>
+                        <span class="s1">&#39;source_id&#39;</span><span class="p">:</span> <span class="n">source_id</span><span class="p">,</span>
+                        <span class="s1">&#39;checksum&#39;</span><span class="p">:</span> <span class="n">checksum</span><span class="p">,</span>
+                        <span class="s1">&#39;output_format&#39;</span><span class="p">:</span> <span class="n">output_format</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+                        <span class="s1">&#39;status&#39;</span><span class="p">:</span> <span class="n">domain</span><span class="o">.</span><span class="n">compilation</span><span class="o">.</span><span class="n">Compilation</span><span class="o">.</span><span class="n">Status</span><span class="o">.</span><span class="n">IN_PROGRESS</span><span class="o">.</span><span class="n">value</span>
+                    <span class="p">}),</span>
+                    <span class="n">headers</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;Location&#39;</span><span class="p">:</span> <span class="n">location</span><span class="p">}</span>
+                <span class="p">)</span>
+            <span class="p">),</span>
+            <span class="n">get</span><span class="o">=</span><span class="n">mock</span><span class="o">.</span><span class="n">MagicMock</span><span class="p">(</span>
+                <span class="n">return_value</span><span class="o">=</span><span class="n">mock</span><span class="o">.</span><span class="n">MagicMock</span><span class="p">(</span>
+                    <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">OK</span><span class="p">,</span>
+                    <span class="n">json</span><span class="o">=</span><span class="n">mock</span><span class="o">.</span><span class="n">MagicMock</span><span class="p">(</span><span class="n">return_value</span><span class="o">=</span><span class="p">{</span>
+                        <span class="s1">&#39;source_id&#39;</span><span class="p">:</span> <span class="n">source_id</span><span class="p">,</span>
+                        <span class="s1">&#39;checksum&#39;</span><span class="p">:</span> <span class="n">checksum</span><span class="p">,</span>
+                        <span class="s1">&#39;output_format&#39;</span><span class="p">:</span> <span class="n">output_format</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+                        <span class="s1">&#39;status&#39;</span><span class="p">:</span> <span class="n">domain</span><span class="o">.</span><span class="n">compilation</span><span class="o">.</span><span class="n">Compilation</span><span class="o">.</span><span class="n">Status</span><span class="o">.</span><span class="n">IN_PROGRESS</span><span class="o">.</span><span class="n">value</span>
+                    <span class="p">}),</span>
+                    <span class="n">headers</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;Location&#39;</span><span class="p">:</span> <span class="n">location</span><span class="p">}</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">mock_Session</span><span class="o">.</span><span class="n">return_value</span> <span class="o">=</span> <span class="n">mock_session</span>
+
+        <span class="n">comp_status</span> <span class="o">=</span> <span class="n">compiler</span><span class="o">.</span><span class="n">Compiler</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="n">source_id</span><span class="p">,</span> <span class="n">checksum</span><span class="p">,</span> <span class="s1">&#39;footok&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">comp_status</span><span class="o">.</span><span class="n">source_id</span><span class="p">,</span> <span class="n">source_id</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">comp_status</span><span class="o">.</span><span class="n">identifier</span><span class="p">,</span>
+                         <span class="n">f</span><span class="s2">&quot;</span><span class="si">{source_id}</span><span class="s2">/</span><span class="si">{checksum}</span><span class="s2">/</span><span class="si">{output_format.value}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">comp_status</span><span class="o">.</span><span class="n">status</span><span class="p">,</span>
+                         <span class="n">domain</span><span class="o">.</span><span class="n">compilation</span><span class="o">.</span><span class="n">Compilation</span><span class="o">.</span><span class="n">Status</span><span class="o">.</span><span class="n">IN_PROGRESS</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">mock_session</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">call_count</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestRequestCompilation.test_compile_redirects"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.services.compiler.tests.html#arxiv.submission.services.compiler.tests.TestRequestCompilation.test_compile_redirects">[docs]</a>    <span class="nd">@mock</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="s1">&#39;arxiv.integration.api.service.current_app&#39;</span><span class="p">,</span> <span class="n">mock_app</span><span class="p">)</span>
+    <span class="nd">@mock</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="s1">&#39;arxiv.integration.api.service.requests.Session&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">test_compile_redirects</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mock_Session</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Request compilation of an upload workspace already processing.&quot;&quot;&quot;</span>
+        <span class="n">source_id</span> <span class="o">=</span> <span class="mi">42</span>
+        <span class="n">checksum</span> <span class="o">=</span> <span class="s1">&#39;asdf1234=&#39;</span>
+        <span class="n">output_format</span> <span class="o">=</span> <span class="n">domain</span><span class="o">.</span><span class="n">compilation</span><span class="o">.</span><span class="n">Compilation</span><span class="o">.</span><span class="n">Format</span><span class="o">.</span><span class="n">PDF</span>
+
+        <span class="n">location</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;http://asdf/</span><span class="si">{source_id}</span><span class="s1">/</span><span class="si">{checksum}</span><span class="s1">/</span><span class="si">{output_format.value}</span><span class="s1">&#39;</span>
+        <span class="n">mock_session</span> <span class="o">=</span> <span class="n">mock</span><span class="o">.</span><span class="n">MagicMock</span><span class="p">(</span>
+            <span class="n">post</span><span class="o">=</span><span class="n">mock</span><span class="o">.</span><span class="n">MagicMock</span><span class="p">(</span>    <span class="c1"># Redirected</span>
+                <span class="n">return_value</span><span class="o">=</span><span class="n">mock</span><span class="o">.</span><span class="n">MagicMock</span><span class="p">(</span>
+                    <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">OK</span><span class="p">,</span>
+                    <span class="n">json</span><span class="o">=</span><span class="n">mock</span><span class="o">.</span><span class="n">MagicMock</span><span class="p">(</span>
+                        <span class="n">return_value</span><span class="o">=</span><span class="p">{</span>
+                            <span class="s1">&#39;source_id&#39;</span><span class="p">:</span> <span class="n">source_id</span><span class="p">,</span>
+                            <span class="s1">&#39;checksum&#39;</span><span class="p">:</span> <span class="n">checksum</span><span class="p">,</span>
+                            <span class="s1">&#39;output_format&#39;</span><span class="p">:</span> <span class="n">output_format</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+                            <span class="s1">&#39;status&#39;</span><span class="p">:</span> <span class="n">domain</span><span class="o">.</span><span class="n">compilation</span><span class="o">.</span><span class="n">Compilation</span><span class="o">.</span><span class="n">Status</span><span class="o">.</span><span class="n">IN_PROGRESS</span><span class="o">.</span><span class="n">value</span>
+                        <span class="p">}</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">mock_Session</span><span class="o">.</span><span class="n">return_value</span> <span class="o">=</span> <span class="n">mock_session</span>
+        <span class="n">comp_status</span> <span class="o">=</span> <span class="n">compiler</span><span class="o">.</span><span class="n">Compiler</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="n">source_id</span><span class="p">,</span> <span class="n">checksum</span><span class="p">,</span>
+                                                       <span class="s1">&#39;footok&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">comp_status</span><span class="o">.</span><span class="n">source_id</span><span class="p">,</span> <span class="n">source_id</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">comp_status</span><span class="o">.</span><span class="n">identifier</span><span class="p">,</span>
+                         <span class="n">f</span><span class="s2">&quot;</span><span class="si">{source_id}</span><span class="s2">/</span><span class="si">{checksum}</span><span class="s2">/</span><span class="si">{output_format.value}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">comp_status</span><span class="o">.</span><span class="n">status</span><span class="p">,</span>
+                         <span class="n">domain</span><span class="o">.</span><span class="n">compilation</span><span class="o">.</span><span class="n">Compilation</span><span class="o">.</span><span class="n">Status</span><span class="o">.</span><span class="n">IN_PROGRESS</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">mock_session</span><span class="o">.</span><span class="n">post</span><span class="o">.</span><span class="n">call_count</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="TestGetTaskStatus"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.services.compiler.tests.html#arxiv.submission.services.compiler.tests.TestGetTaskStatus">[docs]</a><span class="k">class</span> <span class="nc">TestGetTaskStatus</span><span class="p">(</span><span class="n">TestCase</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Tests for :mod:`compiler.get_status` with mocked responses.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="TestGetTaskStatus.test_get_status_failed"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.services.compiler.tests.html#arxiv.submission.services.compiler.tests.TestGetTaskStatus.test_get_status_failed">[docs]</a>    <span class="nd">@mock</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="s1">&#39;arxiv.integration.api.service.current_app&#39;</span><span class="p">,</span> <span class="n">mock_app</span><span class="p">)</span>
+    <span class="nd">@mock</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="s1">&#39;arxiv.integration.api.service.requests.Session&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">test_get_status_failed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mock_Session</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the status of a failed task.&quot;&quot;&quot;</span>
+        <span class="n">source_id</span> <span class="o">=</span> <span class="mi">42</span>
+        <span class="n">checksum</span> <span class="o">=</span> <span class="s1">&#39;asdf1234=&#39;</span>
+        <span class="n">output_format</span> <span class="o">=</span> <span class="n">domain</span><span class="o">.</span><span class="n">compilation</span><span class="o">.</span><span class="n">Compilation</span><span class="o">.</span><span class="n">Format</span><span class="o">.</span><span class="n">PDF</span>
+
+        <span class="n">mock_session</span> <span class="o">=</span> <span class="n">mock</span><span class="o">.</span><span class="n">MagicMock</span><span class="p">(</span>
+            <span class="n">get</span><span class="o">=</span><span class="n">mock</span><span class="o">.</span><span class="n">MagicMock</span><span class="p">(</span>
+                <span class="n">return_value</span><span class="o">=</span><span class="n">mock</span><span class="o">.</span><span class="n">MagicMock</span><span class="p">(</span>
+                    <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">OK</span><span class="p">,</span>
+                    <span class="n">json</span><span class="o">=</span><span class="n">mock</span><span class="o">.</span><span class="n">MagicMock</span><span class="p">(</span>
+                        <span class="n">return_value</span><span class="o">=</span><span class="p">{</span>
+                            <span class="s1">&#39;source_id&#39;</span><span class="p">:</span> <span class="n">source_id</span><span class="p">,</span>
+                            <span class="s1">&#39;checksum&#39;</span><span class="p">:</span> <span class="n">checksum</span><span class="p">,</span>
+                            <span class="s1">&#39;output_format&#39;</span><span class="p">:</span> <span class="n">output_format</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+                            <span class="s1">&#39;status&#39;</span><span class="p">:</span> <span class="n">domain</span><span class="o">.</span><span class="n">compilation</span><span class="o">.</span><span class="n">Compilation</span><span class="o">.</span><span class="n">Status</span><span class="o">.</span><span class="n">FAILED</span><span class="o">.</span><span class="n">value</span>
+                        <span class="p">}</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">mock_Session</span><span class="o">.</span><span class="n">return_value</span> <span class="o">=</span> <span class="n">mock_session</span>
+        <span class="n">comp_status</span> <span class="o">=</span> <span class="n">compiler</span><span class="o">.</span><span class="n">Compiler</span><span class="o">.</span><span class="n">get_status</span><span class="p">(</span><span class="n">source_id</span><span class="p">,</span> <span class="n">checksum</span><span class="p">,</span>
+                                                          <span class="s1">&#39;tok&#39;</span><span class="p">,</span> <span class="n">output_format</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">comp_status</span><span class="o">.</span><span class="n">source_id</span><span class="p">,</span> <span class="n">source_id</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">comp_status</span><span class="o">.</span><span class="n">identifier</span><span class="p">,</span>
+                         <span class="n">f</span><span class="s2">&quot;</span><span class="si">{source_id}</span><span class="s2">/</span><span class="si">{checksum}</span><span class="s2">/</span><span class="si">{output_format.value}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">comp_status</span><span class="o">.</span><span class="n">status</span><span class="p">,</span> <span class="n">domain</span><span class="o">.</span><span class="n">compilation</span><span class="o">.</span><span class="n">Compilation</span><span class="o">.</span><span class="n">Status</span><span class="o">.</span><span class="n">FAILED</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">mock_session</span><span class="o">.</span><span class="n">get</span><span class="o">.</span><span class="n">call_count</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestGetTaskStatus.test_get_status_in_progress"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.services.compiler.tests.html#arxiv.submission.services.compiler.tests.TestGetTaskStatus.test_get_status_in_progress">[docs]</a>    <span class="nd">@mock</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="s1">&#39;arxiv.integration.api.service.current_app&#39;</span><span class="p">,</span> <span class="n">mock_app</span><span class="p">)</span>
+    <span class="nd">@mock</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="s1">&#39;arxiv.integration.api.service.requests.Session&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">test_get_status_in_progress</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mock_Session</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the status of an in-progress task.&quot;&quot;&quot;</span>
+        <span class="n">source_id</span> <span class="o">=</span> <span class="mi">42</span>
+        <span class="n">checksum</span> <span class="o">=</span> <span class="s1">&#39;asdf1234=&#39;</span>
+        <span class="n">output_format</span> <span class="o">=</span> <span class="n">domain</span><span class="o">.</span><span class="n">compilation</span><span class="o">.</span><span class="n">Compilation</span><span class="o">.</span><span class="n">Format</span><span class="o">.</span><span class="n">PDF</span>
+        <span class="n">mock_session</span> <span class="o">=</span> <span class="n">mock</span><span class="o">.</span><span class="n">MagicMock</span><span class="p">(</span>
+            <span class="n">get</span><span class="o">=</span><span class="n">mock</span><span class="o">.</span><span class="n">MagicMock</span><span class="p">(</span>
+                <span class="n">return_value</span><span class="o">=</span><span class="n">mock</span><span class="o">.</span><span class="n">MagicMock</span><span class="p">(</span>
+                    <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">OK</span><span class="p">,</span>
+                    <span class="n">json</span><span class="o">=</span><span class="n">mock</span><span class="o">.</span><span class="n">MagicMock</span><span class="p">(</span>
+                        <span class="n">return_value</span><span class="o">=</span><span class="p">{</span>
+                            <span class="s1">&#39;source_id&#39;</span><span class="p">:</span> <span class="n">source_id</span><span class="p">,</span>
+                            <span class="s1">&#39;checksum&#39;</span><span class="p">:</span> <span class="n">checksum</span><span class="p">,</span>
+                            <span class="s1">&#39;output_format&#39;</span><span class="p">:</span> <span class="n">output_format</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+                            <span class="s1">&#39;status&#39;</span><span class="p">:</span> <span class="n">domain</span><span class="o">.</span><span class="n">compilation</span><span class="o">.</span><span class="n">Compilation</span><span class="o">.</span><span class="n">Status</span><span class="o">.</span><span class="n">IN_PROGRESS</span><span class="o">.</span><span class="n">value</span>
+                        <span class="p">}</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">mock_Session</span><span class="o">.</span><span class="n">return_value</span> <span class="o">=</span> <span class="n">mock_session</span>
+        <span class="n">comp_status</span> <span class="o">=</span> <span class="n">compiler</span><span class="o">.</span><span class="n">Compiler</span><span class="o">.</span><span class="n">get_status</span><span class="p">(</span><span class="n">source_id</span><span class="p">,</span> <span class="n">checksum</span><span class="p">,</span>
+                                                          <span class="s1">&#39;tok&#39;</span><span class="p">,</span> <span class="n">output_format</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">comp_status</span><span class="o">.</span><span class="n">source_id</span><span class="p">,</span> <span class="n">source_id</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">comp_status</span><span class="o">.</span><span class="n">identifier</span><span class="p">,</span>
+                         <span class="n">f</span><span class="s2">&quot;</span><span class="si">{source_id}</span><span class="s2">/</span><span class="si">{checksum}</span><span class="s2">/</span><span class="si">{output_format.value}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">comp_status</span><span class="o">.</span><span class="n">status</span><span class="p">,</span> <span class="n">domain</span><span class="o">.</span><span class="n">compilation</span><span class="o">.</span><span class="n">Compilation</span><span class="o">.</span><span class="n">Status</span><span class="o">.</span><span class="n">IN_PROGRESS</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">mock_session</span><span class="o">.</span><span class="n">get</span><span class="o">.</span><span class="n">call_count</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestGetTaskStatus.test_get_status_completed"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.services.compiler.tests.html#arxiv.submission.services.compiler.tests.TestGetTaskStatus.test_get_status_completed">[docs]</a>    <span class="nd">@mock</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="s1">&#39;arxiv.integration.api.service.current_app&#39;</span><span class="p">,</span> <span class="n">mock_app</span><span class="p">)</span>
+    <span class="nd">@mock</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="s1">&#39;arxiv.integration.api.service.requests.Session&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">test_get_status_completed</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mock_Session</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the status of a completed task.&quot;&quot;&quot;</span>
+        <span class="n">source_id</span> <span class="o">=</span> <span class="mi">42</span>
+        <span class="n">checksum</span> <span class="o">=</span> <span class="s1">&#39;asdf1234=&#39;</span>
+        <span class="n">output_format</span> <span class="o">=</span> <span class="n">domain</span><span class="o">.</span><span class="n">compilation</span><span class="o">.</span><span class="n">Compilation</span><span class="o">.</span><span class="n">Format</span><span class="o">.</span><span class="n">PDF</span>
+
+        <span class="n">mock_session</span> <span class="o">=</span> <span class="n">mock</span><span class="o">.</span><span class="n">MagicMock</span><span class="p">(</span>
+            <span class="n">get</span><span class="o">=</span><span class="n">mock</span><span class="o">.</span><span class="n">MagicMock</span><span class="p">(</span>
+                <span class="n">return_value</span><span class="o">=</span><span class="n">mock</span><span class="o">.</span><span class="n">MagicMock</span><span class="p">(</span>
+                    <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">OK</span><span class="p">,</span>
+                    <span class="n">json</span><span class="o">=</span><span class="n">mock</span><span class="o">.</span><span class="n">MagicMock</span><span class="p">(</span>
+                        <span class="n">return_value</span><span class="o">=</span><span class="p">{</span>
+                            <span class="s1">&#39;source_id&#39;</span><span class="p">:</span> <span class="n">source_id</span><span class="p">,</span>
+                            <span class="s1">&#39;checksum&#39;</span><span class="p">:</span> <span class="n">checksum</span><span class="p">,</span>
+                            <span class="s1">&#39;output_format&#39;</span><span class="p">:</span> <span class="n">output_format</span><span class="o">.</span><span class="n">value</span><span class="p">,</span>
+                            <span class="s1">&#39;status&#39;</span><span class="p">:</span> <span class="n">domain</span><span class="o">.</span><span class="n">compilation</span><span class="o">.</span><span class="n">Compilation</span><span class="o">.</span><span class="n">Status</span><span class="o">.</span><span class="n">SUCCEEDED</span><span class="o">.</span><span class="n">value</span>
+                        <span class="p">}</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">mock_Session</span><span class="o">.</span><span class="n">return_value</span> <span class="o">=</span> <span class="n">mock_session</span>
+        <span class="n">comp_status</span> <span class="o">=</span> <span class="n">compiler</span><span class="o">.</span><span class="n">Compiler</span><span class="o">.</span><span class="n">get_status</span><span class="p">(</span><span class="n">source_id</span><span class="p">,</span> <span class="n">checksum</span><span class="p">,</span>
+                                                          <span class="s1">&#39;tok&#39;</span><span class="p">,</span> <span class="n">output_format</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">comp_status</span><span class="o">.</span><span class="n">source_id</span><span class="p">,</span> <span class="n">source_id</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">comp_status</span><span class="o">.</span><span class="n">identifier</span><span class="p">,</span>
+                         <span class="n">f</span><span class="s2">&quot;</span><span class="si">{source_id}</span><span class="s2">/</span><span class="si">{checksum}</span><span class="s2">/</span><span class="si">{output_format.value}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">comp_status</span><span class="o">.</span><span class="n">status</span><span class="p">,</span> <span class="n">domain</span><span class="o">.</span><span class="n">compilation</span><span class="o">.</span><span class="n">Compilation</span><span class="o">.</span><span class="n">Status</span><span class="o">.</span><span class="n">SUCCEEDED</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">mock_session</span><span class="o">.</span><span class="n">get</span><span class="o">.</span><span class="n">call_count</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestGetTaskStatus.test_get_status_doesnt_exist"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.services.compiler.tests.html#arxiv.submission.services.compiler.tests.TestGetTaskStatus.test_get_status_doesnt_exist">[docs]</a>    <span class="nd">@mock</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="s1">&#39;arxiv.integration.api.service.current_app&#39;</span><span class="p">,</span> <span class="n">mock_app</span><span class="p">)</span>
+    <span class="nd">@mock</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="s1">&#39;arxiv.integration.api.service.requests.Session&#39;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">test_get_status_doesnt_exist</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mock_Session</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the status of a task that does not exist.&quot;&quot;&quot;</span>
+        <span class="n">source_id</span> <span class="o">=</span> <span class="mi">42</span>
+        <span class="n">checksum</span> <span class="o">=</span> <span class="s1">&#39;asdf1234=&#39;</span>
+        <span class="n">output_format</span> <span class="o">=</span> <span class="n">domain</span><span class="o">.</span><span class="n">compilation</span><span class="o">.</span><span class="n">Compilation</span><span class="o">.</span><span class="n">Format</span><span class="o">.</span><span class="n">PDF</span>
+        <span class="n">mock_session</span> <span class="o">=</span> <span class="n">mock</span><span class="o">.</span><span class="n">MagicMock</span><span class="p">(</span>
+            <span class="n">get</span><span class="o">=</span><span class="n">mock</span><span class="o">.</span><span class="n">MagicMock</span><span class="p">(</span>
+                <span class="n">return_value</span><span class="o">=</span><span class="n">mock</span><span class="o">.</span><span class="n">MagicMock</span><span class="p">(</span>
+                    <span class="n">status_code</span><span class="o">=</span><span class="n">status</span><span class="o">.</span><span class="n">NOT_FOUND</span><span class="p">,</span>
+                    <span class="n">json</span><span class="o">=</span><span class="n">mock</span><span class="o">.</span><span class="n">MagicMock</span><span class="p">(</span>
+                        <span class="n">return_value</span><span class="o">=</span><span class="p">{}</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+        <span class="n">mock_Session</span><span class="o">.</span><span class="n">return_value</span> <span class="o">=</span> <span class="n">mock_session</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="n">exceptions</span><span class="o">.</span><span class="n">NotFound</span><span class="p">):</span>
+            <span class="n">compiler</span><span class="o">.</span><span class="n">Compiler</span><span class="o">.</span><span class="n">get_status</span><span class="p">(</span><span class="n">source_id</span><span class="p">,</span> <span class="n">checksum</span><span class="p">,</span> <span class="s1">&#39;footok&#39;</span><span class="p">,</span>
+                                                <span class="n">output_format</span><span class="p">)</span></div></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../../index.html">arXiv submission & moderation</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../architecture.html">Submission &amp; moderation subsystem architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../announcement_process.html">Submission &amp; announcement Process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../submission_api_context.html">Submission API: Context</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../arxiv.submission/arxiv.submission.html">arxiv.submission package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../containers/agent/agent.html">agent package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../containers/metadata/metadata.html">metadata package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../background.html">Background</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../../index.html">Module code</a><ul>
+  <li><a href="../../../submission.html">arxiv.submission</a><ul>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, arXiv.org.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.0.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

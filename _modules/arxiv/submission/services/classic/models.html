@@ -1,11 +1,9 @@
 
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE html>
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta charset="utf-8" />
     <title>arxiv.submission.services.classic.models &#8212; arXiv submission &amp; moderation 0.1 documentation</title>
     <link rel="stylesheet" href="../../../../../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../../../../../_static/pygments.css" type="text/css" />
@@ -37,23 +35,27 @@
 <span></span><span class="sd">&quot;&quot;&quot;SQLAlchemy ORM classes for the classic database.&quot;&quot;&quot;</span>
 
 <span class="kn">import</span> <span class="nn">json</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">List</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Any</span>
 <span class="kn">from</span> <span class="nn">datetime</span> <span class="k">import</span> <span class="n">datetime</span>
 <span class="kn">from</span> <span class="nn">pytz</span> <span class="k">import</span> <span class="n">UTC</span>
 <span class="kn">from</span> <span class="nn">sqlalchemy</span> <span class="k">import</span> <span class="n">Column</span><span class="p">,</span> <span class="n">Date</span><span class="p">,</span> <span class="n">DateTime</span><span class="p">,</span> <span class="n">Enum</span><span class="p">,</span> <span class="n">ForeignKey</span><span class="p">,</span> <span class="n">Text</span><span class="p">,</span> <span class="n">text</span><span class="p">,</span> \
     <span class="n">ForeignKeyConstraint</span><span class="p">,</span> <span class="n">Index</span><span class="p">,</span> <span class="n">Integer</span><span class="p">,</span> <span class="n">SmallInteger</span><span class="p">,</span> <span class="n">String</span><span class="p">,</span> <span class="n">Table</span>
 <span class="kn">from</span> <span class="nn">sqlalchemy.orm</span> <span class="k">import</span> <span class="n">relationship</span><span class="p">,</span> <span class="n">joinedload</span><span class="p">,</span> <span class="n">backref</span>
-
 <span class="kn">from</span> <span class="nn">sqlalchemy.ext.declarative</span> <span class="k">import</span> <span class="n">declarative_base</span>
+
+<span class="kn">from</span> <span class="nn">arxiv.base</span> <span class="k">import</span> <span class="n">logging</span>
 <span class="kn">from</span> <span class="nn">arxiv.license</span> <span class="k">import</span> <span class="n">LICENSES</span>
 <span class="kn">from</span> <span class="nn">arxiv</span> <span class="k">import</span> <span class="n">taxonomy</span>
+
 <span class="kn">from</span> <span class="nn">...</span> <span class="k">import</span> <span class="n">domain</span>
 <span class="kn">from</span> <span class="nn">.util</span> <span class="k">import</span> <span class="n">transaction</span>
 
 <span class="n">Base</span> <span class="o">=</span> <span class="n">declarative_base</span><span class="p">()</span>
 
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
-<div class="viewcode-block" id="Submission"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.services.classic.models.html#arxiv.submission.services.classic.models.Submission">[docs]</a><span class="k">class</span> <span class="nc">Submission</span><span class="p">(</span><span class="n">Base</span><span class="p">):</span>    <span class="c1"># type: ignore</span>
+
+<div class="viewcode-block" id="Submission"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.services.classic.models.html#arxiv.submission.services.classic.models.Submission">[docs]</a><span class="k">class</span> <span class="nc">Submission</span><span class="p">(</span><span class="n">Base</span><span class="p">):</span>    <span class="c1"># type: ignore</span>
     <span class="sd">&quot;&quot;&quot;Represents an arXiv submission.&quot;&quot;&quot;</span>
 
     <span class="n">__tablename__</span> <span class="o">=</span> <span class="s1">&#39;arXiv_submissions&#39;</span>
@@ -78,11 +80,11 @@
     <span class="n">PROCESSING</span> <span class="o">=</span> <span class="mi">5</span>
     <span class="sd">&quot;&quot;&quot;Scheduled for today.&quot;&quot;&quot;</span>
     <span class="n">NEEDS_EMAIL</span> <span class="o">=</span> <span class="mi">6</span>
-    <span class="sd">&quot;&quot;&quot;Published, not yet announced.&quot;&quot;&quot;</span>
+    <span class="sd">&quot;&quot;&quot;Announced, not yet announced.&quot;&quot;&quot;</span>
 
-    <span class="n">PUBLISHED</span> <span class="o">=</span> <span class="mi">7</span>
-    <span class="n">DELETED_PUBLISHED</span> <span class="o">=</span> <span class="mi">27</span>
-    <span class="sd">&quot;&quot;&quot;Published and files expired.&quot;&quot;&quot;</span>
+    <span class="n">ANNOUNCED</span> <span class="o">=</span> <span class="mi">7</span>
+    <span class="n">DELETED_ANNOUNCED</span> <span class="o">=</span> <span class="mi">27</span>
+    <span class="sd">&quot;&quot;&quot;Announced and files expired.&quot;&quot;&quot;</span>
 
     <span class="n">PROCESSING_SUBMISSION</span> <span class="o">=</span> <span class="mi">8</span>
     <span class="n">REMOVED</span> <span class="o">=</span> <span class="mi">9</span>     <span class="c1"># This is &quot;rejected&quot;.</span>
@@ -111,26 +113,6 @@
     <span class="n">WITHDRAWAL</span> <span class="o">=</span> <span class="s1">&#39;wdr&#39;</span>
     <span class="n">CROSS_LIST</span> <span class="o">=</span> <span class="s1">&#39;cross&#39;</span>
     <span class="n">WITHDRAWN_FORMAT</span> <span class="o">=</span> <span class="s1">&#39;withdrawn&#39;</span>
-
-    <span class="c1"># Map classic status to Submission domain status.</span>
-    <span class="n">STATUS_MAP</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="n">NOT_SUBMITTED</span><span class="p">:</span> <span class="n">domain</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">WORKING</span><span class="p">,</span>
-        <span class="n">SUBMITTED</span><span class="p">:</span> <span class="n">domain</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">SUBMITTED</span><span class="p">,</span>
-        <span class="n">ON_HOLD</span><span class="p">:</span> <span class="n">domain</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">ON_HOLD</span><span class="p">,</span>
-        <span class="n">NEXT_PUBLISH_DAY</span><span class="p">:</span> <span class="n">domain</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">SCHEDULED</span><span class="p">,</span>
-        <span class="n">PROCESSING</span><span class="p">:</span> <span class="n">domain</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">SCHEDULED</span><span class="p">,</span>
-        <span class="n">PROCESSING_SUBMISSION</span><span class="p">:</span> <span class="n">domain</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">SCHEDULED</span><span class="p">,</span>
-        <span class="n">NEEDS_EMAIL</span><span class="p">:</span> <span class="n">domain</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">SCHEDULED</span><span class="p">,</span>
-        <span class="n">PUBLISHED</span><span class="p">:</span> <span class="n">domain</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">PUBLISHED</span><span class="p">,</span>
-        <span class="n">DELETED_PUBLISHED</span><span class="p">:</span> <span class="n">domain</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">PUBLISHED</span><span class="p">,</span>
-        <span class="n">USER_DELETED</span><span class="p">:</span>  <span class="n">domain</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">DELETED</span><span class="p">,</span>
-        <span class="n">DELETED_EXPIRED</span><span class="p">:</span> <span class="n">domain</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">DELETED</span><span class="p">,</span>
-        <span class="n">DELETED_ON_HOLD</span><span class="p">:</span> <span class="n">domain</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">DELETED</span><span class="p">,</span>
-        <span class="n">DELETED_PROCESSING</span><span class="p">:</span> <span class="n">domain</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">DELETED</span><span class="p">,</span>
-        <span class="n">DELETED_REMOVED</span><span class="p">:</span> <span class="n">domain</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">DELETED</span><span class="p">,</span>
-        <span class="n">DELETED_USER_EXPIRED</span><span class="p">:</span>  <span class="n">domain</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">DELETED</span><span class="p">,</span>
-        <span class="n">ERROR_STATE</span><span class="p">:</span> <span class="n">domain</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">ERROR</span>
-    <span class="p">}</span>
 
     <span class="n">submission_id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Integer</span><span class="p">,</span> <span class="n">primary_key</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
@@ -222,218 +204,29 @@
                               <span class="n">back_populates</span><span class="o">=</span><span class="s1">&#39;submission&#39;</span><span class="p">,</span> <span class="n">lazy</span><span class="o">=</span><span class="s1">&#39;joined&#39;</span><span class="p">,</span>
                               <span class="n">cascade</span><span class="o">=</span><span class="s2">&quot;all, delete-orphan&quot;</span><span class="p">)</span>
 
-    <span class="n">PATCHABLE</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;title&#39;</span><span class="p">,</span> <span class="s1">&#39;abstract&#39;</span><span class="p">,</span> <span class="s1">&#39;comments&#39;</span><span class="p">,</span> <span class="s1">&#39;doi&#39;</span><span class="p">,</span> <span class="s1">&#39;journal_ref&#39;</span><span class="p">,</span>
-                 <span class="s1">&#39;msc_class&#39;</span><span class="p">,</span> <span class="s1">&#39;acm_class&#39;</span><span class="p">]</span>
-
-<div class="viewcode-block" id="Submission.patch"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.services.classic.models.html#arxiv.submission.services.classic.models.Submission.patch">[docs]</a>    <span class="k">def</span> <span class="nf">patch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">domain</span><span class="o">.</span><span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">domain</span><span class="o">.</span><span class="n">Submission</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Patch a :class:`.domain.Submission` with data outside the event scope.</span>
-
-<span class="sd">        There are several fields that may change after a submission enters the</span>
-<span class="sd">        classic moderation and publication system, that cannot be inferred</span>
-<span class="sd">        from the event stack.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        submission : :class:`.domain.Submission`</span>
-<span class="sd">            The submission object to patch.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        :class:`.domain.Submission`</span>
-<span class="sd">            The same submission that was passed; now patched with data outside</span>
-<span class="sd">            the scope of the event model.</span>
-
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_crosslist</span><span class="p">():</span>
-            <span class="n">submission</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">patch_cross</span><span class="p">(</span><span class="n">submission</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_withdrawal</span><span class="p">():</span>
-            <span class="n">submission</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">patch_withdrawal</span><span class="p">(</span><span class="n">submission</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_jref</span><span class="p">():</span>
-            <span class="n">submission</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">patch_jref</span><span class="p">(</span><span class="n">submission</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="c1"># Possible reclassification.</span>
-            <span class="n">primary</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">primary_classification</span>
-            <span class="k">if</span> <span class="n">primary</span><span class="p">:</span>
-                <span class="n">submission</span><span class="o">.</span><span class="n">primary_classification</span> <span class="o">=</span> <span class="n">domain</span><span class="o">.</span><span class="n">Classification</span><span class="p">(</span>
-                    <span class="n">category</span><span class="o">=</span><span class="n">primary</span><span class="o">.</span><span class="n">category</span>
-                <span class="p">)</span>
-            <span class="n">submission</span><span class="o">.</span><span class="n">secondary_classification</span> <span class="o">=</span> <span class="p">[</span>
-                <span class="n">domain</span><span class="o">.</span><span class="n">Classification</span><span class="p">(</span><span class="n">category</span><span class="o">=</span><span class="n">db_cat</span><span class="o">.</span><span class="n">category</span><span class="p">)</span>
-                <span class="k">for</span> <span class="n">db_cat</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">categories</span>
-                <span class="k">if</span> <span class="n">db_cat</span><span class="o">.</span><span class="n">is_primary</span> <span class="o">==</span> <span class="mi">0</span>
-            <span class="p">]</span>
-
-            <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">PATCHABLE</span><span class="p">:</span>
-                <span class="n">value</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">field</span><span class="p">)</span>
-                <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">submission</span><span class="o">.</span><span class="n">metadata</span><span class="p">,</span> <span class="n">field</span><span class="p">)</span> <span class="o">!=</span> <span class="n">value</span><span class="p">:</span>
-                    <span class="nb">setattr</span><span class="p">(</span><span class="n">submission</span><span class="o">.</span><span class="n">metadata</span><span class="p">,</span> <span class="n">field</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">authors</span> <span class="o">!=</span> <span class="n">submission</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">authors_display</span><span class="p">:</span>
-                <span class="n">submission</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">authors_display</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">authors</span>
-            <span class="c1"># # Comments (admins may modify).</span>
-            <span class="c1"># submission.metadata.comments = self.comments</span>
-
-            <span class="n">submission</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">patch_status</span><span class="p">(</span><span class="n">submission</span><span class="p">)</span>
-            <span class="n">submission</span><span class="o">.</span><span class="n">created</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_created</span><span class="p">()</span>
-            <span class="n">submission</span><span class="o">.</span><span class="n">updated</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_updated</span><span class="p">()</span>
-        <span class="k">return</span> <span class="n">submission</span></div>
-
-<div class="viewcode-block" id="Submission.patch_hold"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.services.classic.models.html#arxiv.submission.services.classic.models.Submission.patch_hold">[docs]</a>    <span class="k">def</span> <span class="nf">patch_hold</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">domain</span><span class="o">.</span><span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">domain</span><span class="o">.</span><span class="n">Submission</span><span class="p">:</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">ON_HOLD</span><span class="p">:</span>
-            <span class="n">submission</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="n">domain</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">ON_HOLD</span>
-        <span class="k">return</span> <span class="n">submission</span></div>
-
-<div class="viewcode-block" id="Submission.patch_status"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.services.classic.models.html#arxiv.submission.services.classic.models.Submission.patch_status">[docs]</a>    <span class="k">def</span> <span class="nf">patch_status</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">domain</span><span class="o">.</span><span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">domain</span><span class="o">.</span><span class="n">Submission</span><span class="p">:</span>
-        <span class="c1"># We&#39;re phasing journal reference out as a submission</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">type</span> <span class="o">!=</span> <span class="n">Submission</span><span class="o">.</span><span class="n">JOURNAL_REFERENCE</span><span class="p">:</span>
-            <span class="c1"># Apply sticky status.</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">sticky_status</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">ON_HOLD</span> \
-                    <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">ON_HOLD</span><span class="p">:</span>
-                <span class="n">submission</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">patch_hold</span><span class="p">(</span><span class="n">submission</span><span class="p">)</span>
-            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_withdrawal</span><span class="p">()</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_crosslist</span><span class="p">():</span>
-                <span class="k">pass</span>
-            <span class="c1"># We&#39;re going to use a Publish event instead of setting this</span>
-            <span class="c1"># here.</span>
-            <span class="k">elif</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_published</span><span class="p">():</span>
-                <span class="c1"># Status changes.</span>
-                <span class="n">submission</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_status</span><span class="p">()</span>
-        <span class="k">return</span> <span class="n">submission</span></div>
-
-<div class="viewcode-block" id="Submission.patch_jref"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.services.classic.models.html#arxiv.submission.services.classic.models.Submission.patch_jref">[docs]</a>    <span class="k">def</span> <span class="nf">patch_jref</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">domain</span><span class="o">.</span><span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">domain</span><span class="o">.</span><span class="n">Submission</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Patch a :class:`.domain.Submission` with JREF data outside the event scope.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        submission : :class:`.domain.Submission`</span>
-<span class="sd">            The submission object to patch.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        :class:`.domain.Submission`</span>
-<span class="sd">            The same submission that was passed; now patched with JREF data</span>
-<span class="sd">            outside the scope of the event model.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">submission</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">doi</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">doi</span>
-        <span class="n">submission</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">journal_ref</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">journal_ref</span>
-        <span class="n">submission</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">report_num</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">report_num</span>
-        <span class="k">return</span> <span class="n">submission</span></div>
-
-<div class="viewcode-block" id="Submission.get_submitter"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.services.classic.models.html#arxiv.submission.services.classic.models.Submission.get_submitter">[docs]</a>    <span class="k">def</span> <span class="nf">get_submitter</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">domain</span><span class="o">.</span><span class="n">User</span><span class="p">:</span>
+<div class="viewcode-block" id="Submission.get_submitter"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.services.classic.models.html#arxiv.submission.services.classic.models.Submission.get_submitter">[docs]</a>    <span class="k">def</span> <span class="nf">get_submitter</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">domain</span><span class="o">.</span><span class="n">User</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Generate a :class:`.User` representing the submitter.&quot;&quot;&quot;</span>
+        <span class="n">extra</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">submitter</span><span class="p">:</span>
-            <span class="n">extra</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
-                <span class="n">forename</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">submitter</span><span class="o">.</span><span class="n">first_name</span><span class="p">,</span>
-                <span class="n">surname</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">submitter</span><span class="o">.</span><span class="n">last_name</span><span class="p">,</span>
-                <span class="n">suffix</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">submitter</span><span class="o">.</span><span class="n">suffix_name</span>
-            <span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">extra</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="n">extra</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">forename</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">submitter</span><span class="o">.</span><span class="n">first_name</span><span class="p">,</span>
+                              <span class="n">surname</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">submitter</span><span class="o">.</span><span class="n">last_name</span><span class="p">,</span>
+                              <span class="n">suffix</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">submitter</span><span class="o">.</span><span class="n">suffix_name</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">domain</span><span class="o">.</span><span class="n">User</span><span class="p">(</span><span class="n">native_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">submitter_id</span><span class="p">,</span>
+                           <span class="n">email</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">submitter_email</span><span class="p">,</span> <span class="o">**</span><span class="n">extra</span><span class="p">)</span></div>
 
-        <span class="k">return</span> <span class="n">domain</span><span class="o">.</span><span class="n">User</span><span class="p">(</span>
-            <span class="n">native_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">submitter_id</span><span class="p">,</span>
-            <span class="n">email</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">submitter_email</span><span class="p">,</span>
-            <span class="o">**</span><span class="n">extra</span>
-        <span class="p">)</span></div>
-
-<div class="viewcode-block" id="Submission.to_submission"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.services.classic.models.html#arxiv.submission.services.classic.models.Submission.to_submission">[docs]</a>    <span class="k">def</span> <span class="nf">to_submission</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> \
-            <span class="o">-&gt;</span> <span class="n">domain</span><span class="o">.</span><span class="n">Submission</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Generate a representation of submission state from a DB instance.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        submission_id : int or None</span>
-<span class="sd">            If provided the database value is overridden when setting</span>
-<span class="sd">            :attr:`domain.Submission.submission_id`.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        :class:`.domain.Submission`</span>
-
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">status</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_status</span><span class="p">()</span>
-        <span class="n">primary</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">primary_classification</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">submitter</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">submitter</span> <span class="o">=</span> <span class="n">domain</span><span class="o">.</span><span class="n">User</span><span class="p">(</span>
-                <span class="n">native_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">submitter_id</span><span class="p">,</span>
-                <span class="n">email</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">submitter_email</span><span class="p">,</span>
-            <span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">submitter</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_submitter</span><span class="p">()</span>
-        <span class="k">if</span> <span class="n">submission_id</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">submission_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">submission_id</span>
-        <span class="n">submission</span> <span class="o">=</span> <span class="n">domain</span><span class="o">.</span><span class="n">Submission</span><span class="p">(</span>
-            <span class="n">submission_id</span><span class="o">=</span><span class="n">submission_id</span><span class="p">,</span>
-            <span class="n">creator</span><span class="o">=</span><span class="n">submitter</span><span class="p">,</span>
-            <span class="n">owner</span><span class="o">=</span><span class="n">submitter</span><span class="p">,</span>
-            <span class="n">status</span><span class="o">=</span><span class="n">status</span><span class="p">,</span>
-            <span class="n">created</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">get_created</span><span class="p">(),</span>
-            <span class="n">updated</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">get_updated</span><span class="p">(),</span>
-            <span class="n">submitter_is_author</span><span class="o">=</span><span class="nb">bool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">is_author</span><span class="p">),</span>
-            <span class="n">submitter_accepts_policy</span><span class="o">=</span><span class="nb">bool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">agree_policy</span><span class="p">),</span>
-            <span class="n">submitter_contact_verified</span><span class="o">=</span><span class="nb">bool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">userinfo</span><span class="p">),</span>
-            <span class="n">submitter_confirmed_preview</span><span class="o">=</span><span class="nb">bool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">viewed</span><span class="p">),</span>
-            <span class="n">metadata</span><span class="o">=</span><span class="n">domain</span><span class="o">.</span><span class="n">SubmissionMetadata</span><span class="p">(</span>
-                <span class="n">title</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">title</span><span class="p">,</span>
-                <span class="n">abstract</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">abstract</span><span class="p">,</span>
-                <span class="n">comments</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">comments</span><span class="p">,</span>
-                <span class="n">report_num</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">report_num</span><span class="p">,</span>
-                <span class="n">doi</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">doi</span><span class="p">,</span>
-                <span class="n">msc_class</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">msc_class</span><span class="p">,</span>
-                <span class="n">acm_class</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">acm_class</span><span class="p">,</span>
-                <span class="n">journal_ref</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">journal_ref</span>
-            <span class="p">),</span>
-            <span class="n">license</span><span class="o">=</span><span class="n">domain</span><span class="o">.</span><span class="n">License</span><span class="p">(</span>
-                <span class="n">uri</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">license</span><span class="p">,</span>
-                <span class="n">name</span><span class="o">=</span><span class="n">LICENSES</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">license</span><span class="p">][</span><span class="s1">&#39;label&#39;</span><span class="p">]</span>
-            <span class="p">)</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">license</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
-            <span class="n">primary_classification</span><span class="o">=</span><span class="n">domain</span><span class="o">.</span><span class="n">Classification</span><span class="p">(</span>
-                <span class="n">category</span><span class="o">=</span><span class="n">primary</span><span class="o">.</span><span class="n">category</span>
-            <span class="p">)</span> <span class="k">if</span> <span class="n">primary</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
-            <span class="n">secondary_classification</span><span class="o">=</span><span class="p">[</span>
-                <span class="n">domain</span><span class="o">.</span><span class="n">Classification</span><span class="p">(</span><span class="n">category</span><span class="o">=</span><span class="n">db_cat</span><span class="o">.</span><span class="n">category</span><span class="p">)</span>
-                <span class="k">for</span> <span class="n">db_cat</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">categories</span>
-                <span class="k">if</span> <span class="n">db_cat</span><span class="o">.</span><span class="n">is_primary</span> <span class="o">==</span> <span class="mi">0</span>
-            <span class="p">],</span>
-            <span class="n">arxiv_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">doc_paper_id</span><span class="p">,</span>
-            <span class="n">version</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">version</span>
-        <span class="p">)</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">sticky_status</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">ON_HOLD</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">ON_HOLD</span><span class="p">:</span>
-            <span class="n">submission</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">patch_hold</span><span class="p">(</span><span class="n">submission</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_withdrawal</span><span class="p">():</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="n">Submission</span><span class="o">.</span><span class="n">PROCESSING_SUBMISSION</span><span class="p">:</span>
-                <span class="n">wdr_status</span> <span class="o">=</span> <span class="n">domain</span><span class="o">.</span><span class="n">WithdrawalRequest</span><span class="o">.</span><span class="n">PENDING</span>
-
-            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_published</span><span class="p">():</span>
-                <span class="n">wdr_status</span> <span class="o">=</span> <span class="n">domain</span><span class="o">.</span><span class="n">WithdrawalRequest</span><span class="o">.</span><span class="n">APPLIED</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Unhandled condition&quot;</span><span class="p">)</span>
-            <span class="n">request</span> <span class="o">=</span> <span class="n">domain</span><span class="o">.</span><span class="n">WithdrawalRequest</span><span class="p">(</span>
-                <span class="n">creator</span><span class="o">=</span><span class="n">domain</span><span class="o">.</span><span class="n">User</span><span class="p">(</span>
-                    <span class="n">native_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">submitter_id</span><span class="p">,</span>
-                    <span class="n">email</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">submitter_email</span><span class="p">,</span>
-                <span class="p">),</span>
-                <span class="n">reason_for_withdrawal</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_withdrawal_reason</span><span class="p">(),</span>
-                <span class="n">created</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">get_created</span><span class="p">(),</span>
-                <span class="n">updated</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">get_updated</span><span class="p">(),</span>
-                <span class="n">status</span><span class="o">=</span><span class="n">wdr_status</span>
-            <span class="p">)</span>
-            <span class="n">submission</span><span class="o">.</span><span class="n">user_requests</span><span class="p">[</span><span class="n">request</span><span class="o">.</span><span class="n">request_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">request</span>
-        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_crosslist</span><span class="p">():</span>
-            <span class="n">request</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_crosslist_request</span><span class="p">(</span><span class="n">submission</span><span class="p">)</span>
-            <span class="n">submission</span><span class="o">.</span><span class="n">user_requests</span><span class="p">[</span><span class="n">request</span><span class="o">.</span><span class="n">request_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">request</span>
-        <span class="k">return</span> <span class="n">submission</span></div>
 
     <span class="n">WDR_DELIMETER</span> <span class="o">=</span> <span class="s1">&#39;. Withdrawn: &#39;</span>
 
-    <span class="k">def</span> <span class="nf">_get_withdrawal_reason</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<div class="viewcode-block" id="Submission.get_withdrawal_reason"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.services.classic.models.html#arxiv.submission.services.classic.models.Submission.get_withdrawal_reason">[docs]</a>    <span class="k">def</span> <span class="nf">get_withdrawal_reason</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Extract the withdrawal reason from the comments field.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">Submission</span><span class="o">.</span><span class="n">WDR_DELIMETER</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">comments</span><span class="p">:</span>
             <span class="k">return</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">comments</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">Submission</span><span class="o">.</span><span class="n">WDR_DELIMETER</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">comments</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">Submission</span><span class="o">.</span><span class="n">WDR_DELIMETER</span><span class="p">,</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span></div>
 
-<div class="viewcode-block" id="Submission.update_withdrawal"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.services.classic.models.html#arxiv.submission.services.classic.models.Submission.update_withdrawal">[docs]</a>    <span class="k">def</span> <span class="nf">update_withdrawal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">domain</span><span class="o">.</span><span class="n">Submission</span><span class="p">,</span> <span class="n">reason</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+<div class="viewcode-block" id="Submission.update_withdrawal"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.services.classic.models.html#arxiv.submission.services.classic.models.Submission.update_withdrawal">[docs]</a>    <span class="k">def</span> <span class="nf">update_withdrawal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">domain</span><span class="o">.</span><span class="n">Submission</span><span class="p">,</span> <span class="n">reason</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
                           <span class="n">paper_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">version</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
                           <span class="n">created</span><span class="p">:</span> <span class="n">datetime</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Update withdrawal request information in the database.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">update_from_submission</span><span class="p">(</span><span class="n">submission</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">created</span> <span class="o">=</span> <span class="n">created</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">updated</span> <span class="o">=</span> <span class="n">created</span>
@@ -442,9 +235,10 @@
         <span class="n">reason</span> <span class="o">=</span> <span class="n">f</span><span class="s2">&quot;</span><span class="si">{Submission.WDR_DELIMETER}{reason}</span><span class="s2">&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">comments</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">comments</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s1">&#39;. &#39;</span><span class="p">)</span> <span class="o">+</span> <span class="n">reason</span></div>
 
-<div class="viewcode-block" id="Submission.update_cross"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.services.classic.models.html#arxiv.submission.services.classic.models.Submission.update_cross">[docs]</a>    <span class="k">def</span> <span class="nf">update_cross</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">domain</span><span class="o">.</span><span class="n">Submission</span><span class="p">,</span>
+<div class="viewcode-block" id="Submission.update_cross"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.services.classic.models.html#arxiv.submission.services.classic.models.Submission.update_cross">[docs]</a>    <span class="k">def</span> <span class="nf">update_cross</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">domain</span><span class="o">.</span><span class="n">Submission</span><span class="p">,</span>
                      <span class="n">categories</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">paper_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">version</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
                      <span class="n">created</span><span class="p">:</span> <span class="n">datetime</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Update cross-list request information in the database.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">update_from_submission</span><span class="p">(</span><span class="n">submission</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">created</span> <span class="o">=</span> <span class="n">created</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">updated</span> <span class="o">=</span> <span class="n">created</span>
@@ -455,74 +249,9 @@
                 <span class="n">SubmissionCategory</span><span class="p">(</span><span class="n">submission_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">submission_id</span><span class="p">,</span>
                                    <span class="n">category</span><span class="o">=</span><span class="n">category</span><span class="p">,</span> <span class="n">is_primary</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span></div>
 
-<div class="viewcode-block" id="Submission.patch_withdrawal"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.services.classic.models.html#arxiv.submission.services.classic.models.Submission.patch_withdrawal">[docs]</a>    <span class="k">def</span> <span class="nf">patch_withdrawal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">domain</span><span class="o">.</span><span class="n">Submission</span><span class="p">)</span> \
-            <span class="o">-&gt;</span> <span class="n">domain</span><span class="o">.</span><span class="n">Submission</span><span class="p">:</span>
-        <span class="n">reason</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_withdrawal_reason</span><span class="p">()</span>
-        <span class="k">if</span> <span class="n">reason</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">Submission</span>
-        <span class="c1"># TODO: what is rejected status?</span>
-        <span class="n">status</span> <span class="o">=</span> <span class="n">domain</span><span class="o">.</span><span class="n">WithdrawalRequest</span><span class="o">.</span><span class="n">PENDING</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_published</span><span class="p">():</span>
-            <span class="n">status</span> <span class="o">=</span> <span class="n">domain</span><span class="o">.</span><span class="n">WithdrawalRequest</span><span class="o">.</span><span class="n">APPLIED</span>
-            <span class="n">submission</span><span class="o">.</span><span class="n">reason_for_withdrawal</span> <span class="o">=</span> <span class="n">reason</span>
-        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_rejected</span><span class="p">():</span>
-            <span class="n">status</span> <span class="o">=</span> <span class="n">domain</span><span class="o">.</span><span class="n">WithdrawalRequest</span><span class="o">.</span><span class="n">REJECTED</span>
-        <span class="n">request</span> <span class="o">=</span> <span class="n">domain</span><span class="o">.</span><span class="n">WithdrawalRequest</span><span class="p">(</span>
-            <span class="n">creator</span><span class="o">=</span><span class="n">domain</span><span class="o">.</span><span class="n">User</span><span class="p">(</span>
-                <span class="n">native_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">submitter_id</span><span class="p">,</span>
-                <span class="n">email</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">submitter_email</span><span class="p">,</span>
-            <span class="p">),</span>
-            <span class="n">created</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">get_created</span><span class="p">(),</span>
-            <span class="n">updated</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">get_updated</span><span class="p">(),</span>
-            <span class="n">reason_for_withdrawal</span><span class="o">=</span><span class="n">reason</span><span class="p">,</span>
-            <span class="n">status</span><span class="o">=</span><span class="n">status</span>
-        <span class="p">)</span>
-        <span class="n">submission</span><span class="o">.</span><span class="n">user_requests</span><span class="p">[</span><span class="n">request</span><span class="o">.</span><span class="n">request_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">request</span>
-        <span class="k">return</span> <span class="n">submission</span></div>
-
-    <span class="k">def</span> <span class="nf">_get_crosslist_categories</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">domain</span><span class="o">.</span><span class="n">Submission</span><span class="p">)</span> \
-            <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">domain</span><span class="o">.</span><span class="n">Classification</span><span class="p">]:</span>
-        <span class="n">cats</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">domain</span><span class="o">.</span><span class="n">Classification</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="k">for</span> <span class="n">db_cat</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">categories</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">db_cat</span><span class="o">.</span><span class="n">is_primary</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
-                <span class="k">continue</span>
-            <span class="k">if</span> <span class="n">db_cat</span><span class="o">.</span><span class="n">category</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">submission</span><span class="o">.</span><span class="n">secondary_categories</span><span class="p">:</span>
-                <span class="n">cats</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">domain</span><span class="o">.</span><span class="n">Classification</span><span class="p">(</span><span class="n">db_cat</span><span class="o">.</span><span class="n">category</span><span class="p">))</span>
-        <span class="k">return</span> <span class="n">cats</span>
-
-    <span class="k">def</span> <span class="nf">_get_crosslist_request</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">domain</span><span class="o">.</span><span class="n">Submission</span><span class="p">)</span> \
-            <span class="o">-&gt;</span> <span class="n">domain</span><span class="o">.</span><span class="n">CrossListClassificationRequest</span><span class="p">:</span>
-        <span class="n">status</span> <span class="o">=</span> <span class="n">domain</span><span class="o">.</span><span class="n">CrossListClassificationRequest</span><span class="o">.</span><span class="n">PENDING</span>
-        <span class="n">clsns</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_crosslist_categories</span><span class="p">(</span><span class="n">submission</span><span class="p">)</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_published</span><span class="p">():</span>
-            <span class="n">status</span> <span class="o">=</span> <span class="n">domain</span><span class="o">.</span><span class="n">CrossListClassificationRequest</span><span class="o">.</span><span class="n">APPLIED</span>
-            <span class="k">for</span> <span class="n">clsn</span> <span class="ow">in</span> <span class="n">clsns</span><span class="p">:</span>
-                <span class="k">if</span> <span class="n">clsn</span><span class="o">.</span><span class="n">category</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">submission</span><span class="o">.</span><span class="n">secondary_categories</span><span class="p">:</span>
-                    <span class="n">submission</span><span class="o">.</span><span class="n">secondary_classification</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">clsn</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_rejected</span><span class="p">():</span>
-            <span class="n">status</span> <span class="o">=</span> <span class="n">domain</span><span class="o">.</span><span class="n">CrossListClassificationRequest</span><span class="o">.</span><span class="n">REJECTED</span>
-        <span class="k">return</span> <span class="n">domain</span><span class="o">.</span><span class="n">CrossListClassificationRequest</span><span class="p">(</span>
-            <span class="n">creator</span><span class="o">=</span><span class="n">domain</span><span class="o">.</span><span class="n">User</span><span class="p">(</span>
-                <span class="n">native_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">submitter_id</span><span class="p">,</span>
-                <span class="n">email</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">submitter_email</span><span class="p">,</span>
-            <span class="p">),</span>
-            <span class="n">created</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">get_created</span><span class="p">(),</span>
-            <span class="n">updated</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">get_updated</span><span class="p">(),</span>
-            <span class="n">classifications</span><span class="o">=</span><span class="n">clsns</span><span class="p">,</span>
-            <span class="n">status</span><span class="o">=</span><span class="n">status</span>
-        <span class="p">)</span>
-
-<div class="viewcode-block" id="Submission.patch_cross"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.services.classic.models.html#arxiv.submission.services.classic.models.Submission.patch_cross">[docs]</a>    <span class="k">def</span> <span class="nf">patch_cross</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">domain</span><span class="o">.</span><span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">domain</span><span class="o">.</span><span class="n">Submission</span><span class="p">:</span>
-        <span class="n">request</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_crosslist_request</span><span class="p">(</span><span class="n">submission</span><span class="p">)</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_published</span><span class="p">():</span>
-            <span class="k">for</span> <span class="n">classification</span> <span class="ow">in</span> <span class="n">request</span><span class="o">.</span><span class="n">classifications</span><span class="p">:</span>
-                <span class="n">submission</span><span class="o">.</span><span class="n">secondary_classification</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">classification</span><span class="p">)</span>
-        <span class="n">submission</span><span class="o">.</span><span class="n">user_requests</span><span class="p">[</span><span class="n">request</span><span class="o">.</span><span class="n">request_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">request</span>
-        <span class="k">return</span> <span class="n">submission</span></div>
-
-<div class="viewcode-block" id="Submission.update_from_submission"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.services.classic.models.html#arxiv.submission.services.classic.models.Submission.update_from_submission">[docs]</a>    <span class="k">def</span> <span class="nf">update_from_submission</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">domain</span><span class="o">.</span><span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Update this database object from a :class:`.domain.Submission`.&quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_published</span><span class="p">():</span>     <span class="c1"># Avoid doing anything. to be safe.</span>
+<div class="viewcode-block" id="Submission.update_from_submission"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.services.classic.models.html#arxiv.submission.services.classic.models.Submission.update_from_submission">[docs]</a>    <span class="k">def</span> <span class="nf">update_from_submission</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">domain</span><span class="o">.</span><span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Update this database object from a :class:`.domain.submission.Submission`.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_announced</span><span class="p">():</span>     <span class="c1"># Avoid doing anything. to be safe.</span>
             <span class="k">return</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">submitter_id</span> <span class="o">=</span> <span class="n">submission</span><span class="o">.</span><span class="n">creator</span><span class="o">.</span><span class="n">native_id</span>
@@ -532,7 +261,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">agree_policy</span> <span class="o">=</span> <span class="mi">1</span> <span class="k">if</span> <span class="n">submission</span><span class="o">.</span><span class="n">submitter_accepts_policy</span> <span class="k">else</span> <span class="mi">0</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">userinfo</span> <span class="o">=</span> <span class="mi">1</span> <span class="k">if</span> <span class="n">submission</span><span class="o">.</span><span class="n">submitter_contact_verified</span> <span class="k">else</span> <span class="mi">0</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">viewed</span> <span class="o">=</span> <span class="mi">1</span> <span class="k">if</span> <span class="n">submission</span><span class="o">.</span><span class="n">submitter_confirmed_preview</span> <span class="k">else</span> <span class="mi">0</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">updated</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">UTC</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">updated</span> <span class="o">=</span> <span class="n">submission</span><span class="o">.</span><span class="n">updated</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">title</span> <span class="o">=</span> <span class="n">submission</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">title</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">abstract</span> <span class="o">=</span> <span class="n">submission</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">abstract</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">authors</span> <span class="o">=</span> <span class="n">submission</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">authors_display</span>
@@ -557,9 +286,19 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">license</span> <span class="o">=</span> <span class="n">submission</span><span class="o">.</span><span class="n">license</span><span class="o">.</span><span class="n">uri</span>
 
         <span class="k">if</span> <span class="n">submission</span><span class="o">.</span><span class="n">source_content</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">source_size</span> <span class="o">=</span> <span class="n">submission</span><span class="o">.</span><span class="n">source_content</span><span class="o">.</span><span class="n">uncompressed_size</span>
+            <span class="k">if</span> <span class="n">submission</span><span class="o">.</span><span class="n">source_content</span><span class="o">.</span><span class="n">source_format</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">source_format</span> <span class="o">=</span> \
+                    <span class="n">submission</span><span class="o">.</span><span class="n">source_content</span><span class="o">.</span><span class="n">source_format</span><span class="o">.</span><span class="n">value</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">source_format</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">package</span> <span class="o">=</span> <span class="p">(</span><span class="n">f</span><span class="s1">&#39;fm://</span><span class="si">{submission.source_content.identifier}</span><span class="s1">&#39;</span>
+                            <span class="n">f</span><span class="s1">&#39;@</span><span class="si">{submission.source_content.checksum}</span><span class="s1">&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">submission</span><span class="o">.</span><span class="n">submitter_compiled_preview</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">must_process</span> <span class="o">=</span> <span class="mi">0</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">source_size</span> <span class="o">=</span> <span class="n">submission</span><span class="o">.</span><span class="n">source_content</span><span class="o">.</span><span class="n">size</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">source_format</span> <span class="o">=</span> <span class="n">submission</span><span class="o">.</span><span class="n">source_content</span><span class="o">.</span><span class="n">format</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">must_process</span> <span class="o">=</span> <span class="mi">1</span>
 
         <span class="c1"># Not submitted -&gt; Submitted.</span>
         <span class="k">if</span> <span class="n">submission</span><span class="o">.</span><span class="n">finalized</span> \
@@ -569,6 +308,8 @@
         <span class="c1"># Delete.</span>
         <span class="k">elif</span> <span class="n">submission</span><span class="o">.</span><span class="n">deleted</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="n">Submission</span><span class="o">.</span><span class="n">USER_DELETED</span>
+        <span class="k">elif</span> <span class="n">submission</span><span class="o">.</span><span class="n">is_on_hold</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="n">Submission</span><span class="o">.</span><span class="n">ON_HOLD</span>
         <span class="c1"># Unsubmit.</span>
         <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="o">&lt;=</span> <span class="n">Submission</span><span class="o">.</span><span class="n">ON_HOLD</span><span class="p">:</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">submission</span><span class="o">.</span><span class="n">finalized</span><span class="p">:</span>
@@ -594,43 +335,43 @@
         <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
             <span class="k">return</span>
 
-<div class="viewcode-block" id="Submission.get_arxiv_id"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.services.classic.models.html#arxiv.submission.services.classic.models.Submission.get_arxiv_id">[docs]</a>    <span class="k">def</span> <span class="nf">get_arxiv_id</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+<div class="viewcode-block" id="Submission.get_arxiv_id"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.services.classic.models.html#arxiv.submission.services.classic.models.Submission.get_arxiv_id">[docs]</a>    <span class="k">def</span> <span class="nf">get_arxiv_id</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
         <span class="sd">&quot;&quot;&quot;Get the arXiv identifier for this submission.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">document</span><span class="p">:</span>
             <span class="k">return</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">document</span><span class="o">.</span><span class="n">paper_id</span></div>
 
-<div class="viewcode-block" id="Submission.get_created"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.services.classic.models.html#arxiv.submission.services.classic.models.Submission.get_created">[docs]</a>    <span class="k">def</span> <span class="nf">get_created</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">datetime</span><span class="p">:</span>
+<div class="viewcode-block" id="Submission.get_created"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.services.classic.models.html#arxiv.submission.services.classic.models.Submission.get_created">[docs]</a>    <span class="k">def</span> <span class="nf">get_created</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">datetime</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Get the UTC-localized creation datetime.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">created</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">tzinfo</span><span class="o">=</span><span class="n">UTC</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="Submission.get_updated"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.services.classic.models.html#arxiv.submission.services.classic.models.Submission.get_updated">[docs]</a>    <span class="k">def</span> <span class="nf">get_updated</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">datetime</span><span class="p">:</span>
+<div class="viewcode-block" id="Submission.get_updated"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.services.classic.models.html#arxiv.submission.services.classic.models.Submission.get_updated">[docs]</a>    <span class="k">def</span> <span class="nf">get_updated</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">datetime</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Get the UTC-localized updated datetime.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">updated</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">tzinfo</span><span class="o">=</span><span class="n">UTC</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="Submission.is_published"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.services.classic.models.html#arxiv.submission.services.classic.models.Submission.is_published">[docs]</a>    <span class="k">def</span> <span class="nf">is_published</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="ow">in</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">PUBLISHED</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">DELETED_PUBLISHED</span><span class="p">]</span></div>
+<div class="viewcode-block" id="Submission.is_announced"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.services.classic.models.html#arxiv.submission.services.classic.models.Submission.is_announced">[docs]</a>    <span class="k">def</span> <span class="nf">is_announced</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="ow">in</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">ANNOUNCED</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">DELETED_ANNOUNCED</span><span class="p">]</span></div>
 
-<div class="viewcode-block" id="Submission.is_rejected"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.services.classic.models.html#arxiv.submission.services.classic.models.Submission.is_rejected">[docs]</a>    <span class="k">def</span> <span class="nf">is_rejected</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<div class="viewcode-block" id="Submission.is_rejected"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.services.classic.models.html#arxiv.submission.services.classic.models.Submission.is_rejected">[docs]</a>    <span class="k">def</span> <span class="nf">is_rejected</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">REMOVED</span></div>
 
-<div class="viewcode-block" id="Submission.is_deleted"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.services.classic.models.html#arxiv.submission.services.classic.models.Submission.is_deleted">[docs]</a>    <span class="k">def</span> <span class="nf">is_deleted</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<div class="viewcode-block" id="Submission.is_deleted"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.services.classic.models.html#arxiv.submission.services.classic.models.Submission.is_deleted">[docs]</a>    <span class="k">def</span> <span class="nf">is_deleted</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">DELETED</span></div>
 
-<div class="viewcode-block" id="Submission.is_on_hold"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.services.classic.models.html#arxiv.submission.services.classic.models.Submission.is_on_hold">[docs]</a>    <span class="k">def</span> <span class="nf">is_on_hold</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<div class="viewcode-block" id="Submission.is_on_hold"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.services.classic.models.html#arxiv.submission.services.classic.models.Submission.is_on_hold">[docs]</a>    <span class="k">def</span> <span class="nf">is_on_hold</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">ON_HOLD</span></div>
 
-<div class="viewcode-block" id="Submission.is_new_version"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.services.classic.models.html#arxiv.submission.services.classic.models.Submission.is_new_version">[docs]</a>    <span class="k">def</span> <span class="nf">is_new_version</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<div class="viewcode-block" id="Submission.is_new_version"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.services.classic.models.html#arxiv.submission.services.classic.models.Submission.is_new_version">[docs]</a>    <span class="k">def</span> <span class="nf">is_new_version</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Indicate whether this row represents a new version.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">type</span> <span class="ow">in</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">NEW_SUBMISSION</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">REPLACEMENT</span><span class="p">]</span></div>
 
-<div class="viewcode-block" id="Submission.is_withdrawal"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.services.classic.models.html#arxiv.submission.services.classic.models.Submission.is_withdrawal">[docs]</a>    <span class="k">def</span> <span class="nf">is_withdrawal</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<div class="viewcode-block" id="Submission.is_withdrawal"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.services.classic.models.html#arxiv.submission.services.classic.models.Submission.is_withdrawal">[docs]</a>    <span class="k">def</span> <span class="nf">is_withdrawal</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">WITHDRAWAL</span></div>
 
-<div class="viewcode-block" id="Submission.is_crosslist"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.services.classic.models.html#arxiv.submission.services.classic.models.Submission.is_crosslist">[docs]</a>    <span class="k">def</span> <span class="nf">is_crosslist</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<div class="viewcode-block" id="Submission.is_crosslist"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.services.classic.models.html#arxiv.submission.services.classic.models.Submission.is_crosslist">[docs]</a>    <span class="k">def</span> <span class="nf">is_crosslist</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">CROSS_LIST</span></div>
 
-<div class="viewcode-block" id="Submission.is_jref"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.services.classic.models.html#arxiv.submission.services.classic.models.Submission.is_jref">[docs]</a>    <span class="k">def</span> <span class="nf">is_jref</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<div class="viewcode-block" id="Submission.is_jref"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.services.classic.models.html#arxiv.submission.services.classic.models.Submission.is_jref">[docs]</a>    <span class="k">def</span> <span class="nf">is_jref</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">JOURNAL_REFERENCE</span></div>
 
     <span class="nd">@property</span>
@@ -638,18 +379,13 @@
         <span class="sd">&quot;&quot;&quot;Category names from this submission&#39;s secondary classifications.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="p">[</span><span class="n">c</span><span class="o">.</span><span class="n">category</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">categories</span> <span class="k">if</span> <span class="n">c</span><span class="o">.</span><span class="n">is_primary</span> <span class="o">==</span> <span class="mi">0</span><span class="p">]</span>
 
-    <span class="k">def</span> <span class="nf">_get_status</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Map classic status codes to :class:`.domain.Submission` status.&quot;&quot;&quot;</span>
-        <span class="c1"># if self.get_arxiv_id() is not None:</span>
-        <span class="c1">#     return domain.Submission.PUBLISHED</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">STATUS_MAP</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">status</span><span class="p">)</span>
-
     <span class="k">def</span> <span class="nf">_update_submitter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">domain</span><span class="o">.</span><span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Update submitter information.&quot;&quot;&quot;</span>
+        <span class="sd">&quot;&quot;&quot;Update submitter information on this row.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">submitter_id</span> <span class="o">=</span> <span class="n">submission</span><span class="o">.</span><span class="n">creator</span><span class="o">.</span><span class="n">native_id</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">submitter_email</span> <span class="o">=</span> <span class="n">submission</span><span class="o">.</span><span class="n">creator</span><span class="o">.</span><span class="n">email</span>
 
     <span class="k">def</span> <span class="nf">_update_primary</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">domain</span><span class="o">.</span><span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Update primary classification.&quot;&quot;&quot;</span>
+        <span class="sd">&quot;&quot;&quot;Update primary classification on this row.&quot;&quot;&quot;</span>
         <span class="n">primary_category</span> <span class="o">=</span> <span class="n">submission</span><span class="o">.</span><span class="n">primary_classification</span><span class="o">.</span><span class="n">category</span>
         <span class="n">cur_primary</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">primary_classification</span>
 
@@ -669,7 +405,7 @@
             <span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_update_secondaries</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">domain</span><span class="o">.</span><span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Update secondary classifications.&quot;&quot;&quot;</span>
+        <span class="sd">&quot;&quot;&quot;Update secondary classifications on this row.&quot;&quot;&quot;</span>
         <span class="c1"># Remove any categories that have been removed from the Submission.</span>
         <span class="k">for</span> <span class="n">db_cat</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">categories</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">db_cat</span><span class="o">.</span><span class="n">is_primary</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
@@ -689,7 +425,7 @@
                 <span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="License"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.services.classic.models.html#arxiv.submission.services.classic.models.License">[docs]</a><span class="k">class</span> <span class="nc">License</span><span class="p">(</span><span class="n">Base</span><span class="p">):</span>    <span class="c1"># type: ignore</span>
+<div class="viewcode-block" id="License"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.services.classic.models.html#arxiv.submission.services.classic.models.License">[docs]</a><span class="k">class</span> <span class="nc">License</span><span class="p">(</span><span class="n">Base</span><span class="p">):</span>    <span class="c1"># type: ignore</span>
     <span class="sd">&quot;&quot;&quot;Licenses available for submissions.&quot;&quot;&quot;</span>
 
     <span class="n">__tablename__</span> <span class="o">=</span> <span class="s1">&#39;arXiv_licenses&#39;</span>
@@ -707,7 +443,7 @@
     <span class="n">sequence</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Integer</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="CategoryDef"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.services.classic.models.html#arxiv.submission.services.classic.models.CategoryDef">[docs]</a><span class="k">class</span> <span class="nc">CategoryDef</span><span class="p">(</span><span class="n">Base</span><span class="p">):</span>    <span class="c1"># type: ignore</span>
+<div class="viewcode-block" id="CategoryDef"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.services.classic.models.html#arxiv.submission.services.classic.models.CategoryDef">[docs]</a><span class="k">class</span> <span class="nc">CategoryDef</span><span class="p">(</span><span class="n">Base</span><span class="p">):</span>    <span class="c1"># type: ignore</span>
     <span class="sd">&quot;&quot;&quot;Classification categories available for submissions.&quot;&quot;&quot;</span>
 
     <span class="n">__tablename__</span> <span class="o">=</span> <span class="s1">&#39;arXiv_category_def&#39;</span>
@@ -717,7 +453,7 @@
     <span class="n">active</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Integer</span><span class="p">,</span> <span class="n">server_default</span><span class="o">=</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&#39;1&#39;&quot;</span><span class="p">))</span></div>
 
 
-<div class="viewcode-block" id="SubmissionCategory"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.services.classic.models.html#arxiv.submission.services.classic.models.SubmissionCategory">[docs]</a><span class="k">class</span> <span class="nc">SubmissionCategory</span><span class="p">(</span><span class="n">Base</span><span class="p">):</span>    <span class="c1"># type: ignore</span>
+<div class="viewcode-block" id="SubmissionCategory"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.services.classic.models.html#arxiv.submission.services.classic.models.SubmissionCategory">[docs]</a><span class="k">class</span> <span class="nc">SubmissionCategory</span><span class="p">(</span><span class="n">Base</span><span class="p">):</span>    <span class="c1"># type: ignore</span>
     <span class="sd">&quot;&quot;&quot;Classification relation for submissions.&quot;&quot;&quot;</span>
 
     <span class="n">__tablename__</span> <span class="o">=</span> <span class="s1">&#39;arXiv_submission_category&#39;</span>
@@ -744,12 +480,12 @@
     <span class="n">submission</span> <span class="o">=</span> <span class="n">relationship</span><span class="p">(</span><span class="s1">&#39;Submission&#39;</span><span class="p">,</span> <span class="n">back_populates</span><span class="o">=</span><span class="s1">&#39;categories&#39;</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="Document"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.services.classic.models.html#arxiv.submission.services.classic.models.Document">[docs]</a><span class="k">class</span> <span class="nc">Document</span><span class="p">(</span><span class="n">Base</span><span class="p">):</span>    <span class="c1"># type: ignore</span>
+<div class="viewcode-block" id="Document"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.services.classic.models.html#arxiv.submission.services.classic.models.Document">[docs]</a><span class="k">class</span> <span class="nc">Document</span><span class="p">(</span><span class="n">Base</span><span class="p">):</span>    <span class="c1"># type: ignore</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Represents a published arXiv paper.</span>
+<span class="sd">    Represents an announced arXiv paper.</span>
 
 <span class="sd">    This is here so that we can look up the arXiv ID after a submission is</span>
-<span class="sd">    published.</span>
+<span class="sd">    announced.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">__tablename__</span> <span class="o">=</span> <span class="s1">&#39;arXiv_documents&#39;</span>
@@ -780,8 +516,8 @@
         <span class="k">return</span> <span class="n">datetime</span><span class="o">.</span><span class="n">utcfromtimestamp</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dated</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">tzinfo</span><span class="o">=</span><span class="n">UTC</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="DocumentCategory"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.services.classic.models.html#arxiv.submission.services.classic.models.DocumentCategory">[docs]</a><span class="k">class</span> <span class="nc">DocumentCategory</span><span class="p">(</span><span class="n">Base</span><span class="p">):</span>    <span class="c1"># type: ignore</span>
-    <span class="sd">&quot;&quot;&quot;Relation between published arXiv papers and their classifications.&quot;&quot;&quot;</span>
+<div class="viewcode-block" id="DocumentCategory"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.services.classic.models.html#arxiv.submission.services.classic.models.DocumentCategory">[docs]</a><span class="k">class</span> <span class="nc">DocumentCategory</span><span class="p">(</span><span class="n">Base</span><span class="p">):</span>    <span class="c1"># type: ignore</span>
+    <span class="sd">&quot;&quot;&quot;Relation between announced arXiv papers and their classifications.&quot;&quot;&quot;</span>
 
     <span class="n">__tablename__</span> <span class="o">=</span> <span class="s1">&#39;arXiv_document_category&#39;</span>
 
@@ -805,7 +541,7 @@
     <span class="n">document</span> <span class="o">=</span> <span class="n">relationship</span><span class="p">(</span><span class="s1">&#39;Document&#39;</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="User"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.services.classic.models.html#arxiv.submission.services.classic.models.User">[docs]</a><span class="k">class</span> <span class="nc">User</span><span class="p">(</span><span class="n">Base</span><span class="p">):</span>    <span class="c1"># type: ignore</span>
+<div class="viewcode-block" id="User"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.services.classic.models.html#arxiv.submission.services.classic.models.User">[docs]</a><span class="k">class</span> <span class="nc">User</span><span class="p">(</span><span class="n">Base</span><span class="p">):</span>    <span class="c1"># type: ignore</span>
     <span class="sd">&quot;&quot;&quot;Represents an arXiv user.&quot;&quot;&quot;</span>
 
     <span class="n">__tablename__</span> <span class="o">=</span> <span class="s1">&#39;tapir_users&#39;</span>
@@ -866,7 +602,7 @@
 
     <span class="n">tapir_policy_class</span> <span class="o">=</span> <span class="n">relationship</span><span class="p">(</span><span class="s1">&#39;PolicyClass&#39;</span><span class="p">)</span>
 
-<div class="viewcode-block" id="User.to_user"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.services.classic.models.html#arxiv.submission.services.classic.models.User.to_user">[docs]</a>    <span class="k">def</span> <span class="nf">to_user</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">domain</span><span class="o">.</span><span class="n">agent</span><span class="o">.</span><span class="n">User</span><span class="p">:</span>
+<div class="viewcode-block" id="User.to_user"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.services.classic.models.html#arxiv.submission.services.classic.models.User.to_user">[docs]</a>    <span class="k">def</span> <span class="nf">to_user</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">domain</span><span class="o">.</span><span class="n">agent</span><span class="o">.</span><span class="n">User</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">domain</span><span class="o">.</span><span class="n">agent</span><span class="o">.</span><span class="n">User</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">user_id</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">email</span><span class="p">,</span>
@@ -877,7 +613,7 @@
         <span class="p">)</span></div></div>
 
 
-<div class="viewcode-block" id="Username"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.services.classic.models.html#arxiv.submission.services.classic.models.Username">[docs]</a><span class="k">class</span> <span class="nc">Username</span><span class="p">(</span><span class="n">Base</span><span class="p">):</span>  <span class="c1"># type: ignore</span>
+<div class="viewcode-block" id="Username"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.services.classic.models.html#arxiv.submission.services.classic.models.Username">[docs]</a><span class="k">class</span> <span class="nc">Username</span><span class="p">(</span><span class="n">Base</span><span class="p">):</span>  <span class="c1"># type: ignore</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Users&#39; usernames (because why not have a separate table).</span>
 
@@ -912,7 +648,7 @@
 
 
 <span class="c1"># TODO: what is this?</span>
-<div class="viewcode-block" id="PolicyClass"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.services.classic.models.html#arxiv.submission.services.classic.models.PolicyClass">[docs]</a><span class="k">class</span> <span class="nc">PolicyClass</span><span class="p">(</span><span class="n">Base</span><span class="p">):</span>    <span class="c1"># type: ignore</span>
+<div class="viewcode-block" id="PolicyClass"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.services.classic.models.html#arxiv.submission.services.classic.models.PolicyClass">[docs]</a><span class="k">class</span> <span class="nc">PolicyClass</span><span class="p">(</span><span class="n">Base</span><span class="p">):</span>    <span class="c1"># type: ignore</span>
     <span class="sd">&quot;&quot;&quot;Defines user roles in the system.&quot;&quot;&quot;</span>
 
     <span class="n">__tablename__</span> <span class="o">=</span> <span class="s1">&#39;tapir_policy_classes&#39;</span>
@@ -928,7 +664,7 @@
                              <span class="n">server_default</span><span class="o">=</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&#39;0&#39;&quot;</span><span class="p">))</span></div>
 
 
-<div class="viewcode-block" id="Tracking"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.services.classic.models.html#arxiv.submission.services.classic.models.Tracking">[docs]</a><span class="k">class</span> <span class="nc">Tracking</span><span class="p">(</span><span class="n">Base</span><span class="p">):</span>    <span class="c1"># type: ignore</span>
+<div class="viewcode-block" id="Tracking"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.services.classic.models.html#arxiv.submission.services.classic.models.Tracking">[docs]</a><span class="k">class</span> <span class="nc">Tracking</span><span class="p">(</span><span class="n">Base</span><span class="p">):</span>    <span class="c1"># type: ignore</span>
     <span class="sd">&quot;&quot;&quot;Record of SWORD submissions.&quot;&quot;&quot;</span>
 
     <span class="n">__tablename__</span> <span class="o">=</span> <span class="s1">&#39;arXiv_tracking&#39;</span>
@@ -942,7 +678,7 @@
                        <span class="n">server_default</span><span class="o">=</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;CURRENT_TIMESTAMP&quot;</span><span class="p">))</span></div>
 
 
-<div class="viewcode-block" id="ArchiveCategory"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.services.classic.models.html#arxiv.submission.services.classic.models.ArchiveCategory">[docs]</a><span class="k">class</span> <span class="nc">ArchiveCategory</span><span class="p">(</span><span class="n">Base</span><span class="p">):</span>    <span class="c1"># type: ignore</span>
+<div class="viewcode-block" id="ArchiveCategory"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.services.classic.models.html#arxiv.submission.services.classic.models.ArchiveCategory">[docs]</a><span class="k">class</span> <span class="nc">ArchiveCategory</span><span class="p">(</span><span class="n">Base</span><span class="p">):</span>    <span class="c1"># type: ignore</span>
     <span class="sd">&quot;&quot;&quot;Maps categories to the archives in which they reside.&quot;&quot;&quot;</span>
 
     <span class="n">__tablename__</span> <span class="o">=</span> <span class="s1">&#39;arXiv_archive_category&#39;</span>
@@ -952,7 +688,7 @@
     <span class="n">category_id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">String</span><span class="p">(</span><span class="mi">32</span><span class="p">),</span> <span class="n">primary_key</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">nullable</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="ArchiveDef"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.services.classic.models.html#arxiv.submission.services.classic.models.ArchiveDef">[docs]</a><span class="k">class</span> <span class="nc">ArchiveDef</span><span class="p">(</span><span class="n">Base</span><span class="p">):</span>    <span class="c1"># type: ignore</span>
+<div class="viewcode-block" id="ArchiveDef"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.services.classic.models.html#arxiv.submission.services.classic.models.ArchiveDef">[docs]</a><span class="k">class</span> <span class="nc">ArchiveDef</span><span class="p">(</span><span class="n">Base</span><span class="p">):</span>    <span class="c1"># type: ignore</span>
     <span class="sd">&quot;&quot;&quot;Defines the archives in the arXiv classification taxonomy.&quot;&quot;&quot;</span>
 
     <span class="n">__tablename__</span> <span class="o">=</span> <span class="s1">&#39;arXiv_archive_def&#39;</span>
@@ -961,7 +697,7 @@
     <span class="n">name</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">String</span><span class="p">(</span><span class="mi">255</span><span class="p">))</span></div>
 
 
-<div class="viewcode-block" id="ArchiveGroup"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.services.classic.models.html#arxiv.submission.services.classic.models.ArchiveGroup">[docs]</a><span class="k">class</span> <span class="nc">ArchiveGroup</span><span class="p">(</span><span class="n">Base</span><span class="p">):</span>    <span class="c1"># type: ignore</span>
+<div class="viewcode-block" id="ArchiveGroup"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.services.classic.models.html#arxiv.submission.services.classic.models.ArchiveGroup">[docs]</a><span class="k">class</span> <span class="nc">ArchiveGroup</span><span class="p">(</span><span class="n">Base</span><span class="p">):</span>    <span class="c1"># type: ignore</span>
     <span class="sd">&quot;&quot;&quot;Maps archives to the groups in which they reside.&quot;&quot;&quot;</span>
 
     <span class="n">__tablename__</span> <span class="o">=</span> <span class="s1">&#39;arXiv_archive_group&#39;</span>
@@ -972,7 +708,7 @@
                       <span class="n">server_default</span><span class="o">=</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&#39;&#39;&quot;</span><span class="p">))</span></div>
 
 
-<div class="viewcode-block" id="Archive"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.services.classic.models.html#arxiv.submission.services.classic.models.Archive">[docs]</a><span class="k">class</span> <span class="nc">Archive</span><span class="p">(</span><span class="n">Base</span><span class="p">):</span>    <span class="c1"># type: ignore</span>
+<div class="viewcode-block" id="Archive"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.services.classic.models.html#arxiv.submission.services.classic.models.Archive">[docs]</a><span class="k">class</span> <span class="nc">Archive</span><span class="p">(</span><span class="n">Base</span><span class="p">):</span>    <span class="c1"># type: ignore</span>
     <span class="sd">&quot;&quot;&quot;Supplemental data about archives in the classification hierarchy.&quot;&quot;&quot;</span>
 
     <span class="n">__tablename__</span> <span class="o">=</span> <span class="s1">&#39;arXiv_archives&#39;</span>
@@ -990,7 +726,7 @@
     <span class="n">arXiv_group</span> <span class="o">=</span> <span class="n">relationship</span><span class="p">(</span><span class="s1">&#39;Group&#39;</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="GroupDef"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.services.classic.models.html#arxiv.submission.services.classic.models.GroupDef">[docs]</a><span class="k">class</span> <span class="nc">GroupDef</span><span class="p">(</span><span class="n">Base</span><span class="p">):</span>    <span class="c1"># type: ignore</span>
+<div class="viewcode-block" id="GroupDef"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.services.classic.models.html#arxiv.submission.services.classic.models.GroupDef">[docs]</a><span class="k">class</span> <span class="nc">GroupDef</span><span class="p">(</span><span class="n">Base</span><span class="p">):</span>    <span class="c1"># type: ignore</span>
     <span class="sd">&quot;&quot;&quot;Defines the groups in the arXiv classification taxonomy.&quot;&quot;&quot;</span>
 
     <span class="n">__tablename__</span> <span class="o">=</span> <span class="s1">&#39;arXiv_group_def&#39;</span>
@@ -1000,7 +736,7 @@
     <span class="n">name</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">String</span><span class="p">(</span><span class="mi">255</span><span class="p">))</span></div>
 
 
-<div class="viewcode-block" id="Group"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.services.classic.models.html#arxiv.submission.services.classic.models.Group">[docs]</a><span class="k">class</span> <span class="nc">Group</span><span class="p">(</span><span class="n">Base</span><span class="p">):</span>    <span class="c1"># type: ignore</span>
+<div class="viewcode-block" id="Group"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.services.classic.models.html#arxiv.submission.services.classic.models.Group">[docs]</a><span class="k">class</span> <span class="nc">Group</span><span class="p">(</span><span class="n">Base</span><span class="p">):</span>    <span class="c1"># type: ignore</span>
     <span class="sd">&quot;&quot;&quot;Supplemental data about groups in the classification hierarchy.&quot;&quot;&quot;</span>
 
     <span class="n">__tablename__</span> <span class="o">=</span> <span class="s1">&#39;arXiv_groups&#39;</span>
@@ -1010,7 +746,7 @@
     <span class="n">start_year</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">String</span><span class="p">(</span><span class="mi">4</span><span class="p">),</span> <span class="n">nullable</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">server_default</span><span class="o">=</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&#39;&#39;&quot;</span><span class="p">))</span></div>
 
 
-<div class="viewcode-block" id="EndorsementDomain"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.services.classic.models.html#arxiv.submission.services.classic.models.EndorsementDomain">[docs]</a><span class="k">class</span> <span class="nc">EndorsementDomain</span><span class="p">(</span><span class="n">Base</span><span class="p">):</span>    <span class="c1"># type: ignore</span>
+<div class="viewcode-block" id="EndorsementDomain"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.services.classic.models.html#arxiv.submission.services.classic.models.EndorsementDomain">[docs]</a><span class="k">class</span> <span class="nc">EndorsementDomain</span><span class="p">(</span><span class="n">Base</span><span class="p">):</span>    <span class="c1"># type: ignore</span>
     <span class="sd">&quot;&quot;&quot;Endorsement configurations.&quot;&quot;&quot;</span>
 
     <span class="n">__tablename__</span> <span class="o">=</span> <span class="s1">&#39;arXiv_endorsement_domains&#39;</span>
@@ -1027,7 +763,7 @@
                                <span class="n">server_default</span><span class="o">=</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&#39;4&#39;&quot;</span><span class="p">))</span></div>
 
 
-<div class="viewcode-block" id="Category"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.services.classic.models.html#arxiv.submission.services.classic.models.Category">[docs]</a><span class="k">class</span> <span class="nc">Category</span><span class="p">(</span><span class="n">Base</span><span class="p">):</span>    <span class="c1"># type: ignore</span>
+<div class="viewcode-block" id="Category"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.services.classic.models.html#arxiv.submission.services.classic.models.Category">[docs]</a><span class="k">class</span> <span class="nc">Category</span><span class="p">(</span><span class="n">Base</span><span class="p">):</span>    <span class="c1"># type: ignore</span>
     <span class="sd">&quot;&quot;&quot;Supplemental data about arXiv categories, including endorsement.&quot;&quot;&quot;</span>
 
     <span class="n">__tablename__</span> <span class="o">=</span> <span class="s1">&#39;arXiv_categories&#39;</span>
@@ -1072,7 +808,7 @@
                                <span class="n">server_default</span><span class="o">=</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&#39;0&#39;&quot;</span><span class="p">))</span></div>
 
 
-<div class="viewcode-block" id="AdminLogEntry"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.services.classic.models.html#arxiv.submission.services.classic.models.AdminLogEntry">[docs]</a><span class="k">class</span> <span class="nc">AdminLogEntry</span><span class="p">(</span><span class="n">Base</span><span class="p">):</span>    <span class="c1"># type: ignore</span>
+<div class="viewcode-block" id="AdminLogEntry"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.services.classic.models.html#arxiv.submission.services.classic.models.AdminLogEntry">[docs]</a><span class="k">class</span> <span class="nc">AdminLogEntry</span><span class="p">(</span><span class="n">Base</span><span class="p">):</span>    <span class="c1"># type: ignore</span>
     <span class="sd">&quot;&quot;&quot;</span>
 
 <span class="sd">    +---------------+-----------------------+------+-----+-------------------+</span>
@@ -1109,7 +845,7 @@
     <span class="n">notify</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Integer</span><span class="p">,</span> <span class="n">nullable</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="CategoryProposal"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.services.classic.models.html#arxiv.submission.services.classic.models.CategoryProposal">[docs]</a><span class="k">class</span> <span class="nc">CategoryProposal</span><span class="p">(</span><span class="n">Base</span><span class="p">):</span>   <span class="c1"># type: ignore</span>
+<div class="viewcode-block" id="CategoryProposal"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.services.classic.models.html#arxiv.submission.services.classic.models.CategoryProposal">[docs]</a><span class="k">class</span> <span class="nc">CategoryProposal</span><span class="p">(</span><span class="n">Base</span><span class="p">):</span>   <span class="c1"># type: ignore</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Represents a proposal to change the classification of a submission.</span>
 
@@ -1145,8 +881,8 @@
     <span class="n">submission_id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">ForeignKey</span><span class="p">(</span><span class="s1">&#39;arXiv_submissions.submission_id&#39;</span><span class="p">))</span>
     <span class="n">submission</span> <span class="o">=</span> <span class="n">relationship</span><span class="p">(</span><span class="s1">&#39;Submission&#39;</span><span class="p">)</span>
     <span class="n">category</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">String</span><span class="p">(</span><span class="mi">32</span><span class="p">))</span>
-    <span class="n">is_primary</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Integer</span><span class="p">,</span> <span class="n">server_default</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;&#39;0&#39;&quot;</span><span class="p">))</span>
-    <span class="n">proposal_status</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Integer</span><span class="p">,</span> <span class="n">nullable</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">server_default</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;&#39;0&#39;&quot;</span><span class="p">))</span>
+    <span class="n">is_primary</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Integer</span><span class="p">,</span> <span class="n">server_default</span><span class="o">=</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&#39;0&#39;&quot;</span><span class="p">))</span>
+    <span class="n">proposal_status</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Integer</span><span class="p">,</span> <span class="n">nullable</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">server_default</span><span class="o">=</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;&#39;0&#39;&quot;</span><span class="p">))</span>
     <span class="n">user_id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">ForeignKey</span><span class="p">(</span><span class="s1">&#39;tapir_users.user_id&#39;</span><span class="p">))</span>
     <span class="n">user</span> <span class="o">=</span> <span class="n">relationship</span><span class="p">(</span><span class="s2">&quot;User&quot;</span><span class="p">)</span>
     <span class="n">updated</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">DateTime</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="k">lambda</span><span class="p">:</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">UTC</span><span class="p">))</span>
@@ -1159,7 +895,7 @@
     <span class="n">response_comment</span> <span class="o">=</span> <span class="n">relationship</span><span class="p">(</span><span class="s2">&quot;AdminLogEntry&quot;</span><span class="p">,</span>
                                     <span class="n">foreign_keys</span><span class="o">=</span><span class="p">[</span><span class="n">response_comment_id</span><span class="p">])</span>
 
-<div class="viewcode-block" id="CategoryProposal.status_from_domain"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.services.classic.models.html#arxiv.submission.services.classic.models.CategoryProposal.status_from_domain">[docs]</a>    <span class="k">def</span> <span class="nf">status_from_domain</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">proposal</span><span class="p">:</span> <span class="n">domain</span><span class="o">.</span><span class="n">proposal</span><span class="o">.</span><span class="n">Proposal</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+<div class="viewcode-block" id="CategoryProposal.status_from_domain"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.services.classic.models.html#arxiv.submission.services.classic.models.CategoryProposal.status_from_domain">[docs]</a>    <span class="k">def</span> <span class="nf">status_from_domain</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">proposal</span><span class="p">:</span> <span class="n">domain</span><span class="o">.</span><span class="n">proposal</span><span class="o">.</span><span class="n">Proposal</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">proposal</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="n">domain</span><span class="o">.</span><span class="n">proposal</span><span class="o">.</span><span class="n">Proposal</span><span class="o">.</span><span class="n">Status</span><span class="o">.</span><span class="n">PENDING</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">UNRESOLVED</span>
         <span class="k">elif</span> <span class="n">proposal</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="n">domain</span><span class="o">.</span><span class="n">proposal</span><span class="o">.</span><span class="n">Proposal</span><span class="o">.</span><span class="n">Status</span><span class="o">.</span><span class="n">REJECTED</span><span class="p">:</span>
@@ -1211,7 +947,8 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../../architecture.html">Submission &amp; moderation subsystem architecture</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../announcement_process.html">Submission &amp; announcement Process</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../submission_api_context.html">Submission API: Context</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../../containers/core/arxiv.submission.html">arxiv.submission package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../arxiv.submission/arxiv.submission.html">arxiv.submission package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../containers/agent/agent.html">agent package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../containers/metadata/metadata.html">metadata package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../background.html">Background</a></li>
 </ul>
@@ -1221,7 +958,9 @@
 <ul>
   <li><a href="../../../../../index.html">Documentation overview</a><ul>
   <li><a href="../../../../index.html">Module code</a><ul>
+  <li><a href="../../../submission.html">arxiv.submission</a><ul>
   <li><a href="../classic.html">arxiv.submission.services.classic</a><ul>
+  </ul></li>
   </ul></li>
   </ul></li>
   </ul></li>
@@ -1233,8 +972,6 @@
     <form class="search" action="../../../../../search.html" method="get">
       <input type="text" name="q" />
       <input type="submit" value="Go" />
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
     </form>
     </div>
 </div>
@@ -1255,7 +992,7 @@
       &copy;2017, arXiv.org.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.3</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.0.0</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
     </div>

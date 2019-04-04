@@ -1,0 +1,246 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>arxiv.submission.domain.compilation &#8212; arXiv submission &amp; moderation 0.1 documentation</title>
+    <link rel="stylesheet" href="../../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/graphviz.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for arxiv.submission.domain.compilation</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Data structs related to compilation.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">enum</span> <span class="k">import</span> <span class="n">Enum</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="k">import</span> <span class="n">datetime</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">NamedTuple</span>
+<span class="kn">from</span> <span class="nn">dataclasses</span> <span class="k">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">field</span>
+<span class="kn">import</span> <span class="nn">io</span>
+
+
+<div class="viewcode-block" id="Compilation"><a class="viewcode-back" href="../../../../arxiv.submission/arxiv.submission.domain.compilation.html#arxiv.submission.domain.compilation.Compilation">[docs]</a><span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">Compilation</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;The state of a compilation attempt from the :mod:`.compiler` service.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="Compilation.Status"><a class="viewcode-back" href="../../../../arxiv.submission/arxiv.submission.domain.compilation.html#arxiv.submission.domain.compilation.Compilation.Status">[docs]</a>    <span class="k">class</span> <span class="nc">Status</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>      <span class="c1"># type: ignore</span>
+        <span class="sd">&quot;&quot;&quot;Acceptable compilation process statuses.&quot;&quot;&quot;</span>
+
+        <span class="n">SUCCEEDED</span> <span class="o">=</span> <span class="s2">&quot;completed&quot;</span>
+        <span class="n">IN_PROGRESS</span> <span class="o">=</span> <span class="s2">&quot;in_progress&quot;</span>
+        <span class="n">FAILED</span> <span class="o">=</span> <span class="s2">&quot;failed&quot;</span></div>
+
+<div class="viewcode-block" id="Compilation.Format"><a class="viewcode-back" href="../../../../arxiv.submission/arxiv.submission.domain.compilation.html#arxiv.submission.domain.compilation.Compilation.Format">[docs]</a>    <span class="k">class</span> <span class="nc">Format</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>      <span class="c1"># type: ignore</span>
+        <span class="sd">&quot;&quot;&quot;Supported compilation output formats.&quot;&quot;&quot;</span>
+
+        <span class="n">PDF</span> <span class="o">=</span> <span class="s2">&quot;pdf&quot;</span>
+        <span class="n">DVI</span> <span class="o">=</span> <span class="s2">&quot;dvi&quot;</span>
+        <span class="n">PS</span> <span class="o">=</span> <span class="s2">&quot;ps&quot;</span>
+
+        <span class="nd">@property</span>
+        <span class="k">def</span> <span class="nf">content_type</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;Get the MIME type for the compilation product.&quot;&quot;&quot;</span>
+            <span class="n">_ctypes</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">PDF</span><span class="p">:</span> <span class="s1">&#39;application/pdf&#39;</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">DVI</span><span class="p">:</span> <span class="s1">&#39;application/x-dvi&#39;</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">PS</span><span class="p">:</span> <span class="s1">&#39;application/postscript&#39;</span>
+            <span class="p">}</span>
+            <span class="k">return</span> <span class="n">_ctypes</span><span class="p">[</span><span class="bp">self</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="Compilation.SupportedCompiler"><a class="viewcode-back" href="../../../../arxiv.submission/arxiv.submission.domain.compilation.html#arxiv.submission.domain.compilation.Compilation.SupportedCompiler">[docs]</a>    <span class="k">class</span> <span class="nc">SupportedCompiler</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Compiler known to be supported by the compiler service.&quot;&quot;&quot;</span>
+
+        <span class="n">PDFLATEX</span> <span class="o">=</span> <span class="s1">&#39;pdflatex&#39;</span></div>
+
+<div class="viewcode-block" id="Compilation.Reason"><a class="viewcode-back" href="../../../../arxiv.submission/arxiv.submission.domain.compilation.html#arxiv.submission.domain.compilation.Compilation.Reason">[docs]</a>    <span class="k">class</span> <span class="nc">Reason</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Specific reasons for a (usually failure) outcome.&quot;&quot;&quot;</span>
+
+        <span class="n">AUTHORIZATION</span> <span class="o">=</span> <span class="s2">&quot;auth_error&quot;</span>
+        <span class="n">MISSING</span> <span class="o">=</span> <span class="s2">&quot;missing_source&quot;</span>
+        <span class="n">SOURCE_TYPE</span> <span class="o">=</span> <span class="s2">&quot;invalid_source_type&quot;</span>
+        <span class="n">CORRUPTED</span> <span class="o">=</span> <span class="s2">&quot;corrupted_source&quot;</span>
+        <span class="n">CANCELLED</span> <span class="o">=</span> <span class="s2">&quot;cancelled&quot;</span>
+        <span class="n">ERROR</span> <span class="o">=</span> <span class="s2">&quot;compilation_errors&quot;</span>
+        <span class="n">NETWORK</span> <span class="o">=</span> <span class="s2">&quot;network_error&quot;</span>
+        <span class="n">STORAGE</span> <span class="o">=</span> <span class="s2">&quot;storage&quot;</span>
+        <span class="n">NONE</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+    <span class="c1"># Here are the actual slots/fields.</span>
+    <span class="n">source_id</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="sd">&quot;&quot;&quot;This is the upload workspace identifier.&quot;&quot;&quot;</span>
+    <span class="n">status</span><span class="p">:</span> <span class="n">Status</span>
+    <span class="sd">&quot;&quot;&quot;The status of the compilation.&quot;&quot;&quot;</span>
+    <span class="n">checksum</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="sd">&quot;&quot;&quot;Checksum of the source package that we are compiling.&quot;&quot;&quot;</span>
+    <span class="n">output_format</span><span class="p">:</span> <span class="n">Format</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">Format</span><span class="o">.</span><span class="n">PDF</span><span class="p">)</span>
+    <span class="sd">&quot;&quot;&quot;The requested output format.&quot;&quot;&quot;</span>
+    <span class="n">reason</span><span class="p">:</span> <span class="n">Reason</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">Reason</span><span class="o">.</span><span class="n">NONE</span><span class="p">)</span>
+    <span class="sd">&quot;&quot;&quot;The specific reason for the :attr:`.status`.&quot;&quot;&quot;</span>
+    <span class="n">description</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="sd">&quot;&quot;&quot;Additional detail about the :attr:`.status`.&quot;&quot;&quot;</span>
+    <span class="n">size_bytes</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="sd">&quot;&quot;&quot;The size of the compilation product in bytes.&quot;&quot;&quot;</span>
+    <span class="n">start_time</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">datetime</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">end_time</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">datetime</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Check enums.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">output_format</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">output_format</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reason</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Reason</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">reason</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">identifier</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the task identifier.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_identifier</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">source_id</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">checksum</span><span class="p">,</span>
+                                   <span class="bp">self</span><span class="o">.</span><span class="n">output_format</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Compilation.get_identifier"><a class="viewcode-back" href="../../../../arxiv.submission/arxiv.submission.domain.compilation.html#arxiv.submission.domain.compilation.Compilation.get_identifier">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">get_identifier</span><span class="p">(</span><span class="n">source_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">checksum</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+                       <span class="n">output_format</span><span class="p">:</span> <span class="n">Format</span> <span class="o">=</span> <span class="n">Format</span><span class="o">.</span><span class="n">PDF</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">f</span><span class="s2">&quot;</span><span class="si">{source_id}</span><span class="s2">/</span><span class="si">{checksum}</span><span class="s2">/</span><span class="si">{output_format.value}</span><span class="s2">&quot;</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">content_type</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Get the MIME type for the compilation product.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">output_format</span><span class="o">.</span><span class="n">content_type</span></div>
+
+
+<div class="viewcode-block" id="CompilationProduct"><a class="viewcode-back" href="../../../../arxiv.submission/arxiv.submission.domain.compilation.html#arxiv.submission.domain.compilation.CompilationProduct">[docs]</a><span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">CompilationProduct</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Content of a compilation product itself.&quot;&quot;&quot;</span>
+
+    <span class="n">stream</span><span class="p">:</span> <span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span>
+    <span class="sd">&quot;&quot;&quot;Readable buffer with the product content.&quot;&quot;&quot;</span>
+
+    <span class="n">content_type</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="sd">&quot;&quot;&quot;MIME-type of the stream.&quot;&quot;&quot;</span>
+
+    <span class="n">status</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Compilation</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="sd">&quot;&quot;&quot;Status information about the product.&quot;&quot;&quot;</span>
+
+    <span class="n">checksum</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="sd">&quot;&quot;&quot;The B64-encoded MD5 hash of the compilation product.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Check status.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="ow">and</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">status</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">dict</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="n">Compilation</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">status</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="CompilationLog"><a class="viewcode-back" href="../../../../arxiv.submission/arxiv.submission.domain.compilation.html#arxiv.submission.domain.compilation.CompilationLog">[docs]</a><span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">CompilationLog</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Content of a compilation log.&quot;&quot;&quot;</span>
+
+    <span class="n">stream</span><span class="p">:</span> <span class="n">io</span><span class="o">.</span><span class="n">BytesIO</span>
+    <span class="sd">&quot;&quot;&quot;Readable buffer with the product content.&quot;&quot;&quot;</span>
+
+    <span class="n">status</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Compilation</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="sd">&quot;&quot;&quot;Status information about the log.&quot;&quot;&quot;</span>
+
+    <span class="n">checksum</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="sd">&quot;&quot;&quot;The B64-encoded MD5 hash of the log.&quot;&quot;&quot;</span>
+
+    <span class="n">content_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s1">&#39;text/plain&#39;</span><span class="p">)</span>
+    <span class="sd">&quot;&quot;&quot;MIME-type of the stream.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Check status.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="ow">and</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">status</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">dict</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="n">Compilation</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">status</span><span class="p">)</span></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../index.html">arXiv submission & moderation</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../architecture.html">Submission &amp; moderation subsystem architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../announcement_process.html">Submission &amp; announcement Process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../submission_api_context.html">Submission API: Context</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../arxiv.submission/arxiv.submission.html">arxiv.submission package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../containers/agent/agent.html">agent package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../containers/metadata/metadata.html">metadata package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../background.html">Background</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  <li><a href="../../submission.html">arxiv.submission</a><ul>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, arXiv.org.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.0.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

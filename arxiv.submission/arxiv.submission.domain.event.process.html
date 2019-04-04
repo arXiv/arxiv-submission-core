@@ -1,0 +1,230 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>arxiv.submission.domain.event.process module &#8212; arXiv submission &amp; moderation 0.1 documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="arxiv.submission.domain.event.proposal module" href="arxiv.submission.domain.event.proposal.html" />
+    <link rel="prev" title="arxiv.submission.domain.event.flag module" href="arxiv.submission.domain.event.flag.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="module-arxiv.submission.domain.event.process">
+<span id="arxiv-submission-domain-event-process-module"></span><h1>arxiv.submission.domain.event.process module<a class="headerlink" href="#module-arxiv.submission.domain.event.process" title="Permalink to this headline">¶</a></h1>
+<p>Events related to external or long-running processes.</p>
+<dl class="class">
+<dt id="arxiv.submission.domain.event.process.AddProcessStatus">
+<em class="property">class </em><code class="descclassname">arxiv.submission.domain.event.process.</code><code class="descname">AddProcessStatus</code><span class="sig-paren">(</span><em>creator</em>, <em>created=&lt;factory&gt;</em>, <em>proxy=None</em>, <em>client=None</em>, <em>submission_id=None</em>, <em>committed=False</em>, <em>before=None</em>, <em>after=None</em>, <em>event_type=&lt;factory&gt;</em>, <em>event_version=&lt;factory&gt;</em>, <em>process=None</em>, <em>step=None</em>, <em>status=&lt;Status.PENDING: 'pending'&gt;</em>, <em>reason=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/event/process.html#AddProcessStatus"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.process.AddProcessStatus" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="arxiv.submission.domain.event.base.html#arxiv.submission.domain.event.base.Event" title="arxiv.submission.domain.event.base.Event"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.submission.domain.event.base.Event</span></code></a></p>
+<p>Add the status of an external/long-running process to a submission.</p>
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.process.AddProcessStatus.NAME">
+<code class="descname">NAME</code><em class="property"> = 'add status of a process'</em><a class="headerlink" href="#arxiv.submission.domain.event.process.AddProcessStatus.NAME" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.process.AddProcessStatus.NAMED">
+<code class="descname">NAMED</code><em class="property"> = 'added status of a process'</em><a class="headerlink" href="#arxiv.submission.domain.event.process.AddProcessStatus.NAMED" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="class">
+<dt id="arxiv.submission.domain.event.process.AddProcessStatus.Status">
+<em class="property">class </em><code class="descname">Status</code><a class="headerlink" href="#arxiv.submission.domain.event.process.AddProcessStatus.Status" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.6/library/enum.html#enum.Enum" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">enum.Enum</span></code></a></p>
+<p>Supported statuses.</p>
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.process.AddProcessStatus.Status.FAILED">
+<code class="descname">FAILED</code><em class="property"> = 'failed'</em><a class="headerlink" href="#arxiv.submission.domain.event.process.AddProcessStatus.Status.FAILED" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.process.AddProcessStatus.Status.FAILED_TO_END">
+<code class="descname">FAILED_TO_END</code><em class="property"> = 'failed_to_end'</em><a class="headerlink" href="#arxiv.submission.domain.event.process.AddProcessStatus.Status.FAILED_TO_END" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.process.AddProcessStatus.Status.FAILED_TO_START">
+<code class="descname">FAILED_TO_START</code><em class="property"> = 'failed_to_start'</em><a class="headerlink" href="#arxiv.submission.domain.event.process.AddProcessStatus.Status.FAILED_TO_START" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.process.AddProcessStatus.Status.IN_PROGRESS">
+<code class="descname">IN_PROGRESS</code><em class="property"> = 'in_progress'</em><a class="headerlink" href="#arxiv.submission.domain.event.process.AddProcessStatus.Status.IN_PROGRESS" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.process.AddProcessStatus.Status.PENDING">
+<code class="descname">PENDING</code><em class="property"> = 'pending'</em><a class="headerlink" href="#arxiv.submission.domain.event.process.AddProcessStatus.Status.PENDING" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.process.AddProcessStatus.Status.SUCCEEDED">
+<code class="descname">SUCCEEDED</code><em class="property"> = 'succeeded'</em><a class="headerlink" href="#arxiv.submission.domain.event.process.AddProcessStatus.Status.SUCCEEDED" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.process.AddProcessStatus.Status.TERMINATED">
+<code class="descname">TERMINATED</code><em class="property"> = 'terminated'</em><a class="headerlink" href="#arxiv.submission.domain.event.process.AddProcessStatus.Status.TERMINATED" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.process.AddProcessStatus.process">
+<code class="descname">process</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.submission.domain.event.process.AddProcessStatus.process" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.event.process.AddProcessStatus.project">
+<code class="descname">project</code><span class="sig-paren">(</span><em>submission</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/event/process.html#AddProcessStatus.project"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.process.AddProcessStatus.project" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add the process status to the submission.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.Submission" title="arxiv.submission.domain.submission.Submission"><code class="xref py py-class docutils literal notranslate"><span class="pre">Submission</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.process.AddProcessStatus.reason">
+<code class="descname">reason</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.submission.domain.event.process.AddProcessStatus.reason" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.process.AddProcessStatus.status">
+<code class="descname">status</code><em class="property"> = 'pending'</em><a class="headerlink" href="#arxiv.submission.domain.event.process.AddProcessStatus.status" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.process.AddProcessStatus.step">
+<code class="descname">step</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.submission.domain.event.process.AddProcessStatus.step" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.event.process.AddProcessStatus.validate">
+<code class="descname">validate</code><span class="sig-paren">(</span><em>submission</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/event/process.html#AddProcessStatus.validate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.process.AddProcessStatus.validate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Verify that we have a <a class="reference internal" href="arxiv.submission.domain.process.html#arxiv.submission.domain.process.ProcessStatus" title="arxiv.submission.domain.process.ProcessStatus"><code class="xref py py-class docutils literal notranslate"><span class="pre">ProcessStatus</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">arXiv submission & moderation</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../architecture.html">Submission &amp; moderation subsystem architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../announcement_process.html">Submission &amp; announcement Process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../submission_api_context.html">Submission API: Context</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="arxiv.submission.html">arxiv.submission package</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="arxiv.submission.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.submission.html#using-commands-events">Using commands/events</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.submission.html#versioning-events">Versioning events</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.submission.html#integration-with-the-legacy-system">Integration with the legacy system</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="arxiv.submission.html#subpackages">Subpackages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.submission.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../containers/agent/agent.html">agent package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../containers/metadata/metadata.html">metadata package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../background.html">Background</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="arxiv.submission.html">arxiv.submission package</a><ul>
+  <li><a href="arxiv.submission.domain.html">arxiv.submission.domain package</a><ul>
+  <li><a href="arxiv.submission.domain.event.html">arxiv.submission.domain.event package</a><ul>
+      <li>Previous: <a href="arxiv.submission.domain.event.flag.html" title="previous chapter">arxiv.submission.domain.event.flag module</a></li>
+      <li>Next: <a href="arxiv.submission.domain.event.proposal.html" title="next chapter">arxiv.submission.domain.event.proposal module</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, arXiv.org.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.0.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/arxiv.submission/arxiv.submission.domain.event.process.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

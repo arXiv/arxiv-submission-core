@@ -1,11 +1,9 @@
 
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE html>
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta charset="utf-8" />
     <title>Submission API: Context &#8212; arXiv submission &amp; moderation 0.1 documentation</title>
     <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -17,7 +15,7 @@
     <script type="text/javascript" src="_static/language_data.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="arxiv.submission package" href="containers/core/arxiv.submission.html" />
+    <link rel="next" title="arxiv.submission package" href="arxiv.submission/arxiv.submission.html" />
     <link rel="prev" title="Submission &amp; announcement Process" href="announcement_process.html" />
    
   <link rel="stylesheet" href="_static/custom.css" type="text/css" />
@@ -38,8 +36,8 @@
   <div class="section" id="submission-api-context">
 <h1>Submission API: Context<a class="headerlink" href="#submission-api-context" title="Permalink to this headline">¶</a></h1>
 <div class="admonition note">
-<p class="first admonition-title">Note</p>
-<p class="last">This section is badly out of date. Disregard for now.</p>
+<p class="admonition-title">Note</p>
+<p>This section is badly out of date. Disregard for now.</p>
 </div>
 <p>The arXiv submission API provides programmatic access to the arXiv submission
 system for API consumers.</p>
@@ -83,9 +81,9 @@ via the arXiv API Client Registry. See …</p>
 your use-case. To request that missing scopes be added to your credentials,
 see …</p>
 <ul class="simple">
-<li><code class="docutils literal notranslate"><span class="pre">auth:3legged</span></code>: Required for proxy submission.</li>
-<li><code class="docutils literal notranslate"><span class="pre">submit:proxy</span></code>: Required for proxy submission.</li>
-<li><code class="docutils literal notranslate"><span class="pre">submit:bulk</span></code>: Required for bulk submission.</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">auth:3legged</span></code>: Required for proxy submission.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">submit:proxy</span></code>: Required for proxy submission.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">submit:bulk</span></code>: Required for bulk submission.</p></li>
 </ul>
 </div>
 <div class="section" id="two-legged-authorization">
@@ -125,18 +123,15 @@ actions on their behalf. This is required for proxy submission. Note that your
 client credentials must have an associated <code class="docutils literal notranslate"><span class="pre">auth:3legged</span></code> scope, and you
 must have entered a valid callback URI for your application.</p>
 <ul>
-<li><p class="first">Client initiates authorization by directing the user to the arXiv API
-authorization endpoint: <code class="docutils literal notranslate"><span class="pre">https://api.arxiv.org/auth/authorize?client_id=[</span> <span class="pre">your</span> <span class="pre">client</span> <span class="pre">ID</span> <span class="pre">]</span></code></p>
-</li>
-<li><p class="first">User is asked to log in and authorize your client. If the user does not
+<li><p>Client initiates authorization by directing the user to the arXiv API
+authorization endpoint: <code class="docutils literal notranslate"><span class="pre">https://api.arxiv.org/auth/authorize?client_id=[</span> <span class="pre">your</span> <span class="pre">client</span> <span class="pre">ID</span> <span class="pre">]</span></code></p></li>
+<li><p>User is asked to log in and authorize your client. If the user does not
 already have an arXiv account, they are given the option to create one at
-this time, and then proceed with authorization.</p>
-</li>
-<li><p class="first">If the user authorizes your client, they will be redirected to your
+this time, and then proceed with authorization.</p></li>
+<li><p>If the user authorizes your client, they will be redirected to your
 registered callback URI. A short-lived authorization code will be included
-as a GET parameter, e.g. <code class="docutils literal notranslate"><span class="pre">https://yourapp.foo/callback?code=[</span> <span class="pre">auth</span> <span class="pre">code</span> <span class="pre">]</span></code></p>
-</li>
-<li><p class="first">Client may exchange the short-lived authorization code for a longer-lived
+as a GET parameter, e.g. <code class="docutils literal notranslate"><span class="pre">https://yourapp.foo/callback?code=[</span> <span class="pre">auth</span> <span class="pre">code</span> <span class="pre">]</span></code></p></li>
+<li><p>Client may exchange the short-lived authorization code for a longer-lived
 authorization token:</p>
 <p>$ curl -i -L &gt;    -d “client_id=[ your client id ]” &gt;    -d “client_secret=[ your client secret ]” &gt;    -d “code=[ your auth code ]” &gt;    -d “grant_type=authorization_code” &gt;    “<a class="reference external" href="https://api.arxiv.org/auth/token">https://api.arxiv.org/auth/token</a>”
 {“access_token”:”[ your access token ]”,”token_type”:”bearer”,
@@ -253,7 +248,8 @@ to delegate editing privileges to another agent, via the
 <li class="toctree-l2"><a class="reference internal" href="#submission-overview">Submission Overview</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="containers/core/arxiv.submission.html">arxiv.submission package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="arxiv.submission/arxiv.submission.html">arxiv.submission package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="containers/agent/agent.html">agent package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="containers/metadata/metadata.html">metadata package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="background.html">Background</a></li>
 </ul>
@@ -263,7 +259,7 @@ to delegate editing privileges to another agent, via the
 <ul>
   <li><a href="index.html">Documentation overview</a><ul>
       <li>Previous: <a href="announcement_process.html" title="previous chapter">Submission &amp; announcement Process</a></li>
-      <li>Next: <a href="containers/core/arxiv.submission.html" title="next chapter">arxiv.submission package</a></li>
+      <li>Next: <a href="arxiv.submission/arxiv.submission.html" title="next chapter">arxiv.submission package</a></li>
   </ul></li>
 </ul>
 </div>
@@ -273,8 +269,6 @@ to delegate editing privileges to another agent, via the
     <form class="search" action="search.html" method="get">
       <input type="text" name="q" />
       <input type="submit" value="Go" />
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
     </form>
     </div>
 </div>
@@ -295,7 +289,7 @@ to delegate editing privileges to another agent, via the
       &copy;2017, arXiv.org.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.3</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.0.0</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
       |

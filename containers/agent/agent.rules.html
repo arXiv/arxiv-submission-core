@@ -1,0 +1,165 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>agent.rules package &#8212; arXiv submission &amp; moderation 0.1 documentation</title>
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="agent.rules.base module" href="agent.rules.base.html" />
+    <link rel="prev" title="agent.process.util module" href="agent.process.util.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="module-agent.rules">
+<span id="agent-rules-package"></span><h1>agent.rules package<a class="headerlink" href="#module-agent.rules" title="Permalink to this headline">¶</a></h1>
+<p>Submission event rules.</p>
+<p>A <strong>rule</strong> defines the circumstances under which a process should be carried
+out. Specifically, a rule is associated with a particular type of event, and a
+function that determines whether the process should be carried out based on the
+event properties and/or the state of the submission.</p>
+<p>Rules are implemented by instantiating <a class="reference internal" href="agent.rules.base.html#agent.rules.base.Rule" title="agent.rules.base.Rule"><code class="xref py py-class docutils literal notranslate"><span class="pre">Rule</span></code></a> in this module.</p>
+<dl class="function">
+<dt id="agent.rules.evaluate">
+<code class="descclassname">agent.rules.</code><code class="descname">evaluate</code><span class="sig-paren">(</span><em>event</em>, <em>before</em>, <em>after</em><span class="sig-paren">)</span><a class="headerlink" href="#agent.rules.evaluate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluate an event against known rules.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>event</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">domain.Event</span></code>) – The event to evaluate.</p></li>
+<li><p><strong>before</strong> (<a class="reference internal" href="../../arxiv.submission/arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.Submission" title="arxiv.submission.domain.submission.Submission"><code class="xref py py-class docutils literal notranslate"><span class="pre">domain.submission.Submission</span></code></a>) – The state of the submission prior to the event.</p></li>
+<li><p><strong>after</strong> (<a class="reference internal" href="../../arxiv.submission/arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.Submission" title="arxiv.submission.domain.submission.Submission"><code class="xref py py-class docutils literal notranslate"><span class="pre">domain.submission.Submission</span></code></a>) – The state of the submission after the event.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Iterable" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Iterable</span></code></a>[<code class="xref py py-class docutils literal notranslate"><span class="pre">Tuple</span></code>[<a class="reference internal" href="agent.process.base.html#agent.process.base.Process" title="agent.process.base.Process"><code class="xref py py-class docutils literal notranslate"><span class="pre">Process</span></code></a>, <a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Dict" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Any" title="(in Python v3.6)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Any</span></code></a>]]]</p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><em>iterable</em> – Each item is a two-tuple, composed of a triggered <a class="reference internal" href="agent.process.base.html#agent.process.base.Process" title="agent.process.base.Process"><code class="xref py py-class docutils literal notranslate"><span class="pre">Process</span></code></a>
+instance and the configuration parameters with which it should be run.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<div class="section" id="subpackages">
+<h2>Subpackages<a class="headerlink" href="#subpackages" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+</div>
+</div>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="agent.rules.base.html">agent.rules.base module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="agent.rules.conditions.html">agent.rules.conditions module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="agent.rules.params.html">agent.rules.params module</a></li>
+</ul>
+</div>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">arXiv submission & moderation</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../architecture.html">Submission &amp; moderation subsystem architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../announcement_process.html">Submission &amp; announcement Process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../submission_api_context.html">Submission API: Context</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../arxiv.submission/arxiv.submission.html">arxiv.submission package</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="agent.html">agent package</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="agent.html#conceptual-overview">Conceptual overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="agent.html#architectural-overview">Architectural overview</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="agent.html#subpackages">Subpackages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="agent.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../metadata/metadata.html">metadata package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../background.html">Background</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="agent.html">agent package</a><ul>
+      <li>Previous: <a href="agent.process.util.html" title="previous chapter">agent.process.util module</a></li>
+      <li>Next: <a href="agent.rules.base.html" title="next chapter">agent.rules.base module</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, arXiv.org.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.0.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../../_sources/containers/agent/agent.rules.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

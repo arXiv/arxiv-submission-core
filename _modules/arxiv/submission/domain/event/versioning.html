@@ -1,0 +1,242 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>arxiv.submission.domain.event.versioning &#8212; arXiv submission &amp; moderation 0.1 documentation</title>
+    <link rel="stylesheet" href="../../../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/graphviz.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../../../../" src="../../../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for arxiv.submission.domain.event.versioning</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Provides on-the-fly versioned migrations for event data.</span>
+
+<span class="sd">The purpose of this module is to facilitate backwards-compatible changes to</span>
+<span class="sd">the structure of :class:`.domain.event.Event` classes. This problem is similar</span>
+<span class="sd">to database migrations, except that the &quot;meat&quot; of the event data are dicts</span>
+<span class="sd">stored as JSON and thus ALTER commands won&#39;t get us all that far.</span>
+
+<span class="sd">Writing version mappings</span>
+<span class="sd">========================</span>
+<span class="sd">Any new version of this software that includes changes to existing</span>
+<span class="sd">event/command classes that would break events from earlier versions **MUST**</span>
+<span class="sd">include a version mapping module. The module should include a mapping class</span>
+<span class="sd">(a subclass of :class:`.BaseVersionMapping`) for each event type for which</span>
+<span class="sd">there are relevant changes.</span>
+
+<span class="sd">See :mod:`.versioning.version_0_0_0_example` for an example.</span>
+
+<span class="sd">Each such class must include an internal ``Meta`` class with its software</span>
+<span class="sd">version and the name of the event type to which it applies. For example:</span>
+
+<span class="sd">.. code-block:: python</span>
+
+<span class="sd">   from ._base import BaseVersionMapping</span>
+
+<span class="sd">   class SetAbstractMigration(BaseVersionMapping):</span>
+<span class="sd">       class Meta:</span>
+<span class="sd">           event_version = &quot;0.2.12&quot;     # Must be a semver.</span>
+<span class="sd">           event_type = &quot;SetAbstract&quot;</span>
+
+
+<span class="sd">In addition, it&#39;s a good idea to include some test data that can be used to</span>
+<span class="sd">verify the behavior of the migration. You can do this by adding a ``tests``</span>
+<span class="sd">attribute to ``Meta`` that includes tuples of the form</span>
+<span class="sd">``(original: EventData, expected: EventData)``. For example:</span>
+
+
+<span class="sd">.. code-block:: python</span>
+
+<span class="sd">   from ._base import BaseVersionMapping</span>
+
+<span class="sd">   class SetAbstractMigration(BaseVersionMapping):</span>
+<span class="sd">       class Meta:</span>
+<span class="sd">           event_version = &quot;0.2.12&quot;     # Must be a semver.</span>
+<span class="sd">           event_type = &quot;SetAbstract&quot;</span>
+<span class="sd">           tests = [({&quot;event_version&quot;: &quot;0.2.11&quot;, &quot;abstract&quot;: &quot;very abstract&quot;},</span>
+<span class="sd">                     {&quot;event_version&quot;: &quot;0.2.12&quot;, &quot;abstract&quot;: &quot;more abstract&quot;})]</span>
+
+
+<span class="sd">Transformation logic can be implemented for individual fields, or for the event</span>
+<span class="sd">datum as a whole.</span>
+
+<span class="sd">Transforming individual fields</span>
+<span class="sd">------------------------------</span>
+<span class="sd">Transformers for individual fields may be implemented by</span>
+<span class="sd">defining instance methods with the name ``transform_{field}`` and the signature</span>
+<span class="sd">``(self, original: EventData, key: str, value: Any) -&gt; Tuple[str, Any]``.</span>
+<span class="sd">The return value is the field name and transformed value. Note that the field</span>
+<span class="sd">name may be altered here, and the original field name will be omitted from the</span>
+<span class="sd">final transformed representation of the event datum.</span>
+
+<span class="sd">Transforming the datum as a whole</span>
+<span class="sd">---------------------------------</span>
+<span class="sd">A transformer for the datum as a whole may be implemented by defining an</span>
+<span class="sd">instance method named ``transform`` with the signature</span>
+<span class="sd">``(self, original: EventData, transformed: EventData) -&gt; EventData``. This is</span>
+<span class="sd">called **after** the transformers for individual fields; the second positional</span>
+<span class="sd">argument is the state of the datum at that point, and the first positional</span>
+<span class="sd">argument is the state of the datum before transformations were applied.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">copy</span>
+<span class="kn">from</span> <span class="nn">._base</span> <span class="k">import</span> <span class="n">EventData</span><span class="p">,</span> <span class="n">BaseVersionMapping</span><span class="p">,</span> <span class="n">Version</span>
+
+<span class="kn">from</span> <span class="nn">arxiv.base.globals</span> <span class="k">import</span> <span class="n">get_application_config</span>
+
+
+<div class="viewcode-block" id="map_to_version"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.domain.event.versioning.html#arxiv.submission.domain.event.versioning.map_to_version">[docs]</a><span class="k">def</span> <span class="nf">map_to_version</span><span class="p">(</span><span class="n">original</span><span class="p">:</span> <span class="n">EventData</span><span class="p">,</span> <span class="n">target</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">EventData</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Map raw event data to a later version.</span>
+
+<span class="sd">    Loads all version mappings for the original event type subsequent to the</span>
+<span class="sd">    version of the software at which the data was created, up to and</span>
+<span class="sd">    includiong the ``target`` version.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    original : dict</span>
+<span class="sd">        Original event data.</span>
+<span class="sd">    target : str</span>
+<span class="sd">        The target software version. Must be a valid semantic version, i.e.</span>
+<span class="sd">        with major, minor, and patch components.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        Data from ``original`` transformed into a representation suitable for</span>
+<span class="sd">        use in the target software version.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">original_version</span> <span class="o">=</span> <span class="n">Version</span><span class="o">.</span><span class="n">from_event_data</span><span class="p">(</span><span class="n">original</span><span class="p">)</span>
+    <span class="n">transformed</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">original</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">mapping</span> <span class="ow">in</span> <span class="n">BaseVersionMapping</span><span class="o">.</span><span class="n">__subclasses__</span><span class="p">():</span>
+        <span class="k">if</span> <span class="n">original</span><span class="p">[</span><span class="s1">&#39;event_type&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">mapping</span><span class="o">.</span><span class="n">Meta</span><span class="o">.</span><span class="n">event_type</span> \
+                <span class="ow">and</span> <span class="n">Version</span><span class="p">(</span><span class="n">mapping</span><span class="o">.</span><span class="n">Meta</span><span class="o">.</span><span class="n">event_version</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">Version</span><span class="p">(</span><span class="n">target</span><span class="p">)</span> \
+                <span class="ow">and</span> <span class="n">Version</span><span class="p">(</span><span class="n">mapping</span><span class="o">.</span><span class="n">Meta</span><span class="o">.</span><span class="n">event_version</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">original_version</span><span class="p">:</span>
+            <span class="n">mapper</span> <span class="o">=</span> <span class="n">mapping</span><span class="p">()</span>
+            <span class="n">transformed</span> <span class="o">=</span> <span class="n">mapper</span><span class="p">(</span><span class="n">transformed</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">transformed</span></div>
+
+
+<div class="viewcode-block" id="map_to_current_version"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.domain.event.versioning.html#arxiv.submission.domain.event.versioning.map_to_current_version">[docs]</a><span class="k">def</span> <span class="nf">map_to_current_version</span><span class="p">(</span><span class="n">original</span><span class="p">:</span> <span class="n">EventData</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">EventData</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Map raw event data to the current software version.</span>
+
+<span class="sd">    Relies on the ``CORE_VERSION`` parameter in the application configuration.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    original : dict</span>
+<span class="sd">        Original event data.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        Data from ``original`` transformed into a representation suitable for</span>
+<span class="sd">        use in the current software version.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">current_version</span> <span class="o">=</span> <span class="n">get_application_config</span><span class="p">()</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;CORE_VERSION&#39;</span><span class="p">,</span> <span class="s1">&#39;0.0.0&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">map_to_version</span><span class="p">(</span><span class="n">original</span><span class="p">,</span> <span class="n">current_version</span><span class="p">)</span></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../../index.html">arXiv submission & moderation</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../architecture.html">Submission &amp; moderation subsystem architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../announcement_process.html">Submission &amp; announcement Process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../submission_api_context.html">Submission API: Context</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../arxiv.submission/arxiv.submission.html">arxiv.submission package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../containers/agent/agent.html">agent package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../containers/metadata/metadata.html">metadata package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../background.html">Background</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../../index.html">Module code</a><ul>
+  <li><a href="../../../submission.html">arxiv.submission</a><ul>
+  <li><a href="../event.html">arxiv.submission.domain.event</a><ul>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, arXiv.org.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.0.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

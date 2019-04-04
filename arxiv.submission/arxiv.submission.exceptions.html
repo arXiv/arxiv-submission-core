@@ -1,0 +1,153 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>arxiv.submission.exceptions module &#8212; arXiv submission &amp; moderation 0.1 documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="arxiv.submission.schedule module" href="arxiv.submission.schedule.html" />
+    <link rel="prev" title="arxiv.submission.core module" href="arxiv.submission.core.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="module-arxiv.submission.exceptions">
+<span id="arxiv-submission-exceptions-module"></span><h1>arxiv.submission.exceptions module<a class="headerlink" href="#module-arxiv.submission.exceptions" title="Permalink to this headline">¶</a></h1>
+<p>Exceptions raised during event handling.</p>
+<dl class="exception">
+<dt id="arxiv.submission.exceptions.InvalidEvent">
+<em class="property">exception </em><code class="descclassname">arxiv.submission.exceptions.</code><code class="descname">InvalidEvent</code><span class="sig-paren">(</span><em>event</em>, <em>message=''</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/exceptions.html#InvalidEvent"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.exceptions.InvalidEvent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.6/library/exceptions.html#ValueError" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">ValueError</span></code></a></p>
+<p>Raised when an invalid event is encountered.</p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="arxiv.submission.exceptions.NoSuchSubmission">
+<em class="property">exception </em><code class="descclassname">arxiv.submission.exceptions.</code><code class="descname">NoSuchSubmission</code><a class="reference internal" href="../_modules/arxiv/submission/exceptions.html#NoSuchSubmission"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.exceptions.NoSuchSubmission" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.6/library/exceptions.html#Exception" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></a></p>
+<p>An operation was performed on/for a submission that does not exist.</p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="arxiv.submission.exceptions.NothingToDo">
+<em class="property">exception </em><code class="descclassname">arxiv.submission.exceptions.</code><code class="descname">NothingToDo</code><a class="reference internal" href="../_modules/arxiv/submission/exceptions.html#NothingToDo"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.exceptions.NothingToDo" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.6/library/exceptions.html#RuntimeError" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">RuntimeError</span></code></a></p>
+<p>There is nothing to do.</p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="arxiv.submission.exceptions.SaveError">
+<em class="property">exception </em><code class="descclassname">arxiv.submission.exceptions.</code><code class="descname">SaveError</code><a class="reference internal" href="../_modules/arxiv/submission/exceptions.html#SaveError"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.exceptions.SaveError" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.6/library/exceptions.html#RuntimeError" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">RuntimeError</span></code></a></p>
+<p>Failed to persist event state.</p>
+</dd></dl>
+
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">arXiv submission & moderation</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../architecture.html">Submission &amp; moderation subsystem architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../announcement_process.html">Submission &amp; announcement Process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../submission_api_context.html">Submission API: Context</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="arxiv.submission.html">arxiv.submission package</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="arxiv.submission.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.submission.html#using-commands-events">Using commands/events</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.submission.html#versioning-events">Versioning events</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.submission.html#integration-with-the-legacy-system">Integration with the legacy system</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.submission.html#subpackages">Subpackages</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="arxiv.submission.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../containers/agent/agent.html">agent package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../containers/metadata/metadata.html">metadata package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../background.html">Background</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="arxiv.submission.html">arxiv.submission package</a><ul>
+      <li>Previous: <a href="arxiv.submission.core.html" title="previous chapter">arxiv.submission.core module</a></li>
+      <li>Next: <a href="arxiv.submission.schedule.html" title="next chapter">arxiv.submission.schedule module</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, arXiv.org.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.0.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/arxiv.submission/arxiv.submission.exceptions.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

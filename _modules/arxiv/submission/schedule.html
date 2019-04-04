@@ -1,0 +1,175 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>arxiv.submission.schedule &#8212; arXiv submission &amp; moderation 0.1 documentation</title>
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for arxiv.submission.schedule</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Policies for announcement scheduling.</span>
+
+<span class="sd">Submissions to arXiv are normally made public on Sunday through Thursday, with</span>
+<span class="sd">no announcements Friday or Saturday.</span>
+
+<span class="sd">+-----------------------+----------------+------------------------------------+</span>
+<span class="sd">| Received Between (ET) | Announced (ET) | Mailed                             |</span>
+<span class="sd">+=======================+================+====================================+</span>
+<span class="sd">| Mon 14:00 - Tue 14:00 | Tue 20:00      | Tuesday Night / Wednesday Morning  |</span>
+<span class="sd">| Tue 14:00 - Wed 14:00 | Wed 20:00      | Wednesday Night / Thursday Morning |</span>
+<span class="sd">| Wed 14:00 - Thu 14:00 | Thu 20:00      | Thursday Night / Friday Morning    |</span>
+<span class="sd">| Thu 14:00 - Fri 14:00 | Sun 20:00      | Sunday Night / Monday Morning      |</span>
+<span class="sd">| Fri 14:00 - Mon 14:00 | Mon 20:00      | Monday Night / Tuesday Morning     |</span>
+<span class="sd">+-----------------------+----------------+------------------------------------+</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Optional</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="k">import</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">timedelta</span>
+<span class="kn">from</span> <span class="nn">enum</span> <span class="k">import</span> <span class="n">IntEnum</span>
+<span class="kn">from</span> <span class="nn">pytz</span> <span class="k">import</span> <span class="n">timezone</span><span class="p">,</span> <span class="n">UTC</span>
+
+<span class="n">ET</span> <span class="o">=</span> <span class="n">timezone</span><span class="p">(</span><span class="s1">&#39;US/Eastern&#39;</span><span class="p">)</span>
+
+<span class="n">Weekdays</span> <span class="o">=</span> <span class="n">IntEnum</span><span class="p">(</span><span class="s1">&#39;Weekdays&#39;</span><span class="p">,</span> <span class="s1">&#39;Mon Tue Wed Thu Fri Sat Sun&#39;</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+<span class="n">ANNOUNCE_TIME</span> <span class="o">=</span> <span class="mi">20</span>
+<span class="n">FREEZE_TIME</span> <span class="o">=</span> <span class="mi">13</span>
+
+<span class="n">WINDOWS</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="p">((</span><span class="n">Weekdays</span><span class="o">.</span><span class="n">Fri</span> <span class="o">-</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">14</span><span class="p">),</span> <span class="p">(</span><span class="n">Weekdays</span><span class="o">.</span><span class="n">Mon</span><span class="p">,</span> <span class="mi">14</span><span class="p">),</span> <span class="p">(</span><span class="n">Weekdays</span><span class="o">.</span><span class="n">Mon</span><span class="p">,</span> <span class="mi">20</span><span class="p">)),</span>
+    <span class="p">((</span><span class="n">Weekdays</span><span class="o">.</span><span class="n">Mon</span><span class="p">,</span> <span class="mi">14</span><span class="p">),</span> <span class="p">(</span><span class="n">Weekdays</span><span class="o">.</span><span class="n">Tue</span><span class="p">,</span> <span class="mi">14</span><span class="p">),</span> <span class="p">(</span><span class="n">Weekdays</span><span class="o">.</span><span class="n">Tue</span><span class="p">,</span> <span class="mi">20</span><span class="p">)),</span>
+    <span class="p">((</span><span class="n">Weekdays</span><span class="o">.</span><span class="n">Tue</span><span class="p">,</span> <span class="mi">14</span><span class="p">),</span> <span class="p">(</span><span class="n">Weekdays</span><span class="o">.</span><span class="n">Wed</span><span class="p">,</span> <span class="mi">14</span><span class="p">),</span> <span class="p">(</span><span class="n">Weekdays</span><span class="o">.</span><span class="n">Wed</span><span class="p">,</span> <span class="mi">20</span><span class="p">)),</span>
+    <span class="p">((</span><span class="n">Weekdays</span><span class="o">.</span><span class="n">Wed</span><span class="p">,</span> <span class="mi">14</span><span class="p">),</span> <span class="p">(</span><span class="n">Weekdays</span><span class="o">.</span><span class="n">Thu</span><span class="p">,</span> <span class="mi">14</span><span class="p">),</span> <span class="p">(</span><span class="n">Weekdays</span><span class="o">.</span><span class="n">Thu</span><span class="p">,</span> <span class="mi">20</span><span class="p">)),</span>
+    <span class="p">((</span><span class="n">Weekdays</span><span class="o">.</span><span class="n">Thu</span><span class="p">,</span> <span class="mi">14</span><span class="p">),</span> <span class="p">(</span><span class="n">Weekdays</span><span class="o">.</span><span class="n">Fri</span><span class="p">,</span> <span class="mi">14</span><span class="p">),</span> <span class="p">(</span><span class="n">Weekdays</span><span class="o">.</span><span class="n">Sun</span><span class="p">,</span> <span class="mi">20</span><span class="p">)),</span>
+    <span class="p">((</span><span class="n">Weekdays</span><span class="o">.</span><span class="n">Fri</span><span class="p">,</span> <span class="mi">14</span><span class="p">),</span> <span class="p">(</span><span class="n">Weekdays</span><span class="o">.</span><span class="n">Mon</span> <span class="o">+</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">14</span><span class="p">),</span> <span class="p">(</span><span class="n">Weekdays</span><span class="o">.</span><span class="n">Mon</span> <span class="o">+</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">20</span><span class="p">)),</span>
+<span class="p">]</span>
+
+
+<span class="k">def</span> <span class="nf">_datetime</span><span class="p">(</span><span class="n">ref</span><span class="p">:</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">isoweekday</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">hour</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">datetime</span><span class="p">:</span>
+    <span class="n">days_hence</span> <span class="o">=</span> <span class="n">isoweekday</span> <span class="o">-</span> <span class="n">ref</span><span class="o">.</span><span class="n">isoweekday</span><span class="p">()</span>
+    <span class="n">repl</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">hour</span><span class="o">=</span><span class="n">hour</span><span class="p">,</span> <span class="n">minute</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">second</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">microsecond</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">ref</span> <span class="o">+</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">days</span><span class="o">=</span><span class="n">days_hence</span><span class="p">))</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="o">**</span><span class="n">repl</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="next_announcement_time"><a class="viewcode-back" href="../../../arxiv.submission/arxiv.submission.schedule.html#arxiv.submission.schedule.next_announcement_time">[docs]</a><span class="k">def</span> <span class="nf">next_announcement_time</span><span class="p">(</span><span class="n">ref</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">datetime</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">datetime</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Get the datetime of the next announcement.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">ref</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">ref</span> <span class="o">=</span> <span class="n">ET</span><span class="o">.</span><span class="n">localize</span><span class="p">(</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">())</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">ref</span> <span class="o">=</span> <span class="n">ref</span><span class="o">.</span><span class="n">astimezone</span><span class="p">(</span><span class="n">ET</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">,</span> <span class="n">announce</span> <span class="ow">in</span> <span class="n">WINDOWS</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">_datetime</span><span class="p">(</span><span class="n">ref</span><span class="p">,</span> <span class="o">*</span><span class="n">start</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">ref</span> <span class="o">&lt;</span> <span class="n">_datetime</span><span class="p">(</span><span class="n">ref</span><span class="p">,</span> <span class="o">*</span><span class="n">end</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">_datetime</span><span class="p">(</span><span class="n">ref</span><span class="p">,</span> <span class="o">*</span><span class="n">announce</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="next_freeze_time"><a class="viewcode-back" href="../../../arxiv.submission/arxiv.submission.schedule.html#arxiv.submission.schedule.next_freeze_time">[docs]</a><span class="k">def</span> <span class="nf">next_freeze_time</span><span class="p">(</span><span class="n">ref</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">datetime</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">datetime</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Get the datetime of the next freeze.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">ref</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">ref</span> <span class="o">=</span> <span class="n">ET</span><span class="o">.</span><span class="n">localize</span><span class="p">(</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">())</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">ref</span> <span class="o">=</span> <span class="n">ref</span><span class="o">.</span><span class="n">astimezone</span><span class="p">(</span><span class="n">ET</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">,</span> <span class="n">announce</span> <span class="ow">in</span> <span class="n">WINDOWS</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">_datetime</span><span class="p">(</span><span class="n">ref</span><span class="p">,</span> <span class="o">*</span><span class="n">start</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">ref</span> <span class="o">&lt;</span> <span class="n">_datetime</span><span class="p">(</span><span class="n">ref</span><span class="p">,</span> <span class="o">*</span><span class="n">end</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">_datetime</span><span class="p">(</span><span class="n">ref</span><span class="p">,</span> <span class="o">*</span><span class="n">end</span><span class="p">)</span></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../index.html">arXiv submission & moderation</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../architecture.html">Submission &amp; moderation subsystem architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../announcement_process.html">Submission &amp; announcement Process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../submission_api_context.html">Submission API: Context</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../arxiv.submission/arxiv.submission.html">arxiv.submission package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../containers/agent/agent.html">agent package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../containers/metadata/metadata.html">metadata package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../background.html">Background</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  <li><a href="../submission.html">arxiv.submission</a><ul>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, arXiv.org.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.0.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

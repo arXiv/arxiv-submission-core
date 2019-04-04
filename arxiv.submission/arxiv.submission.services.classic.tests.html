@@ -1,0 +1,131 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>arxiv.submission.services.classic.tests package &#8212; arXiv submission &amp; moderation 0.1 documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="module-arxiv.submission.services.classic.tests">
+<span id="arxiv-submission-services-classic-tests-package"></span><h1>arxiv.submission.services.classic.tests package<a class="headerlink" href="#module-arxiv.submission.services.classic.tests" title="Permalink to this headline">¶</a></h1>
+<p>Integration tests for the classic database service.</p>
+<p>These tests assume that SQLAlchemy’s MySQL backend is implemented correctly:
+instead of using a live MySQL database, they use an in-memory SQLite database.
+This is mostly fine (they are intended to be more-or-less swappable). The one
+iffy bit is the JSON datatype, which is not available by default in the SQLite
+backend. We extend the SQLite engine with a JSON type in
+<a class="reference internal" href="arxiv.submission.services.classic.util.html#module-arxiv.submission.services.classic.util" title="arxiv.submission.services.classic.util"><code class="xref py py-mod docutils literal notranslate"><span class="pre">arxiv.submission.services.classic.util</span></code></a>. End to end tests with a live
+MySQL database will provide more confidence in this area.</p>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="arxiv.submission.services.classic.tests.test_admin_log.html">arxiv.submission.services.classic.tests.test_admin_log module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="arxiv.submission.services.classic.tests.test_get_licenses.html">arxiv.submission.services.classic.tests.test_get_licenses module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="arxiv.submission.services.classic.tests.test_get_submission.html">arxiv.submission.services.classic.tests.test_get_submission module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="arxiv.submission.services.classic.tests.test_store_annotations.html">arxiv.submission.services.classic.tests.test_store_annotations module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="arxiv.submission.services.classic.tests.test_store_event.html">arxiv.submission.services.classic.tests.test_store_event module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="arxiv.submission.services.classic.tests.test_store_proposals.html">arxiv.submission.services.classic.tests.test_store_proposals module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="arxiv.submission.services.classic.tests.util.html">arxiv.submission.services.classic.tests.util module</a></li>
+</ul>
+</div>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">arXiv submission & moderation</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../architecture.html">Submission &amp; moderation subsystem architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../announcement_process.html">Submission &amp; announcement Process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../submission_api_context.html">Submission API: Context</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../containers/agent/agent.html">agent package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../containers/metadata/metadata.html">metadata package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../background.html">Background</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, arXiv.org.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.0.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/arxiv.submission/arxiv.submission.services.classic.tests.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

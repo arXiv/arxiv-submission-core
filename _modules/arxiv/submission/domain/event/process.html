@@ -1,11 +1,9 @@
 
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE html>
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta charset="utf-8" />
     <title>arxiv.submission.domain.event.process &#8212; arXiv submission &amp; moderation 0.1 documentation</title>
     <link rel="stylesheet" href="../../../../../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../../../../../_static/pygments.css" type="text/css" />
@@ -43,11 +41,11 @@
 <span class="kn">from</span> <span class="nn">...exceptions</span> <span class="k">import</span> <span class="n">InvalidEvent</span>
 <span class="kn">from</span> <span class="nn">..submission</span> <span class="k">import</span> <span class="n">Submission</span>
 <span class="kn">from</span> <span class="nn">..process</span> <span class="k">import</span> <span class="n">ProcessStatus</span>
-<span class="kn">from</span> <span class="nn">.event</span> <span class="k">import</span> <span class="n">Event</span>
+<span class="kn">from</span> <span class="nn">.base</span> <span class="k">import</span> <span class="n">Event</span>
 <span class="kn">from</span> <span class="nn">.util</span> <span class="k">import</span> <span class="n">dataclass</span>
 
 
-<div class="viewcode-block" id="AddProcessStatus"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.domain.event.process.html#arxiv.submission.domain.event.process.AddProcessStatus">[docs]</a><span class="nd">@dataclass</span><span class="p">()</span>
+<div class="viewcode-block" id="AddProcessStatus"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.domain.event.process.html#arxiv.submission.domain.event.process.AddProcessStatus">[docs]</a><span class="nd">@dataclass</span><span class="p">()</span>
 <span class="k">class</span> <span class="nc">AddProcessStatus</span><span class="p">(</span><span class="n">Event</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Add the status of an external/long-running process to a submission.&quot;&quot;&quot;</span>
 
@@ -55,30 +53,30 @@
     <span class="n">NAMED</span> <span class="o">=</span> <span class="s2">&quot;added status of a process&quot;</span>
 
     <span class="n">Status</span> <span class="o">=</span> <span class="n">ProcessStatus</span><span class="o">.</span><span class="n">Status</span>
-    <span class="n">Process</span> <span class="o">=</span> <span class="n">ProcessStatus</span><span class="o">.</span><span class="n">Process</span>
 
-    <span class="n">status</span><span class="p">:</span> <span class="n">Status</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">Status</span><span class="o">.</span><span class="n">REQUESTED</span><span class="p">)</span>
-    <span class="n">process</span><span class="p">:</span> <span class="n">Process</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">Process</span><span class="o">.</span><span class="n">NONE</span><span class="p">)</span>
-    <span class="n">service</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
-    <span class="n">version</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
-    <span class="n">identifier</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">process</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">step</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">status</span><span class="p">:</span> <span class="n">Status</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">Status</span><span class="o">.</span><span class="n">PENDING</span><span class="p">)</span>
     <span class="n">reason</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 
-<div class="viewcode-block" id="AddProcessStatus.validate"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.domain.event.process.html#arxiv.submission.domain.event.process.AddProcessStatus.validate">[docs]</a>    <span class="k">def</span> <span class="nf">validate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Make sure our enums are in order.&quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">AddProcessStatus</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__post_init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Status</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">status</span><span class="p">)</span>
+
+<div class="viewcode-block" id="AddProcessStatus.validate"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.domain.event.process.html#arxiv.submission.domain.event.process.AddProcessStatus.validate">[docs]</a>    <span class="k">def</span> <span class="nf">validate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Verify that we have a :class:`.ProcessStatus`.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">process</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">InvalidEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;Must include process&quot;</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="AddProcessStatus.project"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.domain.event.process.html#arxiv.submission.domain.event.process.AddProcessStatus.project">[docs]</a>    <span class="k">def</span> <span class="nf">project</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Submission</span><span class="p">:</span>
+<div class="viewcode-block" id="AddProcessStatus.project"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.domain.event.process.html#arxiv.submission.domain.event.process.AddProcessStatus.project">[docs]</a>    <span class="k">def</span> <span class="nf">project</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Submission</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Add the process status to the submission.&quot;&quot;&quot;</span>
         <span class="n">submission</span><span class="o">.</span><span class="n">processes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ProcessStatus</span><span class="p">(</span>
             <span class="n">creator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">creator</span><span class="p">,</span>
             <span class="n">created</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">created</span><span class="p">,</span>
             <span class="n">process</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">process</span><span class="p">,</span>
+            <span class="n">step</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">step</span><span class="p">,</span>
             <span class="n">status</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">status</span><span class="p">,</span>
-            <span class="n">process_service</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">service</span><span class="p">,</span>
-            <span class="n">process_version</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">version</span><span class="p">,</span>
-            <span class="n">process_identifier</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">identifier</span><span class="p">,</span>
             <span class="n">reason</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">reason</span>
         <span class="p">))</span>
         <span class="k">return</span> <span class="n">submission</span></div></div>
@@ -104,7 +102,8 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../../architecture.html">Submission &amp; moderation subsystem architecture</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../announcement_process.html">Submission &amp; announcement Process</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../submission_api_context.html">Submission API: Context</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../../containers/core/arxiv.submission.html">arxiv.submission package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../arxiv.submission/arxiv.submission.html">arxiv.submission package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../containers/agent/agent.html">agent package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../containers/metadata/metadata.html">metadata package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../background.html">Background</a></li>
 </ul>
@@ -114,7 +113,9 @@
 <ul>
   <li><a href="../../../../../index.html">Documentation overview</a><ul>
   <li><a href="../../../../index.html">Module code</a><ul>
+  <li><a href="../../../submission.html">arxiv.submission</a><ul>
   <li><a href="../event.html">arxiv.submission.domain.event</a><ul>
+  </ul></li>
   </ul></li>
   </ul></li>
   </ul></li>
@@ -126,8 +127,6 @@
     <form class="search" action="../../../../../search.html" method="get">
       <input type="text" name="q" />
       <input type="submit" value="Go" />
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
     </form>
     </div>
 </div>
@@ -148,7 +147,7 @@
       &copy;2017, arXiv.org.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.3</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.0.0</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
     </div>

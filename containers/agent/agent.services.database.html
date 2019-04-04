@@ -1,0 +1,290 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>agent.services.database module &#8212; arXiv submission &amp; moderation 0.1 documentation</title>
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="agent.config module" href="agent.config.html" />
+    <link rel="prev" title="agent.services package" href="agent.services.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="module-agent.services.database">
+<span id="agent-services-database-module"></span><h1>agent.services.database module<a class="headerlink" href="#module-agent.services.database" title="Permalink to this headline">¶</a></h1>
+<p>Lightweight database integration for checkpointing.</p>
+<dl class="class">
+<dt id="agent.services.database.Checkpoint">
+<em class="property">class </em><code class="descclassname">agent.services.database.</code><code class="descname">Checkpoint</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#agent.services.database.Checkpoint" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">sqlalchemy.ext.declarative.api.Model</span></code></p>
+<p>Stores checkpoint information for the Kinesis consumer.</p>
+<dl class="attribute">
+<dt id="agent.services.database.Checkpoint.created">
+<code class="descname">created</code><a class="headerlink" href="#agent.services.database.Checkpoint.created" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="agent.services.database.Checkpoint.id">
+<code class="descname">id</code><a class="headerlink" href="#agent.services.database.Checkpoint.id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="agent.services.database.Checkpoint.position">
+<code class="descname">position</code><a class="headerlink" href="#agent.services.database.Checkpoint.position" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="agent.services.database.Checkpoint.shard_id">
+<code class="descname">shard_id</code><a class="headerlink" href="#agent.services.database.Checkpoint.shard_id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="agent.services.database.ProcessStatusEvent">
+<em class="property">class </em><code class="descclassname">agent.services.database.</code><code class="descname">ProcessStatusEvent</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#agent.services.database.ProcessStatusEvent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">sqlalchemy.ext.declarative.api.Model</span></code></p>
+<p>Stores events related to processes.</p>
+<dl class="attribute">
+<dt id="agent.services.database.ProcessStatusEvent.agent_id">
+<code class="descname">agent_id</code><a class="headerlink" href="#agent.services.database.ProcessStatusEvent.agent_id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="agent.services.database.ProcessStatusEvent.agent_type">
+<code class="descname">agent_type</code><a class="headerlink" href="#agent.services.database.ProcessStatusEvent.agent_type" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="agent.services.database.ProcessStatusEvent.created">
+<code class="descname">created</code><a class="headerlink" href="#agent.services.database.ProcessStatusEvent.created" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="agent.services.database.ProcessStatusEvent.event_id">
+<code class="descname">event_id</code><a class="headerlink" href="#agent.services.database.ProcessStatusEvent.event_id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="agent.services.database.ProcessStatusEvent.id">
+<code class="descname">id</code><a class="headerlink" href="#agent.services.database.ProcessStatusEvent.id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="agent.services.database.ProcessStatusEvent.process_id">
+<code class="descname">process_id</code><a class="headerlink" href="#agent.services.database.ProcessStatusEvent.process_id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="agent.services.database.ProcessStatusEvent.process_status">
+<code class="descname">process_status</code><a class="headerlink" href="#agent.services.database.ProcessStatusEvent.process_status" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="agent.services.database.ProcessStatusEvent.process_type">
+<code class="descname">process_type</code><a class="headerlink" href="#agent.services.database.ProcessStatusEvent.process_type" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="agent.services.database.ProcessStatusEvent.reason">
+<code class="descname">reason</code><a class="headerlink" href="#agent.services.database.ProcessStatusEvent.reason" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="agent.services.database.ProcessStatusEvent.received">
+<code class="descname">received</code><a class="headerlink" href="#agent.services.database.ProcessStatusEvent.received" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="agent.services.database.ProcessStatusEvent.submission_id">
+<code class="descname">submission_id</code><a class="headerlink" href="#agent.services.database.ProcessStatusEvent.submission_id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="agent.services.database.await_connection">
+<code class="descclassname">agent.services.database.</code><code class="descname">await_connection</code><span class="sig-paren">(</span><em>max_wait=-1</em><span class="sig-paren">)</span><a class="headerlink" href="#agent.services.database.await_connection" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="agent.services.database.create_all">
+<code class="descclassname">agent.services.database.</code><code class="descname">create_all</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#agent.services.database.create_all" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create all tables in the agent database.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="agent.services.database.get_latest_position">
+<code class="descclassname">agent.services.database.</code><code class="descname">get_latest_position</code><span class="sig-paren">(</span><em>shard_id</em><span class="sig-paren">)</span><a class="headerlink" href="#agent.services.database.get_latest_position" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the latest checkpointed position.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="agent.services.database.init_app">
+<code class="descclassname">agent.services.database.</code><code class="descname">init_app</code><span class="sig-paren">(</span><em>app</em><span class="sig-paren">)</span><a class="headerlink" href="#agent.services.database.init_app" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set configuration defaults and attach session to the application.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="agent.services.database.store_event">
+<code class="descclassname">agent.services.database.</code><code class="descname">store_event</code><span class="sig-paren">(</span><em>event</em><span class="sig-paren">)</span><a class="headerlink" href="#agent.services.database.store_event" title="Permalink to this definition">¶</a></dt>
+<dd><p>Store an <a class="reference internal" href="../../arxiv.submission/arxiv.submission.domain.event.process.html#arxiv.submission.domain.event.process.AddProcessStatus" title="arxiv.submission.domain.event.process.AddProcessStatus"><code class="xref py py-class docutils literal notranslate"><span class="pre">AddProcessStatus</span></code></a> event.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="agent.services.database.store_position">
+<code class="descclassname">agent.services.database.</code><code class="descname">store_position</code><span class="sig-paren">(</span><em>position</em>, <em>shard_id</em><span class="sig-paren">)</span><a class="headerlink" href="#agent.services.database.store_position" title="Permalink to this definition">¶</a></dt>
+<dd><p>Store a new checkpoint position.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="agent.services.database.tables_exist">
+<code class="descclassname">agent.services.database.</code><code class="descname">tables_exist</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#agent.services.database.tables_exist" title="Permalink to this definition">¶</a></dt>
+<dd><p>Determine whether or not these database tables exist.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/functions.html#bool" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">arXiv submission & moderation</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../architecture.html">Submission &amp; moderation subsystem architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../announcement_process.html">Submission &amp; announcement Process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../submission_api_context.html">Submission API: Context</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../arxiv.submission/arxiv.submission.html">arxiv.submission package</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="agent.html">agent package</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="agent.html#conceptual-overview">Conceptual overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="agent.html#architectural-overview">Architectural overview</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="agent.html#subpackages">Subpackages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="agent.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../metadata/metadata.html">metadata package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../background.html">Background</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="agent.html">agent package</a><ul>
+  <li><a href="agent.services.html">agent.services package</a><ul>
+      <li>Previous: <a href="agent.services.html" title="previous chapter">agent.services package</a></li>
+      <li>Next: <a href="agent.config.html" title="next chapter">agent.config module</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, arXiv.org.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.0.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../../_sources/containers/agent/agent.services.database.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

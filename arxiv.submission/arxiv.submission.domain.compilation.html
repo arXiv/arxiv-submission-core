@@ -1,0 +1,384 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>arxiv.submission.domain.compilation module &#8212; arXiv submission &amp; moderation 0.1 documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="arxiv.submission.domain.flag module" href="arxiv.submission.domain.flag.html" />
+    <link rel="prev" title="arxiv.submission.domain.annotation module" href="arxiv.submission.domain.annotation.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="module-arxiv.submission.domain.compilation">
+<span id="arxiv-submission-domain-compilation-module"></span><h1>arxiv.submission.domain.compilation module<a class="headerlink" href="#module-arxiv.submission.domain.compilation" title="Permalink to this headline">¶</a></h1>
+<p>Data structs related to compilation.</p>
+<dl class="class">
+<dt id="arxiv.submission.domain.compilation.Compilation">
+<em class="property">class </em><code class="descclassname">arxiv.submission.domain.compilation.</code><code class="descname">Compilation</code><span class="sig-paren">(</span><em>source_id</em>, <em>status</em>, <em>checksum</em>, <em>output_format=&lt;Format.PDF: 'pdf'&gt;</em>, <em>reason=&lt;Reason.NONE: None&gt;</em>, <em>description=None</em>, <em>size_bytes=0</em>, <em>start_time=None</em>, <em>end_time=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/compilation.html#Compilation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.compilation.Compilation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.6/library/functions.html#object" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>The state of a compilation attempt from the <a class="reference internal" href="arxiv.submission.services.compiler.html#module-arxiv.submission.services.compiler" title="arxiv.submission.services.compiler"><code class="xref py py-mod docutils literal notranslate"><span class="pre">compiler</span></code></a> service.</p>
+<dl class="class">
+<dt id="arxiv.submission.domain.compilation.Compilation.Format">
+<em class="property">class </em><code class="descname">Format</code><a class="reference internal" href="../_modules/arxiv/submission/domain/compilation.html#Compilation.Format"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.compilation.Compilation.Format" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.6/library/enum.html#enum.Enum" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">enum.Enum</span></code></a></p>
+<p>Supported compilation output formats.</p>
+<dl class="attribute">
+<dt id="arxiv.submission.domain.compilation.Compilation.Format.DVI">
+<code class="descname">DVI</code><em class="property"> = 'dvi'</em><a class="headerlink" href="#arxiv.submission.domain.compilation.Compilation.Format.DVI" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.compilation.Compilation.Format.PDF">
+<code class="descname">PDF</code><em class="property"> = 'pdf'</em><a class="headerlink" href="#arxiv.submission.domain.compilation.Compilation.Format.PDF" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.compilation.Compilation.Format.PS">
+<code class="descname">PS</code><em class="property"> = 'ps'</em><a class="headerlink" href="#arxiv.submission.domain.compilation.Compilation.Format.PS" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.compilation.Compilation.Format.content_type">
+<code class="descname">content_type</code><a class="headerlink" href="#arxiv.submission.domain.compilation.Compilation.Format.content_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the MIME type for the compilation product.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.submission.domain.compilation.Compilation.Reason">
+<em class="property">class </em><code class="descname">Reason</code><a class="reference internal" href="../_modules/arxiv/submission/domain/compilation.html#Compilation.Reason"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.compilation.Compilation.Reason" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.6/library/enum.html#enum.Enum" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">enum.Enum</span></code></a></p>
+<p>Specific reasons for a (usually failure) outcome.</p>
+<dl class="attribute">
+<dt id="arxiv.submission.domain.compilation.Compilation.Reason.AUTHORIZATION">
+<code class="descname">AUTHORIZATION</code><em class="property"> = 'auth_error'</em><a class="headerlink" href="#arxiv.submission.domain.compilation.Compilation.Reason.AUTHORIZATION" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.compilation.Compilation.Reason.CANCELLED">
+<code class="descname">CANCELLED</code><em class="property"> = 'cancelled'</em><a class="headerlink" href="#arxiv.submission.domain.compilation.Compilation.Reason.CANCELLED" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.compilation.Compilation.Reason.CORRUPTED">
+<code class="descname">CORRUPTED</code><em class="property"> = 'corrupted_source'</em><a class="headerlink" href="#arxiv.submission.domain.compilation.Compilation.Reason.CORRUPTED" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.compilation.Compilation.Reason.ERROR">
+<code class="descname">ERROR</code><em class="property"> = 'compilation_errors'</em><a class="headerlink" href="#arxiv.submission.domain.compilation.Compilation.Reason.ERROR" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.compilation.Compilation.Reason.MISSING">
+<code class="descname">MISSING</code><em class="property"> = 'missing_source'</em><a class="headerlink" href="#arxiv.submission.domain.compilation.Compilation.Reason.MISSING" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.compilation.Compilation.Reason.NETWORK">
+<code class="descname">NETWORK</code><em class="property"> = 'network_error'</em><a class="headerlink" href="#arxiv.submission.domain.compilation.Compilation.Reason.NETWORK" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.compilation.Compilation.Reason.NONE">
+<code class="descname">NONE</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.submission.domain.compilation.Compilation.Reason.NONE" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.compilation.Compilation.Reason.SOURCE_TYPE">
+<code class="descname">SOURCE_TYPE</code><em class="property"> = 'invalid_source_type'</em><a class="headerlink" href="#arxiv.submission.domain.compilation.Compilation.Reason.SOURCE_TYPE" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.compilation.Compilation.Reason.STORAGE">
+<code class="descname">STORAGE</code><em class="property"> = 'storage'</em><a class="headerlink" href="#arxiv.submission.domain.compilation.Compilation.Reason.STORAGE" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.submission.domain.compilation.Compilation.Status">
+<em class="property">class </em><code class="descname">Status</code><a class="reference internal" href="../_modules/arxiv/submission/domain/compilation.html#Compilation.Status"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.compilation.Compilation.Status" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.6/library/enum.html#enum.Enum" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">enum.Enum</span></code></a></p>
+<p>Acceptable compilation process statuses.</p>
+<dl class="attribute">
+<dt id="arxiv.submission.domain.compilation.Compilation.Status.FAILED">
+<code class="descname">FAILED</code><em class="property"> = 'failed'</em><a class="headerlink" href="#arxiv.submission.domain.compilation.Compilation.Status.FAILED" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.compilation.Compilation.Status.IN_PROGRESS">
+<code class="descname">IN_PROGRESS</code><em class="property"> = 'in_progress'</em><a class="headerlink" href="#arxiv.submission.domain.compilation.Compilation.Status.IN_PROGRESS" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.compilation.Compilation.Status.SUCCEEDED">
+<code class="descname">SUCCEEDED</code><em class="property"> = 'completed'</em><a class="headerlink" href="#arxiv.submission.domain.compilation.Compilation.Status.SUCCEEDED" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.submission.domain.compilation.Compilation.SupportedCompiler">
+<em class="property">class </em><code class="descname">SupportedCompiler</code><a class="reference internal" href="../_modules/arxiv/submission/domain/compilation.html#Compilation.SupportedCompiler"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.compilation.Compilation.SupportedCompiler" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.6/library/enum.html#enum.Enum" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">enum.Enum</span></code></a></p>
+<p>Compiler known to be supported by the compiler service.</p>
+<dl class="attribute">
+<dt id="arxiv.submission.domain.compilation.Compilation.SupportedCompiler.PDFLATEX">
+<code class="descname">PDFLATEX</code><em class="property"> = 'pdflatex'</em><a class="headerlink" href="#arxiv.submission.domain.compilation.Compilation.SupportedCompiler.PDFLATEX" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.compilation.Compilation.checksum">
+<code class="descname">checksum</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.submission.domain.compilation.Compilation.checksum" title="Permalink to this definition">¶</a></dt>
+<dd><p>Checksum of the source package that we are compiling.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.compilation.Compilation.content_type">
+<code class="descname">content_type</code><a class="headerlink" href="#arxiv.submission.domain.compilation.Compilation.content_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the MIME type for the compilation product.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.compilation.Compilation.description">
+<code class="descname">description</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.submission.domain.compilation.Compilation.description" title="Permalink to this definition">¶</a></dt>
+<dd><p>Additional detail about the <a class="reference internal" href="#arxiv.submission.domain.compilation.Compilation.status" title="arxiv.submission.domain.compilation.Compilation.status"><code class="xref py py-attr docutils literal notranslate"><span class="pre">status</span></code></a>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.compilation.Compilation.end_time">
+<code class="descname">end_time</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.submission.domain.compilation.Compilation.end_time" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="staticmethod">
+<dt id="arxiv.submission.domain.compilation.Compilation.get_identifier">
+<em class="property">static </em><code class="descname">get_identifier</code><span class="sig-paren">(</span><em>source_id</em>, <em>checksum</em>, <em>output_format=&lt;Format.PDF: 'pdf'&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/compilation.html#Compilation.get_identifier"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.compilation.Compilation.get_identifier" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.compilation.Compilation.identifier">
+<code class="descname">identifier</code><a class="headerlink" href="#arxiv.submission.domain.compilation.Compilation.identifier" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the task identifier.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.compilation.Compilation.output_format">
+<code class="descname">output_format</code><em class="property"> = 'pdf'</em><a class="headerlink" href="#arxiv.submission.domain.compilation.Compilation.output_format" title="Permalink to this definition">¶</a></dt>
+<dd><p>The requested output format.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.compilation.Compilation.reason">
+<code class="descname">reason</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.submission.domain.compilation.Compilation.reason" title="Permalink to this definition">¶</a></dt>
+<dd><p>The specific reason for the <a class="reference internal" href="#arxiv.submission.domain.compilation.Compilation.status" title="arxiv.submission.domain.compilation.Compilation.status"><code class="xref py py-attr docutils literal notranslate"><span class="pre">status</span></code></a>.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.compilation.Compilation.size_bytes">
+<code class="descname">size_bytes</code><em class="property"> = 0</em><a class="headerlink" href="#arxiv.submission.domain.compilation.Compilation.size_bytes" title="Permalink to this definition">¶</a></dt>
+<dd><p>The size of the compilation product in bytes.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.compilation.Compilation.source_id">
+<code class="descname">source_id</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.submission.domain.compilation.Compilation.source_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is the upload workspace identifier.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.compilation.Compilation.start_time">
+<code class="descname">start_time</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.submission.domain.compilation.Compilation.start_time" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.compilation.Compilation.status">
+<code class="descname">status</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.submission.domain.compilation.Compilation.status" title="Permalink to this definition">¶</a></dt>
+<dd><p>The status of the compilation.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.submission.domain.compilation.CompilationLog">
+<em class="property">class </em><code class="descclassname">arxiv.submission.domain.compilation.</code><code class="descname">CompilationLog</code><span class="sig-paren">(</span><em>stream</em>, <em>status=None</em>, <em>checksum=None</em>, <em>content_type='text/plain'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/compilation.html#CompilationLog"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.compilation.CompilationLog" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.6/library/functions.html#object" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Content of a compilation log.</p>
+<dl class="attribute">
+<dt id="arxiv.submission.domain.compilation.CompilationLog.checksum">
+<code class="descname">checksum</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.submission.domain.compilation.CompilationLog.checksum" title="Permalink to this definition">¶</a></dt>
+<dd><p>The B64-encoded MD5 hash of the log.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.compilation.CompilationLog.content_type">
+<code class="descname">content_type</code><em class="property"> = 'text/plain'</em><a class="headerlink" href="#arxiv.submission.domain.compilation.CompilationLog.content_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>MIME-type of the stream.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.compilation.CompilationLog.status">
+<code class="descname">status</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.submission.domain.compilation.CompilationLog.status" title="Permalink to this definition">¶</a></dt>
+<dd><p>Status information about the log.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.compilation.CompilationLog.stream">
+<code class="descname">stream</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.submission.domain.compilation.CompilationLog.stream" title="Permalink to this definition">¶</a></dt>
+<dd><p>Readable buffer with the product content.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.submission.domain.compilation.CompilationProduct">
+<em class="property">class </em><code class="descclassname">arxiv.submission.domain.compilation.</code><code class="descname">CompilationProduct</code><span class="sig-paren">(</span><em>stream</em>, <em>content_type</em>, <em>status=None</em>, <em>checksum=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/compilation.html#CompilationProduct"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.compilation.CompilationProduct" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.6/library/functions.html#object" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Content of a compilation product itself.</p>
+<dl class="attribute">
+<dt id="arxiv.submission.domain.compilation.CompilationProduct.checksum">
+<code class="descname">checksum</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.submission.domain.compilation.CompilationProduct.checksum" title="Permalink to this definition">¶</a></dt>
+<dd><p>The B64-encoded MD5 hash of the compilation product.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.compilation.CompilationProduct.content_type">
+<code class="descname">content_type</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.submission.domain.compilation.CompilationProduct.content_type" title="Permalink to this definition">¶</a></dt>
+<dd><p>MIME-type of the stream.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.compilation.CompilationProduct.status">
+<code class="descname">status</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.submission.domain.compilation.CompilationProduct.status" title="Permalink to this definition">¶</a></dt>
+<dd><p>Status information about the product.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.compilation.CompilationProduct.stream">
+<code class="descname">stream</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.submission.domain.compilation.CompilationProduct.stream" title="Permalink to this definition">¶</a></dt>
+<dd><p>Readable buffer with the product content.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">arXiv submission & moderation</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../architecture.html">Submission &amp; moderation subsystem architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../announcement_process.html">Submission &amp; announcement Process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../submission_api_context.html">Submission API: Context</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="arxiv.submission.html">arxiv.submission package</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="arxiv.submission.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.submission.html#using-commands-events">Using commands/events</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.submission.html#versioning-events">Versioning events</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.submission.html#integration-with-the-legacy-system">Integration with the legacy system</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="arxiv.submission.html#subpackages">Subpackages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="arxiv.submission.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../containers/agent/agent.html">agent package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../containers/metadata/metadata.html">metadata package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../background.html">Background</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="arxiv.submission.html">arxiv.submission package</a><ul>
+  <li><a href="arxiv.submission.domain.html">arxiv.submission.domain package</a><ul>
+      <li>Previous: <a href="arxiv.submission.domain.annotation.html" title="previous chapter">arxiv.submission.domain.annotation module</a></li>
+      <li>Next: <a href="arxiv.submission.domain.flag.html" title="next chapter">arxiv.submission.domain.flag module</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, arXiv.org.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.0.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/arxiv.submission/arxiv.submission.domain.compilation.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

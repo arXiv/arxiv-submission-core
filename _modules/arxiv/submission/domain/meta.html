@@ -1,11 +1,9 @@
 
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE html>
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta charset="utf-8" />
     <title>arxiv.submission.domain.meta &#8212; arXiv submission &amp; moderation 0.1 documentation</title>
     <link rel="stylesheet" href="../../../../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
@@ -41,27 +39,19 @@
 <span class="kn">from</span> <span class="nn">dataclasses</span> <span class="k">import</span> <span class="n">dataclass</span><span class="p">,</span> <span class="n">asdict</span><span class="p">,</span> <span class="n">field</span>
 
 
-<div class="viewcode-block" id="Classification"><a class="viewcode-back" href="../../../../containers/core/arxiv.submission.domain.meta.html#arxiv.submission.domain.meta.Classification">[docs]</a><span class="nd">@dataclass</span>
+<div class="viewcode-block" id="Classification"><a class="viewcode-back" href="../../../../arxiv.submission/arxiv.submission.domain.meta.html#arxiv.submission.domain.meta.Classification">[docs]</a><span class="nd">@dataclass</span>
 <span class="k">class</span> <span class="nc">Classification</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;An archive/category classification for a :class:`.domain.Submission`.&quot;&quot;&quot;</span>
+    <span class="sd">&quot;&quot;&quot;An archive/category classification for a :class:`.domain.submission.Submission`.&quot;&quot;&quot;</span>
 
-    <span class="n">category</span><span class="p">:</span> <span class="n">Category</span>
-
-<div class="viewcode-block" id="Classification.to_dict"><a class="viewcode-back" href="../../../../containers/core/arxiv.submission.domain.meta.html#arxiv.submission.domain.meta.Classification.to_dict">[docs]</a>    <span class="k">def</span> <span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Generate a dict representation of this :class:`.Classification`.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">asdict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div></div>
+    <span class="n">category</span><span class="p">:</span> <span class="n">Category</span></div>
 
 
-<div class="viewcode-block" id="License"><a class="viewcode-back" href="../../../../containers/core/arxiv.submission.domain.meta.html#arxiv.submission.domain.meta.License">[docs]</a><span class="nd">@dataclass</span>
+<div class="viewcode-block" id="License"><a class="viewcode-back" href="../../../../arxiv.submission/arxiv.submission.domain.meta.html#arxiv.submission.domain.meta.License">[docs]</a><span class="nd">@dataclass</span>
 <span class="k">class</span> <span class="nc">License</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;An license for distribution of the submission.&quot;&quot;&quot;</span>
 
     <span class="n">uri</span><span class="p">:</span> <span class="nb">str</span>
-    <span class="n">name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
-
-<div class="viewcode-block" id="License.to_dict"><a class="viewcode-back" href="../../../../containers/core/arxiv.submission.domain.meta.html#arxiv.submission.domain.meta.License.to_dict">[docs]</a>    <span class="k">def</span> <span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Generate a dict representation of this :class:`.License`.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">asdict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div></div>
+    <span class="n">name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span></div>
 </pre></div>
 
           </div>
@@ -84,7 +74,8 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../architecture.html">Submission &amp; moderation subsystem architecture</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../announcement_process.html">Submission &amp; announcement Process</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../submission_api_context.html">Submission API: Context</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../containers/core/arxiv.submission.html">arxiv.submission package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../arxiv.submission/arxiv.submission.html">arxiv.submission package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../containers/agent/agent.html">agent package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../containers/metadata/metadata.html">metadata package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../background.html">Background</a></li>
 </ul>
@@ -94,6 +85,8 @@
 <ul>
   <li><a href="../../../../index.html">Documentation overview</a><ul>
   <li><a href="../../../index.html">Module code</a><ul>
+  <li><a href="../../submission.html">arxiv.submission</a><ul>
+  </ul></li>
   </ul></li>
   </ul></li>
 </ul>
@@ -104,8 +97,6 @@
     <form class="search" action="../../../../search.html" method="get">
       <input type="text" name="q" />
       <input type="submit" value="Go" />
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
     </form>
     </div>
 </div>
@@ -126,7 +117,7 @@
       &copy;2017, arXiv.org.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.3</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.0.0</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
     </div>

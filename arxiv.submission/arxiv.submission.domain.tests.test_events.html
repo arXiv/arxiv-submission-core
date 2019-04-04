@@ -1,0 +1,551 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>arxiv.submission.domain.tests.test_events module &#8212; arXiv submission &amp; moderation 0.1 documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="module-arxiv.submission.domain.tests.test_events">
+<span id="arxiv-submission-domain-tests-test-events-module"></span><h1>arxiv.submission.domain.tests.test_events module<a class="headerlink" href="#module-arxiv.submission.domain.tests.test_events" title="Permalink to this headline">¶</a></h1>
+<p>Tests for <a class="reference internal" href="arxiv.submission.domain.event.event.html#arxiv.submission.domain.event.event.Event" title="arxiv.submission.domain.event.event.Event"><code class="xref py py-class docutils literal notranslate"><span class="pre">Event</span></code></a> instances in <a class="reference internal" href="arxiv.submission.domain.event.html#module-arxiv.submission.domain.event" title="arxiv.submission.domain.event"><code class="xref py py-mod docutils literal notranslate"><span class="pre">arxiv.submission.domain.event</span></code></a>.</p>
+<dl class="class">
+<dt id="arxiv.submission.domain.tests.test_events.TestAddSecondaryClassification">
+<em class="property">class </em><code class="descclassname">arxiv.submission.domain.tests.test_events.</code><code class="descname">TestAddSecondaryClassification</code><span class="sig-paren">(</span><em>methodName='runTest'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/tests/test_events.html#TestAddSecondaryClassification"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.tests.test_events.TestAddSecondaryClassification" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">unittest.case.TestCase</span></code></p>
+<p>Test <code class="xref py py-class docutils literal notranslate"><span class="pre">event.AddSecondaryClassification</span></code>.</p>
+<dl class="method">
+<dt id="arxiv.submission.domain.tests.test_events.TestAddSecondaryClassification.setUp">
+<code class="descname">setUp</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/tests/test_events.html#TestAddSecondaryClassification.setUp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.tests.test_events.TestAddSecondaryClassification.setUp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize auxiliary data for test cases.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.tests.test_events.TestAddSecondaryClassification.test_add_secondary_already_present">
+<code class="descname">test_add_secondary_already_present</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/tests/test_events.html#TestAddSecondaryClassification.test_add_secondary_already_present"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.tests.test_events.TestAddSecondaryClassification.test_add_secondary_already_present" title="Permalink to this definition">¶</a></dt>
+<dd><p>Category is already present on the submission.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.tests.test_events.TestAddSecondaryClassification.test_add_secondary_already_primary">
+<code class="descname">test_add_secondary_already_primary</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/tests/test_events.html#TestAddSecondaryClassification.test_add_secondary_already_primary"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.tests.test_events.TestAddSecondaryClassification.test_add_secondary_already_primary" title="Permalink to this definition">¶</a></dt>
+<dd><p>Category is already set as primary.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.tests.test_events.TestAddSecondaryClassification.test_add_secondary_with_nonsense">
+<code class="descname">test_add_secondary_with_nonsense</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/tests/test_events.html#TestAddSecondaryClassification.test_add_secondary_with_nonsense"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.tests.test_events.TestAddSecondaryClassification.test_add_secondary_with_nonsense" title="Permalink to this definition">¶</a></dt>
+<dd><p>Category is not from the arXiv taxonomy.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.tests.test_events.TestAddSecondaryClassification.test_add_secondary_with_valid_category">
+<code class="descname">test_add_secondary_with_valid_category</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/tests/test_events.html#TestAddSecondaryClassification.test_add_secondary_with_valid_category"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.tests.test_events.TestAddSecondaryClassification.test_add_secondary_with_valid_category" title="Permalink to this definition">¶</a></dt>
+<dd><p>Category is from the arXiv taxonomy.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.submission.domain.tests.test_events.TestDOIorJREFAfterAnnounce">
+<em class="property">class </em><code class="descclassname">arxiv.submission.domain.tests.test_events.</code><code class="descname">TestDOIorJREFAfterAnnounce</code><span class="sig-paren">(</span><em>methodName='runTest'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/tests/test_events.html#TestDOIorJREFAfterAnnounce"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.tests.test_events.TestDOIorJREFAfterAnnounce" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">unittest.case.TestCase</span></code></p>
+<p>Test <code class="xref py py-class docutils literal notranslate"><span class="pre">event.SetDOI</span></code> or <code class="xref py py-class docutils literal notranslate"><span class="pre">event.SetJournalReference</span></code>.</p>
+<dl class="method">
+<dt id="arxiv.submission.domain.tests.test_events.TestDOIorJREFAfterAnnounce.setUp">
+<code class="descname">setUp</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/tests/test_events.html#TestDOIorJREFAfterAnnounce.setUp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.tests.test_events.TestDOIorJREFAfterAnnounce.setUp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize auxiliary data for test cases.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.tests.test_events.TestDOIorJREFAfterAnnounce.test_create_submission_jref">
+<code class="descname">test_create_submission_jref</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/tests/test_events.html#TestDOIorJREFAfterAnnounce.test_create_submission_jref"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.tests.test_events.TestDOIorJREFAfterAnnounce.test_create_submission_jref" title="Permalink to this definition">¶</a></dt>
+<dd><p>A JREF is just like a replacement, but different.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.submission.domain.tests.test_events.TestRemoveSecondaryClassification">
+<em class="property">class </em><code class="descclassname">arxiv.submission.domain.tests.test_events.</code><code class="descname">TestRemoveSecondaryClassification</code><span class="sig-paren">(</span><em>methodName='runTest'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/tests/test_events.html#TestRemoveSecondaryClassification"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.tests.test_events.TestRemoveSecondaryClassification" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">unittest.case.TestCase</span></code></p>
+<p>Test <code class="xref py py-class docutils literal notranslate"><span class="pre">event.RemoveSecondaryClassification</span></code>.</p>
+<dl class="method">
+<dt id="arxiv.submission.domain.tests.test_events.TestRemoveSecondaryClassification.setUp">
+<code class="descname">setUp</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/tests/test_events.html#TestRemoveSecondaryClassification.setUp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.tests.test_events.TestRemoveSecondaryClassification.setUp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize auxiliary data for test cases.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.tests.test_events.TestRemoveSecondaryClassification.test_add_secondary_with_nonsense">
+<code class="descname">test_add_secondary_with_nonsense</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/tests/test_events.html#TestRemoveSecondaryClassification.test_add_secondary_with_nonsense"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.tests.test_events.TestRemoveSecondaryClassification.test_add_secondary_with_nonsense" title="Permalink to this definition">¶</a></dt>
+<dd><p>Category is not from the arXiv taxonomy.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.tests.test_events.TestRemoveSecondaryClassification.test_remove_secondary_not_present">
+<code class="descname">test_remove_secondary_not_present</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/tests/test_events.html#TestRemoveSecondaryClassification.test_remove_secondary_not_present"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.tests.test_events.TestRemoveSecondaryClassification.test_remove_secondary_not_present" title="Permalink to this definition">¶</a></dt>
+<dd><p>Category is not present.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.tests.test_events.TestRemoveSecondaryClassification.test_remove_secondary_with_valid_category">
+<code class="descname">test_remove_secondary_with_valid_category</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/tests/test_events.html#TestRemoveSecondaryClassification.test_remove_secondary_with_valid_category"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.tests.test_events.TestRemoveSecondaryClassification.test_remove_secondary_with_valid_category" title="Permalink to this definition">¶</a></dt>
+<dd><p>Category is from the arXiv taxonomy.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.submission.domain.tests.test_events.TestReplacementSubmission">
+<em class="property">class </em><code class="descclassname">arxiv.submission.domain.tests.test_events.</code><code class="descname">TestReplacementSubmission</code><span class="sig-paren">(</span><em>methodName='runTest'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/tests/test_events.html#TestReplacementSubmission"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.tests.test_events.TestReplacementSubmission" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">unittest.case.TestCase</span></code></p>
+<p>Test <code class="xref py py-class docutils literal notranslate"><span class="pre">event.CreateSubmission</span></code> with a replacement.</p>
+<dl class="method">
+<dt id="arxiv.submission.domain.tests.test_events.TestReplacementSubmission.setUp">
+<code class="descname">setUp</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/tests/test_events.html#TestReplacementSubmission.setUp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.tests.test_events.TestReplacementSubmission.setUp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize auxiliary data for test cases.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.tests.test_events.TestReplacementSubmission.test_create_submission_replacement">
+<code class="descname">test_create_submission_replacement</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/tests/test_events.html#TestReplacementSubmission.test_create_submission_replacement"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.tests.test_events.TestReplacementSubmission.test_create_submission_replacement" title="Permalink to this definition">¶</a></dt>
+<dd><p>A replacement is a new submission based on an old submission.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.submission.domain.tests.test_events.TestSetACMClassification">
+<em class="property">class </em><code class="descclassname">arxiv.submission.domain.tests.test_events.</code><code class="descname">TestSetACMClassification</code><span class="sig-paren">(</span><em>methodName='runTest'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/tests/test_events.html#TestSetACMClassification"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.tests.test_events.TestSetACMClassification" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">unittest.case.TestCase</span></code></p>
+<p>Tests for <a class="reference internal" href="arxiv.submission.domain.event.html#arxiv.submission.domain.event.SetACMClassification" title="arxiv.submission.domain.event.SetACMClassification"><code class="xref py py-class docutils literal notranslate"><span class="pre">event.SetACMClassification</span></code></a>.</p>
+<dl class="method">
+<dt id="arxiv.submission.domain.tests.test_events.TestSetACMClassification.setUp">
+<code class="descname">setUp</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/tests/test_events.html#TestSetACMClassification.setUp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.tests.test_events.TestSetACMClassification.setUp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize auxiliary data for test cases.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.tests.test_events.TestSetACMClassification.test_valid_acm_class">
+<code class="descname">test_valid_acm_class</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/tests/test_events.html#TestSetACMClassification.test_valid_acm_class"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.tests.test_events.TestSetACMClassification.test_valid_acm_class" title="Permalink to this definition">¶</a></dt>
+<dd><p>ACM classification value is valid.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.submission.domain.tests.test_events.TestSetAbstract">
+<em class="property">class </em><code class="descclassname">arxiv.submission.domain.tests.test_events.</code><code class="descname">TestSetAbstract</code><span class="sig-paren">(</span><em>methodName='runTest'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/tests/test_events.html#TestSetAbstract"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.tests.test_events.TestSetAbstract" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">unittest.case.TestCase</span></code></p>
+<p>Tests for <a class="reference internal" href="arxiv.submission.domain.event.html#arxiv.submission.domain.event.SetAbstract" title="arxiv.submission.domain.event.SetAbstract"><code class="xref py py-class docutils literal notranslate"><span class="pre">event.SetAbstract</span></code></a>.</p>
+<dl class="method">
+<dt id="arxiv.submission.domain.tests.test_events.TestSetAbstract.setUp">
+<code class="descname">setUp</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/tests/test_events.html#TestSetAbstract.setUp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.tests.test_events.TestSetAbstract.setUp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize auxiliary data for test cases.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.tests.test_events.TestSetAbstract.test_empty_value">
+<code class="descname">test_empty_value</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/tests/test_events.html#TestSetAbstract.test_empty_value"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.tests.test_events.TestSetAbstract.test_empty_value" title="Permalink to this definition">¶</a></dt>
+<dd><p>Abstract is set to an empty string.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.tests.test_events.TestSetAbstract.test_huge_abstract">
+<code class="descname">test_huge_abstract</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/tests/test_events.html#TestSetAbstract.test_huge_abstract"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.tests.test_events.TestSetAbstract.test_huge_abstract" title="Permalink to this definition">¶</a></dt>
+<dd><p>Abstract is set to something unreasonably large.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.tests.test_events.TestSetAbstract.test_reasonable_abstract">
+<code class="descname">test_reasonable_abstract</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/tests/test_events.html#TestSetAbstract.test_reasonable_abstract"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.tests.test_events.TestSetAbstract.test_reasonable_abstract" title="Permalink to this definition">¶</a></dt>
+<dd><p>Abstract is set to some reasonable value smaller than 1920 chars.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.submission.domain.tests.test_events.TestSetAuthors">
+<em class="property">class </em><code class="descclassname">arxiv.submission.domain.tests.test_events.</code><code class="descname">TestSetAuthors</code><span class="sig-paren">(</span><em>methodName='runTest'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/tests/test_events.html#TestSetAuthors"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.tests.test_events.TestSetAuthors" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">unittest.case.TestCase</span></code></p>
+<p>Test <code class="xref py py-class docutils literal notranslate"><span class="pre">event.SetAuthors</span></code>.</p>
+<dl class="method">
+<dt id="arxiv.submission.domain.tests.test_events.TestSetAuthors.setUp">
+<code class="descname">setUp</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/tests/test_events.html#TestSetAuthors.setUp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.tests.test_events.TestSetAuthors.setUp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize auxiliary data for test cases.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.tests.test_events.TestSetAuthors.test_canonical_authors_contains_et_al">
+<code class="descname">test_canonical_authors_contains_et_al</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/tests/test_events.html#TestSetAuthors.test_canonical_authors_contains_et_al"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.tests.test_events.TestSetAuthors.test_canonical_authors_contains_et_al" title="Permalink to this definition">¶</a></dt>
+<dd><p>Author display value contains et al.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.tests.test_events.TestSetAuthors.test_canonical_authors_not_provided">
+<code class="descname">test_canonical_authors_not_provided</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/tests/test_events.html#TestSetAuthors.test_canonical_authors_not_provided"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.tests.test_events.TestSetAuthors.test_canonical_authors_not_provided" title="Permalink to this definition">¶</a></dt>
+<dd><p>Data does not include canonical author display string.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.tests.test_events.TestSetAuthors.test_canonical_authors_provided">
+<code class="descname">test_canonical_authors_provided</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/tests/test_events.html#TestSetAuthors.test_canonical_authors_provided"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.tests.test_events.TestSetAuthors.test_canonical_authors_provided" title="Permalink to this definition">¶</a></dt>
+<dd><p>Data includes canonical author display string.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.submission.domain.tests.test_events.TestSetComments">
+<em class="property">class </em><code class="descclassname">arxiv.submission.domain.tests.test_events.</code><code class="descname">TestSetComments</code><span class="sig-paren">(</span><em>methodName='runTest'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/tests/test_events.html#TestSetComments"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.tests.test_events.TestSetComments" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">unittest.case.TestCase</span></code></p>
+<p>Tests for <a class="reference internal" href="arxiv.submission.domain.event.html#arxiv.submission.domain.event.SetComments" title="arxiv.submission.domain.event.SetComments"><code class="xref py py-class docutils literal notranslate"><span class="pre">event.SetComments</span></code></a>.</p>
+<dl class="method">
+<dt id="arxiv.submission.domain.tests.test_events.TestSetComments.setUp">
+<code class="descname">setUp</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/tests/test_events.html#TestSetComments.setUp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.tests.test_events.TestSetComments.setUp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize auxiliary data for test cases.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.tests.test_events.TestSetComments.test_empty_value">
+<code class="descname">test_empty_value</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/tests/test_events.html#TestSetComments.test_empty_value"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.tests.test_events.TestSetComments.test_empty_value" title="Permalink to this definition">¶</a></dt>
+<dd><p>Comment is set to an empty string.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.tests.test_events.TestSetComments.test_huge_comment">
+<code class="descname">test_huge_comment</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/tests/test_events.html#TestSetComments.test_huge_comment"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.tests.test_events.TestSetComments.test_huge_comment" title="Permalink to this definition">¶</a></dt>
+<dd><p>Comment is set to something unreasonably large.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.tests.test_events.TestSetComments.test_reasonable_comment">
+<code class="descname">test_reasonable_comment</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/tests/test_events.html#TestSetComments.test_reasonable_comment"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.tests.test_events.TestSetComments.test_reasonable_comment" title="Permalink to this definition">¶</a></dt>
+<dd><p>Comment is set to some reasonable value smaller than 400 chars.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.submission.domain.tests.test_events.TestSetDOI">
+<em class="property">class </em><code class="descclassname">arxiv.submission.domain.tests.test_events.</code><code class="descname">TestSetDOI</code><span class="sig-paren">(</span><em>methodName='runTest'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/tests/test_events.html#TestSetDOI"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.tests.test_events.TestSetDOI" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">unittest.case.TestCase</span></code></p>
+<p>Tests for <a class="reference internal" href="arxiv.submission.domain.event.html#arxiv.submission.domain.event.SetDOI" title="arxiv.submission.domain.event.SetDOI"><code class="xref py py-class docutils literal notranslate"><span class="pre">event.SetDOI</span></code></a>.</p>
+<dl class="method">
+<dt id="arxiv.submission.domain.tests.test_events.TestSetDOI.setUp">
+<code class="descname">setUp</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/tests/test_events.html#TestSetDOI.setUp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.tests.test_events.TestSetDOI.setUp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize auxiliary data for test cases.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.tests.test_events.TestSetDOI.test_empty_doi">
+<code class="descname">test_empty_doi</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/tests/test_events.html#TestSetDOI.test_empty_doi"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.tests.test_events.TestSetDOI.test_empty_doi" title="Permalink to this definition">¶</a></dt>
+<dd><p>DOI is set to an empty string.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.tests.test_events.TestSetDOI.test_invalid_doi">
+<code class="descname">test_invalid_doi</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/tests/test_events.html#TestSetDOI.test_invalid_doi"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.tests.test_events.TestSetDOI.test_invalid_doi" title="Permalink to this definition">¶</a></dt>
+<dd><p>DOI is set to something other than a valid DOI.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.tests.test_events.TestSetDOI.test_multiple_valid_dois">
+<code class="descname">test_multiple_valid_dois</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/tests/test_events.html#TestSetDOI.test_multiple_valid_dois"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.tests.test_events.TestSetDOI.test_multiple_valid_dois" title="Permalink to this definition">¶</a></dt>
+<dd><p>DOI is set to multiple valid DOIs.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.tests.test_events.TestSetDOI.test_valid_doi">
+<code class="descname">test_valid_doi</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/tests/test_events.html#TestSetDOI.test_valid_doi"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.tests.test_events.TestSetDOI.test_valid_doi" title="Permalink to this definition">¶</a></dt>
+<dd><p>DOI is set to a single valid DOI.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.submission.domain.tests.test_events.TestSetJournalReference">
+<em class="property">class </em><code class="descclassname">arxiv.submission.domain.tests.test_events.</code><code class="descname">TestSetJournalReference</code><span class="sig-paren">(</span><em>methodName='runTest'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/tests/test_events.html#TestSetJournalReference"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.tests.test_events.TestSetJournalReference" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">unittest.case.TestCase</span></code></p>
+<p>Tests for <a class="reference internal" href="arxiv.submission.domain.event.html#arxiv.submission.domain.event.SetJournalReference" title="arxiv.submission.domain.event.SetJournalReference"><code class="xref py py-class docutils literal notranslate"><span class="pre">event.SetJournalReference</span></code></a>.</p>
+<dl class="method">
+<dt id="arxiv.submission.domain.tests.test_events.TestSetJournalReference.setUp">
+<code class="descname">setUp</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/tests/test_events.html#TestSetJournalReference.setUp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.tests.test_events.TestSetJournalReference.setUp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize auxiliary data for test cases.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.tests.test_events.TestSetJournalReference.test_invalid_values">
+<code class="descname">test_invalid_values</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/tests/test_events.html#TestSetJournalReference.test_invalid_values"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.tests.test_events.TestSetJournalReference.test_invalid_values" title="Permalink to this definition">¶</a></dt>
+<dd><p>Some invalid values are passed.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.tests.test_events.TestSetJournalReference.test_valid_journal_ref">
+<code class="descname">test_valid_journal_ref</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/tests/test_events.html#TestSetJournalReference.test_valid_journal_ref"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.tests.test_events.TestSetJournalReference.test_valid_journal_ref" title="Permalink to this definition">¶</a></dt>
+<dd><p>Valid journal ref values are used.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.submission.domain.tests.test_events.TestSetMSCClassification">
+<em class="property">class </em><code class="descclassname">arxiv.submission.domain.tests.test_events.</code><code class="descname">TestSetMSCClassification</code><span class="sig-paren">(</span><em>methodName='runTest'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/tests/test_events.html#TestSetMSCClassification"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.tests.test_events.TestSetMSCClassification" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">unittest.case.TestCase</span></code></p>
+<p>Tests for <a class="reference internal" href="arxiv.submission.domain.event.html#arxiv.submission.domain.event.SetMSCClassification" title="arxiv.submission.domain.event.SetMSCClassification"><code class="xref py py-class docutils literal notranslate"><span class="pre">event.SetMSCClassification</span></code></a>.</p>
+<dl class="method">
+<dt id="arxiv.submission.domain.tests.test_events.TestSetMSCClassification.setUp">
+<code class="descname">setUp</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/tests/test_events.html#TestSetMSCClassification.setUp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.tests.test_events.TestSetMSCClassification.setUp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize auxiliary data for test cases.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.tests.test_events.TestSetMSCClassification.test_valid_msc_class">
+<code class="descname">test_valid_msc_class</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/tests/test_events.html#TestSetMSCClassification.test_valid_msc_class"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.tests.test_events.TestSetMSCClassification.test_valid_msc_class" title="Permalink to this definition">¶</a></dt>
+<dd><p>MSC classification value is valid.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.submission.domain.tests.test_events.TestSetPrimaryClassification">
+<em class="property">class </em><code class="descclassname">arxiv.submission.domain.tests.test_events.</code><code class="descname">TestSetPrimaryClassification</code><span class="sig-paren">(</span><em>methodName='runTest'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/tests/test_events.html#TestSetPrimaryClassification"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.tests.test_events.TestSetPrimaryClassification" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">unittest.case.TestCase</span></code></p>
+<p>Test <code class="xref py py-class docutils literal notranslate"><span class="pre">event.SetPrimaryClassification</span></code>.</p>
+<dl class="method">
+<dt id="arxiv.submission.domain.tests.test_events.TestSetPrimaryClassification.setUp">
+<code class="descname">setUp</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/tests/test_events.html#TestSetPrimaryClassification.setUp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.tests.test_events.TestSetPrimaryClassification.setUp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize auxiliary data for test cases.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.tests.test_events.TestSetPrimaryClassification.test_set_primary_already_secondary">
+<code class="descname">test_set_primary_already_secondary</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/tests/test_events.html#TestSetPrimaryClassification.test_set_primary_already_secondary"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.tests.test_events.TestSetPrimaryClassification.test_set_primary_already_secondary" title="Permalink to this definition">¶</a></dt>
+<dd><p>Category is already set as a secondary.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.tests.test_events.TestSetPrimaryClassification.test_set_primary_with_nonsense">
+<code class="descname">test_set_primary_with_nonsense</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/tests/test_events.html#TestSetPrimaryClassification.test_set_primary_with_nonsense"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.tests.test_events.TestSetPrimaryClassification.test_set_primary_with_nonsense" title="Permalink to this definition">¶</a></dt>
+<dd><p>Category is not from the arXiv taxonomy.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.tests.test_events.TestSetPrimaryClassification.test_set_primary_with_valid_category">
+<code class="descname">test_set_primary_with_valid_category</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/tests/test_events.html#TestSetPrimaryClassification.test_set_primary_with_valid_category"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.tests.test_events.TestSetPrimaryClassification.test_set_primary_with_valid_category" title="Permalink to this definition">¶</a></dt>
+<dd><p>Category is from the arXiv taxonomy.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.submission.domain.tests.test_events.TestSetReportNumber">
+<em class="property">class </em><code class="descclassname">arxiv.submission.domain.tests.test_events.</code><code class="descname">TestSetReportNumber</code><span class="sig-paren">(</span><em>methodName='runTest'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/tests/test_events.html#TestSetReportNumber"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.tests.test_events.TestSetReportNumber" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">unittest.case.TestCase</span></code></p>
+<p>Tests for <a class="reference internal" href="arxiv.submission.domain.event.html#arxiv.submission.domain.event.SetReportNumber" title="arxiv.submission.domain.event.SetReportNumber"><code class="xref py py-class docutils literal notranslate"><span class="pre">event.SetReportNumber</span></code></a>.</p>
+<dl class="method">
+<dt id="arxiv.submission.domain.tests.test_events.TestSetReportNumber.setUp">
+<code class="descname">setUp</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/tests/test_events.html#TestSetReportNumber.setUp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.tests.test_events.TestSetReportNumber.setUp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize auxiliary data for test cases.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.tests.test_events.TestSetReportNumber.test_invalid_values">
+<code class="descname">test_invalid_values</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/tests/test_events.html#TestSetReportNumber.test_invalid_values"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.tests.test_events.TestSetReportNumber.test_invalid_values" title="Permalink to this definition">¶</a></dt>
+<dd><p>Some invalid values are passed.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.tests.test_events.TestSetReportNumber.test_valid_report_number">
+<code class="descname">test_valid_report_number</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/tests/test_events.html#TestSetReportNumber.test_valid_report_number"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.tests.test_events.TestSetReportNumber.test_valid_report_number" title="Permalink to this definition">¶</a></dt>
+<dd><p>Valid report number values are used.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.submission.domain.tests.test_events.TestSetTitle">
+<em class="property">class </em><code class="descclassname">arxiv.submission.domain.tests.test_events.</code><code class="descname">TestSetTitle</code><span class="sig-paren">(</span><em>methodName='runTest'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/tests/test_events.html#TestSetTitle"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.tests.test_events.TestSetTitle" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">unittest.case.TestCase</span></code></p>
+<p>Tests for <a class="reference internal" href="arxiv.submission.domain.event.html#arxiv.submission.domain.event.SetTitle" title="arxiv.submission.domain.event.SetTitle"><code class="xref py py-class docutils literal notranslate"><span class="pre">event.SetTitle</span></code></a>.</p>
+<dl class="method">
+<dt id="arxiv.submission.domain.tests.test_events.TestSetTitle.setUp">
+<code class="descname">setUp</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/tests/test_events.html#TestSetTitle.setUp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.tests.test_events.TestSetTitle.setUp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize auxiliary data for test cases.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.tests.test_events.TestSetTitle.test_all_caps_title">
+<code class="descname">test_all_caps_title</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/tests/test_events.html#TestSetTitle.test_all_caps_title"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.tests.test_events.TestSetTitle.test_all_caps_title" title="Permalink to this definition">¶</a></dt>
+<dd><p>Title is all uppercase.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.tests.test_events.TestSetTitle.test_empty_value">
+<code class="descname">test_empty_value</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/tests/test_events.html#TestSetTitle.test_empty_value"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.tests.test_events.TestSetTitle.test_empty_value" title="Permalink to this definition">¶</a></dt>
+<dd><p>Title is set to an empty string.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.tests.test_events.TestSetTitle.test_huge_title">
+<code class="descname">test_huge_title</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/tests/test_events.html#TestSetTitle.test_huge_title"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.tests.test_events.TestSetTitle.test_huge_title" title="Permalink to this definition">¶</a></dt>
+<dd><p>Title is set to something unreasonably large.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.tests.test_events.TestSetTitle.test_reasonable_title">
+<code class="descname">test_reasonable_title</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/tests/test_events.html#TestSetTitle.test_reasonable_title"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.tests.test_events.TestSetTitle.test_reasonable_title" title="Permalink to this definition">¶</a></dt>
+<dd><p>Title is set to some reasonable value smaller than 240 chars.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.tests.test_events.TestSetTitle.test_title_ends_with_ellipsis">
+<code class="descname">test_title_ends_with_ellipsis</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/tests/test_events.html#TestSetTitle.test_title_ends_with_ellipsis"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.tests.test_events.TestSetTitle.test_title_ends_with_ellipsis" title="Permalink to this definition">¶</a></dt>
+<dd><p>Title ends with an ellipsis.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.tests.test_events.TestSetTitle.test_title_ends_with_period">
+<code class="descname">test_title_ends_with_period</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/tests/test_events.html#TestSetTitle.test_title_ends_with_period"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.tests.test_events.TestSetTitle.test_title_ends_with_period" title="Permalink to this definition">¶</a></dt>
+<dd><p>Title ends with a period.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.tests.test_events.TestSetTitle.test_title_with_html_escapes">
+<code class="descname">test_title_with_html_escapes</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/tests/test_events.html#TestSetTitle.test_title_with_html_escapes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.tests.test_events.TestSetTitle.test_title_with_html_escapes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Title should not allow HTML escapes.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="arxiv.submission.domain.tests.test_events.TestWithdrawalSubmission">
+<em class="property">class </em><code class="descclassname">arxiv.submission.domain.tests.test_events.</code><code class="descname">TestWithdrawalSubmission</code><span class="sig-paren">(</span><em>methodName='runTest'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/tests/test_events.html#TestWithdrawalSubmission"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.tests.test_events.TestWithdrawalSubmission" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">unittest.case.TestCase</span></code></p>
+<p>Test <code class="xref py py-class docutils literal notranslate"><span class="pre">event.RequestWithdrawal</span></code>.</p>
+<dl class="method">
+<dt id="arxiv.submission.domain.tests.test_events.TestWithdrawalSubmission.setUp">
+<code class="descname">setUp</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/tests/test_events.html#TestWithdrawalSubmission.setUp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.tests.test_events.TestWithdrawalSubmission.setUp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize auxiliary data for test cases.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.tests.test_events.TestWithdrawalSubmission.test_request_withdrawal">
+<code class="descname">test_request_withdrawal</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/tests/test_events.html#TestWithdrawalSubmission.test_request_withdrawal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.tests.test_events.TestWithdrawalSubmission.test_request_withdrawal" title="Permalink to this definition">¶</a></dt>
+<dd><p>Request that a paper be withdrawn.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.tests.test_events.TestWithdrawalSubmission.test_request_without_a_reason">
+<code class="descname">test_request_without_a_reason</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/tests/test_events.html#TestWithdrawalSubmission.test_request_without_a_reason"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.tests.test_events.TestWithdrawalSubmission.test_request_without_a_reason" title="Permalink to this definition">¶</a></dt>
+<dd><p>A reason is required.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.domain.tests.test_events.TestWithdrawalSubmission.test_request_without_announced_submission">
+<code class="descname">test_request_without_announced_submission</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/tests/test_events.html#TestWithdrawalSubmission.test_request_without_announced_submission"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.tests.test_events.TestWithdrawalSubmission.test_request_without_announced_submission" title="Permalink to this definition">¶</a></dt>
+<dd><p>The submission must already be announced.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">arXiv submission & moderation</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../architecture.html">Submission &amp; moderation subsystem architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../announcement_process.html">Submission &amp; announcement Process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../submission_api_context.html">Submission API: Context</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../containers/agent/agent.html">agent package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../containers/metadata/metadata.html">metadata package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../background.html">Background</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, arXiv.org.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.0.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/arxiv.submission/arxiv.submission.domain.tests.test_events.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

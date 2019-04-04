@@ -1,11 +1,9 @@
 
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE html>
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta charset="utf-8" />
     <title>arxiv.submission.services.classic.tests.test_get_submission &#8212; arXiv submission &amp; moderation 0.1 documentation</title>
     <link rel="stylesheet" href="../../../../../../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../../../../../../_static/pygments.css" type="text/css" />
@@ -47,7 +45,7 @@
     <span class="n">SetLicense</span><span class="p">,</span> <span class="n">SetPrimaryClassification</span><span class="p">,</span> <span class="n">ConfirmPolicy</span><span class="p">,</span> \
     <span class="n">ConfirmContactInformation</span><span class="p">,</span> <span class="n">SetTitle</span><span class="p">,</span> <span class="n">SetAbstract</span><span class="p">,</span> <span class="n">SetDOI</span><span class="p">,</span> \
     <span class="n">SetMSCClassification</span><span class="p">,</span> <span class="n">SetACMClassification</span><span class="p">,</span> <span class="n">SetJournalReference</span><span class="p">,</span> \
-    <span class="n">SetComments</span><span class="p">,</span> <span class="n">SetAuthors</span><span class="p">,</span> <span class="n">Publish</span><span class="p">,</span> <span class="n">ConfirmAuthorship</span><span class="p">,</span> <span class="n">ConfirmPolicy</span><span class="p">,</span> \
+    <span class="n">SetComments</span><span class="p">,</span> <span class="n">SetAuthors</span><span class="p">,</span> <span class="n">Announce</span><span class="p">,</span> <span class="n">ConfirmAuthorship</span><span class="p">,</span> <span class="n">ConfirmPolicy</span><span class="p">,</span> \
     <span class="n">SetUploadPackage</span>
 <span class="kn">from</span> <span class="nn">..</span> <span class="k">import</span> <span class="n">init_app</span><span class="p">,</span> <span class="n">create_all</span><span class="p">,</span> <span class="n">drop_all</span><span class="p">,</span> <span class="n">models</span><span class="p">,</span> <span class="n">DBEvent</span><span class="p">,</span> \
     <span class="n">get_submission</span><span class="p">,</span> <span class="n">current_session</span><span class="p">,</span> <span class="n">get_licenses</span><span class="p">,</span> <span class="n">exceptions</span><span class="p">,</span> <span class="n">store_event</span>
@@ -55,16 +53,16 @@
 <span class="kn">from</span> <span class="nn">.util</span> <span class="k">import</span> <span class="n">in_memory_db</span>
 
 
-<div class="viewcode-block" id="TestGetSubmission"><a class="viewcode-back" href="../../../../../../containers/core/arxiv.submission.services.classic.tests.test_get_submission.html#arxiv.submission.services.classic.tests.test_get_submission.TestGetSubmission">[docs]</a><span class="k">class</span> <span class="nc">TestGetSubmission</span><span class="p">(</span><span class="n">TestCase</span><span class="p">):</span>
+<div class="viewcode-block" id="TestGetSubmission"><a class="viewcode-back" href="../../../../../../arxiv.submission/arxiv.submission.services.classic.tests.test_get_submission.html#arxiv.submission.services.classic.tests.test_get_submission.TestGetSubmission">[docs]</a><span class="k">class</span> <span class="nc">TestGetSubmission</span><span class="p">(</span><span class="n">TestCase</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Test :func:`.classic.get_submission`.&quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="TestGetSubmission.test_get_submission_that_does_not_exist"><a class="viewcode-back" href="../../../../../../containers/core/arxiv.submission.services.classic.tests.test_get_submission.html#arxiv.submission.services.classic.tests.test_get_submission.TestGetSubmission.test_get_submission_that_does_not_exist">[docs]</a>    <span class="k">def</span> <span class="nf">test_get_submission_that_does_not_exist</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="TestGetSubmission.test_get_submission_that_does_not_exist"><a class="viewcode-back" href="../../../../../../arxiv.submission/arxiv.submission.services.classic.tests.test_get_submission.html#arxiv.submission.services.classic.tests.test_get_submission.TestGetSubmission.test_get_submission_that_does_not_exist">[docs]</a>    <span class="k">def</span> <span class="nf">test_get_submission_that_does_not_exist</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Test that an exception is raised when submission doesn&#39;t exist.&quot;&quot;&quot;</span>
         <span class="k">with</span> <span class="n">in_memory_db</span><span class="p">():</span>
             <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="n">exceptions</span><span class="o">.</span><span class="n">NoSuchSubmission</span><span class="p">):</span>
                 <span class="n">get_submission</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="TestGetSubmission.test_get_submission_with_publish"><a class="viewcode-back" href="../../../../../../containers/core/arxiv.submission.services.classic.tests.test_get_submission.html#arxiv.submission.services.classic.tests.test_get_submission.TestGetSubmission.test_get_submission_with_publish">[docs]</a>    <span class="k">def</span> <span class="nf">test_get_submission_with_publish</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="TestGetSubmission.test_get_submission_with_publish"><a class="viewcode-back" href="../../../../../../arxiv.submission/arxiv.submission.services.classic.tests.test_get_submission.html#arxiv.submission.services.classic.tests.test_get_submission.TestGetSubmission.test_get_submission_with_publish">[docs]</a>    <span class="k">def</span> <span class="nf">test_get_submission_with_publish</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Test that publication state is reflected in submission data.&quot;&quot;&quot;</span>
         <span class="n">user</span> <span class="o">=</span> <span class="n">User</span><span class="p">(</span><span class="mi">12345</span><span class="p">,</span> <span class="s1">&#39;joe@joe.joe&#39;</span><span class="p">,</span>
                     <span class="n">endorsements</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;physics.soc-ph&#39;</span><span class="p">,</span> <span class="s1">&#39;cs.DL&#39;</span><span class="p">])</span>
@@ -103,8 +101,8 @@
             <span class="c1"># Moderation happens, things change outside the event model.</span>
             <span class="n">db_submission</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">ident</span><span class="p">)</span>
 
-            <span class="c1"># Published!</span>
-            <span class="n">db_submission</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="n">db_submission</span><span class="o">.</span><span class="n">PUBLISHED</span>
+            <span class="c1"># Announced!</span>
+            <span class="n">db_submission</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="n">db_submission</span><span class="o">.</span><span class="n">ANNOUNCED</span>
             <span class="n">db_document</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">Document</span><span class="p">(</span><span class="n">paper_id</span><span class="o">=</span><span class="s1">&#39;1901.00123&#39;</span><span class="p">)</span>
             <span class="n">db_submission</span><span class="o">.</span><span class="n">document</span> <span class="o">=</span> <span class="n">db_document</span>
             <span class="n">session</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">db_submission</span><span class="p">)</span>
@@ -119,10 +117,10 @@
                          <span class="s2">&quot;Event-derived metadata should be preserved.&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">submission_loaded</span><span class="o">.</span><span class="n">arxiv_id</span><span class="p">,</span> <span class="s2">&quot;1901.00123&quot;</span><span class="p">,</span>
                          <span class="s2">&quot;arXiv paper ID should be set&quot;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">submission_loaded</span><span class="o">.</span><span class="n">status</span><span class="p">,</span> <span class="n">Submission</span><span class="o">.</span><span class="n">PUBLISHED</span><span class="p">,</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">submission_loaded</span><span class="o">.</span><span class="n">status</span><span class="p">,</span> <span class="n">Submission</span><span class="o">.</span><span class="n">ANNOUNCED</span><span class="p">,</span>
                          <span class="s2">&quot;Submission status should reflect publish action&quot;</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="TestGetSubmission.test_get_submission_with_hold_and_reclass"><a class="viewcode-back" href="../../../../../../containers/core/arxiv.submission.services.classic.tests.test_get_submission.html#arxiv.submission.services.classic.tests.test_get_submission.TestGetSubmission.test_get_submission_with_hold_and_reclass">[docs]</a>    <span class="k">def</span> <span class="nf">test_get_submission_with_hold_and_reclass</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="TestGetSubmission.test_get_submission_with_hold_and_reclass"><a class="viewcode-back" href="../../../../../../arxiv.submission/arxiv.submission.services.classic.tests.test_get_submission.html#arxiv.submission.services.classic.tests.test_get_submission.TestGetSubmission.test_get_submission_with_hold_and_reclass">[docs]</a>    <span class="k">def</span> <span class="nf">test_get_submission_with_hold_and_reclass</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Test changes made externally are reflected in submission data.&quot;&quot;&quot;</span>
         <span class="n">user</span> <span class="o">=</span> <span class="n">User</span><span class="p">(</span><span class="mi">12345</span><span class="p">,</span> <span class="s1">&#39;joe@joe.joe&#39;</span><span class="p">,</span>
                     <span class="n">endorsements</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;physics.soc-ph&#39;</span><span class="p">,</span> <span class="s1">&#39;cs.DL&#39;</span><span class="p">])</span>
@@ -181,7 +179,7 @@
                          <span class="s2">&quot;Primary classification should reflect the&quot;</span>
                          <span class="s2">&quot; reclassification that occurred outside the purview&quot;</span>
                          <span class="s2">&quot; of the event model.&quot;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">submission_loaded</span><span class="o">.</span><span class="n">status</span><span class="p">,</span> <span class="n">Submission</span><span class="o">.</span><span class="n">ON_HOLD</span><span class="p">,</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">submission_loaded</span><span class="o">.</span><span class="n">status</span><span class="p">,</span> <span class="n">Submission</span><span class="o">.</span><span class="n">SUBMITTED</span><span class="p">,</span>
                          <span class="s2">&quot;Submission status should still be submitted.&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">assertTrue</span><span class="p">(</span><span class="n">submission_loaded</span><span class="o">.</span><span class="n">is_on_hold</span><span class="p">,</span>
                         <span class="s2">&quot;Hold status should reflect hold action performed&quot;</span>
@@ -208,7 +206,8 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../../../architecture.html">Submission &amp; moderation subsystem architecture</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../../announcement_process.html">Submission &amp; announcement Process</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../../submission_api_context.html">Submission API: Context</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../../../containers/core/arxiv.submission.html">arxiv.submission package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../arxiv.submission/arxiv.submission.html">arxiv.submission package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../containers/agent/agent.html">agent package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../../containers/metadata/metadata.html">metadata package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../../background.html">Background</a></li>
 </ul>
@@ -218,7 +217,9 @@
 <ul>
   <li><a href="../../../../../../index.html">Documentation overview</a><ul>
   <li><a href="../../../../../index.html">Module code</a><ul>
+  <li><a href="../../../../submission.html">arxiv.submission</a><ul>
   <li><a href="../../classic.html">arxiv.submission.services.classic</a><ul>
+  </ul></li>
   </ul></li>
   </ul></li>
   </ul></li>
@@ -230,8 +231,6 @@
     <form class="search" action="../../../../../../search.html" method="get">
       <input type="text" name="q" />
       <input type="submit" value="Go" />
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
     </form>
     </div>
 </div>
@@ -252,7 +251,7 @@
       &copy;2017, arXiv.org.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.3</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.0.0</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
     </div>

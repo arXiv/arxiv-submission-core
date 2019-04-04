@@ -1,0 +1,275 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>agent package &#8212; arXiv submission &amp; moderation 0.1 documentation</title>
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="agent.process package" href="agent.process.html" />
+    <link rel="prev" title="arxiv.submission.serializer module" href="../../arxiv.submission/arxiv.submission.serializer.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="module-agent">
+<span id="agent-package"></span><h1>agent package<a class="headerlink" href="#module-agent" title="Permalink to this headline">¶</a></h1>
+<p>Orchestrates backend processes based on rules triggered by submission events.</p>
+<p>The primary concerns of the agent are:</p>
+<ul class="simple">
+<li><p>Orchestrating automated processes in support of submission and moderation.</p></li>
+<li><p>KEeping track of what processes have been carried out on a submission, and
+the outcomes of those processes.</p></li>
+<li><p>Providing a framework for defining conditions under which processes should be
+carried out.</p></li>
+</ul>
+<p>In addition, we anticipate future development of:</p>
+<ul class="simple">
+<li><p>Interfaces for administrators to monitor submission-related processes, and
+to start processes manually.</p></li>
+<li><p>A metrics endpoint for Prometheus, to expose process performance/rates.</p></li>
+<li><p>Interfaces for administrators to define processing rules.</p></li>
+</ul>
+<div class="section" id="conceptual-overview">
+<h2>Conceptual overview<a class="headerlink" href="#conceptual-overview" title="Permalink to this headline">¶</a></h2>
+<p>A <strong>process</strong> is a set of one or more related steps that should be carried out
+in order, usually focusing on a single submission. Steps are small units of
+work with a specific objective, such as getting a resource from a service or
+applying a policy. If a step in a process fails, the subsequent steps are not
+carried out. Examples of processes include running the autoclassifier and
+annotating a submission with the results, and placing submissions on hold when
+they exceed size limits.</p>
+<p>Processes are implemented by defining a class that inherits from
+<a class="reference internal" href="agent.process.base.html#agent.process.base.Process" title="agent.process.base.Process"><code class="xref py py-class docutils literal notranslate"><span class="pre">Process</span></code></a>.</p>
+<p>A <strong>rule</strong> defines the circumstances under which a process should be carried
+out. Specifically, a rule is associated with a particular type of event, and a
+function that determines whether the process should be carried out based on the
+event properties and/or the state of the submission.</p>
+<p>Rules are implemented by instantiating <a class="reference internal" href="agent.rules.base.html#agent.rules.base.Rule" title="agent.rules.base.Rule"><code class="xref py py-class docutils literal notranslate"><span class="pre">Rule</span></code></a> in <a class="reference internal" href="agent.rules.html#module-agent.rules" title="agent.rules"><code class="xref py py-mod docutils literal notranslate"><span class="pre">rules</span></code></a>.</p>
+<p>An <strong>event</strong> is a specific mutation of a submission by an actor at a particular
+point in time. See <a class="reference internal" href="../../arxiv.submission/arxiv.submission.html#module-arxiv.submission" title="arxiv.submission"><code class="xref py py-mod docutils literal notranslate"><span class="pre">arxiv.submission</span></code></a> for an overview of the event model
+used in the submission system.</p>
+<p>Events are implemented by defining an <a class="reference internal" href="../../arxiv.submission/arxiv.submission.domain.event.base.html#arxiv.submission.domain.event.base.Event" title="arxiv.submission.domain.event.base.Event"><code class="xref py py-class docutils literal notranslate"><span class="pre">Event</span></code></a> class in
+<a class="reference internal" href="../../arxiv.submission/arxiv.submission.html#module-arxiv.submission" title="arxiv.submission"><code class="xref py py-mod docutils literal notranslate"><span class="pre">arxiv.submission</span></code></a>, and emitted via <a class="reference internal" href="../../arxiv.submission/arxiv.submission.core.html#arxiv.submission.core.save" title="arxiv.submission.core.save"><code class="xref py py-func docutils literal notranslate"><span class="pre">arxiv.submission.core.save()</span></code></a>.</p>
+</div>
+<div class="section" id="architectural-overview">
+<h2>Architectural overview<a class="headerlink" href="#architectural-overview" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="context">
+<h3>Context<a class="headerlink" href="#context" title="Permalink to this headline">¶</a></h3>
+<p>The agent operates within the scope of the submission system.</p>
+<div class="figure align-center" id="id1">
+<span id="figure-submission-agent-context"></span><a class="reference internal image-reference" href="../../_images/submission-agent-context.png"><img alt="../../_images/submission-agent-context.png" src="../../_images/submission-agent-context.png" style="width: 600px;" /></a>
+<p class="caption"><span class="caption-number">Fig. 6 </span><span class="caption-text">System context for the arXiv submission agent.</span><a class="headerlink" href="#id1" title="Permalink to this image">¶</a></p>
+</div>
+<p>The submission agent consumes submission events generated by other applications
+running in the submission system, such as the submission UI, via the
+<code class="docutils literal notranslate"><span class="pre">SubmissionEvents</span></code> Kinesis stream. The agent uses the <a class="reference internal" href="../../arxiv.submission/arxiv.submission.html#module-arxiv.submission" title="arxiv.submission"><code class="xref py py-mod docutils literal notranslate"><span class="pre">arxiv.submission</span></code></a>
+package to generate new events, which involves writing to the submission
+database and putting records on the <code class="docutils literal notranslate"><span class="pre">SubmissionEvents</span></code> Kinesis stream.</p>
+<p>In carrying out processes, the agent makes requests to backend services in the
+submission system, such as the plain text extraction service, file management
+service, etc.</p>
+</div>
+<div class="section" id="containers">
+<h3>Containers<a class="headerlink" href="#containers" title="Permalink to this headline">¶</a></h3>
+<p>The submission agent is comprised of four containers that are deployed and
+scaled more or less independently.</p>
+<div class="figure align-center" id="id2">
+<span id="figure-submission-agent-containers"></span><a class="reference internal image-reference" href="../../_images/submission-agent-containers.png"><img alt="../../_images/submission-agent-containers.png" src="../../_images/submission-agent-containers.png" style="width: 600px;" /></a>
+<p class="caption"><span class="caption-number">Fig. 7 </span><span class="caption-text">Containers within the arXiv submission agent.</span><a class="headerlink" href="#id2" title="Permalink to this image">¶</a></p>
+</div>
+<p>The <a class="reference internal" href="agent.consumer.html#module-agent.consumer" title="agent.consumer"><code class="xref py py-mod docutils literal notranslate"><span class="pre">agent.consumer</span></code></a> is a single-threaded process that consumes
+notifications about events on the <code class="docutils literal notranslate"><span class="pre">SubmissionEvents</span></code> Kinesis stream. It is
+implemented on top of <code class="xref py py-mod docutils literal notranslate"><span class="pre">arxiv.integration.kinesis</span></code>. The agent relies
+on a database for checkpointing its progress in the stream, and for
+commemorating process-relevant submission events. The agent dispatches
+steps in triggered processes to be carried out by the <a class="reference internal" href="agent.worker.html#module-agent.worker" title="agent.worker"><code class="xref py py-mod docutils literal notranslate"><span class="pre">agent.worker</span></code></a>.</p>
+<p>The agent database is a MariaDB SQL database used by the consumer. It stores
+checkpoints, process-relevant submission events, and (future) configurations
+for user-defined rules.</p>
+<p>The <a class="reference internal" href="agent.worker.html#module-agent.worker" title="agent.worker"><code class="xref py py-mod docutils literal notranslate"><span class="pre">agent.worker</span></code></a> is an horizontally-scalable <a class="reference external" href="http://www.celeryproject.org/">Celery</a> worker that carries out the steps of
+processes. These tasks are dispatched by the <a class="reference internal" href="agent.consumer.html#module-agent.consumer" title="agent.consumer"><code class="xref py py-mod docutils literal notranslate"><span class="pre">agent.consumer</span></code></a> via a
+Redis in-memory key-value store. The worker is responsible for calling backend
+services as it carries out its work.</p>
+</div>
+</div>
+<div class="section" id="subpackages">
+<h2>Subpackages<a class="headerlink" href="#subpackages" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="agent.process.html">agent.process package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="agent.process.html#subpackages">Subpackages</a><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="agent.process.html#submodules">Submodules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="agent.process.base.html">agent.process.base module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="agent.process.classification_and_content.html">agent.process.classification_and_content module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="agent.process.email_notifications.html">agent.process.email_notifications module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="agent.process.metadata_checks.html">agent.process.metadata_checks module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="agent.process.reclassification.html">agent.process.reclassification module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="agent.process.size_limits.html">agent.process.size_limits module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="agent.process.util.html">agent.process.util module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="agent.rules.html">agent.rules package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="agent.rules.html#subpackages">Subpackages</a><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="agent.rules.html#submodules">Submodules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="agent.rules.base.html">agent.rules.base module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="agent.rules.conditions.html">agent.rules.conditions module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="agent.rules.params.html">agent.rules.params module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="agent.runner.html">agent.runner package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="agent.runner.html#subpackages">Subpackages</a><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="agent.runner.html#submodules">Submodules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="agent.runner.async.html">agent.runner.async module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="agent.runner.base.html">agent.runner.base module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="agent.services.html">agent.services package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="agent.services.html#submodules">Submodules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="agent.services.database.html">agent.services.database module</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="agent.config.html">agent.config module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="agent.consumer.html">agent.consumer module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="agent.consumer.html#submission-event-consumer">Submission Event Consumer</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="agent.consumer.html#components">Components</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="agent.domain.html">agent.domain module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="agent.factory.html">agent.factory module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="agent.serializer.html">agent.serializer module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="agent.tasks.html">agent.tasks module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="agent.worker.html">agent.worker module</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="agent.worker.html#submission-agent-worker">Submission Agent Worker</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">arXiv submission & moderation</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../architecture.html">Submission &amp; moderation subsystem architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../announcement_process.html">Submission &amp; announcement Process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../submission_api_context.html">Submission API: Context</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../arxiv.submission/arxiv.submission.html">arxiv.submission package</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">agent package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#conceptual-overview">Conceptual overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#architectural-overview">Architectural overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#subpackages">Subpackages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../metadata/metadata.html">metadata package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../background.html">Background</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="../../arxiv.submission/arxiv.submission.serializer.html" title="previous chapter">arxiv.submission.serializer module</a></li>
+      <li>Next: <a href="agent.process.html" title="next chapter">agent.process package</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, arXiv.org.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.0.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../../_sources/containers/agent/agent.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

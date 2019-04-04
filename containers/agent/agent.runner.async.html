@@ -1,0 +1,313 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>agent.runner.async module &#8212; arXiv submission &amp; moderation 0.1 documentation</title>
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="agent.runner.base module" href="agent.runner.base.html" />
+    <link rel="prev" title="agent.runner package" href="agent.runner.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="module-agent.runner.async">
+<span id="agent-runner-async-module"></span><h1>agent.runner.async module<a class="headerlink" href="#module-agent.runner.async" title="Permalink to this headline">¶</a></h1>
+<p>Provides an asynchronous process runner.</p>
+<p>The <a class="reference internal" href="#agent.runner.async.AsyncProcessRunner" title="agent.runner.async.AsyncProcessRunner"><code class="xref py py-class docutils literal notranslate"><span class="pre">AsyncProcessRunner</span></code></a> registers and dispatches processes via
+Celery, to be carried out by the worker.</p>
+<dl class="class">
+<dt id="agent.runner.async.AsyncProcessRunner">
+<em class="property">class </em><code class="descclassname">agent.runner.async.</code><code class="descname">AsyncProcessRunner</code><span class="sig-paren">(</span><em>process</em><span class="sig-paren">)</span><a class="headerlink" href="#agent.runner.async.AsyncProcessRunner" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="agent.runner.base.html#agent.runner.base.ProcessRunner" title="agent.runner.base.ProcessRunner"><code class="xref py py-class docutils literal notranslate"><span class="pre">agent.runner.base.ProcessRunner</span></code></a></p>
+<p>Runs <a class="reference internal" href="agent.process.base.html#agent.process.base.Process" title="agent.process.base.Process"><code class="xref py py-class docutils literal notranslate"><span class="pre">Process</span></code></a> instances asynchronously.</p>
+<p>In order for this to work at runtime, <a class="reference internal" href="#agent.runner.async.AsyncProcessRunner.prepare" title="agent.runner.async.AsyncProcessRunner.prepare"><code class="xref py py-meth docutils literal notranslate"><span class="pre">prepare()</span></code></a> <em>MUST</em> be called
+with the process class at import time in both the process that dispatches
+tasks (e.g. the event consumer) and the worker process.</p>
+<dl class="classmethod">
+<dt id="agent.runner.async.AsyncProcessRunner.prepare">
+<em class="property">classmethod </em><code class="descname">prepare</code><span class="sig-paren">(</span><em>ProcessImpl</em><span class="sig-paren">)</span><a class="headerlink" href="#agent.runner.async.AsyncProcessRunner.prepare" title="Permalink to this definition">¶</a></dt>
+<dd><p>Register an <a class="reference internal" href="agent.process.base.html#agent.process.base.ProcessType" title="agent.process.base.ProcessType"><code class="xref py py-class docutils literal notranslate"><span class="pre">ProcessType</span></code></a> for asynchronous execution.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>ProcessImpl</strong> (<a class="reference internal" href="agent.process.base.html#agent.process.base.ProcessType" title="agent.process.base.ProcessType"><code class="xref py py-class docutils literal notranslate"><span class="pre">ProcessType</span></code></a>) – The process (class) to register.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="agent.runner.async.AsyncProcessRunner.processes">
+<code class="descname">processes</code><em class="property"> = {'AcceptSystemCrossListProposals': &lt;function register_process.&lt;locals&gt;.execute_chain&gt;, 'CheckAbstractForUnicodeAbuse': &lt;function register_process.&lt;locals&gt;.execute_chain&gt;, 'CheckForSimilarTitles': &lt;function register_process.&lt;locals&gt;.execute_chain&gt;, 'CheckPDFSize': &lt;function register_process.&lt;locals&gt;.execute_chain&gt;, 'CheckStopwordCount': &lt;function register_process.&lt;locals&gt;.execute_chain&gt;, 'CheckStopwordPercent': &lt;function register_process.&lt;locals&gt;.execute_chain&gt;, 'CheckSubmissionSourceSize': &lt;function register_process.&lt;locals&gt;.execute_chain&gt;, 'CheckTitleForUnicodeAbuse': &lt;function register_process.&lt;locals&gt;.execute_chain&gt;, 'PlainTextExtraction': &lt;function register_process.&lt;locals&gt;.execute_chain&gt;, 'ProposeCrossListFromPrimaryCategory': &lt;function register_process.&lt;locals&gt;.execute_chain&gt;, 'ProposeReclassification': &lt;function register_process.&lt;locals&gt;.execute_chain&gt;, 'SendConfirmationEmail': &lt;function register_process.&lt;locals&gt;.execute_chain&gt;}</em><a class="headerlink" href="#agent.runner.async.AsyncProcessRunner.processes" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="agent.runner.async.AsyncProcessRunner.run">
+<code class="descname">run</code><span class="sig-paren">(</span><em>trigger</em><span class="sig-paren">)</span><a class="headerlink" href="#agent.runner.async.AsyncProcessRunner.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Run a <a class="reference internal" href="agent.process.base.html#agent.process.base.Process" title="agent.process.base.Process"><code class="xref py py-class docutils literal notranslate"><span class="pre">Process</span></code></a> asynchronously.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="agent.runner.async.async_save">
+<code class="descclassname">agent.runner.async.</code><code class="descname">async_save</code><span class="sig-paren">(</span><em>self</em>, <em>*events</em>, <em>submission_id=-1</em><span class="sig-paren">)</span><a class="headerlink" href="#agent.runner.async.async_save" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save/emit new events.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>events</strong> (<a class="reference internal" href="../../arxiv.submission/arxiv.submission.domain.event.base.html#arxiv.submission.domain.event.base.Event" title="arxiv.submission.domain.event.base.Event"><code class="xref py py-class docutils literal notranslate"><span class="pre">Event</span></code></a>) – Each item is an <a class="reference internal" href="../../arxiv.submission/arxiv.submission.domain.event.base.html#arxiv.submission.domain.event.base.Event" title="arxiv.submission.domain.event.base.Event"><code class="xref py py-class docutils literal notranslate"><span class="pre">Event</span></code></a>.</p></li>
+<li><p><strong>submission_id</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/functions.html#int" title="(in Python v3.6)"><em>int</em></a>) – Identifier of the submission to which the commands/events apply.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="agent.runner.async.create_worker_app">
+<code class="descclassname">agent.runner.async.</code><code class="descname">create_worker_app</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#agent.runner.async.create_worker_app" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialize the worker application.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">Celery</span></code></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">celery.Celery</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="agent.runner.async.execute_async_save">
+<code class="descclassname">agent.runner.async.</code><code class="descname">execute_async_save</code><span class="sig-paren">(</span><em>*events</em>, <em>submission_id=-1</em><span class="sig-paren">)</span><a class="headerlink" href="#agent.runner.async.execute_async_save" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save events asynchronously, using <a class="reference internal" href="#agent.runner.async.async_save" title="agent.runner.async.async_save"><code class="xref py py-func docutils literal notranslate"><span class="pre">async_save()</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>events</strong> (<a class="reference internal" href="../../arxiv.submission/arxiv.submission.domain.event.base.html#arxiv.submission.domain.event.base.Event" title="arxiv.submission.domain.event.base.Event"><code class="xref py py-class docutils literal notranslate"><span class="pre">Event</span></code></a>) – Each item is an <a class="reference internal" href="../../arxiv.submission/arxiv.submission.domain.event.base.html#arxiv.submission.domain.event.base.Event" title="arxiv.submission.domain.event.base.Event"><code class="xref py py-class docutils literal notranslate"><span class="pre">Event</span></code></a>.</p></li>
+<li><p><strong>submission_id</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/functions.html#int" title="(in Python v3.6)"><em>int</em></a>) – Identifier of the submission to which the commands/events apply.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="agent.runner.async.get_or_create_worker_app">
+<code class="descclassname">agent.runner.async.</code><code class="descname">get_or_create_worker_app</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#agent.runner.async.get_or_create_worker_app" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the current worker app, or create one.</p>
+<p>Uses the Flask application global to keep track of the worker app.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">Celery</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="agent.runner.async.make_countdown">
+<code class="descclassname">agent.runner.async.</code><code class="descname">make_countdown</code><span class="sig-paren">(</span><em>delay</em>, <em>backoff=1</em>, <em>max_delay=None</em>, <em>jitter=0</em><span class="sig-paren">)</span><a class="headerlink" href="#agent.runner.async.make_countdown" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make a countdown callable based on the retry parameters of a step.</p>
+<p>For use in task retry calls, to customize the retry delay.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>delay</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/functions.html#int" title="(in Python v3.6)"><em>int</em></a>) – The base number of seconds to wait before retrying.</p></li>
+<li><p><strong>backoff</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/functions.html#int" title="(in Python v3.6)"><em>int</em></a>) – If provided, the exponent applied to the delay * number of attempts.</p></li>
+<li><p><strong>max_delay</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/functions.html#int" title="(in Python v3.6)"><em>int</em></a>) – If provided, the maximum number of seconds to wait.</p></li>
+<li><p><strong>jitter</strong> (<a class="reference external" href="https://docs.python.org/3.6/library/functions.html#int" title="(in Python v3.6)"><em>int</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#tuple" title="(in Python v3.6)"><em>tuple</em></a>) – If an int, number of seconds (+/-) to alter the delay, after the
+backoff is applied. If a two-tuple of ints,
+a random offset will be used in the range (jitter[0], jitter[1]).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Callable" title="(in Python v3.6)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code></a>[[<a class="reference external" href="https://docs.python.org/3.6/library/functions.html#int" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>], <a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Union" title="(in Python v3.6)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[<a class="reference external" href="https://docs.python.org/3.6/library/functions.html#int" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>, <a class="reference external" href="https://docs.python.org/3.6/library/functions.html#float" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a>]]</p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><em>function</em> – Countdown function; accepts a single int parameter representing the
+current retry count.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="agent.runner.async.make_failure_task">
+<code class="descclassname">agent.runner.async.</code><code class="descname">make_failure_task</code><span class="sig-paren">(</span><em>app</em>, <em>Proc</em><span class="sig-paren">)</span><a class="headerlink" href="#agent.runner.async.make_failure_task" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make a <code class="xref py py-class docutils literal notranslate"><span class="pre">Task</span></code> to handle failure of a process.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>app</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">celery.Celery</span></code>) – The Celery application on which to register the task.</p></li>
+<li><p><strong>Proc</strong> (<a class="reference internal" href="agent.process.base.html#agent.process.base.ProcessType" title="agent.process.base.ProcessType"><code class="xref py py-class docutils literal notranslate"><span class="pre">ProcessType</span></code></a>) – The process (class) for which the failure handler should be
+generated.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">Task</span></code></p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">celery.Task</span></code> – An asynchronous task that can be used as an errback for an async
+process.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="agent.runner.async.make_task">
+<code class="descclassname">agent.runner.async.</code><code class="descname">make_task</code><span class="sig-paren">(</span><em>app</em>, <em>Proc</em>, <em>step</em><span class="sig-paren">)</span><a class="headerlink" href="#agent.runner.async.make_task" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate an asynchronous task to perform a step.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>app</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">celery.Celery</span></code>) – The Celery application on which to register the task.</p></li>
+<li><p><strong>Proc</strong> (<a class="reference internal" href="agent.process.base.html#agent.process.base.ProcessType" title="agent.process.base.ProcessType"><code class="xref py py-class docutils literal notranslate"><span class="pre">ProcessType</span></code></a>) – The process (class) for which to make a task.</p></li>
+<li><p><strong>step</strong> (<em>function</em>) – The specific step of the process to make into a task.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">Task</span></code></p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">celery.Task</span></code> – An asynchronous task that performs <code class="docutils literal notranslate"><span class="pre">step</span></code>.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="agent.runner.async.register_process">
+<code class="descclassname">agent.runner.async.</code><code class="descname">register_process</code><span class="sig-paren">(</span><em>Proc</em><span class="sig-paren">)</span><a class="headerlink" href="#agent.runner.async.register_process" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate an asynchronous variant of a <a class="reference internal" href="agent.process.base.html#agent.process.base.Process" title="agent.process.base.Process"><code class="xref py py-class docutils literal notranslate"><span class="pre">Process</span></code></a>.</p>
+<p>Builds a chain of asynchronous :class:<a href="#id1"><span class="problematic" id="id2">`</span></a>celery.Task`s from the steps in the
+process.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>Proc</strong> (<a class="reference internal" href="agent.process.base.html#agent.process.base.ProcessType" title="agent.process.base.ProcessType"><code class="xref py py-class docutils literal notranslate"><span class="pre">ProcessType</span></code></a>) – The process (class) to be registered for asynchronous execution.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3.6/library/typing.html#typing.Callable" title="(in Python v3.6)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code></a></p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><em>function</em> – A function that, when called, dispatches the process for asynchronous
+execution.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">arXiv submission & moderation</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../architecture.html">Submission &amp; moderation subsystem architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../announcement_process.html">Submission &amp; announcement Process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../submission_api_context.html">Submission API: Context</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../arxiv.submission/arxiv.submission.html">arxiv.submission package</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="agent.html">agent package</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="agent.html#conceptual-overview">Conceptual overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="agent.html#architectural-overview">Architectural overview</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="agent.html#subpackages">Subpackages</a></li>
+<li class="toctree-l2"><a class="reference internal" href="agent.html#submodules">Submodules</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../metadata/metadata.html">metadata package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../background.html">Background</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="agent.html">agent package</a><ul>
+  <li><a href="agent.runner.html">agent.runner package</a><ul>
+      <li>Previous: <a href="agent.runner.html" title="previous chapter">agent.runner package</a></li>
+      <li>Next: <a href="agent.runner.base.html" title="next chapter">agent.runner.base module</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, arXiv.org.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.0.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../../_sources/containers/agent/agent.runner.async.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

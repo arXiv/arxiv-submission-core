@@ -1,11 +1,9 @@
 
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE html>
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta charset="utf-8" />
     <title>arxiv.submission.domain.event.event &#8212; arXiv submission &amp; moderation 0.1 documentation</title>
     <link rel="stylesheet" href="../../../../../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../../../../../_static/pygments.css" type="text/css" />
@@ -34,13 +32,14 @@
           <div class="body" role="main">
             
   <h1>Source code for arxiv.submission.domain.event.event</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;Provides the base command/event class, :class:`Event`.&quot;&quot;&quot;</span>
+<span></span><span class="sd">&quot;&quot;&quot;Provides the base event class.&quot;&quot;&quot;</span>
 
 <span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">ClassVar</span><span class="p">,</span> <span class="n">Mapping</span>
 <span class="kn">from</span> <span class="nn">collections</span> <span class="k">import</span> <span class="n">defaultdict</span>
 <span class="kn">from</span> <span class="nn">datetime</span> <span class="k">import</span> <span class="n">datetime</span>
 <span class="kn">import</span> <span class="nn">hashlib</span>
 <span class="kn">import</span> <span class="nn">copy</span>
+<span class="kn">from</span> <span class="nn">pytz</span> <span class="k">import</span> <span class="n">UTC</span>
 <span class="kn">from</span> <span class="nn">functools</span> <span class="k">import</span> <span class="n">wraps</span>
 <span class="kn">from</span> <span class="nn">flask</span> <span class="k">import</span> <span class="n">current_app</span>
 <span class="kn">from</span> <span class="nn">dataclasses</span> <span class="k">import</span> <span class="n">field</span><span class="p">,</span> <span class="n">asdict</span>
@@ -49,14 +48,13 @@
 <span class="kn">from</span> <span class="nn">arxiv.base</span> <span class="k">import</span> <span class="n">logging</span>
 <span class="kn">from</span> <span class="nn">arxiv.base.globals</span> <span class="k">import</span> <span class="n">get_application_config</span>
 
-<span class="kn">from</span> <span class="nn">..agent</span> <span class="k">import</span> <span class="n">Agent</span><span class="p">,</span> <span class="n">System</span>
+<span class="kn">from</span> <span class="nn">..agent</span> <span class="k">import</span> <span class="n">Agent</span><span class="p">,</span> <span class="n">System</span><span class="p">,</span> <span class="n">agent_factory</span>
 <span class="kn">from</span> <span class="nn">...exceptions</span> <span class="k">import</span> <span class="n">InvalidEvent</span>
 <span class="kn">from</span> <span class="nn">..util</span> <span class="k">import</span> <span class="n">get_tzaware_utc_now</span>
 <span class="kn">from</span> <span class="nn">..submission</span> <span class="k">import</span> <span class="n">Submission</span>
+<span class="kn">from</span> <span class="nn">.versioning</span> <span class="k">import</span> <span class="n">EventData</span><span class="p">,</span> <span class="n">map_to_current_version</span>
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
-<span class="n">logger</span><span class="o">.</span><span class="n">propagate</span> <span class="o">=</span> <span class="kc">False</span>
-
 
 <span class="n">Events</span> <span class="o">=</span> <span class="n">Iterable</span><span class="p">[</span><span class="s1">&#39;Event&#39;</span><span class="p">]</span>
 <span class="n">Condition</span> <span class="o">=</span> <span class="n">Callable</span><span class="p">[[</span><span class="s1">&#39;Event&#39;</span><span class="p">,</span> <span class="n">Submission</span><span class="p">,</span> <span class="n">Submission</span><span class="p">],</span> <span class="nb">bool</span><span class="p">]</span>
@@ -66,8 +64,12 @@
 <span class="n">Store</span> <span class="o">=</span> <span class="n">Callable</span><span class="p">[[</span><span class="s1">&#39;Event&#39;</span><span class="p">,</span> <span class="n">Submission</span><span class="p">,</span> <span class="n">Submission</span><span class="p">],</span> <span class="n">Tuple</span><span class="p">[</span><span class="s1">&#39;Event&#39;</span><span class="p">,</span> <span class="n">Submission</span><span class="p">]]</span>
 
 
-<div class="viewcode-block" id="Event"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.domain.event.event.html#arxiv.submission.domain.event.event.Event">[docs]</a><span class="nd">@dataclass</span><span class="p">()</span>
-<span class="k">class</span> <span class="nc">Event</span><span class="p">:</span>
+<div class="viewcode-block" id="EventType"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.domain.event.event.html#arxiv.submission.domain.event.event.EventType">[docs]</a><span class="k">class</span> <span class="nc">EventType</span><span class="p">(</span><span class="nb">type</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Metaclass for :class:`.Event`\.&quot;&quot;&quot;</span></div>
+
+
+<div class="viewcode-block" id="Event"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.domain.event.event.html#arxiv.submission.domain.event.event.Event">[docs]</a><span class="nd">@dataclass</span><span class="p">()</span>
+<span class="k">class</span> <span class="nc">Event</span><span class="p">(</span><span class="n">metaclass</span><span class="o">=</span><span class="n">EventType</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Base class for submission-related events/commands.</span>
 
@@ -138,14 +140,31 @@
     <span class="n">after</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Submission</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="sd">&quot;&quot;&quot;The state of the submission after the event.&quot;&quot;&quot;</span>
 
+    <span class="n">event_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">str</span><span class="p">)</span>
+    <span class="n">event_version</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">str</span><span class="p">)</span>
+
     <span class="n">_hooks</span><span class="p">:</span> <span class="n">ClassVar</span><span class="p">[</span><span class="n">Mapping</span><span class="p">[</span><span class="nb">type</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Rule</span><span class="p">]]]</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
 
-    <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">event_type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Name of the event type.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_event_type</span><span class="p">()</span>
+    <span class="k">def</span> <span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Make sure data look right.&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">event_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_event_type</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">event_version</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_event_version</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">client</span> <span class="ow">and</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">dict</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">client</span> <span class="o">=</span> <span class="n">agent_factory</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">creator</span> <span class="ow">and</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">creator</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">dict</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">creator</span> <span class="o">=</span> <span class="n">agent_factory</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">creator</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">proxy</span> <span class="ow">and</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">proxy</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">dict</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">proxy</span> <span class="o">=</span> <span class="n">agent_factory</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">proxy</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">before</span> <span class="ow">and</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">before</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">dict</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">before</span> <span class="o">=</span> <span class="n">Submission</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">before</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">after</span> <span class="ow">and</span> <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">after</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">dict</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">after</span> <span class="o">=</span> <span class="n">Submission</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">after</span><span class="p">)</span>
 
-<div class="viewcode-block" id="Event.get_event_type"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.domain.event.event.html#arxiv.submission.domain.event.event.Event.get_event_type">[docs]</a>    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Event.get_event_version"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.domain.event.event.html#arxiv.submission.domain.event.event.Event.get_event_version">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">get_event_version</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">get_application_config</span><span class="p">()</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;CORE_VERSION&#39;</span><span class="p">,</span> <span class="s1">&#39;0.0.0&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Event.get_event_type"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.domain.event.event.html#arxiv.submission.domain.event.event.Event.get_event_type">[docs]</a>    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">get_event_type</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Get the name of the event type.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="vm">__name__</span></div>
@@ -153,13 +172,17 @@
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">event_id</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Unique ID for this event.&quot;&quot;&quot;</span>
-        <span class="n">h</span> <span class="o">=</span> <span class="n">hashlib</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="s1">&#39;sha1&#39;</span><span class="p">)</span>
-        <span class="n">h</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="sa">b</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1">:</span><span class="si">%s</span><span class="s1">:</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">created</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">),</span>
-                                <span class="bp">self</span><span class="o">.</span><span class="n">event_type</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">),</span>
-                                <span class="bp">self</span><span class="o">.</span><span class="n">creator</span><span class="o">.</span><span class="n">agent_identifier</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)))</span>
-        <span class="k">return</span> <span class="n">h</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_id</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">created</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">event_type</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">creator</span><span class="p">)</span>
 
-<div class="viewcode-block" id="Event.apply"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.domain.event.event.html#arxiv.submission.domain.event.event.Event.apply">[docs]</a>    <span class="k">def</span> <span class="nf">apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Submission</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Submission</span><span class="p">:</span>
+<div class="viewcode-block" id="Event.get_id"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.domain.event.event.html#arxiv.submission.domain.event.event.Event.get_id">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">get_id</span><span class="p">(</span><span class="n">created</span><span class="p">:</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">event_type</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">creator</span><span class="p">:</span> <span class="n">Agent</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="n">h</span> <span class="o">=</span> <span class="n">hashlib</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="s1">&#39;sha1&#39;</span><span class="p">)</span>
+        <span class="n">h</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="sa">b</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1">:</span><span class="si">%s</span><span class="s1">:</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">created</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">),</span>
+                                <span class="n">event_type</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">),</span>
+                                <span class="n">creator</span><span class="o">.</span><span class="n">agent_identifier</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)))</span>
+        <span class="k">return</span> <span class="n">h</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="Event.apply"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.domain.event.event.html#arxiv.submission.domain.event.event.Event.apply">[docs]</a>    <span class="k">def</span> <span class="nf">apply</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Submission</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Submission</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Apply the projection for this :class:`.Event` instance.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">before</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">submission</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">validate</span><span class="p">(</span><span class="n">submission</span><span class="p">)</span>
@@ -177,15 +200,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">submission_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">after</span><span class="o">.</span><span class="n">submission_id</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">after</span></div>
 
-<div class="viewcode-block" id="Event.to_dict"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.domain.event.event.html#arxiv.submission.domain.event.event.Event.to_dict">[docs]</a>    <span class="k">def</span> <span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Generate a dict representation of this :class:`.Event`.&quot;&quot;&quot;</span>
-        <span class="n">data</span> <span class="o">=</span> <span class="n">asdict</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
-        <span class="n">data</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s1">&#39;event_type&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">event_type</span><span class="p">})</span>
-        <span class="n">data</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;before&#39;</span><span class="p">)</span>
-        <span class="n">data</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;after&#39;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">data</span></div>
-
-<div class="viewcode-block" id="Event.bind"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.domain.event.event.html#arxiv.submission.domain.event.event.Event.bind">[docs]</a>    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Event.bind"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.domain.event.event.html#arxiv.submission.domain.event.event.Event.bind">[docs]</a>    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">bind</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">condition</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Condition</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Decorator</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Generate a decorator to bind a callback to an event type.</span>
@@ -278,7 +293,7 @@
         <span class="n">config</span> <span class="o">=</span> <span class="n">get_application_config</span><span class="p">()</span>
         <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;ENABLE_CALLBACKS&#39;</span><span class="p">,</span> <span class="s1">&#39;0&#39;</span><span class="p">)))</span>
 
-<div class="viewcode-block" id="Event.commit"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.domain.event.event.html#arxiv.submission.domain.event.event.Event.commit">[docs]</a>    <span class="k">def</span> <span class="nf">commit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">store</span><span class="p">:</span> <span class="n">Store</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Submission</span><span class="p">,</span> <span class="n">Events</span><span class="p">]:</span>
+<div class="viewcode-block" id="Event.commit"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.domain.event.event.html#arxiv.submission.domain.event.event.Event.commit">[docs]</a>    <span class="k">def</span> <span class="nf">commit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">store</span><span class="p">:</span> <span class="n">Store</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Submission</span><span class="p">,</span> <span class="n">Events</span><span class="p">]:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Persist this event instance using an injected store method.</span>
 
@@ -311,6 +326,43 @@
                     <span class="k">for</span> <span class="n">addl</span> <span class="ow">in</span> <span class="n">addl_consequences</span><span class="p">:</span>
                         <span class="n">consequences</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">addl</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">after</span><span class="p">,</span> <span class="n">consequences</span></div></div>
+
+
+<span class="k">def</span> <span class="nf">_get_subclasses</span><span class="p">(</span><span class="n">klass</span><span class="p">:</span> <span class="nb">type</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">type</span><span class="p">]:</span>
+    <span class="n">_subclasses</span> <span class="o">=</span> <span class="n">klass</span><span class="o">.</span><span class="n">__subclasses__</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">_subclasses</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_subclasses</span> <span class="o">+</span> <span class="p">[</span><span class="n">sub</span> <span class="k">for</span> <span class="n">klass</span> <span class="ow">in</span> <span class="n">_subclasses</span>
+                              <span class="k">for</span> <span class="n">sub</span> <span class="ow">in</span> <span class="n">_get_subclasses</span><span class="p">(</span><span class="n">klass</span><span class="p">)]</span>
+    <span class="k">return</span> <span class="n">_subclasses</span>
+
+
+<div class="viewcode-block" id="event_factory"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.domain.event.event.html#arxiv.submission.domain.event.event.event_factory">[docs]</a><span class="k">def</span> <span class="nf">event_factory</span><span class="p">(</span><span class="o">**</span><span class="n">data</span><span class="p">:</span> <span class="n">EventData</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Event</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generate an :class:`Event` instance from raw :const:`EventData`.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    event_type : str</span>
+<span class="sd">        Should be the name of a :class:`.Event` subclass.</span>
+<span class="sd">    data : kwargs</span>
+<span class="sd">        Keyword parameters passed to the event constructor.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    :class:`.Event`</span>
+<span class="sd">        An instance of an :class:`.Event` subclass.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">etypes</span> <span class="o">=</span> <span class="p">{</span><span class="n">klas</span><span class="o">.</span><span class="n">get_event_type</span><span class="p">():</span> <span class="n">klas</span> <span class="k">for</span> <span class="n">klas</span> <span class="ow">in</span> <span class="n">_get_subclasses</span><span class="p">(</span><span class="n">Event</span><span class="p">)}</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">map_to_current_version</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+    <span class="n">event_type</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;event_type&quot;</span><span class="p">)</span>
+    <span class="n">event_version</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;event_version&quot;</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Create </span><span class="si">%s</span><span class="s1"> with data version </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">event_type</span><span class="p">,</span> <span class="n">event_version</span><span class="p">)</span>
+    <span class="k">if</span> <span class="s1">&#39;created&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+        <span class="n">data</span><span class="p">[</span><span class="s1">&#39;created&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">UTC</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">event_type</span> <span class="ow">in</span> <span class="n">etypes</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">etypes</span><span class="p">[</span><span class="n">event_type</span><span class="p">](</span><span class="o">**</span><span class="n">data</span><span class="p">)</span>
+    <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;Unknown event type: </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">event_type</span><span class="p">)</span></div>
 </pre></div>
 
           </div>
@@ -333,7 +385,8 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../../architecture.html">Submission &amp; moderation subsystem architecture</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../announcement_process.html">Submission &amp; announcement Process</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../submission_api_context.html">Submission API: Context</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../../containers/core/arxiv.submission.html">arxiv.submission package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../arxiv.submission/arxiv.submission.html">arxiv.submission package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../containers/agent/agent.html">agent package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../containers/metadata/metadata.html">metadata package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../background.html">Background</a></li>
 </ul>
@@ -343,7 +396,9 @@
 <ul>
   <li><a href="../../../../../index.html">Documentation overview</a><ul>
   <li><a href="../../../../index.html">Module code</a><ul>
+  <li><a href="../../../submission.html">arxiv.submission</a><ul>
   <li><a href="../event.html">arxiv.submission.domain.event</a><ul>
+  </ul></li>
   </ul></li>
   </ul></li>
   </ul></li>
@@ -355,8 +410,6 @@
     <form class="search" action="../../../../../search.html" method="get">
       <input type="text" name="q" />
       <input type="submit" value="Go" />
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
     </form>
     </div>
 </div>
@@ -377,7 +430,7 @@
       &copy;2017, arXiv.org.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.3</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.0.0</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
     </div>

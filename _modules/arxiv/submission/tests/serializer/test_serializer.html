@@ -1,0 +1,263 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>arxiv.submission.tests.serializer.test_serializer &#8212; arXiv submission &amp; moderation 0.1 documentation</title>
+    <link rel="stylesheet" href="../../../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../../../../_static/graphviz.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../../../../" src="../../../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for arxiv.submission.tests.serializer.test_serializer</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">unittest</span> <span class="k">import</span> <span class="n">TestCase</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="k">import</span> <span class="n">datetime</span>
+<span class="kn">from</span> <span class="nn">pytz</span> <span class="k">import</span> <span class="n">UTC</span>
+<span class="kn">from</span> <span class="nn">dataclasses</span> <span class="k">import</span> <span class="n">asdict</span>
+<span class="kn">import</span> <span class="nn">json</span>
+
+<span class="kn">from</span> <span class="nn">...serializer</span> <span class="k">import</span> <span class="n">dumps</span><span class="p">,</span> <span class="n">loads</span>
+<span class="kn">from</span> <span class="nn">...domain.event</span> <span class="k">import</span> <span class="n">CreateSubmission</span><span class="p">,</span> <span class="n">SetTitle</span>
+<span class="kn">from</span> <span class="nn">...domain.agent</span> <span class="k">import</span> <span class="n">User</span><span class="p">,</span> <span class="n">System</span><span class="p">,</span> <span class="n">Client</span>
+<span class="kn">from</span> <span class="nn">...domain.submission</span> <span class="k">import</span> <span class="n">Submission</span><span class="p">,</span> <span class="n">SubmissionContent</span><span class="p">,</span> <span class="n">License</span><span class="p">,</span> \
+    <span class="n">Classification</span><span class="p">,</span> <span class="n">CrossListClassificationRequest</span><span class="p">,</span> <span class="n">Hold</span><span class="p">,</span> <span class="n">Waiver</span>
+<span class="kn">from</span> <span class="nn">...domain.proposal</span> <span class="k">import</span> <span class="n">Proposal</span>
+<span class="kn">from</span> <span class="nn">...domain.process</span> <span class="k">import</span> <span class="n">ProcessStatus</span>
+<span class="kn">from</span> <span class="nn">...domain.annotation</span> <span class="k">import</span> <span class="n">Feature</span><span class="p">,</span> <span class="n">Comment</span>
+<span class="kn">from</span> <span class="nn">...domain.flag</span> <span class="k">import</span> <span class="n">ContentFlag</span>
+
+
+<div class="viewcode-block" id="TestDumpLoad"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.tests.serializer.test_serializer.html#arxiv.submission.tests.serializer.test_serializer.TestDumpLoad">[docs]</a><span class="k">class</span> <span class="nc">TestDumpLoad</span><span class="p">(</span><span class="n">TestCase</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Tests for :func:`.dumps` and :func:`.loads`.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="TestDumpLoad.test_dump_createsubmission"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.tests.serializer.test_serializer.html#arxiv.submission.tests.serializer.test_serializer.TestDumpLoad.test_dump_createsubmission">[docs]</a>    <span class="k">def</span> <span class="nf">test_dump_createsubmission</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Serialize and deserialize a :class:`.CreateSubmission` event.&quot;&quot;&quot;</span>
+        <span class="n">user</span> <span class="o">=</span> <span class="n">User</span><span class="p">(</span><span class="s1">&#39;123&#39;</span><span class="p">,</span> <span class="s1">&#39;foo@user.com&#39;</span><span class="p">,</span> <span class="s1">&#39;foouser&#39;</span><span class="p">)</span>
+        <span class="n">event</span> <span class="o">=</span> <span class="n">CreateSubmission</span><span class="p">(</span><span class="n">creator</span><span class="o">=</span><span class="n">user</span><span class="p">)</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">dumps</span><span class="p">(</span><span class="n">event</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertDictEqual</span><span class="p">(</span><span class="n">asdict</span><span class="p">(</span><span class="n">user</span><span class="p">),</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">data</span><span class="p">)[</span><span class="s2">&quot;creator&quot;</span><span class="p">],</span>
+                             <span class="s2">&quot;User data is fully encoded&quot;</span><span class="p">)</span>
+        <span class="n">deserialized</span> <span class="o">=</span> <span class="n">loads</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">deserialized</span><span class="p">,</span> <span class="n">event</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">deserialized</span><span class="o">.</span><span class="n">creator</span><span class="p">,</span> <span class="n">user</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">deserialized</span><span class="o">.</span><span class="n">created</span><span class="p">,</span> <span class="n">event</span><span class="o">.</span><span class="n">created</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestDumpLoad.test_dump_load_submission"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.tests.serializer.test_serializer.html#arxiv.submission.tests.serializer.test_serializer.TestDumpLoad.test_dump_load_submission">[docs]</a>    <span class="k">def</span> <span class="nf">test_dump_load_submission</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Serialize and deserialize a :class:`.Submission`.&quot;&quot;&quot;</span>
+        <span class="n">user</span> <span class="o">=</span> <span class="n">User</span><span class="p">(</span><span class="s1">&#39;123&#39;</span><span class="p">,</span> <span class="s1">&#39;foo@user.com&#39;</span><span class="p">,</span> <span class="s1">&#39;foouser&#39;</span><span class="p">)</span>
+
+        <span class="n">client</span> <span class="o">=</span> <span class="n">Client</span><span class="p">(</span><span class="s1">&#39;fooclient&#39;</span><span class="p">,</span> <span class="s1">&#39;asdf&#39;</span><span class="p">)</span>
+        <span class="n">system</span> <span class="o">=</span> <span class="n">System</span><span class="p">(</span><span class="s1">&#39;testprocess&#39;</span><span class="p">)</span>
+        <span class="n">submission</span> <span class="o">=</span> <span class="n">Submission</span><span class="p">(</span>
+            <span class="n">creator</span><span class="o">=</span><span class="n">user</span><span class="p">,</span>
+            <span class="n">owner</span><span class="o">=</span><span class="n">user</span><span class="p">,</span>
+            <span class="n">client</span><span class="o">=</span><span class="n">client</span><span class="p">,</span>
+            <span class="n">created</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">UTC</span><span class="p">),</span>
+            <span class="n">updated</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">UTC</span><span class="p">),</span>
+            <span class="n">submitted</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">UTC</span><span class="p">),</span>
+            <span class="n">source_content</span><span class="o">=</span><span class="n">SubmissionContent</span><span class="p">(</span>
+                <span class="n">identifier</span><span class="o">=</span><span class="s1">&#39;12345&#39;</span><span class="p">,</span>
+                <span class="n">checksum</span><span class="o">=</span><span class="s1">&#39;asdf1234&#39;</span><span class="p">,</span>
+                <span class="n">uncompressed_size</span><span class="o">=</span><span class="mi">435321</span><span class="p">,</span>
+                <span class="n">compressed_size</span><span class="o">=</span><span class="mi">23421</span><span class="p">,</span>
+                <span class="n">source_format</span><span class="o">=</span><span class="n">SubmissionContent</span><span class="o">.</span><span class="n">Format</span><span class="o">.</span><span class="n">TEX</span>
+            <span class="p">),</span>
+            <span class="n">primary_classification</span><span class="o">=</span><span class="n">Classification</span><span class="p">(</span><span class="n">category</span><span class="o">=</span><span class="s1">&#39;cs.DL&#39;</span><span class="p">),</span>
+            <span class="n">secondary_classification</span><span class="o">=</span><span class="p">[</span><span class="n">Classification</span><span class="p">(</span><span class="n">category</span><span class="o">=</span><span class="s1">&#39;cs.AI&#39;</span><span class="p">)],</span>
+            <span class="n">submitter_contact_verified</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">submitter_is_author</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">submitter_accepts_policy</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">submitter_confirmed_preview</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">license</span><span class="o">=</span><span class="n">License</span><span class="p">(</span><span class="s1">&#39;http://foolicense.org/v1&#39;</span><span class="p">,</span> <span class="s1">&#39;The Foo License&#39;</span><span class="p">),</span>
+            <span class="n">status</span><span class="o">=</span><span class="n">Submission</span><span class="o">.</span><span class="n">ANNOUNCED</span><span class="p">,</span>
+            <span class="n">arxiv_id</span><span class="o">=</span><span class="s1">&#39;1234.56789&#39;</span><span class="p">,</span>
+            <span class="n">version</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+            <span class="n">user_requests</span><span class="o">=</span><span class="p">{</span>
+                <span class="s1">&#39;asdf1234&#39;</span><span class="p">:</span> <span class="n">CrossListClassificationRequest</span><span class="p">(</span><span class="s1">&#39;asdf1234&#39;</span><span class="p">,</span> <span class="n">user</span><span class="p">)</span>
+            <span class="p">},</span>
+            <span class="n">proposals</span><span class="o">=</span><span class="p">{</span>
+                <span class="s1">&#39;prop1234&#39;</span><span class="p">:</span> <span class="n">Proposal</span><span class="p">(</span>
+                    <span class="n">event_id</span><span class="o">=</span><span class="s1">&#39;prop1234&#39;</span><span class="p">,</span>
+                    <span class="n">creator</span><span class="o">=</span><span class="n">user</span><span class="p">,</span>
+                    <span class="n">proposed_event_type</span><span class="o">=</span><span class="n">SetTitle</span><span class="p">,</span>
+                    <span class="n">proposed_event_data</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;title&#39;</span><span class="p">:</span> <span class="s1">&#39;foo title&#39;</span><span class="p">}</span>
+                <span class="p">)</span>
+            <span class="p">},</span>
+            <span class="n">processes</span><span class="o">=</span><span class="p">[</span>
+                <span class="n">ProcessStatus</span><span class="p">(</span>
+                    <span class="n">creator</span><span class="o">=</span><span class="n">system</span><span class="p">,</span>
+                    <span class="n">created</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">UTC</span><span class="p">),</span>
+                    <span class="n">status</span><span class="o">=</span><span class="n">ProcessStatus</span><span class="o">.</span><span class="n">Status</span><span class="o">.</span><span class="n">SUCCEEDED</span><span class="p">,</span>
+                    <span class="n">process</span><span class="o">=</span><span class="n">ProcessStatus</span><span class="o">.</span><span class="n">Process</span><span class="o">.</span><span class="n">COMPILATION</span><span class="p">,</span>
+                    <span class="n">process_service</span><span class="o">=</span><span class="s1">&#39;fooservice&#39;</span><span class="p">,</span>
+                    <span class="n">process_version</span><span class="o">=</span><span class="s1">&#39;fooversion&#39;</span><span class="p">,</span>
+                    <span class="n">process_identifier</span><span class="o">=</span><span class="s1">&#39;fooidentifier&#39;</span>
+                <span class="p">)</span>
+            <span class="p">],</span>
+            <span class="n">annotations</span><span class="o">=</span><span class="p">{</span>
+                <span class="s1">&#39;asdf123543&#39;</span><span class="p">:</span> <span class="n">Feature</span><span class="p">(</span>
+                    <span class="n">event_id</span><span class="o">=</span><span class="s1">&#39;asdf123543&#39;</span><span class="p">,</span>
+                    <span class="n">created</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">UTC</span><span class="p">),</span>
+                    <span class="n">creator</span><span class="o">=</span><span class="n">system</span><span class="p">,</span>
+                    <span class="n">feature_type</span><span class="o">=</span><span class="n">Feature</span><span class="o">.</span><span class="n">Type</span><span class="o">.</span><span class="n">PAGE_COUNT</span><span class="p">,</span>
+                    <span class="n">feature_value</span><span class="o">=</span><span class="mf">12345678.32</span>
+                <span class="p">)</span>
+            <span class="p">},</span>
+            <span class="n">flags</span><span class="o">=</span><span class="p">{</span>
+                <span class="s1">&#39;fooflag1&#39;</span><span class="p">:</span> <span class="n">ContentFlag</span><span class="p">(</span>
+                    <span class="n">event_id</span><span class="o">=</span><span class="s1">&#39;fooflag1&#39;</span><span class="p">,</span>
+                    <span class="n">creator</span><span class="o">=</span><span class="n">system</span><span class="p">,</span>
+                    <span class="n">created</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">UTC</span><span class="p">),</span>
+                    <span class="n">flag_type</span><span class="o">=</span><span class="n">ContentFlag</span><span class="o">.</span><span class="n">Type</span><span class="o">.</span><span class="n">LOW_STOP</span><span class="p">,</span>
+                    <span class="n">flag_data</span><span class="o">=</span><span class="mi">25</span><span class="p">,</span>
+                    <span class="n">comment</span><span class="o">=</span><span class="s1">&#39;no comment&#39;</span>
+                <span class="p">)</span>
+            <span class="p">},</span>
+            <span class="n">comments</span><span class="o">=</span><span class="p">{</span>
+                <span class="s1">&#39;asdf54321&#39;</span><span class="p">:</span> <span class="n">Comment</span><span class="p">(</span>
+                    <span class="n">event_id</span><span class="o">=</span><span class="s1">&#39;asdf54321&#39;</span><span class="p">,</span>
+                    <span class="n">creator</span><span class="o">=</span><span class="n">system</span><span class="p">,</span>
+                    <span class="n">created</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">UTC</span><span class="p">),</span>
+                    <span class="n">body</span><span class="o">=</span><span class="s1">&#39;here is comment&#39;</span>
+                <span class="p">)</span>
+            <span class="p">},</span>
+            <span class="n">holds</span><span class="o">=</span><span class="p">{</span>
+                <span class="s1">&#39;foohold1234&#39;</span><span class="p">:</span> <span class="n">Hold</span><span class="p">(</span>
+                    <span class="n">event_id</span><span class="o">=</span><span class="s1">&#39;foohold1234&#39;</span><span class="p">,</span>
+                    <span class="n">creator</span><span class="o">=</span><span class="n">system</span><span class="p">,</span>
+                    <span class="n">hold_type</span><span class="o">=</span><span class="n">Hold</span><span class="o">.</span><span class="n">Type</span><span class="o">.</span><span class="n">SOURCE_OVERSIZE</span><span class="p">,</span>
+                    <span class="n">hold_reason</span><span class="o">=</span><span class="s1">&#39;the best reason&#39;</span>
+                <span class="p">)</span>
+            <span class="p">},</span>
+            <span class="n">waivers</span><span class="o">=</span><span class="p">{</span>
+                <span class="s1">&#39;waiver1234&#39;</span><span class="p">:</span> <span class="n">Waiver</span><span class="p">(</span>
+                    <span class="n">event_id</span><span class="o">=</span><span class="s1">&#39;waiver1234&#39;</span><span class="p">,</span>
+                    <span class="n">waiver_type</span><span class="o">=</span><span class="n">Hold</span><span class="o">.</span><span class="n">Type</span><span class="o">.</span><span class="n">SOURCE_OVERSIZE</span><span class="p">,</span>
+                    <span class="n">waiver_reason</span><span class="o">=</span><span class="s1">&#39;it is ok&#39;</span><span class="p">,</span>
+                    <span class="n">created</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">UTC</span><span class="p">),</span>
+                    <span class="n">creator</span><span class="o">=</span><span class="n">system</span>
+                <span class="p">)</span>
+            <span class="p">}</span>
+        <span class="p">)</span>
+        <span class="n">raw</span> <span class="o">=</span> <span class="n">dumps</span><span class="p">(</span><span class="n">submission</span><span class="p">)</span>
+        <span class="n">loaded</span> <span class="o">=</span> <span class="n">loads</span><span class="p">(</span><span class="n">raw</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">submission</span><span class="o">.</span><span class="n">creator</span><span class="p">,</span> <span class="n">loaded</span><span class="o">.</span><span class="n">creator</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">submission</span><span class="o">.</span><span class="n">owner</span><span class="p">,</span> <span class="n">loaded</span><span class="o">.</span><span class="n">owner</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">submission</span><span class="o">.</span><span class="n">client</span><span class="p">,</span> <span class="n">loaded</span><span class="o">.</span><span class="n">client</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">submission</span><span class="o">.</span><span class="n">created</span><span class="p">,</span> <span class="n">loaded</span><span class="o">.</span><span class="n">created</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">submission</span><span class="o">.</span><span class="n">updated</span><span class="p">,</span> <span class="n">loaded</span><span class="o">.</span><span class="n">updated</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">submission</span><span class="o">.</span><span class="n">submitted</span><span class="p">,</span> <span class="n">loaded</span><span class="o">.</span><span class="n">submitted</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">submission</span><span class="o">.</span><span class="n">source_content</span><span class="p">,</span> <span class="n">loaded</span><span class="o">.</span><span class="n">source_content</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">submission</span><span class="o">.</span><span class="n">source_content</span><span class="o">.</span><span class="n">source_format</span><span class="p">,</span>
+                         <span class="n">loaded</span><span class="o">.</span><span class="n">source_content</span><span class="o">.</span><span class="n">source_format</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">submission</span><span class="o">.</span><span class="n">primary_classification</span><span class="p">,</span>
+                         <span class="n">loaded</span><span class="o">.</span><span class="n">primary_classification</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">submission</span><span class="o">.</span><span class="n">secondary_classification</span><span class="p">,</span>
+                         <span class="n">loaded</span><span class="o">.</span><span class="n">secondary_classification</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">submission</span><span class="o">.</span><span class="n">license</span><span class="p">,</span> <span class="n">loaded</span><span class="o">.</span><span class="n">license</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">submission</span><span class="o">.</span><span class="n">user_requests</span><span class="p">,</span> <span class="n">loaded</span><span class="o">.</span><span class="n">user_requests</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">submission</span><span class="o">.</span><span class="n">proposals</span><span class="p">,</span> <span class="n">loaded</span><span class="o">.</span><span class="n">proposals</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">submission</span><span class="o">.</span><span class="n">processes</span><span class="p">,</span> <span class="n">loaded</span><span class="o">.</span><span class="n">processes</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">submission</span><span class="o">.</span><span class="n">annotations</span><span class="p">,</span> <span class="n">loaded</span><span class="o">.</span><span class="n">annotations</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">submission</span><span class="o">.</span><span class="n">flags</span><span class="p">,</span> <span class="n">loaded</span><span class="o">.</span><span class="n">flags</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">submission</span><span class="o">.</span><span class="n">comments</span><span class="p">,</span> <span class="n">loaded</span><span class="o">.</span><span class="n">comments</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">submission</span><span class="o">.</span><span class="n">holds</span><span class="p">,</span> <span class="n">loaded</span><span class="o">.</span><span class="n">holds</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">submission</span><span class="o">.</span><span class="n">waivers</span><span class="p">,</span> <span class="n">loaded</span><span class="o">.</span><span class="n">waivers</span><span class="p">)</span></div></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../../index.html">arXiv submission & moderation</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../architecture.html">Submission &amp; moderation subsystem architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../announcement_process.html">Submission &amp; announcement Process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../submission_api_context.html">Submission API: Context</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../arxiv.submission/arxiv.submission.html">arxiv.submission package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../containers/agent/agent.html">agent package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../containers/metadata/metadata.html">metadata package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../background.html">Background</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../../index.html">Module code</a><ul>
+  <li><a href="../../../submission.html">arxiv.submission</a><ul>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, arXiv.org.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.0.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

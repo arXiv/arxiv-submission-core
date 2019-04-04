@@ -1,11 +1,9 @@
 
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE html>
 
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta charset="utf-8" />
     <title>arxiv.submission.tests.examples.test_01_working_submission &#8212; arXiv submission &amp; moderation 0.1 documentation</title>
     <link rel="stylesheet" href="../../../../../_static/alabaster.css" type="text/css" />
     <link rel="stylesheet" href="../../../../../_static/pygments.css" type="text/css" />
@@ -36,16 +34,17 @@
   <h1>Source code for arxiv.submission.tests.examples.test_01_working_submission</h1><div class="highlight"><pre>
 <span></span><span class="sd">&quot;&quot;&quot;Example 1: working submission.&quot;&quot;&quot;</span>
 
-<span class="kn">from</span> <span class="nn">unittest</span> <span class="k">import</span> <span class="n">TestCase</span>
+<span class="kn">from</span> <span class="nn">unittest</span> <span class="k">import</span> <span class="n">TestCase</span><span class="p">,</span> <span class="n">mock</span>
 <span class="kn">import</span> <span class="nn">tempfile</span>
 
 <span class="kn">from</span> <span class="nn">flask</span> <span class="k">import</span> <span class="n">Flask</span>
 
 <span class="kn">from</span> <span class="nn">...services</span> <span class="k">import</span> <span class="n">classic</span>
 <span class="kn">from</span> <span class="nn">...</span> <span class="k">import</span> <span class="n">save</span><span class="p">,</span> <span class="n">load</span><span class="p">,</span> <span class="n">load_fast</span><span class="p">,</span> <span class="n">domain</span><span class="p">,</span> <span class="n">exceptions</span>
+<span class="kn">from</span> <span class="nn">...</span> <span class="k">import</span> <span class="n">core</span>
 
 
-<div class="viewcode-block" id="TestWorkingSubmission"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.tests.examples.test_01_working_submission.html#arxiv.submission.tests.examples.test_01_working_submission.TestWorkingSubmission">[docs]</a><span class="k">class</span> <span class="nc">TestWorkingSubmission</span><span class="p">(</span><span class="n">TestCase</span><span class="p">):</span>
+<div class="viewcode-block" id="TestWorkingSubmission"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.tests.examples.test_01_working_submission.html#arxiv.submission.tests.examples.test_01_working_submission.TestWorkingSubmission">[docs]</a><span class="k">class</span> <span class="nc">TestWorkingSubmission</span><span class="p">(</span><span class="n">TestCase</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Submitter creates a new submission, has completed some but not all fields.</span>
 
@@ -54,17 +53,19 @@
 <span class="sd">    the UI or API right, but it&#39;s possible that something slipped through.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-<div class="viewcode-block" id="TestWorkingSubmission.setUpClass"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.tests.examples.test_01_working_submission.html#arxiv.submission.tests.examples.test_01_working_submission.TestWorkingSubmission.setUpClass">[docs]</a>    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="TestWorkingSubmission.setUpClass"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.tests.examples.test_01_working_submission.html#arxiv.submission.tests.examples.test_01_working_submission.TestWorkingSubmission.setUpClass">[docs]</a>    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">setUpClass</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Instantiate an app for use with a SQLite database.&quot;&quot;&quot;</span>
         <span class="n">_</span><span class="p">,</span> <span class="n">db</span> <span class="o">=</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">mkstemp</span><span class="p">(</span><span class="n">suffix</span><span class="o">=</span><span class="s1">&#39;.sqlite&#39;</span><span class="p">)</span>
         <span class="bp">cls</span><span class="o">.</span><span class="n">app</span> <span class="o">=</span> <span class="n">Flask</span><span class="p">(</span><span class="s1">&#39;foo&#39;</span><span class="p">)</span>
         <span class="bp">cls</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;CLASSIC_DATABASE_URI&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">f</span><span class="s1">&#39;sqlite:///</span><span class="si">{db}</span><span class="s1">&#39;</span>
+        <span class="bp">cls</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;SQLALCHEMY_TRACK_MODIFICATIONS&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
 
         <span class="k">with</span> <span class="bp">cls</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">app_context</span><span class="p">():</span>
             <span class="n">classic</span><span class="o">.</span><span class="n">init_app</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">app</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="TestWorkingSubmission.setUp"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.tests.examples.test_01_working_submission.html#arxiv.submission.tests.examples.test_01_working_submission.TestWorkingSubmission.setUp">[docs]</a>    <span class="k">def</span> <span class="nf">setUp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="TestWorkingSubmission.setUp"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.tests.examples.test_01_working_submission.html#arxiv.submission.tests.examples.test_01_working_submission.TestWorkingSubmission.setUp">[docs]</a>    <span class="nd">@mock</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;</span><span class="si">{core.__name__}</span><span class="s1">.StreamPublisher&#39;</span><span class="p">,</span> <span class="n">mock</span><span class="o">.</span><span class="n">MagicMock</span><span class="p">())</span>
+    <span class="k">def</span> <span class="nf">setUp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Create and partially complete the submission.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">submitter</span> <span class="o">=</span> <span class="n">domain</span><span class="o">.</span><span class="n">agent</span><span class="o">.</span><span class="n">User</span><span class="p">(</span><span class="mi">1234</span><span class="p">,</span> <span class="n">email</span><span class="o">=</span><span class="s1">&#39;j.user@somewhere.edu&#39;</span><span class="p">,</span>
                                            <span class="n">forename</span><span class="o">=</span><span class="s1">&#39;Jane&#39;</span><span class="p">,</span> <span class="n">surname</span><span class="o">=</span><span class="s1">&#39;User&#39;</span><span class="p">,</span>
@@ -80,12 +81,13 @@
             <span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">submission_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">submission_id</span></div>
 
-<div class="viewcode-block" id="TestWorkingSubmission.tearDown"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.tests.examples.test_01_working_submission.html#arxiv.submission.tests.examples.test_01_working_submission.TestWorkingSubmission.tearDown">[docs]</a>    <span class="k">def</span> <span class="nf">tearDown</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="TestWorkingSubmission.tearDown"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.tests.examples.test_01_working_submission.html#arxiv.submission.tests.examples.test_01_working_submission.TestWorkingSubmission.tearDown">[docs]</a>    <span class="k">def</span> <span class="nf">tearDown</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Clear the database after each test.&quot;&quot;&quot;</span>
         <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">app_context</span><span class="p">():</span>
             <span class="n">classic</span><span class="o">.</span><span class="n">drop_all</span><span class="p">()</span></div>
 
-<div class="viewcode-block" id="TestWorkingSubmission.test_is_in_working_state"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.tests.examples.test_01_working_submission.html#arxiv.submission.tests.examples.test_01_working_submission.TestWorkingSubmission.test_is_in_working_state">[docs]</a>    <span class="k">def</span> <span class="nf">test_is_in_working_state</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="TestWorkingSubmission.test_is_in_working_state"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.tests.examples.test_01_working_submission.html#arxiv.submission.tests.examples.test_01_working_submission.TestWorkingSubmission.test_is_in_working_state">[docs]</a>    <span class="nd">@mock</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;</span><span class="si">{core.__name__}</span><span class="s1">.StreamPublisher&#39;</span><span class="p">,</span> <span class="n">mock</span><span class="o">.</span><span class="n">MagicMock</span><span class="p">())</span>
+    <span class="k">def</span> <span class="nf">test_is_in_working_state</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;The submission in in the working state.&quot;&quot;&quot;</span>
         <span class="c1"># Check the submission state.</span>
         <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">app_context</span><span class="p">():</span>
@@ -93,11 +95,8 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="n">submission</span><span class="o">.</span><span class="n">status</span><span class="p">,</span>
                              <span class="n">domain</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">WORKING</span><span class="p">,</span>
                              <span class="s2">&quot;The submission is in the working state&quot;</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">events</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">events</span><span class="p">),</span>
-                             <span class="s2">&quot;The same number of events were retrieved as&quot;</span>
-                             <span class="s2">&quot; were initially saved.&quot;</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">submission</span><span class="o">.</span><span class="n">versions</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span>
-                             <span class="s2">&quot;There are no published versions&quot;</span><span class="p">)</span>
+                             <span class="s2">&quot;There are no announced versions&quot;</span><span class="p">)</span>
 
         <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">app_context</span><span class="p">():</span>
             <span class="n">submission</span> <span class="o">=</span> <span class="n">load_fast</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">submission_id</span><span class="p">)</span>
@@ -105,7 +104,7 @@
                              <span class="n">domain</span><span class="o">.</span><span class="n">submission</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">WORKING</span><span class="p">,</span>
                              <span class="s2">&quot;The submission is in the working state&quot;</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">submission</span><span class="o">.</span><span class="n">versions</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span>
-                             <span class="s2">&quot;There are no published versions&quot;</span><span class="p">)</span>
+                             <span class="s2">&quot;There are no announced versions&quot;</span><span class="p">)</span>
 
         <span class="c1"># Check the database state.</span>
         <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">app_context</span><span class="p">():</span>
@@ -123,7 +122,8 @@
                              <span class="s2">&quot;The classic submission is in the not submitted&quot;</span>
                              <span class="s2">&quot; state&quot;</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="TestWorkingSubmission.test_can_delete"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.tests.examples.test_01_working_submission.html#arxiv.submission.tests.examples.test_01_working_submission.TestWorkingSubmission.test_can_delete">[docs]</a>    <span class="k">def</span> <span class="nf">test_can_delete</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="TestWorkingSubmission.test_can_delete"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.tests.examples.test_01_working_submission.html#arxiv.submission.tests.examples.test_01_working_submission.TestWorkingSubmission.test_can_delete">[docs]</a>    <span class="nd">@mock</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;</span><span class="si">{core.__name__}</span><span class="s1">.StreamPublisher&#39;</span><span class="p">,</span> <span class="n">mock</span><span class="o">.</span><span class="n">MagicMock</span><span class="p">())</span>
+    <span class="k">def</span> <span class="nf">test_can_delete</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;The submission can be deleted.&quot;&quot;&quot;</span>
         <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">app_context</span><span class="p">():</span>
             <span class="n">save</span><span class="p">(</span><span class="n">domain</span><span class="o">.</span><span class="n">event</span><span class="o">.</span><span class="n">Rollback</span><span class="p">(</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">defaults</span><span class="p">),</span>
@@ -138,7 +138,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">assertFalse</span><span class="p">(</span><span class="n">submission</span><span class="o">.</span><span class="n">active</span><span class="p">,</span>
                              <span class="s2">&quot;The submission is no longer considered active.&quot;</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">submission</span><span class="o">.</span><span class="n">versions</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span>
-                             <span class="s2">&quot;There are no published versions&quot;</span><span class="p">)</span>
+                             <span class="s2">&quot;There are no announced versions&quot;</span><span class="p">)</span>
 
         <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">app_context</span><span class="p">():</span>
             <span class="n">submission</span> <span class="o">=</span> <span class="n">load_fast</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">submission_id</span><span class="p">)</span>
@@ -148,7 +148,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">assertFalse</span><span class="p">(</span><span class="n">submission</span><span class="o">.</span><span class="n">active</span><span class="p">,</span>
                              <span class="s2">&quot;The submission is no longer considered active.&quot;</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">assertEqual</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">submission</span><span class="o">.</span><span class="n">versions</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span>
-                             <span class="s2">&quot;There are no published versions&quot;</span><span class="p">)</span>
+                             <span class="s2">&quot;There are no announced versions&quot;</span><span class="p">)</span>
 
         <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">app_context</span><span class="p">():</span>
             <span class="n">session</span> <span class="o">=</span> <span class="n">classic</span><span class="o">.</span><span class="n">current_session</span><span class="p">()</span>
@@ -164,7 +164,8 @@
                              <span class="n">classic</span><span class="o">.</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">USER_DELETED</span><span class="p">,</span>
                              <span class="s2">&quot;The classic submission is in the DELETED state&quot;</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="TestWorkingSubmission.test_cannot_finalize_submission"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.tests.examples.test_01_working_submission.html#arxiv.submission.tests.examples.test_01_working_submission.TestWorkingSubmission.test_cannot_finalize_submission">[docs]</a>    <span class="k">def</span> <span class="nf">test_cannot_finalize_submission</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="TestWorkingSubmission.test_cannot_finalize_submission"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.tests.examples.test_01_working_submission.html#arxiv.submission.tests.examples.test_01_working_submission.TestWorkingSubmission.test_cannot_finalize_submission">[docs]</a>    <span class="nd">@mock</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;</span><span class="si">{core.__name__}</span><span class="s1">.StreamPublisher&#39;</span><span class="p">,</span> <span class="n">mock</span><span class="o">.</span><span class="n">MagicMock</span><span class="p">())</span>
+    <span class="k">def</span> <span class="nf">test_cannot_finalize_submission</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;The submission cannot be finalized.&quot;&quot;&quot;</span>
         <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">app_context</span><span class="p">():</span>
             <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="n">exceptions</span><span class="o">.</span><span class="n">InvalidEvent</span><span class="p">,</span> <span class="n">msg</span><span class="o">=</span><span class="p">(</span>
@@ -175,7 +176,8 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">test_is_in_working_state</span><span class="p">()</span></div>
 
-<div class="viewcode-block" id="TestWorkingSubmission.test_cannot_replace_submission"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.tests.examples.test_01_working_submission.html#arxiv.submission.tests.examples.test_01_working_submission.TestWorkingSubmission.test_cannot_replace_submission">[docs]</a>    <span class="k">def</span> <span class="nf">test_cannot_replace_submission</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="TestWorkingSubmission.test_cannot_replace_submission"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.tests.examples.test_01_working_submission.html#arxiv.submission.tests.examples.test_01_working_submission.TestWorkingSubmission.test_cannot_replace_submission">[docs]</a>    <span class="nd">@mock</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;</span><span class="si">{core.__name__}</span><span class="s1">.StreamPublisher&#39;</span><span class="p">,</span> <span class="n">mock</span><span class="o">.</span><span class="n">MagicMock</span><span class="p">())</span>
+    <span class="k">def</span> <span class="nf">test_cannot_replace_submission</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;The submission cannot be replaced.&quot;&quot;&quot;</span>
         <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">app_context</span><span class="p">():</span>
             <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="n">exceptions</span><span class="o">.</span><span class="n">InvalidEvent</span><span class="p">,</span> <span class="n">msg</span><span class="o">=</span><span class="p">(</span>
@@ -186,7 +188,8 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">test_is_in_working_state</span><span class="p">()</span></div>
 
-<div class="viewcode-block" id="TestWorkingSubmission.test_cannot_withdraw_submission"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.tests.examples.test_01_working_submission.html#arxiv.submission.tests.examples.test_01_working_submission.TestWorkingSubmission.test_cannot_withdraw_submission">[docs]</a>    <span class="k">def</span> <span class="nf">test_cannot_withdraw_submission</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="TestWorkingSubmission.test_cannot_withdraw_submission"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.tests.examples.test_01_working_submission.html#arxiv.submission.tests.examples.test_01_working_submission.TestWorkingSubmission.test_cannot_withdraw_submission">[docs]</a>    <span class="nd">@mock</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;</span><span class="si">{core.__name__}</span><span class="s1">.StreamPublisher&#39;</span><span class="p">,</span> <span class="n">mock</span><span class="o">.</span><span class="n">MagicMock</span><span class="p">())</span>
+    <span class="k">def</span> <span class="nf">test_cannot_withdraw_submission</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;The submission cannot be withdrawn.&quot;&quot;&quot;</span>
         <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">app_context</span><span class="p">():</span>
             <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="n">exceptions</span><span class="o">.</span><span class="n">InvalidEvent</span><span class="p">,</span> <span class="n">msg</span><span class="o">=</span><span class="p">(</span>
@@ -198,7 +201,8 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">test_is_in_working_state</span><span class="p">()</span></div>
 
-<div class="viewcode-block" id="TestWorkingSubmission.test_cannot_be_unfinalized"><a class="viewcode-back" href="../../../../../containers/core/arxiv.submission.tests.examples.test_01_working_submission.html#arxiv.submission.tests.examples.test_01_working_submission.TestWorkingSubmission.test_cannot_be_unfinalized">[docs]</a>    <span class="k">def</span> <span class="nf">test_cannot_be_unfinalized</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="TestWorkingSubmission.test_cannot_be_unfinalized"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.tests.examples.test_01_working_submission.html#arxiv.submission.tests.examples.test_01_working_submission.TestWorkingSubmission.test_cannot_be_unfinalized">[docs]</a>    <span class="nd">@mock</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;</span><span class="si">{core.__name__}</span><span class="s1">.StreamPublisher&#39;</span><span class="p">,</span> <span class="n">mock</span><span class="o">.</span><span class="n">MagicMock</span><span class="p">())</span>
+    <span class="k">def</span> <span class="nf">test_cannot_be_unfinalized</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;The submission cannot be unfinalized.&quot;&quot;&quot;</span>
         <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">app</span><span class="o">.</span><span class="n">app_context</span><span class="p">():</span>
             <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="n">exceptions</span><span class="o">.</span><span class="n">InvalidEvent</span><span class="p">,</span> <span class="n">msg</span><span class="o">=</span><span class="p">(</span>
@@ -230,7 +234,8 @@
 <li class="toctree-l1"><a class="reference internal" href="../../../../../architecture.html">Submission &amp; moderation subsystem architecture</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../announcement_process.html">Submission &amp; announcement Process</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../submission_api_context.html">Submission API: Context</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../../containers/core/arxiv.submission.html">arxiv.submission package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../arxiv.submission/arxiv.submission.html">arxiv.submission package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../containers/agent/agent.html">agent package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../containers/metadata/metadata.html">metadata package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../background.html">Background</a></li>
 </ul>
@@ -240,6 +245,8 @@
 <ul>
   <li><a href="../../../../../index.html">Documentation overview</a><ul>
   <li><a href="../../../../index.html">Module code</a><ul>
+  <li><a href="../../../submission.html">arxiv.submission</a><ul>
+  </ul></li>
   </ul></li>
   </ul></li>
 </ul>
@@ -250,8 +257,6 @@
     <form class="search" action="../../../../../search.html" method="get">
       <input type="text" name="q" />
       <input type="submit" value="Go" />
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
     </form>
     </div>
 </div>
@@ -272,7 +277,7 @@
       &copy;2017, arXiv.org.
       
       |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.3</a>
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.0.0</a>
       &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
       
     </div>

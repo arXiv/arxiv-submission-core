@@ -1,0 +1,249 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>arxiv.submission.domain.event.versioning.tests.test_versioning &#8212; arXiv submission &amp; moderation 0.1 documentation</title>
+    <link rel="stylesheet" href="../../../../../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../../../../../../_static/graphviz.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../../../../../../" src="../../../../../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../../../../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../../../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for arxiv.submission.domain.event.versioning.tests.test_versioning</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Test versioning of event data.&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">unittest</span> <span class="k">import</span> <span class="n">TestCase</span>
+
+<span class="kn">from</span> <span class="nn">..</span> <span class="k">import</span> <span class="n">map_to_version</span>
+<span class="kn">from</span> <span class="nn">.._base</span> <span class="k">import</span> <span class="n">BaseVersionMapping</span>
+
+
+<div class="viewcode-block" id="TitleIsNowCoolTitle"><a class="viewcode-back" href="../../../../../../../arxiv.submission/arxiv.submission.domain.event.versioning.tests.test_versioning.html#arxiv.submission.domain.event.versioning.tests.test_versioning.TitleIsNowCoolTitle">[docs]</a><span class="k">class</span> <span class="nc">TitleIsNowCoolTitle</span><span class="p">(</span><span class="n">BaseVersionMapping</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Changes the ``title`` field to ``cool_title``.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="TitleIsNowCoolTitle.Meta"><a class="viewcode-back" href="../../../../../../../arxiv.submission/arxiv.submission.domain.event.versioning.tests.test_versioning.html#arxiv.submission.domain.event.versioning.tests.test_versioning.TitleIsNowCoolTitle.Meta">[docs]</a>    <span class="k">class</span> <span class="nc">Meta</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Metadata for this mapping.&quot;&quot;&quot;</span>
+
+        <span class="n">event_version</span> <span class="o">=</span> <span class="s1">&#39;0.3.5&#39;</span>
+        <span class="n">event_type</span> <span class="o">=</span> <span class="s2">&quot;SetTitle&quot;</span>
+        <span class="n">tests</span> <span class="o">=</span> <span class="p">[({</span><span class="s1">&#39;event_version&#39;</span><span class="p">:</span> <span class="s1">&#39;0.1.1&#39;</span><span class="p">,</span> <span class="s1">&#39;title&#39;</span><span class="p">:</span> <span class="s1">&#39;olde&#39;</span><span class="p">},</span>
+                  <span class="p">{</span><span class="s1">&#39;event_version&#39;</span><span class="p">:</span> <span class="s1">&#39;0.3.5&#39;</span><span class="p">,</span> <span class="s1">&#39;cool_title&#39;</span><span class="p">:</span> <span class="s1">&#39;olde&#39;</span><span class="p">})]</span></div>
+
+<div class="viewcode-block" id="TitleIsNowCoolTitle.transform_title"><a class="viewcode-back" href="../../../../../../../arxiv.submission/arxiv.submission.domain.event.versioning.tests.test_versioning.html#arxiv.submission.domain.event.versioning.tests.test_versioning.TitleIsNowCoolTitle.transform_title">[docs]</a>    <span class="k">def</span> <span class="nf">transform_title</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">original</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Rename the `title` field to `cool_title`.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="s2">&quot;cool_title&quot;</span><span class="p">,</span> <span class="n">value</span></div></div>
+
+
+<div class="viewcode-block" id="TestVersionMapping"><a class="viewcode-back" href="../../../../../../../arxiv.submission/arxiv.submission.domain.event.versioning.tests.test_versioning.html#arxiv.submission.domain.event.versioning.tests.test_versioning.TestVersionMapping">[docs]</a><span class="k">class</span> <span class="nc">TestVersionMapping</span><span class="p">(</span><span class="n">TestCase</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Tests for :func:`.map_to_version`.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="TestVersionMapping.test_map_to_version"><a class="viewcode-back" href="../../../../../../../arxiv.submission/arxiv.submission.domain.event.versioning.tests.test_versioning.html#arxiv.submission.domain.event.versioning.tests.test_versioning.TestVersionMapping.test_map_to_version">[docs]</a>    <span class="k">def</span> <span class="nf">test_map_to_version</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;We have data from a previous version and an intermediate mapping.&quot;&quot;&quot;</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;event_version&#39;</span><span class="p">:</span> <span class="s1">&#39;0.1.2&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;event_type&#39;</span><span class="p">:</span> <span class="s1">&#39;SetTitle&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;title&#39;</span><span class="p">:</span> <span class="s1">&#39;Some olde title&#39;</span>
+        <span class="p">}</span>
+
+        <span class="n">expected</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;event_version&#39;</span><span class="p">:</span> <span class="s1">&#39;0.3.5&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;event_type&#39;</span><span class="p">:</span> <span class="s1">&#39;SetTitle&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;cool_title&#39;</span><span class="p">:</span> <span class="s1">&#39;Some olde title&#39;</span>
+        <span class="p">}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertDictEqual</span><span class="p">(</span><span class="n">map_to_version</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="s1">&#39;0.4.1&#39;</span><span class="p">),</span> <span class="n">expected</span><span class="p">,</span>
+                             <span class="s2">&quot;The mapping is applied&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestVersionMapping.test_map_to_version_no_intermediate"><a class="viewcode-back" href="../../../../../../../arxiv.submission/arxiv.submission.domain.event.versioning.tests.test_versioning.html#arxiv.submission.domain.event.versioning.tests.test_versioning.TestVersionMapping.test_map_to_version_no_intermediate">[docs]</a>    <span class="k">def</span> <span class="nf">test_map_to_version_no_intermediate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;We have data from a previous version and no intermediate mapping.&quot;&quot;&quot;</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;event_version&#39;</span><span class="p">:</span> <span class="s1">&#39;0.5.5&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;event_type&#39;</span><span class="p">:</span> <span class="s1">&#39;SetTitle&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;cool_title&#39;</span><span class="p">:</span> <span class="s1">&#39;Some olde title&#39;</span>
+        <span class="p">}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertDictEqual</span><span class="p">(</span><span class="n">map_to_version</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="s1">&#39;0.6.7&#39;</span><span class="p">),</span> <span class="n">data</span><span class="p">,</span>
+                             <span class="s2">&quot;The mapping is not applied&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TestVersionMapping.test_data_is_up_to_date"><a class="viewcode-back" href="../../../../../../../arxiv.submission/arxiv.submission.domain.event.versioning.tests.test_versioning.html#arxiv.submission.domain.event.versioning.tests.test_versioning.TestVersionMapping.test_data_is_up_to_date">[docs]</a>    <span class="k">def</span> <span class="nf">test_data_is_up_to_date</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;We have data that is 100% current.&quot;&quot;&quot;</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;event_version&#39;</span><span class="p">:</span> <span class="s1">&#39;0.5.5&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;event_type&#39;</span><span class="p">:</span> <span class="s1">&#39;SetTitle&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;cool_title&#39;</span><span class="p">:</span> <span class="s1">&#39;Some olde title&#39;</span>
+        <span class="p">}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertDictEqual</span><span class="p">(</span><span class="n">map_to_version</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="s1">&#39;0.5.5&#39;</span><span class="p">),</span> <span class="n">data</span><span class="p">,</span>
+                             <span class="s2">&quot;The mapping is not applied&quot;</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="TestVersionMappingTests"><a class="viewcode-back" href="../../../../../../../arxiv.submission/arxiv.submission.domain.event.versioning.tests.test_versioning.html#arxiv.submission.domain.event.versioning.tests.test_versioning.TestVersionMappingTests">[docs]</a><span class="k">class</span> <span class="nc">TestVersionMappingTests</span><span class="p">(</span><span class="n">TestCase</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Tests defined in metadata can be run, with the expected result.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="TestVersionMappingTests.test_test"><a class="viewcode-back" href="../../../../../../../arxiv.submission/arxiv.submission.domain.event.versioning.tests.test_versioning.html#arxiv.submission.domain.event.versioning.tests.test_versioning.TestVersionMappingTests.test_test">[docs]</a>    <span class="k">def</span> <span class="nf">test_test</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Run tests in mapping metadata.&quot;&quot;&quot;</span>
+        <span class="k">class</span> <span class="nc">BrokenFitleIsNowCoolTitle</span><span class="p">(</span><span class="n">BaseVersionMapping</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;A broken version mapping.&quot;&quot;&quot;</span>
+
+            <span class="k">class</span> <span class="nc">Meta</span><span class="p">:</span>
+                <span class="sd">&quot;&quot;&quot;Metadata for this mapping.&quot;&quot;&quot;</span>
+
+                <span class="n">event_version</span> <span class="o">=</span> <span class="s1">&#39;0.3.5&#39;</span>
+                <span class="n">event_type</span> <span class="o">=</span> <span class="s2">&quot;SetFitle&quot;</span>
+                <span class="n">tests</span> <span class="o">=</span> <span class="p">[({</span><span class="s1">&#39;event_version&#39;</span><span class="p">:</span> <span class="s1">&#39;0.1.1&#39;</span><span class="p">,</span> <span class="s1">&#39;title&#39;</span><span class="p">:</span> <span class="s1">&#39;olde&#39;</span><span class="p">},</span>
+                          <span class="p">{</span><span class="s1">&#39;event_version&#39;</span><span class="p">:</span> <span class="s1">&#39;0.3.5&#39;</span><span class="p">,</span> <span class="s1">&#39;cool_title&#39;</span><span class="p">:</span> <span class="s1">&#39;olde&#39;</span><span class="p">})]</span>
+
+            <span class="k">def</span> <span class="nf">transform_title</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">original</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+                <span class="sd">&quot;&quot;&quot;Rename the `title` field to `cool_title`.&quot;&quot;&quot;</span>
+                <span class="k">return</span> <span class="s2">&quot;fool_title&quot;</span><span class="p">,</span> <span class="n">value</span>
+
+        <span class="n">TitleIsNowCoolTitle</span><span class="o">.</span><span class="n">test</span><span class="p">()</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">AssertionError</span><span class="p">):</span>
+            <span class="n">BrokenFitleIsNowCoolTitle</span><span class="o">.</span><span class="n">test</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="TestVersionMappingTests.test_version_is_present"><a class="viewcode-back" href="../../../../../../../arxiv.submission/arxiv.submission.domain.event.versioning.tests.test_versioning.html#arxiv.submission.domain.event.versioning.tests.test_versioning.TestVersionMappingTests.test_version_is_present">[docs]</a>    <span class="k">def</span> <span class="nf">test_version_is_present</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Tests check that version is specified.&quot;&quot;&quot;</span>
+        <span class="k">class</span> <span class="nc">MappingWithoutVersion</span><span class="p">(</span><span class="n">BaseVersionMapping</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;Mapping that is missing a version.&quot;&quot;&quot;</span>
+
+            <span class="k">class</span> <span class="nc">Meta</span><span class="p">:</span>
+                <span class="sd">&quot;&quot;&quot;Metadata for this mapping.&quot;&quot;&quot;</span>
+
+                <span class="n">event_type</span> <span class="o">=</span> <span class="s2">&quot;FetBitle&quot;</span>
+
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">AssertionError</span><span class="p">):</span>
+            <span class="n">MappingWithoutVersion</span><span class="o">.</span><span class="n">test</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="TestVersionMappingTests.test_event_type_is_present"><a class="viewcode-back" href="../../../../../../../arxiv.submission/arxiv.submission.domain.event.versioning.tests.test_versioning.html#arxiv.submission.domain.event.versioning.tests.test_versioning.TestVersionMappingTests.test_event_type_is_present">[docs]</a>    <span class="k">def</span> <span class="nf">test_event_type_is_present</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Tests check that event_type is specified.&quot;&quot;&quot;</span>
+        <span class="k">class</span> <span class="nc">MappingWithoutEventType</span><span class="p">(</span><span class="n">BaseVersionMapping</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;Mapping that is missing an event type.&quot;&quot;&quot;</span>
+
+            <span class="k">class</span> <span class="nc">Meta</span><span class="p">:</span>
+                <span class="sd">&quot;&quot;&quot;Metadata for this mapping.&quot;&quot;&quot;</span>
+
+                <span class="n">event_version</span> <span class="o">=</span> <span class="s2">&quot;5.3.2&quot;</span>
+
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">AssertionError</span><span class="p">):</span>
+            <span class="n">MappingWithoutEventType</span><span class="o">.</span><span class="n">test</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="TestVersionMappingTests.test_version_is_valid"><a class="viewcode-back" href="../../../../../../../arxiv.submission/arxiv.submission.domain.event.versioning.tests.test_versioning.html#arxiv.submission.domain.event.versioning.tests.test_versioning.TestVersionMappingTests.test_version_is_valid">[docs]</a>    <span class="k">def</span> <span class="nf">test_version_is_valid</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Tests check that version is a valid semver.&quot;&quot;&quot;</span>
+        <span class="k">class</span> <span class="nc">MappingWithInvalidVersion</span><span class="p">(</span><span class="n">BaseVersionMapping</span><span class="p">):</span>
+            <span class="sd">&quot;&quot;&quot;Mapping that has an invalid semantic version.&quot;&quot;&quot;</span>
+
+            <span class="k">class</span> <span class="nc">Meta</span><span class="p">:</span>
+                <span class="sd">&quot;&quot;&quot;Metadata for this mapping.&quot;&quot;&quot;</span>
+
+                <span class="n">event_version</span> <span class="o">=</span> <span class="s2">&quot;52&quot;</span>
+                <span class="n">event_type</span> <span class="o">=</span> <span class="s2">&quot;FetBitle&quot;</span>
+
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">assertRaises</span><span class="p">(</span><span class="ne">AssertionError</span><span class="p">):</span>
+            <span class="n">MappingWithInvalidVersion</span><span class="o">.</span><span class="n">test</span><span class="p">()</span></div></div>
+
+
+<div class="viewcode-block" id="TestVersioningModule"><a class="viewcode-back" href="../../../../../../../arxiv.submission/arxiv.submission.domain.event.versioning.tests.test_versioning.html#arxiv.submission.domain.event.versioning.tests.test_versioning.TestVersioningModule">[docs]</a><span class="k">class</span> <span class="nc">TestVersioningModule</span><span class="p">(</span><span class="n">TestCase</span><span class="p">):</span>
+<div class="viewcode-block" id="TestVersioningModule.test_loads_mappings"><a class="viewcode-back" href="../../../../../../../arxiv.submission/arxiv.submission.domain.event.versioning.tests.test_versioning.html#arxiv.submission.domain.event.versioning.tests.test_versioning.TestVersioningModule.test_loads_mappings">[docs]</a>    <span class="k">def</span> <span class="nf">test_loads_mappings</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Loading a version mapping module installs those mappings.&quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">..</span> <span class="k">import</span> <span class="n">version_0_0_0_example</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">assertIn</span><span class="p">(</span><span class="n">version_0_0_0_example</span><span class="o">.</span><span class="n">SetTitleExample</span><span class="p">,</span>
+                      <span class="n">BaseVersionMapping</span><span class="o">.</span><span class="n">__subclasses__</span><span class="p">(),</span>
+                      <span class="s1">&#39;Mappings in an imported module are available for use&#39;</span><span class="p">)</span></div></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../../../../index.html">arXiv submission & moderation</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../architecture.html">Submission &amp; moderation subsystem architecture</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../announcement_process.html">Submission &amp; announcement Process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../submission_api_context.html">Submission API: Context</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../arxiv.submission/arxiv.submission.html">arxiv.submission package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../containers/agent/agent.html">agent package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../containers/metadata/metadata.html">metadata package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../../background.html">Background</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../../../../index.html">Module code</a><ul>
+  <li><a href="../../../../../submission.html">arxiv.submission</a><ul>
+  <li><a href="../../../event.html">arxiv.submission.domain.event</a><ul>
+  <li><a href="../../versioning.html">arxiv.submission.domain.event.versioning</a><ul>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, arXiv.org.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.0.0</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>
