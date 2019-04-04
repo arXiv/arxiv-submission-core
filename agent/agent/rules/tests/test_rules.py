@@ -91,31 +91,31 @@ class TestFinalizeSubmission(TestCase):
             triggers[type(process_inst)] = trigger
         return passed, triggers
 
-    @mock.patch(f'{rules.__name__}.AsyncProcessRunner')
-    def test_confirm_preview(self, mock_Runner):
+    def test_confirm_preview(self):
         """The submitter confirms their preview."""
         event = ConfirmPreview(creator=self.creator, created=datetime.now(UTC))
 
         with self.app.app_context():
-            rules.evaluate(event, self.before, self.after)
-
-        passed, triggers = self._get_call_data(mock_Runner)
+            passed, configs = [], []
+            for proc, conf in rules.evaluate(event, self.before, self.after):
+                passed.append(type(proc))
+                configs.append(conf)
 
         self.assertIn(process.RunAutoclassifier, passed,
                       'Autoclassifier process is started')
         self.assertIn(process.CheckPDFSize, passed,
                       'PDF size check is started')
 
-    @mock.patch(f'{rules.__name__}.AsyncProcessRunner')
-    def test_finalize(self, mock_Runner):
+    def test_finalize(self):
         """The submission is finalized."""
         event = FinalizeSubmission(creator=self.creator,
                                    created=datetime.now(UTC))
 
         with self.app.app_context():
-            rules.evaluate(event, self.before, self.after)
-
-        passed, triggers = self._get_call_data(mock_Runner)
+            passed, configs = [], []
+            for proc, conf in rules.evaluate(event, self.before, self.after):
+                passed.append(type(proc))
+                configs.append(conf)
 
         self.assertIn(process.SendConfirmationEmail, passed,
                       'Email confirmation process is started')

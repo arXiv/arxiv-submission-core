@@ -333,8 +333,7 @@ def store_event(event: Event, before: Optional[Submission],
             # The submission has not yet been announced; we're working with a
             # single row.
             elif isinstance(before, Submission) and before.submission_id:
-                dbs = _load(before.submission_id,
-                            check_consistency=event.created)
+                dbs = _load(before.submission_id)
                 _check_consistency(dbs, event.created)
                 _preserve_sticky_hold(dbs, before, after, event)
                 dbs.update_from_submission(after)

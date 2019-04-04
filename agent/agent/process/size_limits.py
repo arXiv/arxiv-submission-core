@@ -30,7 +30,6 @@ class CheckSubmissionSourceSize(Process):
     def check(self, previous: Optional, trigger: Trigger,
               emit: Callable) -> None:
         """Perform the source size check procedure."""
-        print(self, '|||', previous, '|||', trigger, '|||', emit)
         uncompressed_max = trigger.params['UNCOMPRESSED_PACKAGE_MAX']
         compressed_max = trigger.params['COMPRESSED_PACKAGE_MAX']
         try:

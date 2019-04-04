@@ -32,7 +32,7 @@ class TestSendConfirmationEmail(TestCase):
         self.creator = User(native_id=1234, email='something@else.com',
                             forename='Ross', surname='Perot')
         self.submission_id = 12345
-        self.before = mock.MagicMock(
+        self.before = Submission(
             submission_id=self.submission_id,
             metadata=mock.MagicMock(
                 title="The best title",
@@ -53,9 +53,9 @@ class TestSendConfirmationEmail(TestCase):
             owner=self.creator,
             created=datetime(2018, 3, 4, 18, 34, 2, tzinfo=UTC),
             submitted=datetime(2018, 3, 4, 19, 34, 2, tzinfo=UTC),
-            finalized=False
+            status=Submission.WORKING
         )
-        self.after = mock.MagicMock(
+        self.after = Submission(
             submission_id=12345,
             metadata=mock.MagicMock(
                 title="The best title",
@@ -76,7 +76,7 @@ class TestSendConfirmationEmail(TestCase):
             owner=self.creator,
             created=datetime(2018, 3, 4, 18, 34, 2, tzinfo=UTC),
             submitted=datetime(2018, 3, 4, 19, 34, 2, tzinfo=UTC),
-            finalized=True
+            status=Submission.SUBMITTED
         )
         self.event = FinalizeSubmission(creator=self.creator,
                                         created=datetime.now(UTC))
