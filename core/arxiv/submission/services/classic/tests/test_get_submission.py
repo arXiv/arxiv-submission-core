@@ -1,7 +1,8 @@
 """Tests for retrieving submissions."""
 
 from unittest import TestCase, mock
-
+from datetime import datetime
+from pytz import UTC
 from flask import Flask
 
 from ....domain.agent import User, System
@@ -56,6 +57,7 @@ class TestGetSubmission(TestCase):
             # User creates and finalizes submission.
             before = None
             for i, event in enumerate(list(events)):
+                event.created = datetime.now(UTC)
                 after = event.apply(before)
                 event, after = store_event(event, before, after)
                 events[i] = event
@@ -113,6 +115,7 @@ class TestGetSubmission(TestCase):
             # User creates and finalizes submission.
             before = None
             for i, event in enumerate(list(events)):
+                event.created = datetime.now(UTC)
                 after = event.apply(before)
                 event, after = store_event(event, before, after)
                 events[i] = event

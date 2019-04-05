@@ -55,6 +55,9 @@ class ProcessData:
     submission_id: int
     """Identifier of the submission upon which the process is operating."""
 
+    process_id: str
+    """Unique identifier of a specific process instance."""
+
     trigger: Trigger
     """The original trigger condition for the process."""
 

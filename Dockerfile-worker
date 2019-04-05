@@ -17,7 +17,7 @@ RUN pipenv install
 
 ADD core/ /opt/arxiv/core/
 RUN pipenv install /opt/arxiv/core/
-ADD agent/ /opt/arxiv/agent/
+ADD agent/agent/ /opt/arxiv/agent/
 
 ENV JWT_SECRET "foo"
 EXPOSE 8000

@@ -1,7 +1,8 @@
 """Tests for storing events."""
 
 from unittest import TestCase, mock
-
+from datetime import datetime
+from pytz import UTC
 from flask import Flask
 
 from ....domain.agent import User, System
@@ -10,8 +11,8 @@ from ....domain.event import CreateSubmission, \
     FinalizeSubmission, SetPrimaryClassification, AddSecondaryClassification, \
     SetLicense, ConfirmPolicy, ConfirmContactInformation, SetTitle, \
     SetAbstract, SetDOI, SetMSCClassification, SetACMClassification, \
-    SetJournalReference, SetComments, SetAuthors, Announce, ConfirmAuthorship, \
-    SetUploadPackage
+    SetJournalReference, SetComments, SetAuthors, Announce, \
+    ConfirmAuthorship, SetUploadPackage
 from .. import init_app, create_all, drop_all, models, DBEvent, \
     get_submission, current_session, get_licenses, exceptions, store_event
 
@@ -31,6 +32,7 @@ class TestStoreEvent(TestCase):
         with in_memory_db() as session:
             before = None
             event = CreateSubmission(creator=self.user)
+            event.created = datetime.now(UTC)
             after = event.apply(before)
 
             event, after = store_event(event, before, after)
@@ -74,6 +76,7 @@ class TestStoreEvent(TestCase):
 
             before = None
             for i, event in enumerate(list(events)):
+                event.created = datetime.now(UTC)
                 after = event.apply(before)
                 event, after = store_event(event, before, after)
                 events[i] = event
@@ -145,6 +148,7 @@ class TestStoreEvent(TestCase):
 
             before = None
             for i, event in enumerate(list(events)):
+                event.created = datetime.now(UTC)
                 after = event.apply(before)
                 event, after = store_event(event, before, after)
                 events[i] = event
@@ -211,6 +215,7 @@ class TestStoreEvent(TestCase):
 
             before = None
             for i, event in enumerate(list(events)):
+                event.created = datetime.now(UTC)
                 after = event.apply(before)
                 event = store_event(event, before, after)
                 events[i] = event
@@ -237,13 +242,15 @@ class TestStoreEvent(TestCase):
             doi = '10.1000/182'
             journal_ref = 'foo journal 1994'
             e3 = SetDOI(creator=self.user, doi=doi,
-                        submission_id=after.submission_id)
+                        submission_id=after.submission_id,
+                        created=datetime.now(UTC))
             after = e3.apply(before)
             store_event(e3, before, after)
 
             e4 = SetJournalReference(creator=self.user,
                                      journal_ref=journal_ref,
-                                     submission_id=after.submission_id)
+                                     submission_id=after.submission_id,
+                                     created=datetime.now(UTC))
             before = after
             after = e4.apply(before)
             store_event(e4, before, after)
@@ -271,6 +278,7 @@ class TestStoreEvent(TestCase):
         with in_memory_db() as session:
             before = None
             for i, event in enumerate(list(events)):
+                event.created = datetime.now(UTC)
                 after = event.apply(before)
                 event, after = store_event(event, before, after)
                 events[i] = event

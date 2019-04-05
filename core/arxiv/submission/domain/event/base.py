@@ -62,12 +62,8 @@ class Event(metaclass=EventType):
     This is **not** necessarily the creator of the submission.
     """
 
-    created: datetime = field(default_factory=get_tzaware_utc_now)
-    """
-    The timestamp when the event was originally committed.
-
-    This should generally not be set from outside this package.
-    """
+    created: Optional[datetime] = field(default=None)   # get_tzaware_utc_now
+    """The timestamp when the event was originally committed."""
 
     proxy: Optional[Agent] = field(default=None)
     """
@@ -138,6 +134,8 @@ class Event(metaclass=EventType):
     @property
     def event_id(self) -> str:
         """Unique ID for this event."""
+        if not self.created:
+            raise RuntimeError('Event not yet committed')
         return self.get_id(self.created, self.event_type, self.creator)
 
     @staticmethod
@@ -286,6 +284,7 @@ class Event(metaclass=EventType):
         for condition, callback in self._get_callbacks():
             if condition(self, self.before, self.after):
                 for consequence in callback(self, self.before, self.after):
+                    consequence.created = datetime.now(UTC)
                     self.after = consequence.apply(self.after)
                     consequences.append(consequence)
                     self.after, addl_consequences = consequence.commit(store)

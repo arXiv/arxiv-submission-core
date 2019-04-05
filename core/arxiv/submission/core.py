@@ -3,6 +3,8 @@
 from typing import Callable, List, Dict, Mapping, Tuple, Iterable, Optional
 from functools import wraps
 from collections import defaultdict
+from datetime import datetime
+from pytz import UTC
 
 from flask import Flask
 
@@ -11,7 +13,7 @@ from arxiv.base.globals import get_application_config, get_application_global
 
 from .domain.submission import Submission, SubmissionMetadata, Author
 from .domain.agent import Agent, User, System, Client
-from .domain.event import *
+from .domain.event import Event, CreateSubmission
 from .services import classic, StreamPublisher
 from .exceptions import InvalidEvent, NoSuchSubmission, SaveError, NothingToDo
 
@@ -42,6 +44,7 @@ def load(submission_id: int) -> Tuple[Submission, List[Event]]:
     ------
     :class:`arxiv.submission.exceptions.NoSuchSubmission`
         Raised when a submission with the passed ID cannot be found.
+
     """
     try:
         return classic.get_submission(submission_id)
@@ -51,7 +54,7 @@ def load(submission_id: int) -> Tuple[Submission, List[Event]]:
 
 def load_submissions_for_user(user_id: int) -> List[Submission]:
     """
-    Load active :class:`.domain.submission.Submission` instances for a specific user.
+    Load active :class:`.domain.submission.Submission` for a specific user.
 
     Parameters
     ----------
@@ -69,7 +72,7 @@ def load_submissions_for_user(user_id: int) -> List[Submission]:
 
 def load_fast(submission_id: int) -> Submission:
     """
-    Load a :class:`.domain.submission.Submission` from its last projected state.
+    Load a :class:`.domain.submission.Submission` from its projected state.
 
     This does not load and apply past events. The most recent stored submission
     state is loaded directly from the database.
@@ -139,7 +142,10 @@ def save(*events: Event, submission_id: Optional[str] = None) \
     prior: List[Event] = []
     before: Optional[Submission] = None
 
-    # Get the current state of the submission from past events.
+    # Get the current state of the submission from past events. Normally we
+    # would not want to load all past events, but legacy components may be
+    # active, and the legacy projected state does not capture all of the
+    # detail in the event model.
     if submission_id is not None:
         before, prior = classic.get_submission(submission_id)
 
@@ -148,24 +154,29 @@ def save(*events: Event, submission_id: Optional[str] = None) \
             and not isinstance(events[0], CreateSubmission):
         raise NoSuchSubmission('Unable to determine submission')
 
-    events = sorted(set(prior) | set(events), key=lambda e: e.created)
-    applied: List[Event] = []
+    committed: List[Event] = []
     for event in events:
-        # Fill in event IDs, if they are missing.
+        # Fill in submission IDs, if they are missing.
         if event.submission_id is None and submission_id is not None:
             event.submission_id = submission_id
 
+        # The created timestamp should be roughly when the event was committed.
+        # Since the event projection may refer to its own ID (which is based)
+        # on the creation time, this must be set before the event is applied.
+        event.created = datetime.now(UTC)
         # Mutation happens here; raises InvalidEvent.
         logger.debug('Apply event %s: %s', event.event_id, event.NAME)
         after = event.apply(before)
         logger.debug('Submission has requests: %s', after.user_requests)
-        applied.append(event)
+        committed.append(event)
         if not event.committed:
             after, consequent_events = event.commit(_store_event)
-            applied += consequent_events
+            committed += consequent_events
 
         before = after
-    return after, list(sorted(set(applied), key=lambda e: e.created))
+
+    all_events = sorted(set(prior) | set(committed), key=lambda e: e.created)
+    return after, list(all_events)
 
 
 def _store_event(event, before, after) -> Tuple[Event, Submission]:

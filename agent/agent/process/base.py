@@ -6,6 +6,7 @@ from typing import Iterable, Tuple, Callable, Union, Optional, Any, \
 from unittest import mock
 from contextlib import contextmanager
 from collections import OrderedDict
+from uuid import uuid4
 
 from arxiv.submission import Event, AddProcessStatus, Agent, Submission, System
 from arxiv.submission.domain.process import ProcessStatus
@@ -90,8 +91,12 @@ def is_step(func: Callable) -> bool:
 class Process(metaclass=ProcessType):
     Status = ProcessStatus.Status
 
-    def __init__(self, submission_id: int) -> None:
+    def __init__(self, submission_id: int,
+                 process_id: Optional[str] = None) -> None:
         self.submission_id = submission_id
+        if process_id is None:
+            process_id = str(uuid4())
+        self.process_id = process_id
 
     @property
     def name(self):
@@ -123,17 +128,20 @@ class Process(metaclass=ProcessType):
     def before_start(self, trigger: Trigger, emit: Callable, *args, **kwargs):
         """Emit a pending status before the process starts."""
         emit(AddProcessStatus(creator=self.agent, process=self.name,
-                              status=Process.Status.PENDING))
+                              status=Process.Status.PENDING,
+                              process_id=self.process_id))
 
     def on_failure(self, step_name: str, trigger: Trigger,
                    emit: Callable) -> None:
         """Emit a failure status when the process fails."""
         emit(AddProcessStatus(creator=self.agent, process=self.name,
-                              step=step_name, status=Process.Status.FAILED))
+                              step=step_name, status=Process.Status.FAILED,
+                              process_id=self.process_id))
 
     def on_success(self, step_name: str, trigger: Trigger,
                    emit: Callable) -> None:
         """Emit a success state when a step is completed."""
         emit(AddProcessStatus(creator=self.agent, process=self.name,
                               step=step_name,
-                              status=self._success_status(step_name)))
+                              status=self._success_status(step_name),
+                              process_id=self.process_id))

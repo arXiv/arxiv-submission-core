@@ -20,7 +20,7 @@ ENV AWS_SECRET_ACCESS_KEY ""
 
 ADD core/ /opt/arxiv/core/
 RUN pipenv install /opt/arxiv/core/
-ADD agent/ /opt/arxiv/agent/
+ADD agent/agent/ /opt/arxiv/agent/
 
 ENV KINESIS_STREAM "SubmissionEvents"
 ENV KINESIS_SHARD_ID "0"

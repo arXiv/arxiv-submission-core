@@ -21,7 +21,7 @@ class TestDumpLoad(TestCase):
     def test_dump_createsubmission(self):
         """Serialize and deserialize a :class:`.CreateSubmission` event."""
         user = User('123', 'foo@user.com', 'foouser')
-        event = CreateSubmission(creator=user)
+        event = CreateSubmission(creator=user, created=datetime.now(UTC))
         data = dumps(event)
         self.assertDictEqual(asdict(user), json.loads(data)["creator"],
                              "User data is fully encoded")

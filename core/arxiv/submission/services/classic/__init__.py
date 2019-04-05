@@ -269,7 +269,7 @@ def store_event(event: Event, before: Optional[Submission],
     with transaction() as session:
         if event.committed:
             raise TransactionFailed('%s already committed', event.event_id)
-        logger.debug('store event %s', event.event_id)
+        logger.debug('store event %s', event.event_type)
 
         doc_id: Optional[int] = None
 

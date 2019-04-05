@@ -8,11 +8,11 @@ EventType = TypeVar('EventType', bound='core.events.domain.event.Event')
 class InvalidEvent(ValueError):
     """Raised when an invalid event is encountered."""
 
-    def __init__(self, event: EventType, message: str='') -> None:
+    def __init__(self, event: EventType, message: str = '') -> None:
         """Use the :class:`.Event` to build an error message."""
         self.event: EventType = event
         self.message = message
-        r = f"Invalid event: {event.event_type} ({event.event_id}): {message}"
+        r = f"Invalid {event.event_type}: {message}"
         super(InvalidEvent, self).__init__(r)
 
 

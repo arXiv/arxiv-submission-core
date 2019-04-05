@@ -20,6 +20,7 @@ class AddProcessStatus(Event):
 
     Status = ProcessStatus.Status
 
+    process_id: Optional[str] = field(default=None)
     process: Optional[str] = field(default=None)
     step: Optional[str] = field(default=None)
     status: Status = field(default=Status.PENDING)

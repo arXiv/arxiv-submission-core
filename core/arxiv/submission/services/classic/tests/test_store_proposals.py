@@ -1,6 +1,7 @@
 """Test persistence of proposals in the classic database."""
 
 from unittest import TestCase, mock
+from datetime import datetime
 from pytz import UTC
 from ....domain.event import CreateSubmission, SetPrimaryClassification, \
     AddSecondaryClassification, SetTitle, AddProposal
@@ -26,7 +27,8 @@ class TestSaveProposal(TestCase):
     def test_save_reclassification_proposal(self):
         """A submission has a new reclassification proposal."""
         with in_memory_db() as session:
-            create = CreateSubmission(creator=self.user)
+            create = CreateSubmission(creator=self.user,
+                                      created=datetime.now(UTC))
             before, after = None, create.apply(None)
             create, before = store_event(create, before, after)
 
@@ -36,7 +38,8 @@ class TestSaveProposal(TestCase):
                 proposed_event_data={
                     'category': taxonomy.Category('cs.DL'),
                 },
-                comment='foo'
+                comment='foo',
+                created=datetime.now(UTC)
             )
             after = event.apply(before)
             event, after = store_event(event, before, after)
@@ -64,12 +67,14 @@ class TestSaveProposal(TestCase):
     def test_save_secondary_proposal(self):
         """A submission has a new cross-list proposal."""
         with in_memory_db() as session:
-            create = CreateSubmission(creator=self.user)
+            create = CreateSubmission(creator=self.user,
+                                      created=datetime.now(UTC))
             before, after = None, create.apply(None)
             create, before = store_event(create, before, after)
 
             event = AddProposal(
                 creator=self.user,
+                created=datetime.now(UTC),
                 proposed_event_type=AddSecondaryClassification,
                 proposed_event_data={
                     'category': taxonomy.Category('cs.DL'),
@@ -102,12 +107,14 @@ class TestSaveProposal(TestCase):
     def test_save_title_proposal(self):
         """A submission has a new SetTitle proposal."""
         with in_memory_db() as session:
-            create = CreateSubmission(creator=self.user)
+            create = CreateSubmission(creator=self.user,
+                                      created=datetime.now(UTC))
             before, after = None, create.apply(None)
             create, before = store_event(create, before, after)
 
             event = AddProposal(
                 creator=self.user,
+                created=datetime.now(UTC),
                 proposed_event_type=SetTitle,
                 proposed_event_data={'title': 'the foo title'},
                 comment='foo'

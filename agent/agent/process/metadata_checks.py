@@ -65,6 +65,8 @@ class CheckForSimilarTitles(Process):
                        emit: Callable) -> List[Tuple[int, str, Agent]]:
         """Get candidate titles from the database."""
         title = self._get_title(trigger)
+        if not title:   # Nothing to do.
+            return []
         # If the title has no tokens, there is nothing to do.
         if not tokenized(title):
             self.fail(message='No usable tokens in title')
@@ -79,6 +81,8 @@ class CheckForSimilarTitles(Process):
                              trigger: Trigger, emit: Callable) -> None:
         """Look for very similar titles, and add flags if appropriate."""
         title = self._get_title(trigger)
+        if not title:   # Nothing to do.
+            return []
         flag_type = MetadataFlag.Type.POSSIBLE_DUPLICATE_TITLE
 
         for flag_id, flag in trigger.after.flags.items():
@@ -86,6 +90,8 @@ class CheckForSimilarTitles(Process):
                 emit(RemoveFlag(creator=self.agent, flag_id=flag_id))
 
         for ident, candidate_title, submitter in candidates:
+            if not candidate_title:     # Nothing to do.
+                continue
             similarity = jaccard(title, candidate_title)
             if similarity > trigger.params['TITLE_SIMILARITY_THRESHOLD']:
                 emit(AddMetadataFlag(

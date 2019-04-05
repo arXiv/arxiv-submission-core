@@ -60,7 +60,7 @@ class AsyncProcessRunner(ProcessRunner):
     def run(self, trigger: Trigger) -> None:
         """Run a :class:`.Process` asynchronously."""
         _run = self.processes[self.process.name]
-        _run(self.process.submission_id, trigger)
+        _run(self.process.submission_id, self.process.process_id, trigger)
 
 
 def create_worker_app() -> Celery:
@@ -126,7 +126,10 @@ def async_save(self, *events: Event, submission_id: int = -1) -> None:
     except NothingToDo as e:
         logger.debug('No events to save, move along: %s', e)
     except classic.Unavailable as e:
-        self.retry(exc=e, max_retries=None, countdown=(2 ** self.retries))
+        self.retry(exc=e, max_retries=None,
+                   countdown=(2 ** self.request.retries))
+    except classic.ConsistencyError as e:
+        logger.error('Encountered a ConsistencyError; could not save: %s', e)
     except Exception as e:
         self.retry(exc=e, countdown=5)
 
@@ -217,21 +220,17 @@ def make_task(app: Celery, Proc: ProcessType, step: Callable) -> Task:
     @app.task(name=f'{Proc.__name__}.{step.name}', bind=True,
               max_retries=step.max_retries, default_retry_delay=step.delay)
     def do_step(self, data: ProcessData) -> Any:
-        logger.debug('Do step %s with data %s', step.name, data)
-        events: List[Event] = []
+        logger.debug('Do step %s', step.name)
+        emit = partial(async_save, self, submission_id=data.submission_id)
         previous = data.get_last_result() if data.results else None
         try:
-            inst = Proc(data.submission_id)
-            data.add_result(step(inst, previous, data.trigger, events.append))
+            inst = Proc(data.submission_id, data.process_id)
+            data.add_result(step(inst, previous, data.trigger, emit))
         except Failed as exc:
             raise exc   # This is a deliberately unrecoverable failure.
         except Exception as exc:
             # Any other exception deserves more chances.
-            self.retry(exc=exc, countdown=countdown(self.retries))
-        finally:
-            # Save whatever was emitted before the end of the step, or prior to
-            # an exception.
-            execute_async_save(*events, submission_id=data.submission_id)
+            self.retry(exc=exc, countdown=countdown(self.request.retries))
         return data
     return do_step
 
@@ -260,7 +259,8 @@ def make_failure_task(app: Celery, Proc: ProcessType) -> Task:
         data, = request.args
         name = getattr(exc, 'step_name', 'none')
         events = []
-        Proc(data.submission_id).on_failure(name, data.trigger, events.append)
+        process = Proc(data.submission_id, data.process_id)
+        process.on_failure(name, data.trigger, events.append)
         execute_async_save(*events, submission_id=data.submission_id)
     return on_failure
 
@@ -291,9 +291,9 @@ def register_process(Proc: ProcessType) -> Callable:
     process = chain(*[make_task(app, Proc, step).s() for step in Proc.steps])
     on_failure = make_failure_task(app, Proc)
 
-    def execute_chain(submission_id: int, trigger: Trigger):
-        logger.debug('Execute chain %s for submission %s',
-                     Proc.__name__, submission_id)
-        process.apply_async((ProcessData(submission_id, trigger, []),),
-                            link_error=on_failure.s())
+    def execute_chain(submission_id: int, process_id: str, trigger: Trigger):
+        logger.debug('Execute chain %s with id %s for submission %s',
+                     Proc.__name__, process_id, submission_id)
+        data = ProcessData(submission_id, process_id, trigger, [])
+        process.apply_async((data,), link_error=on_failure.s())
     return execute_chain

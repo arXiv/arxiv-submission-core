@@ -5,6 +5,7 @@ import os
 from datetime import datetime
 from contextlib import contextmanager
 import json
+from pytz import UTC
 
 from flask import Flask
 
@@ -84,7 +85,7 @@ class TestStoreEvent(TestCase):
         log.ON_EVENT[CreateSubmission] = [mock_handler]
         user = User(12345, 'joe@joe.joe', username="joeuser",
                     endorsements=['physics.soc-ph', 'cs.DL'])
-        event = CreateSubmission(creator=user)
+        event = CreateSubmission(creator=user, created=datetime.now(UTC))
         before = None
         after = Submission(creator=user, owner=user, submission_id=42)
 

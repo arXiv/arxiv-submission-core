@@ -12,6 +12,8 @@ from sqlalchemy import BigInteger, Column, DateTime, Enum, ForeignKey, \
     ForeignKeyConstraint, Index, \
     Integer, SmallInteger, String, Table, text, Text
 from sqlalchemy.dialects.mysql import DATETIME
+from sqlalchemy.exc import OperationalError
+from retry import retry
 
 from arxiv.base import logging
 from arxiv.submission.domain.event import AddProcessStatus
@@ -47,9 +49,9 @@ class ProcessStatusEvent(db.Model):
                       default=lambda: datetime.now(UTC))
     event_id = Column(String(255), index=True, nullable=False)
     submission_id = Column(Integer, index=True)
-    process_type = Column(String(100), index=True, nullable=False)
     process_id = Column(String(100), index=True, nullable=False)
-    process_status = Column(String(50), index=True, nullable=True)
+    process = Column(String(100), index=True, nullable=False)
+    status = Column(String(50), index=True, nullable=True)
     reason = Column(Text, nullable=True)
     agent_type = Column(Enum('System', 'User', 'Client'), index=True,
                         nullable=False)
@@ -71,38 +73,55 @@ def tables_exist() -> bool:
     return db.engine.dialect.has_table(db.engine, 'checkpoint')
 
 
+class Unavailable(IOError):
+    """The database is not available."""
+
+
+@retry(Unavailable, tries=3, backoff=2)
 def get_latest_position(shard_id: str) -> str:
     """Get the latest checkpointed position."""
-    result = db.session.query(Checkpoint.position) \
-        .filter(Checkpoint.shard_id == shard_id) \
-        .order_by(Checkpoint.id.desc()) \
-        .first()
-    if result is None:
-        return
-    position, = result
+    try:
+        result = db.session.query(Checkpoint.position) \
+            .filter(Checkpoint.shard_id == shard_id) \
+            .order_by(Checkpoint.id.desc()) \
+            .first()
+        if result is None:
+            return
+        position, = result
+    except OperationalError as e:
+        raise Unavailable('Caught op error') from e
     return position
 
 
+@retry(Unavailable, tries=3, backoff=2)
 def store_position(position: str, shard_id: str) -> None:
     """Store a new checkpoint position."""
-    db.session.add(Checkpoint(position=position, shard_id=shard_id))
-    db.session.commit()
+    try:
+        db.session.add(Checkpoint(position=position, shard_id=shard_id))
+        db.session.commit()
+    except OperationalError as e:
+        db.session.rollback()
+        raise Unavailable('Caught op error') from e
 
 
 def store_event(event: AddProcessStatus) -> None:
     """Store an :class:`.AddProcessStatus` event."""
-    db.session.add(ProcessStatusEvent(
-        created=event.created,
-        event_id=event.event_id,
-        submission_id=event.submission_id,
-        process_type=event.process_type,
-        process_id=event.process_id,
-        process_status=event.process_status,
-        reason=event.reason,
-        agent_type=event.creator.agent_type,
-        agent_id=event.creator.native_id
-    ))
-    db.session.commit()
+    try:
+        db.session.add(ProcessStatusEvent(
+            created=event.created,
+            event_id=event.event_id,
+            submission_id=event.submission_id,
+            process_id=event.process_id,
+            process=event.process,
+            status=event.status,
+            reason=event.reason,
+            agent_type=event.creator.agent_type,
+            agent_id=event.creator.native_id
+        ))
+        db.session.commit()
+    except OperationalError as e:
+        db.session.rollback()
+        raise Unavailable('Caught op error') from e
 
 
 def await_connection(max_wait: int = -1) -> None:
@@ -111,7 +130,7 @@ def await_connection(max_wait: int = -1) -> None:
     start = time.time()
     while True:
         if max_wait > 0 and time.time() - start >= max_wait:
-            raise RuntimeError('Failed to connect in %i seconds', max_wait)
+            raise Unavailable('Failed to connect in %i seconds', max_wait)
         try:
             db.session.execute('SELECT 1')
             break
