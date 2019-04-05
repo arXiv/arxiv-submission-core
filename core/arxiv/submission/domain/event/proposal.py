@@ -73,6 +73,9 @@ class AddProposal(Event):
 class RejectProposal(Event):
     """Reject a :class:`.Proposal` on a submission."""
 
+    NAME = 'reject proposal'
+    NAMED = 'proposal rejected'
+
     proposal_id: Optional[str] = field(default=None)
     comment: Optional[str] = field(default=None)
 
@@ -99,6 +102,9 @@ class RejectProposal(Event):
 @dataclass()
 class AcceptProposal(Event):
     """Accept a :class:`.Proposal` on a submission."""
+
+    NAME = 'accept proposal'
+    NAMED = 'proposal accepted'
 
     proposal_id: Optional[str] = field(default=None)
     comment: Optional[str] = field(default=None)

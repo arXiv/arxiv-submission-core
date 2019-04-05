@@ -14,6 +14,7 @@ import random
 from flask import Flask
 from celery import shared_task, Celery, Task, chain
 from celery.result import AsyncResult
+from retry import retry
 
 from arxiv.base.globals import get_application_config, get_application_global
 from arxiv.base import logging
@@ -26,7 +27,7 @@ from arxiv.submission.services import classic
 from .. import config
 
 from .base import ProcessRunner
-from ..process import ProcessType, Process, Failed
+from ..process import ProcessType, Process, Failed, Recoverable
 from ..domain import ProcessData, Trigger
 
 logger = logging.getLogger(__name__)
@@ -107,6 +108,7 @@ def get_or_create_worker_app() -> Celery:
     return g.worker
 
 
+@retry(Recoverable, backoff=2)
 def async_save(self, *events: Event, submission_id: int = -1) -> None:
     """
     Save/emit new events.
@@ -126,12 +128,12 @@ def async_save(self, *events: Event, submission_id: int = -1) -> None:
     except NothingToDo as e:
         logger.debug('No events to save, move along: %s', e)
     except classic.Unavailable as e:
-        self.retry(exc=e, max_retries=None,
-                   countdown=(2 ** self.request.retries))
+        raise Recoverable('Database is not available; try again') from e
     except classic.ConsistencyError as e:
         logger.error('Encountered a ConsistencyError; could not save: %s', e)
+        raise Failed('Encountered a consistency error') from e
     except Exception as e:
-        self.retry(exc=e, countdown=5)
+        raise Failed('Unhandled exception: %s' % e) from e
 
 
 def execute_async_save(*events: Event, submission_id: int = -1):

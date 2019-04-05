@@ -222,6 +222,9 @@ class RemoveHold(Event):
 class AddWaiver(Event):
     """Add a :class:`.Waiver` to a :class:`.Submission`."""
 
+    NAME = "add waiver"
+    NAMED = "waiver added"
+
     waiver_type: Hold.Type = field(default=Hold.Type.SOURCE_OVERSIZE)
     waiver_reason: str = field(default_factory=str)
 

@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 from flask import Flask
 from pytz import UTC
 from ... import save, load, core, Submission, User, Event, \
-    CreateComment, SubmissionMetadata, CreateSubmission, SetAuthors, Author, \
+    SubmissionMetadata, CreateSubmission, SetAuthors, Author, \
     SetTitle, SetAbstract
 from ...exceptions import NoSuchSubmission, InvalidEvent
 from ...services import classic

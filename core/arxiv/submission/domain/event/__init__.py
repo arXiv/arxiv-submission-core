@@ -729,7 +729,7 @@ class SetReportNumber(Event):
                                      " consecutive digits")
 
     def project(self, submission: Submission) -> Submission:
-        """Update the report number on a :class:`.domain.submission.Submission`."""
+        """Set report number on a :class:`.domain.submission.Submission`."""
         submission.metadata.report_num = self.report_num
         return submission
 
@@ -911,6 +911,9 @@ class UpdateUploadPackage(Event):
 class UnsetUploadPackage(Event):
     """Unset the upload workspace for this submission."""
 
+    NAME = "unset the upload package"
+    NAMED = "upload package unset"
+
     def validate(self, submission: Submission) -> None:
         """Validate data for :class:`.UnsetUploadPackage`."""
         validators.submission_is_not_finalized(self, submission)
@@ -1068,58 +1071,58 @@ class Announce(Event):
 # Moderation-related events.
 
 
-@dataclass()
-class CreateComment(Event):
-    """Creation of a :class:`.Comment` on a :class:`.domain.submission.Submission`."""
-
-    read_scope = 'submission:moderate'
-    write_scope = 'submission:moderate'
-
-    body: str = field(default_factory=str)
-    scope: str = 'private'
-
-    def validate(self, submission: Submission) -> None:
-        """The :attr:`.body` should be set."""
-        if not self.body:
-            raise ValueError('Comment body not set')
-
-    def project(self, submission: Submission) -> Submission:
-        """Create a new :class:`.Comment` and attach it to the submission."""
-        submission.comments[self.event_id] = Comment(
-            event_id=self.event_id,
-            creator=self.creator,
-            created=self.created,
-            proxy=self.proxy,
-            submission=submission,
-            body=self.body
-        )
-        return submission
-
-
-@dataclass()
-class DeleteComment(Event):
-    """Deletion of a :class:`.Comment` on a :class:`.domain.submission.Submission`."""
-
-    read_scope = 'submission:moderate'
-    write_scope = 'submission:moderate'
-
-    comment_id: str = field(default_factory=str)
-
-    def validate(self, submission: Submission) -> None:
-        """The :attr:`.comment_id` must present on the submission."""
-        if self.comment_id is None:
-            raise InvalidEvent(self, 'comment_id is required')
-        if not hasattr(submission, 'comments') or not submission.comments:
-            raise InvalidEvent(self, 'Cannot delete nonexistant comment')
-        if self.comment_id not in submission.comments:
-            raise InvalidEvent(self, 'Cannot delete nonexistant comment')
-
-    def project(self, submission: Submission) -> Submission:
-        """Remove the comment from the submission."""
-        del submission.comments[self.comment_id]
-        return submission
-
-
+# @dataclass()
+# class CreateComment(Event):
+#     """Creation of a :class:`.Comment` on a :class:`.domain.submission.Submission`."""
+#
+#     read_scope = 'submission:moderate'
+#     write_scope = 'submission:moderate'
+#
+#     body: str = field(default_factory=str)
+#     scope: str = 'private'
+#
+#     def validate(self, submission: Submission) -> None:
+#         """The :attr:`.body` should be set."""
+#         if not self.body:
+#             raise ValueError('Comment body not set')
+#
+#     def project(self, submission: Submission) -> Submission:
+#         """Create a new :class:`.Comment` and attach it to the submission."""
+#         submission.comments[self.event_id] = Comment(
+#             event_id=self.event_id,
+#             creator=self.creator,
+#             created=self.created,
+#             proxy=self.proxy,
+#             submission=submission,
+#             body=self.body
+#         )
+#         return submission
+#
+#
+# @dataclass()
+# class DeleteComment(Event):
+#     """Deletion of a :class:`.Comment` on a :class:`.domain.submission.Submission`."""
+#
+#     read_scope = 'submission:moderate'
+#     write_scope = 'submission:moderate'
+#
+#     comment_id: str = field(default_factory=str)
+#
+#     def validate(self, submission: Submission) -> None:
+#         """The :attr:`.comment_id` must present on the submission."""
+#         if self.comment_id is None:
+#             raise InvalidEvent(self, 'comment_id is required')
+#         if not hasattr(submission, 'comments') or not submission.comments:
+#             raise InvalidEvent(self, 'Cannot delete nonexistant comment')
+#         if self.comment_id not in submission.comments:
+#             raise InvalidEvent(self, 'Cannot delete nonexistant comment')
+#
+#     def project(self, submission: Submission) -> Submission:
+#         """Remove the comment from the submission."""
+#         del submission.comments[self.comment_id]
+#         return submission
+#
+#
 # @dataclass()
 # class AddDelegate(Event):
 #     """Owner delegates authority to another agent."""

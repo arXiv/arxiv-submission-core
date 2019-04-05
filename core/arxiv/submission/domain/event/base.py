@@ -21,6 +21,7 @@ from ..submission import Submission
 from .versioning import EventData, map_to_current_version
 
 logger = logging.getLogger(__name__)
+logger.propagate = False
 
 Events = Iterable['Event']
 Condition = Callable[['Event', Submission, Submission], bool]
