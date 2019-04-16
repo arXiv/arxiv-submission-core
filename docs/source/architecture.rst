@@ -64,7 +64,7 @@ Key requirements
    areas of concern.
 
 
-Solution Strategy
+Solution strategy
 =================
 
 - Major functional components of the classic submission system are decomposed
@@ -146,7 +146,7 @@ arXiv papers. For example, classification, overlap detection, and other
 QA/QC services will keep themselves up to date by consuming metadata and
 content from announced e-prints in the canonical record.
 
-Services & Building Blocks
+Services & building blocks
 ==========================
 
 The submission & moderation subsystem is comprised of the following parts:
@@ -245,9 +245,10 @@ These core interface services integrate with other services in the submission
 subsystem (e.g. :ref:`file-management-service`, :ref:`compilation-service`) via
 their HTTP APIs.
 
+.. _submission-ui:
 
-Submission UI service
-^^^^^^^^^^^^^^^^^^^^^
+Submission UI
+^^^^^^^^^^^^^
 https://github.com/cul-it/arxiv-submission-ui
 
 Provides form-based views that allow users to create and update submissions,
@@ -370,6 +371,24 @@ Web-hook notification service
 Provides mechanisms for API clients to register callbacks for submission
 events. Event consumer is implemented using the Kinesis Consumer Library and
 MultiLangDaemon [refs].
+
+
+Example: integration with the auto-classifier
+=============================================
+When a user finalizes their submission for announcement, we perform a variety
+of automated quality assurance checks to support the moderation process. This
+example illustrates how classification-related checks are implemented in the NG
+submission architecture.
+
+1. The submitter finalizes their submission via the :ref:`submission-ui`. This
+   may involve a POST request, including a field attesting to the submitter's
+   intent.
+2. The submission UI generates a :class:`.FinalizeSubmission` event using
+   :mod:`arxiv.submission`, persisting the event in the classic database and
+   emitting the event on the ``SubmissionEvents`` Kinesis stream.
+3. The :ref:`submission-agent` observes the :class:`.FinalizeSubmission` event
+   on the ``SubmissionEvents`` Kinesis stream. This matches a rule that
+   triggers the :class:`agent.process.RunAutoclassifier` process.
 
 
 

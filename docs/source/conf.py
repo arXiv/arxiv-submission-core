@@ -56,7 +56,8 @@ extensions = [
     'sphinx.ext.napoleon',
     'sphinx.ext.graphviz',
     'sphinx.ext.githubpages',
-    'patched_sphinx_autodoc_typehints'
+    'patched_sphinx_autodoc_typehints',
+    'sphinx_jekyll_builder'
 ]
 
 # Add any paths that contain templates here, relative to this directory.

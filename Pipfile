@@ -42,6 +42,7 @@ sphinx-autodoc-typehints = "*"
 pydocstyle = "==3.0.0"
 pytest = "*"
 pytest-cov = "*"
+sphinx-jekyll-builder = "*"
 
 [pipenv]
 allow_prereleases = true
