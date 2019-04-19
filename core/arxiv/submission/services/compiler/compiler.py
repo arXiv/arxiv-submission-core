@@ -70,6 +70,7 @@ class Compiler(service.HTTPIntegration):
         return self.json('get', 'status')[0]
 
     def compile(self, source_id: str, checksum: str, token: str,
+                stamp_label: str, stamp_link: str,
                 compiler: Optional[Compilation.SupportedCompiler] = None,
                 output_format: Compilation.Format = PDF,
                 force: bool = False) -> Compilation:
@@ -90,6 +91,16 @@ class Compiler(service.HTTPIntegration):
             Unique identifier for the upload workspace.
         checksum : str
             State up of the upload workspace.
+        token : str
+            The original (encrypted) auth token on the request. Used to perform
+            subrequests to the file management service.
+        stamp_label : str
+            Label to use in PS/PDF stamp/watermark. Form is
+              'Identifier  [Category Date]'
+            Category and Date are optional. By default Date will be added
+            by compiler.
+        stamp_link : str
+            Link (URI) to use in PS/PDF stamp/watermark.
         compiler : :class:`.Compiler` or None
             Name of the preferred compiler.
         output_format : :class:`.Format`
@@ -107,6 +118,7 @@ class Compiler(service.HTTPIntegration):
         logger.debug("Requesting compilation for %s @ %s: %s",
                      source_id, checksum, output_format)
         payload = {'source_id': source_id, 'checksum': checksum,
+                   'stamp_label': stamp_label, 'stamp_link': stamp_link,
                    'format': output_format.value, 'force': force}
         endpoint = '/'
         expected_codes = [status.OK, status.ACCEPTED,
