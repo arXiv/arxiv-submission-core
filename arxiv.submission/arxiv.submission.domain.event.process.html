@@ -38,7 +38,7 @@
 <p>Events related to external or long-running processes.</p>
 <dl class="class">
 <dt id="arxiv.submission.domain.event.process.AddProcessStatus">
-<em class="property">class </em><code class="descclassname">arxiv.submission.domain.event.process.</code><code class="descname">AddProcessStatus</code><span class="sig-paren">(</span><em>creator</em>, <em>created=&lt;factory&gt;</em>, <em>proxy=None</em>, <em>client=None</em>, <em>submission_id=None</em>, <em>committed=False</em>, <em>before=None</em>, <em>after=None</em>, <em>event_type=&lt;factory&gt;</em>, <em>event_version=&lt;factory&gt;</em>, <em>process=None</em>, <em>step=None</em>, <em>status=&lt;Status.PENDING: 'pending'&gt;</em>, <em>reason=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/event/process.html#AddProcessStatus"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.process.AddProcessStatus" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">arxiv.submission.domain.event.process.</code><code class="descname">AddProcessStatus</code><span class="sig-paren">(</span><em>creator</em>, <em>created=None</em>, <em>proxy=None</em>, <em>client=None</em>, <em>submission_id=None</em>, <em>committed=False</em>, <em>before=None</em>, <em>after=None</em>, <em>event_type=&lt;factory&gt;</em>, <em>event_version=&lt;factory&gt;</em>, <em>process_id=None</em>, <em>process=None</em>, <em>step=None</em>, <em>status=&lt;Status.PENDING: 'pending'&gt;</em>, <em>reason=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/event/process.html#AddProcessStatus"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.process.AddProcessStatus" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="arxiv.submission.domain.event.base.html#arxiv.submission.domain.event.base.Event" title="arxiv.submission.domain.event.base.Event"><code class="xref py py-class docutils literal notranslate"><span class="pre">arxiv.submission.domain.event.base.Event</span></code></a></p>
 <p>Add the status of an external/long-running process to a submission.</p>
 <dl class="attribute">
@@ -96,6 +96,11 @@
 <dl class="attribute">
 <dt id="arxiv.submission.domain.event.process.AddProcessStatus.process">
 <code class="descname">process</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.submission.domain.event.process.AddProcessStatus.process" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="arxiv.submission.domain.event.process.AddProcessStatus.process_id">
+<code class="descname">process_id</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.submission.domain.event.process.AddProcessStatus.process_id" title="Permalink to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="method">
@@ -158,7 +163,7 @@
 <h3>Navigation</h3>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../architecture.html">Submission &amp; moderation subsystem architecture</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../announcement_process.html">Submission &amp; announcement Process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../announcement_process.html">Submission &amp; announcement process</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../submission_api_context.html">Submission API: Context</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="arxiv.submission.html">arxiv.submission package</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="arxiv.submission.html#overview">Overview</a></li>

@@ -38,7 +38,7 @@
 <p>Automated metadata checks.</p>
 <dl class="class">
 <dt id="agent.process.metadata_checks.CheckAbstractForUnicodeAbuse">
-<em class="property">class </em><code class="descclassname">agent.process.metadata_checks.</code><code class="descname">CheckAbstractForUnicodeAbuse</code><span class="sig-paren">(</span><em>submission_id</em><span class="sig-paren">)</span><a class="headerlink" href="#agent.process.metadata_checks.CheckAbstractForUnicodeAbuse" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">agent.process.metadata_checks.</code><code class="descname">CheckAbstractForUnicodeAbuse</code><span class="sig-paren">(</span><em>submission_id</em>, <em>process_id=None</em><span class="sig-paren">)</span><a class="headerlink" href="#agent.process.metadata_checks.CheckAbstractForUnicodeAbuse" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="agent.process.base.html#agent.process.base.Process" title="agent.process.base.Process"><code class="xref py py-class docutils literal notranslate"><span class="pre">agent.process.base.Process</span></code></a></p>
 <p>Screen for possible abuse of unicode in abstracts.</p>
 <p>We support unicode characters in abstracts, but this can get out of hand.
@@ -64,7 +64,7 @@ is too high.</p>
 
 <dl class="class">
 <dt id="agent.process.metadata_checks.CheckForSimilarTitles">
-<em class="property">class </em><code class="descclassname">agent.process.metadata_checks.</code><code class="descname">CheckForSimilarTitles</code><span class="sig-paren">(</span><em>submission_id</em><span class="sig-paren">)</span><a class="headerlink" href="#agent.process.metadata_checks.CheckForSimilarTitles" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">agent.process.metadata_checks.</code><code class="descname">CheckForSimilarTitles</code><span class="sig-paren">(</span><em>submission_id</em>, <em>process_id=None</em><span class="sig-paren">)</span><a class="headerlink" href="#agent.process.metadata_checks.CheckForSimilarTitles" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="agent.process.base.html#agent.process.base.Process" title="agent.process.base.Process"><code class="xref py py-class docutils literal notranslate"><span class="pre">agent.process.base.Process</span></code></a></p>
 <p>Check for other submissions with very similar titles.</p>
 <p>Ask classic for titles of papers submitted within the last several months.
@@ -101,7 +101,7 @@ current submission’s title than a configurable threshold.</p>
 
 <dl class="class">
 <dt id="agent.process.metadata_checks.CheckTitleForUnicodeAbuse">
-<em class="property">class </em><code class="descclassname">agent.process.metadata_checks.</code><code class="descname">CheckTitleForUnicodeAbuse</code><span class="sig-paren">(</span><em>submission_id</em><span class="sig-paren">)</span><a class="headerlink" href="#agent.process.metadata_checks.CheckTitleForUnicodeAbuse" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">agent.process.metadata_checks.</code><code class="descname">CheckTitleForUnicodeAbuse</code><span class="sig-paren">(</span><em>submission_id</em>, <em>process_id=None</em><span class="sig-paren">)</span><a class="headerlink" href="#agent.process.metadata_checks.CheckTitleForUnicodeAbuse" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="agent.process.base.html#agent.process.base.Process" title="agent.process.base.Process"><code class="xref py py-class docutils literal notranslate"><span class="pre">agent.process.base.Process</span></code></a></p>
 <p>Screen for possible abuse of unicode in titles.</p>
 <p>We support unicode characters in titles, but this can get out of hand.
@@ -212,7 +212,7 @@ is too high.</p>
 <h3>Navigation</h3>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../../architecture.html">Submission &amp; moderation subsystem architecture</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../announcement_process.html">Submission &amp; announcement Process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../announcement_process.html">Submission &amp; announcement process</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../submission_api_context.html">Submission API: Context</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../arxiv.submission/arxiv.submission.html">arxiv.submission package</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="agent.html">agent package</a><ul class="current">

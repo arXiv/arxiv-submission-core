@@ -120,11 +120,6 @@
         <span class="c1"># Classic lacks millisecond precision.</span>
         <span class="k">return</span> <span class="p">(</span><span class="n">delta</span><span class="p">)</span><span class="o">.</span><span class="n">total_seconds</span><span class="p">()</span> <span class="o">&lt;</span> <span class="o">-</span><span class="mi">1</span>
 
-    <span class="k">def</span> <span class="nf">_should_apply_current_row</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">:</span> <span class="n">Event</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_row</span> \
-            <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_current_row_preceeds_event</span><span class="p">(</span><span class="n">event</span><span class="p">)</span> \
-            <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_row</span><span class="o">.</span><span class="n">is_announced</span><span class="p">()</span>
-
     <span class="k">def</span> <span class="nf">_should_advance_to_next_row</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">:</span> <span class="n">Event</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_there_are_rows_remaining</span><span class="p">()</span> \
             <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">next_row</span><span class="o">.</span><span class="n">get_created</span><span class="p">()</span> <span class="o">&lt;=</span> <span class="n">event</span><span class="o">.</span><span class="n">created</span>
@@ -329,7 +324,7 @@
 <h3>Navigation</h3>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../architecture.html">Submission &amp; moderation subsystem architecture</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../../announcement_process.html">Submission &amp; announcement Process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../announcement_process.html">Submission &amp; announcement process</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../submission_api_context.html">Submission API: Context</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../arxiv.submission/arxiv.submission.html">arxiv.submission package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../containers/agent/agent.html">agent package</a></li>

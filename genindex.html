@@ -711,8 +711,6 @@
 </li>
       <li><a href="containers/agent/agent.runner.async.html#agent.runner.async.create_worker_app">create_worker_app() (in module agent.runner.async)</a>
 </li>
-      <li><a href="arxiv.submission/arxiv.submission.domain.event.html#arxiv.submission.domain.event.CreateComment">CreateComment (class in arxiv.submission.domain.event)</a>
-</li>
       <li><a href="containers/agent/agent.services.database.html#agent.services.database.Checkpoint.created">created (agent.services.database.Checkpoint attribute)</a>
 
       <ul>
@@ -784,8 +782,6 @@
       <li><a href="arxiv.submission/arxiv.submission.services.classic.models.html#arxiv.submission.services.classic.models.Category.definitive">definitive (arxiv.submission.services.classic.models.Category attribute)</a>
 </li>
       <li><a href="arxiv.submission/arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.Delegation">Delegation (class in arxiv.submission.domain.submission)</a>
-</li>
-      <li><a href="arxiv.submission/arxiv.submission.domain.event.html#arxiv.submission.domain.event.DeleteComment">DeleteComment (class in arxiv.submission.domain.event)</a>
 </li>
       <li><a href="arxiv.submission/arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.Submission.DELETED">DELETED (arxiv.submission.domain.submission.Submission attribute)</a>
 </li>
@@ -1298,7 +1294,11 @@
       <li><a href="arxiv.submission/arxiv.submission.domain.proposal.html#arxiv.submission.domain.proposal.Proposal.is_accepted">is_accepted() (arxiv.submission.domain.proposal.Proposal method)</a>
 </li>
       <li><a href="arxiv.submission/arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.UserRequest.is_active">is_active() (arxiv.submission.domain.submission.UserRequest method)</a>
+
+      <ul>
+        <li><a href="arxiv.submission/arxiv.submission.services.classic.models.html#arxiv.submission.services.classic.models.Submission.is_active">(arxiv.submission.services.classic.models.Submission method)</a>
 </li>
+      </ul></li>
       <li><a href="arxiv.submission/arxiv.submission.services.classic.models.html#arxiv.submission.services.classic.models.Submission.is_announced">is_announced() (arxiv.submission.services.classic.models.Submission method)</a>
 </li>
   </ul></td>
@@ -1314,6 +1314,8 @@
       <li><a href="arxiv.submission/arxiv.submission.services.classic.models.html#arxiv.submission.services.classic.models.Submission.is_crosslist">is_crosslist() (arxiv.submission.services.classic.models.Submission method)</a>
 </li>
       <li><a href="arxiv.submission/arxiv.submission.services.classic.models.html#arxiv.submission.services.classic.models.Submission.is_deleted">is_deleted() (arxiv.submission.services.classic.models.Submission method)</a>
+</li>
+      <li><a href="arxiv.submission/arxiv.submission.services.classic.models.html#arxiv.submission.services.classic.models.Submission.is_finalized">is_finalized() (arxiv.submission.services.classic.models.Submission method)</a>
 </li>
       <li><a href="arxiv.submission/arxiv.submission.services.classic.models.html#arxiv.submission.services.classic.models.Submission.is_jref">is_jref() (arxiv.submission.services.classic.models.Submission method)</a>
 </li>
@@ -1598,6 +1600,8 @@
 </li>
         <li><a href="arxiv.submission/arxiv.submission.domain.event.html#arxiv.submission.domain.event.UnFinalizeSubmission.NAME">(arxiv.submission.domain.event.UnFinalizeSubmission attribute)</a>
 </li>
+        <li><a href="arxiv.submission/arxiv.submission.domain.event.html#arxiv.submission.domain.event.UnsetUploadPackage.NAME">(arxiv.submission.domain.event.UnsetUploadPackage attribute)</a>
+</li>
         <li><a href="arxiv.submission/arxiv.submission.domain.event.html#arxiv.submission.domain.event.UpdateUploadPackage.NAME">(arxiv.submission.domain.event.UpdateUploadPackage attribute)</a>
 </li>
         <li><a href="arxiv.submission/arxiv.submission.domain.event.flag.html#arxiv.submission.domain.event.flag.AddContentFlag.NAME">(arxiv.submission.domain.event.flag.AddContentFlag attribute)</a>
@@ -1610,13 +1614,19 @@
 </li>
         <li><a href="arxiv.submission/arxiv.submission.domain.event.flag.html#arxiv.submission.domain.event.flag.AddUserFlag.NAME">(arxiv.submission.domain.event.flag.AddUserFlag attribute)</a>
 </li>
+        <li><a href="arxiv.submission/arxiv.submission.domain.event.flag.html#arxiv.submission.domain.event.flag.AddWaiver.NAME">(arxiv.submission.domain.event.flag.AddWaiver attribute)</a>
+</li>
         <li><a href="arxiv.submission/arxiv.submission.domain.event.flag.html#arxiv.submission.domain.event.flag.RemoveFlag.NAME">(arxiv.submission.domain.event.flag.RemoveFlag attribute)</a>
 </li>
         <li><a href="arxiv.submission/arxiv.submission.domain.event.flag.html#arxiv.submission.domain.event.flag.RemoveHold.NAME">(arxiv.submission.domain.event.flag.RemoveHold attribute)</a>
 </li>
         <li><a href="arxiv.submission/arxiv.submission.domain.event.process.html#arxiv.submission.domain.event.process.AddProcessStatus.NAME">(arxiv.submission.domain.event.process.AddProcessStatus attribute)</a>
 </li>
+        <li><a href="arxiv.submission/arxiv.submission.domain.event.proposal.html#arxiv.submission.domain.event.proposal.AcceptProposal.NAME">(arxiv.submission.domain.event.proposal.AcceptProposal attribute)</a>
+</li>
         <li><a href="arxiv.submission/arxiv.submission.domain.event.proposal.html#arxiv.submission.domain.event.proposal.AddProposal.NAME">(arxiv.submission.domain.event.proposal.AddProposal attribute)</a>
+</li>
+        <li><a href="arxiv.submission/arxiv.submission.domain.event.proposal.html#arxiv.submission.domain.event.proposal.RejectProposal.NAME">(arxiv.submission.domain.event.proposal.RejectProposal attribute)</a>
 </li>
         <li><a href="arxiv.submission/arxiv.submission.domain.event.request.html#arxiv.submission.domain.event.request.ApplyRequest.NAME">(arxiv.submission.domain.event.request.ApplyRequest attribute)</a>
 </li>
@@ -1712,6 +1722,8 @@
 </li>
         <li><a href="arxiv.submission/arxiv.submission.domain.event.html#arxiv.submission.domain.event.UnFinalizeSubmission.NAMED">(arxiv.submission.domain.event.UnFinalizeSubmission attribute)</a>
 </li>
+        <li><a href="arxiv.submission/arxiv.submission.domain.event.html#arxiv.submission.domain.event.UnsetUploadPackage.NAMED">(arxiv.submission.domain.event.UnsetUploadPackage attribute)</a>
+</li>
         <li><a href="arxiv.submission/arxiv.submission.domain.event.html#arxiv.submission.domain.event.UpdateUploadPackage.NAMED">(arxiv.submission.domain.event.UpdateUploadPackage attribute)</a>
 </li>
         <li><a href="arxiv.submission/arxiv.submission.domain.event.flag.html#arxiv.submission.domain.event.flag.AddContentFlag.NAMED">(arxiv.submission.domain.event.flag.AddContentFlag attribute)</a>
@@ -1724,13 +1736,19 @@
 </li>
         <li><a href="arxiv.submission/arxiv.submission.domain.event.flag.html#arxiv.submission.domain.event.flag.AddUserFlag.NAMED">(arxiv.submission.domain.event.flag.AddUserFlag attribute)</a>
 </li>
+        <li><a href="arxiv.submission/arxiv.submission.domain.event.flag.html#arxiv.submission.domain.event.flag.AddWaiver.NAMED">(arxiv.submission.domain.event.flag.AddWaiver attribute)</a>
+</li>
         <li><a href="arxiv.submission/arxiv.submission.domain.event.flag.html#arxiv.submission.domain.event.flag.RemoveFlag.NAMED">(arxiv.submission.domain.event.flag.RemoveFlag attribute)</a>
 </li>
         <li><a href="arxiv.submission/arxiv.submission.domain.event.flag.html#arxiv.submission.domain.event.flag.RemoveHold.NAMED">(arxiv.submission.domain.event.flag.RemoveHold attribute)</a>
 </li>
         <li><a href="arxiv.submission/arxiv.submission.domain.event.process.html#arxiv.submission.domain.event.process.AddProcessStatus.NAMED">(arxiv.submission.domain.event.process.AddProcessStatus attribute)</a>
 </li>
+        <li><a href="arxiv.submission/arxiv.submission.domain.event.proposal.html#arxiv.submission.domain.event.proposal.AcceptProposal.NAMED">(arxiv.submission.domain.event.proposal.AcceptProposal attribute)</a>
+</li>
         <li><a href="arxiv.submission/arxiv.submission.domain.event.proposal.html#arxiv.submission.domain.event.proposal.AddProposal.NAMED">(arxiv.submission.domain.event.proposal.AddProposal attribute)</a>
+</li>
+        <li><a href="arxiv.submission/arxiv.submission.domain.event.proposal.html#arxiv.submission.domain.event.proposal.RejectProposal.NAMED">(arxiv.submission.domain.event.proposal.RejectProposal attribute)</a>
 </li>
         <li><a href="arxiv.submission/arxiv.submission.domain.event.request.html#arxiv.submission.domain.event.request.ApplyRequest.NAMED">(arxiv.submission.domain.event.request.ApplyRequest attribute)</a>
 </li>
@@ -1923,8 +1941,12 @@
 </li>
       <li><a href="arxiv.submission/arxiv.submission.services.classifier.classifier.html#arxiv.submission.services.classifier.classifier.Classifier.probability">probability() (arxiv.submission.services.classifier.classifier.Classifier class method)</a>
 </li>
-      <li><a href="arxiv.submission/arxiv.submission.domain.event.process.html#arxiv.submission.domain.event.process.AddProcessStatus.process">process (arxiv.submission.domain.event.process.AddProcessStatus attribute)</a>
+      <li><a href="containers/agent/agent.services.database.html#agent.services.database.ProcessStatusEvent.process">process (agent.services.database.ProcessStatusEvent attribute)</a>
+
+      <ul>
+        <li><a href="arxiv.submission/arxiv.submission.domain.event.process.html#arxiv.submission.domain.event.process.AddProcessStatus.process">(arxiv.submission.domain.event.process.AddProcessStatus attribute)</a>
 </li>
+      </ul></li>
       <li><a href="containers/agent/agent.process.base.html#agent.process.base.Process">Process (class in agent.process.base)</a>
 </li>
       <li><a href="containers/agent/agent.process.base.html#agent.process.base.Process.Status">Process.Status (class in agent.process.base)</a>
@@ -1932,18 +1954,18 @@
       <li><a href="arxiv.submission/arxiv.submission.services.classic.util.html#arxiv.submission.services.classic.util.SQLiteJSON.process_bind_param">process_bind_param() (arxiv.submission.services.classic.util.SQLiteJSON method)</a>
 </li>
       <li><a href="containers/agent/agent.services.database.html#agent.services.database.ProcessStatusEvent.process_id">process_id (agent.services.database.ProcessStatusEvent attribute)</a>
+
+      <ul>
+        <li><a href="arxiv.submission/arxiv.submission.domain.event.process.html#arxiv.submission.domain.event.process.AddProcessStatus.process_id">(arxiv.submission.domain.event.process.AddProcessStatus attribute)</a>
 </li>
+      </ul></li>
       <li><a href="containers/agent/agent.consumer.html#agent.consumer.SubmissionEventConsumer.process_record">process_record() (agent.consumer.SubmissionEventConsumer method)</a>
 </li>
       <li><a href="containers/agent/agent.process.classification_and_content.html#agent.process.classification_and_content.RunAutoclassifier.process_result">process_result() (agent.process.classification_and_content.RunAutoclassifier method)</a>
 </li>
       <li><a href="arxiv.submission/arxiv.submission.services.classic.util.html#arxiv.submission.services.classic.util.SQLiteJSON.process_result_value">process_result_value() (arxiv.submission.services.classic.util.SQLiteJSON method)</a>
 </li>
-      <li><a href="containers/agent/agent.services.database.html#agent.services.database.ProcessStatusEvent.process_status">process_status (agent.services.database.ProcessStatusEvent attribute)</a>
-</li>
       <li><a href="containers/agent/agent.consumer.html#agent.consumer.process_stream">process_stream() (in module agent.consumer)</a>
-</li>
-      <li><a href="containers/agent/agent.services.database.html#agent.services.database.ProcessStatusEvent.process_type">process_type (agent.services.database.ProcessStatusEvent attribute)</a>
 </li>
       <li><a href="containers/agent/agent.domain.html#agent.domain.ProcessData">ProcessData (class in agent.domain)</a>
 </li>
@@ -1994,13 +2016,9 @@
 </li>
         <li><a href="arxiv.submission/arxiv.submission.domain.event.html#arxiv.submission.domain.event.ConfirmPreview.project">(arxiv.submission.domain.event.ConfirmPreview method)</a>
 </li>
-        <li><a href="arxiv.submission/arxiv.submission.domain.event.html#arxiv.submission.domain.event.CreateComment.project">(arxiv.submission.domain.event.CreateComment method)</a>
-</li>
         <li><a href="arxiv.submission/arxiv.submission.domain.event.html#arxiv.submission.domain.event.CreateSubmission.project">(arxiv.submission.domain.event.CreateSubmission method)</a>
 </li>
         <li><a href="arxiv.submission/arxiv.submission.domain.event.html#arxiv.submission.domain.event.CreateSubmissionVersion.project">(arxiv.submission.domain.event.CreateSubmissionVersion method)</a>
-</li>
-        <li><a href="arxiv.submission/arxiv.submission.domain.event.html#arxiv.submission.domain.event.DeleteComment.project">(arxiv.submission.domain.event.DeleteComment method)</a>
 </li>
         <li><a href="arxiv.submission/arxiv.submission.domain.event.html#arxiv.submission.domain.event.FinalizeSubmission.project">(arxiv.submission.domain.event.FinalizeSubmission method)</a>
 </li>
@@ -2155,12 +2173,6 @@
 </li>
       <li><a href="arxiv.submission/arxiv.submission.services.compiler.compiler.html#arxiv.submission.services.compiler.compiler.Download.read">read() (arxiv.submission.services.compiler.compiler.Download method)</a>
 </li>
-      <li><a href="arxiv.submission/arxiv.submission.domain.event.html#arxiv.submission.domain.event.CreateComment.read_scope">read_scope (arxiv.submission.domain.event.CreateComment attribute)</a>
-
-      <ul>
-        <li><a href="arxiv.submission/arxiv.submission.domain.event.html#arxiv.submission.domain.event.DeleteComment.read_scope">(arxiv.submission.domain.event.DeleteComment attribute)</a>
-</li>
-      </ul></li>
       <li><a href="containers/agent/agent.services.database.html#agent.services.database.ProcessStatusEvent.reason">reason (agent.services.database.ProcessStatusEvent attribute)</a>
 
       <ul>
@@ -2213,10 +2225,10 @@
 </li>
       <li><a href="arxiv.submission/arxiv.submission.domain.event.flag.html#arxiv.submission.domain.event.flag.RemoveHold">RemoveHold (class in arxiv.submission.domain.event.flag)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="arxiv.submission/arxiv.submission.domain.event.html#arxiv.submission.domain.event.RemoveSecondaryClassification">RemoveSecondaryClassification (class in arxiv.submission.domain.event)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="arxiv.submission/arxiv.submission.services.classic.models.html#arxiv.submission.services.classic.models.Submission.REPLACEMENT">REPLACEMENT (arxiv.submission.services.classic.models.Submission attribute)</a>
 </li>
       <li><a href="arxiv.submission/arxiv.submission.domain.event.html#arxiv.submission.domain.event.SetReportNumber.report_num">report_num (arxiv.submission.domain.event.SetReportNumber attribute)</a>
@@ -2290,8 +2302,6 @@
       <li><a href="arxiv.submission/arxiv.submission.exceptions.html#arxiv.submission.exceptions.SaveError">SaveError</a>
 </li>
       <li><a href="arxiv.submission/arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.Submission.SCHEDULED">SCHEDULED (arxiv.submission.domain.submission.Submission attribute)</a>
-</li>
-      <li><a href="arxiv.submission/arxiv.submission.domain.event.html#arxiv.submission.domain.event.CreateComment.scope">scope (arxiv.submission.domain.event.CreateComment attribute)</a>
 </li>
       <li><a href="arxiv.submission/arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.Submission.secondary_categories">secondary_categories (arxiv.submission.domain.submission.Submission attribute)</a>
 
@@ -2399,9 +2409,11 @@
 </li>
       <li><a href="arxiv.submission/arxiv.submission.services.classic.models.html#arxiv.submission.services.classic.models.Submission.STARTED">STARTED (arxiv.submission.services.classic.models.Submission attribute)</a>
 </li>
-      <li><a href="arxiv.submission/arxiv.submission.domain.compilation.html#arxiv.submission.domain.compilation.Compilation.status">status (arxiv.submission.domain.compilation.Compilation attribute)</a>
+      <li><a href="containers/agent/agent.services.database.html#agent.services.database.ProcessStatusEvent.status">status (agent.services.database.ProcessStatusEvent attribute)</a>
 
       <ul>
+        <li><a href="arxiv.submission/arxiv.submission.domain.compilation.html#arxiv.submission.domain.compilation.Compilation.status">(arxiv.submission.domain.compilation.Compilation attribute)</a>
+</li>
         <li><a href="arxiv.submission/arxiv.submission.domain.compilation.html#arxiv.submission.domain.compilation.CompilationLog.status">(arxiv.submission.domain.compilation.CompilationLog attribute)</a>
 </li>
         <li><a href="arxiv.submission/arxiv.submission.domain.compilation.html#arxiv.submission.domain.compilation.CompilationProduct.status">(arxiv.submission.domain.compilation.CompilationProduct attribute)</a>
@@ -2687,7 +2699,7 @@
 <h2 id="U">U</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="arxiv.submission/arxiv.submission.services.classic.exceptions.html#arxiv.submission.services.classic.exceptions.Unavailable">Unavailable</a>
+      <li><a href="arxiv.submission/arxiv.submission.services.classic.exceptions.html#arxiv.submission.services.classic.exceptions.Unavailable">Unavailable</a>, <a href="containers/agent/agent.services.database.html#agent.services.database.Unavailable">[1]</a>
 </li>
       <li><a href="arxiv.submission/arxiv.submission.domain.event.html#arxiv.submission.domain.event.SetUploadPackage.uncompressed_size">uncompressed_size (arxiv.submission.domain.event.SetUploadPackage attribute)</a>
 
@@ -2796,13 +2808,9 @@
 </li>
         <li><a href="arxiv.submission/arxiv.submission.domain.event.html#arxiv.submission.domain.event.ConfirmPreview.validate">(arxiv.submission.domain.event.ConfirmPreview method)</a>
 </li>
-        <li><a href="arxiv.submission/arxiv.submission.domain.event.html#arxiv.submission.domain.event.CreateComment.validate">(arxiv.submission.domain.event.CreateComment method)</a>
-</li>
         <li><a href="arxiv.submission/arxiv.submission.domain.event.html#arxiv.submission.domain.event.CreateSubmission.validate">(arxiv.submission.domain.event.CreateSubmission method)</a>
 </li>
         <li><a href="arxiv.submission/arxiv.submission.domain.event.html#arxiv.submission.domain.event.CreateSubmissionVersion.validate">(arxiv.submission.domain.event.CreateSubmissionVersion method)</a>
-</li>
-        <li><a href="arxiv.submission/arxiv.submission.domain.event.html#arxiv.submission.domain.event.DeleteComment.validate">(arxiv.submission.domain.event.DeleteComment method)</a>
 </li>
         <li><a href="arxiv.submission/arxiv.submission.domain.event.html#arxiv.submission.domain.event.FinalizeSubmission.validate">(arxiv.submission.domain.event.FinalizeSubmission method)</a>
 </li>
@@ -2925,10 +2933,10 @@
 </li>
       <li><a href="arxiv.submission/arxiv.submission.schedule.html#arxiv.submission.schedule.Weekdays">Weekdays (class in arxiv.submission.schedule)</a>
 </li>
-      <li><a href="containers/agent/agent.process.metadata_checks.html#agent.process.metadata_checks.window">window() (in module agent.process.metadata_checks)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="containers/agent/agent.process.metadata_checks.html#agent.process.metadata_checks.window">window() (in module agent.process.metadata_checks)</a>
+</li>
       <li><a href="arxiv.submission/arxiv.submission.services.classic.models.html#arxiv.submission.services.classic.models.Submission.WITHDRAWAL">WITHDRAWAL (arxiv.submission.services.classic.models.Submission attribute)</a>
 </li>
       <li><a href="arxiv.submission/arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.WithdrawalRequest">WithdrawalRequest (class in arxiv.submission.domain.submission)</a>
@@ -2943,12 +2951,6 @@
 </li>
       <li><a href="arxiv.submission/arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.Submission.WORKING">WORKING (arxiv.submission.domain.submission.Submission attribute)</a>
 </li>
-      <li><a href="arxiv.submission/arxiv.submission.domain.event.html#arxiv.submission.domain.event.CreateComment.write_scope">write_scope (arxiv.submission.domain.event.CreateComment attribute)</a>
-
-      <ul>
-        <li><a href="arxiv.submission/arxiv.submission.domain.event.html#arxiv.submission.domain.event.DeleteComment.write_scope">(arxiv.submission.domain.event.DeleteComment attribute)</a>
-</li>
-      </ul></li>
   </ul></td>
 </tr></table>
 
@@ -2972,7 +2974,7 @@
 <h3>Navigation</h3>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="architecture.html">Submission &amp; moderation subsystem architecture</a></li>
-<li class="toctree-l1"><a class="reference internal" href="announcement_process.html">Submission &amp; announcement Process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="announcement_process.html">Submission &amp; announcement process</a></li>
 <li class="toctree-l1"><a class="reference internal" href="submission_api_context.html">Submission API: Context</a></li>
 <li class="toctree-l1"><a class="reference internal" href="arxiv.submission/arxiv.submission.html">arxiv.submission package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="containers/agent/agent.html">agent package</a></li>

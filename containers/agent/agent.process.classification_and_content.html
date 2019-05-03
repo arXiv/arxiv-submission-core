@@ -38,7 +38,7 @@
 <p>Extract text, and get suggestions, features, and flags from Classifier.</p>
 <dl class="class">
 <dt id="agent.process.classification_and_content.CheckStopwordCount">
-<em class="property">class </em><code class="descclassname">agent.process.classification_and_content.</code><code class="descname">CheckStopwordCount</code><span class="sig-paren">(</span><em>submission_id</em><span class="sig-paren">)</span><a class="headerlink" href="#agent.process.classification_and_content.CheckStopwordCount" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">agent.process.classification_and_content.</code><code class="descname">CheckStopwordCount</code><span class="sig-paren">(</span><em>submission_id</em>, <em>process_id=None</em><span class="sig-paren">)</span><a class="headerlink" href="#agent.process.classification_and_content.CheckStopwordCount" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="agent.process.base.html#agent.process.base.Process" title="agent.process.base.Process"><code class="xref py py-class docutils literal notranslate"><span class="pre">agent.process.base.Process</span></code></a></p>
 <p>Check the submission content for too low stopword count.</p>
 <dl class="method">
@@ -61,7 +61,7 @@
 
 <dl class="class">
 <dt id="agent.process.classification_and_content.CheckStopwordPercent">
-<em class="property">class </em><code class="descclassname">agent.process.classification_and_content.</code><code class="descname">CheckStopwordPercent</code><span class="sig-paren">(</span><em>submission_id</em><span class="sig-paren">)</span><a class="headerlink" href="#agent.process.classification_and_content.CheckStopwordPercent" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">agent.process.classification_and_content.</code><code class="descname">CheckStopwordPercent</code><span class="sig-paren">(</span><em>submission_id</em>, <em>process_id=None</em><span class="sig-paren">)</span><a class="headerlink" href="#agent.process.classification_and_content.CheckStopwordPercent" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="agent.process.base.html#agent.process.base.Process" title="agent.process.base.Process"><code class="xref py py-class docutils literal notranslate"><span class="pre">agent.process.base.Process</span></code></a></p>
 <p>Check the submission content for too low percentage of stopwords.</p>
 <dl class="method">
@@ -84,7 +84,7 @@
 
 <dl class="class">
 <dt id="agent.process.classification_and_content.PlainTextExtraction">
-<em class="property">class </em><code class="descclassname">agent.process.classification_and_content.</code><code class="descname">PlainTextExtraction</code><span class="sig-paren">(</span><em>submission_id</em><span class="sig-paren">)</span><a class="headerlink" href="#agent.process.classification_and_content.PlainTextExtraction" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">agent.process.classification_and_content.</code><code class="descname">PlainTextExtraction</code><span class="sig-paren">(</span><em>submission_id</em>, <em>process_id=None</em><span class="sig-paren">)</span><a class="headerlink" href="#agent.process.classification_and_content.PlainTextExtraction" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="agent.process.base.html#agent.process.base.Process" title="agent.process.base.Process"><code class="xref py py-class docutils literal notranslate"><span class="pre">agent.process.base.Process</span></code></a></p>
 <p>Extract plain text from a compiled PDF.</p>
 <dl class="method">
@@ -151,7 +151,7 @@
 
 <dl class="class">
 <dt id="agent.process.classification_and_content.RunAutoclassifier">
-<em class="property">class </em><code class="descclassname">agent.process.classification_and_content.</code><code class="descname">RunAutoclassifier</code><span class="sig-paren">(</span><em>submission_id</em><span class="sig-paren">)</span><a class="headerlink" href="#agent.process.classification_and_content.RunAutoclassifier" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">agent.process.classification_and_content.</code><code class="descname">RunAutoclassifier</code><span class="sig-paren">(</span><em>submission_id</em>, <em>process_id=None</em><span class="sig-paren">)</span><a class="headerlink" href="#agent.process.classification_and_content.RunAutoclassifier" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#agent.process.classification_and_content.PlainTextExtraction" title="agent.process.classification_and_content.PlainTextExtraction"><code class="xref py py-class docutils literal notranslate"><span class="pre">agent.process.classification_and_content.PlainTextExtraction</span></code></a></p>
 <p>Extract plain text and poll the autoclassifier.</p>
 <p>In addition to generating classification suggestions, the current
@@ -223,7 +223,7 @@ counts) and content flags (e.g. possible language issues, line numbers).</p>
 <h3>Navigation</h3>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../../architecture.html">Submission &amp; moderation subsystem architecture</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../announcement_process.html">Submission &amp; announcement Process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../announcement_process.html">Submission &amp; announcement process</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../submission_api_context.html">Submission API: Context</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../arxiv.submission/arxiv.submission.html">arxiv.submission package</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="agent.html">agent package</a><ul class="current">

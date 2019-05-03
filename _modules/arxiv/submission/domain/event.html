@@ -763,7 +763,7 @@
                                      <span class="s2">&quot; consecutive digits&quot;</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="SetReportNumber.project"><a class="viewcode-back" href="../../../../arxiv.submission/arxiv.submission.domain.event.html#arxiv.submission.domain.event.SetReportNumber.project">[docs]</a>    <span class="k">def</span> <span class="nf">project</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Submission</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Update the report number on a :class:`.domain.submission.Submission`.&quot;&quot;&quot;</span>
+        <span class="sd">&quot;&quot;&quot;Set report number on a :class:`.domain.submission.Submission`.&quot;&quot;&quot;</span>
         <span class="n">submission</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">report_num</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">report_num</span>
         <span class="k">return</span> <span class="n">submission</span></div>
 
@@ -945,6 +945,9 @@
 <span class="k">class</span> <span class="nc">UnsetUploadPackage</span><span class="p">(</span><span class="n">Event</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Unset the upload workspace for this submission.&quot;&quot;&quot;</span>
 
+    <span class="n">NAME</span> <span class="o">=</span> <span class="s2">&quot;unset the upload package&quot;</span>
+    <span class="n">NAMED</span> <span class="o">=</span> <span class="s2">&quot;upload package unset&quot;</span>
+
 <div class="viewcode-block" id="UnsetUploadPackage.validate"><a class="viewcode-back" href="../../../../arxiv.submission/arxiv.submission.domain.event.html#arxiv.submission.domain.event.UnsetUploadPackage.validate">[docs]</a>    <span class="k">def</span> <span class="nf">validate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Validate data for :class:`.UnsetUploadPackage`.&quot;&quot;&quot;</span>
         <span class="n">validators</span><span class="o">.</span><span class="n">submission_is_not_finalized</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">)</span></div>
@@ -1102,58 +1105,58 @@
 <span class="c1"># Moderation-related events.</span>
 
 
-<div class="viewcode-block" id="CreateComment"><a class="viewcode-back" href="../../../../arxiv.submission/arxiv.submission.domain.event.html#arxiv.submission.domain.event.CreateComment">[docs]</a><span class="nd">@dataclass</span><span class="p">()</span>
-<span class="k">class</span> <span class="nc">CreateComment</span><span class="p">(</span><span class="n">Event</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Creation of a :class:`.Comment` on a :class:`.domain.submission.Submission`.&quot;&quot;&quot;</span>
-
-    <span class="n">read_scope</span> <span class="o">=</span> <span class="s1">&#39;submission:moderate&#39;</span>
-    <span class="n">write_scope</span> <span class="o">=</span> <span class="s1">&#39;submission:moderate&#39;</span>
-
-    <span class="n">body</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">str</span><span class="p">)</span>
-    <span class="n">scope</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;private&#39;</span>
-
-<div class="viewcode-block" id="CreateComment.validate"><a class="viewcode-back" href="../../../../arxiv.submission/arxiv.submission.domain.event.html#arxiv.submission.domain.event.CreateComment.validate">[docs]</a>    <span class="k">def</span> <span class="nf">validate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;The :attr:`.body` should be set.&quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">body</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Comment body not set&#39;</span><span class="p">)</span></div>
-
-<div class="viewcode-block" id="CreateComment.project"><a class="viewcode-back" href="../../../../arxiv.submission/arxiv.submission.domain.event.html#arxiv.submission.domain.event.CreateComment.project">[docs]</a>    <span class="k">def</span> <span class="nf">project</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Submission</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Create a new :class:`.Comment` and attach it to the submission.&quot;&quot;&quot;</span>
-        <span class="n">submission</span><span class="o">.</span><span class="n">comments</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">event_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">Comment</span><span class="p">(</span>
-            <span class="n">event_id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">event_id</span><span class="p">,</span>
-            <span class="n">creator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">creator</span><span class="p">,</span>
-            <span class="n">created</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">created</span><span class="p">,</span>
-            <span class="n">proxy</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">proxy</span><span class="p">,</span>
-            <span class="n">submission</span><span class="o">=</span><span class="n">submission</span><span class="p">,</span>
-            <span class="n">body</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">body</span>
-        <span class="p">)</span>
-        <span class="k">return</span> <span class="n">submission</span></div></div>
-
-
-<div class="viewcode-block" id="DeleteComment"><a class="viewcode-back" href="../../../../arxiv.submission/arxiv.submission.domain.event.html#arxiv.submission.domain.event.DeleteComment">[docs]</a><span class="nd">@dataclass</span><span class="p">()</span>
-<span class="k">class</span> <span class="nc">DeleteComment</span><span class="p">(</span><span class="n">Event</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Deletion of a :class:`.Comment` on a :class:`.domain.submission.Submission`.&quot;&quot;&quot;</span>
-
-    <span class="n">read_scope</span> <span class="o">=</span> <span class="s1">&#39;submission:moderate&#39;</span>
-    <span class="n">write_scope</span> <span class="o">=</span> <span class="s1">&#39;submission:moderate&#39;</span>
-
-    <span class="n">comment_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">str</span><span class="p">)</span>
-
-<div class="viewcode-block" id="DeleteComment.validate"><a class="viewcode-back" href="../../../../arxiv.submission/arxiv.submission.domain.event.html#arxiv.submission.domain.event.DeleteComment.validate">[docs]</a>    <span class="k">def</span> <span class="nf">validate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;The :attr:`.comment_id` must present on the submission.&quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">comment_id</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">InvalidEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;comment_id is required&#39;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">submission</span><span class="p">,</span> <span class="s1">&#39;comments&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">submission</span><span class="o">.</span><span class="n">comments</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">InvalidEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;Cannot delete nonexistant comment&#39;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">comment_id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">submission</span><span class="o">.</span><span class="n">comments</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">InvalidEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;Cannot delete nonexistant comment&#39;</span><span class="p">)</span></div>
-
-<div class="viewcode-block" id="DeleteComment.project"><a class="viewcode-back" href="../../../../arxiv.submission/arxiv.submission.domain.event.html#arxiv.submission.domain.event.DeleteComment.project">[docs]</a>    <span class="k">def</span> <span class="nf">project</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Submission</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Remove the comment from the submission.&quot;&quot;&quot;</span>
-        <span class="k">del</span> <span class="n">submission</span><span class="o">.</span><span class="n">comments</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">comment_id</span><span class="p">]</span>
-        <span class="k">return</span> <span class="n">submission</span></div></div>
-
-
+<span class="c1"># @dataclass()</span>
+<span class="c1"># class CreateComment(Event):</span>
+<span class="c1">#     &quot;&quot;&quot;Creation of a :class:`.Comment` on a :class:`.domain.submission.Submission`.&quot;&quot;&quot;</span>
+<span class="c1">#</span>
+<span class="c1">#     read_scope = &#39;submission:moderate&#39;</span>
+<span class="c1">#     write_scope = &#39;submission:moderate&#39;</span>
+<span class="c1">#</span>
+<span class="c1">#     body: str = field(default_factory=str)</span>
+<span class="c1">#     scope: str = &#39;private&#39;</span>
+<span class="c1">#</span>
+<span class="c1">#     def validate(self, submission: Submission) -&gt; None:</span>
+<span class="c1">#         &quot;&quot;&quot;The :attr:`.body` should be set.&quot;&quot;&quot;</span>
+<span class="c1">#         if not self.body:</span>
+<span class="c1">#             raise ValueError(&#39;Comment body not set&#39;)</span>
+<span class="c1">#</span>
+<span class="c1">#     def project(self, submission: Submission) -&gt; Submission:</span>
+<span class="c1">#         &quot;&quot;&quot;Create a new :class:`.Comment` and attach it to the submission.&quot;&quot;&quot;</span>
+<span class="c1">#         submission.comments[self.event_id] = Comment(</span>
+<span class="c1">#             event_id=self.event_id,</span>
+<span class="c1">#             creator=self.creator,</span>
+<span class="c1">#             created=self.created,</span>
+<span class="c1">#             proxy=self.proxy,</span>
+<span class="c1">#             submission=submission,</span>
+<span class="c1">#             body=self.body</span>
+<span class="c1">#         )</span>
+<span class="c1">#         return submission</span>
+<span class="c1">#</span>
+<span class="c1">#</span>
+<span class="c1"># @dataclass()</span>
+<span class="c1"># class DeleteComment(Event):</span>
+<span class="c1">#     &quot;&quot;&quot;Deletion of a :class:`.Comment` on a :class:`.domain.submission.Submission`.&quot;&quot;&quot;</span>
+<span class="c1">#</span>
+<span class="c1">#     read_scope = &#39;submission:moderate&#39;</span>
+<span class="c1">#     write_scope = &#39;submission:moderate&#39;</span>
+<span class="c1">#</span>
+<span class="c1">#     comment_id: str = field(default_factory=str)</span>
+<span class="c1">#</span>
+<span class="c1">#     def validate(self, submission: Submission) -&gt; None:</span>
+<span class="c1">#         &quot;&quot;&quot;The :attr:`.comment_id` must present on the submission.&quot;&quot;&quot;</span>
+<span class="c1">#         if self.comment_id is None:</span>
+<span class="c1">#             raise InvalidEvent(self, &#39;comment_id is required&#39;)</span>
+<span class="c1">#         if not hasattr(submission, &#39;comments&#39;) or not submission.comments:</span>
+<span class="c1">#             raise InvalidEvent(self, &#39;Cannot delete nonexistant comment&#39;)</span>
+<span class="c1">#         if self.comment_id not in submission.comments:</span>
+<span class="c1">#             raise InvalidEvent(self, &#39;Cannot delete nonexistant comment&#39;)</span>
+<span class="c1">#</span>
+<span class="c1">#     def project(self, submission: Submission) -&gt; Submission:</span>
+<span class="c1">#         &quot;&quot;&quot;Remove the comment from the submission.&quot;&quot;&quot;</span>
+<span class="c1">#         del submission.comments[self.comment_id]</span>
+<span class="c1">#         return submission</span>
+<span class="c1">#</span>
+<span class="c1">#</span>
 <span class="c1"># @dataclass()</span>
 <span class="c1"># class AddDelegate(Event):</span>
 <span class="c1">#     &quot;&quot;&quot;Owner delegates authority to another agent.&quot;&quot;&quot;</span>
@@ -1300,7 +1303,7 @@
 <h3>Navigation</h3>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../../architecture.html">Submission &amp; moderation subsystem architecture</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../announcement_process.html">Submission &amp; announcement Process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../announcement_process.html">Submission &amp; announcement process</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../submission_api_context.html">Submission API: Context</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../arxiv.submission/arxiv.submission.html">arxiv.submission package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../containers/agent/agent.html">agent package</a></li>

@@ -15,7 +15,7 @@
     <script type="text/javascript" src="_static/language_data.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Submission &amp; announcement Process" href="announcement_process.html" />
+    <link rel="next" title="Submission &amp; announcement process" href="announcement_process.html" />
     <link rel="prev" title="Submission &amp; moderation" href="index.html" />
    
   <link rel="stylesheet" href="_static/custom.css" type="text/css" />
@@ -34,43 +34,44 @@
           <div class="body" role="main">
             
   <div class="section" id="submission-moderation-subsystem-architecture">
-<h1><a class="toc-backref" href="#id13">Submission &amp; moderation subsystem architecture</a><a class="headerlink" href="#submission-moderation-subsystem-architecture" title="Permalink to this headline">¶</a></h1>
+<h1><a class="toc-backref" href="#id14">Submission &amp; moderation subsystem architecture</a><a class="headerlink" href="#submission-moderation-subsystem-architecture" title="Permalink to this headline">¶</a></h1>
 <div class="contents topic" id="contents">
 <p class="topic-title first">Contents</p>
 <ul class="simple">
-<li><p><a class="reference internal" href="#submission-moderation-subsystem-architecture" id="id13">Submission &amp; moderation subsystem architecture</a></p>
+<li><p><a class="reference internal" href="#submission-moderation-subsystem-architecture" id="id14">Submission &amp; moderation subsystem architecture</a></p>
 <ul>
-<li><p><a class="reference internal" href="#overview" id="id14">Overview</a></p>
+<li><p><a class="reference internal" href="#overview" id="id15">Overview</a></p>
 <ul>
-<li><p><a class="reference internal" href="#typical-workflow" id="id15">Typical workflow</a></p></li>
+<li><p><a class="reference internal" href="#typical-workflow" id="id16">Typical workflow</a></p></li>
 </ul>
 </li>
-<li><p><a class="reference internal" href="#key-requirements" id="id16">Key requirements</a></p></li>
-<li><p><a class="reference internal" href="#solution-strategy" id="id17">Solution Strategy</a></p></li>
-<li><p><a class="reference internal" href="#context" id="id18">Context</a></p>
+<li><p><a class="reference internal" href="#key-requirements" id="id17">Key requirements</a></p></li>
+<li><p><a class="reference internal" href="#solution-strategy" id="id18">Solution strategy</a></p></li>
+<li><p><a class="reference internal" href="#context" id="id19">Context</a></p>
 <ul>
-<li><p><a class="reference internal" href="#authenticated-users" id="id19">Authenticated users</a></p></li>
-<li><p><a class="reference internal" href="#api-access" id="id20">API access</a></p></li>
-<li><p><a class="reference internal" href="#other-arxiv-services" id="id21">Other arXiv services</a></p></li>
+<li><p><a class="reference internal" href="#authenticated-users" id="id20">Authenticated users</a></p></li>
+<li><p><a class="reference internal" href="#api-access" id="id21">API access</a></p></li>
+<li><p><a class="reference internal" href="#other-arxiv-services" id="id22">Other arXiv services</a></p></li>
 </ul>
 </li>
-<li><p><a class="reference internal" href="#services-building-blocks" id="id22">Services &amp; Building Blocks</a></p>
+<li><p><a class="reference internal" href="#services-building-blocks" id="id23">Services &amp; building blocks</a></p>
 <ul>
-<li><p><a class="reference internal" href="#submission-database" id="id23">Submission database</a></p></li>
-<li><p><a class="reference internal" href="#submission-core-package" id="id24">Submission core package</a></p></li>
-<li><p><a class="reference internal" href="#submission-agent" id="id25">Submission agent</a></p></li>
-<li><p><a class="reference internal" href="#core-interface-services" id="id26">Core interface services</a></p></li>
-<li><p><a class="reference internal" href="#utility-services" id="id27">Utility services</a></p></li>
-<li><p><a class="reference internal" href="#web-hook-notification-service" id="id28">Web-hook notification service</a></p></li>
+<li><p><a class="reference internal" href="#submission-database" id="id24">Submission database</a></p></li>
+<li><p><a class="reference internal" href="#submission-core-package" id="id25">Submission core package</a></p></li>
+<li><p><a class="reference internal" href="#submission-agent" id="id26">Submission agent</a></p></li>
+<li><p><a class="reference internal" href="#core-interface-services" id="id27">Core interface services</a></p></li>
+<li><p><a class="reference internal" href="#utility-services" id="id28">Utility services</a></p></li>
+<li><p><a class="reference internal" href="#web-hook-notification-service" id="id29">Web-hook notification service</a></p></li>
 </ul>
 </li>
-<li><p><a class="reference internal" href="#open-problems-future-development" id="id29">Open problems/future development</a></p></li>
+<li><p><a class="reference internal" href="#example-integration-with-the-auto-classifier" id="id30">Example: integration with the auto-classifier</a></p></li>
+<li><p><a class="reference internal" href="#open-problems-future-development" id="id31">Open problems/future development</a></p></li>
 </ul>
 </li>
 </ul>
 </div>
 <div class="section" id="overview">
-<h2><a class="toc-backref" href="#id14">Overview</a><a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id15">Overview</a><a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
 <p>The submission and moderation subsystem provides:</p>
 <ul class="simple">
 <li><p>Accession of submission of e-print content and metadata via multiple
@@ -92,7 +93,7 @@ has been accessioned for possible announcement in arXiv.</p>
 </dd>
 </dl>
 <div class="section" id="typical-workflow">
-<h3><a class="toc-backref" href="#id15">Typical workflow</a><a class="headerlink" href="#typical-workflow" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id16">Typical workflow</a><a class="headerlink" href="#typical-workflow" title="Permalink to this headline">¶</a></h3>
 <p>Submitters (and external services) generate new submissions, which are
 comprised of metadata and a content object (e.g. a tar/gzipped TeX source
 bundle, or a single PDF file). Prior to consideration by moderators,
@@ -110,7 +111,7 @@ submitter and/or administrators may be necessary.</p>
 </div>
 </div>
 <div class="section" id="key-requirements">
-<h2><a class="toc-backref" href="#id16">Key requirements</a><a class="headerlink" href="#key-requirements" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id17">Key requirements</a><a class="headerlink" href="#key-requirements" title="Permalink to this headline">¶</a></h2>
 <ol class="arabic simple">
 <li><p>The subsystem must sensibly incorporate input from, and synchronize the
 activities of, a variety of human and non-human agents.</p></li>
@@ -130,7 +131,7 @@ areas of concern.</p></li>
 </ol>
 </div>
 <div class="section" id="solution-strategy">
-<h2><a class="toc-backref" href="#id17">Solution Strategy</a><a class="headerlink" href="#solution-strategy" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id18">Solution strategy</a><a class="headerlink" href="#solution-strategy" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
 <li><p>Major functional components of the classic submission system are decomposed
 into independent <a class="reference internal" href="#utility-services"><span class="std std-ref">Utility services</span></a> that are agnostic about the
@@ -152,14 +153,14 @@ processes based on submission vents.</p></li>
 </ul>
 </div>
 <div class="section" id="context">
-<h2><a class="toc-backref" href="#id18">Context</a><a class="headerlink" href="#context" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id19">Context</a><a class="headerlink" href="#context" title="Permalink to this headline">¶</a></h2>
 <p>This section describes the context for the submission system.</p>
-<div class="figure align-center" id="id9">
+<div class="figure align-center" id="id10">
 <span id="figure-submission-context"></span><a class="reference internal image-reference" href="_images/submission-context.png"><img alt="_images/submission-context.png" src="_images/submission-context.png" style="width: 600px;" /></a>
-<p class="caption"><span class="caption-number">Fig. 1 </span><span class="caption-text">System context for the arXiv submission system.</span><a class="headerlink" href="#id9" title="Permalink to this image">¶</a></p>
+<p class="caption"><span class="caption-number">Fig. 1 </span><span class="caption-text">System context for the arXiv submission system.</span><a class="headerlink" href="#id10" title="Permalink to this image">¶</a></p>
 </div>
 <div class="section" id="authenticated-users">
-<h3><a class="toc-backref" href="#id19">Authenticated users</a><a class="headerlink" href="#authenticated-users" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id20">Authenticated users</a><a class="headerlink" href="#authenticated-users" title="Permalink to this headline">¶</a></h3>
 <p>Authenticated users submit new e-prints via a user interface. Users can
 view the status of their submissions, which may include feedback from
 administrators, and amend their submissions as necessary. They
@@ -174,7 +175,7 @@ behavior of automated processes and policies, through an administrative
 interface.</p>
 </div>
 <div class="section" id="api-access">
-<h3><a class="toc-backref" href="#id20">API access</a><a class="headerlink" href="#api-access" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id21">API access</a><a class="headerlink" href="#api-access" title="Permalink to this headline">¶</a></h3>
 <p>All API access passes through the arXiv API gateway.</p>
 <p>The submission system provides a RESTful API for programmatic use. Clients may
 deposit submissions in bulk (e.g. conference proceedings), or on an individual
@@ -188,7 +189,7 @@ and classification services. Access to those services must be explicitly
 authorized by administrators.</p>
 </div>
 <div class="section" id="other-arxiv-services">
-<h3><a class="toc-backref" href="#id21">Other arXiv services</a><a class="headerlink" href="#other-arxiv-services" title="Permalink to this headline">¶</a></h3>
+<h3><a class="toc-backref" href="#id22">Other arXiv services</a><a class="headerlink" href="#other-arxiv-services" title="Permalink to this headline">¶</a></h3>
 <p>During the daily announcement process, the <span class="xref std std-ref">announcement-agent</span> retrieves
 information about announcement-ready submissions. The announcement agent moves
 submission content and metadata into the appropriate storage facilities,
@@ -201,7 +202,7 @@ content from announced e-prints in the canonical record.</p>
 </div>
 </div>
 <div class="section" id="services-building-blocks">
-<h2><a class="toc-backref" href="#id22">Services &amp; Building Blocks</a><a class="headerlink" href="#services-building-blocks" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id23">Services &amp; building blocks</a><a class="headerlink" href="#services-building-blocks" title="Permalink to this headline">¶</a></h2>
 <p>The submission &amp; moderation subsystem is comprised of the following parts:</p>
 <ol class="arabic simple">
 <li><p>The <a class="reference internal" href="#submission-database"><span class="std std-ref">Submission database</span></a>, which houses a detailed record of
@@ -218,12 +219,12 @@ backend processes (such as QA checks) based on a set of configurable rules.</p><
 <li><p>A <a class="reference internal" href="#web-hook-service"><span class="std std-ref">Web-hook notification service</span></a> that disseminates submission-related events
 to authorized clients via HTTP requests.</p></li>
 </ol>
-<div class="figure align-center" id="id10">
+<div class="figure align-center" id="id11">
 <span id="figure-submission-services"></span><a class="reference internal image-reference" href="_images/submission-services.png"><img alt="_images/submission-services.png" src="_images/submission-services.png" style="width: 600px;" /></a>
-<p class="caption"><span class="caption-number">Fig. 2 </span><span class="caption-text">Services in the arXiv submission subsystem.</span><a class="headerlink" href="#id10" title="Permalink to this image">¶</a></p>
+<p class="caption"><span class="caption-number">Fig. 2 </span><span class="caption-text">Services in the arXiv submission subsystem.</span><a class="headerlink" href="#id11" title="Permalink to this image">¶</a></p>
 </div>
 <div class="section" id="submission-database">
-<span id="id1"></span><h3><a class="toc-backref" href="#id23">Submission database</a><a class="headerlink" href="#submission-database" title="Permalink to this headline">¶</a></h3>
+<span id="id1"></span><h3><a class="toc-backref" href="#id24">Submission database</a><a class="headerlink" href="#submission-database" title="Permalink to this headline">¶</a></h3>
 <p>The submission database (currently MySQL) is responsible for the persistence of
 operational and core descriptive metadata about submissions. Operational
 metadata includes information related to arXiv workflows and processes. Core
@@ -238,7 +239,7 @@ submission data will be migrated to a standalone MariaDB or PostgresQL cluster
 in AWS RDS.</p>
 </div>
 <div class="section" id="submission-core-package">
-<span id="submission-core-events-package"></span><h3><a class="toc-backref" href="#id24">Submission core package</a><a class="headerlink" href="#submission-core-package" title="Permalink to this headline">¶</a></h3>
+<span id="submission-core-events-package"></span><h3><a class="toc-backref" href="#id25">Submission core package</a><a class="headerlink" href="#submission-core-package" title="Permalink to this headline">¶</a></h3>
 <p>This package provides an event-based Python API for mutating submissions, and
 is the <em>only</em> mechanism for writing submission data to the
 <a class="reference internal" href="#submission-database"><span class="std std-ref">Submission database</span></a>. This package is used by both the
@@ -255,7 +256,7 @@ events to other parts of the system (e.g. <a class="reference internal" href="#s
 <p>Detailed package documentation can be found in <a class="reference internal" href="arxiv.submission/arxiv.submission.html#module-arxiv.submission" title="arxiv.submission"><code class="xref py py-mod docutils literal notranslate"><span class="pre">arxiv.submission</span></code></a>.</p>
 </div>
 <div class="section" id="submission-agent">
-<span id="id2"></span><h3><a class="toc-backref" href="#id25">Submission agent</a><a class="headerlink" href="#submission-agent" title="Permalink to this headline">¶</a></h3>
+<span id="id2"></span><h3><a class="toc-backref" href="#id26">Submission agent</a><a class="headerlink" href="#submission-agent" title="Permalink to this headline">¶</a></h3>
 <p>The <a class="reference internal" href="containers/agent/agent.html#module-agent" title="agent"><code class="xref py py-mod docutils literal notranslate"><span class="pre">agent</span></code></a> orchestrates backend processes based on rules triggered by
 submission events.</p>
 <p>The primary concerns of the agent are:</p>
@@ -271,7 +272,7 @@ which are emitted via the notification broker. Relies on a task queue (Redis)
 implemented using <a class="reference external" href="http://www.celeryproject.org/">Celery</a>.</p>
 </div>
 <div class="section" id="core-interface-services">
-<span id="interface-services"></span><h3><a class="toc-backref" href="#id26">Core interface services</a><a class="headerlink" href="#core-interface-services" title="Permalink to this headline">¶</a></h3>
+<span id="interface-services"></span><h3><a class="toc-backref" href="#id27">Core interface services</a><a class="headerlink" href="#core-interface-services" title="Permalink to this headline">¶</a></h3>
 <p>These services provide the core submission, moderation, and administrative
 interfaces for the arXiv submission subsystem. Each of these services integrates
 with the <a class="reference internal" href="#submission-database"><span class="std std-ref">Submission database</span></a> to modify submission state, via the
@@ -279,8 +280,8 @@ with the <a class="reference internal" href="#submission-database"><span class="
 <p>These core interface services integrate with other services in the submission
 subsystem (e.g. <a class="reference internal" href="#file-management-service"><span class="std std-ref">File management service</span></a>, <a class="reference internal" href="#compilation-service"><span class="std std-ref">Compilation service</span></a>) via
 their HTTP APIs.</p>
-<div class="section" id="submission-ui-service">
-<h4>Submission UI service<a class="headerlink" href="#submission-ui-service" title="Permalink to this headline">¶</a></h4>
+<div class="section" id="submission-ui">
+<span id="id3"></span><h4>Submission UI<a class="headerlink" href="#submission-ui" title="Permalink to this headline">¶</a></h4>
 <p><a class="reference external" href="https://github.com/cul-it/arxiv-submission-ui">https://github.com/cul-it/arxiv-submission-ui</a></p>
 <p>Provides form-based views that allow users to create and update submissions,
 and track the state of their submission through the moderation and announcement
@@ -317,12 +318,12 @@ and act on moderator proposals and comments.</p>
 </div>
 </div>
 <div class="section" id="utility-services">
-<span id="id3"></span><h3><a class="toc-backref" href="#id27">Utility services</a><a class="headerlink" href="#utility-services" title="Permalink to this headline">¶</a></h3>
+<span id="id4"></span><h3><a class="toc-backref" href="#id28">Utility services</a><a class="headerlink" href="#utility-services" title="Permalink to this headline">¶</a></h3>
 <p>The following utility services support the submission and moderation workflow,
 providing a menu of functionality used by UI and API services to support
 accession and quality assurance.</p>
 <div class="section" id="file-management-service">
-<span id="id4"></span><h4>File management service<a class="headerlink" href="#file-management-service" title="Permalink to this headline">¶</a></h4>
+<span id="id5"></span><h4>File management service<a class="headerlink" href="#file-management-service" title="Permalink to this headline">¶</a></h4>
 <p><a class="reference external" href="https://github.com/cul-it/arxiv-filemanager">https://github.com/cul-it/arxiv-filemanager</a></p>
 <p>This service is responsible for ensuring the safety and suitability of files
 uploaded to the submission subsystem. The file management service accepts
@@ -333,7 +334,7 @@ SFS volume provided by Cornell IT. Upon migration to the cloud, the file
 management service will be backed by an EFS volume.</p>
 </div>
 <div class="section" id="compilation-service">
-<span id="id5"></span><h4>Compilation service<a class="headerlink" href="#compilation-service" title="Permalink to this headline">¶</a></h4>
+<span id="id6"></span><h4>Compilation service<a class="headerlink" href="#compilation-service" title="Permalink to this headline">¶</a></h4>
 <p><a class="reference external" href="https://github.com/cul-it/arxiv-converter">https://github.com/cul-it/arxiv-converter</a></p>
 <p>The build service compiles sanitized upload packages into PDF, PostScript,
 and other formats. This service encompasses the arXiv TeX tree. Compilation
@@ -342,21 +343,21 @@ compilation failures or warnings.</p>
 <p>The compilation service is backed by an AWS S3 bucket.</p>
 </div>
 <div class="section" id="plain-text-extraction-service">
-<span id="id6"></span><h4>Plain text extraction service<a class="headerlink" href="#plain-text-extraction-service" title="Permalink to this headline">¶</a></h4>
+<span id="id7"></span><h4>Plain text extraction service<a class="headerlink" href="#plain-text-extraction-service" title="Permalink to this headline">¶</a></h4>
 <p><a class="reference external" href="https://github.com/cul-it/arxiv-fulltext">https://github.com/cul-it/arxiv-fulltext</a></p>
 <p>Extracts plain text content from PDFs, for use by the for overlap detection
 and classification services. Makes both raw extracted text and normalized
 “PSV” tokenized text available to other services.</p>
 </div>
 <div class="section" id="overlap-detection-service">
-<span id="id7"></span><h4>Overlap detection service<a class="headerlink" href="#overlap-detection-service" title="Permalink to this headline">¶</a></h4>
+<span id="id8"></span><h4>Overlap detection service<a class="headerlink" href="#overlap-detection-service" title="Permalink to this headline">¶</a></h4>
 <p><a class="reference external" href="https://github.com/cul-it/arxiv-docsim">https://github.com/cul-it/arxiv-docsim</a></p>
 <p>Operates on extracted plain text content and submission metadata to
 detect possibly duplicate submissions. Returns an array of announced e-prints
 with a high degree of overlap.</p>
 </div>
 <div class="section" id="classifier-service">
-<span id="id8"></span><h4>Classifier service<a class="headerlink" href="#classifier-service" title="Permalink to this headline">¶</a></h4>
+<span id="id9"></span><h4>Classifier service<a class="headerlink" href="#classifier-service" title="Permalink to this headline">¶</a></h4>
 <p><a class="reference external" href="https://github.com/cul-it/arxiv-classifier">https://github.com/cul-it/arxiv-classifier</a></p>
 <p>Operates on extracted plain text content and submission metadata to
 propose categories for submitted papers.</p>
@@ -369,14 +370,32 @@ administrator configuration.</p>
 </div>
 </div>
 <div class="section" id="web-hook-notification-service">
-<span id="web-hook-service"></span><h3><a class="toc-backref" href="#id28">Web-hook notification service</a><a class="headerlink" href="#web-hook-notification-service" title="Permalink to this headline">¶</a></h3>
+<span id="web-hook-service"></span><h3><a class="toc-backref" href="#id29">Web-hook notification service</a><a class="headerlink" href="#web-hook-notification-service" title="Permalink to this headline">¶</a></h3>
 <p>Provides mechanisms for API clients to register callbacks for submission
 events. Event consumer is implemented using the Kinesis Consumer Library and
 MultiLangDaemon [refs].</p>
 </div>
 </div>
+<div class="section" id="example-integration-with-the-auto-classifier">
+<h2><a class="toc-backref" href="#id30">Example: integration with the auto-classifier</a><a class="headerlink" href="#example-integration-with-the-auto-classifier" title="Permalink to this headline">¶</a></h2>
+<p>When a user finalizes their submission for announcement, we perform a variety
+of automated quality assurance checks to support the moderation process. This
+example illustrates how classification-related checks are implemented in the NG
+submission architecture.</p>
+<ol class="arabic simple">
+<li><p>The submitter finalizes their submission via the <a class="reference internal" href="#submission-ui"><span class="std std-ref">Submission UI</span></a>. This
+may involve a POST request, including a field attesting to the submitter’s
+intent.</p></li>
+<li><p>The submission UI generates a <a class="reference internal" href="arxiv.submission/arxiv.submission.domain.event.html#arxiv.submission.domain.event.FinalizeSubmission" title="arxiv.submission.domain.event.FinalizeSubmission"><code class="xref py py-class docutils literal notranslate"><span class="pre">FinalizeSubmission</span></code></a> event using
+<a class="reference internal" href="arxiv.submission/arxiv.submission.html#module-arxiv.submission" title="arxiv.submission"><code class="xref py py-mod docutils literal notranslate"><span class="pre">arxiv.submission</span></code></a>, persisting the event in the classic database and
+emitting the event on the <code class="docutils literal notranslate"><span class="pre">SubmissionEvents</span></code> Kinesis stream.</p></li>
+<li><p>The <a class="reference internal" href="#submission-agent"><span class="std std-ref">Submission agent</span></a> observes the <a class="reference internal" href="arxiv.submission/arxiv.submission.domain.event.html#arxiv.submission.domain.event.FinalizeSubmission" title="arxiv.submission.domain.event.FinalizeSubmission"><code class="xref py py-class docutils literal notranslate"><span class="pre">FinalizeSubmission</span></code></a> event
+on the <code class="docutils literal notranslate"><span class="pre">SubmissionEvents</span></code> Kinesis stream. This matches a rule that
+triggers the <code class="xref py py-class docutils literal notranslate"><span class="pre">agent.process.RunAutoclassifier</span></code> process.</p></li>
+</ol>
+</div>
 <div class="section" id="open-problems-future-development">
-<h2><a class="toc-backref" href="#id29">Open problems/future development</a><a class="headerlink" href="#open-problems-future-development" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id31">Open problems/future development</a><a class="headerlink" href="#open-problems-future-development" title="Permalink to this headline">¶</a></h2>
 <p>The current implementation of the <a class="reference internal" href="#submission-core-events-package"><span class="std std-ref">core submission package</span></a> is a step toward an event-sourcing framework
 for the submission system. One of the core concepts of event-sourcing is that
 we are able to generate the current state of an object (in this case, a
@@ -395,9 +414,8 @@ event store, which will reject events for which there is a version mismatch.
 Since (as above) we are continuing to deal with legacy components that make
 direct writes to submission state, in the interim we will rely on the atomic
 transactions afforded by the legacy MySQL database, and ensure consistency
-by rejecting events that were instantiated prior to the most recent change on
-the submission being mutated. This is implemented in
-<a class="reference internal" href="arxiv.submission/arxiv.submission.services.classic.html#arxiv.submission.services.classic.store_event" title="arxiv.submission.services.classic.store_event"><code class="xref py py-func docutils literal notranslate"><span class="pre">arxiv.submission.services.classic.store_event()</span></code></a>.</p>
+by creating a short-lived shared lock on related submission rows while
+committing new events.</p>
 <p>Finally, we ultimately want to avoid placing the responsibility for updating
 the projected submission state on the applications that are generating events.
 This is not possible in the short term for the reasons outlined above.
@@ -405,27 +423,27 @@ Currently, the event-generating application must read the submission state and
 events from the legacy database, write both events and submission state to  the
 legacy database, and propagate events via the event stream. This is handled by
 <a class="reference internal" href="arxiv.submission/arxiv.submission.core.html#arxiv.submission.core.save" title="arxiv.submission.core.save"><code class="xref py py-func docutils literal notranslate"><span class="pre">arxiv.submission.core.save()</span></code></a>, and is implemented in a way that
-preserves the atomicity of the write.</p>
-<div class="figure align-center" id="id11">
+preserves the ACIDity of the write.</p>
+<div class="figure align-center" id="id12">
 <span id="figure-submission-events-interim"></span><a class="reference internal image-reference" href="_images/submission-events-interim.png"><img alt="_images/submission-events-interim.png" src="_images/submission-events-interim.png" style="width: 600px;" /></a>
 <p class="caption"><span class="caption-number">Fig. 3 </span><span class="caption-text">Current implementation of submission events in the submission system,
 constrained by support for legacy integrations with the database.
 Applications that produce events must handle persistence (including
 consistency checks), updating the submission state, and propagating event
-notifications.</span><a class="headerlink" href="#id11" title="Permalink to this image">¶</a></p>
+notifications.</span><a class="headerlink" href="#id12" title="Permalink to this image">¶</a></p>
 </div>
 <p>Once those constraints are lifted, however, applications generating events
 should only be reading the submission state from the/a submission database, and
 writing events to the event stream (e.g. by putting them to the event
 controller).</p>
-<div class="figure align-center" id="id12">
+<div class="figure align-center" id="id13">
 <span id="figure-submission-events-goals"></span><a class="reference internal image-reference" href="_images/submission-events-goal.png"><img alt="_images/submission-events-goal.png" src="_images/submission-events-goal.png" style="width: 600px;" /></a>
 <p class="caption"><span class="caption-number">Fig. 4 </span><span class="caption-text">Eventual implementation of submission events in the submission system,
 when legacy integrations with the database are no longer required. An
 event controller service assumes responsibility for ensuring the consistency
 of events, persisting/propagating the event stream, and updating the read
 database. All other applications use the database for reads only, and
-produce events via the event controller.</span><a class="headerlink" href="#id12" title="Permalink to this image">¶</a></p>
+produce events via the event controller.</span><a class="headerlink" href="#id13" title="Permalink to this image">¶</a></p>
 </div>
 </div>
 </div>
@@ -451,13 +469,14 @@ produce events via the event controller.</span><a class="headerlink" href="#id12
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Submission &amp; moderation subsystem architecture</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#overview">Overview</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#key-requirements">Key requirements</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#solution-strategy">Solution Strategy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#solution-strategy">Solution strategy</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#context">Context</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#services-building-blocks">Services &amp; Building Blocks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#services-building-blocks">Services &amp; building blocks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#example-integration-with-the-auto-classifier">Example: integration with the auto-classifier</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#open-problems-future-development">Open problems/future development</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="announcement_process.html">Submission &amp; announcement Process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="announcement_process.html">Submission &amp; announcement process</a></li>
 <li class="toctree-l1"><a class="reference internal" href="submission_api_context.html">Submission API: Context</a></li>
 <li class="toctree-l1"><a class="reference internal" href="arxiv.submission/arxiv.submission.html">arxiv.submission package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="containers/agent/agent.html">agent package</a></li>
@@ -470,7 +489,7 @@ produce events via the event controller.</span><a class="headerlink" href="#id12
 <ul>
   <li><a href="index.html">Documentation overview</a><ul>
       <li>Previous: <a href="index.html" title="previous chapter">Submission &amp; moderation</a></li>
-      <li>Next: <a href="announcement_process.html" title="next chapter">Submission &amp; announcement Process</a></li>
+      <li>Next: <a href="announcement_process.html" title="next chapter">Submission &amp; announcement process</a></li>
   </ul></li>
 </ul>
 </div>

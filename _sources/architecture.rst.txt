@@ -64,7 +64,7 @@ Key requirements
    areas of concern.
 
 
-Solution Strategy
+Solution strategy
 =================
 
 - Major functional components of the classic submission system are decomposed
@@ -146,7 +146,7 @@ arXiv papers. For example, classification, overlap detection, and other
 QA/QC services will keep themselves up to date by consuming metadata and
 content from announced e-prints in the canonical record.
 
-Services & Building Blocks
+Services & building blocks
 ==========================
 
 The submission & moderation subsystem is comprised of the following parts:
@@ -245,9 +245,10 @@ These core interface services integrate with other services in the submission
 subsystem (e.g. :ref:`file-management-service`, :ref:`compilation-service`) via
 their HTTP APIs.
 
+.. _submission-ui:
 
-Submission UI service
-^^^^^^^^^^^^^^^^^^^^^
+Submission UI
+^^^^^^^^^^^^^
 https://github.com/cul-it/arxiv-submission-ui
 
 Provides form-based views that allow users to create and update submissions,
@@ -372,6 +373,24 @@ events. Event consumer is implemented using the Kinesis Consumer Library and
 MultiLangDaemon [refs].
 
 
+Example: integration with the auto-classifier
+=============================================
+When a user finalizes their submission for announcement, we perform a variety
+of automated quality assurance checks to support the moderation process. This
+example illustrates how classification-related checks are implemented in the NG
+submission architecture.
+
+1. The submitter finalizes their submission via the :ref:`submission-ui`. This
+   may involve a POST request, including a field attesting to the submitter's
+   intent.
+2. The submission UI generates a :class:`.FinalizeSubmission` event using
+   :mod:`arxiv.submission`, persisting the event in the classic database and
+   emitting the event on the ``SubmissionEvents`` Kinesis stream.
+3. The :ref:`submission-agent` observes the :class:`.FinalizeSubmission` event
+   on the ``SubmissionEvents`` Kinesis stream. This matches a rule that
+   triggers the :class:`agent.process.RunAutoclassifier` process.
+
+
 
 Open problems/future development
 ================================
@@ -396,9 +415,8 @@ event store, which will reject events for which there is a version mismatch.
 Since (as above) we are continuing to deal with legacy components that make
 direct writes to submission state, in the interim we will rely on the atomic
 transactions afforded by the legacy MySQL database, and ensure consistency
-by rejecting events that were instantiated prior to the most recent change on
-the submission being mutated. This is implemented in
-:func:`arxiv.submission.services.classic.store_event`\.
+by creating a short-lived shared lock on related submission rows while
+committing new events.
 
 Finally, we ultimately want to avoid placing the responsibility for updating
 the projected submission state on the applications that are generating events.
@@ -407,7 +425,8 @@ Currently, the event-generating application must read the submission state and
 events from the legacy database, write both events and submission state to  the
 legacy database, and propagate events via the event stream. This is handled by
 :func:`arxiv.submission.core.save`\, and is implemented in a way that
-preserves the atomicity of the write.
+preserves the ACIDity of the write.
+
 
 .. _figure-submission-events-interim:
 

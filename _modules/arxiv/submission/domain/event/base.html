@@ -55,6 +55,7 @@
 <span class="kn">from</span> <span class="nn">.versioning</span> <span class="k">import</span> <span class="n">EventData</span><span class="p">,</span> <span class="n">map_to_current_version</span>
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+<span class="n">logger</span><span class="o">.</span><span class="n">propagate</span> <span class="o">=</span> <span class="kc">False</span>
 
 <span class="n">Events</span> <span class="o">=</span> <span class="n">Iterable</span><span class="p">[</span><span class="s1">&#39;Event&#39;</span><span class="p">]</span>
 <span class="n">Condition</span> <span class="o">=</span> <span class="n">Callable</span><span class="p">[[</span><span class="s1">&#39;Event&#39;</span><span class="p">,</span> <span class="n">Submission</span><span class="p">,</span> <span class="n">Submission</span><span class="p">],</span> <span class="nb">bool</span><span class="p">]</span>
@@ -96,12 +97,8 @@
 <span class="sd">    This is **not** necessarily the creator of the submission.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="n">created</span><span class="p">:</span> <span class="n">datetime</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="n">get_tzaware_utc_now</span><span class="p">)</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    The timestamp when the event was originally committed.</span>
-
-<span class="sd">    This should generally not be set from outside this package.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">created</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">datetime</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>   <span class="c1"># get_tzaware_utc_now</span>
+    <span class="sd">&quot;&quot;&quot;The timestamp when the event was originally committed.&quot;&quot;&quot;</span>
 
     <span class="n">proxy</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Agent</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
     <span class="sd">&quot;&quot;&quot;</span>
@@ -172,6 +169,8 @@
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">event_id</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Unique ID for this event.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">created</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;Event not yet committed&#39;</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_id</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">created</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">event_type</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">creator</span><span class="p">)</span>
 
 <div class="viewcode-block" id="Event.get_id"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.domain.event.base.html#arxiv.submission.domain.event.base.Event.get_id">[docs]</a>    <span class="nd">@staticmethod</span>
@@ -320,6 +319,7 @@
         <span class="k">for</span> <span class="n">condition</span><span class="p">,</span> <span class="n">callback</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_callbacks</span><span class="p">():</span>
             <span class="k">if</span> <span class="n">condition</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">before</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">after</span><span class="p">):</span>
                 <span class="k">for</span> <span class="n">consequence</span> <span class="ow">in</span> <span class="n">callback</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">before</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">after</span><span class="p">):</span>
+                    <span class="n">consequence</span><span class="o">.</span><span class="n">created</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">UTC</span><span class="p">)</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">after</span> <span class="o">=</span> <span class="n">consequence</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">after</span><span class="p">)</span>
                     <span class="n">consequences</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">consequence</span><span class="p">)</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">after</span><span class="p">,</span> <span class="n">addl_consequences</span> <span class="o">=</span> <span class="n">consequence</span><span class="o">.</span><span class="n">commit</span><span class="p">(</span><span class="n">store</span><span class="p">)</span>
@@ -383,7 +383,7 @@
 <h3>Navigation</h3>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../architecture.html">Submission &amp; moderation subsystem architecture</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../../announcement_process.html">Submission &amp; announcement Process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../announcement_process.html">Submission &amp; announcement process</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../submission_api_context.html">Submission API: Context</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../arxiv.submission/arxiv.submission.html">arxiv.submission package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../containers/agent/agent.html">agent package</a></li>

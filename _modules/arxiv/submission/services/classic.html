@@ -42,13 +42,19 @@
 <span class="sd">1. Store and provide access to event data generated during the submission</span>
 <span class="sd">   process,</span>
 <span class="sd">2. Keep the classic database tables up to date so that &quot;downstream&quot; components</span>
-<span class="sd">   can continue to operate. Since classic components work directly on</span>
-<span class="sd">   submission tables, persisting events and resulting submission state must</span>
-<span class="sd">   occur in the same transaction. We must also verify that we are not storing</span>
-<span class="sd">   events that are stale with respect to the current state of the submission.</span>
+<span class="sd">   can continue to operate.</span>
 <span class="sd">3. Patch NG submission data with state changes that occur in the classic</span>
 <span class="sd">   system. Those changes will be made directly to submission tables and not</span>
 <span class="sd">   involve event-generation. See :func:`get_submission` for details.</span>
+
+<span class="sd">Since classic components work directly on submission tables, persisting events</span>
+<span class="sd">and resulting submission state must occur in the same transaction. We must also</span>
+<span class="sd">verify that we are not storing events that are stale with respect to the</span>
+<span class="sd">current state of the submission. To achieve this, the caller should use the</span>
+<span class="sd">:func:`.util.transaction` context manager, and (when committing new events)</span>
+<span class="sd">call :func:`.get_submission` with ``for_update=True``. This will trigger a</span>
+<span class="sd">shared lock on the submission row(s) involved until the transaction is</span>
+<span class="sd">committed or rolled back.</span>
 
 <span class="sd">ORM representations of the classic database tables involved in submission</span>
 <span class="sd">are located in :mod:`.classic.models`. An additional model, :class:`.DBEvent`,</span>
@@ -70,6 +76,7 @@
 
 <span class="kn">from</span> <span class="nn">flask</span> <span class="k">import</span> <span class="n">Flask</span>
 <span class="kn">from</span> <span class="nn">sqlalchemy</span> <span class="k">import</span> <span class="n">or_</span>
+<span class="kn">from</span> <span class="nn">sqlalchemy.orm.exc</span> <span class="k">import</span> <span class="n">NoResultFound</span>
 <span class="kn">from</span> <span class="nn">sqlalchemy.exc</span> <span class="k">import</span> <span class="n">DBAPIError</span><span class="p">,</span> <span class="n">OperationalError</span>
 
 <span class="kn">from</span> <span class="nn">arxiv.base</span> <span class="k">import</span> <span class="n">logging</span>
@@ -108,10 +115,9 @@
 <span class="nd">@handle_operational_errors</span>
 <span class="k">def</span> <span class="nf">get_licenses</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">License</span><span class="p">]:</span>
     <span class="sd">&quot;&quot;&quot;Get a list of :class:`.domain.License` instances available.&quot;&quot;&quot;</span>
-    <span class="k">with</span> <span class="n">transaction</span><span class="p">():</span>
-        <span class="n">license_data</span> <span class="o">=</span> <span class="n">util</span><span class="o">.</span><span class="n">current_session</span><span class="p">()</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">License</span><span class="p">)</span> \
-            <span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">License</span><span class="o">.</span><span class="n">active</span> <span class="o">==</span> <span class="s1">&#39;1&#39;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="p">[</span><span class="n">License</span><span class="p">(</span><span class="n">uri</span><span class="o">=</span><span class="n">row</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">row</span><span class="o">.</span><span class="n">label</span><span class="p">)</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">license_data</span><span class="p">]</span></div>
+    <span class="n">license_data</span> <span class="o">=</span> <span class="n">current_session</span><span class="p">()</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">License</span><span class="p">)</span> \
+        <span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">License</span><span class="o">.</span><span class="n">active</span> <span class="o">==</span> <span class="s1">&#39;1&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">License</span><span class="p">(</span><span class="n">uri</span><span class="o">=</span><span class="n">row</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">row</span><span class="o">.</span><span class="n">label</span><span class="p">)</span> <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">license_data</span><span class="p">]</span></div>
 
 
 <div class="viewcode-block" id="get_events"><a class="viewcode-back" href="../../../../arxiv.submission/arxiv.submission.services.classic.html#arxiv.submission.services.classic.get_events">[docs]</a><span class="nd">@retry</span><span class="p">(</span><span class="n">ClassicBaseException</span><span class="p">,</span> <span class="n">tries</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">delay</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
@@ -135,14 +141,14 @@
 <span class="sd">        Raised when there are no events for the provided submission ID.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">with</span> <span class="n">transaction</span><span class="p">()</span> <span class="k">as</span> <span class="n">session</span><span class="p">:</span>
-        <span class="n">event_data</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">DBEvent</span><span class="p">)</span> \
-            <span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">DBEvent</span><span class="o">.</span><span class="n">submission_id</span> <span class="o">==</span> <span class="n">submission_id</span><span class="p">)</span> \
-            <span class="o">.</span><span class="n">order_by</span><span class="p">(</span><span class="n">DBEvent</span><span class="o">.</span><span class="n">created</span><span class="p">)</span>
-        <span class="n">events</span> <span class="o">=</span> <span class="p">[</span><span class="n">datum</span><span class="o">.</span><span class="n">to_event</span><span class="p">()</span> <span class="k">for</span> <span class="n">datum</span> <span class="ow">in</span> <span class="n">event_data</span><span class="p">]</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">events</span><span class="p">:</span>      <span class="c1"># No events, no dice.</span>
-            <span class="k">raise</span> <span class="n">NoSuchSubmission</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;Submission </span><span class="si">{submission_id}</span><span class="s1"> not found&#39;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">events</span></div>
+    <span class="n">session</span> <span class="o">=</span> <span class="n">current_session</span><span class="p">()</span>
+    <span class="n">event_data</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">DBEvent</span><span class="p">)</span> \
+        <span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">DBEvent</span><span class="o">.</span><span class="n">submission_id</span> <span class="o">==</span> <span class="n">submission_id</span><span class="p">)</span> \
+        <span class="o">.</span><span class="n">order_by</span><span class="p">(</span><span class="n">DBEvent</span><span class="o">.</span><span class="n">created</span><span class="p">)</span>
+    <span class="n">events</span> <span class="o">=</span> <span class="p">[</span><span class="n">datum</span><span class="o">.</span><span class="n">to_event</span><span class="p">()</span> <span class="k">for</span> <span class="n">datum</span> <span class="ow">in</span> <span class="n">event_data</span><span class="p">]</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">events</span><span class="p">:</span>      <span class="c1"># No events, no dice.</span>
+        <span class="k">raise</span> <span class="n">NoSuchSubmission</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;Submission </span><span class="si">{submission_id}</span><span class="s1"> not found&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">events</span></div>
 
 
 <div class="viewcode-block" id="get_user_submissions_fast"><a class="viewcode-back" href="../../../../arxiv.submission/arxiv.submission.services.classic.html#arxiv.submission.services.classic.get_user_submissions_fast">[docs]</a><span class="nd">@retry</span><span class="p">(</span><span class="n">ClassicBaseException</span><span class="p">,</span> <span class="n">tries</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">delay</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
@@ -163,23 +169,23 @@
 <span class="sd">        Items are the user&#39;s :class:`.domain.submission.Submission` instances.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">with</span> <span class="n">transaction</span><span class="p">()</span> <span class="k">as</span> <span class="n">session</span><span class="p">:</span>
-        <span class="n">db_submissions</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span>
-            <span class="n">session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="p">)</span>
-            <span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">submitter_id</span> <span class="o">==</span> <span class="n">user_id</span><span class="p">)</span>
-            <span class="o">.</span><span class="n">order_by</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">doc_paper_id</span><span class="o">.</span><span class="n">desc</span><span class="p">())</span>
-        <span class="p">)</span>
-        <span class="n">grouped</span> <span class="o">=</span> <span class="n">groupby</span><span class="p">(</span><span class="n">db_submissions</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">dbs</span><span class="p">:</span> <span class="n">dbs</span><span class="o">.</span><span class="n">doc_paper_id</span><span class="p">)</span>
-        <span class="n">submissions</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Submission</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="k">for</span> <span class="n">arxiv_id</span><span class="p">,</span> <span class="n">dbss</span> <span class="ow">in</span> <span class="n">grouped</span><span class="p">:</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Handle group for arXiv ID </span><span class="si">%s</span><span class="s1">: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">arxiv_id</span><span class="p">,</span> <span class="n">dbss</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">arxiv_id</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>    <span class="c1"># This is an unannounced submission.</span>
-                <span class="k">for</span> <span class="n">dbs</span> <span class="ow">in</span> <span class="n">dbss</span><span class="p">:</span>    <span class="c1"># Each row represents a separate e-print.</span>
-                    <span class="n">submissions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">load</span><span class="o">.</span><span class="n">to_submission</span><span class="p">(</span><span class="n">dbs</span><span class="p">))</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">dbss</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">dbss</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">dbs</span><span class="p">:</span> <span class="n">dbs</span><span class="o">.</span><span class="n">submission_id</span><span class="p">)</span>
-                <span class="n">submissions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">load</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">dbss</span><span class="p">))</span>
-        <span class="k">return</span> <span class="p">[</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">submissions</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">s</span><span class="o">.</span><span class="n">deleted</span><span class="p">]</span></div>
+    <span class="n">session</span> <span class="o">=</span> <span class="n">current_session</span><span class="p">()</span>
+    <span class="n">db_submissions</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span>
+        <span class="n">session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">submitter_id</span> <span class="o">==</span> <span class="n">user_id</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">order_by</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">doc_paper_id</span><span class="o">.</span><span class="n">desc</span><span class="p">())</span>
+    <span class="p">)</span>
+    <span class="n">grouped</span> <span class="o">=</span> <span class="n">groupby</span><span class="p">(</span><span class="n">db_submissions</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">dbs</span><span class="p">:</span> <span class="n">dbs</span><span class="o">.</span><span class="n">doc_paper_id</span><span class="p">)</span>
+    <span class="n">submissions</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Submission</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">arxiv_id</span><span class="p">,</span> <span class="n">dbss</span> <span class="ow">in</span> <span class="n">grouped</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Handle group for arXiv ID </span><span class="si">%s</span><span class="s1">: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">arxiv_id</span><span class="p">,</span> <span class="n">dbss</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">arxiv_id</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>    <span class="c1"># This is an unannounced submission.</span>
+            <span class="k">for</span> <span class="n">dbs</span> <span class="ow">in</span> <span class="n">dbss</span><span class="p">:</span>    <span class="c1"># Each row represents a separate e-print.</span>
+                <span class="n">submissions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">load</span><span class="o">.</span><span class="n">to_submission</span><span class="p">(</span><span class="n">dbs</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">dbss</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">dbss</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">dbs</span><span class="p">:</span> <span class="n">dbs</span><span class="o">.</span><span class="n">submission_id</span><span class="p">)</span>
+            <span class="n">submissions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">load</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">dbss</span><span class="p">))</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">submissions</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">s</span><span class="o">.</span><span class="n">deleted</span><span class="p">]</span></div>
 
 
 <div class="viewcode-block" id="get_submission_fast"><a class="viewcode-back" href="../../../../arxiv.submission/arxiv.submission.services.classic.html#arxiv.submission.services.classic.get_submission_fast">[docs]</a><span class="nd">@retry</span><span class="p">(</span><span class="n">ClassicBaseException</span><span class="p">,</span> <span class="n">tries</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">delay</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
@@ -210,11 +216,12 @@
     <span class="k">return</span> <span class="n">load</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">_get_db_submission_rows</span><span class="p">(</span><span class="n">submission_id</span><span class="p">))</span></div>
 
 
-<div class="viewcode-block" id="get_submission"><a class="viewcode-back" href="../../../../arxiv.submission/arxiv.submission.services.classic.html#arxiv.submission.services.classic.get_submission">[docs]</a><span class="nd">@retry</span><span class="p">(</span><span class="n">ClassicBaseException</span><span class="p">,</span> <span class="n">tries</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">delay</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-<span class="nd">@handle_operational_errors</span>
-<span class="k">def</span> <span class="nf">get_submission</span><span class="p">(</span><span class="n">submission_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Submission</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Event</span><span class="p">]]:</span>
+<span class="c1"># @retry(ClassicBaseException, tries=3, delay=1)</span>
+<div class="viewcode-block" id="get_submission"><a class="viewcode-back" href="../../../../arxiv.submission/arxiv.submission.services.classic.html#arxiv.submission.services.classic.get_submission">[docs]</a><span class="nd">@handle_operational_errors</span>
+<span class="k">def</span> <span class="nf">get_submission</span><span class="p">(</span><span class="n">submission_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">for_update</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> \
+        <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Submission</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Event</span><span class="p">]]:</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Get the current state of a :class:`.domain.submission.Submission` from the database.</span>
+<span class="sd">    Get the current state of a submission from the database.</span>
 
 <span class="sd">    In the medium term, services that use this package will need to</span>
 <span class="sd">    play well with legacy services that integrate with the classic</span>
@@ -239,23 +246,37 @@
 <span class="sd">        Items are :class:`Event` instances.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">with</span> <span class="n">transaction</span><span class="p">()</span> <span class="k">as</span> <span class="n">session</span><span class="p">:</span>
-        <span class="n">original_row</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="p">)</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">submission_id</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">original_row</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">NoSuchSubmission</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;Submission </span><span class="si">{submission_id}</span><span class="s1"> not found&#39;</span><span class="p">)</span>
+    <span class="c1"># Let the caller determine the transaction scope.</span>
+    <span class="n">session</span> <span class="o">=</span> <span class="n">current_session</span><span class="p">()</span>
+    <span class="n">original_row</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="p">)</span> \
+        <span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">submission_id</span> <span class="o">==</span> <span class="n">submission_id</span><span class="p">)</span>
 
-        <span class="c1"># Load any subsequent submission rows (e.g. v=2, jref, withdrawal).</span>
-        <span class="c1"># These do not have the same legacy submission ID as the original</span>
-        <span class="c1"># submission.</span>
-        <span class="n">subsequent_rows</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="n">arxiv_id</span> <span class="o">=</span> <span class="n">original_row</span><span class="o">.</span><span class="n">get_arxiv_id</span><span class="p">()</span>
-        <span class="k">if</span> <span class="n">arxiv_id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">subsequent_rows</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span>
-                <span class="n">session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="p">)</span>
-                <span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">doc_paper_id</span> <span class="o">==</span> <span class="n">arxiv_id</span><span class="p">)</span>
-                <span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">submission_id</span> <span class="o">!=</span> <span class="n">submission_id</span><span class="p">)</span>
-                <span class="o">.</span><span class="n">order_by</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">submission_id</span><span class="o">.</span><span class="n">asc</span><span class="p">())</span>
-            <span class="p">)</span>
+    <span class="k">if</span> <span class="n">for_update</span><span class="p">:</span>
+        <span class="c1"># Gives us SELECT ... FOR READ. In other words, lock this row for</span>
+        <span class="c1"># writing, but allow other clients to read from it in the meantime.</span>
+        <span class="n">original_row</span> <span class="o">=</span> <span class="n">original_row</span><span class="o">.</span><span class="n">with_for_update</span><span class="p">(</span><span class="n">read</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">original_row</span> <span class="o">=</span> <span class="n">original_row</span><span class="o">.</span><span class="n">one</span><span class="p">()</span>
+    <span class="k">except</span> <span class="n">NoResultFound</span><span class="p">:</span>       <span class="c1"># May also raise MultipleResultsFound; if so,</span>
+                                <span class="c1"># we want to fail loudly.</span>
+        <span class="k">raise</span> <span class="n">NoSuchSubmission</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;Submission </span><span class="si">{submission_id}</span><span class="s1"> not found&#39;</span><span class="p">)</span>
+
+    <span class="c1"># Load any subsequent submission rows (e.g. v=2, jref, withdrawal).</span>
+    <span class="c1"># These do not have the same legacy submission ID as the original</span>
+    <span class="c1"># submission.</span>
+    <span class="n">subsequent_rows</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">arxiv_id</span> <span class="o">=</span> <span class="n">original_row</span><span class="o">.</span><span class="n">get_arxiv_id</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">arxiv_id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">subsequent_rows</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="p">)</span> \
+            <span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">doc_paper_id</span> <span class="o">==</span> <span class="n">arxiv_id</span><span class="p">)</span> \
+            <span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">submission_id</span> <span class="o">!=</span> <span class="n">submission_id</span><span class="p">)</span> \
+            <span class="o">.</span><span class="n">order_by</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">submission_id</span><span class="o">.</span><span class="n">asc</span><span class="p">())</span>
+
+        <span class="k">if</span> <span class="n">for_update</span><span class="p">:</span>      <span class="c1"># Lock these rows as well.</span>
+            <span class="n">subsequent_rows</span> <span class="o">=</span> <span class="n">subsequent_rows</span><span class="o">.</span><span class="n">with_for_update</span><span class="p">(</span><span class="n">read</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">subsequent_rows</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">subsequent_rows</span><span class="p">)</span>   <span class="c1"># Execute query.</span>
+
     <span class="n">interpolator</span> <span class="o">=</span> <span class="n">interpolate</span><span class="o">.</span><span class="n">ClassicEventInterpolator</span><span class="p">(</span>
         <span class="n">original_row</span><span class="p">,</span>
         <span class="n">subsequent_rows</span><span class="p">,</span>
@@ -264,8 +285,8 @@
     <span class="k">return</span> <span class="n">interpolator</span><span class="o">.</span><span class="n">get_submission_state</span><span class="p">()</span></div>
 
 
-<div class="viewcode-block" id="store_event"><a class="viewcode-back" href="../../../../arxiv.submission/arxiv.submission.services.classic.html#arxiv.submission.services.classic.store_event">[docs]</a><span class="nd">@retry</span><span class="p">(</span><span class="n">ClassicBaseException</span><span class="p">,</span> <span class="n">tries</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">delay</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-<span class="nd">@handle_operational_errors</span>
+<span class="c1"># @retry(ClassicBaseException, tries=3, delay=1)</span>
+<div class="viewcode-block" id="store_event"><a class="viewcode-back" href="../../../../arxiv.submission/arxiv.submission.services.classic.html#arxiv.submission.services.classic.store_event">[docs]</a><span class="nd">@handle_operational_errors</span>
 <span class="k">def</span> <span class="nf">store_event</span><span class="p">(</span><span class="n">event</span><span class="p">:</span> <span class="n">Event</span><span class="p">,</span> <span class="n">before</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Submission</span><span class="p">],</span>
                 <span class="n">after</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Submission</span><span class="p">],</span>
                 <span class="o">*</span><span class="n">call</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Callable</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Event</span><span class="p">,</span> <span class="n">Submission</span><span class="p">]:</span>
@@ -300,97 +321,98 @@
 <span class="sd">        raised, the transaction is rolled back.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">with</span> <span class="n">transaction</span><span class="p">()</span> <span class="k">as</span> <span class="n">session</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">event</span><span class="o">.</span><span class="n">committed</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="n">TransactionFailed</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1"> already committed&#39;</span><span class="p">,</span> <span class="n">event</span><span class="o">.</span><span class="n">event_id</span><span class="p">)</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;store event </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">event</span><span class="o">.</span><span class="n">event_id</span><span class="p">)</span>
+    <span class="c1"># Let the caller determine the transaction scope.</span>
+    <span class="n">session</span> <span class="o">=</span> <span class="n">current_session</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">event</span><span class="o">.</span><span class="n">committed</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="n">TransactionFailed</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1"> already committed&#39;</span><span class="p">,</span> <span class="n">event</span><span class="o">.</span><span class="n">event_id</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;store event </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">event</span><span class="o">.</span><span class="n">event_type</span><span class="p">)</span>
 
-        <span class="n">doc_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">doc_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
 
-        <span class="c1"># This is the case that we have a new submission.</span>
-        <span class="k">if</span> <span class="n">before</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">after</span><span class="p">,</span> <span class="n">Submission</span><span class="p">):</span>
-            <span class="n">dbs</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="p">(</span><span class="nb">type</span><span class="o">=</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">NEW_SUBMISSION</span><span class="p">)</span>
+    <span class="c1"># This is the case that we have a new submission.</span>
+    <span class="k">if</span> <span class="n">before</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">after</span><span class="p">,</span> <span class="n">Submission</span><span class="p">):</span>
+        <span class="n">dbs</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="p">(</span><span class="nb">type</span><span class="o">=</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">NEW_SUBMISSION</span><span class="p">)</span>
+        <span class="n">dbs</span><span class="o">.</span><span class="n">update_from_submission</span><span class="p">(</span><span class="n">after</span><span class="p">)</span>
+        <span class="n">this_is_a_new_submission</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="k">else</span><span class="p">:</span>   <span class="c1"># Otherwise we&#39;re making an update for an existing submission.</span>
+        <span class="n">this_is_a_new_submission</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="c1"># After the original submission is announced, a new Document row is</span>
+        <span class="c1"># created. This Document is shared by all subsequent Submission rows.</span>
+        <span class="k">if</span> <span class="n">before</span><span class="o">.</span><span class="n">announced</span><span class="p">:</span>
+            <span class="n">doc_id</span> <span class="o">=</span> <span class="n">_load_document_id</span><span class="p">(</span><span class="n">before</span><span class="o">.</span><span class="n">arxiv_id</span><span class="p">,</span> <span class="n">before</span><span class="o">.</span><span class="n">version</span><span class="p">)</span>
+
+        <span class="n">JREFEvents</span> <span class="o">=</span> <span class="p">[</span><span class="n">SetDOI</span><span class="p">,</span> <span class="n">SetJournalReference</span><span class="p">,</span> <span class="n">SetReportNumber</span><span class="p">]</span>
+
+        <span class="c1"># From the perspective of the database, a replacement is mainly an</span>
+        <span class="c1"># incremented version number. This requires a new row in the</span>
+        <span class="c1"># database.</span>
+        <span class="k">if</span> <span class="n">after</span><span class="o">.</span><span class="n">version</span> <span class="o">&gt;</span> <span class="n">before</span><span class="o">.</span><span class="n">version</span><span class="p">:</span>
+            <span class="n">dbs</span> <span class="o">=</span> <span class="n">_create_replacement</span><span class="p">(</span><span class="n">doc_id</span><span class="p">,</span> <span class="n">before</span><span class="o">.</span><span class="n">arxiv_id</span><span class="p">,</span>
+                                      <span class="n">after</span><span class="o">.</span><span class="n">version</span><span class="p">,</span> <span class="n">after</span><span class="p">,</span> <span class="n">event</span><span class="o">.</span><span class="n">created</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">Rollback</span><span class="p">)</span> <span class="ow">and</span> <span class="n">before</span><span class="o">.</span><span class="n">version</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">dbs</span> <span class="o">=</span> <span class="n">_delete_replacement</span><span class="p">(</span><span class="n">doc_id</span><span class="p">,</span> <span class="n">before</span><span class="o">.</span><span class="n">arxiv_id</span><span class="p">,</span>
+                                      <span class="n">before</span><span class="o">.</span><span class="n">version</span><span class="p">)</span>
+
+        <span class="c1"># Withdrawals also require a new row, and they use the most recent</span>
+        <span class="c1"># version number.</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">RequestWithdrawal</span><span class="p">):</span>
+            <span class="n">dbs</span> <span class="o">=</span> <span class="n">_create_withdrawal</span><span class="p">(</span><span class="n">doc_id</span><span class="p">,</span> <span class="n">event</span><span class="o">.</span><span class="n">reason</span><span class="p">,</span>
+                                     <span class="n">before</span><span class="o">.</span><span class="n">arxiv_id</span><span class="p">,</span> <span class="n">after</span><span class="o">.</span><span class="n">version</span><span class="p">,</span> <span class="n">after</span><span class="p">,</span>
+                                     <span class="n">event</span><span class="o">.</span><span class="n">created</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">RequestCrossList</span><span class="p">):</span>
+            <span class="n">dbs</span> <span class="o">=</span> <span class="n">_create_crosslist</span><span class="p">(</span><span class="n">doc_id</span><span class="p">,</span> <span class="n">event</span><span class="o">.</span><span class="n">categories</span><span class="p">,</span>
+                                    <span class="n">before</span><span class="o">.</span><span class="n">arxiv_id</span><span class="p">,</span> <span class="n">after</span><span class="o">.</span><span class="n">version</span><span class="p">,</span> <span class="n">after</span><span class="p">,</span>
+                                    <span class="n">event</span><span class="o">.</span><span class="n">created</span><span class="p">)</span>
+
+        <span class="c1"># Adding DOIs and citation information (so-called &quot;journal reference&quot;)</span>
+        <span class="c1"># also requires a new row. The version number is not incremented.</span>
+        <span class="k">elif</span> <span class="n">before</span><span class="o">.</span><span class="n">announced</span> <span class="ow">and</span> <span class="nb">type</span><span class="p">(</span><span class="n">event</span><span class="p">)</span> <span class="ow">in</span> <span class="n">JREFEvents</span><span class="p">:</span>
+            <span class="n">dbs</span> <span class="o">=</span> <span class="n">_create_jref</span><span class="p">(</span><span class="n">doc_id</span><span class="p">,</span> <span class="n">before</span><span class="o">.</span><span class="n">arxiv_id</span><span class="p">,</span> <span class="n">after</span><span class="o">.</span><span class="n">version</span><span class="p">,</span> <span class="n">after</span><span class="p">,</span>
+                               <span class="n">event</span><span class="o">.</span><span class="n">created</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">CancelRequest</span><span class="p">):</span>
+            <span class="n">dbs</span> <span class="o">=</span> <span class="n">_cancel_request</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">before</span><span class="p">,</span> <span class="n">after</span><span class="p">)</span>
+
+        <span class="c1"># The submission has been announced.</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">before</span><span class="p">,</span> <span class="n">Submission</span><span class="p">)</span> <span class="ow">and</span> <span class="n">before</span><span class="o">.</span><span class="n">arxiv_id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">dbs</span> <span class="o">=</span> <span class="n">_load</span><span class="p">(</span><span class="n">paper_id</span><span class="o">=</span><span class="n">before</span><span class="o">.</span><span class="n">arxiv_id</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="n">before</span><span class="o">.</span><span class="n">version</span><span class="p">)</span>
+            <span class="n">_preserve_sticky_hold</span><span class="p">(</span><span class="n">dbs</span><span class="p">,</span> <span class="n">before</span><span class="p">,</span> <span class="n">after</span><span class="p">,</span> <span class="n">event</span><span class="p">)</span>
             <span class="n">dbs</span><span class="o">.</span><span class="n">update_from_submission</span><span class="p">(</span><span class="n">after</span><span class="p">)</span>
-            <span class="n">this_is_a_new_submission</span> <span class="o">=</span> <span class="kc">True</span>
 
-        <span class="k">else</span><span class="p">:</span>   <span class="c1"># Otherwise we&#39;re making an update for an existing submission.</span>
-            <span class="n">this_is_a_new_submission</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="c1"># The submission has not yet been announced; we&#39;re working with a</span>
+        <span class="c1"># single row.</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">before</span><span class="p">,</span> <span class="n">Submission</span><span class="p">)</span> <span class="ow">and</span> <span class="n">before</span><span class="o">.</span><span class="n">submission_id</span><span class="p">:</span>
+            <span class="n">dbs</span> <span class="o">=</span> <span class="n">_load</span><span class="p">(</span><span class="n">before</span><span class="o">.</span><span class="n">submission_id</span><span class="p">)</span>
 
-            <span class="c1"># After the original submission is announced, a new Document row is</span>
-            <span class="c1">#  created. This Document is shared by all subsequent Submission</span>
-            <span class="c1"># rows.</span>
-            <span class="k">if</span> <span class="n">before</span><span class="o">.</span><span class="n">announced</span><span class="p">:</span>
-                <span class="n">doc_id</span> <span class="o">=</span> <span class="n">_load_document_id</span><span class="p">(</span><span class="n">before</span><span class="o">.</span><span class="n">arxiv_id</span><span class="p">,</span> <span class="n">before</span><span class="o">.</span><span class="n">version</span><span class="p">)</span>
+            <span class="n">_preserve_sticky_hold</span><span class="p">(</span><span class="n">dbs</span><span class="p">,</span> <span class="n">before</span><span class="p">,</span> <span class="n">after</span><span class="p">,</span> <span class="n">event</span><span class="p">)</span>
+            <span class="n">dbs</span><span class="o">.</span><span class="n">update_from_submission</span><span class="p">(</span><span class="n">after</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">TransactionFailed</span><span class="p">(</span><span class="s2">&quot;Something is fishy&quot;</span><span class="p">)</span>
 
-            <span class="n">JREFEvents</span> <span class="o">=</span> <span class="p">[</span><span class="n">SetDOI</span><span class="p">,</span> <span class="n">SetJournalReference</span><span class="p">,</span> <span class="n">SetReportNumber</span><span class="p">]</span>
+    <span class="n">db_event</span> <span class="o">=</span> <span class="n">_new_dbevent</span><span class="p">(</span><span class="n">event</span><span class="p">)</span>
+    <span class="n">session</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">dbs</span><span class="p">)</span>
+    <span class="n">session</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">db_event</span><span class="p">)</span>
 
-            <span class="c1"># From the perspective of the database, a replacement is mainly an</span>
-            <span class="c1"># incremented version number. This requires a new row in the</span>
-            <span class="c1"># database.</span>
-            <span class="k">if</span> <span class="n">after</span><span class="o">.</span><span class="n">version</span> <span class="o">&gt;</span> <span class="n">before</span><span class="o">.</span><span class="n">version</span><span class="p">:</span>
-                <span class="n">dbs</span> <span class="o">=</span> <span class="n">_create_replacement</span><span class="p">(</span><span class="n">doc_id</span><span class="p">,</span> <span class="n">before</span><span class="o">.</span><span class="n">arxiv_id</span><span class="p">,</span>
-                                          <span class="n">after</span><span class="o">.</span><span class="n">version</span><span class="p">,</span> <span class="n">after</span><span class="p">,</span> <span class="n">event</span><span class="o">.</span><span class="n">created</span><span class="p">)</span>
-            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">Rollback</span><span class="p">)</span> <span class="ow">and</span> <span class="n">before</span><span class="o">.</span><span class="n">version</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
-                <span class="n">dbs</span> <span class="o">=</span> <span class="n">_delete_replacement</span><span class="p">(</span><span class="n">doc_id</span><span class="p">,</span> <span class="n">before</span><span class="o">.</span><span class="n">arxiv_id</span><span class="p">,</span>
-                                          <span class="n">before</span><span class="o">.</span><span class="n">version</span><span class="p">)</span>
+    <span class="c1"># Make sure that we get a submission ID; note that this # does not commit</span>
+    <span class="c1"># the transaction, just pushes the # SQL that we have generated so far to</span>
+    <span class="c1"># the database # server.</span>
+    <span class="n">session</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
 
-            <span class="c1"># Withdrawals also require a new row, and they use the most recent</span>
-            <span class="c1"># version number.</span>
-            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">RequestWithdrawal</span><span class="p">):</span>
-                <span class="n">dbs</span> <span class="o">=</span> <span class="n">_create_withdrawal</span><span class="p">(</span><span class="n">doc_id</span><span class="p">,</span> <span class="n">event</span><span class="o">.</span><span class="n">reason</span><span class="p">,</span>
-                                         <span class="n">before</span><span class="o">.</span><span class="n">arxiv_id</span><span class="p">,</span> <span class="n">after</span><span class="o">.</span><span class="n">version</span><span class="p">,</span> <span class="n">after</span><span class="p">,</span>
-                                         <span class="n">event</span><span class="o">.</span><span class="n">created</span><span class="p">)</span>
-            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">RequestCrossList</span><span class="p">):</span>
-                <span class="n">dbs</span> <span class="o">=</span> <span class="n">_create_crosslist</span><span class="p">(</span><span class="n">doc_id</span><span class="p">,</span> <span class="n">event</span><span class="o">.</span><span class="n">categories</span><span class="p">,</span>
-                                        <span class="n">before</span><span class="o">.</span><span class="n">arxiv_id</span><span class="p">,</span> <span class="n">after</span><span class="o">.</span><span class="n">version</span><span class="p">,</span> <span class="n">after</span><span class="p">,</span>
-                                        <span class="n">event</span><span class="o">.</span><span class="n">created</span><span class="p">)</span>
+    <span class="n">log</span><span class="o">.</span><span class="n">handle</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">before</span><span class="p">,</span> <span class="n">after</span><span class="p">)</span>   <span class="c1"># Create admin log entry.</span>
+    <span class="k">for</span> <span class="n">func</span> <span class="ow">in</span> <span class="n">call</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;call </span><span class="si">%s</span><span class="s1"> with event </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">func</span><span class="p">,</span> <span class="n">event</span><span class="o">.</span><span class="n">event_id</span><span class="p">)</span>
+        <span class="n">func</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">before</span><span class="p">,</span> <span class="n">after</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">AddProposal</span><span class="p">):</span>
+        <span class="n">proposal</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">before</span><span class="p">,</span> <span class="n">after</span><span class="p">)</span>
 
-            <span class="c1"># Adding DOIs and citation information (so-called &quot;journal</span>
-            <span class="c1"># reference&quot;) also requires a new row. The version number is not</span>
-            <span class="c1"># incremented.</span>
-            <span class="k">elif</span> <span class="n">before</span><span class="o">.</span><span class="n">announced</span> <span class="ow">and</span> <span class="nb">type</span><span class="p">(</span><span class="n">event</span><span class="p">)</span> <span class="ow">in</span> <span class="n">JREFEvents</span><span class="p">:</span>
-                <span class="n">dbs</span> <span class="o">=</span> <span class="n">_create_jref</span><span class="p">(</span><span class="n">doc_id</span><span class="p">,</span> <span class="n">before</span><span class="o">.</span><span class="n">arxiv_id</span><span class="p">,</span> <span class="n">after</span><span class="o">.</span><span class="n">version</span><span class="p">,</span>
-                                   <span class="n">after</span><span class="p">,</span> <span class="n">event</span><span class="o">.</span><span class="n">created</span><span class="p">)</span>
-
-            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">CancelRequest</span><span class="p">):</span>
-                <span class="n">dbs</span> <span class="o">=</span> <span class="n">_cancel_request</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">before</span><span class="p">,</span> <span class="n">after</span><span class="p">)</span>
-
-            <span class="c1"># The submission has been announced.</span>
-            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">before</span><span class="p">,</span> <span class="n">Submission</span><span class="p">)</span>  \
-                    <span class="ow">and</span> <span class="n">before</span><span class="o">.</span><span class="n">arxiv_id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="n">dbs</span> <span class="o">=</span> <span class="n">_load</span><span class="p">(</span><span class="n">paper_id</span><span class="o">=</span><span class="n">before</span><span class="o">.</span><span class="n">arxiv_id</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="n">before</span><span class="o">.</span><span class="n">version</span><span class="p">)</span>
-                <span class="n">_check_consistency</span><span class="p">(</span><span class="n">dbs</span><span class="p">,</span> <span class="n">event</span><span class="o">.</span><span class="n">created</span><span class="p">)</span>
-                <span class="n">_preserve_sticky_hold</span><span class="p">(</span><span class="n">dbs</span><span class="p">,</span> <span class="n">before</span><span class="p">,</span> <span class="n">after</span><span class="p">,</span> <span class="n">event</span><span class="p">)</span>
-
-                <span class="n">dbs</span><span class="o">.</span><span class="n">update_from_submission</span><span class="p">(</span><span class="n">after</span><span class="p">)</span>
-
-            <span class="c1"># The submission has not yet been announced; we&#39;re working with a</span>
-            <span class="c1"># single row.</span>
-            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">before</span><span class="p">,</span> <span class="n">Submission</span><span class="p">)</span> <span class="ow">and</span> <span class="n">before</span><span class="o">.</span><span class="n">submission_id</span><span class="p">:</span>
-                <span class="n">dbs</span> <span class="o">=</span> <span class="n">_load</span><span class="p">(</span><span class="n">before</span><span class="o">.</span><span class="n">submission_id</span><span class="p">)</span>
-                <span class="n">_check_consistency</span><span class="p">(</span><span class="n">dbs</span><span class="p">,</span> <span class="n">event</span><span class="o">.</span><span class="n">created</span><span class="p">)</span>
-                <span class="n">_preserve_sticky_hold</span><span class="p">(</span><span class="n">dbs</span><span class="p">,</span> <span class="n">before</span><span class="p">,</span> <span class="n">after</span><span class="p">,</span> <span class="n">event</span><span class="p">)</span>
-                <span class="n">dbs</span><span class="o">.</span><span class="n">update_from_submission</span><span class="p">(</span><span class="n">after</span><span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="n">TransactionFailed</span><span class="p">(</span><span class="s2">&quot;Something is fishy&quot;</span><span class="p">)</span>
-
-        <span class="n">db_event</span> <span class="o">=</span> <span class="n">_new_dbevent</span><span class="p">(</span><span class="n">event</span><span class="p">)</span>
-        <span class="n">session</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">dbs</span><span class="p">)</span>
-        <span class="n">session</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">db_event</span><span class="p">)</span>
-
-        <span class="n">log</span><span class="o">.</span><span class="n">handle</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">before</span><span class="p">,</span> <span class="n">after</span><span class="p">)</span>   <span class="c1"># Create admin log entry.</span>
-        <span class="k">for</span> <span class="n">func</span> <span class="ow">in</span> <span class="n">call</span><span class="p">:</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;call </span><span class="si">%s</span><span class="s1"> with event </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">func</span><span class="p">,</span> <span class="n">event</span><span class="o">.</span><span class="n">event_id</span><span class="p">)</span>
-            <span class="n">func</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">before</span><span class="p">,</span> <span class="n">after</span><span class="p">)</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">AddProposal</span><span class="p">):</span>
-            <span class="n">proposal</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">before</span><span class="p">,</span> <span class="n">after</span><span class="p">)</span>
-
-        <span class="c1"># Attach the database object for the event to the row for the</span>
-        <span class="c1">#  submission.</span>
-        <span class="k">if</span> <span class="n">this_is_a_new_submission</span><span class="p">:</span>    <span class="c1"># Update in transaction.</span>
-            <span class="n">db_event</span><span class="o">.</span><span class="n">submission</span> <span class="o">=</span> <span class="n">dbs</span>
-        <span class="k">else</span><span class="p">:</span>                           <span class="c1"># Just set the ID directly.</span>
-            <span class="n">db_event</span><span class="o">.</span><span class="n">submission_id</span> <span class="o">=</span> <span class="n">before</span><span class="o">.</span><span class="n">submission_id</span>
+    <span class="c1"># Attach the database object for the event to the row for the</span>
+    <span class="c1">#  submission.</span>
+    <span class="k">if</span> <span class="n">this_is_a_new_submission</span><span class="p">:</span>    <span class="c1"># Update in transaction.</span>
+        <span class="n">db_event</span><span class="o">.</span><span class="n">submission</span> <span class="o">=</span> <span class="n">dbs</span>
+    <span class="k">else</span><span class="p">:</span>                           <span class="c1"># Just set the ID directly.</span>
+        <span class="n">db_event</span><span class="o">.</span><span class="n">submission_id</span> <span class="o">=</span> <span class="n">before</span><span class="o">.</span><span class="n">submission_id</span>
 
     <span class="n">event</span><span class="o">.</span><span class="n">committed</span> <span class="o">=</span> <span class="kc">True</span>
 
@@ -424,29 +446,22 @@
         <span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">DELETED_REMOVED</span><span class="p">,</span>
         <span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">DELETED_USER_EXPIRED</span>
     <span class="p">]</span>
-    <span class="k">with</span> <span class="n">transaction</span><span class="p">()</span> <span class="k">as</span> <span class="n">session</span><span class="p">:</span>
-        <span class="n">q</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span>
-            <span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">submission_id</span><span class="p">,</span>
-            <span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">title</span><span class="p">,</span>
-            <span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">submitter_id</span><span class="p">,</span>
-            <span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">submitter_email</span>
-        <span class="p">)</span>
-        <span class="n">q</span> <span class="o">=</span> <span class="n">q</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">status</span><span class="o">.</span><span class="n">in_</span><span class="p">(</span><span class="n">STATUSES_TO_CHECK</span><span class="p">))</span>
-        <span class="n">q</span> <span class="o">=</span> <span class="n">q</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">created</span> <span class="o">&gt;=</span> <span class="n">since</span><span class="p">)</span>
-        <span class="k">return</span> <span class="p">[</span>
-            <span class="p">(</span><span class="n">submission_id</span><span class="p">,</span> <span class="n">title</span><span class="p">,</span> <span class="n">User</span><span class="p">(</span><span class="n">native_id</span><span class="o">=</span><span class="n">user_id</span><span class="p">,</span> <span class="n">email</span><span class="o">=</span><span class="n">user_email</span><span class="p">))</span>
-            <span class="k">for</span> <span class="n">submission_id</span><span class="p">,</span> <span class="n">title</span><span class="p">,</span> <span class="n">user_id</span><span class="p">,</span> <span class="n">user_email</span> <span class="ow">in</span> <span class="n">q</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
-        <span class="p">]</span></div>
+    <span class="n">session</span> <span class="o">=</span> <span class="n">current_session</span><span class="p">()</span>
+    <span class="n">q</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span>
+        <span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">submission_id</span><span class="p">,</span>
+        <span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">title</span><span class="p">,</span>
+        <span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">submitter_id</span><span class="p">,</span>
+        <span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">submitter_email</span>
+    <span class="p">)</span>
+    <span class="n">q</span> <span class="o">=</span> <span class="n">q</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">status</span><span class="o">.</span><span class="n">in_</span><span class="p">(</span><span class="n">STATUSES_TO_CHECK</span><span class="p">))</span>
+    <span class="n">q</span> <span class="o">=</span> <span class="n">q</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">created</span> <span class="o">&gt;=</span> <span class="n">since</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">[</span>
+        <span class="p">(</span><span class="n">submission_id</span><span class="p">,</span> <span class="n">title</span><span class="p">,</span> <span class="n">User</span><span class="p">(</span><span class="n">native_id</span><span class="o">=</span><span class="n">user_id</span><span class="p">,</span> <span class="n">email</span><span class="o">=</span><span class="n">user_email</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">submission_id</span><span class="p">,</span> <span class="n">title</span><span class="p">,</span> <span class="n">user_id</span><span class="p">,</span> <span class="n">user_email</span> <span class="ow">in</span> <span class="n">q</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+    <span class="p">]</span></div>
 
 
 <span class="c1"># Private functions down here.</span>
-
-<span class="k">def</span> <span class="nf">_check_consistency</span><span class="p">(</span><span class="n">row</span><span class="p">:</span> <span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="p">,</span> <span class="n">created</span><span class="p">:</span> <span class="n">datetime</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;Verify that the database row is not fresher than the current event.&quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="n">row</span><span class="o">.</span><span class="n">get_updated</span><span class="p">()</span> <span class="o">&gt;</span> <span class="n">created</span><span class="p">:</span>
-        <span class="n">lag</span> <span class="o">=</span> <span class="p">(</span><span class="n">row</span><span class="o">.</span><span class="n">get_updated</span><span class="p">()</span> <span class="o">-</span> <span class="n">created</span><span class="p">)</span><span class="o">.</span><span class="n">total_seconds</span><span class="p">()</span>
-        <span class="k">raise</span> <span class="n">ConsistencyError</span><span class="p">(</span><span class="s1">&#39;Event is stale by </span><span class="si">%s</span><span class="s1"> seconds&#39;</span> <span class="o">%</span> <span class="n">lag</span><span class="p">)</span>
-
 
 <span class="k">def</span> <span class="nf">_load</span><span class="p">(</span><span class="n">submission_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">paper_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
           <span class="n">version</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span> <span class="n">row_type</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> \
@@ -484,7 +499,6 @@
         <span class="n">row_type</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">CROSS_LIST</span>
     <span class="n">dbs</span> <span class="o">=</span> <span class="n">_load</span><span class="p">(</span><span class="n">paper_id</span><span class="o">=</span><span class="n">before</span><span class="o">.</span><span class="n">arxiv_id</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="n">before</span><span class="o">.</span><span class="n">version</span><span class="p">,</span>
                 <span class="n">row_type</span><span class="o">=</span><span class="n">row_type</span><span class="p">)</span>
-    <span class="n">_check_consistency</span><span class="p">(</span><span class="n">dbs</span><span class="p">,</span> <span class="n">event</span><span class="o">.</span><span class="n">created</span><span class="p">)</span>
     <span class="n">dbs</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">USER_DELETED</span>
     <span class="k">return</span> <span class="n">dbs</span>
 
@@ -566,8 +580,8 @@
 
 
 <span class="k">def</span> <span class="nf">_create_jref</span><span class="p">(</span><span class="n">document_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">paper_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">version</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
-                 <span class="n">submission</span><span class="p">:</span> <span class="n">Submission</span><span class="p">,</span> <span class="n">created</span><span class="p">:</span> <span class="n">datetime</span><span class="p">)</span> \
-        <span class="o">-&gt;</span> <span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="p">:</span>
+                 <span class="n">submission</span><span class="p">:</span> <span class="n">Submission</span><span class="p">,</span>
+                 <span class="n">created</span><span class="p">:</span> <span class="n">datetime</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Create a JREF submission.</span>
 
@@ -579,7 +593,6 @@
     <span class="k">try</span><span class="p">:</span>
         <span class="n">most_recent_sb</span> <span class="o">=</span> <span class="n">_load</span><span class="p">(</span><span class="n">paper_id</span><span class="o">=</span><span class="n">paper_id</span><span class="p">,</span> <span class="n">version</span><span class="o">=</span><span class="n">version</span><span class="p">,</span>
                                <span class="n">row_type</span><span class="o">=</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">JOURNAL_REFERENCE</span><span class="p">)</span>
-        <span class="n">_check_consistency</span><span class="p">(</span><span class="n">most_recent_sb</span><span class="p">,</span> <span class="n">created</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">most_recent_sb</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">most_recent_sb</span><span class="o">.</span><span class="n">is_announced</span><span class="p">():</span>
             <span class="n">most_recent_sb</span><span class="o">.</span><span class="n">update_from_submission</span><span class="p">(</span><span class="n">submission</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">most_recent_sb</span>
@@ -617,17 +630,17 @@
 
 
 <span class="k">def</span> <span class="nf">_get_db_submission_rows</span><span class="p">(</span><span class="n">submission_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="p">]:</span>
-    <span class="k">with</span> <span class="n">transaction</span><span class="p">()</span> <span class="k">as</span> <span class="n">session</span><span class="p">:</span>
-        <span class="n">head</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">submission_id</span><span class="p">,</span>
-                             <span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">doc_paper_id</span><span class="p">)</span> \
-            <span class="o">.</span><span class="n">filter_by</span><span class="p">(</span><span class="n">submission_id</span><span class="o">=</span><span class="n">submission_id</span><span class="p">)</span> \
-            <span class="o">.</span><span class="n">subquery</span><span class="p">()</span>
-        <span class="n">dbss</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span>
-            <span class="n">session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="p">)</span>
-            <span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">or_</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">submission_id</span> <span class="o">==</span> <span class="n">submission_id</span><span class="p">,</span>
-                        <span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">doc_paper_id</span> <span class="o">==</span> <span class="n">head</span><span class="o">.</span><span class="n">c</span><span class="o">.</span><span class="n">doc_paper_id</span><span class="p">))</span>
-            <span class="o">.</span><span class="n">order_by</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">submission_id</span><span class="o">.</span><span class="n">desc</span><span class="p">())</span>
-        <span class="p">)</span>
+    <span class="n">session</span> <span class="o">=</span> <span class="n">current_session</span><span class="p">()</span>
+    <span class="n">head</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">submission_id</span><span class="p">,</span>
+                         <span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">doc_paper_id</span><span class="p">)</span> \
+        <span class="o">.</span><span class="n">filter_by</span><span class="p">(</span><span class="n">submission_id</span><span class="o">=</span><span class="n">submission_id</span><span class="p">)</span> \
+        <span class="o">.</span><span class="n">subquery</span><span class="p">()</span>
+    <span class="n">dbss</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span>
+        <span class="n">session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">or_</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">submission_id</span> <span class="o">==</span> <span class="n">submission_id</span><span class="p">,</span>
+                    <span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">doc_paper_id</span> <span class="o">==</span> <span class="n">head</span><span class="o">.</span><span class="n">c</span><span class="o">.</span><span class="n">doc_paper_id</span><span class="p">))</span>
+        <span class="o">.</span><span class="n">order_by</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">submission_id</span><span class="o">.</span><span class="n">desc</span><span class="p">())</span>
+    <span class="p">)</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">dbss</span><span class="p">:</span>
         <span class="k">raise</span> <span class="n">NoSuchSubmission</span><span class="p">(</span><span class="s1">&#39;No submission found&#39;</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">dbss</span>
@@ -659,17 +672,17 @@
 
 
 <span class="k">def</span> <span class="nf">_get_db_submission_rows</span><span class="p">(</span><span class="n">submission_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="p">]:</span>
-    <span class="k">with</span> <span class="n">transaction</span><span class="p">()</span> <span class="k">as</span> <span class="n">session</span><span class="p">:</span>
-        <span class="n">head</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">submission_id</span><span class="p">,</span>
-                             <span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">doc_paper_id</span><span class="p">)</span> \
-            <span class="o">.</span><span class="n">filter_by</span><span class="p">(</span><span class="n">submission_id</span><span class="o">=</span><span class="n">submission_id</span><span class="p">)</span> \
-            <span class="o">.</span><span class="n">subquery</span><span class="p">()</span>
-        <span class="n">dbss</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span>
-            <span class="n">session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="p">)</span>
-            <span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">or_</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">submission_id</span> <span class="o">==</span> <span class="n">submission_id</span><span class="p">,</span>
-                        <span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">doc_paper_id</span> <span class="o">==</span> <span class="n">head</span><span class="o">.</span><span class="n">c</span><span class="o">.</span><span class="n">doc_paper_id</span><span class="p">))</span>
-            <span class="o">.</span><span class="n">order_by</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">submission_id</span><span class="o">.</span><span class="n">desc</span><span class="p">())</span>
-        <span class="p">)</span>
+    <span class="n">session</span> <span class="o">=</span> <span class="n">current_session</span><span class="p">()</span>
+    <span class="n">head</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">submission_id</span><span class="p">,</span>
+                         <span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">doc_paper_id</span><span class="p">)</span> \
+        <span class="o">.</span><span class="n">filter_by</span><span class="p">(</span><span class="n">submission_id</span><span class="o">=</span><span class="n">submission_id</span><span class="p">)</span> \
+        <span class="o">.</span><span class="n">subquery</span><span class="p">()</span>
+    <span class="n">dbss</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span>
+        <span class="n">session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">or_</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">submission_id</span> <span class="o">==</span> <span class="n">submission_id</span><span class="p">,</span>
+                    <span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">doc_paper_id</span> <span class="o">==</span> <span class="n">head</span><span class="o">.</span><span class="n">c</span><span class="o">.</span><span class="n">doc_paper_id</span><span class="p">))</span>
+        <span class="o">.</span><span class="n">order_by</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">submission_id</span><span class="o">.</span><span class="n">desc</span><span class="p">())</span>
+    <span class="p">)</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">dbss</span><span class="p">:</span>
         <span class="k">raise</span> <span class="n">NoSuchSubmission</span><span class="p">(</span><span class="s1">&#39;No submission found&#39;</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">dbss</span>
@@ -693,7 +706,7 @@
 <h3>Navigation</h3>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../../architecture.html">Submission &amp; moderation subsystem architecture</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../announcement_process.html">Submission &amp; announcement Process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../announcement_process.html">Submission &amp; announcement process</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../submission_api_context.html">Submission API: Context</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../arxiv.submission/arxiv.submission.html">arxiv.submission package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../containers/agent/agent.html">agent package</a></li>

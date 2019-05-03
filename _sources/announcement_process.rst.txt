@@ -1,10 +1,10 @@
-Submission & announcement Process
+Submission & announcement process
 *********************************
 
 This section describes the classic arXiv submission and announcement process at
 a high level.
 
-Submissions & States
+Submissions & states
 --------------------
 An arXiv submission is comprised of a source package and a collection of
 procedural and descriptive metadata. The source package is usually comprised of

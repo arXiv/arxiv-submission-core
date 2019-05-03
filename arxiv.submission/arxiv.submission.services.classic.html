@@ -43,14 +43,19 @@ service module must therefore do three main things:</p>
 <li><p>Store and provide access to event data generated during the submission
 process,</p></li>
 <li><p>Keep the classic database tables up to date so that “downstream” components
-can continue to operate. Since classic components work directly on
-submission tables, persisting events and resulting submission state must
-occur in the same transaction. We must also verify that we are not storing
-events that are stale with respect to the current state of the submission.</p></li>
+can continue to operate.</p></li>
 <li><p>Patch NG submission data with state changes that occur in the classic
 system. Those changes will be made directly to submission tables and not
 involve event-generation. See <a class="reference internal" href="#arxiv.submission.services.classic.get_submission" title="arxiv.submission.services.classic.get_submission"><code class="xref py py-func docutils literal notranslate"><span class="pre">get_submission()</span></code></a> for details.</p></li>
 </ol>
+<p>Since classic components work directly on submission tables, persisting events
+and resulting submission state must occur in the same transaction. We must also
+verify that we are not storing events that are stale with respect to the
+current state of the submission. To achieve this, the caller should use the
+<a class="reference internal" href="arxiv.submission.services.classic.util.html#arxiv.submission.services.classic.util.transaction" title="arxiv.submission.services.classic.util.transaction"><code class="xref py py-func docutils literal notranslate"><span class="pre">util.transaction()</span></code></a> context manager, and (when committing new events)
+call <a class="reference internal" href="#arxiv.submission.services.classic.get_submission" title="arxiv.submission.services.classic.get_submission"><code class="xref py py-func docutils literal notranslate"><span class="pre">get_submission()</span></code></a> with <code class="docutils literal notranslate"><span class="pre">for_update=True</span></code>. This will trigger a
+shared lock on the submission row(s) involved until the transaction is
+committed or rolled back.</p>
 <p>ORM representations of the classic database tables involved in submission
 are located in <a class="reference internal" href="arxiv.submission.services.classic.models.html#module-arxiv.submission.services.classic.models" title="arxiv.submission.services.classic.models"><code class="xref py py-mod docutils literal notranslate"><span class="pre">classic.models</span></code></a>. An additional model, <a class="reference internal" href="arxiv.submission.services.classic.event.html#arxiv.submission.services.classic.event.DBEvent" title="arxiv.submission.services.classic.event.DBEvent"><code class="xref py py-class docutils literal notranslate"><span class="pre">DBEvent</span></code></a>,
 is defined in <a class="reference internal" href="arxiv.submission.services.classic.event.html#module-arxiv.submission.services.classic.event" title="arxiv.submission.services.classic.event"><code class="xref py py-mod docutils literal notranslate"><span class="pre">classic.event</span></code></a>.</p>
@@ -110,8 +115,8 @@ is defined in <a class="reference internal" href="arxiv.submission.services.clas
 
 <dl class="function">
 <dt id="arxiv.submission.services.classic.get_submission">
-<code class="descclassname">arxiv.submission.services.classic.</code><code class="descname">get_submission</code><span class="sig-paren">(</span><em>submission_id</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/services/classic.html#get_submission"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.services.classic.get_submission" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get the current state of a <a class="reference internal" href="arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.Submission" title="arxiv.submission.domain.submission.Submission"><code class="xref py py-class docutils literal notranslate"><span class="pre">domain.submission.Submission</span></code></a> from the database.</p>
+<code class="descclassname">arxiv.submission.services.classic.</code><code class="descname">get_submission</code><span class="sig-paren">(</span><em>submission_id</em>, <em>for_update=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/services/classic.html#get_submission"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.services.classic.get_submission" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the current state of a submission from the database.</p>
 <p>In the medium term, services that use this package will need to
 play well with legacy services that integrate with the classic
 database. For example, the moderation system does not use the event
@@ -287,7 +292,7 @@ raised, the transaction is rolled back.</p></li>
 <h3>Navigation</h3>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../architecture.html">Submission &amp; moderation subsystem architecture</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../announcement_process.html">Submission &amp; announcement Process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../announcement_process.html">Submission &amp; announcement process</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../submission_api_context.html">Submission API: Context</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="arxiv.submission.html">arxiv.submission package</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="arxiv.submission.html#overview">Overview</a></li>

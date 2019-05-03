@@ -215,9 +215,7 @@
 
 
 <div class="viewcode-block" id="status_from_classic"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.services.classic.load.html#arxiv.submission.services.classic.load.status_from_classic">[docs]</a><span class="k">def</span> <span class="nf">status_from_classic</span><span class="p">(</span><span class="n">classic_status</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-    <span class="sd">&quot;&quot;&quot;Map classic status codes to :class:`.domain.submission.Submission` status.&quot;&quot;&quot;</span>
-    <span class="c1"># if self.get_arxiv_id() is not None:</span>
-    <span class="c1">#     return domain.Submission.ANNOUNCED</span>
+    <span class="sd">&quot;&quot;&quot;Map classic status codes to domain submission status.&quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="n">STATUS_MAP</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">classic_status</span><span class="p">)</span></div>
 
 
@@ -260,7 +258,7 @@
 <h3>Navigation</h3>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../architecture.html">Submission &amp; moderation subsystem architecture</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../../announcement_process.html">Submission &amp; announcement Process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../announcement_process.html">Submission &amp; announcement process</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../submission_api_context.html">Submission API: Context</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../arxiv.submission/arxiv.submission.html">arxiv.submission package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../../containers/agent/agent.html">agent package</a></li>

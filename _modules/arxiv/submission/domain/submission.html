@@ -128,93 +128,6 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">source_format</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">source_format</span><span class="p">)</span></div>
 
 
-<span class="c1"># TODO: revisit start_time</span>
-<span class="c1"># @dataclass</span>
-<span class="c1"># class Compilation:</span>
-<span class="c1">#     &quot;&quot;&quot;Represents a submission compilation.&quot;&quot;&quot;</span>
-<span class="c1">#</span>
-<span class="c1">#     class Status(Enum):      # type: ignore</span>
-<span class="c1">#         &quot;&quot;&quot;Represents the status of a requested compilation.&quot;&quot;&quot;</span>
-<span class="c1">#</span>
-<span class="c1">#         IN_PROGRESS = &quot;in_progress&quot;</span>
-<span class="c1">#         &quot;&quot;&quot;Compilation has been requested.&quot;&quot;&quot;</span>
-<span class="c1">#</span>
-<span class="c1">#         SUCCEEDED = &quot;succeeded&quot;</span>
-<span class="c1">#         &quot;&quot;&quot;Compilation successfully completed.&quot;&quot;&quot;</span>
-<span class="c1">#</span>
-<span class="c1">#         FAILED = &quot;failed&quot;</span>
-<span class="c1">#         &quot;&quot;&quot;Compilation failed.&quot;&quot;&quot;</span>
-<span class="c1">#</span>
-<span class="c1">#     source_id: str</span>
-<span class="c1">#     &quot;&quot;&quot;This is the ID of the source upload workspace.&quot;&quot;&quot;</span>
-<span class="c1">#     checksum: str</span>
-<span class="c1">#     &quot;&quot;&quot;The checksum of the source package to compile.&quot;&quot;&quot;</span>
-<span class="c1">#     output_format: str</span>
-<span class="c1">#     &quot;&quot;&quot;Compilation target format.&quot;&quot;&quot;</span>
-<span class="c1">#     start_time: datetime</span>
-<span class="c1">#     end_time: Optional[datetime]</span>
-<span class="c1">#     status: Status = field(default=Status.IN_PROGRESS)</span>
-<span class="c1">#</span>
-<span class="c1">#     def __post_init__(self):</span>
-<span class="c1">#         &quot;&quot;&quot;Make sure that :attr:`.status` is a :class:`.Status`.&quot;&quot;&quot;</span>
-<span class="c1">#         if self.status and type(self.status) is str:</span>
-<span class="c1">#             self.status = self.Status(self.status)</span>
-<span class="c1">#</span>
-<span class="c1">#     @property</span>
-<span class="c1">#     def identifier(self) -&gt; str:</span>
-<span class="c1">#         return f&quot;{self.source_id}/{self.checksum}/{self.output_format}&quot;</span>
-<span class="c1">#</span>
-<span class="c1">#     @classmethod</span>
-<span class="c1">#     def from_processes(cls, processes: List[ProcessStatus]) -&gt; &#39;Compilation&#39;:</span>
-<span class="c1">#         &quot;&quot;&quot;</span>
-<span class="c1">#         Get a :class:`.Compilation` from :attr:`.Submission.processes`.</span>
-<span class="c1">#</span>
-<span class="c1">#         Parameters</span>
-<span class="c1">#         ----------</span>
-<span class="c1">#         processes : list</span>
-<span class="c1">#             List of :class:`.ProcessStatus` instances from a submission.</span>
-<span class="c1">#</span>
-<span class="c1">#         Returns</span>
-<span class="c1">#         -------</span>
-<span class="c1">#         :class:`.Compilation`</span>
-<span class="c1">#             Static representation of the compilation attempt.</span>
-<span class="c1">#</span>
-<span class="c1">#         &quot;&quot;&quot;</span>
-<span class="c1">#         processes = sorted((p for p in processes</span>
-<span class="c1">#                             if p.process is ProcessStatus.Process.COMPILATION),</span>
-<span class="c1">#                            key=lambda p: p.created)</span>
-<span class="c1">#         if not processes:</span>
-<span class="c1">#             return None</span>
-<span class="c1">#         finished_states = [ProcessStatus.Status.SUCCEEDED,</span>
-<span class="c1">#                            ProcessStatus.Status.FAILED]</span>
-<span class="c1">#         latest = processes[-1]</span>
-<span class="c1">#         source_id, checksum, output_format = \</span>
-<span class="c1">#             latest.process_identifier.split(&quot;/&quot;)</span>
-<span class="c1">#         if latest.status in finished_states:</span>
-<span class="c1">#             end_time = latest.created</span>
-<span class="c1">#             for proc in processes[::-1]:</span>
-<span class="c1">#                 if proc.process_identifier == latest.process_identifier \</span>
-<span class="c1">#                         and proc.status is ProcessStatus.Status.REQUESTED:</span>
-<span class="c1">#                     start_time = proc.created</span>
-<span class="c1">#                     break</span>
-<span class="c1">#         else:</span>
-<span class="c1">#             start_time = latest.created</span>
-<span class="c1">#             end_time = None</span>
-<span class="c1">#         status_map = {</span>
-<span class="c1">#             ProcessStatus.Status.REQUESTED: cls.Status.IN_PROGRESS,</span>
-<span class="c1">#             ProcessStatus.Status.SUCCEEDED: cls.Status.SUCCEEDED,</span>
-<span class="c1">#             ProcessStatus.Status.FAILED: cls.Status.FAILED,</span>
-<span class="c1">#         }</span>
-<span class="c1">#         return Compilation(</span>
-<span class="c1">#             source_id=source_id,</span>
-<span class="c1">#             checksum=checksum,</span>
-<span class="c1">#             output_format=output_format,</span>
-<span class="c1">#             start_time=start_time,</span>
-<span class="c1">#             end_time=end_time,</span>
-<span class="c1">#             status=status_map[latest.status]</span>
-<span class="c1">#         )</span>
-
-
 <div class="viewcode-block" id="SubmissionMetadata"><a class="viewcode-back" href="../../../../arxiv.submission/arxiv.submission.domain.submission.html#arxiv.submission.domain.event.SubmissionMetadata">[docs]</a><span class="nd">@dataclass</span>
 <span class="k">class</span> <span class="nc">SubmissionMetadata</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;Metadata about a :class:`.domain.submission.Submission` instance.&quot;&quot;&quot;</span>
@@ -651,7 +564,7 @@
 <h3>Navigation</h3>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../../architecture.html">Submission &amp; moderation subsystem architecture</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../../../announcement_process.html">Submission &amp; announcement Process</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../announcement_process.html">Submission &amp; announcement process</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../submission_api_context.html">Submission API: Context</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../arxiv.submission/arxiv.submission.html">arxiv.submission package</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../containers/agent/agent.html">agent package</a></li>
