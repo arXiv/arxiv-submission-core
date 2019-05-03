@@ -15,7 +15,7 @@ from flask_sqlalchemy import SQLAlchemy
 from arxiv.base.globals import get_application_config, get_application_global
 from arxiv.base import logging
 from .exceptions import ClassicBaseException, TransactionFailed
-
+from ...exceptions import InvalidEvent
 from ... import serializer
 
 
@@ -91,6 +91,8 @@ def transaction() -> Generator:
         logger.debug('Command failed, rolling back: %s', str(e))
         session.rollback()
         raise   # Propagate exceptions raised from this module.
+    except InvalidEvent:
+        raise
     except Exception as e:
         logger.debug('Command failed, rolling back: %s', str(e))
         session.rollback()
