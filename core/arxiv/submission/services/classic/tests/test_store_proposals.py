@@ -9,7 +9,7 @@ from ....domain.agent import User
 from ....domain.annotation import Comment
 from ....domain.submission import Submission
 from ....domain.proposal import Proposal
-from .. import store_event, models, get_events
+from .. import store_event, models, get_events, current_session, transaction
 
 from .util import in_memory_db
 
@@ -26,7 +26,7 @@ class TestSaveProposal(TestCase):
 
     def test_save_reclassification_proposal(self):
         """A submission has a new reclassification proposal."""
-        with in_memory_db() as session:
+        with in_memory_db():
             create = CreateSubmission(creator=self.user,
                                       created=datetime.now(UTC))
             before, after = None, create.apply(None)
@@ -42,8 +42,10 @@ class TestSaveProposal(TestCase):
                 created=datetime.now(UTC)
             )
             after = event.apply(before)
-            event, after = store_event(event, before, after)
+            with transaction():
+                event, after = store_event(event, before, after)
 
+            session = current_session()
             db_sb = session.query(models.Submission).get(event.submission_id)
 
             # Make sure that we get the right submission ID.
@@ -66,7 +68,7 @@ class TestSaveProposal(TestCase):
 
     def test_save_secondary_proposal(self):
         """A submission has a new cross-list proposal."""
-        with in_memory_db() as session:
+        with in_memory_db():
             create = CreateSubmission(creator=self.user,
                                       created=datetime.now(UTC))
             before, after = None, create.apply(None)
@@ -82,8 +84,10 @@ class TestSaveProposal(TestCase):
                 comment='foo'
             )
             after = event.apply(before)
-            event, after = store_event(event, before, after)
+            with transaction():
+                event, after = store_event(event, before, after)
 
+            session = current_session()
             db_sb = session.query(models.Submission).get(event.submission_id)
 
             # Make sure that we get the right submission ID.
@@ -106,7 +110,7 @@ class TestSaveProposal(TestCase):
 
     def test_save_title_proposal(self):
         """A submission has a new SetTitle proposal."""
-        with in_memory_db() as session:
+        with in_memory_db():
             create = CreateSubmission(creator=self.user,
                                       created=datetime.now(UTC))
             before, after = None, create.apply(None)
@@ -120,8 +124,10 @@ class TestSaveProposal(TestCase):
                 comment='foo'
             )
             after = event.apply(before)
-            event, after = store_event(event, before, after)
+            with transaction():
+                event, after = store_event(event, before, after)
 
+            session = current_session()
             db_sb = session.query(models.Submission).get(event.submission_id)
 
             # Make sure that we get the right submission ID.

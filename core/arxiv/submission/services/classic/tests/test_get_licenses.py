@@ -5,7 +5,7 @@ from unittest import TestCase, mock
 from flask import Flask
 
 from ....domain.submission import License
-from .. import models, get_licenses
+from .. import models, get_licenses, current_session
 from .util import in_memory_db
 
 
@@ -16,7 +16,8 @@ class TestGetLicenses(TestCase):
         """Return a :class:`.domain.License` for each active license."""
         # mock_util.json_factory.return_value = SQLiteJSON
 
-        with in_memory_db() as session:
+        with in_memory_db():
+            session = current_session()
             session.add(models.License(
                 name="http://arxiv.org/licenses/assumed-1991-2003",
                 sequence=9,

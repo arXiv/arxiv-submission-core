@@ -15,7 +15,8 @@ from ....domain.event import CreateSubmission, \
     SetComments, SetAuthors, Announce, ConfirmAuthorship, ConfirmPolicy, \
     SetUploadPackage
 from .. import init_app, create_all, drop_all, models, DBEvent, \
-    get_submission, current_session, get_licenses, exceptions, store_event
+    get_submission, current_session, get_licenses, exceptions, store_event, \
+    transaction
 
 from .util import in_memory_db
 
@@ -53,7 +54,7 @@ class TestGetSubmission(TestCase):
             FinalizeSubmission(creator=user)
         ]
 
-        with in_memory_db() as session:
+        with in_memory_db():
             # User creates and finalizes submission.
             before = None
             for i, event in enumerate(list(events)):
@@ -66,6 +67,7 @@ class TestGetSubmission(TestCase):
 
             ident = submission.submission_id
 
+            session = current_session()
             # Moderation happens, things change outside the event model.
             db_submission = session.query(models.Submission).get(ident)
 
@@ -111,18 +113,20 @@ class TestGetSubmission(TestCase):
             FinalizeSubmission(creator=user)
         ]
 
-        with in_memory_db() as session:
+        with in_memory_db():
             # User creates and finalizes submission.
-            before = None
-            for i, event in enumerate(list(events)):
-                event.created = datetime.now(UTC)
-                after = event.apply(before)
-                event, after = store_event(event, before, after)
-                events[i] = event
-                before = after
-            submission = after
-            ident = submission.submission_id
+            with transaction():
+                before = None
+                for i, event in enumerate(list(events)):
+                    event.created = datetime.now(UTC)
+                    after = event.apply(before)
+                    event, after = store_event(event, before, after)
+                    events[i] = event
+                    before = after
+                submission = after
+                ident = submission.submission_id
 
+            session = current_session()
             # Moderation happens, things change outside the event model.
             db_submission = session.query(models.Submission).get(ident)
 

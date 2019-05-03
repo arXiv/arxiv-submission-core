@@ -146,7 +146,7 @@ class TestSave(TestCase):
             emit(event)
             return event, after
 
-        def mock_get_events(submission_id):
+        def mock_get_events(submission_id, *args, **kwargs):
             return cache[submission_id]
 
         mock_db.store_event = mock_store_event_with_cache

@@ -15,10 +15,9 @@ def in_memory_db(app=None):
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     init_app(app)
     with app.app_context():
-
         create_all()
         try:
-            yield current_session()
+            yield
         except Exception:
             raise
         finally:

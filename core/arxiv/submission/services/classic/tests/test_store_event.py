@@ -14,7 +14,9 @@ from ....domain.event import CreateSubmission, \
     SetJournalReference, SetComments, SetAuthors, Announce, \
     ConfirmAuthorship, SetUploadPackage
 from .. import init_app, create_all, drop_all, models, DBEvent, \
-    get_submission, current_session, get_licenses, exceptions, store_event
+    get_submission, current_session, get_licenses, exceptions, store_event, \
+    transaction
+
 
 from .util import in_memory_db
 
@@ -29,7 +31,8 @@ class TestStoreEvent(TestCase):
 
     def test_store_creation(self):
         """Store a :class:`CreateSubmission`."""
-        with in_memory_db() as session:
+        with in_memory_db():
+            session = current_session()
             before = None
             event = CreateSubmission(creator=self.user)
             event.created = datetime.now(UTC)
@@ -60,7 +63,8 @@ class TestStoreEvent(TestCase):
             'journal_ref': 'Nature 1991 2: 1',
             'authors': [Author(order=0, forename='Joe', surname='Bloggs')]
         }
-        with in_memory_db() as session:
+        with in_memory_db():
+
             ev = CreateSubmission(creator=self.user)
             ev2 = SetTitle(creator=self.user, title=metadata['title'])
             ev3 = SetAbstract(creator=self.user, abstract=metadata['abstract'])
@@ -74,14 +78,16 @@ class TestStoreEvent(TestCase):
             ev8 = SetDOI(creator=self.user, doi=metadata['doi'])
             events = [ev, ev2, ev3, ev4, ev5, ev6, ev7, ev8]
 
-            before = None
-            for i, event in enumerate(list(events)):
-                event.created = datetime.now(UTC)
-                after = event.apply(before)
-                event, after = store_event(event, before, after)
-                events[i] = event
-                before = after
+            with transaction():
+                before = None
+                for i, event in enumerate(list(events)):
+                    event.created = datetime.now(UTC)
+                    after = event.apply(before)
+                    event, after = store_event(event, before, after)
+                    events[i] = event
+                    before = after
 
+            session = current_session()
             db_submission = session.query(models.Submission)\
                 .get(after.submission_id)
             db_events = session.query(DBEvent).all()
@@ -113,7 +119,7 @@ class TestStoreEvent(TestCase):
             'journal_ref': 'Nature 1991 2: 1',
             'authors': [Author(order=0, forename='Joe', surname='Bloggs')]
         }
-        with in_memory_db() as session:
+        with in_memory_db():
 
             events = [
                 CreateSubmission(creator=self.user),
@@ -146,14 +152,16 @@ class TestStoreEvent(TestCase):
                 FinalizeSubmission(creator=self.user)
             ]
 
-            before = None
-            for i, event in enumerate(list(events)):
-                event.created = datetime.now(UTC)
-                after = event.apply(before)
-                event, after = store_event(event, before, after)
-                events[i] = event
-                before = after
+            with transaction():
+                before = None
+                for i, event in enumerate(list(events)):
+                    event.created = datetime.now(UTC)
+                    after = event.apply(before)
+                    event, after = store_event(event, before, after)
+                    events[i] = event
+                    before = after
 
+            session = current_session()
             db_submission = session.query(models.Submission) \
                 .get(after.submission_id)
             db_events = session.query(DBEvent).all()
@@ -181,7 +189,7 @@ class TestStoreEvent(TestCase):
             'authors': [Author(order=0, forename='Joe', surname='Bloggs')]
         }
 
-        with in_memory_db() as session:
+        with in_memory_db():
             events = [
                 CreateSubmission(creator=self.user),
                 ConfirmContactInformation(creator=self.user),
@@ -213,14 +221,16 @@ class TestStoreEvent(TestCase):
                 FinalizeSubmission(creator=self.user)
             ]
 
-            before = None
-            for i, event in enumerate(list(events)):
-                event.created = datetime.now(UTC)
-                after = event.apply(before)
-                event = store_event(event, before, after)
-                events[i] = event
-                before = after
+            with transaction():
+                before = None
+                for i, event in enumerate(list(events)):
+                    event.created = datetime.now(UTC)
+                    after = event.apply(before)
+                    event = store_event(event, before, after)
+                    events[i] = event
+                    before = after
 
+            session = current_session()
             # Announced!
             paper_id = '1901.00123'
             db_submission = session.query(models.Submission) \
@@ -245,7 +255,8 @@ class TestStoreEvent(TestCase):
                         submission_id=after.submission_id,
                         created=datetime.now(UTC))
             after = e3.apply(before)
-            store_event(e3, before, after)
+            with transaction():
+                store_event(e3, before, after)
 
             e4 = SetJournalReference(creator=self.user,
                                      journal_ref=journal_ref,
@@ -253,8 +264,10 @@ class TestStoreEvent(TestCase):
                                      created=datetime.now(UTC))
             before = after
             after = e4.apply(before)
-            store_event(e4, before, after)
+            with transaction():
+                store_event(e4, before, after)
 
+            session = current_session()
             # What happened.
             db_submission = session.query(models.Submission) \
                 .filter(models.Submission.doc_paper_id == paper_id) \
@@ -275,15 +288,17 @@ class TestStoreEvent(TestCase):
                                          category='physics.acc-ph')
         events = [ev, ev2, ev3]
 
-        with in_memory_db() as session:
-            before = None
-            for i, event in enumerate(list(events)):
-                event.created = datetime.now(UTC)
-                after = event.apply(before)
-                event, after = store_event(event, before, after)
-                events[i] = event
-                before = after
+        with in_memory_db():
+            with transaction():
+                before = None
+                for i, event in enumerate(list(events)):
+                    event.created = datetime.now(UTC)
+                    after = event.apply(before)
+                    event, after = store_event(event, before, after)
+                    events[i] = event
+                    before = after
 
+            session = current_session()
             db_submission = session.query(models.Submission)\
                 .get(after.submission_id)
             db_events = session.query(DBEvent).all()

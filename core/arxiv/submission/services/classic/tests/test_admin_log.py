@@ -12,7 +12,7 @@ from flask import Flask
 from ....domain.agent import User, System
 from ....domain.submission import Submission, Author
 from ....domain.event import CreateSubmission, ConfirmPolicy, SetTitle
-from .. import models, store_event, log
+from .. import models, store_event, log, current_session
 
 from .util import in_memory_db
 
@@ -22,7 +22,7 @@ class TestAdminLog(TestCase):
 
     def test_add_admin_log_entry(self):
         """Add a log entry."""
-        with in_memory_db() as session:
+        with in_memory_db():
             log.admin_log(
                 "fooprogram",
                 "test",
@@ -32,6 +32,7 @@ class TestAdminLog(TestCase):
                 submission_id=5
             )
 
+            session = current_session()
             logs = session.query(models.AdminLogEntry).all()
             self.assertEqual(len(logs), 1)
             self.assertEqual(logs[0].program, "fooprogram")

@@ -318,8 +318,14 @@ class Submission(Base):    # type: ignore
     def is_announced(self) -> bool:
         return self.status in [self.ANNOUNCED, self.DELETED_ANNOUNCED]
 
+    def is_active(self) -> bool:
+        return not self.is_announced() and not self.is_deleted()
+
     def is_rejected(self) -> bool:
         return self.status == self.REMOVED
+
+    def is_finalized(self) -> bool:
+        return self.status > self.WORKING and not self.is_deleted()
 
     def is_deleted(self) -> bool:
         return self.status in self.DELETED

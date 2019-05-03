@@ -415,9 +415,8 @@ event store, which will reject events for which there is a version mismatch.
 Since (as above) we are continuing to deal with legacy components that make
 direct writes to submission state, in the interim we will rely on the atomic
 transactions afforded by the legacy MySQL database, and ensure consistency
-by rejecting events that were instantiated prior to the most recent change on
-the submission being mutated. This is implemented in
-:func:`arxiv.submission.services.classic.store_event`\.
+by creating a short-lived shared lock on related submission rows while
+committing new events.
 
 Finally, we ultimately want to avoid placing the responsibility for updating
 the projected submission state on the applications that are generating events.
@@ -426,7 +425,8 @@ Currently, the event-generating application must read the submission state and
 events from the legacy database, write both events and submission state to  the
 legacy database, and propagate events via the event stream. This is handled by
 :func:`arxiv.submission.core.save`\, and is implemented in a way that
-preserves the atomicity of the write.
+preserves the ACIDity of the write.
+
 
 .. _figure-submission-events-interim:
 

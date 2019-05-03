@@ -82,9 +82,11 @@ def current_session() -> Session:
 def transaction() -> Generator:
     """Context manager for database transaction."""
     session = current_session()
+    logger.debug('transaction with session %s', id(session))
     try:
         yield session
         session.commit()
+        logger.debug('committed!')
     except ClassicBaseException as e:
         logger.debug('Command failed, rolling back: %s', str(e))
         session.rollback()

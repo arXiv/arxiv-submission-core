@@ -86,11 +86,6 @@ class ClassicEventInterpolator:
         # Classic lacks millisecond precision.
         return (delta).total_seconds() < -1
 
-    def _should_apply_current_row(self, event: Event) -> bool:
-        return self.current_row \
-            and self._current_row_preceeds_event(event) \
-            and self.current_row.is_announced()
-
     def _should_advance_to_next_row(self, event: Event) -> bool:
         return self._there_are_rows_remaining() \
             and self.next_row.get_created() <= event.created

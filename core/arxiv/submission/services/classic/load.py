@@ -181,9 +181,7 @@ def to_submission(row: models.Submission,
 
 
 def status_from_classic(classic_status: str) -> str:
-    """Map classic status codes to :class:`.domain.submission.Submission` status."""
-    # if self.get_arxiv_id() is not None:
-    #     return domain.Submission.ANNOUNCED
+    """Map classic status codes to domain submission status."""
     return STATUS_MAP.get(classic_status)
 
 

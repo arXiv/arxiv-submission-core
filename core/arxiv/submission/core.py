@@ -142,48 +142,52 @@ def save(*events: Event, submission_id: Optional[str] = None) \
     prior: List[Event] = []
     before: Optional[Submission] = None
 
-    # Get the current state of the submission from past events. Normally we
-    # would not want to load all past events, but legacy components may be
-    # active, and the legacy projected state does not capture all of the
-    # detail in the event model.
-    if submission_id is not None:
-        before, prior = classic.get_submission(submission_id)
+    # We need ACIDity surrounding the the validation and persistence of new
+    # events.
+    with classic.transaction():
+        # Get the current state of the submission from past events. Normally we
+        # would not want to load all past events, but legacy components may be
+        # active, and the legacy projected state does not capture all of the
+        # detail in the event model.
+        if submission_id is not None:
+            # This will create a shared lock on the submission rows while we
+            # are working with them.
+            before, prior = classic.get_submission(submission_id,
+                                                   for_update=True)
 
-    # Either we need a submission ID, or the first event must be a creation.
-    elif events[0].submission_id is None \
-            and not isinstance(events[0], CreateSubmission):
-        raise NoSuchSubmission('Unable to determine submission')
+        # Either we need a submission ID, or the first event must be a
+        # creation.
+        elif events[0].submission_id is None \
+                and not isinstance(events[0], CreateSubmission):
+            raise NoSuchSubmission('Unable to determine submission')
 
-    committed: List[Event] = []
-    for event in events:
-        # Fill in submission IDs, if they are missing.
-        if event.submission_id is None and submission_id is not None:
-            event.submission_id = submission_id
+        committed: List[Event] = []
+        for event in events:
+            # Fill in submission IDs, if they are missing.
+            if event.submission_id is None and submission_id is not None:
+                event.submission_id = submission_id
 
-        # The created timestamp should be roughly when the event was committed.
-        # Since the event projection may refer to its own ID (which is based)
-        # on the creation time, this must be set before the event is applied.
-        event.created = datetime.now(UTC)
-        # Mutation happens here; raises InvalidEvent.
-        logger.debug('Apply event %s: %s', event.event_id, event.NAME)
-        after = event.apply(before)
-        logger.debug('Submission has requests: %s', after.user_requests)
-        committed.append(event)
-        if not event.committed:
-            after, consequent_events = event.commit(_store_event)
-            committed += consequent_events
+            # The created timestamp should be roughly when the event was
+            # committed. Since the event projection may refer to its own ID
+            # (which is based) on the creation time, this must be set before
+            # the event is applied.
+            event.created = datetime.now(UTC)
+            # Mutation happens here; raises InvalidEvent.
+            logger.debug('Apply event %s: %s', event.event_id, event.NAME)
+            after = event.apply(before)
+            committed.append(event)
+            if not event.committed:
+                after, consequent_events = event.commit(_store_event)
+                committed += consequent_events
 
-        before = after
+            before = after      # Prepare for the next event.
 
-    all_events = sorted(set(prior) | set(committed), key=lambda e: e.created)
-    return after, list(all_events)
+        all_ = sorted(set(prior) | set(committed), key=lambda e: e.created)
+        return after, list(all_)
 
 
 def _store_event(event, before, after) -> Tuple[Event, Submission]:
-    try:
-        return classic.store_event(event, before, after, StreamPublisher.put)
-    except classic.exceptions.TransactionFailed as e:
-        raise SaveError('Failed to persist event') from e
+    return classic.store_event(event, before, after, StreamPublisher.put)
 
 
 def init_app(app: Flask) -> None:
