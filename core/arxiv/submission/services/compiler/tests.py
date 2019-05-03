@@ -53,7 +53,8 @@ class TestRequestCompilation(TestCase):
         )
         mock_Session.return_value = mock_session
 
-        comp_status = compiler.Compiler.compile(source_id, checksum, 'footok')
+        comp_status = compiler.Compiler.compile(source_id, checksum, 'footok',
+                                                'theLabel', 'http://the.link')
         self.assertEqual(comp_status.source_id, source_id)
         self.assertEqual(comp_status.identifier,
                          f"{source_id}/{checksum}/{output_format.value}")
@@ -86,8 +87,8 @@ class TestRequestCompilation(TestCase):
             )
         )
         mock_Session.return_value = mock_session
-        comp_status = compiler.Compiler.compile(source_id, checksum,
-                                                       'footok')
+        comp_status = compiler.Compiler.compile(source_id, checksum, 'footok',
+                                                'theLabel', 'http://the.link')
         self.assertEqual(comp_status.source_id, source_id)
         self.assertEqual(comp_status.identifier,
                          f"{source_id}/{checksum}/{output_format.value}")
