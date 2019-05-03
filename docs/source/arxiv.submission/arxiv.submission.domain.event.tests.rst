@@ -11,5 +11,6 @@ Submodules
 
 .. toctree::
 
+   arxiv.submission.domain.event.tests.test_event_construction
    arxiv.submission.domain.event.tests.test_hooks
 

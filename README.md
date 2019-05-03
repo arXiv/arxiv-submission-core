@@ -4,16 +4,43 @@ This repository houses development related to the arXiv-NG
 submission system. See https://cul-it.github.io/arxiv-submission-core/ for the
 latest documentation.
 
+## Documentation
+
+### Freshen/build
+
+Update the API doc source refs with:
+
+```bash
+sphinx-apidoc -o docs/source/arxiv.submission -e -f -M --implicit-namespaces core/arxiv *test*/*
+```
+
+Build HTML docs with:
+
+```bash
+cd docs
+make html SPHINXBUILD=$(pipenv --venv)/bin/sphinx-build
+```
+
 ## Contributions
 
 https://github.com/cul-it/arxiv-submission-core/blob/master/CONTRIBUTING.md
 
 ## What's in the repo
 
-- The [events core package](core/) is provides integrations with the
+- The [events core package](core/) provides integrations with the
   submission database and notification streams, and exposes a Python API for
   event-based operations on submission (meta)data. Any web services that
   modify submission data must do so via this package.
+- The [submission agent](agent/) is a Kinesis consumer that orchestrates
+  backend processes based on rules triggered by submission events.
+
+
+### In progress/stale
+
+These components are considerably behind, or only partially complete. Future
+development milestones will focus on these services, possibly in separate
+repositories.
+
 - The [API service](metadata/) provides the client-facing interface for
   submission-related requests. **Status: In progress**
 - The [Webhooks service](webhooks/) provides an API for creating and managing
@@ -23,9 +50,6 @@ https://github.com/cul-it/arxiv-submission-core/blob/master/CONTRIBUTING.md
   client-facing services, including the API service. This is close (but not
   identical) to what is run in production.
 
-This project is in its early stages, and has been subject to considerable
-churn. As a consequence, test coverage, documentation, and verification are
-incomplete. We will actively address these issues as we go along.
 
 ## Related components/dependencies
 
