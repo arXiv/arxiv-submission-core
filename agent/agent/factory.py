@@ -15,7 +15,7 @@ from .services import database
 def create_app() -> Flask:
     """Create a new agent application."""
     app = Flask(__name__)
-
+    app.config.from_object(config)
     Base(app)
     classic.init_app(app)
     database.init_app(app)
@@ -23,8 +23,6 @@ def create_app() -> Flask:
     PlainTextService.init_app(app)
     Classifier.init_app(app)
     mail.init_app(app)
-
-    app.config.from_object(config)
     app.app_context().push()
     init_app(app)
 
