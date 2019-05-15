@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "e53508700ed2b5a160c976752ec33dcec0888ebecd9a3c81c889eddea374d3e6"
+            "sha256": "6f184bec76faeea3cdaf72b3832109ca0f7b745d029c0aa7c56f08e1cd395836"
         },
         "pipfile-spec": 6,
         "requires": {},
@@ -37,13 +37,20 @@
         },
         "arxiv-base": {
             "hashes": [
-                "sha256:370b1c10df3db5572d19063a2919a6efbdb51134ffda3bf4f0f59e78be709e4e"
+                "sha256:995d56c60adff6973b774efd185d1073baf4e20725f98b7a04c3d6d9f5d3a93b"
             ],
             "index": "pypi",
-            "version": "==0.15.7rc8"
+            "version": "==0.15.7rc9"
         },
         "arxiv-submission-core": {
             "path": "./core"
+        },
+        "arxiv-vault": {
+            "hashes": [
+                "sha256:fd2904d414f63cd7b594cc727dc24586711b5c56d2cad8e23c9c601c847d02c6"
+            ],
+            "index": "pypi",
+            "version": "==0.1.1rc7"
         },
         "backports-datetime-fromisoformat": {
             "hashes": [
@@ -87,6 +94,20 @@
             ],
             "index": "pypi",
             "version": "==4.1.0"
+        },
+        "certifi": {
+            "hashes": [
+                "sha256:59b7658e26ca9c7339e00f8f4636cdfe59d34fa37b9b04f6f9e9926b3cece1a5",
+                "sha256:b26104d6835d1f5e49452a26eb2ff87fe7090b89dfcaee5ea2212697e1e1d7ae"
+            ],
+            "version": "==2019.3.9"
+        },
+        "chardet": {
+            "hashes": [
+                "sha256:84ab92ed1c4d4f16916e05906b6b75a6c0fb5db821cc65e70cbd64a3e2a5eaae",
+                "sha256:fc323ffcaeaed0e0a02bf4d117757b98aed530d9ed4531e3e15460124c106691"
+            ],
+            "version": "==3.0.4"
         },
         "click": {
             "hashes": [
@@ -133,6 +154,20 @@
             ],
             "index": "pypi",
             "version": "==2.4.0"
+        },
+        "hvac": {
+            "hashes": [
+                "sha256:00f78fb4f8244605284338bb36df6f46fbd4e83807e94a72fbb63a7cbac850e6",
+                "sha256:727e4e4ecd69631112f8baadc5054024da82248836e77411c6e9e51dffe011c8"
+            ],
+            "version": "==0.8.2"
+        },
+        "idna": {
+            "hashes": [
+                "sha256:c357b3f628cf53ae2c4c05627ecc484553142ca23264e593d327bcde5e9c3407",
+                "sha256:ea8b7f6188e6fa117537c3df7da9fc686d485087abf6ac197f9c46432f7e4a3c"
+            ],
+            "version": "==2.8"
         },
         "itsdangerous": {
             "hashes": [
@@ -310,6 +345,13 @@
             ],
             "version": "==1.3.6"
         },
+        "requests": {
+            "hashes": [
+                "sha256:502a824f31acdacb3a35b6690b5fbf0bc41d63a24a45c4004352b0242707598e",
+                "sha256:7bf2a778576d825600030a110f3c0e3e8edc51dfaafe1c146e39a2027784957b"
+            ],
+            "version": "==2.21.0"
+        },
         "retry": {
             "hashes": [
                 "sha256:ccddf89761fa2c726ab29391837d4327f819ea14d244c232a1d24c67a2f98606",
@@ -438,10 +480,10 @@
         },
         "certifi": {
             "hashes": [
-                "sha256:47f9c83ef4c0c621eaef743f133f09fa8a74a9b75f037e8624f83bd1b6626cb7",
-                "sha256:993f830721089fef441cdfeb4b2c8c9df86f0c63239f06bd025a76a7daddb033"
+                "sha256:59b7658e26ca9c7339e00f8f4636cdfe59d34fa37b9b04f6f9e9926b3cece1a5",
+                "sha256:b26104d6835d1f5e49452a26eb2ff87fe7090b89dfcaee5ea2212697e1e1d7ae"
             ],
-            "version": "==2018.11.29"
+            "version": "==2019.3.9"
         },
         "chardet": {
             "hashes": [

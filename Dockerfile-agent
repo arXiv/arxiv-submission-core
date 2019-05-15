@@ -13,12 +13,12 @@ RUN yum -y install mariadb-devel
 
 # Add Python consumer and configuration.
 RUN pip install pipenv
-RUN pipenv install
 
 ENV AWS_ACCESS_KEY_ID ""
 ENV AWS_SECRET_ACCESS_KEY ""
 
 ADD core/ /opt/arxiv/core/
+ADD Pipfile /opt/arxiv/
 RUN pipenv install /opt/arxiv/core/
 ADD agent/agent/ /opt/arxiv/agent/
 

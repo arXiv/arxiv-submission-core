@@ -23,4 +23,5 @@ logging.getLogger('arxiv.submission.services.classic.interpolate') \
     .setLevel(logging.ERROR)
 
 app = create_app()
+app.app_context().push()
 worker_app = get_or_create_worker_app()

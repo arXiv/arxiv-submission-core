@@ -79,7 +79,7 @@ asynchronous tasks carried out by the :mod:`agent.worker`.
 import json
 import os
 import time
-from typing import List, Any, Optional, Dict
+from typing import List, Any, Optional, Dict, Tuple, Union
 
 from flask import Flask
 from retry import retry
@@ -89,6 +89,7 @@ from botocore.exceptions import WaiterError, NoCredentialsError, \
 
 from arxiv.base import logging
 from arxiv.integration.kinesis import consumer
+from arxiv.vault.manager import ConfigManager
 from arxiv.submission.serializer import loads
 from arxiv.submission.domain.submission import Submission
 from arxiv.submission.domain.event import Event, AddProcessStatus
@@ -117,6 +118,51 @@ class SubmissionEventConsumer(consumer.BaseConsumer):
        without overriding methods
 
     """
+
+    sleep = 0.2
+    sleep_after_credentials = 10
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        """Initialize a secrets manager before starting."""
+        self._config = kwargs.pop('config', {})
+        super(SubmissionEventConsumer, self).__init__(*args, **kwargs)
+        if self._config.get('VAULT_ENABLED'):
+            logger.info('Vault enabled; getting secrets')
+            self._secrets = ConfigManager(self._config)
+            self.update_secrets()
+        self._access_key = self._config.get('AWS_ACCESS_KEY_ID')
+        self._secret_key = self._config.get('AWS_SECRET_ACCESS_KEY')
+
+    def update_secrets(self) -> bool:
+        """Update any secrets that are out of date."""
+        got_new_secrets = False
+        for key, value in self._secrets.yield_secrets():
+            if self._config.get(key) != value:
+                got_new_secrets = True
+            self._config[key] = value
+            os.environ[key] = str(value)
+        self._access_key = self._config.get('AWS_ACCESS_KEY_ID')
+        self._secret_key = self._config.get('AWS_SECRET_ACCESS_KEY')
+        if got_new_secrets:
+            logger.debug('Got new secrets')
+        return got_new_secrets
+
+    def process_records(self, start: str) -> Tuple[str, int]:
+        """Update secrets before getting a new batch of records."""
+        if self._config.get('VAULT_ENABLED') and self.update_secrets():
+            # From the docs:
+            #
+            # > Unfortunately, IAM credentials are eventually consistent with
+            # > respect to other Amazon services. If you are planning on using
+            # > these credential in a pipeline, you may need to add a delay of
+            # > 5-10 seconds (or more) after fetching credentials before they
+            # > can be used successfully.
+            #  -- https://www.vaultproject.io/docs/secrets/aws/index.html#usage
+            time.sleep(self.sleep_after_credentials)
+            raise consumer.RestartProcessing('Got fresh credentials')
+        super_ret: Tuple[str, int]
+        super_ret = super(SubmissionEventConsumer, self).process_records(start)
+        return super_ret
 
     def process_record(self, record: dict) -> None:
         """
@@ -171,7 +217,9 @@ class SubmissionEventConsumer(consumer.BaseConsumer):
                     event.event_id, event.submission_id, process.name,
                     params)
 
-    def wait_for_stream(self) -> None:
+    def wait_for_stream(self, tries: int = 5, delay: int = 5,
+                        max_delay: Optional[int] = None, backoff: int = 2,
+                        jitter: Union[int, Tuple[int, int]] = 0) -> None:
         """
         Wait for the stream to become available.
 
@@ -193,11 +241,13 @@ class SubmissionEventConsumer(consumer.BaseConsumer):
                 ExclusiveStartShardId=self.shard_id
             )
         except WaiterError as e:
-            logger.error('Failed to get stream while waiting')
-            raise consumer.exceptions.StreamNotAvailable('Could not connect to stream') from e
+            msg = 'Failed to get stream while waiting'
+            logger.error(msg)
+            raise consumer.exceptions.StreamNotAvailable(msg) from e
         except (PartialCredentialsError, NoCredentialsError) as e:
-            logger.error('Credentials missing or incomplete: %s', e.msg)
-            raise consumer.exceptions.ConfigurationError('Credentials missing') from e
+            msg = 'Credentials missing or incomplete: %s'
+            logger.error(msg, e.msg)
+            raise consumer.exceptions.ConfigurationError(msg % e.msg) from e
         logger.debug('Done waiting')
 
     def go(self) -> None:

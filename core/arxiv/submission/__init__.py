@@ -181,7 +181,13 @@ operation (e.g. pertaining to metadata, classification, proposals, holds, etc).
 
 """
 import os
+import time
+from typing import Any
+from typing_extensions import Protocol
+
 from flask import Flask, Blueprint
+
+from arxiv.base import logging
 
 from .domain.event import *
 from .core import *
@@ -190,14 +196,52 @@ from .domain.agent import Agent, User, System, Client
 from .services import classic, StreamPublisher, Compiler, PlainTextService,\
     Classifier
 
+logger = logging.getLogger(__name__)
+
 
 def init_app(app: Flask) -> None:
+    """Configure a Flask app to use this package."""
     StreamPublisher.init_app(app)
     Classifier.init_app(app)
     Compiler.init_app(app)
     PlainTextService.init_app(app)
+    classic.init_app(app)
     template_folder = os.path.join(os.path.dirname(os.path.realpath(__file__)),
                                    'templates')
     app.register_blueprint(
         Blueprint('submission-core', __name__, template_folder=template_folder)
     )
+
+    if app.config['WAIT_FOR_SERVICES']:
+        time.sleep(app.config['WAIT_ON_STARTUP'])
+        with app.app_context():
+            wait_for(Classifier.current_session())
+            wait_for(StreamPublisher.current_session())
+            wait_for(Compiler.current_session())
+            wait_for(classic.current_session())
+            wait_for(PlainTextService.current_session())    # type: ignore
+        logger.info('All upstream services are available; ready to start')
+
+
+class IAwaitable(Protocol):
+    """An object that provides an ``is_available`` predicate."""
+
+    def is_available(self, **kwargs: Any) -> bool:
+        """Check whether an object (e.g. a service) is available."""
+        ...
+
+
+def wait_for(service: IAwaitable, delay: int = 2, **extra: Any) -> None:
+    """Wait for a service to become available."""
+    if hasattr(service, '__name__'):
+        service_name = service.__name__    # type: ignore
+    elif hasattr(service, '__class__'):
+        service_name = service.__class__.__name__
+    else:
+        service_name = str(service)
+
+    logger.info('await %s', service_name)
+    while not service.is_available(**extra):
+        logger.info('service %s is not available; try again', service_name)
+        time.sleep(delay)
+    logger.info('service %s is available!', service_name)
