@@ -1,6 +1,6 @@
 """Lightweight database integration for checkpointing."""
 
-from typing import Optional
+from typing import Optional, Any
 from datetime import datetime
 from pytz import UTC
 import time
@@ -125,17 +125,26 @@ def store_event(event: AddProcessStatus) -> None:
 
 
 def await_connection(max_wait: int = -1) -> None:
+    """Wait for the database to be available."""
     logger.info('Waiting for database server to be available')
     wait = 2
     start = time.time()
     while True:
         if max_wait > 0 and time.time() - start >= max_wait:
             raise Unavailable('Failed to connect in %i seconds', max_wait)
-        try:
-            db.session.execute('SELECT 1')
+
+        if is_available():
             break
-        except Exception as e:
-            logger.info(e)
-            logger.info(f'...waiting {wait} seconds...')
-            time.sleep(wait)
-            wait *= 2
+        logger.info(f'...waiting {wait} seconds...')
+        time.sleep(wait)
+        wait *= 2
+
+
+def is_available(**kwargs: Any) -> bool:
+    """Check our connection to the database."""
+    try:
+        db.session.query("1").from_statement("SELECT 1").all()
+    except Exception as e:
+        logger.error('Encountered an error talking to database: %s', e)
+        return False
+    return True

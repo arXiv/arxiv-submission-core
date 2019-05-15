@@ -3,10 +3,13 @@ from typing import Optional
 import boto3
 
 from arxiv.integration.meta import MetaIntegration
+from arxiv.base import logging
 from arxiv.base.globals import get_application_config, get_application_global
 
 from ...domain import Submission, Event
 from ...serializer import dumps
+
+logger = logging.getLogger(__name__)
 
 
 class StreamPublisher(metaclass=MetaIntegration):
@@ -59,6 +62,17 @@ class StreamPublisher(metaclass=MetaIntegration):
         elif 'stream' not in g:
             g.stream = cls.get_session()   # type: ignore
         return g.stream    # type: ignore
+
+    def is_available(self, **kwargs) -> bool:
+        """Test our ability to put records."""
+        data = bytes(dumps({}), encoding='utf-8')
+        try:
+            self.client.put_record(StreamName=self.stream, Data=data,
+                                   PartitionKey=self.partition_key)
+        except Exception as e:
+            logger.error('Encountered error while putting to stream: %s', e)
+            return False
+        return True
 
     def put(self, event: Event, before: Submission, after: Submission) -> None:
         """Put an :class:`.Event` on the stream."""

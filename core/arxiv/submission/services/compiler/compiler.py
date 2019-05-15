@@ -7,7 +7,7 @@ that the user can preview their submission. Additionally, we want to show the
 submitter the TeX log so that they can identify any potential problems with
 their sources.
 """
-from typing import Tuple, Optional, List, Union, NamedTuple, Mapping
+from typing import Tuple, Optional, List, Union, NamedTuple, Mapping, Any
 import json
 import io
 import re
@@ -50,6 +50,15 @@ class Compiler(service.HTTPIntegration):
         """Configuration for :class:`Classifier`."""
 
         service_name = "compiler"
+
+    def is_available(self, **kwargs: Any) -> bool:
+        """Check our connection to the compiler service."""
+        try:
+            self.get_service_status()
+        except Exception as e:
+            logger.error('Encountered error calling compiler: %s', e)
+            return False
+        return True
 
     def _parse_status_response(self, data: dict) -> Compilation:
         return Compilation(

@@ -171,3 +171,6 @@ SQLALCHEMY_TRACK_MODIFICATIONS = False
 SQLALCHEMY_BINDS = {
     'agent': os.environ.get('SUBMISSION_AGENT_DATABASE_URI')
 }
+
+WAIT_FOR_SERVICES = bool(int(os.environ.get('WAIT_FOR_SERVICES', '0')))
+WAIT_ON_STARTUP = int(os.environ.get('WAIT_ON_STARTUP', '0'))

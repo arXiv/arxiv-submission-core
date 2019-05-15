@@ -4,8 +4,11 @@ from typing import Tuple, List, Any, Union, NamedTuple, Optional
 from math import exp, log
 from functools import wraps
 
+from arxiv.base import logging
 from arxiv.taxonomy import Category
 from arxiv.integration.api import status, service
+
+logger = logging.getLogger(__name__)
 
 
 class Flag(NamedTuple):
@@ -43,6 +46,15 @@ class Classifier(service.HTTPIntegration):
         """Configuration for :class:`Classifier`."""
 
         service_name = "classifier"
+
+    def is_available(self, **kwargs: Any) -> bool:
+        """Check our connection to the classifier service."""
+        try:
+            self.classify(b'ruok?')
+        except Exception as e:
+            logger.error('Encountered error calling classifier: %s', e)
+            return False
+        return True
 
     @property
     def endpoint(self):
