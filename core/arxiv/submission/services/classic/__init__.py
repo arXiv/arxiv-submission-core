@@ -41,7 +41,7 @@ from operator import ior
 from dataclasses import asdict
 
 from flask import Flask
-from sqlalchemy import or_
+from sqlalchemy import or_, text
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.exc import DBAPIError, OperationalError
 
@@ -80,7 +80,7 @@ def handle_operational_errors(func):
 def is_available(**kwargs: Any) -> bool:
     """Check our connection to the database."""
     try:
-        current_session().query("1").from_statement("SELECT 1").all()
+        current_session().query("1").from_statement(text("SELECT 1")).all()
     except Exception as e:
         logger.error('Encountered an error talking to database: %s', e)
         return False

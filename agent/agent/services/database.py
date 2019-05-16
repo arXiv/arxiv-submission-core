@@ -143,7 +143,7 @@ def await_connection(max_wait: int = -1) -> None:
 def is_available(**kwargs: Any) -> bool:
     """Check our connection to the database."""
     try:
-        db.session.query("1").from_statement("SELECT 1").all()
+        db.session.query("1").from_statement(text("SELECT 1")).all()
     except Exception as e:
         logger.error('Encountered an error talking to database: %s', e)
         return False

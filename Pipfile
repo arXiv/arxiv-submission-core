@@ -25,7 +25,6 @@ flask-sqlalchemy = "*"
 retry = "*"
 backports-datetime-fromisoformat = "*"
 arxiv-base = "==0.15.7rc9"
-arxiv-submission-core = {path = "./core"}
 alembic = "*"
 urllib3 = ">=1.24.2"
 Jinja2 = ">=2.10.1"

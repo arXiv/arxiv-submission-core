@@ -208,7 +208,8 @@ def init_app(app: Flask) -> None:
     PlainTextService.init_app(app)
     classic.init_app(app)
 
-    StreamPublisher.current_session().initialize()
+    with app.app_context():
+        StreamPublisher.current_session().initialize()
 
     template_folder = os.path.join(os.path.dirname(os.path.realpath(__file__)),
                                    'templates')
@@ -222,7 +223,7 @@ def init_app(app: Flask) -> None:
             wait_for(Classifier.current_session())
             wait_for(StreamPublisher.current_session())
             wait_for(Compiler.current_session())
-            wait_for(classic.current_session())
+            wait_for(classic)
             wait_for(PlainTextService.current_session())    # type: ignore
         logger.info('All upstream services are available; ready to start')
 

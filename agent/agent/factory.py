@@ -32,6 +32,6 @@ def create_app() -> Flask:
     if app.config['WAIT_FOR_SERVICES']:
         time.sleep(app.config['WAIT_ON_STARTUP'])
         with app.app_context():
-            wait_for(database.current_session())
+            wait_for(database)
         logger.info('All upstream services are available; ready to start')
     return app

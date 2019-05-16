@@ -17,9 +17,11 @@ RUN pip install pipenv
 ENV AWS_ACCESS_KEY_ID ""
 ENV AWS_SECRET_ACCESS_KEY ""
 
-ADD core/ /opt/arxiv/core/
 ADD Pipfile /opt/arxiv/
-RUN pipenv install /opt/arxiv/core/
+RUN pipenv install
+
+ADD core/ /opt/arxiv/core/
+RUn pipenv install /opt/arxiv/core/
 ADD agent/agent/ /opt/arxiv/agent/
 
 ENV KINESIS_STREAM "SubmissionEvents"
