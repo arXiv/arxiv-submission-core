@@ -201,11 +201,15 @@ logger = logging.getLogger(__name__)
 
 def init_app(app: Flask) -> None:
     """Configure a Flask app to use this package."""
+    # Initialize services.
     StreamPublisher.init_app(app)
     Classifier.init_app(app)
     Compiler.init_app(app)
     PlainTextService.init_app(app)
     classic.init_app(app)
+
+    StreamPublisher.current_session().initialize()
+
     template_folder = os.path.join(os.path.dirname(os.path.realpath(__file__)),
                                    'templates')
     app.register_blueprint(

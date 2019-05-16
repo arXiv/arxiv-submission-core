@@ -1,6 +1,7 @@
 from typing import Optional
 
 import boto3
+from botocore.exceptions import ClientError
 
 from arxiv.integration.meta import MetaIntegration
 from arxiv.base import logging
@@ -73,6 +74,38 @@ class StreamPublisher(metaclass=MetaIntegration):
             logger.error('Encountered error while putting to stream: %s', e)
             return False
         return True
+
+    def _create_stream(self) -> None:
+        self.client.create_stream(StreamName=self.stream, ShardCount=1)
+
+    def _wait_for_stream(self, retries: int = 0, delay: int = 0) -> None:
+        waiter = self.client.get_waiter('stream_exists')
+        waiter.wait(
+            StreamName=self.stream,
+            WaiterConfig={
+                'Delay': delay,
+                'MaxAttempts': retries
+            }
+        )
+
+    def initialize(self) -> None:
+        """Perform initial checks, e.g. at application start-up."""
+        logger.info('initialize Kinesis stream')
+        try:
+            # We keep these tries short, since start-up connection problems
+            # usually clear out pretty fast.
+            if self.is_available(retries=20, connect_timeout=1,
+                                 read_timeout=1):
+                logger.info('storage service is already available')
+                return
+        except ClientError as exc:
+            if exc.response['Error']['Code'] == 'ResourceNotFoundException':
+                logger.info('stream does not exist; creating')
+                self._create_stream()
+                logger.info('wait for stream to be available')
+                self._wait_for_stream(retries=5, delay=5)
+            return
+        raise RuntimeError('Failed to initialize storage service')
 
     def put(self, event: Event, before: Submission, after: Submission) -> None:
         """Put an :class:`.Event` on the stream."""
