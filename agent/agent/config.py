@@ -174,3 +174,32 @@ SQLALCHEMY_BINDS = {
 
 WAIT_FOR_SERVICES = bool(int(os.environ.get('WAIT_FOR_SERVICES', '0')))
 WAIT_ON_STARTUP = int(os.environ.get('WAIT_ON_STARTUP', '0'))
+
+PLAINTEXT_ENDPOINT = os.environ.get('PLAINTEXT_ENDPOINT', 'http://what')
+PLAINTEXT_VERIFY = bool(int(os.environ.get("PLAINTEXT_VERIFY", "1")))
+
+CLASSIFIER_ENDPOINT = os.environ.get('CLASSIFIER_ENDPOINT', 'http://what')
+CLASSIFIER_VERIFY = bool(int(os.environ.get("CLASSIFIER_VERIFY", "1")))
+
+
+VAULT_ENABLED = bool(int(os.environ.get('VAULT_ENABLED', '0')))
+NAMESPACE = os.environ.get('NAMESPACE')
+KUBE_TOKEN = os.environ.get('KUBE_TOKEN', 'fookubetoken')
+VAULT_HOST = os.environ.get('VAULT_HOST', 'foovaulthost')
+VAULT_PORT = os.environ.get('VAULT_PORT', '1234')
+VAULT_SCHEME = os.environ.get('VAULT_SCHEME', 'https')
+VAULT_ROLE = os.environ.get('VAULT_ROLE', 'submission-agent')
+VAULT_CERT = os.environ.get('VAULT_CERT')
+NS_AFFIX = '' if NAMESPACE == 'production' else f'-{NAMESPACE}'
+VAULT_REQUESTS = [
+    {'type': 'generic',
+     'name': 'JWT_SECRET',
+     'mount_point': f'secret{NS_AFFIX}/',
+     'path': 'jwt',
+     'key': 'jwt-secret',
+     'minimum_ttl': 3600},
+    {'type': 'aws',
+     'name': 'AWS_S3_CREDENTIAL',
+     'mount_point': f'aws{NS_AFFIX}/',
+     'role': os.environ.get('VAULT_CREDENTIAL')}
+]

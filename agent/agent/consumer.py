@@ -1,6 +1,5 @@
 """
-Submission Event Consumer
-=========================
+Submission event consumer.
 
 The submission event consumer is responsible for monitoring submission event,
 evaluating them against pre-defined rules, and triggering processes to be
@@ -73,7 +72,6 @@ may be useful for testing purposes. The runner used in production is the
 :class:`.AsyncProcessRunner`, which manages registration and dispatching of
 asynchronous tasks carried out by the :mod:`agent.worker`.
 
-
 """
 
 import json
@@ -84,6 +82,7 @@ from typing import List, Any, Optional, Dict, Tuple, Union
 from flask import Flask
 from retry import retry
 
+import boto3
 from botocore.exceptions import WaiterError, NoCredentialsError, \
     PartialCredentialsError, BotoCoreError, ClientError
 
@@ -112,26 +111,35 @@ class SubmissionEventConsumer(consumer.BaseConsumer):
     .. todo:
        ARXIVNG-2041 Implement throttling control in base Kinesis integration
 
-
-    .. todo:
-       ARXIVNG-2042 Retry should be configurable in base Kinesis controller
-       without overriding methods
-
     """
 
     sleep = 0.2
     sleep_after_credentials = 10
 
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
+    def __init__(self, *args: Any, config: Dict[str, Any] = {},
+                 **kwargs: Any) -> None:
         """Initialize a secrets manager before starting."""
-        self._config = kwargs.pop('config', {})
+        self._config = config
+        self._app: Optional[Flask] = kwargs.pop('app', None)
         super(SubmissionEventConsumer, self).__init__(*args, **kwargs)
         if self._config.get('VAULT_ENABLED'):
             logger.info('Vault enabled; getting secrets')
-            self._secrets = ConfigManager(self._config)
+            self._secrets = self._init_secrets()
             self.update_secrets()
         self._access_key = self._config.get('AWS_ACCESS_KEY_ID')
         self._secret_key = self._config.get('AWS_SECRET_ACCESS_KEY')
+
+    def _init_secrets(self) -> ConfigManager:
+        """
+        Get a :class:`.ConfigManager` for secrets.
+
+        If we have a Flask app, try to re-use an existing ConfigManager if
+        there is one available in the middlewares.
+        """
+        if self._app is not None:
+            if 'VaultMiddleware' in self._app.middlewares:
+                return self._app.middlewares['VaultMiddleware'].secrets
+        return ConfigManager(self._config)
 
     def update_secrets(self) -> bool:
         """Update any secrets that are out of date."""
@@ -183,7 +191,16 @@ class SubmissionEventConsumer(consumer.BaseConsumer):
             logger.error("Error (%s) while deserializing from data %s",
                          exc, record['Data'])
             raise exc
-        event, before, after = data['event'], data['before'], data['after']
+
+        # It is possible that an incomplete or aberrant record will come
+        # through the stream. One example is the generation of a test
+        # notification that other services might use to verify their ability
+        # to write to the stream.
+        try:
+            event, before, after = data['event'], data['before'], data['after']
+        except KeyError:
+            logger.info('Skipping record %s', record["SequenceNumber"])
+            return
 
         # We want to keep track of process-related events, so that we can
         # reconstruct what happened if necessary.
@@ -216,6 +233,23 @@ class SubmissionEventConsumer(consumer.BaseConsumer):
         logger.info('Event %s on submission %s caused %s with params %s',
                     event.event_id, event.submission_id, process.name,
                     params)
+
+    def new_client(self) -> boto3.client:
+        """Generate a new Kinesis client."""
+        params: Dict[str, Any] = {'region_name': self.region,
+                                  'aws_access_key_id': self._access_key,
+                                  'aws_secret_access_key': self._secret_key}
+        client_params: Dict[str, Any] = {}
+        if self.endpoint:
+            client_params['endpoint_url'] = self.endpoint
+        if self.verify is False:
+            client_params['verify'] = False
+
+        logger.debug('New session with parameters: %s', params)
+        # We don't want to let boto3 manage the Session for us.
+        self._session = boto3.Session(**params)
+
+        return self._session.client('kinesis', **client_params)
 
     def wait_for_stream(self, tries: int = 5, delay: int = 5,
                         max_delay: Optional[int] = None, backoff: int = 2,
@@ -250,15 +284,9 @@ class SubmissionEventConsumer(consumer.BaseConsumer):
             raise consumer.exceptions.ConfigurationError(msg % e.msg) from e
         logger.debug('Done waiting')
 
-    def go(self) -> None:
-        logger.debug('Go!')
-        super(SubmissionEventConsumer, self).go()
-
 
 class DatabaseCheckpointManager:
-    """
-    Provides database-backed loading and updating of consumer checkpoints.
-    """
+    """Provides db-backed loading and updating of consumer checkpoints."""
 
     def __init__(self, shard_id: str) -> None:
         """Get the last checkpoint."""
@@ -289,7 +317,9 @@ def process_stream(app: Flask, duration: Optional[int] = None) -> None:
     # integrations with metadata service, search index.
     checkpointer = DatabaseCheckpointManager(app.config['KINESIS_SHARD_ID'])
     consumer.process_stream(SubmissionEventConsumer, app.config,
-                            checkpointmanager=checkpointer, duration=duration)
+                            checkpointmanager=checkpointer,
+                            duration=duration,
+                            extra=dict(app=app, config=app.config))
 
 
 def start_agent() -> None:

@@ -3,7 +3,7 @@ import time
 
 from flask import Flask
 
-from arxiv import mail
+from arxiv import mail, vault
 from arxiv.base import Base, logging
 from arxiv.base.middleware import wrap, request_logs
 from arxiv.submission import init_app, wait_for
@@ -20,14 +20,20 @@ def create_app() -> Flask:
     app = Flask(__name__)
     app.config.from_object(config)
 
+    middleware = [request_logs.ClassicLogsMiddleware]
+    if app.config['VAULT_ENABLED']:
+        middleware.insert(0, vault.middleware.VaultMiddleware)
+    wrap(app, middleware)
     Base(app)
+
+    # Make sure that we have all of the secrets that we need to run.
+    if app.config['VAULT_ENABLED']:
+        app.middlewares['VaultMiddleware'].update_secrets({})
 
     # Initialize services.
     database.init_app(app)
     mail.init_app(app)
     init_app(app)
-
-    wrap(app, [request_logs.ClassicLogsMiddleware])
 
     if app.config['WAIT_FOR_SERVICES']:
         time.sleep(app.config['WAIT_ON_STARTUP'])
