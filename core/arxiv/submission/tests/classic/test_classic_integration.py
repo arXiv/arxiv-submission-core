@@ -29,6 +29,7 @@ class TestClassicUIWorkflow(TestCase):
         """An arXiv user is submitting a new paper."""
         self.app = Flask(__name__)
         self.app.config['EMAIL_ENABLED'] = False
+        self.app.config['WAIT_FOR_SERVICES'] = False
         Base(self.app)
         init_app(self.app)
         mail.init_app(self.app)
@@ -295,6 +296,7 @@ class TestReplacementIntegration(TestCase):
         cls.app = Flask('foo')
         cls.app.config['CLASSIC_DATABASE_URI'] = f'sqlite:///{db}'
         cls.app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+        cls.app.config['WAIT_FOR_SERVICES'] = False
 
         with cls.app.app_context():
             classic.init_app(cls.app)
@@ -450,6 +452,7 @@ class TestJREFIntegration(TestCase):
         cls.app = Flask('foo')
         cls.app.config['CLASSIC_DATABASE_URI'] = f'sqlite:///{db}'
         cls.app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+        cls.app.config['WAIT_FOR_SERVICES'] = False
 
         with cls.app.app_context():
             classic.init_app(cls.app)
@@ -621,6 +624,7 @@ class TestWithdrawalIntegration(TestCase):
         cls.app = Flask('foo')
         cls.app.config['CLASSIC_DATABASE_URI'] = f'sqlite:///{db}'
         cls.app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+        cls.app.config['WAIT_FOR_SERVICES'] = False
 
         with cls.app.app_context():
             classic.init_app(cls.app)
@@ -763,6 +767,7 @@ class TestPublicationIntegration(TestCase):
         cls.app = Flask('foo')
         cls.app.config['CLASSIC_DATABASE_URI'] = f'sqlite:///{db}'
         cls.app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+        cls.app.config['WAIT_FOR_SERVICES'] = False
 
         with cls.app.app_context():
             classic.init_app(cls.app)
