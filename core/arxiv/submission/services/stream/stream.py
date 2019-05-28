@@ -107,7 +107,7 @@ class StreamPublisher(metaclass=MetaIntegration):
                 logger.info('stream does not exist; creating')
                 self._create_stream()
                 logger.info('wait for stream to be available')
-                self._wait_for_stream(retries=5, delay=5)
+                self._wait_for_stream(retries=10, delay=1)
             return
         raise RuntimeError('Failed to initialize stream')
 

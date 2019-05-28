@@ -53,8 +53,9 @@ class Compiler(service.HTTPIntegration):
 
     def is_available(self, **kwargs: Any) -> bool:
         """Check our connection to the compiler service."""
+        timeout: float = kwargs.get('timeout', 0.2)
         try:
-            self.get_service_status()
+            self.get_service_status(timeout=timeout)
         except Exception as e:
             logger.error('Encountered error calling compiler: %s', e)
             return False
@@ -74,9 +75,9 @@ class Compiler(service.HTTPIntegration):
     def _parse_loc(self, headers: Mapping) -> str:
         return urlparse(headers['Location']).path
 
-    def get_service_status(self) -> dict:
+    def get_service_status(self, timeout: float = 0.2) -> dict:
         """Get the status of the compiler service."""
-        return self.json('get', 'status')[0]
+        return self.json('get', 'status', timeout=timeout)[0]
 
     def compile(self, source_id: str, checksum: str, token: str,
                 stamp_label: str, stamp_link: str,

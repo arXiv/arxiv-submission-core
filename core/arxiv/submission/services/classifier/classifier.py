@@ -49,8 +49,9 @@ class Classifier(service.HTTPIntegration):
 
     def is_available(self, **kwargs: Any) -> bool:
         """Check our connection to the classifier service."""
+        timeout: float = kwargs.get('timeout', 0.2)
         try:
-            self.classify(b'ruok?')
+            self.classify(b'ruok?', timeout=timeout)
         except Exception as e:
             logger.error('Encountered error calling classifier: %s', e)
             return False
@@ -85,7 +86,8 @@ class Classifier(service.HTTPIntegration):
                            probability=self.probability(datum['logodds']))
                 for datum in data['classifier']]
 
-    def classify(self, content: bytes) -> ClassifierResponse:
+    def classify(self, content: bytes, timeout: float = 1.) \
+            -> ClassifierResponse:
         """
         Make a classification request to the classifier service.
 
@@ -104,5 +106,5 @@ class Classifier(service.HTTPIntegration):
             Feature counts, if provided.
 
         """
-        data, _, _ = self.json('post', 'ctxt', data=content)
+        data, _, _ = self.json('post', 'ctxt', data=content, timeout=timeout)
         return self._suggestions(data), self._flags(data), self._counts(data)

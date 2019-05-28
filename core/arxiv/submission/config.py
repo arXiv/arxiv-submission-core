@@ -8,7 +8,6 @@ register('ejson', dumps, loads,
          content_type='application/x-ejson',
          content_encoding='utf-8')
 
-APPLY_RULES = bool(int(os.environ.get('APPLY_RULES', '1')))
 BROKER_URL = os.environ.get('SUBMISSION_BROKER_URL', 'redis://localhost:6379/0')
 RESULT_BACKEND = os.environ.get('SUBMISSION_RESULT_BACKEND', BROKER_URL)
 QUEUE_NAME_PREFIX = os.environ.get('SUBMISSION_QUEUE_NAME_PREFIX',

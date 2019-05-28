@@ -143,21 +143,22 @@ class SubmissionEventConsumer(consumer.BaseConsumer):
 
     def update_secrets(self) -> bool:
         """Update any secrets that are out of date."""
-        got_new_secrets = False
         for key, value in self._secrets.yield_secrets():
-            if self._config.get(key) != value:
-                got_new_secrets = True
             self._config[key] = value
             os.environ[key] = str(value)
-        self._access_key = self._config.get('AWS_ACCESS_KEY_ID')
-        self._secret_key = self._config.get('AWS_SECRET_ACCESS_KEY')
-        if got_new_secrets:
-            logger.debug('Got new secrets')
-        return got_new_secrets
+        _access_key = self._config.get('AWS_ACCESS_KEY_ID')
+        _secret_key = self._config.get('AWS_SECRET_ACCESS_KEY')
+        if self._access_key != _access_key or self._secret_key != _secret_key:
+            self._access_key = _access_key
+            self._secret_key = _secret_key
+            return True
+        return False
 
     def process_records(self, start: str) -> Tuple[str, int]:
         """Update secrets before getting a new batch of records."""
         if self._config.get('VAULT_ENABLED') and self.update_secrets():
+            logger.info('Got new secrets; restarting after %i seconds',
+                        self.sleep_after_credentials)
             # From the docs:
             #
             # > Unfortunately, IAM credentials are eventually consistent with

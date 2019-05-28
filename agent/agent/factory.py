@@ -20,11 +20,13 @@ def create_app() -> Flask:
     app = Flask(__name__)
     app.config.from_object(config)
 
+    Base(app)
+
+    # Register logging and secrets middleware.
     middleware = [request_logs.ClassicLogsMiddleware]
     if app.config['VAULT_ENABLED']:
         middleware.insert(0, vault.middleware.VaultMiddleware)
     wrap(app, middleware)
-    Base(app)
 
     # Make sure that we have all of the secrets that we need to run.
     if app.config['VAULT_ENABLED']:
@@ -33,11 +35,17 @@ def create_app() -> Flask:
     # Initialize services.
     database.init_app(app)
     mail.init_app(app)
+    Classifier.init_app(app)
+    Compiler.init_app(app)
+    PlainTextService.init_app(app)
     init_app(app)
 
     if app.config['WAIT_FOR_SERVICES']:
         time.sleep(app.config['WAIT_ON_STARTUP'])
         with app.app_context():
             wait_for(database)
+            wait_for(Classifier.current_session())
+            wait_for(Compiler.current_session())
+            wait_for(PlainTextService.current_session())
         logger.info('All upstream services are available; ready to start')
     return app

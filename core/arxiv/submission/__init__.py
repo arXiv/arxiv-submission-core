@@ -200,12 +200,14 @@ logger = logging.getLogger(__name__)
 
 
 def init_app(app: Flask) -> None:
-    """Configure a Flask app to use this package."""
+    """
+    Configure a Flask app to use this package.
+
+    Initializes and waits for :class:`.StreamPublisher` and :mod:`.classic`
+    to be available.
+    """
     # Initialize services.
     StreamPublisher.init_app(app)
-    Classifier.init_app(app)
-    Compiler.init_app(app)
-    PlainTextService.init_app(app)
     classic.init_app(app)
 
     with app.app_context():
@@ -220,11 +222,8 @@ def init_app(app: Flask) -> None:
     if app.config['WAIT_FOR_SERVICES']:
         time.sleep(app.config['WAIT_ON_STARTUP'])
         with app.app_context():
-            wait_for(Classifier.current_session())
             wait_for(StreamPublisher.current_session())
-            wait_for(Compiler.current_session())
             wait_for(classic)
-            wait_for(PlainTextService.current_session())    # type: ignore
         logger.info('All upstream services are available; ready to start')
 
 

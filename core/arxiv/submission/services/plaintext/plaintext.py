@@ -56,8 +56,9 @@ class PlainTextService(service.HTTPIntegration):
 
     def is_available(self, **kwargs: Any) -> bool:
         """Check our connection to the plain text service."""
+        timeout: float = kwargs.get('timeout', 0.2)
         try:
-            response = self.request('head', '/status')
+            response = self.request('head', '/status', timeout=timeout)
         except Exception as e:
             logger.error('Encountered error calling plain text service: %s', e)
             return False

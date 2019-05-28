@@ -7,7 +7,7 @@ from dataclasses import dataclass, asdict, field
 
 @dataclass
 class Classification:
-    """An archive/category classification for a :class:`.domain.submission.Submission`."""
+    """A classification for a :class:`.domain.submission.Submission`."""
 
     category: Category
 

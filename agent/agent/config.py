@@ -8,7 +8,9 @@ register('process-json', dumps, loads,
          content_type='application/x-process-json',
          content_encoding='utf-8')
 
-APPLY_RULES = bool(int(os.environ.get('APPLY_RULES', '1')))
+NAMESPACE = os.environ.get('NAMESPACE')
+"""Namespace in which this service is deployed; to qualify keys for secrets."""
+
 BROKER_URL = os.environ.get('SUBMISSION_AGENT_BROKER_URL',
                             'redis://localhost:6379/0')
 RESULT_BACKEND = os.environ.get('SUBMISSION_AGENT_RESULT_BACKEND', BROKER_URL)
@@ -183,13 +185,26 @@ CLASSIFIER_VERIFY = bool(int(os.environ.get("CLASSIFIER_VERIFY", "1")))
 
 
 VAULT_ENABLED = bool(int(os.environ.get('VAULT_ENABLED', '0')))
-NAMESPACE = os.environ.get('NAMESPACE')
+"""Enable/disable secret retrieval from Vault."""
+
 KUBE_TOKEN = os.environ.get('KUBE_TOKEN', 'fookubetoken')
+"""Service account token for authenticating with Vault. May be a file path."""
+
 VAULT_HOST = os.environ.get('VAULT_HOST', 'foovaulthost')
+"""Vault hostname/address."""
+
 VAULT_PORT = os.environ.get('VAULT_PORT', '1234')
-VAULT_SCHEME = os.environ.get('VAULT_SCHEME', 'https')
+"""Vault API port."""
+
 VAULT_ROLE = os.environ.get('VAULT_ROLE', 'submission-agent')
+"""Vault role linked to this application's service account."""
+
 VAULT_CERT = os.environ.get('VAULT_CERT')
+"""Path to CA certificate for TLS verification when talking to Vault."""
+
+VAULT_SCHEME = os.environ.get('VAULT_SCHEME', 'https')
+"""Default is ``https``."""
+
 NS_AFFIX = '' if NAMESPACE == 'production' else f'-{NAMESPACE}'
 VAULT_REQUESTS = [
     {'type': 'generic',
@@ -203,3 +218,4 @@ VAULT_REQUESTS = [
      'mount_point': f'aws{NS_AFFIX}/',
      'role': os.environ.get('VAULT_CREDENTIAL')}
 ]
+"""Requests for Vault secrets."""
