@@ -216,6 +216,15 @@ VAULT_REQUESTS = [
     {'type': 'aws',
      'name': 'AWS_S3_CREDENTIAL',
      'mount_point': f'aws{NS_AFFIX}/',
-     'role': os.environ.get('VAULT_CREDENTIAL')}
+     'role': os.environ.get('VAULT_CREDENTIAL')},
+    {'type': 'database',
+     'engine': os.environ.get('AGENT_DATABASE_ENGINE', 'mysql+mysqldb'),
+     'host': os.environ.get('AGENT_DATABASE_HOST', 'localhost'),
+     'database': os.environ.get('AGENT_DATABASE_NAME', 'registry'),
+     'params': 'charset=utf8mb4',
+     'port': os.environ.get('AGENT_DATABASE_PORT', '3306'),
+     'name': 'SUBMISSION_AGENT_DATABASE_URI',
+     'mount_point': f'database{NS_AFFIX}/',
+     'role': 'submission-agent-write'}
 ]
 """Requests for Vault secrets."""

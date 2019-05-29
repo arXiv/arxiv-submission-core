@@ -210,9 +210,6 @@ def init_app(app: Flask) -> None:
     StreamPublisher.init_app(app)
     classic.init_app(app)
 
-    with app.app_context():
-        StreamPublisher.current_session().initialize()
-
     template_folder = os.path.join(os.path.dirname(os.path.realpath(__file__)),
                                    'templates')
     app.register_blueprint(
@@ -222,7 +219,9 @@ def init_app(app: Flask) -> None:
     if app.config['WAIT_FOR_SERVICES']:
         time.sleep(app.config['WAIT_ON_STARTUP'])
         with app.app_context():
-            wait_for(StreamPublisher.current_session())
+            stream_publisher = StreamPublisher.current_session()
+            stream_publisher.initialize()
+            wait_for(stream_publisher)
             wait_for(classic)
         logger.info('All upstream services are available; ready to start')
 
