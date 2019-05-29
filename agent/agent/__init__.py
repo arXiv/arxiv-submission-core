@@ -4,7 +4,7 @@ Orchestrates backend processes based on rules triggered by submission events.
 The primary concerns of the agent are:
 
 - Orchestrating automated processes in support of submission and moderation.
-- KEeping track of what processes have been carried out on a submission, and
+- Keeping track of what processes have been carried out on a submission, and
   the outcomes of those processes.
 - Providing a framework for defining conditions under which processes should be
   carried out.
@@ -13,7 +13,7 @@ In addition, we anticipate future development of:
 
 - Interfaces for administrators to monitor submission-related processes, and
   to start processes manually.
-- A metrics endpoint for Prometheus, to expose process performance/rates.
+- A metrics endpoint for [Prometheus](https://prometheus.io/), to expose process performance/rates.
 - Interfaces for administrators to define processing rules.
 
 Conceptual overview
