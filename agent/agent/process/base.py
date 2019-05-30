@@ -1,4 +1,4 @@
-"""Provides the bas representation of a process."""
+"""Provides the base representation of a process."""
 
 from enum import Enum
 from typing import Iterable, Tuple, Callable, Union, Optional, Any, \
