@@ -144,7 +144,7 @@ class CheckTitleForUnicodeAbuse(Process):
                                  comment=comment))
 
 
-# @SetAbstract.bind(condition=lambda *a: not system_event(*a))
+# @SetAbstract.bind(condition=lambda *a: not is_system_event(*a))
 class CheckAbstractForUnicodeAbuse(Process):
     """
     Screen for possible abuse of unicode in abstracts.

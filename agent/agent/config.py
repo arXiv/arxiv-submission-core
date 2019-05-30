@@ -77,6 +77,12 @@ VAULT_REQUESTS = [
      'path': 'jwt',
      'key': 'jwt-secret',
      'minimum_ttl': 3600},
+    {'type': 'generic',
+     'name': 'SQLALCHEMY_DATABASE_URI',
+     'mount_point': f'secret{NS_AFFIX}/',
+     'path': 'beta-mysql',
+     'key': 'uri',
+     'minimum_ttl': 360000},
     {'type': 'aws',
      'name': 'AWS_S3_CREDENTIAL',
      'mount_point': f'aws{NS_AFFIX}/',
@@ -295,8 +301,11 @@ CLASSIFIER_PROTO = environ.get(f'CLASSIFIER_PORT_{CLASSIFIER_PORT}_PROTO',
 CLASSIFIER_PATH = environ.get('CLASSIFIER_PATH', '')
 """Path at which the classifier service is deployed."""
 
-CLASSIFIER_ENDPOINT = environ.get('CLASSIFIER_ENDPOINT',
-                                  'http://localhost:8000')
+CLASSIFIER_ENDPOINT = environ.get(
+    'CLASSIFIER_ENDPOINT',
+    '%s://%s:%s/%s' % (CLASSIFIER_PROTO, CLASSIFIER_HOST, CLASSIFIER_PORT,
+                       CLASSIFIER_PATH)
+)
 """
 Full URL to the root classifier service API endpoint.
 
