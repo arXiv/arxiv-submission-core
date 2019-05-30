@@ -50,16 +50,6 @@ CLASSIC_DATABASE_URI = os.environ.get('CLASSIC_DATABASE_URI', 'sqlite:///')
 SQLALCHEMY_DATABASE_URI = CLASSIC_DATABASE_URI
 SQLALCHEMY_TRACK_MODIFICATIONS = False
 
-ENABLE_ASYNC = os.environ.get('ENABLE_ASYNC', '0')
-"""
-If ``1``, asynchronous callbacks will be dispatched to the worker.
-
-Otherwise they will be executed in the thread in which they are called.
-"""
-
-ENABLE_CALLBACKS = os.environ.get('ENABLE_CALLBACKS', '0')
-"""If ``0``, callbacks bound to events will not be executed."""
-
 JWT_SECRET = os.environ.get('JWT_SECRET')
 
 CORE_VERSION = "0.0.0"
@@ -102,3 +92,6 @@ KINESIS_ENDPOINT = os.environ.get("KINESIS_ENDPOINT", None)
 KINESIS_VERIFY = bool(int(os.environ.get("KINESIS_VERIFY", "1")))
 
 LOGLEVEL = int(os.environ.get('LOGLEVEL', '40'))
+
+ENABLE_CALLBACKS = bool(int(os.environ.get('ENABLE_CALLBACKS', '1')))
+"""Enable/disable the :func:`Event.bind` feature."""

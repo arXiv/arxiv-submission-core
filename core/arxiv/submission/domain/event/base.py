@@ -40,11 +40,11 @@ class Event(metaclass=EventType):
     """
     Base class for submission-related events/commands.
 
-    An event represents a change to a :class:`.domain.submission.Submission`. Rather than
-    changing submissions directly, an application should create (and store)
-    events. Each event class must inherit from this base class, extend it with
-    whatever data is needed for the event, and define methods for validation
-    and projection (changing a submission):
+    An event represents a change to a :class:`.domain.submission.Submission`.
+    Rather than changing submissions directly, an application should create
+    (and store) events. Each event class must inherit from this base class,
+    extend it with whatever data is needed for the event, and define methods
+    for validation and projection (changing a submission):
 
     - ``validate(self, submission: Submission) -> None`` should raise
       :class:`.InvalidEvent` if the event instance has invalid data.

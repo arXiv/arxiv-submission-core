@@ -38,6 +38,9 @@ if not WAIT_FOR_SERVICES:
 WAIT_ON_STARTUP = int(environ.get('WAIT_ON_STARTUP', '0'))
 """Number of seconds to wait before checking upstream services on startup."""
 
+ENABLE_CALLBACKS = bool(int(environ.get('ENABLE_CALLBACKS', '1')))
+"""Enable/disable the :func:`Event.bind` feature."""
+
 
 # --- VAULT INTEGRATION CONFIGURATION ---
 
