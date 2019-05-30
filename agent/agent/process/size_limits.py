@@ -105,16 +105,22 @@ class CheckPDFSize(Process):
     def evaluate_size(self, size_bytes: int, trigger: Trigger,
                       emit: Callable) -> int:
         """Add or remove holds as appropriate."""
-        msg = "PDF is %i bytes" % size_bytes
-        if size_bytes > trigger.params['PDF_LIMIT_BYTES']:
+        pdf_limit_bytes = trigger.params['PDF_LIMIT_BYTES']
+        if size_bytes > pdf_limit_bytes:
             if Hold.Type.PDF_OVERSIZE in trigger.after.hold_types:
                 return      # Already on hold for this reason; nothing to do.
-            emit(AddHold(creator=self.agent, hold_type=Hold.Type.PDF_OVERSIZE,
-                         hold_reason=msg))
+            emit(AddHold(
+                creator=self.agent,
+                hold_type=Hold.Type.PDF_OVERSIZE,
+                hold_reason=f'PDF is {size_bytes} bytes, exceeds limit of'
+                            f' {pdf_limit_bytes} bytes'))
         else:
             # If the submission is on hold due to oversize, remove the hold.
             for event_id, hold in trigger.after.holds.items():
                 if hold.hold_type is Hold.Type.PDF_OVERSIZE:
-                    emit(RemoveHold(creator=self.agent, hold_event_id=event_id,
-                                    hold_type=Hold.Type.PDF_OVERSIZE,
-                                    removal_reason=msg))
+                    emit(RemoveHold(
+                        creator=self.agent,
+                        hold_event_id=event_id,
+                        hold_type=Hold.Type.PDF_OVERSIZE,
+                        removal_reason=f'PDF is {size_bytes} bytes, below'
+                                       f' limit of {pdf_limit_bytes} bytes'))
