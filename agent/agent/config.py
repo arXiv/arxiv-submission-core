@@ -477,7 +477,7 @@ AUTO_CROSS_FOR_PRIMARY = {
     'stat.ML': 'cs.LG'
 }
 """
-When these categories are the primary, a corresponding cross be suggested.
+When these categories are the primary, a corresponding cross will be suggested.
 
 Per ARXIVOPS-500.
 """
