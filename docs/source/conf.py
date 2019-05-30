@@ -26,7 +26,6 @@ from flask import Flask
 from arxiv.submission import init_app
 # sys.path.insert(0, os.path.abspath('.'))
 sys.path.append(os.path.abspath('../../core/arxiv'))
-print(os.path.abspath('../../core'))
 sys.path.append('../../metadata')
 sys.path.append('../../agent')
 sys.path.append('./')

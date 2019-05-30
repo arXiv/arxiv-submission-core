@@ -127,9 +127,12 @@ def to_submission(row: models.Submission,
 
     primary_clsn: Optional[domain.Classification] = None
     if primary and primary.category:
-        primary_clsn = domain.Classification(category=primary.category)
-    secondary_clsn = [domain.Classification(category=db_cat.category)
-                      for db_cat in row.categories if not db_cat.is_primary]
+        _category = domain.Category(primary.category)
+        primary_clsn = domain.Classification(category=_category)
+    secondary_clsn = [
+        domain.Classification(category=domain.Category(db_cat.category))
+        for db_cat in row.categories if not db_cat.is_primary
+    ]
 
     content: Optional[domain.SubmissionContent] = None
     if row.package:

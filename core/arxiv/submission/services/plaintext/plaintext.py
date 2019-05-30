@@ -15,9 +15,13 @@ service itself.
 """
 
 from enum import Enum
+from typing import Any
 
+from arxiv.base import logging
 from arxiv.integration.api import status, exceptions, service
 from arxiv.taxonomy import Category
+
+logger = logging.getLogger(__name__)
 
 
 class ExtractionFailed(exceptions.RequestFailed):
@@ -50,12 +54,25 @@ class PlainTextService(service.HTTPIntegration):
     def _base_endpoint(self) -> str:
         return f'{self._scheme}://{self._host}:{self._port}'
 
+    def is_available(self, **kwargs: Any) -> bool:
+        """Check our connection to the plain text service."""
+        timeout: float = kwargs.get('timeout', 0.2)
+        try:
+            response = self.request('head', '/status', timeout=timeout)
+        except Exception as e:
+            logger.error('Encountered error calling plain text service: %s', e)
+            return False
+        if response.status_code != status.OK:
+            logger.error('Got unexpected status: %s', response.status_code)
+            return False
+        return True
+
     def endpoint(self, source_id: str):
-        """Get the URL of the classifier endpoint."""
+        """Get the URL of the extraction endpoint."""
         return f'/submission/{source_id}'
 
     def status_endpoint(self, source_id: str):
-        """Get the URL of the classifier endpoint."""
+        """Get the URL of the extraction status endpoint."""
         return f'/submission/{source_id}/status'
 
     def request_extraction(self, source_id: str) -> None:

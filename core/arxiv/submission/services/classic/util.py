@@ -92,6 +92,7 @@ def transaction() -> Generator:
         session.rollback()
         raise   # Propagate exceptions raised from this module.
     except InvalidEvent:
+        session.rollback()
         raise
     except Exception as e:
         logger.debug('Command failed, rolling back: %s', str(e))

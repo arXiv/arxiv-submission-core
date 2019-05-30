@@ -1,6 +1,5 @@
 """
-Submission Event Consumer
-=========================
+Submission event consumer.
 
 The submission event consumer is responsible for monitoring submission event,
 evaluating them against pre-defined rules, and triggering processes to be
@@ -73,22 +72,23 @@ may be useful for testing purposes. The runner used in production is the
 :class:`.AsyncProcessRunner`, which manages registration and dispatching of
 asynchronous tasks carried out by the :mod:`agent.worker`.
 
-
 """
 
 import json
 import os
 import time
-from typing import List, Any, Optional, Dict
+from typing import List, Any, Optional, Dict, Tuple, Union
 
 from flask import Flask
 from retry import retry
 
+import boto3
 from botocore.exceptions import WaiterError, NoCredentialsError, \
     PartialCredentialsError, BotoCoreError, ClientError
 
 from arxiv.base import logging
 from arxiv.integration.kinesis import consumer
+from arxiv.vault.manager import ConfigManager
 from arxiv.submission.serializer import loads
 from arxiv.submission.domain.submission import Submission
 from arxiv.submission.domain.event import Event, AddProcessStatus
@@ -111,12 +111,67 @@ class SubmissionEventConsumer(consumer.BaseConsumer):
     .. todo:
        ARXIVNG-2041 Implement throttling control in base Kinesis integration
 
-
-    .. todo:
-       ARXIVNG-2042 Retry should be configurable in base Kinesis controller
-       without overriding methods
-
     """
+
+    sleep = 0.2
+    sleep_after_credentials = 10
+
+    def __init__(self, *args: Any, config: Dict[str, Any] = {},
+                 **kwargs: Any) -> None:
+        """Initialize a secrets manager before starting."""
+        self._config = config
+        self._app: Optional[Flask] = kwargs.pop('app', None)
+        super(SubmissionEventConsumer, self).__init__(*args, **kwargs)
+        if self._config.get('VAULT_ENABLED'):
+            logger.info('Vault enabled; getting secrets')
+            self._secrets = self._init_secrets()
+            self.update_secrets()
+        self._access_key = self._config.get('AWS_ACCESS_KEY_ID')
+        self._secret_key = self._config.get('AWS_SECRET_ACCESS_KEY')
+
+    def _init_secrets(self) -> ConfigManager:
+        """
+        Get a :class:`.ConfigManager` for secrets.
+
+        If we have a Flask app, try to re-use an existing ConfigManager if
+        there is one available in the middlewares.
+        """
+        if self._app is not None:
+            if 'VaultMiddleware' in self._app.middlewares:
+                return self._app.middlewares['VaultMiddleware'].secrets
+        return ConfigManager(self._config)
+
+    def update_secrets(self) -> bool:
+        """Update any secrets that are out of date."""
+        for key, value in self._secrets.yield_secrets():
+            self._config[key] = value
+            os.environ[key] = str(value)
+        _access_key = self._config.get('AWS_ACCESS_KEY_ID')
+        _secret_key = self._config.get('AWS_SECRET_ACCESS_KEY')
+        if self._access_key != _access_key or self._secret_key != _secret_key:
+            self._access_key = _access_key
+            self._secret_key = _secret_key
+            return True
+        return False
+
+    def process_records(self, start: str) -> Tuple[str, int]:
+        """Update secrets before getting a new batch of records."""
+        if self._config.get('VAULT_ENABLED') and self.update_secrets():
+            logger.info('Got new secrets; restarting after %i seconds',
+                        self.sleep_after_credentials)
+            # From the docs:
+            #
+            # > Unfortunately, IAM credentials are eventually consistent with
+            # > respect to other Amazon services. If you are planning on using
+            # > these credential in a pipeline, you may need to add a delay of
+            # > 5-10 seconds (or more) after fetching credentials before they
+            # > can be used successfully.
+            #  -- https://www.vaultproject.io/docs/secrets/aws/index.html#usage
+            time.sleep(self.sleep_after_credentials)
+            raise consumer.RestartProcessing('Got fresh credentials')
+        super_ret: Tuple[str, int]
+        super_ret = super(SubmissionEventConsumer, self).process_records(start)
+        return super_ret
 
     def process_record(self, record: dict) -> None:
         """
@@ -137,7 +192,16 @@ class SubmissionEventConsumer(consumer.BaseConsumer):
             logger.error("Error (%s) while deserializing from data %s",
                          exc, record['Data'])
             raise exc
-        event, before, after = data['event'], data['before'], data['after']
+
+        # It is possible that an incomplete or aberrant record will come
+        # through the stream. One example is the generation of a test
+        # notification that other services might use to verify their ability
+        # to write to the stream.
+        try:
+            event, before, after = data['event'], data['before'], data['after']
+        except KeyError:
+            logger.info('Skipping record %s', record["SequenceNumber"])
+            return
 
         # We want to keep track of process-related events, so that we can
         # reconstruct what happened if necessary.
@@ -171,7 +235,26 @@ class SubmissionEventConsumer(consumer.BaseConsumer):
                     event.event_id, event.submission_id, process.name,
                     params)
 
-    def wait_for_stream(self) -> None:
+    def new_client(self) -> boto3.client:
+        """Generate a new Kinesis client."""
+        params: Dict[str, Any] = {'region_name': self.region,
+                                  'aws_access_key_id': self._access_key,
+                                  'aws_secret_access_key': self._secret_key}
+        client_params: Dict[str, Any] = {}
+        if self.endpoint:
+            client_params['endpoint_url'] = self.endpoint
+        if self.verify is False:
+            client_params['verify'] = False
+
+        logger.debug('New session with parameters: %s', params)
+        # We don't want to let boto3 manage the Session for us.
+        self._session = boto3.Session(**params)
+
+        return self._session.client('kinesis', **client_params)
+
+    def wait_for_stream(self, tries: int = 5, delay: int = 5,
+                        max_delay: Optional[int] = None, backoff: int = 2,
+                        jitter: Union[int, Tuple[int, int]] = 0) -> None:
         """
         Wait for the stream to become available.
 
@@ -193,22 +276,18 @@ class SubmissionEventConsumer(consumer.BaseConsumer):
                 ExclusiveStartShardId=self.shard_id
             )
         except WaiterError as e:
-            logger.error('Failed to get stream while waiting')
-            raise consumer.exceptions.StreamNotAvailable('Could not connect to stream') from e
+            msg = 'Failed to get stream while waiting'
+            logger.error(msg)
+            raise consumer.exceptions.StreamNotAvailable(msg) from e
         except (PartialCredentialsError, NoCredentialsError) as e:
-            logger.error('Credentials missing or incomplete: %s', e.msg)
-            raise consumer.exceptions.ConfigurationError('Credentials missing') from e
+            msg = 'Credentials missing or incomplete: %s'
+            logger.error(msg, e.msg)
+            raise consumer.exceptions.ConfigurationError(msg % e.msg) from e
         logger.debug('Done waiting')
-
-    def go(self) -> None:
-        logger.debug('Go!')
-        super(SubmissionEventConsumer, self).go()
 
 
 class DatabaseCheckpointManager:
-    """
-    Provides database-backed loading and updating of consumer checkpoints.
-    """
+    """Provides db-backed loading and updating of consumer checkpoints."""
 
     def __init__(self, shard_id: str) -> None:
         """Get the last checkpoint."""
@@ -239,7 +318,9 @@ def process_stream(app: Flask, duration: Optional[int] = None) -> None:
     # integrations with metadata service, search index.
     checkpointer = DatabaseCheckpointManager(app.config['KINESIS_SHARD_ID'])
     consumer.process_stream(SubmissionEventConsumer, app.config,
-                            checkpointmanager=checkpointer, duration=duration)
+                            checkpointmanager=checkpointer,
+                            duration=duration,
+                            extra=dict(app=app, config=app.config))
 
 
 def start_agent() -> None:

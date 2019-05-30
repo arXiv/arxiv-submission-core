@@ -330,6 +330,12 @@ class SetPrimaryClassification(Event):
         submission.primary_classification = clsn
         return submission
 
+    def __post_init__(self):
+        """Ensure that we have an :class:`arxiv.taxonomy.Category`."""
+        super(SetPrimaryClassification, self).__post_init__()
+        if self.category and not isinstance(self.category, taxonomy.Category):
+            self.category = taxonomy.Category(self.category)
+
 
 @dataclass()
 class AddSecondaryClassification(Event):
@@ -351,6 +357,12 @@ class AddSecondaryClassification(Event):
         classification = Classification(category=self.category)
         submission.secondary_classification.append(classification)
         return submission
+
+    def __post_init__(self):
+        """Ensure that we have an :class:`arxiv.taxonomy.Category`."""
+        super(AddSecondaryClassification, self).__post_init__()
+        if self.category and not isinstance(self.category, taxonomy.Category):
+            self.category = taxonomy.Category(self.category)
 
 
 @dataclass()

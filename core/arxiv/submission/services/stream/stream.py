@@ -1,12 +1,16 @@
 from typing import Optional
 
 import boto3
+from botocore.exceptions import ClientError
 
 from arxiv.integration.meta import MetaIntegration
+from arxiv.base import logging
 from arxiv.base.globals import get_application_config, get_application_global
 
 from ...domain import Submission, Event
 from ...serializer import dumps
+
+logger = logging.getLogger(__name__)
 
 
 class StreamPublisher(metaclass=MetaIntegration):
@@ -59,6 +63,53 @@ class StreamPublisher(metaclass=MetaIntegration):
         elif 'stream' not in g:
             g.stream = cls.get_session()   # type: ignore
         return g.stream    # type: ignore
+
+    def is_available(self, **kwargs) -> bool:
+        """Test our ability to put records."""
+        data = bytes(dumps({}), encoding='utf-8')
+        try:
+            self.client.put_record(StreamName=self.stream, Data=data,
+                                   PartitionKey=self.partition_key)
+        except Exception as e:
+            logger.error('Encountered error while putting to stream: %s', e)
+            return False
+        return True
+
+    def _create_stream(self) -> None:
+        try:
+            self.client.create_stream(StreamName=self.stream, ShardCount=1)
+        except self.client.exceptions.ResourceInUseException:
+            logger.info('Stream %s already exists', self.stream)
+            return
+
+    def _wait_for_stream(self, retries: int = 0, delay: int = 0) -> None:
+        waiter = self.client.get_waiter('stream_exists')
+        waiter.wait(
+            StreamName=self.stream,
+            WaiterConfig={
+                'Delay': delay,
+                'MaxAttempts': retries
+            }
+        )
+
+    def initialize(self) -> None:
+        """Perform initial checks, e.g. at application start-up."""
+        logger.info('initialize Kinesis stream')
+        data = bytes(dumps({}), encoding='utf-8')
+        try:
+            self.client.put_record(StreamName=self.stream, Data=data,
+                                   PartitionKey=self.partition_key)
+
+            logger.info('storage service is already available')
+            return
+        except ClientError as exc:
+            if exc.response['Error']['Code'] == 'ResourceNotFoundException':
+                logger.info('stream does not exist; creating')
+                self._create_stream()
+                logger.info('wait for stream to be available')
+                self._wait_for_stream(retries=10, delay=1)
+            return
+        raise RuntimeError('Failed to initialize stream')
 
     def put(self, event: Event, before: Submission, after: Submission) -> None:
         """Put an :class:`.Event` on the stream."""

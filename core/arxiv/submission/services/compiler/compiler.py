@@ -7,7 +7,7 @@ that the user can preview their submission. Additionally, we want to show the
 submitter the TeX log so that they can identify any potential problems with
 their sources.
 """
-from typing import Tuple, Optional, List, Union, NamedTuple, Mapping
+from typing import Tuple, Optional, List, Union, NamedTuple, Mapping, Any
 import json
 import io
 import re
@@ -51,6 +51,16 @@ class Compiler(service.HTTPIntegration):
 
         service_name = "compiler"
 
+    def is_available(self, **kwargs: Any) -> bool:
+        """Check our connection to the compiler service."""
+        timeout: float = kwargs.get('timeout', 0.2)
+        try:
+            self.get_service_status(timeout=timeout)
+        except Exception as e:
+            logger.error('Encountered error calling compiler: %s', e)
+            return False
+        return True
+
     def _parse_status_response(self, data: dict) -> Compilation:
         return Compilation(
             source_id=data['source_id'],
@@ -65,9 +75,9 @@ class Compiler(service.HTTPIntegration):
     def _parse_loc(self, headers: Mapping) -> str:
         return urlparse(headers['Location']).path
 
-    def get_service_status(self) -> dict:
+    def get_service_status(self, timeout: float = 0.2) -> dict:
         """Get the status of the compiler service."""
-        return self.json('get', 'status')[0]
+        return self.json('get', 'status', timeout=timeout)[0]
 
     def compile(self, source_id: str, checksum: str, token: str,
                 stamp_label: str, stamp_link: str,

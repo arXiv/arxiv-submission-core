@@ -1,0 +1,17 @@
+namespace: development
+image:
+  tag: "0.0"
+
+labels:
+  subsystem: submission-moderation
+  service_group: backend
+
+
+redis:
+  url: changeme
+
+vault:
+  host: changeme
+  port: changeme
+  role: compiler
+  credential: compiler

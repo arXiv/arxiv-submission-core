@@ -47,7 +47,8 @@ def load(submission_id: int) -> Tuple[Submission, List[Event]]:
 
     """
     try:
-        return classic.get_submission(submission_id)
+        with classic.transaction():
+            return classic.get_submission(submission_id)
     except classic.NoSuchSubmission as e:
         raise NoSuchSubmission(f'No submission with id {submission_id}') from e
 
@@ -67,7 +68,8 @@ def load_submissions_for_user(user_id: int) -> List[Submission]:
         Items are :class:`.domain.submission.Submission` instances.
 
     """
-    return classic.get_user_submissions_fast(user_id)
+    with classic.transaction():
+        return classic.get_user_submissions_fast(user_id)
 
 
 def load_fast(submission_id: int) -> Submission:
@@ -89,7 +91,8 @@ def load_fast(submission_id: int) -> Submission:
 
     """
     try:
-        return classic.get_submission_fast(submission_id)
+        with classic.transaction():
+            return classic.get_submission_fast(submission_id)
     except classic.NoSuchSubmission as e:
         raise NoSuchSubmission(f'No submission with id {submission_id}') from e
 

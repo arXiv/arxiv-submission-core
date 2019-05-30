@@ -1,0 +1,49 @@
+# Application profile
+
+application:
+  slug: submission-agent
+  subsystem: submission-moderation
+  service_group: backend
+  containers:
+  - name: worker
+    type:  celery
+    resources:
+      memory:
+        min: 128Mi
+        max: 256Mi
+      cpu:
+        min: 100m
+        max: 300m
+  - name: agent
+    type: kinesis
+    resources:
+      memory:
+        min: 128Mi
+        max: 256Mi
+      cpu:
+        min: 100m
+        max: 300m
+  dependencies:
+  - name: database
+    type: maria
+    description: Checkpoint DB.
+  - name: classic
+    type: mysql
+    description: Classic submission DB.
+  - name: filemanager
+    type: http
+    description: File manager service.
+  - name: compiler
+    type: http
+    description: Compiler service.
+  - name: plaintext
+    type: http
+    description: Plain text extraction service.
+  - name: classifier
+    type: http
+    description: Classifier service.
+  - name: mail
+    type: smtp
+    description: arXiv SMTP server.
+  - type: kinesis
+    description: SubmissionEvents

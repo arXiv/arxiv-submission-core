@@ -24,17 +24,17 @@ semver = "*"
 flask-sqlalchemy = "*"
 retry = "*"
 backports-datetime-fromisoformat = "*"
-arxiv-base = "==0.15.7rc8"
-arxiv-submission-core = {path = "./core"}
+arxiv-base = "==0.15.8rc4"
 alembic = "*"
 urllib3 = ">=1.24.2"
 Jinja2 = ">=2.10.1"
 pyyaml = ">=4.2b1"
+arxiv-vault = "==0.1.1rc15"
 
 [dev-packages]
 "nose2" = "*"
 openapi-spec-validator = "*"
-coverage = "*"
+coverage = "==4.5"
 coveralls = "*"
 pylint = "<2"
 mypy = "==0.660"
@@ -44,7 +44,6 @@ sphinx-autodoc-typehints = "*"
 pydocstyle = "==3.0.0"
 pytest = "*"
 pytest-cov = "*"
-sphinx-jekyll-builder = "*"
 
 [pipenv]
 allow_prereleases = true

@@ -1,31 +1,51 @@
 import logging
+import time
 
 from flask import Flask
 
-from arxiv import mail
-from arxiv.base import Base
+from arxiv import mail, vault
+from arxiv.base import Base, logging
 from arxiv.base.middleware import wrap, request_logs
-from arxiv.submission import init_app
+from arxiv.submission import init_app, wait_for
 from arxiv.submission.services import Classifier, PlainTextService, Compiler, \
     classic
 from . import config
 from .services import database
+
+logger = logging.getLogger(__name__)
 
 
 def create_app() -> Flask:
     """Create a new agent application."""
     app = Flask(__name__)
     app.config.from_object(config)
+
     Base(app)
-    classic.init_app(app)
+
+    # Register logging and secrets middleware.
+    middleware = [request_logs.ClassicLogsMiddleware]
+    if app.config['VAULT_ENABLED']:
+        middleware.insert(0, vault.middleware.VaultMiddleware)
+    wrap(app, middleware)
+
+    # Make sure that we have all of the secrets that we need to run.
+    if app.config['VAULT_ENABLED']:
+        app.middlewares['VaultMiddleware'].update_secrets({})
+
+    # Initialize services.
     database.init_app(app)
+    mail.init_app(app)
+    Classifier.init_app(app)
     Compiler.init_app(app)
     PlainTextService.init_app(app)
-    Classifier.init_app(app)
-    mail.init_app(app)
-    app.app_context().push()
     init_app(app)
 
-    wrap(app, [request_logs.ClassicLogsMiddleware])
-
+    if app.config['WAIT_FOR_SERVICES']:
+        time.sleep(app.config['WAIT_ON_STARTUP'])
+        with app.app_context():
+            wait_for(database)
+            wait_for(Classifier.current_session())
+            wait_for(Compiler.current_session())
+            wait_for(PlainTextService.current_session())
+        logger.info('All upstream services are available; ready to start')
     return app
