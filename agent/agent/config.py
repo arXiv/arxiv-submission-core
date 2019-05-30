@@ -443,13 +443,13 @@ TITLE_SIMILARITY_THRESHOLD = 0.7
 METADATA_ASCII_THRESHOLD = 0.5
 """Minimum ASCII content for titles and abstracts (0.-1.)."""
 
-COMPRESSED_PACKAGE_MAX = 6_000_000
+COMPRESSED_PACKAGE_MAX_BYTES = 6_000_000
 """Maximum size of a source package in bytes when compressed."""
 
-UNCOMPRESSED_PACKAGE_MAX = 18_000_000
+UNCOMPRESSED_PACKAGE_MAX_BYTES = 18_000_000
 """Maximum size of a source package in bytes when uncompressed."""
 
-PDF_LIMIT = 15_000_000
+PDF_LIMIT_BYTES = 15_000_000
 """The maximum size in bytes of the provided/compiled PDF."""
 
 NO_RECLASSIFY_CATEGORIES = (

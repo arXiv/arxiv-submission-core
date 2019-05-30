@@ -30,8 +30,8 @@ class CheckSubmissionSourceSize(Process):
     def check(self, previous: Optional, trigger: Trigger,
               emit: Callable) -> None:
         """Perform the source size check procedure."""
-        uncompressed_max = trigger.params['UNCOMPRESSED_PACKAGE_MAX']
-        compressed_max = trigger.params['COMPRESSED_PACKAGE_MAX']
+        uncompressed_max = trigger.params['UNCOMPRESSED_PACKAGE_MAX_BYTES']
+        compressed_max = trigger.params['COMPRESSED_PACKAGE_MAX_BYTES']
         try:
             uncompressed_size = trigger.after.source_content.uncompressed_size
             compressed_size = trigger.after.source_content.compressed_size
@@ -106,7 +106,7 @@ class CheckPDFSize(Process):
                       emit: Callable) -> int:
         """Add or remove holds as appropriate."""
         msg = "PDF is %i bytes" % size_bytes
-        if size_bytes > trigger.params['PDF_LIMIT']:
+        if size_bytes > trigger.params['PDF_LIMIT_BYTES']:
             if Hold.Type.PDF_OVERSIZE in trigger.after.hold_types:
                 return      # Already on hold for this reason; nothing to do.
             emit(AddHold(creator=self.agent, hold_type=Hold.Type.PDF_OVERSIZE,

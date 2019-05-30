@@ -38,8 +38,8 @@ class TestCheckSubmissionSourceSize(TestCase):
     def test_no_source(self):
         """Submission has no source."""
         trigger = Trigger(before=self.submission, after=self.submission,
-                          params={'UNCOMPRESSED_PACKAGE_MAX': 40_003_932,
-                                  'COMPRESSED_PACKAGE_MAX': 3_039_303})
+                          params={'UNCOMPRESSED_PACKAGE_MAX_BYTES': 40_003_932,
+                                  'COMPRESSED_PACKAGE_MAX_BYTES': 3_039_303})
         events = []
         with self.assertRaises(Failed):
             self.process.check(None, trigger, events.append)
@@ -54,8 +54,8 @@ class TestCheckSubmissionSourceSize(TestCase):
             compressed_size=53
         )
         trigger = Trigger(before=self.submission, after=self.submission,
-                          params={'UNCOMPRESSED_PACKAGE_MAX': 40_003_932,
-                                  'COMPRESSED_PACKAGE_MAX': 3_039_303})
+                          params={'UNCOMPRESSED_PACKAGE_MAX_BYTES': 40_003_932,
+                                  'COMPRESSED_PACKAGE_MAX_BYTES': 3_039_303})
         events = []
         self.process.check(None, trigger, events.append)
         self.assertEqual(len(events), 0, 'No events generated')
@@ -75,8 +75,8 @@ class TestCheckSubmissionSourceSize(TestCase):
             hold_type=Hold.Type.SOURCE_OVERSIZE
         )
         trigger = Trigger(before=self.submission, after=self.submission,
-                          params={'UNCOMPRESSED_PACKAGE_MAX': 40_003_932,
-                                  'COMPRESSED_PACKAGE_MAX': 3_039_303})
+                          params={'UNCOMPRESSED_PACKAGE_MAX_BYTES': 40_003_932,
+                                  'COMPRESSED_PACKAGE_MAX_BYTES': 3_039_303})
         events = []
         self.process.check(None, trigger, events.append)
         self.assertIsInstance(events[0], RemoveHold, 'Removes a hold')
@@ -93,8 +93,8 @@ class TestCheckSubmissionSourceSize(TestCase):
             compressed_size=53
         )
         trigger = Trigger(before=self.submission, after=self.submission,
-                          params={'UNCOMPRESSED_PACKAGE_MAX': 40_003_932,
-                                  'COMPRESSED_PACKAGE_MAX': 3_039_303})
+                          params={'UNCOMPRESSED_PACKAGE_MAX_BYTES': 40_003_932,
+                                  'COMPRESSED_PACKAGE_MAX_BYTES': 3_039_303})
         events = []
         self.process.check(None, trigger, events.append)
         self.assertIsInstance(events[0], AddHold, 'Adds a hold')
@@ -115,8 +115,8 @@ class TestCheckSubmissionSourceSize(TestCase):
             hold_type=Hold.Type.SOURCE_OVERSIZE
         )
         trigger = Trigger(before=self.submission, after=self.submission,
-                          params={'UNCOMPRESSED_PACKAGE_MAX': 40_003_932,
-                                  'COMPRESSED_PACKAGE_MAX': 3_039_303})
+                          params={'UNCOMPRESSED_PACKAGE_MAX_BYTES': 40_003_932,
+                                  'COMPRESSED_PACKAGE_MAX_BYTES': 3_039_303})
         events = []
         self.process.check(None, trigger, events.append)
         self.assertEqual(len(events), 0, 'Generates no holds')
@@ -131,8 +131,8 @@ class TestCheckSubmissionSourceSize(TestCase):
             compressed_size=593_032_039     # Something is very wrong...
         )
         trigger = Trigger(before=self.submission, after=self.submission,
-                          params={'UNCOMPRESSED_PACKAGE_MAX': 40_003_932,
-                                  'COMPRESSED_PACKAGE_MAX': 3_039_303})
+                          params={'UNCOMPRESSED_PACKAGE_MAX_BYTES': 40_003_932,
+                                  'COMPRESSED_PACKAGE_MAX_BYTES': 3_039_303})
         events = []
         self.process.check(None, trigger, events.append)
         self.assertIsInstance(events[0], AddHold, 'Adds a hold')
@@ -255,7 +255,7 @@ class TestEvaluatePDFSize(TestCase):
     def test_huge_pdf(self):
         """The PDF is huge."""
         trigger = Trigger(before=self.submission, after=self.submission,
-                          actor=self.creator, params={'PDF_LIMIT': 5_000_000})
+                          actor=self.creator, params={'PDF_LIMIT_BYTES': 5_000_000})
         size_bytes = 50_030_299_399
         events = []
         self.process.evaluate_size(size_bytes, trigger, events.append)
@@ -266,7 +266,7 @@ class TestEvaluatePDFSize(TestCase):
     def test_small_pdf(self):
         """The PDF is quite small."""
         trigger = Trigger(before=self.submission, after=self.submission,
-                          actor=self.creator, params={'PDF_LIMIT': 5_000_000})
+                          actor=self.creator, params={'PDF_LIMIT_BYTES': 5_000_000})
         size_bytes = 549
         events = []
         self.process.evaluate_size(size_bytes, trigger, events.append)
@@ -280,7 +280,7 @@ class TestEvaluatePDFSize(TestCase):
             hold_type=Hold.Type.PDF_OVERSIZE
         )
         trigger = Trigger(before=self.submission, after=self.submission,
-                          actor=self.creator, params={'PDF_LIMIT': 5_000_000})
+                          actor=self.creator, params={'PDF_LIMIT_BYTES': 5_000_000})
         size_bytes = 549
         events = []
         self.process.evaluate_size(size_bytes, trigger, events.append)
@@ -298,7 +298,7 @@ class TestEvaluatePDFSize(TestCase):
             hold_type=Hold.Type.PDF_OVERSIZE
         )
         trigger = Trigger(before=self.submission, after=self.submission,
-                          actor=self.creator, params={'PDF_LIMIT': 5_000_000})
+                          actor=self.creator, params={'PDF_LIMIT_BYTES': 5_000_000})
         size_bytes = 50_030_299_399
         events = []
         self.process.evaluate_size(size_bytes, trigger, events.append)

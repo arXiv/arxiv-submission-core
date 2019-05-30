@@ -71,7 +71,7 @@ reclass_params = make_params('NO_RECLASSIFY_CATEGORIES',
                              'NO_RECLASSIFY_ARCHIVES',
                              'RECLASSIFY_PROPOSAL_THRESHOLD',
                              'AUTO_CROSS_FOR_PRIMARY')
-size_params = make_params('UNCOMPRESSED_PACKAGE_MAX', 'COMPRESSED_PACKAGE_MAX')
+size_params = make_params('UNCOMPRESSED_PACKAGE_MAX_BYTES', 'COMPRESSED_PACKAGE_MAX_BYTES')
 
 
 Rule(ConfirmPreview, user_event, empty_params, process.RunAutoclassifier,
@@ -106,5 +106,5 @@ Rule(SetUploadPackage, always, size_params, process.CheckSubmissionSourceSize,
 Rule(UpdateUploadPackage, always, size_params,
      process.CheckSubmissionSourceSize,
      "Check the size of the source when it is updated, and add/remove holds")
-Rule(ConfirmPreview, always, make_params('PDF_LIMIT'), process.CheckPDFSize,
+Rule(ConfirmPreview, always, make_params('PDF_LIMIT_BYTES'), process.CheckPDFSize,
      "Check the size of the PDF when the submitter confirms the preview.")
