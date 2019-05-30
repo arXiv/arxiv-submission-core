@@ -80,12 +80,17 @@ scaled more or less independently.
 
    Containers within the arXiv submission agent.
 
-The :mod:`agent.consumer` is a single-threaded process that consumes
-notifications about events on the ``SubmissionEvents`` Kinesis stream. It is
-implemented on top of :mod:`arxiv.integration.kinesis`. The agent relies
-on a database for checkpointing its progress in the stream, and for
-commemorating process-relevant submission events. The agent dispatches
-steps in triggered processes to be carried out by the :mod:`agent.worker`.
+
+The :mod:`agent.consumer`consumes notifications about events on the
+``SubmissionEvents`` Kinesis stream.  It is implemented on top of
+:mod:`arxiv.integration.kinesis`.  The agent consumes events on the  stream one
+at a time, in order, and keeps track of its progress by  marking checkpoints in
+a database. The agent also uses the database to commemorate process-relevant
+submission events.  In the event that an agent process goes away, this allows
+us to resume processing the stream while minimizing the amount of duplicated
+work. The agent dispatches steps in triggered processes to be carried out by
+the :mod:`agent.worker`. Only one agent process should run per shard to avoid
+processing the same events more than once.
 
 The agent database is a MariaDB SQL database used by the consumer. It stores
 checkpoints, process-relevant submission events, and (future) configurations
@@ -95,8 +100,8 @@ The :mod:`agent.worker` is an horizontally-scalable `Celery
 <http://www.celeryproject.org/>`_ worker that carries out the steps of
 processes. These tasks are dispatched by the :mod:`agent.consumer` via a
 Redis in-memory key-value store. The worker is responsible for calling backend
-services as it carries out its work.
-
+services as it carries out its work. Worker processes can be scaled
+horizontally independently of agent processes.
 """
 from . import process, rules, runner, consumer, worker, factory
 
