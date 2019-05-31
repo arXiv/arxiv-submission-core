@@ -256,7 +256,7 @@ class UserRequest:
 
 @dataclass
 class WithdrawalRequest(UserRequest):
-    """Represents a request ot withdraw a submission."""
+    """Represents a request to withdraw a submission."""
 
     NAME = "Withdrawal"
 
