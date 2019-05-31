@@ -2,6 +2,7 @@ from typing import Optional
 
 import boto3
 from botocore.exceptions import ClientError
+from retry import retry
 
 from arxiv.integration.meta import MetaIntegration
 from arxiv.base import logging
@@ -92,6 +93,7 @@ class StreamPublisher(metaclass=MetaIntegration):
             }
         )
 
+    @retry(RuntimeError, tries=5, delay=2, backoff=2)
     def initialize(self) -> None:
         """Perform initial checks, e.g. at application start-up."""
         logger.info('initialize Kinesis stream')
@@ -99,17 +101,22 @@ class StreamPublisher(metaclass=MetaIntegration):
         try:
             self.client.put_record(StreamName=self.stream, Data=data,
                                    PartitionKey=self.partition_key)
-
             logger.info('storage service is already available')
-            return
         except ClientError as exc:
             if exc.response['Error']['Code'] == 'ResourceNotFoundException':
                 logger.info('stream does not exist; creating')
                 self._create_stream()
                 logger.info('wait for stream to be available')
-                self._wait_for_stream(retries=10, delay=1)
-            return
-        raise RuntimeError('Failed to initialize stream')
+                self._wait_for_stream(retries=10, delay=5)
+            raise RuntimeError('Failed to initialize stream') from exc
+        except self.client.exceptions.ResourceNotFoundException:
+            logger.info('stream does not exist; creating')
+            self._create_stream()
+            logger.info('wait for stream to be available')
+            self._wait_for_stream(retries=10, delay=5)
+        except Exception as exc:
+            raise RuntimeError('Failed to initialize stream') from exc
+        return
 
     def put(self, event: Event, before: Submission, after: Submission) -> None:
         """Put an :class:`.Event` on the stream."""

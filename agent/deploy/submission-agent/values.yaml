@@ -1,5 +1,8 @@
+name: submission-agent
 namespace: development
+loglevel: 10
 image:
+  name: "arxiv/submission-agent"
   tag: "0.0"
 
 labels:
@@ -8,10 +11,46 @@ labels:
 
 
 redis:
-  url: changeme
+  host: localhost
+  port: 6379
+  db: 0
 
 vault:
   host: changeme
-  port: changeme
-  role: compiler
-  credential: compiler
+  port: 8200
+  role: submission-agent
+  credential: submission-agent
+
+
+config:
+  wait_for_services: 1
+  wait_on_startup: 5
+
+kinesis:
+  stream: SubmissionEvents-development
+  shard_id: 0
+
+classifier:
+  host: localhost
+  port: 8000
+  proto: http
+  path:
+
+smtp:
+  enabled: 0
+  host: localhost
+  port: 0
+  username: foouser
+  password: foopassword
+  ssl: 0
+
+ui:
+  host: development.arxiv.org
+  path: "/submit"
+
+database:
+  host: localhost
+
+# classic:
+#   database:
+#     uri: "mysql+mysqldb://foo:oof@localhost:3306/arXiv"

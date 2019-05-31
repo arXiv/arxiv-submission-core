@@ -1,7 +1,9 @@
+from typing import Any, Dict, Callable, Mapping, List
 import logging
 import time
 
-from flask import Flask
+from flask import Flask, Config
+from collections import defaultdict
 
 from arxiv import mail, vault
 from arxiv.base import Base, logging
@@ -14,11 +16,47 @@ from .services import database
 
 logger = logging.getLogger(__name__)
 
+Callback = Callable[['ConfigWithHooks', str, Any], None]
+
+
+class ConfigWithHooks(Config):
+    """Config object that has __setitem__ hooks."""
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        """Make a place for hooks on init."""
+        super(ConfigWithHooks, self).__init__(*args, **kwargs)
+        self._hooks: Mapping[str, List[Callback]] = defaultdict(list)
+
+    def add_hook(self, key: str, hook: Callback) -> None:
+        """
+        Add a callback/hook for a config key.
+
+        The hook will be called when the ``key`` is set.
+        """
+        self._hooks[key].append(hook)
+
+    def __setitem__(self, key: str, value: Any) -> None:
+        """Set a config ``key``, and call registered hooks."""
+        super(ConfigWithHooks, self).__setitem__(key, value)
+        for hook in self._hooks.get(key, []):
+            hook(self, key, value)
+
+
+Flask.config_class = ConfigWithHooks    # type: ignore
+
+
+def update_binds(config: ConfigWithHooks, key: str, value: Any) -> None:
+    """Update :const:`.config.SQLALCHEMY_BINDS.`."""
+    config['SQLALCHEMY_BINDS'] = {
+        'agent': config['SUBMISSION_AGENT_DATABASE_URI']
+    }
+
 
 def create_app() -> Flask:
     """Create a new agent application."""
     app = Flask(__name__)
     app.config.from_object(config)
+    app.config.add_hook('SUBMISSION_AGENT_DATABASE_URI', update_binds)
 
     Base(app)
 
@@ -31,6 +69,8 @@ def create_app() -> Flask:
     # Make sure that we have all of the secrets that we need to run.
     if app.config['VAULT_ENABLED']:
         app.middlewares['VaultMiddleware'].update_secrets({})
+
+    logger.info(app.config)
 
     # Initialize services.
     database.init_app(app)

@@ -7,9 +7,7 @@ WORKDIR /opt/arxiv
 ENV LC_ALL en_US.utf8
 ENV LANG en_US.utf8
 
-# We're using MariaDB for testing/development, but production is MySQL (for
-# now).
-RUN yum -y install mariadb-devel
+RUN yum -y install mysql mysql-devel
 
 # Add Python consumer and configuration.
 RUN pip install pipenv
@@ -21,7 +19,7 @@ ADD Pipfile /opt/arxiv/
 RUN pipenv install
 
 ADD core/ /opt/arxiv/core/
-RUn pipenv install /opt/arxiv/core/
+RUN pipenv install /opt/arxiv/core/
 ADD agent/agent/ /opt/arxiv/agent/
 
 ENV KINESIS_STREAM "SubmissionEvents"
