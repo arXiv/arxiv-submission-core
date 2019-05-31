@@ -315,8 +315,8 @@ class SetPrimaryClassification(Event):
         if isinstance(self.creator, System):
             return
         try:
-            archive, _ = self.category.split('.', 1)
-        except ValueError:
+            archive = taxonomy.CATEGORIES[self.category]['in_archive']
+        except KeyError:
             archive = self.category
         if self.category not in self.creator.endorsements \
                 and f'{archive}.*' not in self.creator.endorsements \
