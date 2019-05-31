@@ -1,4 +1,4 @@
-"""Submission core configuration parameters."""
+"""Submission agent configuration parameters."""
 
 from os import environ
 import warnings
