@@ -22,6 +22,7 @@ if not JWT_SECRET:
     warnings.warn('JWT_SECRET is not set; authn/z may not work correctly!')
 
 CORE_VERSION = "0.0.0"
+"""Version of the :mod:`arxiv.submission` package."""
 
 MAX_SAVE_RETRIES = 25
 """Number of times to retry storing/emiting a submission event."""
