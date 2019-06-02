@@ -57,11 +57,6 @@ class Classifier(service.HTTPIntegration):
             return False
         return True
 
-    @property
-    def endpoint(self):
-        """Get the URL of the classifier endpoint."""
-        return f'http://{self._host}:{self._port}/ctxt'
-
     @classmethod
     def probability(cls, logodds: float) -> float:
         """Convert log odds to a probability."""
@@ -106,5 +101,6 @@ class Classifier(service.HTTPIntegration):
             Feature counts, if provided.
 
         """
-        data, _, _ = self.json('post', 'ctxt', data=content, timeout=timeout)
+        _path = '/classifier/'
+        data, _, _ = self.json('post', _path, data=content, timeout=timeout)
         return self._suggestions(data), self._flags(data), self._counts(data)

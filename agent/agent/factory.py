@@ -74,6 +74,9 @@ def create_app() -> Flask:
 
     # Initialize services.
     database.init_app(app)
+    with app.app_context():
+        if not database.tables_exist():
+            database.create_all()
     mail.init_app(app)
     Classifier.init_app(app)
     Compiler.init_app(app)
@@ -84,8 +87,12 @@ def create_app() -> Flask:
         time.sleep(app.config['WAIT_ON_STARTUP'])
         with app.app_context():
             wait_for(database)
-            wait_for(Classifier.current_session())
-            wait_for(Compiler.current_session())
-            wait_for(PlainTextService.current_session())
+            wait_for(Classifier.current_session(),
+                     timeout=app.config['CLASSIFIER_STATUS_TIMEOUT'])
+            wait_for(Compiler.current_session(),
+                     timeout=app.config['COMPILER_STATUS_TIMEOUT'])
+            wait_for(PlainTextService.current_session(),
+                     timeout=app.config['PLAINTEXT_STATUS_TIMEOUT'])
+            # FILE_MANAGER_STATUS_TIMEOUT
         logger.info('All upstream services are available; ready to start')
     return app

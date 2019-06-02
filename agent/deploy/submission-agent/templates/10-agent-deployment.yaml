@@ -72,6 +72,15 @@ spec:
           value: "{{ .Values.classifier.proto }}"
         - name: CLASSIFIER_PATH
           value: "{{ .Values.classifier.path }}"
+        - name: CLASSIFIER_PROTO
+          value: "{{ .Values.classifier.proto }}"
+
+        - name: COMPILER_PROTO
+          value: "{{ .Values.compiler.proto }}"
+        - name: PLAINTEXT_PROTO
+          value: "{{ .Values.plaintext.proto }}"
+        - name: FILE_MANAGER_PROTO
+          value: "{{ .Values.filemanager.proto }}"
 
         - name: EMAIL_ENABLED
           value: "{{ .Values.smtp.enabled }}"

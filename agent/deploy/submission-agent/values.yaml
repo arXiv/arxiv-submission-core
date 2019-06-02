@@ -36,6 +36,15 @@ classifier:
   proto: http
   path:
 
+compiler:
+  proto: http
+
+plaintext:
+  proto: http
+
+filemanager:
+  proto: http
+
 smtp:
   enabled: 0
   host: localhost

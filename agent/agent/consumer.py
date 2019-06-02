@@ -269,7 +269,7 @@ class SubmissionEventConsumer(consumer.BaseConsumer):
         """
         waiter = self.client.get_waiter('stream_exists')
         try:
-            logger.error(f'Waiting for stream {self.stream_name}')
+            logger.info(f'Waiting for stream {self.stream_name}')
             waiter.wait(
                 StreamName=self.stream_name,
                 Limit=1,
@@ -283,7 +283,7 @@ class SubmissionEventConsumer(consumer.BaseConsumer):
             msg = 'Credentials missing or incomplete: %s'
             logger.error(msg, e.msg)
             raise consumer.exceptions.ConfigurationError(msg % e.msg) from e
-        logger.debug('Done waiting')
+        logger.info('Done waiting')
 
 
 class DatabaseCheckpointManager:

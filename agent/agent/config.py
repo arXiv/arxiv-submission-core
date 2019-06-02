@@ -94,7 +94,7 @@ VAULT_REQUESTS = [
     {'type': 'database',
      'engine': environ.get('AGENT_DATABASE_ENGINE', 'mysql+mysqldb'),
      'host': environ.get('AGENT_DATABASE_HOST', 'localhost'),
-     'database': environ.get('AGENT_DATABASE_NAME', 'registry'),
+     'database': environ.get('AGENT_DATABASE_NAME', 'agent'),
      'params': 'charset=utf8mb4',
      'port': environ.get('AGENT_DATABASE_PORT', '3306'),
      'name': 'SUBMISSION_AGENT_DATABASE_URI',
@@ -232,8 +232,10 @@ FILE_MANAGER_HOST = environ.get('FILEMANAGER_SERVICE_HOST', 'arxiv.org')
 FILE_MANAGER_PORT = environ.get('FILEMANAGER_SERVICE_PORT', '443')
 """Port for the filemanager service."""
 
-FILE_MANAGER_PROTO = environ.get(f'FILEMANAGER_PORT_{FILE_MANAGER_PORT}_PROTO',
-                                 'https')
+FILE_MANAGER_PROTO = environ.get(
+    f'FILEMANAGER_PORT_{FILE_MANAGER_PORT}_PROTO',
+    environ.get('FILE_MANAGER_PROTO', 'https')
+)
 """Protocol for the filemanager service."""
 
 FILE_MANAGER_PATH = environ.get('FILE_MANAGER_PATH', '').lstrip('/')
@@ -255,6 +257,9 @@ If not explicitly provided, this is composed from :const:`FILE_MANAGER_HOST`,
 FILE_MANAGER_VERIFY = bool(int(environ.get('FILE_MANAGER_VERIFY', '1')))
 """Enable/disable SSL certificate verification for filemanager service."""
 
+FILE_MANAGER_STATUS_TIMEOUT \
+    = float(environ.get('FILE_MANAGER_STATUS_TIMEOUT', 1.0))
+
 if FILE_MANAGER_PROTO == 'https' and not FILE_MANAGER_VERIFY:
     warnings.warn('Certificate verification for filemanager is disabled; this'
                   ' should not be disabled in production.')
@@ -266,7 +271,10 @@ COMPILER_HOST = environ.get('COMPILER_SERVICE_HOST', 'arxiv.org')
 COMPILER_PORT = environ.get('COMPILER_SERVICE_PORT', '443')
 """Port for the compiler service."""
 
-COMPILER_PROTO = environ.get(f'COMPILER_PORT_{COMPILER_PORT}_PROTO', 'https')
+COMPILER_PROTO = environ.get(
+    f'COMPILER_PORT_{COMPILER_PORT}_PROTO',
+    environ.get('COMPILER_PROTO', 'https')
+)
 """Protocol for the compiler service."""
 
 COMPILER_PATH = environ.get('COMPILER_PATH', '')
@@ -287,6 +295,9 @@ If not explicitly provided, this is composed from :const:`COMPILER_HOST`,
 COMPILER_VERIFY = bool(int(environ.get('COMPILER_VERIFY', '1')))
 """Enable/disable SSL certificate verification for compiler service."""
 
+COMPILER_STATUS_TIMEOUT \
+    = float(environ.get('COMPILER_STATUS_TIMEOUT', 1.0))
+
 if COMPILER_PROTO == 'https' and not COMPILER_VERIFY:
     warnings.warn('Certificate verification for compiler is disabled; this'
                   ' should not be disabled in production.')
@@ -298,8 +309,10 @@ CLASSIFIER_HOST = environ.get('CLASSIFIER_SERVICE_HOST', 'localhost')
 CLASSIFIER_PORT = environ.get('CLASSIFIER_SERVICE_PORT', '8000')
 """Port for the classifier service."""
 
-CLASSIFIER_PROTO = environ.get(f'CLASSIFIER_PORT_{CLASSIFIER_PORT}_PROTO',
-                               'http')
+CLASSIFIER_PROTO = environ.get(
+    f'CLASSIFIER_PORT_{CLASSIFIER_PORT}_PROTO',
+    environ.get('CLASSIFIER_PROTO', 'http')
+)
 """Protocol for the classifier service."""
 
 CLASSIFIER_PATH = environ.get('CLASSIFIER_PATH', '')
@@ -321,6 +334,9 @@ If not explicitly provided, this is composed from :const:`CLASSIFIER_HOST`,
 CLASSIFIER_VERIFY = bool(int(environ.get('CLASSIFIER_VERIFY', '0')))
 """Enable/disable SSL certificate verification for classifier service."""
 
+CLASSIFIER_STATUS_TIMEOUT \
+    = float(environ.get('CLASSIFIER_STATUS_TIMEOUT', 1.0))
+
 if CLASSIFIER_PROTO == 'https' and not CLASSIFIER_VERIFY:
     warnings.warn('Certificate verification for classifier is disabled; this'
                   ' should not be disabled in production.')
@@ -332,8 +348,10 @@ PLAINTEXT_HOST = environ.get('PLAINTEXT_SERVICE_HOST', 'arxiv.org')
 PLAINTEXT_PORT = environ.get('PLAINTEXT_SERVICE_PORT', '443')
 """Port for the plaintext extraction service."""
 
-PLAINTEXT_PROTO = environ.get(f'PLAINTEXT_PORT_{PLAINTEXT_PORT}_PROTO',
-                              'https')
+PLAINTEXT_PROTO = environ.get(
+    f'PLAINTEXT_PORT_{PLAINTEXT_PORT}_PROTO',
+    environ.get('PLAINTEXT_PROTO', 'https')
+)
 """Protocol for the plaintext extraction service."""
 
 PLAINTEXT_PATH = environ.get('PLAINTEXT_PATH', '')
@@ -353,6 +371,9 @@ If not explicitly provided, this is composed from :const:`PLAINTEXT_HOST`,
 
 PLAINTEXT_VERIFY = bool(int(environ.get('PLAINTEXT_VERIFY', '1')))
 """Enable/disable certificate verification for plaintext extraction service."""
+
+PLAINTEXT_STATUS_TIMEOUT \
+    = float(environ.get('PLAINTEXT_STATUS_TIMEOUT', 1.0))
 
 if PLAINTEXT_PROTO == 'https' and not PLAINTEXT_VERIFY:
     warnings.warn('Certificate verification for plaintext extraction service'
