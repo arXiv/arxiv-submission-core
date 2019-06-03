@@ -161,7 +161,7 @@ def get_user_submissions_fast(user_id: int) -> List[Submission]:
         else:
             dbss = sorted(dbss, key=lambda dbs: dbs.submission_id)
             submissions.append(load.load(dbss))
-    return [s for s in submissions if not s.is_deleted]
+    return [subm for subm in submissions if not subm.is_deleted]
 
 
 @retry(ClassicBaseException, tries=3, delay=1)
