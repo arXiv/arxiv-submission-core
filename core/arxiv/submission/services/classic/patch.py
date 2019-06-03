@@ -67,13 +67,15 @@ def patch_cross(submission: domain.Submission, row: models.Submission,
 def _patch_request(req_type: type, data: Dict[str, Any],
                    submission: domain.Submission, row: models.Submission,
                    request_number: int = -1) -> domain.Submission:
-    status = req_type.PENDING   # Will be pending if on hold, too.
+    status = req_type.WORKING
     if row.is_announced():
         status = req_type.APPLIED
     elif row.is_deleted():
         status = req_type.CANCELLED
     elif row.is_rejected():
         status = req_type.REJECTED
+    elif not row.is_working():
+        status = req_type.PENDING    # Includes hold state.
     data.update({'status': status})
     request_id = req_type.generate_request_id(submission, request_number)
 

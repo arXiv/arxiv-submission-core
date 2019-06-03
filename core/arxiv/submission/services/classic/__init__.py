@@ -123,6 +123,7 @@ def get_events(submission_id: int) -> List[Event]:
         .order_by(DBEvent.created)
     events = [datum.to_event() for datum in event_data]
     if not events:      # No events, no dice.
+        logger.error('No events for submission %s', submission_id)
         raise NoSuchSubmission(f'Submission {submission_id} not found')
     return events
 
@@ -161,7 +162,7 @@ def get_user_submissions_fast(user_id: int) -> List[Submission]:
         else:
             dbss = sorted(dbss, key=lambda dbs: dbs.submission_id)
             submissions.append(load.load(dbss))
-    return [subm for subm in submissions if not subm.is_deleted]
+    return [subm for subm in submissions if subm and not subm.is_deleted]
 
 
 @retry(ClassicBaseException, tries=3, delay=1)
@@ -234,9 +235,11 @@ def get_submission(submission_id: int, for_update: bool = False) \
 
     try:
         original_row = original_row.one()
-    except NoResultFound:       # May also raise MultipleResultsFound; if so,
-                                # we want to fail loudly.
+        logger.debug('Got row %s', original_row)
+    except NoResultFound as exc:
+        logger.debug('Got NoResultFound exception %s', exc)
         raise NoSuchSubmission(f'Submission {submission_id} not found')
+        # May also raise MultipleResultsFound; if so, we want to fail loudly.
 
     # Load any subsequent submission rows (e.g. v=2, jref, withdrawal).
     # These do not have the same legacy submission ID as the original
@@ -252,11 +255,25 @@ def get_submission(submission_id: int, for_update: bool = False) \
         if for_update:      # Lock these rows as well.
             subsequent_rows = subsequent_rows.with_for_update(read=True)
         subsequent_rows = list(subsequent_rows)   # Execute query.
+        logger.debug('Got subsequent_rows: %s', subsequent_rows)
 
+    # If this submission originated in the classic system, we will have usable
+    # rows from the submission table, but no events. In that case, fall back
+    # to ``load.load()``, which relies only on classic rows.
+    try:
+        _events = get_events(submission_id)
+    except NoSuchSubmission:
+        logger.info('Loading a classic submission: %s', submission_id)
+        submission = load.load([original_row] + subsequent_rows)
+        if submission is None:
+            raise NoSuchSubmission('No such submission')
+        return submission, []
+
+    # We have an NG-native submission.
     interpolator = interpolate.ClassicEventInterpolator(
         original_row,
         subsequent_rows,
-        get_events(submission_id)
+        _events
     )
     return interpolator.get_submission_state()
 

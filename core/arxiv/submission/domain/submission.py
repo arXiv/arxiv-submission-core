@@ -193,6 +193,9 @@ class Waiver:
 class UserRequest:
     """Represents a user request related to a submission."""
 
+    WORKING = 'working'
+    """Request is not yet submitted."""
+
     PENDING = 'pending'
     """Request is pending approval."""
 

@@ -15,8 +15,23 @@ logger = logging.getLogger(__name__)
 logger.propagate = False
 
 
-def load(rows: List[models.Submission]) -> domain.Submission:
-    """Load a submission entirely from its classic database rows."""
+def load(rows: List[models.Submission]) -> Optional[domain.Submission]:
+    """
+    Load a submission entirely from its classic database rows.
+
+    Parameters
+    ----------
+    rows : list
+        Items are :class:`.models.Submission` rows loaded from the classic
+        database belonging to a single arXiv e-print/submission group.
+
+    Returns
+    -------
+    :class:`.domain.Submission` or ``None``
+        Aggregated submission object (with ``.versions``). If there is no
+        representation (e.g. all rows are deleted), returns ``None``.
+
+    """
     versions: List[domain.Submission] = []
     submission_id: Optional[str] = None
 
@@ -87,6 +102,9 @@ def load(rows: List[models.Submission]) -> domain.Submission:
             if version_submission.is_on_hold:
                 version_submission = patch_hold(version_submission, row)
         versions.append(version_submission)
+
+    if not versions:
+        return
     submission = copy.deepcopy(versions[-1])
     submission.versions = [ver for ver in versions if ver and ver.is_announced]
     return submission
@@ -140,6 +158,7 @@ def to_submission(row: models.Submission,
             identifier, checksum = row.package.split('://', 1)[1].split('@', 1)
         else:
             identifier = row.package
+            checksum = ""
         source_format = domain.SubmissionContent.Format(row.source_format)
         content = domain.SubmissionContent(identifier=identifier,
                                            compressed_size=0,

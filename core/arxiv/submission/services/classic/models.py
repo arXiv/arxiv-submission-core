@@ -70,7 +70,7 @@ class Submission(Base):    # type: ignore
 
     DELETED = (
         USER_DELETED, DELETED_ON_HOLD, DELETED_PROCESSING,
-        DELETED_REMOVED, DELETED_USER_EXPIRED
+        DELETED_REMOVED, DELETED_USER_EXPIRED, DELETED_EXPIRED
     )
 
     NEW_SUBMISSION = 'new'
@@ -314,6 +314,9 @@ class Submission(Base):    # type: ignore
     def get_updated(self) -> datetime:
         """Get the UTC-localized updated datetime."""
         return self.updated.replace(tzinfo=UTC)
+
+    def is_working(self) -> bool:
+        return self.status == self.NOT_SUBMITTED
 
     def is_announced(self) -> bool:
         return self.status in [self.ANNOUNCED, self.DELETED_ANNOUNCED]
