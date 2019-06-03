@@ -70,8 +70,6 @@ def create_app() -> Flask:
     if app.config['VAULT_ENABLED']:
         app.middlewares['VaultMiddleware'].update_secrets({})
 
-    logger.info(app.config)
-
     # Initialize services.
     database.init_app(app)
     with app.app_context():

@@ -115,7 +115,8 @@ SQLALCHEMY_DATABASE_URI = CLASSIC_DATABASE_URI
 SQLALCHEMY_TRACK_MODIFICATIONS = False
 """Track modifications feature should always be disabled."""
 
-SUBMISSION_AGENT_DATABASE_URI = environ.get('SUBMISSION_AGENT_DATABASE_URI')
+SUBMISSION_AGENT_DATABASE_URI = environ.get('SUBMISSION_AGENT_DATABASE_URI',
+                                            'sqlite:///')
 """Full database URI for the agent checkpoint database."""
 
 SQLALCHEMY_BINDS = {'agent': SUBMISSION_AGENT_DATABASE_URI}

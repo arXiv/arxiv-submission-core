@@ -103,7 +103,7 @@ Redis in-memory key-value store. The worker is responsible for calling backend
 services as it carries out its work. Worker processes can be scaled
 horizontally independently of agent processes.
 """
-from . import process, rules, runner, consumer, worker, factory
+from . import process, rules, runner, consumer, factory
 
 
 # Prepare all Process types for asynchronous execution.
