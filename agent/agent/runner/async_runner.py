@@ -80,9 +80,12 @@ def create_worker_app() -> Celery:
                         backend=result_backend,
                         result_backend=result_backend,
                         broker=broker)
-    celery_app.config_from_object(config)
 
-    celery_app.conf.task_default_queue = 'submission-worker'
+    celery_app.conf.queue_name_prefix = config.QUEUE_NAME_PREFIX
+    celery_app.conf.task_default_queue = config.TASK_DEFAULT_QUEUE
+    celery_app.conf.prefetch_multiplier = config.PREFETCH_MULTIPLIER
+    celery_app.conf.task_acks_late = config.TASK_ACKS_LATE
+    celery_app.conf.backend = result_backend
 
     register_save = celery_app.task(
         name='save',

@@ -1,103 +1,114 @@
-# apiVersion: apps/v1beta1
-# kind: Deployment
-# metadata:
-#   name: "{{ default "submission-agent" .Values.name }}-worker"
-#   namespace: "{{ .Values.namespace }}"
-#   labels:
-#     subsystem: "{{ .Values.labels.subsystem }}"
-#     container: "{{ default "submission-agent" .Values.name }}-worker"
-#     service-group: "{{ .Values.labels.service_group }}"
-#     log-style: python
-# spec:
-#   replicas: 1
-#   template:
-#     metadata:
-#       labels:
-#         subsystem: "{{ .Values.labels.subsystem }}"
-#         container: "{{ default "submission-agent" .Values.name }}-worker"
-#         service-group: "{{ .Values.labels.service_group }}"
-#         log-style: python
-#     spec:
-#       serviceAccount: "{{ default "submission-agent" .Values.name }}"
-#       volumes:
-#       - name: vault-token
-#         emptyDir: {}
-#       - name: vault-certificate
-#         secret:
-#           secretName: vault-certificate
-#
-#       containers:
-#       - name: "{{ default "submission-agent" .Values.name }}-worker"
-#         image: "arxiv/submission-worker:{{ default "latest" .Values.image.tag }}"
-#         imagePullPolicy: "{{ default "Always" .Values.imagePullPolicy }}"
-#         env:
-#         - name: LOGLEVEL
-#           value: "{{ .Values.loglevel }}"
-#         - name: SUBMISSION_AGENT_BROKER_URL
-#           value: "{{ .Values.redis.host }}:{{ .Values.redis.port }}/{{ .Values.redis.db }}"
-#
-#         - name: VAULT_ENABLED
-#           value: "1"
-#         - name: VAULT_HOST
-#           value: "{{ .Values.vault.host }}"
-#         - name: VAULT_PORT
-#           value: "{{ .Values.vault.port }}"
-#         - name: VAULT_CERT
-#           value: /etc/vault-certificate/vaulttls.cert.pem
-#         - name: VAULT_ROLE
-#           value: "{{ .Values.vault.role }}-{{ .Values.namespace }}"
-#         - name: VAULT_CREDENTIAL
-#           value: "{{ .Values.vault.credential }}"
-#         - name: KUBE_TOKEN
-#           value: /var/run/secrets/kubernetes.io/serviceaccount/token
-#         - name: NAMESPACE
-#           value: "{{ .Values.namespace }}"
-#
-#         - name: WAIT_FOR_SERVICES
-#           value: "{{ .Values.config.wait_for_services }}"
-#         - name: WAIT_ON_STARTUP
-#           value: "{{ .Values.config.wait_on_startup }}"
-#         - name: KINESIS_STREAM
-#           value: "{{ .Values.kinesis.stream }}"
-#         - name: KINESIS_SHARD_ID
-#           value: "{{ .Values.kinesis.shard_id }}"
-#
-#         - name: CLASSIFIER_SERVICE_HOST
-#           value: "{{ .Values.classifier.host }}"
-#         - name: CLASSIFIER_SERVICE_PORT
-#           value: "{{ .Values.classifier.port }}"
-#         - name: CLASSIFIER_{{ .Values.classifier.port }}_PROTO
-#           value: "{{ .Values.classifier.proto }}"
-#         - name: CLASSIFIER_PATH
-#           value: "{{ .Values.classifier.path }}"
-#
-#         - name: EMAIL_ENABLED
-#           value: "{{ .Values.smtp.enabled }}"
-#         - name: SMTP_HOSTNAME
-#           value: "{{ .Values.smtp.host }}"
-#         - name: SMTP_PORT
-#           value: "{{ .Values.smtp.port }}"
-#         - name: SMTP_USERNAME
-#           value: "{{ .Values.smtp.username }}"
-#         - name: SMTP_PASSWORD
-#           value: "{{ .Values.smtp.password }}"
-#         - name: SMTP_SSL
-#           value: "{{ .Values.smtp.ssl }}"
-#
-#         - name: SERVER_NAME
-#           value: "{{ .Values.ui.host }}"
-#
-#         volumeMounts:
-#           - name: vault-certificate
-#             mountPath: /etc/vault-certificate
-#             readOnly: true
-#           - name: vault-token
-#             mountPath: /etc/vault
-#
-#         resources:
-#           limits:
-#             cpu: 300m
-#             memory: 256Mi
-#           requests:
-#             cpu: 100m
-#             memory: 128Mi
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: "{{ default "submission-agent" .Values.name }}-worker"
+  namespace: "{{ .Values.namespace }}"
+  labels:
+    subsystem: "{{ .Values.labels.subsystem }}"
+    container: "{{ default "submission-agent" .Values.name }}-worker"
+    service-group: "{{ .Values.labels.service_group }}"
+    log-style: python
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        subsystem: "{{ .Values.labels.subsystem }}"
+        container: "{{ default "submission-agent" .Values.name }}-worker"
+        service-group: "{{ .Values.labels.service_group }}"
+        log-style: python
+    spec:
+      serviceAccount: "{{ default "submission-agent" .Values.name }}"
+      volumes:
+      - name: vault-token
+        emptyDir: {}
+      - name: vault-certificate
+        secret:
+          secretName: vault-certificate
+
+      containers:
+      - name: "{{ default "submission-agent" .Values.name }}-worker"
+        image: "arxiv/submission-worker:{{ default "latest" .Values.image.tag }}"
+        imagePullPolicy: "{{ default "Always" .Values.imagePullPolicy }}"
+        env:
+        - name: LOGLEVEL
+          value: "{{ .Values.loglevel }}"
+        - name: SUBMISSION_AGENT_BROKER_URL
+          value: "redis://{{ .Values.redis.host }}:{{ .Values.redis.port }}/{{ .Values.redis.db }}"
+        - name: AGENT_DATABASE_HOST
+          value: "{{ .Values.database.host }}"
+
+        - name: VAULT_ENABLED
+          value: "1"
+        - name: VAULT_HOST
+          value: "{{ .Values.vault.host }}"
+        - name: VAULT_PORT
+          value: "{{ .Values.vault.port }}"
+        - name: VAULT_CERT
+          value: /etc/vault-certificate/vaulttls.cert.pem
+        - name: VAULT_ROLE
+          value: "{{ .Values.vault.role }}-{{ .Values.namespace }}"
+        - name: VAULT_CREDENTIAL
+          value: "{{ .Values.vault.credential }}"
+        - name: KUBE_TOKEN
+          value: /var/run/secrets/kubernetes.io/serviceaccount/token
+        - name: NAMESPACE
+          value: "{{ .Values.namespace }}"
+
+        - name: WAIT_FOR_SERVICES
+          value: "{{ .Values.config.wait_for_services }}"
+        - name: WAIT_ON_STARTUP
+          value: "{{ .Values.config.wait_on_startup }}"
+        - name: KINESIS_STREAM
+          value: "{{ .Values.kinesis.stream }}"
+        - name: KINESIS_SHARD_ID
+          value: "{{ .Values.kinesis.shard_id }}"
+
+        - name: CLASSIFIER_SERVICE_HOST
+          value: "{{ .Values.classifier.host }}"
+        - name: CLASSIFIER_SERVICE_PORT
+          value: "{{ .Values.classifier.port }}"
+        - name: CLASSIFIER_{{ .Values.classifier.port }}_PROTO
+          value: "{{ .Values.classifier.proto }}"
+        - name: CLASSIFIER_PATH
+          value: "{{ .Values.classifier.path }}"
+        - name: CLASSIFIER_PROTO
+          value: "{{ .Values.classifier.proto }}"
+
+        - name: COMPILER_PROTO
+          value: "{{ .Values.compiler.proto }}"
+        - name: PLAINTEXT_PROTO
+          value: "{{ .Values.plaintext.proto }}"
+        - name: FILEMANAGER_PROTO
+          value: "{{ .Values.filemanager.proto }}"
+
+        - name: EMAIL_ENABLED
+          value: "{{ .Values.smtp.enabled }}"
+        - name: SMTP_HOSTNAME
+          value: "{{ .Values.smtp.host }}"
+        - name: SMTP_PORT
+          value: "{{ .Values.smtp.port }}"
+        - name: SMTP_USERNAME
+          value: "{{ .Values.smtp.username }}"
+        - name: SMTP_PASSWORD
+          value: "{{ .Values.smtp.password }}"
+        - name: SMTP_SSL
+          value: "{{ .Values.smtp.ssl }}"
+
+        - name: SERVER_NAME
+          value: "{{ .Values.ui.host }}"
+
+        volumeMounts:
+          - name: vault-certificate
+            mountPath: /etc/vault-certificate
+            readOnly: true
+          - name: vault-token
+            mountPath: /etc/vault
+
+        resources:
+          limits:
+            cpu: 300m
+            memory: 256Mi
+          requests:
+            cpu: 100m
+            memory: 128Mi

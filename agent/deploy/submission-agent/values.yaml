@@ -1,6 +1,6 @@
 name: submission-agent
 namespace: development
-loglevel: 10
+loglevel: 20
 image:
   name: "arxiv/submission-agent"
   tag: "0.0"

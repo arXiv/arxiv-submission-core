@@ -34,7 +34,7 @@ spec:
         - name: LOGLEVEL
           value: "{{ .Values.loglevel }}"
         - name: SUBMISSION_AGENT_BROKER_URL
-          value: "{{ .Values.redis.host }}:{{ .Values.redis.port }}/{{ .Values.redis.db }}"
+          value: "redis://{{ .Values.redis.host }}:{{ .Values.redis.port }}/{{ .Values.redis.db }}"
         - name: AGENT_DATABASE_HOST
           value: "{{ .Values.database.host }}"
 
@@ -79,7 +79,7 @@ spec:
           value: "{{ .Values.compiler.proto }}"
         - name: PLAINTEXT_PROTO
           value: "{{ .Values.plaintext.proto }}"
-        - name: FILE_MANAGER_PROTO
+        - name: FILEMANAGER_PROTO
           value: "{{ .Values.filemanager.proto }}"
 
         - name: EMAIL_ENABLED

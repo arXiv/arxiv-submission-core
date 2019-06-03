@@ -14,7 +14,7 @@ discarding expensive results from previous steps.
 
 from flask import Flask
 
-from .runner.async import get_or_create_worker_app
+from .runner.async_runner import get_or_create_worker_app
 from .factory import create_app
 
 import logging

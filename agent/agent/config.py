@@ -197,6 +197,8 @@ QUEUE_NAME_PREFIX = environ.get('SUBMISSION_AGENT_QUEUE_NAME_PREFIX',
                                 'submission-agent-')
 """Used to differentiate our tasks from those of others on a shared broker."""
 
+TASK_DEFAULT_QUEUE = 'submission-worker'
+
 PREFETCH_MULTIPLIER = int(environ.get(
     'SUBMISSION_AGENT_WORKER_PREFETCH_MULTIPLIER',
     '1'
@@ -226,41 +228,41 @@ CELERY_RESULT_SERIALIZER = 'process-json'
 # for details on service DNS and environment variables in k8s.
 
 # Integration with the file manager service.
-FILE_MANAGER_HOST = environ.get('FILEMANAGER_SERVICE_HOST', 'arxiv.org')
+FILEMANAGER_HOST = environ.get('FILEMANAGER_SERVICE_HOST', 'arxiv.org')
 """Hostname or addreess of the filemanager service."""
 
-FILE_MANAGER_PORT = environ.get('FILEMANAGER_SERVICE_PORT', '443')
+FILEMANAGER_PORT = environ.get('FILEMANAGER_SERVICE_PORT', '443')
 """Port for the filemanager service."""
 
-FILE_MANAGER_PROTO = environ.get(
-    f'FILEMANAGER_PORT_{FILE_MANAGER_PORT}_PROTO',
-    environ.get('FILE_MANAGER_PROTO', 'https')
+FILEMANAGER_PROTO = environ.get(
+    f'FILEMANAGER_PORT_{FILEMANAGER_PORT}_PROTO',
+    environ.get('FILEMANAGER_PROTO', 'https')
 )
 """Protocol for the filemanager service."""
 
-FILE_MANAGER_PATH = environ.get('FILE_MANAGER_PATH', '').lstrip('/')
+FILEMANAGER_PATH = environ.get('FILEMANAGER_PATH', '').lstrip('/')
 """Path at which the filemanager service is deployed."""
 
-FILE_MANAGER_ENDPOINT = environ.get(
-    'FILE_MANAGER_ENDPOINT',
-    '%s://%s:%s/%s' % (FILE_MANAGER_PROTO, FILE_MANAGER_HOST,
-                       FILE_MANAGER_PORT, FILE_MANAGER_PATH)
+FILEMANAGER_ENDPOINT = environ.get(
+    'FILEMANAGER_ENDPOINT',
+    '%s://%s:%s/%s' % (FILEMANAGER_PROTO, FILEMANAGER_HOST,
+                       FILEMANAGER_PORT, FILEMANAGER_PATH)
 )
 """
 Full URL to the root filemanager service API endpoint.
 
-If not explicitly provided, this is composed from :const:`FILE_MANAGER_HOST`,
-:const:`FILE_MANAGER_PORT`, :const:`FILE_MANAGER_PROTO`, and
-:const:`FILE_MANAGER_PATH`.
+If not explicitly provided, this is composed from :const:`FILEMANAGER_HOST`,
+:const:`FILEMANAGER_PORT`, :const:`FILEMANAGER_PROTO`, and
+:const:`FILEMANAGER_PATH`.
 """
 
-FILE_MANAGER_VERIFY = bool(int(environ.get('FILE_MANAGER_VERIFY', '1')))
+FILEMANAGER_VERIFY = bool(int(environ.get('FILEMANAGER_VERIFY', '1')))
 """Enable/disable SSL certificate verification for filemanager service."""
 
-FILE_MANAGER_STATUS_TIMEOUT \
-    = float(environ.get('FILE_MANAGER_STATUS_TIMEOUT', 1.0))
+FILEMANAGER_STATUS_TIMEOUT \
+    = float(environ.get('FILEMANAGER_STATUS_TIMEOUT', 1.0))
 
-if FILE_MANAGER_PROTO == 'https' and not FILE_MANAGER_VERIFY:
+if FILEMANAGER_PROTO == 'https' and not FILEMANAGER_VERIFY:
     warnings.warn('Certificate verification for filemanager is disabled; this'
                   ' should not be disabled in production.')
 

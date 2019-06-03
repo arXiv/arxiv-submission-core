@@ -93,6 +93,6 @@ def create_app() -> Flask:
                      timeout=app.config['COMPILER_STATUS_TIMEOUT'])
             wait_for(PlainTextService.current_session(),
                      timeout=app.config['PLAINTEXT_STATUS_TIMEOUT'])
-            # FILE_MANAGER_STATUS_TIMEOUT
+            # FILEMANAGER_STATUS_TIMEOUT
         logger.info('All upstream services are available; ready to start')
     return app

@@ -3,7 +3,7 @@
 from unittest import TestCase, mock
 
 from ... import process
-from ...runner import base, async
+from ...runner import base, async_runner
 
 
 class TestProcess(TestCase):
