@@ -101,7 +101,7 @@ class TestWorkingSubmission(TestCase):
             self.assertEqual(submission.status,
                              domain.event.Submission.DELETED,
                              "Submission is in the deleted state")
-            self.assertFalse(submission.active,
+            self.assertFalse(submission.is_active,
                              "The submission is no longer considered active.")
             self.assertEqual(len(submission.versions), 0,
                              "There are no announced versions")
@@ -111,7 +111,7 @@ class TestWorkingSubmission(TestCase):
             self.assertEqual(submission.status,
                              domain.event.Submission.DELETED,
                              "Submission is in the deleted state")
-            self.assertFalse(submission.active,
+            self.assertFalse(submission.is_active,
                              "The submission is no longer considered active.")
             self.assertEqual(len(submission.versions), 0,
                              "There are no announced versions")

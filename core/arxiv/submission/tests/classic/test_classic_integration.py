@@ -423,8 +423,8 @@ class TestReplacementIntegration(TestCase):
         self.assertEqual(replacement.version,
                          submission_to_replace.version + 1)
         self.assertEqual(replacement.status, Submission.WORKING)
-        self.assertTrue(submission_to_replace.announced)
-        self.assertFalse(replacement.announced)
+        self.assertTrue(submission_to_replace.is_announced)
+        self.assertFalse(replacement.is_announced)
 
         self.assertIsNone(replacement.source_content)
 
@@ -579,8 +579,8 @@ class TestJREFIntegration(TestCase):
         self.assertEqual(jref_submission.version, submission_to_jref.version,
                          "The paper version should not change")
         self.assertEqual(jref_submission.status, Submission.ANNOUNCED)
-        self.assertTrue(submission_to_jref.announced)
-        self.assertTrue(jref_submission.announced)
+        self.assertTrue(submission_to_jref.is_announced)
+        self.assertTrue(jref_submission.is_announced)
 
         self.assertIsNotNone(jref_submission.source_content)
 
@@ -879,7 +879,7 @@ class TestPublicationIntegration(TestCase):
                              "Submission should have announced status.")
             self.assertEqual(submission.arxiv_id, "1901.00123",
                              "arXiv paper ID should be set")
-            self.assertFalse(submission.active,
+            self.assertFalse(submission.is_active,
                              "Announced submission should no longer be active")
 
     @mock.patch(f'{core.__name__}.StreamPublisher', mock.MagicMock())
@@ -916,7 +916,7 @@ class TestPublicationIntegration(TestCase):
                              "Submission should have announced status.")
             self.assertEqual(submission.arxiv_id, "1901.00123",
                              "arXiv paper ID should be set")
-            self.assertFalse(submission.active,
+            self.assertFalse(submission.is_active,
                              "Announced submission should no longer be active")
 
     @mock.patch(f'{core.__name__}.StreamPublisher', mock.MagicMock())

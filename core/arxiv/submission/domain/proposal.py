@@ -46,7 +46,7 @@ class Proposal:
         """Name (str) of the type of annotation."""
         return self.proposed_event_type.__name__
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """Check our enums and agents."""
         if self.creator and type(self.creator) is dict:
             self.creator = agent_factory(**self.creator)
@@ -54,11 +54,11 @@ class Proposal:
             self.proxy = agent_factory(**self.proxy)
         self.status = self.Status(self.status)
 
-    def is_rejected(self):
+    def is_rejected(self) -> bool:
         return self.status == self.Status.REJECTED
 
-    def is_accepted(self):
+    def is_accepted(self) -> bool:
         return self.status == self.Status.ACCEPTED
 
-    def is_pending(self):
+    def is_pending(self) -> bool:
         return self.status == self.Status.PENDING

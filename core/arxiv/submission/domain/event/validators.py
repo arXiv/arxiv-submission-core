@@ -24,7 +24,7 @@ def submission_is_not_finalized(event: Event, submission: Submission) -> None:
         Raised if the submission is finalized.
 
     """
-    if submission.finalized:
+    if submission.is_finalized:
         raise InvalidEvent(event, "Cannot apply to a finalized submission")
 
 

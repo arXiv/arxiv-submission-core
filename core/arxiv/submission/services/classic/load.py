@@ -88,7 +88,7 @@ def load(rows: List[models.Submission]) -> domain.Submission:
                 version_submission = patch_hold(version_submission, row)
         versions.append(version_submission)
     submission = copy.deepcopy(versions[-1])
-    submission.versions = [ver for ver in versions if ver and ver.announced]
+    submission.versions = [ver for ver in versions if ver and ver.is_announced]
     return submission
 
 

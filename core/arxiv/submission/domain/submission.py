@@ -387,22 +387,22 @@ class Submission:
                 if isinstance(v, Feature)}
 
     @property
-    def active(self) -> bool:
+    def is_active(self) -> bool:
         """Actively moving through the submission workflow."""
         return self.status not in [self.DELETED, self.ANNOUNCED]
 
     @property
-    def announced(self) -> bool:
+    def is_announced(self) -> bool:
         """The submission has been announced."""
         return self.status == self.ANNOUNCED
 
     @property
-    def finalized(self) -> bool:
+    def is_finalized(self) -> bool:
         """Submitter has indicated submission is ready for publication."""
         return self.status not in [self.WORKING, self.DELETED]
 
     @property
-    def deleted(self) -> bool:
+    def is_deleted(self) -> bool:
         """Submission is removed."""
         return self.status == self.DELETED
 

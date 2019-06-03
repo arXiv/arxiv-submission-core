@@ -177,7 +177,7 @@ class CreateSubmissionVersion(Event):
 
     def validate(self, submission: Submission) -> None:
         """Only applies to announced submissions."""
-        if not submission.announced:
+        if not submission.is_announced:
             raise InvalidEvent(self, "Must already be announced")
         validators.no_active_requests(self, submission)
 
@@ -208,7 +208,7 @@ class Rollback(Event):
 
     def validate(self, submission: Submission) -> None:
         """Only applies to submissions in an unannounced state."""
-        if submission.announced:
+        if submission.is_announced:
             raise InvalidEvent(self, "Cannot already be announced")
         elif submission.version > 1 and not submission.versions:
             raise InvalidEvent(self, "No announced version to which to revert")
@@ -551,7 +551,7 @@ class SetDOI(Event):
     def validate(self, submission: Submission) -> None:
         """Validate the DOI value."""
         if submission.status == Submission.SUBMITTED \
-                and not submission.announced:
+                and not submission.is_announced:
             raise InvalidEvent(self, 'Cannot edit a finalized submission')
         if not self.doi:    # Can be blank.
             return
@@ -1001,14 +1001,14 @@ class FinalizeSubmission(Event):
 
     def validate(self, submission: Submission) -> None:
         """Ensure that all required data/steps are complete."""
-        if submission.finalized:
+        if submission.is_finalized:
             raise InvalidEvent(self, "Submission already finalized")
-        if not submission.active:
+        if not submission.is_active:
             raise InvalidEvent(self, "Submission must be active")
         self._required_fields_are_complete(submission)
 
     def project(self, submission: Submission) -> Submission:
-        """Set :attr:`Submission.finalized`."""
+        """Set :attr:`Submission.is_finalized`."""
         submission.status = Submission.SUBMITTED
         submission.submitted = datetime.now(UTC)
         return submission
@@ -1033,16 +1033,16 @@ class UnFinalizeSubmission(Event):
     def validate(self, submission: Submission) -> None:
         """Validate the unfinalize action."""
         self._must_be_finalized(submission)
-        if submission.announced:
+        if submission.is_announced:
             raise InvalidEvent(self, "Cannot unfinalize an announced paper")
 
     def _must_be_finalized(self, submission: Submission) -> None:
         """May only unfinalize a finalized submission."""
-        if not submission.finalized:
+        if not submission.is_finalized:
             raise InvalidEvent(self, "Submission is not finalized")
 
     def project(self, submission: Submission) -> Submission:
-        """Set :attr:`Submission.finalized`."""
+        """Set :attr:`Submission.is_finalized`."""
         submission.status = Submission.WORKING
         submission.submitted = None
         return submission

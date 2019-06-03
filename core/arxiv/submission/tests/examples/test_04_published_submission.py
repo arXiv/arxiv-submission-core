@@ -103,7 +103,7 @@ class TestAnnouncedSubmission(TestCase):
             self.assertEqual(submission.status,
                              domain.submission.Submission.ANNOUNCED,
                              "The submission is in the submitted state")
-            self.assertTrue(submission.announced, "Submission is announced")
+            self.assertTrue(submission.is_announced, "Submission is announced")
             self.assertEqual(len(submission.versions), 1,
                              "There is one announced versions")
 
@@ -112,7 +112,7 @@ class TestAnnouncedSubmission(TestCase):
             self.assertEqual(submission.status,
                              domain.submission.Submission.ANNOUNCED,
                              "The submission is in the submitted state")
-            self.assertTrue(submission.announced, "Submission is announced")
+            self.assertTrue(submission.is_announced, "Submission is announced")
             self.assertEqual(len(submission.versions), 1,
                              "There is one announced versions")
 

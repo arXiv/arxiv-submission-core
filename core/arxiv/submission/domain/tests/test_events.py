@@ -63,8 +63,8 @@ class TestWithdrawalSubmission(TestCase):
         self.assertEqual(replacement.status,
                          submission.Submission.ANNOUNCED)
         self.assertTrue(replacement.has_active_requests)
-        self.assertTrue(self.submission.announced)
-        self.assertTrue(replacement.announced)
+        self.assertTrue(self.submission.is_announced)
+        self.assertTrue(replacement.is_announced)
 
     def test_request_without_a_reason(self):
         """A reason is required."""
@@ -128,8 +128,8 @@ class TestReplacementSubmission(TestCase):
         self.assertEqual(replacement.arxiv_id, self.submission.arxiv_id)
         self.assertEqual(replacement.version, self.submission.version + 1)
         self.assertEqual(replacement.status, submission.Submission.WORKING)
-        self.assertTrue(self.submission.announced)
-        self.assertFalse(replacement.announced)
+        self.assertTrue(self.submission.is_announced)
+        self.assertFalse(replacement.is_announced)
 
         self.assertIsNone(replacement.source_content)
 
@@ -207,8 +207,8 @@ class TestDOIorJREFAfterAnnounce(TestCase):
         self.assertEqual(after.arxiv_id, self.submission.arxiv_id)
         self.assertEqual(after.version, self.submission.version)
         self.assertEqual(after.status, submission.Submission.ANNOUNCED)
-        self.assertTrue(self.submission.announced)
-        self.assertTrue(after.announced)
+        self.assertTrue(self.submission.is_announced)
+        self.assertTrue(after.is_announced)
 
         self.assertIsNotNone(after.submission_id)
         self.assertEqual(self.submission.submission_id, after.submission_id)

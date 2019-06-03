@@ -161,7 +161,7 @@ def get_user_submissions_fast(user_id: int) -> List[Submission]:
         else:
             dbss = sorted(dbss, key=lambda dbs: dbs.submission_id)
             submissions.append(load.load(dbss))
-    return [s for s in submissions if not s.deleted]
+    return [s for s in submissions if not s.is_deleted]
 
 
 @retry(ClassicBaseException, tries=3, delay=1)
@@ -316,7 +316,7 @@ def store_event(event: Event, before: Optional[Submission],
 
         # After the original submission is announced, a new Document row is
         # created. This Document is shared by all subsequent Submission rows.
-        if before.announced:
+        if before.is_announced:
             doc_id = _load_document_id(before.arxiv_id, before.version)
 
         JREFEvents = [SetDOI, SetJournalReference, SetReportNumber]
@@ -344,7 +344,7 @@ def store_event(event: Event, before: Optional[Submission],
 
         # Adding DOIs and citation information (so-called "journal reference")
         # also requires a new row. The version number is not incremented.
-        elif before.announced and type(event) in JREFEvents:
+        elif before.is_announced and type(event) in JREFEvents:
             dbs = _create_jref(doc_id, before.arxiv_id, after.version, after,
                                event.created)
 

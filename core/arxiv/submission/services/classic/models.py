@@ -267,18 +267,18 @@ class Submission(Base):    # type: ignore
             self.must_process = 1
 
         # Not submitted -> Submitted.
-        if submission.finalized \
+        if submission.is_finalized \
                 and self.status in [Submission.NOT_SUBMITTED, None]:
             self.status = Submission.SUBMITTED
             self.submit_time = submission.updated
         # Delete.
-        elif submission.deleted:
+        elif submission.is_deleted:
             self.status = Submission.USER_DELETED
         elif submission.is_on_hold:
             self.status = Submission.ON_HOLD
         # Unsubmit.
         elif self.status is None or self.status <= Submission.ON_HOLD:
-            if not submission.finalized:
+            if not submission.is_finalized:
                 self.status = Submission.NOT_SUBMITTED
 
         if submission.primary_classification:
