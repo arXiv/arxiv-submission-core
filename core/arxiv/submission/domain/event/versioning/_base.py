@@ -39,7 +39,7 @@ class Version(str):
         return semver.compare(self, other) > 0
 
     def __ge__(self, other: 'Version') -> bool:
-        """Greter-than-equals comparison using semantic versioning."""
+        """Greater-than-equals comparison using semantic versioning."""
         return semver.compare(self, other) >= 0
 
 
