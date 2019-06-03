@@ -26,7 +26,7 @@ ET = timezone('US/Eastern')
 Weekdays = IntEnum('Weekdays', 'Mon Tue Wed Thu Fri Sat Sun', start=1)
 
 ANNOUNCE_TIME = 20
-FREEZE_TIME = 13
+FREEZE_TIME = 14
 
 WINDOWS = [
     ((Weekdays.Fri - 7, 14), (Weekdays.Mon, 14), (Weekdays.Mon, 20)),
