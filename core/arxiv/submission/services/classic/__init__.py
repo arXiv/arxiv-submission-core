@@ -49,7 +49,8 @@ from arxiv.base import logging
 from arxiv.base.globals import get_application_config, get_application_global
 from ...domain.event import Event, Announce, RequestWithdrawal, SetDOI, \
     SetJournalReference, SetReportNumber, Rollback, RequestCrossList, \
-    ApplyRequest, RejectRequest, ApproveRequest, AddProposal, CancelRequest
+    ApplyRequest, RejectRequest, ApproveRequest, AddProposal, CancelRequest, \
+    CreateSubmission
 
 from ...domain.submission import License, Submission, WithdrawalRequest, \
     CrossListClassificationRequest
@@ -257,12 +258,16 @@ def get_submission(submission_id: int, for_update: bool = False) \
         subsequent_rows = list(subsequent_rows)   # Execute query.
         logger.debug('Got subsequent_rows: %s', subsequent_rows)
 
-    # If this submission originated in the classic system, we will have usable
-    # rows from the submission table, but no events. In that case, fall back
-    # to ``load.load()``, which relies only on classic rows.
     try:
         _events = get_events(submission_id)
     except NoSuchSubmission:
+        _events = []
+
+    # If this submission originated in the classic system, we will have usable
+    # rows from the submission table, and either no events or events that do
+    # not start with a CreateSubmission event. In that case, fall back to
+    # ``load.load()``, which relies only on classic rows.
+    if not _events or not isinstance(_events[0], CreateSubmission):
         logger.info('Loading a classic submission: %s', submission_id)
         submission = load.load([original_row] + subsequent_rows)
         if submission is None:
@@ -648,9 +653,14 @@ def init_app(app: Flask) -> None:
     db.init_app(app)
 
     @app.teardown_request
-    def teardown_request(exception):
+    def teardown_request(exception) -> None:
         if exception:
             db.session.rollback()
+        db.session.remove()
+
+    @app.teardown_appcontext
+    def teardown_appcontext() -> None:
+        db.session.rollback()
         db.session.remove()
 
 
