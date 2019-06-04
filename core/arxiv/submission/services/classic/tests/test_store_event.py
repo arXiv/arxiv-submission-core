@@ -92,20 +92,21 @@ class TestStoreEvent(TestCase):
                 .get(after.submission_id)
             db_events = session.query(DBEvent).all()
 
-        for key, value in metadata.items():
-            if key == 'authors':
-                continue
-            self.assertEqual(getattr(db_submission, key), value,
-                             f"The value of {key} should be {value}")
-        self.assertEqual(db_submission.authors,
-                         after.metadata.authors_display,
-                         "The canonical author string should be used to"
-                         " update the submission in the database.")
+            for key, value in metadata.items():
+                if key == 'authors':
+                    continue
+                self.assertEqual(getattr(db_submission, key), value,
+                                 f"The value of {key} should be {value}")
+            self.assertEqual(db_submission.authors,
+                             after.metadata.authors_display,
+                             "The canonical author string should be used to"
+                             " update the submission in the database.")
 
-        self.assertEqual(len(db_events), 8, "Eight events should be stored")
-        for db_event in db_events:
-            self.assertEqual(db_event.submission_id, after.submission_id,
-                             "The submission id should be set")
+            self.assertEqual(len(db_events), 8,
+                             "Eight events should be stored")
+            for db_event in db_events:
+                self.assertEqual(db_event.submission_id, after.submission_id,
+                                 "The submission id should be set")
 
     def test_store_events_with_finalized_submission(self):
         """Store events and a finalized submission."""
@@ -166,15 +167,15 @@ class TestStoreEvent(TestCase):
                 .get(after.submission_id)
             db_events = session.query(DBEvent).all()
 
-        self.assertEqual(db_submission.submission_id, after.submission_id,
-                         "The submission should be updated with the PK id.")
-        self.assertEqual(db_submission.status, models.Submission.SUBMITTED,
-                         "Submission should be in submitted state.")
-        self.assertEqual(len(db_events), len(events),
-                         "%i events should be stored" % len(events))
-        for db_event in db_events:
-            self.assertEqual(db_event.submission_id, after.submission_id,
-                             "The submission id should be set")
+            self.assertEqual(db_submission.submission_id, after.submission_id,
+                             "The submission should be updated with the PK id")
+            self.assertEqual(db_submission.status, models.Submission.SUBMITTED,
+                             "Submission should be in submitted state.")
+            self.assertEqual(len(db_events), len(events),
+                             "%i events should be stored" % len(events))
+            for db_event in db_events:
+                self.assertEqual(db_event.submission_id, after.submission_id,
+                                 "The submission id should be set")
 
     def test_store_doi_jref_with_publication(self):
         """:class:`SetDOI` or :class:`SetJournalReference` after pub."""
@@ -303,14 +304,15 @@ class TestStoreEvent(TestCase):
                 .get(after.submission_id)
             db_events = session.query(DBEvent).all()
 
-        self.assertEqual(db_submission.submission_id, after.submission_id,
-                         "The submission should be updated with the PK id.")
-        self.assertEqual(len(db_events), 3, "Three events should be stored")
-        for db_event in db_events:
-            self.assertEqual(db_event.submission_id, after.submission_id,
-                             "The submission id should be set")
-        self.assertEqual(len(db_submission.categories), 2,
-                         "Two category relations should be set")
-        self.assertEqual(db_submission.primary_classification.category,
-                         after.primary_classification.category,
-                         "Primary classification should be set.")
+            self.assertEqual(db_submission.submission_id, after.submission_id,
+                             "The submission should be updated with the PK id")
+            self.assertEqual(len(db_events), 3,
+                             "Three events should be stored")
+            for db_event in db_events:
+                self.assertEqual(db_event.submission_id, after.submission_id,
+                                 "The submission id should be set")
+            self.assertEqual(len(db_submission.categories), 2,
+                             "Two category relations should be set")
+            self.assertEqual(db_submission.primary_classification.category,
+                             after.primary_classification.category,
+                             "Primary classification should be set.")

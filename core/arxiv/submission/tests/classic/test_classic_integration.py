@@ -406,40 +406,43 @@ class TestReplacementIntegration(TestCase):
         with self.app.app_context():
             submission_to_replace, _ = load(self.submission.submission_id)
             creation_event = CreateSubmissionVersion(creator=self.submitter)
-            replacement, _ = save(creation_event, submission_id=self.submission.submission_id)
+            replacement, _ = save(creation_event,
+                                  submission_id=self.submission.submission_id)
 
         with self.app.app_context():
             replacement, _ = load(replacement.submission_id)
 
             session = classic.current_session()
             db_replacement = session.query(classic.models.Submission) \
-                .filter(classic.models.Submission.doc_paper_id == replacement.arxiv_id) \
+                .filter(classic.models.Submission.doc_paper_id
+                        == replacement.arxiv_id) \
                 .order_by(classic.models.Submission.submission_id.desc()) \
                 .first()
 
-        # Verify that the round-trip on the replacement submission worked as
-        # expected.
-        self.assertEqual(replacement.arxiv_id, submission_to_replace.arxiv_id)
-        self.assertEqual(replacement.version,
-                         submission_to_replace.version + 1)
-        self.assertEqual(replacement.status, Submission.WORKING)
-        self.assertTrue(submission_to_replace.is_announced)
-        self.assertFalse(replacement.is_announced)
+            # Verify that the round-trip on the replacement submission worked
+            # as expected.
+            self.assertEqual(replacement.arxiv_id,
+                             submission_to_replace.arxiv_id)
+            self.assertEqual(replacement.version,
+                             submission_to_replace.version + 1)
+            self.assertEqual(replacement.status, Submission.WORKING)
+            self.assertTrue(submission_to_replace.is_announced)
+            self.assertFalse(replacement.is_announced)
 
-        self.assertIsNone(replacement.source_content)
+            self.assertIsNone(replacement.source_content)
 
-        self.assertFalse(replacement.submitter_contact_verified)
-        self.assertFalse(replacement.submitter_accepts_policy)
-        self.assertFalse(replacement.submitter_confirmed_preview)
-        self.assertFalse(replacement.submitter_contact_verified)
+            self.assertFalse(replacement.submitter_contact_verified)
+            self.assertFalse(replacement.submitter_accepts_policy)
+            self.assertFalse(replacement.submitter_confirmed_preview)
+            self.assertFalse(replacement.submitter_contact_verified)
 
-        # Verify that the database is in the right state for downstream
-        # integrations.
-        self.assertEqual(db_replacement.status,
-                         classic.models.Submission.NEW)
-        self.assertEqual(db_replacement.type,
-                         classic.models.Submission.REPLACEMENT)
-        self.assertEqual(db_replacement.doc_paper_id, '1901.00123')
+            # Verify that the database is in the right state for downstream
+            # integrations.
+            self.assertEqual(db_replacement.status,
+                             classic.models.Submission.NEW)
+            self.assertEqual(db_replacement.type,
+                             classic.models.Submission.REPLACEMENT)
+            self.assertEqual(db_replacement.doc_paper_id, '1901.00123')
 
 
 class TestJREFIntegration(TestCase):
@@ -561,43 +564,49 @@ class TestJREFIntegration(TestCase):
                 creator=self.submitter,
                 journal_ref='Foo Rev 1, 2 (1903)'
             )
-            jref_submission, _ = save(event,
-                                      submission_id=self.submission.submission_id)
+            jref_submission, _ = save(
+                event,
+                submission_id=self.submission.submission_id
+            )
 
         with self.app.app_context():
             jref_submission, _ = load(jref_submission.submission_id)
             session = classic.current_session()
             db_jref = session.query(classic.models.Submission) \
-                .filter(classic.models.Submission.doc_paper_id == jref_submission.arxiv_id) \
-                .filter(classic.models.Submission.type == classic.models.Submission.JOURNAL_REFERENCE) \
+                .filter(classic.models.Submission.doc_paper_id
+                        == jref_submission.arxiv_id) \
+                .filter(classic.models.Submission.type
+                        == classic.models.Submission.JOURNAL_REFERENCE) \
                 .order_by(classic.models.Submission.submission_id.desc()) \
                 .first()
 
-        # Verify that the round-trip on the replacement submission worked as
-        # expected.
-        self.assertEqual(jref_submission.arxiv_id, submission_to_jref.arxiv_id)
-        self.assertEqual(jref_submission.version, submission_to_jref.version,
-                         "The paper version should not change")
-        self.assertEqual(jref_submission.status, Submission.ANNOUNCED)
-        self.assertTrue(submission_to_jref.is_announced)
-        self.assertTrue(jref_submission.is_announced)
+            # Verify that the round-trip on the replacement submission worked
+            # as expected.
+            self.assertEqual(jref_submission.arxiv_id,
+                             submission_to_jref.arxiv_id)
+            self.assertEqual(jref_submission.version,
+                             submission_to_jref.version,
+                             "The paper version should not change")
+            self.assertEqual(jref_submission.status, Submission.ANNOUNCED)
+            self.assertTrue(submission_to_jref.is_announced)
+            self.assertTrue(jref_submission.is_announced)
 
-        self.assertIsNotNone(jref_submission.source_content)
+            self.assertIsNotNone(jref_submission.source_content)
 
-        self.assertTrue(jref_submission.submitter_contact_verified)
-        self.assertTrue(jref_submission.submitter_accepts_policy)
-        self.assertTrue(jref_submission.submitter_confirmed_preview)
-        self.assertTrue(jref_submission.submitter_contact_verified)
+            self.assertTrue(jref_submission.submitter_contact_verified)
+            self.assertTrue(jref_submission.submitter_accepts_policy)
+            self.assertTrue(jref_submission.submitter_confirmed_preview)
+            self.assertTrue(jref_submission.submitter_contact_verified)
 
-        # Verify that the database is in the right state for downstream
-        # integrations.
-        self.assertEqual(db_jref.status,
-                         classic.models.Submission.PROCESSING_SUBMISSION)
-        self.assertEqual(db_jref.type,
-                         classic.models.Submission.JOURNAL_REFERENCE)
-        self.assertEqual(db_jref.doc_paper_id, '1901.00123')
-        self.assertEqual(db_jref.submitter_id,
-                         jref_submission.creator.native_id)
+            # Verify that the database is in the right state for downstream
+            # integrations.
+            self.assertEqual(db_jref.status,
+                             classic.models.Submission.PROCESSING_SUBMISSION)
+            self.assertEqual(db_jref.type,
+                             classic.models.Submission.JOURNAL_REFERENCE)
+            self.assertEqual(db_jref.doc_paper_id, '1901.00123')
+            self.assertEqual(db_jref.submitter_id,
+                             jref_submission.creator.native_id)
 
 
 class TestWithdrawalIntegration(TestCase):

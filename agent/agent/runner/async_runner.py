@@ -85,6 +85,9 @@ def create_worker_app() -> Celery:
     celery_app.conf.task_default_queue = config.TASK_DEFAULT_QUEUE
     celery_app.conf.prefetch_multiplier = config.PREFETCH_MULTIPLIER
     celery_app.conf.task_acks_late = config.TASK_ACKS_LATE
+    celery_app.conf.accept_content = config.CELERY_ACCEPT_CONTENT
+    celery_app.conf.task_serializer = config.CELERY_TASK_SERIALIZER
+    celery_app.conf.result_serializer = config.CELERY_RESULT_SERIALIZER
     celery_app.conf.backend = result_backend
 
     register_save = celery_app.task(

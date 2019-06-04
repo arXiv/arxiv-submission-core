@@ -85,7 +85,10 @@ def transaction() -> Generator:
     logger.debug('transaction with session %s', id(session))
     try:
         yield session
-        session.commit()
+        # Only commit if there are un-flushed changes. The caller may commit
+        # explicitly, e.g. to do exception handling.
+        if session.dirty or session.deleted or session.new:
+            session.commit()
         logger.debug('committed!')
     except ClassicBaseException as e:
         logger.debug('Command failed, rolling back: %s', str(e))

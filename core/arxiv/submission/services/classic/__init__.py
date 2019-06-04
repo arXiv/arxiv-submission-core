@@ -659,7 +659,7 @@ def init_app(app: Flask) -> None:
         db.session.remove()
 
     @app.teardown_appcontext
-    def teardown_appcontext() -> None:
+    def teardown_appcontext(*args, **kwargs) -> None:
         db.session.rollback()
         db.session.remove()
 
