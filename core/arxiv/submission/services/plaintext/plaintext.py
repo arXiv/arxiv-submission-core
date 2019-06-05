@@ -71,7 +71,7 @@ class PlainTextService(service.HTTPIntegration):
         """Get the URL of the extraction endpoint."""
         return f'/submission/{source_id}'
 
-    def status_endpoint(self, source_id: str):
+    def status_endpoint(self, source_id: str) -> str:
         """Get the URL of the extraction status endpoint."""
         return f'/submission/{source_id}/status'
 
