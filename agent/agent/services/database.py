@@ -70,7 +70,13 @@ def create_all() -> None:
 
 def tables_exist() -> bool:
     """Determine whether or not these database tables exist."""
-    return db.engine.dialect.has_table(db.engine, 'checkpoint')
+    try:
+        db.session.query("1").from_statement(text("SELECT 1 FROM checkpoint limit 1")).all()
+        db.session.query("1").from_statement(text("SELECT 1 FROM process_status_events limit 1")).all()
+    except Exception as e:
+        return False
+    return True
+    # return db.engine.dialect.has_table(db.engine, 'checkpoint')
 
 
 class Unavailable(IOError):

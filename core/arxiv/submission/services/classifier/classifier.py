@@ -101,6 +101,6 @@ class Classifier(service.HTTPIntegration):
             Feature counts, if provided.
 
         """
-        _path = '/classifier/'
+        _path = '/classifier/'    # TODO: this MUST be configurable.
         data, _, _ = self.json('post', _path, data=content, timeout=timeout)
         return self._suggestions(data), self._flags(data), self._counts(data)
