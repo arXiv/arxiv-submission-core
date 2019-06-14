@@ -15,8 +15,8 @@ from ....domain.event import CreateSubmission, \
     SetComments, SetAuthors, Announce, ConfirmAuthorship, ConfirmPolicy, \
     SetUploadPackage
 from .. import init_app, create_all, drop_all, models, DBEvent, \
-    get_submission, current_session, get_licenses, exceptions, store_event, \
-    transaction
+    get_submission, get_user_submissions_fast, current_session, get_licenses, \
+    exceptions, store_event, transaction
 
 from .util import in_memory_db
 
@@ -157,3 +157,53 @@ class TestGetSubmission(TestCase):
         self.assertTrue(submission_loaded.is_on_hold,
                         "Hold status should reflect hold action performed"
                         " outside the purview of the event model.")
+
+    def test_get_submission_list(self):
+        """Test that the set of submissions for a user can be retrieved."""
+        user = User(42, 'adent@example.org',
+                    endorsements=['astro-ph.GA', 'astro-ph.EP'])
+        events = [
+            CreateSubmission(creator=user),
+            SetTitle(creator=user, title='Foo title'),
+            SetAbstract(creator=user, abstract='Indeed' * 20),
+            SetAuthors(creator=user, authors=[
+                Author(order=0, forename='Arthur', surname='Dent',
+                       email='joe@blo.ggs'),
+                Author(order=1, forename='Ford', surname='Prefect',
+                       email='j@doe.com'),
+            ]),
+            SetLicense(creator=user, license_uri='http://foo.org/1.0/',
+                       license_name='Foo zero 1.0'),
+            SetPrimaryClassification(creator=user, category='astro-ph.GA'),
+            ConfirmPolicy(creator=user),
+            SetUploadPackage(creator=user, identifier='1'),
+            ConfirmContactInformation(creator=user),
+            FinalizeSubmission(creator=user)
+        ]
+
+        with in_memory_db():
+            # User creates and finalizes submission.
+            with transaction():
+                before = None
+                for i, event in enumerate(list(events)):
+                    event.created = datetime.now(UTC)
+                    after = event.apply(before)
+                    event, after = store_event(event, before, after)
+                    events[i] = event
+                    before = after
+                submission = after
+                ident = submission.submission_id
+
+            session = current_session()
+            # Now get the submissions for this user.
+            submissions = get_user_submissions_fast(42)
+            print(f'submissions {submissions}')
+            submission_loaded, _ = get_submission(ident)
+
+        self.assertEqual(submission.metadata.title,
+                         submission_loaded.metadata.title,
+                         "Event-derived metadata should be preserved.")
+
+        self.assertEqual(len(submissions),
+                         1,
+                         f"There should be exactly one submission.")
