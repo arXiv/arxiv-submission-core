@@ -162,17 +162,37 @@ class TestGetSubmission(TestCase):
         """Test that the set of submissions for a user can be retrieved."""
         user = User(42, 'adent@example.org',
                     endorsements=['astro-ph.GA', 'astro-ph.EP'])
-        events = [
+        events1 = [
+            # first submission
             CreateSubmission(creator=user),
             SetTitle(creator=user, title='Foo title'),
             SetAbstract(creator=user, abstract='Indeed' * 20),
             SetAuthors(creator=user, authors=[
                 Author(order=0, forename='Arthur', surname='Dent',
-                       email='joe@blo.ggs'),
+                       email='adent@example.org'),
                 Author(order=1, forename='Ford', surname='Prefect',
-                       email='j@doe.com'),
+                       email='fprefect@example.org'),
             ]),
-            SetLicense(creator=user, license_uri='http://foo.org/1.0/',
+            SetLicense(creator=user, license_uri='http://creativecommons.org/publicdomain/zero/1.0/',
+                       license_name='Foo zero 1.0'),
+            SetPrimaryClassification(creator=user, category='astro-ph.GA'),
+            ConfirmPolicy(creator=user),
+            SetUploadPackage(creator=user, identifier='1'),
+            ConfirmContactInformation(creator=user),
+            FinalizeSubmission(creator=user)
+        ]
+        events2 = [
+            # second submission
+            CreateSubmission(creator=user),
+            SetTitle(creator=user, title='Bar title'),
+            SetAbstract(creator=user, abstract='Indubitably' * 20),
+            SetAuthors(creator=user, authors=[
+                Author(order=0, forename='Jane', surname='Doe',
+                       email='jadoe@example.com'),
+                Author(order=1, forename='John', surname='Doe',
+                       email='jodoe@example.com'),
+            ]),
+            SetLicense(creator=user, license_uri='http://creativecommons.org/publicdomain/zero/1.0/',
                        license_name='Foo zero 1.0'),
             SetPrimaryClassification(creator=user, category='astro-ph.GA'),
             ConfirmPolicy(creator=user),
@@ -181,29 +201,44 @@ class TestGetSubmission(TestCase):
             FinalizeSubmission(creator=user)
         ]
 
+        # TODO: create "classic", non-event-derived submission
+
         with in_memory_db():
             # User creates and finalizes submission.
             with transaction():
                 before = None
-                for i, event in enumerate(list(events)):
+                for i, event in enumerate(list(events1)):
                     event.created = datetime.now(UTC)
                     after = event.apply(before)
                     event, after = store_event(event, before, after)
-                    events[i] = event
+                    events1[i] = event
                     before = after
-                submission = after
-                ident = submission.submission_id
+                submission1 = after
+                ident1 = submission1.submission_id
+
+                before = None
+                for i, event in enumerate(list(events2)):
+                    event.created = datetime.now(UTC)
+                    after = event.apply(before)
+                    event, after = store_event(event, before, after)
+                    events2[i] = event
+                    before = after
+                submission2 = after
+                ident2 = submission2.submission_id
 
             session = current_session()
             # Now get the submissions for this user.
             submissions = get_user_submissions_fast(42)
-            print(f'submissions {submissions}')
-            submission_loaded, _ = get_submission(ident)
+            submission_loaded1, _ = get_submission(ident1)
+            submission_loaded2, _ = get_submission(ident2)
 
-        self.assertEqual(submission.metadata.title,
-                         submission_loaded.metadata.title,
-                         "Event-derived metadata should be preserved.")
+        self.assertEqual(submission1.metadata.title,
+                         submission_loaded1.metadata.title,
+                         "Event-derived metadata for submission 1 should be preserved.")
+        self.assertEqual(submission2.metadata.title,
+                         submission_loaded2.metadata.title,
+                         "Event-derived metadata for submission 2 should be preserved.")
 
         self.assertEqual(len(submissions),
-                         1,
-                         f"There should be exactly one submission.")
+                         2,
+                         f"There should be exactly two NG submissions.")
