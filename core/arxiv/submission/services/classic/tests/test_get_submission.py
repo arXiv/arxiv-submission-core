@@ -226,7 +226,11 @@ class TestGetSubmission(TestCase):
                 submission2 = after
                 ident2 = submission2.submission_id
 
+            classic_sub = models.Submission(
+                type='new',
+                submitter_id=42)
             session = current_session()
+            session.add(classic_sub)
             # Now get the submissions for this user.
             submissions = get_user_submissions_fast(42)
             submission_loaded1, _ = get_submission(ident1)
@@ -241,4 +245,5 @@ class TestGetSubmission(TestCase):
 
         self.assertEqual(len(submissions),
                          2,
-                         f"There should be exactly two NG submissions.")
+                         "There should be exactly two NG submissions.")
+
