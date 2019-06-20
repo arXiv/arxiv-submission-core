@@ -515,7 +515,6 @@ class SetAbstract(Event):
     @staticmethod
     def cleanup(value: str) -> str:
         """Perform some light tidying on the abstract."""
-        value = re.sub(r"\s+", " ", value)          # Single spaces only.
         value = value.strip()   # Remove leading or trailing spaces
         # Tidy paragraphs which should be indicated with "\n  ".
         value = re.sub(r"[ ]+\n", "\n", value)
