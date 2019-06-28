@@ -67,11 +67,11 @@ class PlainTextService(service.HTTPIntegration):
             return False
         return True
 
-    def endpoint(self, source_id: str):
+    def endpoint(self, source_id: str) -> str:
         """Get the URL of the extraction endpoint."""
         return f'/submission/{source_id}'
 
-    def status_endpoint(self, source_id: str):
+    def status_endpoint(self, source_id: str) -> str:
         """Get the URL of the extraction status endpoint."""
         return f'/submission/{source_id}/status'
 
