@@ -201,8 +201,6 @@ class TestGetSubmission(TestCase):
             FinalizeSubmission(creator=user)
         ]
 
-        # TODO: create "classic", non-event-derived submission
-
         with in_memory_db():
             # User creates and finalizes submission.
             with transaction():
