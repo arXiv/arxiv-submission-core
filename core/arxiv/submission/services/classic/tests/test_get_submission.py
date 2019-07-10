@@ -224,11 +224,12 @@ class TestGetSubmission(TestCase):
                 submission2 = after
                 ident2 = submission2.submission_id
 
-            classic_sub = models.Submission(
-                type='new',
-                submitter_id=42)
-            session = current_session()
-            session.add(classic_sub)
+                classic_sub = models.Submission(
+                    type='new',
+                    submitter_id=42)
+                session = current_session()
+                session.add(classic_sub)
+
             # Now get the submissions for this user.
             submissions = get_user_submissions_fast(42)
             submission_loaded1, _ = get_submission(ident1)
