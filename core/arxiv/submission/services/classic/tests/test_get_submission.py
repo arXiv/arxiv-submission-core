@@ -15,8 +15,8 @@ from ....domain.event import CreateSubmission, \
     SetComments, SetAuthors, Announce, ConfirmAuthorship, ConfirmPolicy, \
     SetUploadPackage
 from .. import init_app, create_all, drop_all, models, DBEvent, \
-    get_submission, current_session, get_licenses, exceptions, store_event, \
-    transaction
+    get_submission, get_user_submissions_fast, current_session, get_licenses, \
+    exceptions, store_event, transaction
 
 from .util import in_memory_db
 
@@ -157,3 +157,92 @@ class TestGetSubmission(TestCase):
         self.assertTrue(submission_loaded.is_on_hold,
                         "Hold status should reflect hold action performed"
                         " outside the purview of the event model.")
+
+    def test_get_submission_list(self):
+        """Test that the set of submissions for a user can be retrieved."""
+        user = User(42, 'adent@example.org',
+                    endorsements=['astro-ph.GA', 'astro-ph.EP'])
+        events1 = [
+            # first submission
+            CreateSubmission(creator=user),
+            SetTitle(creator=user, title='Foo title'),
+            SetAbstract(creator=user, abstract='Indeed' * 20),
+            SetAuthors(creator=user, authors=[
+                Author(order=0, forename='Arthur', surname='Dent',
+                       email='adent@example.org'),
+                Author(order=1, forename='Ford', surname='Prefect',
+                       email='fprefect@example.org'),
+            ]),
+            SetLicense(creator=user, license_uri='http://creativecommons.org/publicdomain/zero/1.0/',
+                       license_name='Foo zero 1.0'),
+            SetPrimaryClassification(creator=user, category='astro-ph.GA'),
+            ConfirmPolicy(creator=user),
+            SetUploadPackage(creator=user, identifier='1'),
+            ConfirmContactInformation(creator=user),
+            FinalizeSubmission(creator=user)
+        ]
+        events2 = [
+            # second submission
+            CreateSubmission(creator=user),
+            SetTitle(creator=user, title='Bar title'),
+            SetAbstract(creator=user, abstract='Indubitably' * 20),
+            SetAuthors(creator=user, authors=[
+                Author(order=0, forename='Jane', surname='Doe',
+                       email='jadoe@example.com'),
+                Author(order=1, forename='John', surname='Doe',
+                       email='jodoe@example.com'),
+            ]),
+            SetLicense(creator=user, license_uri='http://creativecommons.org/publicdomain/zero/1.0/',
+                       license_name='Foo zero 1.0'),
+            SetPrimaryClassification(creator=user, category='astro-ph.GA'),
+            ConfirmPolicy(creator=user),
+            SetUploadPackage(creator=user, identifier='1'),
+            ConfirmContactInformation(creator=user),
+            FinalizeSubmission(creator=user)
+        ]
+
+        with in_memory_db():
+            # User creates and finalizes submission.
+            with transaction():
+                before = None
+                for i, event in enumerate(list(events1)):
+                    event.created = datetime.now(UTC)
+                    after = event.apply(before)
+                    event, after = store_event(event, before, after)
+                    events1[i] = event
+                    before = after
+                submission1 = after
+                ident1 = submission1.submission_id
+
+                before = None
+                for i, event in enumerate(list(events2)):
+                    event.created = datetime.now(UTC)
+                    after = event.apply(before)
+                    event, after = store_event(event, before, after)
+                    events2[i] = event
+                    before = after
+                submission2 = after
+                ident2 = submission2.submission_id
+
+                classic_sub = models.Submission(
+                    type='new',
+                    submitter_id=42)
+                session = current_session()
+                session.add(classic_sub)
+
+            # Now get the submissions for this user.
+            submissions = get_user_submissions_fast(42)
+            submission_loaded1, _ = get_submission(ident1)
+            submission_loaded2, _ = get_submission(ident2)
+
+        self.assertEqual(submission1.metadata.title,
+                         submission_loaded1.metadata.title,
+                         "Event-derived metadata for submission 1 should be preserved.")
+        self.assertEqual(submission2.metadata.title,
+                         submission_loaded2.metadata.title,
+                         "Event-derived metadata for submission 2 should be preserved.")
+
+        self.assertEqual(len(submissions),
+                         2,
+                         "There should be exactly two NG submissions.")
+

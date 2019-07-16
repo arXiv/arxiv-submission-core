@@ -134,7 +134,9 @@ def get_events(submission_id: int) -> List[Event]:
 @handle_operational_errors
 def get_user_submissions_fast(user_id: int) -> List[Submission]:
     """
-    Get all active submissions for a user.
+    Get active NG submissions for a user.
+
+    This should not return submissions for which there are no events.
 
     Uses the same approach as :func:`get_submission_fast`.
 
@@ -152,6 +154,7 @@ def get_user_submissions_fast(user_id: int) -> List[Submission]:
     db_submissions = list(
         session.query(models.Submission)
         .filter(models.Submission.submitter_id == user_id)
+        .join(DBEvent)  # Only get submissions that are also in the event table
         .order_by(models.Submission.doc_paper_id.desc())
     )
     grouped = groupby(db_submissions, key=lambda dbs: dbs.doc_paper_id)
