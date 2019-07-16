@@ -318,7 +318,7 @@ CLASSIFIER_PROTO = environ.get(
 )
 """Protocol for the classifier service."""
 
-CLASSIFIER_PATH = environ.get('CLASSIFIER_PATH', '')
+CLASSIFIER_PATH = environ.get('CLASSIFIER_PATH', '/classifier/')
 """Path at which the classifier service is deployed."""
 
 CLASSIFIER_ENDPOINT = environ.get(

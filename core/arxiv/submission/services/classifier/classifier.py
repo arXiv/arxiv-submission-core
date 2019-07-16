@@ -47,6 +47,11 @@ class Classifier(service.HTTPIntegration):
 
         service_name = "classifier"
 
+    def __init__(self, endpoint: str, verify: bool = True,
+                 path: str = '/ctxt', **params: Any):
+        self._classifier_path = path
+        super(Classifier, self).__init__(endpoint, verify=verify, **params)
+
     def is_available(self, **kwargs: Any) -> bool:
         """Check our connection to the classifier service."""
         timeout: float = kwargs.get('timeout', 0.2)
@@ -101,6 +106,6 @@ class Classifier(service.HTTPIntegration):
             Feature counts, if provided.
 
         """
-        _path = '/classifier/'    # TODO: this MUST be configurable.
-        data, _, _ = self.json('post', _path, data=content, timeout=timeout)
+        data, _, _ = self.json('post', self._classifier_path, data=content,
+                               timeout=timeout)
         return self._suggestions(data), self._flags(data), self._counts(data)
