@@ -74,6 +74,7 @@ def handle_operational_errors(func):
         try:
             return func(*args, **kwargs)
         except OperationalError as e:
+            logger.error('Encountered an error talking to database: %s', e)
             raise Unavailable('Classic database unavailable') from e
     return inner
 
