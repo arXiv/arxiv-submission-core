@@ -231,7 +231,8 @@ def get_submission(submission_id: int, for_update: bool = False) \
     # Let the caller determine the transaction scope.
     session = current_session()
     original_row = session.query(models.Submission) \
-        .filter(models.Submission.submission_id == submission_id)
+        .filter(models.Submission.submission_id == submission_id) \
+        .join(DBEvent)
 
     if for_update:
         # Gives us SELECT ... FOR READ. In other words, lock this row for
