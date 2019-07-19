@@ -75,6 +75,7 @@ def create_app() -> Flask:
     with app.app_context():
         if not database.tables_exist():
             database.create_all()
+
     mail.init_app(app)
     Classifier.init_app(app)
     Compiler.init_app(app)

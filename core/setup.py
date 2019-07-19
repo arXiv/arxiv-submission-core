@@ -27,7 +27,8 @@ setup(
         'semver==2.8.1',
         'retry==0.9.2',
         'pytz==2018.7',
-        'backports-datetime-fromisoformat==1.0.0'
+        'backports-datetime-fromisoformat==1.0.0',
+        'typing_extensions'
     ],
     include_package_data=True
 )

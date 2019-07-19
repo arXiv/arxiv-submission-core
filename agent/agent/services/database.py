@@ -5,7 +5,7 @@ from datetime import datetime
 from pytz import UTC
 import time
 
-from werkzeug.local import LocalProxy
+from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 
 from sqlalchemy import BigInteger, Column, DateTime, Enum, ForeignKey, \
@@ -58,9 +58,20 @@ class ProcessStatusEvent(db.Model):
     agent_id = Column(String(100), index=True, nullable=False)
 
 
-def init_app(app: Optional[LocalProxy]) -> None:
+def init_app(app: Flask) -> None:
     """Set configuration defaults and attach session to the application."""
     db.init_app(app)
+
+    @app.teardown_request
+    def teardown_request(exception) -> None:
+        if exception:
+            db.session.rollback()
+        db.session.remove()
+
+    @app.teardown_appcontext
+    def teardown_appcontext(*args, **kwargs) -> None:
+        db.session.rollback()
+        db.session.remove()
 
 
 def create_all() -> None:
