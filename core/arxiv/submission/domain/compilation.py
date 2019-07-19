@@ -51,6 +51,7 @@ class Compilation:
         ERROR = "compilation_errors"
         NETWORK = "network_error"
         STORAGE = "storage"
+        DOCKER = 'docker'
         NONE = None
 
     # Here are the actual slots/fields.

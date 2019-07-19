@@ -182,7 +182,7 @@ CLASSIFIER_PROTO = environ.get(f'CLASSIFIER_PORT_{CLASSIFIER_PORT}_PROTO',
                                'http')
 """Protocol for the classifier service."""
 
-CLASSIFIER_PATH = environ.get('CLASSIFIER_PATH', '')
+CLASSIFIER_PATH = environ.get('CLASSIFIER_PATH', '/classifier/')
 """Path at which the classifier service is deployed."""
 
 CLASSIFIER_ENDPOINT = environ.get(

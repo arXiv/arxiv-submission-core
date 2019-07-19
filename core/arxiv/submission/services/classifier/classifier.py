@@ -47,9 +47,7 @@ class Classifier(service.HTTPIntegration):
 
         service_name = "classifier"
 
-    def __init__(self, endpoint: str, verify: bool = True,
-                 path: str = '/ctxt', **params: Any):
-        self._classifier_path = path
+    def __init__(self, endpoint: str, verify: bool = True, **params: Any):
         super(Classifier, self).__init__(endpoint, verify=verify, **params)
 
     def is_available(self, **kwargs: Any) -> bool:
@@ -106,6 +104,5 @@ class Classifier(service.HTTPIntegration):
             Feature counts, if provided.
 
         """
-        data, _, _ = self.json('post', self._classifier_path, data=content,
-                               timeout=timeout)
+        data, _, _ = self.json('post', '', data=content, timeout=timeout)
         return self._suggestions(data), self._flags(data), self._counts(data)

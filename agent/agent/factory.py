@@ -72,10 +72,6 @@ def create_app() -> Flask:
 
     # Initialize services.
     database.init_app(app)
-    with app.app_context():
-        if not database.tables_exist():
-            database.create_all()
-
     mail.init_app(app)
     Classifier.init_app(app)
     Compiler.init_app(app)
@@ -94,4 +90,8 @@ def create_app() -> Flask:
                      timeout=app.config['PLAINTEXT_STATUS_TIMEOUT'])
             # FILEMANAGER_STATUS_TIMEOUT
         logger.info('All upstream services are available; ready to start')
+
+    with app.app_context():
+        if not database.tables_exist():
+            database.create_all()
     return app

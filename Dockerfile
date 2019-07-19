@@ -11,9 +11,7 @@ ENV KINESIS_STREAM="SubmissionEvents" \
     KINESIS_START_TYPE="TRIM_HORIZON" \
     SUBMISSION_AGENT_DATABASE_URI="" \
     LOGLEVEL=10 \
-    JWT_SECRET="foo" \
-    AWS_ACCESS_KEY_ID="" \
-    AWS_SECRET_ACCESS_KEY=""
+    JWT_SECRET="foo"
 
 COPY Pipfile Pipfile.lock /opt/arxiv/
 COPY core/ /opt/arxiv/core/

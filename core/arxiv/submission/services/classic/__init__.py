@@ -36,6 +36,7 @@ from datetime import datetime
 from pytz import UTC
 from itertools import groupby
 import copy
+import traceback
 from functools import reduce, wraps
 from operator import ior
 from dataclasses import asdict
@@ -74,7 +75,9 @@ def handle_operational_errors(func):
         try:
             return func(*args, **kwargs)
         except OperationalError as e:
-            logger.error('Encountered an error talking to database: %s', e)
+            logger.error('Encountered an OperationalError calling %s',
+                         func.__name__)
+            logger.error(traceback.print_exc())
             raise Unavailable('Classic database unavailable') from e
     return inner
 
@@ -82,11 +85,17 @@ def handle_operational_errors(func):
 def is_available(**kwargs: Any) -> bool:
     """Check our connection to the database."""
     try:
-        current_session().query("1").from_statement(text("SELECT 1")).all()
-    except Exception as e:
-        logger.error('Encountered an error talking to database: %s', e)
+        _check_available()
+    except Unavailable as e:
+        logger.info('Database not available: %s', e)
         return False
     return True
+
+
+@handle_operational_errors
+def _check_available() -> None:
+    """Execute ``SELECT 1`` against the database."""
+    current_session().query("1").from_statement(text("SELECT 1")).all()
 
 
 @retry(ClassicBaseException, tries=3, delay=1)
