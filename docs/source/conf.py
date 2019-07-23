@@ -31,10 +31,10 @@ sys.path.append('../../agent')
 sys.path.append('./')
 # See https://github.com/agronholm/sphinx-autodoc-typehints/issues/73
 import patched_sphinx_autodoc_typehints
-from agent import rules
+from agent import rules, factory
 
-app = Flask('docs')
-init_app(app)
+app = factory.create_app()
+# init_app(app)
 app.app_context().push()
 
 # -- General configuration ------------------------------------------------
@@ -56,7 +56,7 @@ extensions = [
     'sphinx.ext.graphviz',
     'sphinx.ext.githubpages',
     'patched_sphinx_autodoc_typehints',
-    'sphinx_jekyll_builder'
+    # 'sphinx_jekyll_builder'
 ]
 
 # Add any paths that contain templates here, relative to this directory.
