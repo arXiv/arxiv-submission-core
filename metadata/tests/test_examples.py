@@ -7,11 +7,13 @@ import os
 import jsonschema
 import tempfile
 from datetime import datetime
-
-from arxiv import status
-from events.domain import Submission
+from pytz import UTC
+from arxiv.integration.api import status
+from arxiv.submission.domain import Submission
 from metadata.factory import create_web_app
 from metadata.controllers.submission import ev
+
+from . import util
 
 BASEPATH = os.path.join(os.path.split(os.path.abspath(__file__))[0], '..')
 _, DB_PATH = tempfile.mkstemp(suffix='.db')
@@ -27,20 +29,14 @@ class TestSubmit(TestCase):
         os.environ['JWT_SECRET'] = SECRET
         os.environ['CLASSIC_DATABASE_URI'] = 'sqlite:///%s' % DB_PATH
 
-        self.authorization = jwt.encode({
-            'scope': ['submission:write', 'submission:read'],
-            'user': {
-                'user_id': 1234,
-                'email': 'joe@bloggs.com'
-            },
-            'client': {
-                'client_id': 5678
-            }
-        }, SECRET)
-        self.headers = {'Authorization': self.authorization.decode('utf-8')}
+        self.authorization = util.generate_client_token(
+            client_id=1, owner_id=52, name='the client',
+            endorsements='astro-ph.CO', secret=SECRET
+        )
+        self.headers = {'Authorization': self.authorization}
         self.app = create_web_app()
         with self.app.app_context():
-            from events.services import classic
+            from arxiv.submission.services import classic
             classic.create_all()
 
         self.client = self.app.test_client()
@@ -65,7 +61,7 @@ class TestSubmit(TestCase):
             response_data = json.loads(response.data)
         except Exception as e:
             self.fail("Should return valid JSON")
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED,
+        self.assertEqual(response.status_code, status.CREATED,
                          "Should return status 201 Created")
         self.assertIn("Location", response.headers,
                       "Should redirect to created submission resource")
@@ -102,7 +98,7 @@ class TestSubmit(TestCase):
                                     content_type='application/json',
                                     headers=self.headers)
         response_data = json.loads(response.data)
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED,
+        self.assertEqual(response.status_code, status.CREATED,
                          "Should return status 201 Created")
         sub_id = response_data['submission_id']
         self.assertFalse(response_data['finalized'],
@@ -130,7 +126,7 @@ class TestSubmit(TestCase):
                                     content_type='application/json',
                                     headers=self.headers)
         response_data = json.loads(response.data)
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED,
+        self.assertEqual(response.status_code, status.CREATED,
                          "Should return status 201 Created")
         sub_id = response_data['submission_id']
         self.assertTrue(response_data['finalized'], "Should be finalized")
@@ -141,7 +137,7 @@ class TestSubmit(TestCase):
                                     content_type='application/json',
                                     headers=self.headers)
         response_data = json.loads(response.data)
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST,
+        self.assertEqual(response.status_code, status.BAD_REQUEST,
                          "Should return 400 Bad Request")
         self.assertIn("reason", response_data,
                       "A reason for the rejected request should be provided")
@@ -157,23 +153,17 @@ class TestModerationScenarios(TestCase):
         os.environ['JWT_SECRET'] = SECRET
         os.environ['CLASSIC_DATABASE_URI'] = 'sqlite:///%s' % DB_PATH
 
-        self.authorization = jwt.encode({
-            'scope': ['submission:write', 'submission:read'],
-            'user': {
-                'user_id': 1234,
-                'email': 'joe@bloggs.com'
-            },
-            'client': {
-                'client_id': 5678
-            }
-        }, SECRET)
+        self.authorization = util.generate_client_token(
+            client_id=1, owner_id=52, name='the client',
+            endorsements='astro-ph.CO', secret=SECRET
+        )
         self.app = create_web_app()
         with self.app.app_context():
-            from events.services import classic
+            from arxiv.submission.services import classic
             classic.create_all()
 
         self.client = self.app.test_client()
-        self.headers = {'Authorization': self.authorization.decode('utf-8')}
+        self.headers = {'Authorization': self.authorization}
 
     def test_submission_placed_on_hold(self):
         """Before publication, a submission may be placed on hold."""
@@ -188,7 +178,7 @@ class TestModerationScenarios(TestCase):
 
         # Moderator, admin, or other agent places the submission on hold.
         with self.app.app_context():
-            from events.services import classic
+            from arxiv.submission.services import classic
             session = classic.current_session()
             submission = session.query(classic.models.Submission) \
                 .get(submission_id)
@@ -216,7 +206,7 @@ class TestModerationScenarios(TestCase):
         # Moderator, admin, or other agent places the submission on hold,
         #  and a sticky status is set.
         with self.app.app_context():
-            from events.services import classic
+            from arxiv.submission.services import classic
             session = classic.current_session()
             submission = session.query(classic.models.Submission)\
                 .get(submission_id)
@@ -279,23 +269,17 @@ class TestPublicationIntegration(TestCase):
         os.environ['JWT_SECRET'] = SECRET
         os.environ['CLASSIC_DATABASE_URI'] = 'sqlite:///%s' % DB_PATH
 
-        self.authorization = jwt.encode({
-            'scope': ['submission:write', 'submission:read'],
-            'user': {
-                'user_id': 1234,
-                'email': 'joe@bloggs.com'
-            },
-            'client': {
-                'client_id': 5678
-            }
-        }, SECRET)
+        self.authorization = util.generate_client_token(
+            client_id=1, owner_id=52, name='the client',
+            endorsements='astro-ph.CO', secret=SECRET
+        )
         self.app = create_web_app()
         with self.app.app_context():
-            from events.services import classic
+            from arxiv.submission.services import classic
             classic.create_all()
 
         self.client = self.app.test_client()
-        self.headers = {'Authorization': self.authorization.decode('utf-8')}
+        self.headers = {'Authorization': self.authorization}
 
         # Create and finalize a new submission.
         example = os.path.join(BASEPATH, 'examples/complete_submission.json')
@@ -310,19 +294,19 @@ class TestPublicationIntegration(TestCase):
     def tearDown(self):
         """Clear the database after each test."""
         with self.app.app_context():
-            from events.services import classic
+            from arxiv.submission.services import classic
             classic.drop_all()
 
     def test_publication_status_is_reflected(self):
-        """The submission has been published/announced."""
+        """The submission has been announced/announced."""
         with self.app.app_context():
-            from events.services import classic
+            from arxiv.submission.services import classic
             session = classic.current_session()
 
             # Publication agent publishes the paper.
             db_submission = session.query(classic.models.Submission)\
                 .get(self.submission_id)
-            db_submission.status = db_submission.PUBLISHED
+            db_submission.status = db_submission.ANNOUNCED
             dated = (datetime.now() - datetime.utcfromtimestamp(0))
             primary = self.submission['primary_classification']['category']
             db_submission.document = classic.models.Document(
@@ -332,7 +316,7 @@ class TestPublicationIntegration(TestCase):
                 authors=self.submission['metadata']['authors_display'],
                 dated=dated.total_seconds(),
                 primary_subject_class=primary,
-                created=datetime.now(),
+                created=datetime.now(UTC),
                 submitter_email=self.submission['creator']['email'],
                 submitter_id=self.submission['creator']['user_id']
             )
@@ -343,23 +327,23 @@ class TestPublicationIntegration(TestCase):
             response = self.client.get(f'/{self.submission_id}/',
                                        headers=self.headers)
             submission = json.loads(response.data)
-            self.assertEqual(submission['status'], Submission.PUBLISHED,
-                             "Submission should have published status.")
+            self.assertEqual(submission['status'], Submission.ANNOUNCED,
+                             "Submission should have announced status.")
             self.assertEqual(submission['arxiv_id'], "1901.00123",
                              "arXiv paper ID should be set")
             self.assertFalse(submission['active'],
-                             "Published submission should no longer be active")
+                             "Announced submission should no longer be active")
 
     def test_publication_status_is_reflected_after_files_expire(self):
-        """The submission has been published/announced, and files expired."""
+        """The submission has been announced/announced, and files expired."""
         with self.app.app_context():
-            from events.services import classic
+            from arxiv.submission.services import classic
             session = classic.current_session()
 
             # Publication agent publishes the paper.
             db_submission = session.query(classic.models.Submission)\
                 .get(self.submission_id)
-            db_submission.status = db_submission.DELETED_PUBLISHED
+            db_submission.status = db_submission.DELETED_ANNOUNCED
             dated = (datetime.now() - datetime.utcfromtimestamp(0))
             primary = self.submission['primary_classification']['category']
             db_submission.document = classic.models.Document(
@@ -369,7 +353,7 @@ class TestPublicationIntegration(TestCase):
                 authors=self.submission['metadata']['authors_display'],
                 dated=dated.total_seconds(),
                 primary_subject_class=primary,
-                created=datetime.now(),
+                created=datetime.now(UTC),
                 submitter_email=self.submission['creator']['email'],
                 submitter_id=self.submission['creator']['user_id']
             )
@@ -380,17 +364,17 @@ class TestPublicationIntegration(TestCase):
             response = self.client.get(f'/{self.submission_id}/',
                                        headers=self.headers)
             submission = json.loads(response.data)
-            self.assertEqual(submission['status'], Submission.PUBLISHED,
-                             "Submission should have published status.")
+            self.assertEqual(submission['status'], Submission.ANNOUNCED,
+                             "Submission should have announced status.")
             self.assertEqual(submission['arxiv_id'], "1901.00123",
                              "arXiv paper ID should be set")
             self.assertFalse(submission['active'],
-                             "Published submission should no longer be active")
+                             "Announced submission should no longer be active")
 
     def test_scheduled_status_is_reflected(self):
         """The submission has been scheduled for publication today."""
         with self.app.app_context():
-            from events.services import classic
+            from arxiv.submission.services import classic
             session = classic.current_session()
 
             # Publication agent publishes the paper.
@@ -410,7 +394,7 @@ class TestPublicationIntegration(TestCase):
     def test_scheduled_status_is_reflected_processing_submission(self):
         """The submission has been scheduled for publication today."""
         with self.app.app_context():
-            from events.services import classic
+            from arxiv.submission.services import classic
             session = classic.current_session()
 
             # Publication agent publishes the paper.
@@ -428,9 +412,9 @@ class TestPublicationIntegration(TestCase):
                              "Submission should have scheduled status.")
 
     def test_scheduled_status_is_reflected_prior_to_announcement(self):
-        """The submission is being published; not yet announced."""
+        """The submission is being announced; not yet announced."""
         with self.app.app_context():
-            from events.services import classic
+            from arxiv.submission.services import classic
             session = classic.current_session()
 
             # Publication agent publishes the paper.
@@ -450,7 +434,7 @@ class TestPublicationIntegration(TestCase):
     def test_scheduled_tomorrow_status_is_reflected(self):
         """The submission has been scheduled for publication tomorrow."""
         with self.app.app_context():
-            from events.services import classic
+            from arxiv.submission.services import classic
             session = classic.current_session()
 
             # Publication agent publishes the paper.
@@ -468,9 +452,9 @@ class TestPublicationIntegration(TestCase):
                              "Submission should be scheduled for tomorrow.")
 
     def test_publication_failed(self):
-        """The submission was not published successfully."""
+        """The submission was not announced successfully."""
         with self.app.app_context():
-            from events.services import classic
+            from arxiv.submission.services import classic
             session = classic.current_session()
 
             # Publication agent publishes the paper.
@@ -490,7 +474,7 @@ class TestPublicationIntegration(TestCase):
     def test_deleted(self):
         """The submission was deleted."""
         with self.app.app_context():
-            from events.services import classic
+            from arxiv.submission.services import classic
             session = classic.current_session()
 
             for classic_status in classic.models.Submission.DELETED:

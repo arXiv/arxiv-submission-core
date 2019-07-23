@@ -4,12 +4,14 @@ from unittest import TestCase, mock
 import json
 from datetime import datetime
 from werkzeug.exceptions import BadRequest, InternalServerError, NotFound
-
-from arxiv import status
-from events.domain import User, Submission, Author
-from events import CreateSubmission, UpdateMetadata, SaveError, \
+from pytz import UTC
+from arxiv.integration.api import status
+from arxiv.submission.domain import User, Submission, Author, Client
+from arxiv.submission import CreateSubmission, SaveError, \
     InvalidEvent, NoSuchSubmission, SetPrimaryClassification, \
-    AttachSourceContent, UpdateAuthors, InvalidStack
+    SetUploadPackage, SetAuthors, SetTitle, SetAbstract, SetDOI, \
+    SetMSCClassification, SetACMClassification, SetJournalReference,  \
+    SetComments
 from metadata.controllers import submission
 
 
@@ -17,14 +19,20 @@ def preserve_exceptions_and_events(mock_events):
     """Add real exceptions back to the mock."""
     mock_events.SaveError = SaveError
     mock_events.InvalidEvent = InvalidEvent
-    mock_events.InvalidStack = InvalidStack
     mock_events.NoSuchSubmission = NoSuchSubmission
-    mock_events.UpdateMetadata = UpdateMetadata
-    mock_events.UpdateAuthors = UpdateAuthors
+    mock_events.SetTitle = SetTitle
+    mock_events.SetAbstract = SetAbstract
+    mock_events.SetComments = SetComments
+    mock_events.SetDOI = SetDOI
+    mock_events.SetMSCClassification = SetMSCClassification
+    mock_events.SetACMClassification = SetACMClassification
+    mock_events.SetJournalReference = SetJournalReference
+
+    mock_events.SetAuthors = SetAuthors
     mock_events.Author = Author
     mock_events.CreateSubmission = CreateSubmission
     mock_events.SetPrimaryClassification = SetPrimaryClassification
-    mock_events.AttachSourceContent = AttachSourceContent
+    mock_events.SetUploadPackage = SetUploadPackage
 
 
 class TestCreateSubmission(TestCase):
@@ -32,8 +40,12 @@ class TestCreateSubmission(TestCase):
 
     def setUp(self):
         """Create some fake request data."""
-        self.user_data = {'user_id': 1234, 'email': 'foo@bar.baz'}
-        self.client_data = {'client_id': 5678}
+        self.agents = {
+            'creator': User(1234, 'foo@bar.baz',
+                            endorsements=[('astro-ph', 'GA')]),
+            'client': Client(5678),
+            'proxy': None
+        }
         self.token = 'asdf1234'
         self.headers = {}
 
@@ -45,17 +57,16 @@ class TestCreateSubmission(TestCase):
         url_for.return_value = '/foo/'
         user = User(1234, 'foo@bar.baz')
         mock_events.save.return_value = (
-            Submission(creator=user, owner=user, created=datetime.now()),
+            Submission(creator=user, owner=user, created=datetime.now(UTC)),
             [CreateSubmission(creator=user)]
         )
         data = {
             'primary_classification': {
-                'category': 'astro-ph'
+                'category': 'astro-ph.GA'
             }
         }
         resp, stat, head = submission.create_submission(data, self.headers,
-                                                        self.user_data,
-                                                        self.client_data,
+                                                        self.agents,
                                                         self.token)
         call_args, call_kwargs = mock_events.save.call_args
 
@@ -63,7 +74,7 @@ class TestCreateSubmission(TestCase):
                               "Should pass a CreateSubmission first")
         self.assertIsInstance(call_args[1], SetPrimaryClassification,
                               "Should pass a SetPrimaryClassification")
-        self.assertEqual(stat, status.HTTP_201_CREATED,
+        self.assertEqual(stat, status.CREATED,
                          "Should return 201 Created when submission is"
                          " successfully created.")
         self.assertIn('Location', head, "Should include a Location header.")
@@ -78,8 +89,8 @@ class TestCreateSubmission(TestCase):
             'metadata': 'bad value',
         }
         with self.assertRaises(BadRequest):
-            submission.create_submission(data, self.headers, self.user_data,
-                                         self.client_data, self.token)
+            submission.create_submission(data, self.headers, self.agents,
+                                         self.token)
 
     @mock.patch('metadata.controllers.submission.url_for')
     @mock.patch('metadata.controllers.submission.ev')
@@ -94,8 +105,8 @@ class TestCreateSubmission(TestCase):
             }
         }
         with self.assertRaises(InternalServerError):
-            submission.create_submission(data, self.headers, self.user_data,
-                                         self.client_data, self.token)
+            submission.create_submission(data, self.headers, self.agents,
+                                         self.token)
 
     @mock.patch('metadata.controllers.submission.url_for')
     @mock.patch('metadata.controllers.submission.ev')
@@ -104,10 +115,10 @@ class TestCreateSubmission(TestCase):
         url_for.return_value = '/foo/'
 
         def raise_invalid_event(*events, **kwargs):
-            user = dict(**self.user_data)
-            user['native_id'] = user['user_id']
-            user.pop('user_id')
-            raise InvalidEvent(CreateSubmission(creator=User(**user)), 'foo')
+            raise InvalidEvent(
+                CreateSubmission(creator=self.agents['creator']),
+                'foo'
+            )
 
         mock_events.save.side_effect = raise_invalid_event
         preserve_exceptions_and_events(mock_events)
@@ -117,8 +128,8 @@ class TestCreateSubmission(TestCase):
             }
         }
         with self.assertRaises(BadRequest):
-            submission.create_submission(data, self.headers, self.user_data,
-                                         self.client_data, self.token)
+            submission.create_submission(data, self.headers, self.agents,
+                                         self.token)
 
 
 class TestUpdateSubmission(TestCase):
@@ -126,8 +137,12 @@ class TestUpdateSubmission(TestCase):
 
     def setUp(self):
         """Create some fake request data."""
-        self.user_data = {'user_id': 1234, 'email': 'foo@bar.baz'}
-        self.client_data = {'client_id': 5678}
+        self.agents = {
+            'creator': User(1234, 'foo@bar.baz',
+                            endorsements=[('astro-ph', 'GA')]),
+            'client': Client(5678),
+            'proxy': None
+        }
         self.token = 'asdf1234'
         self.headers = {}
 
@@ -139,9 +154,9 @@ class TestUpdateSubmission(TestCase):
         url_for.return_value = '/foo/'
         user = User(1234, 'foo@bar.baz')
         mock_events.save.return_value = (
-            Submission(creator=user, owner=user, created=datetime.now()),
+            Submission(creator=user, owner=user, created=datetime.now(UTC)),
             [CreateSubmission(creator=user),
-             UpdateMetadata(creator=user, metadata=[('title', 'foo title')])]
+             SetTitle(creator=user, title='foo title')]
         )
         data = {
             'metadata': {
@@ -156,19 +171,18 @@ class TestUpdateSubmission(TestCase):
              }
         }
         resp, stat, head = submission.update_submission(data, self.headers,
-                                                        self.user_data,
-                                                        self.client_data,
+                                                        self.agents,
                                                         self.token, 1)
-        self.assertEqual(stat, status.HTTP_200_OK,
+        self.assertEqual(stat, status.OK,
                          "Should return 200 OK when submission is"
                          " successfully updated.")
         self.assertIn('Location', head, "Should include a Location header.")
         call_args, call_kwargs = mock_events.save.call_args
 
-        self.assertIsInstance(call_args[0], UpdateMetadata,
-                              "Should pass an UpdateMetadata")
-        self.assertIsInstance(call_args[1], UpdateAuthors,
-                              "Should pass an UpdateAuthors")
+        self.assertIsInstance(call_args[0], SetTitle,
+                              "Should pass a SetTitle")
+        self.assertIsInstance(call_args[1], SetAuthors,
+                              "Should pass an SetAuthors")
 
     @mock.patch('metadata.controllers.submission.url_for')
     @mock.patch('metadata.controllers.submission.ev')
@@ -183,8 +197,8 @@ class TestUpdateSubmission(TestCase):
              }
         }
         with self.assertRaises(NotFound):
-            submission.update_submission(data, self.headers, self.user_data,
-                                         self.client_data, self.token, 1)
+            submission.update_submission(data, self.headers, self.agents,
+                                         self.token, 1)
 
     @mock.patch('metadata.controllers.submission.url_for')
     @mock.patch('metadata.controllers.submission.ev')
@@ -196,8 +210,8 @@ class TestUpdateSubmission(TestCase):
             'metadata': 'bad value',
         }
         with self.assertRaises(BadRequest):
-            submission.update_submission(data, self.headers, self.user_data,
-                                         self.client_data, self.token, 1)
+            submission.update_submission(data, self.headers, self.agents,
+                                         self.token, 1)
 
     @mock.patch('metadata.controllers.submission.url_for')
     @mock.patch('metadata.controllers.submission.ev')
@@ -212,8 +226,8 @@ class TestUpdateSubmission(TestCase):
             }
         }
         with self.assertRaises(InternalServerError):
-            submission.update_submission(data, self.headers, self.user_data,
-                                         self.client_data, self.token, 1)
+            submission.update_submission(data, self.headers, self.agents,
+                                         self.token, 1)
 
     @mock.patch('metadata.controllers.submission.url_for')
     @mock.patch('metadata.controllers.submission.ev')
@@ -223,10 +237,10 @@ class TestUpdateSubmission(TestCase):
         preserve_exceptions_and_events(mock_events)
 
         def raise_invalid_event(*events, **kwargs):
-            user = dict(**self.user_data)
-            user['native_id'] = user['user_id']
-            user.pop('user_id')
-            raise InvalidEvent(CreateSubmission(creator=User(**user)), 'foo')
+            raise InvalidEvent(
+                CreateSubmission(creator=self.agents['creator']),
+                'foo'
+            )
 
         mock_events.save.side_effect = raise_invalid_event
         data = {
@@ -235,8 +249,8 @@ class TestUpdateSubmission(TestCase):
             }
         }
         with self.assertRaises(BadRequest):
-            submission.update_submission(data, self.headers, self.user_data,
-                                         self.client_data, self.token, 1)
+            submission.update_submission(data, self.headers, self.agents,
+                                         self.token, 1)
 
 
 class TestGetSubmission(TestCase):
@@ -248,13 +262,13 @@ class TestGetSubmission(TestCase):
         preserve_exceptions_and_events(mock_events)
         user = User(1234, 'foo@bar.baz')
         mock_events.load.return_value = (
-            Submission(creator=user, owner=user, created=datetime.now()),
+            Submission(creator=user, owner=user, created=datetime.now(UTC)),
             [CreateSubmission(creator=user)]
         )
         content, status_code, headers = submission.get_submission(1)
         self.assertEqual(mock_events.load.call_count, 1,
                          "Should call load() in the events core package")
-        self.assertEqual(status_code, status.HTTP_200_OK,
+        self.assertEqual(status_code, status.OK,
                          "Should return 200 OK")
         self.assertIsInstance(content, dict, "Should return a dict")
         try:

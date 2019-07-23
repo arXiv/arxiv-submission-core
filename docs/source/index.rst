@@ -8,7 +8,9 @@ subsystem.
    :maxdepth: 2
 
    architecture
-   publication_process
+   announcement_process
    submission_api_context
-   containers/core/events
+   arxiv.submission/arxiv.submission
+   containers/agent/agent
    containers/metadata/metadata
+   background

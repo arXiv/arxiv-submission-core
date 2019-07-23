@@ -1,0 +1,7 @@
+name: submission-agent
+version: 0.0.1
+appVersion: 0.0.1
+description: Submission agent.
+sources:
+  - https://github.com/arxiv/arxiv-submission-core
+engine: gotpl

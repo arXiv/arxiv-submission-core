@@ -212,7 +212,7 @@ request may be made to ``/submission/{id}/webhooks/``. To register a webhook
 for all submissions for which the client is responsible, a POST request may be
 made to ``/webhooks/``. See :ref:`api-webhooks`.
 
-Once the submission has been published, the submission will be updated with
+Once the submission has been announced, the submission will be updated with
 its arXiv identifier and version number. If a webhook is registered, a
 publication notification will also be issued.
 

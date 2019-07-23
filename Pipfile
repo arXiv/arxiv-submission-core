@@ -1,32 +1,50 @@
 [[source]]
-
 url = "https://pypi.python.org/simple"
 verify_ssl = true
 name = "pypi"
 
-
 [packages]
-
-flask = "*"
-dataclasses = "*"
-pyjwt = "*"
-jsonschema = "*"
-arxiv-base = "==0.7.1"
-sqlalchemy = "*"
-pyyaml = "*"
-pytz = "*"
-uwsgi = "*"
-mysqlclient = "*"
-mimesis = "*"
-
+flask = "==1.0.2"
+dataclasses = "==0.6"
+pyjwt = "==1.6.4"
+jsonschema = "==2.6.0"
+sqlalchemy = ">=1.3.0"
+pytz = "==2018.7"
+uwsgi = "==2.0.17.1"
+mysqlclient = "==1.3.13"
+mimesis = "==2.1.0"
+bleach = ">=3.0.2"
+python-dateutil = "*"
+unidecode = "*"
+celery = "==4.1.0"
+arxiv-auth = "==0.3.2rc5"
+mypy_extensions = "*"
+kombu = "==4.1.0"
+semver = "*"
+flask-sqlalchemy = "*"
+retry = "*"
+backports-datetime-fromisoformat = "*"
+arxiv-base = "==0.15.8rc4"
+alembic = "*"
+urllib3 = ">=1.24.2"
+Jinja2 = ">=2.10.1"
+pyyaml = ">=4.2b1"
+arxiv-vault = "==0.1.1rc15"
+redis = "==2.10.6"
 
 [dev-packages]
-
 "nose2" = "*"
 openapi-spec-validator = "*"
-coverage = "*"
+coverage = "==4.5"
 coveralls = "*"
-pylint = "*"
-pydocstyle = "*"
-mypy = "*"
+pylint = "<2"
+mypy = "==0.660"
 mimesis = "*"
+sphinx = "*"
+sphinx-autodoc-typehints = "*"
+pydocstyle = "==3.0.0"
+pytest = "*"
+pytest-cov = "*"
+
+[pipenv]
+allow_prereleases = true

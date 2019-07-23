@@ -2,7 +2,7 @@ language: python
 sudo: required
 services:
   - docker
-cache: pip
+#cache: pip
 env:
   MIN_PYLINT_SCORE: 8
 os:
@@ -11,10 +11,11 @@ python:
   - "3.6"
 script:
   - pip install pipenv
-  - pipenv install
   - pipenv install --dev
-  - pipenv run nose2 --with-coverage
-  - tests/lint.sh
-  - tests/docstyle.sh
+  - pipenv install ./core
+  - pipenv run pip show arxiv-base
+  - pipenv run pytest --cov=agent/agent --cov=core/arxiv --cov-report=term-missing agent/agent core/arxiv
 after_success:
   - coveralls
+#  - tests/lint.sh
+  - tests/docstyle.sh

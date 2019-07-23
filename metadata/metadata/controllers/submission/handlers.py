@@ -18,7 +18,7 @@ and carry out any required transformation/cleanup.
 """
 from typing import Tuple, Optional, Dict, Callable, List
 
-import events
+import arxiv.submission as events
 
 
 def handle_submission(data: dict, agents: dict) -> Tuple[events.Event]:
@@ -32,12 +32,12 @@ def handle_submission(data: dict, agents: dict) -> Tuple[events.Event]:
     ----------
     data : dict
     agents : dict
-        Values are :class:`events.Agent` instances.
+        Values are :class:`arxiv.submission.Agent` instances.
 
     Returns
     -------
     tuple
-        Zero or more uncommitted :class:`events.Event` instances.
+        Zero or more uncommitted :class:`arxiv.submission.Event` instances.
     """
     _events = []
     for key_path, handler in HANDLERS:
@@ -62,19 +62,19 @@ def handle_submitter_is_author(data: bool, agents: dict) \
     ----------
     data : dict
     agents : dict
-        Values are :class:`events.Agent` instances.
+        Values are :class:`arxiv.submission.Agent` instances.
 
     Returns
     -------
     tuple
-        Zero or more uncommitted :class:`events.Event` instances.
+        Zero or more uncommitted :class:`arxiv.submission.Event` instances.
     """
-    return events.AssertAuthorship(**agents, submitter_is_author=data),
+    return events.ConfirmAuthorship(**agents, submitter_is_author=data),
 
 
 def handle_license(data: dict, agents: dict) -> Tuple[events.Event]:
     """Handle the ``license`` field in submission payload."""
-    return events.SelectLicense(
+    return events.SetLicense(
         **agents,
         license_name=data.get('name', ''),
         license_uri=data['uri']
@@ -90,15 +90,15 @@ def handle_submitter_accepts_policy(data: dict, agents: dict) \
     ----------
     data : dict
     agents : dict
-        Values are :class:`events.Agent` instances.
+        Values are :class:`arxiv.submission.Agent` instances.
 
     Returns
     -------
     tuple
-        Zero or more uncommitted :class:`events.Event` instances.
+        Zero or more uncommitted :class:`arxiv.submission.Event` instances.
     """
     if data:
-        return events.AcceptPolicy(**agents),
+        return events.ConfirmPolicy(**agents),
     return tuple()
 
 
@@ -111,15 +111,15 @@ def handle_submitter_contact_verified(data: dict, agents: dict) \
     ----------
     data : dict
     agents : dict
-        Values are :class:`events.Agent` instances.
+        Values are :class:`arxiv.submission.Agent` instances.
 
     Returns
     -------
     tuple
-        Zero or more uncommitted :class:`events.Event` instances.
+        Zero or more uncommitted :class:`arxiv.submission.Event` instances.
     """
     if data:
-        return events.VerifyContactInformation(**agents),
+        return events.ConfirmContactInformation(**agents),
     return tuple()
 
 
@@ -141,12 +141,12 @@ def handle_secondary_classification(data: list, agents: dict) \
     ----------
     data : dict
     agents : dict
-        Values are :class:`events.Agent` instances.
+        Values are :class:`arxiv.submission.Agent` instances.
 
     Returns
     -------
     tuple
-        Zero or more uncommitted :class:`events.Event` instances.
+        Zero or more uncommitted :class:`arxiv.submission.Event` instances.
     """
     return tuple([
         events.AddSecondaryClassification(**agents, category=clsn['category'])
@@ -162,23 +162,48 @@ def handle_metadata(data: dict, agents: dict) -> Tuple[events.Event]:
     ----------
     data : dict
     agents : dict
-        Values are :class:`events.Agent` instances.
+        Values are :class:`arxiv.submission.Agent` instances.
 
     Returns
     -------
     tuple
-        Zero or more uncommitted :class:`events.Event` instances.
+        Zero or more uncommitted :class:`arxiv.submission.Event` instances.
     """
     # Most of this could be in a list comprehension, but it may help to
     # keep this verbose in case we want to intervene on values.
-    _metadata = []
-    for key in events.UpdateMetadata.FIELDS:
-        if key not in data:
-            continue
-        _metadata.append((key, data[key]))
-    if not _metadata:
+    _events = []
+    if 'title' in data:
+        _events.append(events.SetTitle(**agents, title=data['title']))
+    if 'abstract' in data:
+        _events.append(events.SetAbstract(**agents, abstract=data['abstract']))
+    if 'comments' in data:
+        _events.append(events.SetComments(**agents, comments=data['comments']))
+    if 'msc_class' in data:
+        _events.append(events.SetMSCClassification(
+            **agents,
+            msc_class=data['msc_class'])
+        )
+    if 'acm_class' in data:
+        _events.append(events.SetACMClassification(
+            **agents,
+            acm_class=data['acm_class'])
+        )
+    if 'journal_ref' in data:
+        _events.append(events.SetJournalReference(
+            **agents,
+            journal_ref=data['journal_ref'])
+        )
+    if 'report_num' in data:
+        _events.append(events.SetReportNumber(
+            **agents,
+            report_num=data['report_num'])
+        )
+    if 'doi' in data:
+        _events.append(events.SetDOI(**agents, doi=data['doi']))
+
+    if not _events:
         return tuple()
-    return events.UpdateMetadata(**agents, metadata=_metadata),
+    return tuple(_events)
 
 
 def handle_authors(data: dict, agents: dict) -> Tuple[events.Event]:
@@ -189,12 +214,12 @@ def handle_authors(data: dict, agents: dict) -> Tuple[events.Event]:
     ----------
     data : dict
     agents : dict
-        Values are :class:`events.Agent` instances.
+        Values are :class:`arxiv.submission.Agent` instances.
 
     Returns
     -------
     tuple
-        Zero or more uncommitted :class:`events.Event` instances.
+        Zero or more uncommitted :class:`arxiv.submission.Event` instances.
     """
     if not data:
         return tuple()
@@ -203,7 +228,7 @@ def handle_authors(data: dict, agents: dict) -> Tuple[events.Event]:
         if 'order' not in au:
             au['order'] = i
         _authors.append(events.Author(**au))
-    return events.UpdateAuthors(**agents, authors=_authors),
+    return events.SetAuthors(**agents, authors=_authors),
 
 
 def handle_finalization(data: dict, agents: dict) -> Tuple[events.Event]:
@@ -214,12 +239,12 @@ def handle_finalization(data: dict, agents: dict) -> Tuple[events.Event]:
     ----------
     data : dict
     agents : dict
-        Values are :class:`events.Agent` instances.
+        Values are :class:`arxiv.submission.Agent` instances.
 
     Returns
     -------
     tuple
-        Zero or more uncommitted :class:`events.Event` instances.
+        Zero or more uncommitted :class:`arxiv.submission.Event` instances.
     """
     if data:
         return events.FinalizeSubmission(**agents),
@@ -235,23 +260,22 @@ def handle_source_content(data: dict, agents: dict) -> Tuple[events.Event]:
     ----------
     data : dict
     agents : dict
-        Values are :class:`events.Agent` instances.
+        Values are :class:`arxiv.submission.Agent` instances.
 
     Returns
     -------
     tuple
-        Zero or more uncommitted :class:`events.Event` instances.
+        Zero or more uncommitted :class:`arxiv.submission.Event` instances.
     """
     if not data:
         return tuple()
-    return events.AttachSourceContent(
+    return events.SetUploadPackage(
         **agents,
-        location=data.get('location'),
         format=data.get('format'),
         checksum=data.get('checksum'),
-        mime_type=data.get('mime_type'),
         identifier=data.get('identifier'),
-        size=data.get('size'),
+        uncompressed_size=data.get('uncompressed_size'),
+        compressed_size=data.get('compressed_size')
     ),
 
 

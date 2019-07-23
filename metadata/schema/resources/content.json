@@ -3,7 +3,7 @@
   "description": "Describes content for a submission.",
   "additionalProperties": false,
   "type": "object",
-  "required": ["location", "checksum", "format", "identifier"],
+  "required": ["uncompressed_size", "checksum", "format", "identifier"],
   "properties": {
     "location": {
       "description": "Location of the content resource.",
@@ -26,8 +26,12 @@
       "description": "Unique identifier for the content resource.",
       "type": "integer"
     },
-    "size": {
-      "description": "Content size, in bytes.",
+    "uncompressed_size": {
+      "description": "Content size of the uncompressed submission, in bytes.",
+      "type": "integer"
+    },
+    "compressed_size": {
+      "description": "Content size of the compressed submission, in bytes.",
       "type": "integer"
     }
   }
