@@ -104,7 +104,7 @@
 
     <span class="n">DELETED</span> <span class="o">=</span> <span class="p">(</span>
         <span class="n">USER_DELETED</span><span class="p">,</span> <span class="n">DELETED_ON_HOLD</span><span class="p">,</span> <span class="n">DELETED_PROCESSING</span><span class="p">,</span>
-        <span class="n">DELETED_REMOVED</span><span class="p">,</span> <span class="n">DELETED_USER_EXPIRED</span>
+        <span class="n">DELETED_REMOVED</span><span class="p">,</span> <span class="n">DELETED_USER_EXPIRED</span><span class="p">,</span> <span class="n">DELETED_EXPIRED</span>
     <span class="p">)</span>
 
     <span class="n">NEW_SUBMISSION</span> <span class="o">=</span> <span class="s1">&#39;new&#39;</span>
@@ -301,18 +301,18 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">must_process</span> <span class="o">=</span> <span class="mi">1</span>
 
         <span class="c1"># Not submitted -&gt; Submitted.</span>
-        <span class="k">if</span> <span class="n">submission</span><span class="o">.</span><span class="n">finalized</span> \
+        <span class="k">if</span> <span class="n">submission</span><span class="o">.</span><span class="n">is_finalized</span> \
                 <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="ow">in</span> <span class="p">[</span><span class="n">Submission</span><span class="o">.</span><span class="n">NOT_SUBMITTED</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="n">Submission</span><span class="o">.</span><span class="n">SUBMITTED</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">submit_time</span> <span class="o">=</span> <span class="n">submission</span><span class="o">.</span><span class="n">updated</span>
         <span class="c1"># Delete.</span>
-        <span class="k">elif</span> <span class="n">submission</span><span class="o">.</span><span class="n">deleted</span><span class="p">:</span>
+        <span class="k">elif</span> <span class="n">submission</span><span class="o">.</span><span class="n">is_deleted</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="n">Submission</span><span class="o">.</span><span class="n">USER_DELETED</span>
         <span class="k">elif</span> <span class="n">submission</span><span class="o">.</span><span class="n">is_on_hold</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="n">Submission</span><span class="o">.</span><span class="n">ON_HOLD</span>
         <span class="c1"># Unsubmit.</span>
         <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="o">&lt;=</span> <span class="n">Submission</span><span class="o">.</span><span class="n">ON_HOLD</span><span class="p">:</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">submission</span><span class="o">.</span><span class="n">finalized</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">submission</span><span class="o">.</span><span class="n">is_finalized</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="n">Submission</span><span class="o">.</span><span class="n">NOT_SUBMITTED</span>
 
         <span class="k">if</span> <span class="n">submission</span><span class="o">.</span><span class="n">primary_classification</span><span class="p">:</span>
@@ -348,6 +348,9 @@
 <div class="viewcode-block" id="Submission.get_updated"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.services.classic.models.html#arxiv.submission.services.classic.models.Submission.get_updated">[docs]</a>    <span class="k">def</span> <span class="nf">get_updated</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">datetime</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Get the UTC-localized updated datetime.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">updated</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">tzinfo</span><span class="o">=</span><span class="n">UTC</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Submission.is_working"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.services.classic.models.html#arxiv.submission.services.classic.models.Submission.is_working">[docs]</a>    <span class="k">def</span> <span class="nf">is_working</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">NOT_SUBMITTED</span></div>
 
 <div class="viewcode-block" id="Submission.is_announced"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.services.classic.models.html#arxiv.submission.services.classic.models.Submission.is_announced">[docs]</a>    <span class="k">def</span> <span class="nf">is_announced</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="ow">in</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">ANNOUNCED</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">DELETED_ANNOUNCED</span><span class="p">]</span></div>

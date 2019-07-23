@@ -49,9 +49,13 @@
 <span class="sd">&quot;&quot;&quot;</span>
 
 <span class="kn">from</span> <span class="nn">enum</span> <span class="k">import</span> <span class="n">Enum</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Any</span>
 
+<span class="kn">from</span> <span class="nn">arxiv.base</span> <span class="k">import</span> <span class="n">logging</span>
 <span class="kn">from</span> <span class="nn">arxiv.integration.api</span> <span class="k">import</span> <span class="n">status</span><span class="p">,</span> <span class="n">exceptions</span><span class="p">,</span> <span class="n">service</span>
 <span class="kn">from</span> <span class="nn">arxiv.taxonomy</span> <span class="k">import</span> <span class="n">Category</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="ExtractionFailed"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.services.plaintext.plaintext.html#arxiv.submission.services.plaintext.plaintext.ExtractionFailed">[docs]</a><span class="k">class</span> <span class="nc">ExtractionFailed</span><span class="p">(</span><span class="n">exceptions</span><span class="o">.</span><span class="n">RequestFailed</span><span class="p">):</span>
@@ -84,12 +88,25 @@
     <span class="k">def</span> <span class="nf">_base_endpoint</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">f</span><span class="s1">&#39;</span><span class="si">{self._scheme}</span><span class="s1">://</span><span class="si">{self._host}</span><span class="s1">:</span><span class="si">{self._port}</span><span class="s1">&#39;</span>
 
-<div class="viewcode-block" id="PlainTextService.endpoint"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.services.plaintext.plaintext.html#arxiv.submission.services.plaintext.plaintext.PlainTextService.endpoint">[docs]</a>    <span class="k">def</span> <span class="nf">endpoint</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Get the URL of the classifier endpoint.&quot;&quot;&quot;</span>
+<div class="viewcode-block" id="PlainTextService.is_available"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.services.plaintext.plaintext.html#arxiv.submission.services.plaintext.plaintext.PlainTextService.is_available">[docs]</a>    <span class="k">def</span> <span class="nf">is_available</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Check our connection to the plain text service.&quot;&quot;&quot;</span>
+        <span class="n">timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;timeout&#39;</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">response</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">request</span><span class="p">(</span><span class="s1">&#39;head&#39;</span><span class="p">,</span> <span class="s1">&#39;/status&#39;</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;Encountered error calling plain text service: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="n">response</span><span class="o">.</span><span class="n">status_code</span> <span class="o">!=</span> <span class="n">status</span><span class="o">.</span><span class="n">OK</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;Got unexpected status: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">response</span><span class="o">.</span><span class="n">status_code</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">return</span> <span class="kc">True</span></div>
+
+<div class="viewcode-block" id="PlainTextService.endpoint"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.services.plaintext.plaintext.html#arxiv.submission.services.plaintext.plaintext.PlainTextService.endpoint">[docs]</a>    <span class="k">def</span> <span class="nf">endpoint</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Get the URL of the extraction endpoint.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">f</span><span class="s1">&#39;/submission/</span><span class="si">{source_id}</span><span class="s1">&#39;</span></div>
 
-<div class="viewcode-block" id="PlainTextService.status_endpoint"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.services.plaintext.plaintext.html#arxiv.submission.services.plaintext.plaintext.PlainTextService.status_endpoint">[docs]</a>    <span class="k">def</span> <span class="nf">status_endpoint</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Get the URL of the classifier endpoint.&quot;&quot;&quot;</span>
+<div class="viewcode-block" id="PlainTextService.status_endpoint"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.services.plaintext.plaintext.html#arxiv.submission.services.plaintext.plaintext.PlainTextService.status_endpoint">[docs]</a>    <span class="k">def</span> <span class="nf">status_endpoint</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Get the URL of the extraction status endpoint.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">f</span><span class="s1">&#39;/submission/</span><span class="si">{source_id}</span><span class="s1">/status&#39;</span></div>
 
 <div class="viewcode-block" id="PlainTextService.request_extraction"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.services.plaintext.plaintext.html#arxiv.submission.services.plaintext.plaintext.PlainTextService.request_extraction">[docs]</a>    <span class="k">def</span> <span class="nf">request_extraction</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>

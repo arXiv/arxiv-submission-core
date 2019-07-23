@@ -74,11 +74,11 @@
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Base class for submission-related events/commands.</span>
 
-<span class="sd">    An event represents a change to a :class:`.domain.submission.Submission`. Rather than</span>
-<span class="sd">    changing submissions directly, an application should create (and store)</span>
-<span class="sd">    events. Each event class must inherit from this base class, extend it with</span>
-<span class="sd">    whatever data is needed for the event, and define methods for validation</span>
-<span class="sd">    and projection (changing a submission):</span>
+<span class="sd">    An event represents a change to a :class:`.domain.submission.Submission`.</span>
+<span class="sd">    Rather than changing submissions directly, an application should create</span>
+<span class="sd">    (and store) events. Each event class must inherit from this base class,</span>
+<span class="sd">    extend it with whatever data is needed for the event, and define methods</span>
+<span class="sd">    for validation and projection (changing a submission):</span>
 
 <span class="sd">    - ``validate(self, submission: Submission) -&gt; None`` should raise</span>
 <span class="sd">      :class:`.InvalidEvent` if the event instance has invalid data.</span>

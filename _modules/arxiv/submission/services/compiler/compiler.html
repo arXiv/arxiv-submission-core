@@ -41,7 +41,7 @@
 <span class="sd">submitter the TeX log so that they can identify any potential problems with</span>
 <span class="sd">their sources.</span>
 <span class="sd">&quot;&quot;&quot;</span>
-<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">NamedTuple</span><span class="p">,</span> <span class="n">Mapping</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">NamedTuple</span><span class="p">,</span> <span class="n">Mapping</span><span class="p">,</span> <span class="n">Any</span>
 <span class="kn">import</span> <span class="nn">json</span>
 <span class="kn">import</span> <span class="nn">io</span>
 <span class="kn">import</span> <span class="nn">re</span>
@@ -85,6 +85,16 @@
 
         <span class="n">service_name</span> <span class="o">=</span> <span class="s2">&quot;compiler&quot;</span></div>
 
+<div class="viewcode-block" id="Compiler.is_available"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.services.compiler.compiler.html#arxiv.submission.services.compiler.compiler.Compiler.is_available">[docs]</a>    <span class="k">def</span> <span class="nf">is_available</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Check our connection to the compiler service.&quot;&quot;&quot;</span>
+        <span class="n">timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;timeout&#39;</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">get_service_status</span><span class="p">(</span><span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;Encountered error calling compiler: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">return</span> <span class="kc">True</span></div>
+
     <span class="k">def</span> <span class="nf">_parse_status_response</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="nb">dict</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Compilation</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">Compilation</span><span class="p">(</span>
             <span class="n">source_id</span><span class="o">=</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;source_id&#39;</span><span class="p">],</span>
@@ -99,9 +109,9 @@
     <span class="k">def</span> <span class="nf">_parse_loc</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">headers</span><span class="p">:</span> <span class="n">Mapping</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">urlparse</span><span class="p">(</span><span class="n">headers</span><span class="p">[</span><span class="s1">&#39;Location&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">path</span>
 
-<div class="viewcode-block" id="Compiler.get_service_status"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.services.compiler.compiler.html#arxiv.submission.services.compiler.compiler.Compiler.get_service_status">[docs]</a>    <span class="k">def</span> <span class="nf">get_service_status</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<div class="viewcode-block" id="Compiler.get_service_status"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.services.compiler.compiler.html#arxiv.submission.services.compiler.compiler.Compiler.get_service_status">[docs]</a>    <span class="k">def</span> <span class="nf">get_service_status</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.2</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Get the status of the compiler service.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">json</span><span class="p">(</span><span class="s1">&#39;get&#39;</span><span class="p">,</span> <span class="s1">&#39;status&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">json</span><span class="p">(</span><span class="s1">&#39;get&#39;</span><span class="p">,</span> <span class="s1">&#39;status&#39;</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span></div>
 
 <div class="viewcode-block" id="Compiler.compile"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.services.compiler.compiler.html#arxiv.submission.services.compiler.compiler.Compiler.compile">[docs]</a>    <span class="k">def</span> <span class="nf">compile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">source_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">checksum</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">token</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
                 <span class="n">stamp_label</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">stamp_link</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>

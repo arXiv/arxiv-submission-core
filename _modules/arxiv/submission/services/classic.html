@@ -75,7 +75,7 @@
 <span class="kn">from</span> <span class="nn">dataclasses</span> <span class="k">import</span> <span class="n">asdict</span>
 
 <span class="kn">from</span> <span class="nn">flask</span> <span class="k">import</span> <span class="n">Flask</span>
-<span class="kn">from</span> <span class="nn">sqlalchemy</span> <span class="k">import</span> <span class="n">or_</span>
+<span class="kn">from</span> <span class="nn">sqlalchemy</span> <span class="k">import</span> <span class="n">or_</span><span class="p">,</span> <span class="n">text</span>
 <span class="kn">from</span> <span class="nn">sqlalchemy.orm.exc</span> <span class="k">import</span> <span class="n">NoResultFound</span>
 <span class="kn">from</span> <span class="nn">sqlalchemy.exc</span> <span class="k">import</span> <span class="n">DBAPIError</span><span class="p">,</span> <span class="n">OperationalError</span>
 
@@ -83,7 +83,8 @@
 <span class="kn">from</span> <span class="nn">arxiv.base.globals</span> <span class="k">import</span> <span class="n">get_application_config</span><span class="p">,</span> <span class="n">get_application_global</span>
 <span class="kn">from</span> <span class="nn">...domain.event</span> <span class="k">import</span> <span class="n">Event</span><span class="p">,</span> <span class="n">Announce</span><span class="p">,</span> <span class="n">RequestWithdrawal</span><span class="p">,</span> <span class="n">SetDOI</span><span class="p">,</span> \
     <span class="n">SetJournalReference</span><span class="p">,</span> <span class="n">SetReportNumber</span><span class="p">,</span> <span class="n">Rollback</span><span class="p">,</span> <span class="n">RequestCrossList</span><span class="p">,</span> \
-    <span class="n">ApplyRequest</span><span class="p">,</span> <span class="n">RejectRequest</span><span class="p">,</span> <span class="n">ApproveRequest</span><span class="p">,</span> <span class="n">AddProposal</span><span class="p">,</span> <span class="n">CancelRequest</span>
+    <span class="n">ApplyRequest</span><span class="p">,</span> <span class="n">RejectRequest</span><span class="p">,</span> <span class="n">ApproveRequest</span><span class="p">,</span> <span class="n">AddProposal</span><span class="p">,</span> <span class="n">CancelRequest</span><span class="p">,</span> \
+    <span class="n">CreateSubmission</span>
 
 <span class="kn">from</span> <span class="nn">...domain.submission</span> <span class="k">import</span> <span class="n">License</span><span class="p">,</span> <span class="n">Submission</span><span class="p">,</span> <span class="n">WithdrawalRequest</span><span class="p">,</span> \
     <span class="n">CrossListClassificationRequest</span>
@@ -107,8 +108,19 @@
         <span class="k">try</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="k">except</span> <span class="n">OperationalError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;Encountered an error talking to database: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
             <span class="k">raise</span> <span class="n">Unavailable</span><span class="p">(</span><span class="s1">&#39;Classic database unavailable&#39;</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span>
     <span class="k">return</span> <span class="n">inner</span></div>
+
+
+<div class="viewcode-block" id="is_available"><a class="viewcode-back" href="../../../../arxiv.submission/arxiv.submission.services.classic.html#arxiv.submission.services.classic.is_available">[docs]</a><span class="k">def</span> <span class="nf">is_available</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Check our connection to the database.&quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">current_session</span><span class="p">()</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="s2">&quot;1&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">from_statement</span><span class="p">(</span><span class="n">text</span><span class="p">(</span><span class="s2">&quot;SELECT 1&quot;</span><span class="p">))</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;Encountered an error talking to database: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">False</span>
+    <span class="k">return</span> <span class="kc">True</span></div>
 
 
 <div class="viewcode-block" id="get_licenses"><a class="viewcode-back" href="../../../../arxiv.submission/arxiv.submission.services.classic.html#arxiv.submission.services.classic.get_licenses">[docs]</a><span class="nd">@retry</span><span class="p">(</span><span class="n">ClassicBaseException</span><span class="p">,</span> <span class="n">tries</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">delay</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
@@ -147,6 +159,7 @@
         <span class="o">.</span><span class="n">order_by</span><span class="p">(</span><span class="n">DBEvent</span><span class="o">.</span><span class="n">created</span><span class="p">)</span>
     <span class="n">events</span> <span class="o">=</span> <span class="p">[</span><span class="n">datum</span><span class="o">.</span><span class="n">to_event</span><span class="p">()</span> <span class="k">for</span> <span class="n">datum</span> <span class="ow">in</span> <span class="n">event_data</span><span class="p">]</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">events</span><span class="p">:</span>      <span class="c1"># No events, no dice.</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;No events for submission </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">submission_id</span><span class="p">)</span>
         <span class="k">raise</span> <span class="n">NoSuchSubmission</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;Submission </span><span class="si">{submission_id}</span><span class="s1"> not found&#39;</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">events</span></div>
 
@@ -155,7 +168,9 @@
 <span class="nd">@handle_operational_errors</span>
 <span class="k">def</span> <span class="nf">get_user_submissions_fast</span><span class="p">(</span><span class="n">user_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Submission</span><span class="p">]:</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Get all active submissions for a user.</span>
+<span class="sd">    Get active NG submissions for a user.</span>
+
+<span class="sd">    This should not return submissions for which there are no events.</span>
 
 <span class="sd">    Uses the same approach as :func:`get_submission_fast`.</span>
 
@@ -173,6 +188,7 @@
     <span class="n">db_submissions</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span>
         <span class="n">session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="p">)</span>
         <span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">submitter_id</span> <span class="o">==</span> <span class="n">user_id</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">DBEvent</span><span class="p">)</span>  <span class="c1"># Only get submissions that are also in the event table</span>
         <span class="o">.</span><span class="n">order_by</span><span class="p">(</span><span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="o">.</span><span class="n">doc_paper_id</span><span class="o">.</span><span class="n">desc</span><span class="p">())</span>
     <span class="p">)</span>
     <span class="n">grouped</span> <span class="o">=</span> <span class="n">groupby</span><span class="p">(</span><span class="n">db_submissions</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">dbs</span><span class="p">:</span> <span class="n">dbs</span><span class="o">.</span><span class="n">doc_paper_id</span><span class="p">)</span>
@@ -185,7 +201,7 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="n">dbss</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">dbss</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">dbs</span><span class="p">:</span> <span class="n">dbs</span><span class="o">.</span><span class="n">submission_id</span><span class="p">)</span>
             <span class="n">submissions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">load</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">dbss</span><span class="p">))</span>
-    <span class="k">return</span> <span class="p">[</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">submissions</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">s</span><span class="o">.</span><span class="n">deleted</span><span class="p">]</span></div>
+    <span class="k">return</span> <span class="p">[</span><span class="n">subm</span> <span class="k">for</span> <span class="n">subm</span> <span class="ow">in</span> <span class="n">submissions</span> <span class="k">if</span> <span class="n">subm</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">subm</span><span class="o">.</span><span class="n">is_deleted</span><span class="p">]</span></div>
 
 
 <div class="viewcode-block" id="get_submission_fast"><a class="viewcode-back" href="../../../../arxiv.submission/arxiv.submission.services.classic.html#arxiv.submission.services.classic.get_submission_fast">[docs]</a><span class="nd">@retry</span><span class="p">(</span><span class="n">ClassicBaseException</span><span class="p">,</span> <span class="n">tries</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">delay</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
@@ -258,9 +274,11 @@
 
     <span class="k">try</span><span class="p">:</span>
         <span class="n">original_row</span> <span class="o">=</span> <span class="n">original_row</span><span class="o">.</span><span class="n">one</span><span class="p">()</span>
-    <span class="k">except</span> <span class="n">NoResultFound</span><span class="p">:</span>       <span class="c1"># May also raise MultipleResultsFound; if so,</span>
-                                <span class="c1"># we want to fail loudly.</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Got row </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">original_row</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">NoResultFound</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Got NoResultFound exception </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">exc</span><span class="p">)</span>
         <span class="k">raise</span> <span class="n">NoSuchSubmission</span><span class="p">(</span><span class="n">f</span><span class="s1">&#39;Submission </span><span class="si">{submission_id}</span><span class="s1"> not found&#39;</span><span class="p">)</span>
+        <span class="c1"># May also raise MultipleResultsFound; if so, we want to fail loudly.</span>
 
     <span class="c1"># Load any subsequent submission rows (e.g. v=2, jref, withdrawal).</span>
     <span class="c1"># These do not have the same legacy submission ID as the original</span>
@@ -276,11 +294,29 @@
         <span class="k">if</span> <span class="n">for_update</span><span class="p">:</span>      <span class="c1"># Lock these rows as well.</span>
             <span class="n">subsequent_rows</span> <span class="o">=</span> <span class="n">subsequent_rows</span><span class="o">.</span><span class="n">with_for_update</span><span class="p">(</span><span class="n">read</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="n">subsequent_rows</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">subsequent_rows</span><span class="p">)</span>   <span class="c1"># Execute query.</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s1">&#39;Got subsequent_rows: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">subsequent_rows</span><span class="p">)</span>
 
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">_events</span> <span class="o">=</span> <span class="n">get_events</span><span class="p">(</span><span class="n">submission_id</span><span class="p">)</span>
+    <span class="k">except</span> <span class="n">NoSuchSubmission</span><span class="p">:</span>
+        <span class="n">_events</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="c1"># If this submission originated in the classic system, we will have usable</span>
+    <span class="c1"># rows from the submission table, and either no events or events that do</span>
+    <span class="c1"># not start with a CreateSubmission event. In that case, fall back to</span>
+    <span class="c1"># ``load.load()``, which relies only on classic rows.</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">_events</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">_events</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">CreateSubmission</span><span class="p">):</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Loading a classic submission: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">submission_id</span><span class="p">)</span>
+        <span class="n">submission</span> <span class="o">=</span> <span class="n">load</span><span class="o">.</span><span class="n">load</span><span class="p">([</span><span class="n">original_row</span><span class="p">]</span> <span class="o">+</span> <span class="n">subsequent_rows</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">submission</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">NoSuchSubmission</span><span class="p">(</span><span class="s1">&#39;No such submission&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">submission</span><span class="p">,</span> <span class="p">[]</span>
+
+    <span class="c1"># We have an NG-native submission.</span>
     <span class="n">interpolator</span> <span class="o">=</span> <span class="n">interpolate</span><span class="o">.</span><span class="n">ClassicEventInterpolator</span><span class="p">(</span>
         <span class="n">original_row</span><span class="p">,</span>
         <span class="n">subsequent_rows</span><span class="p">,</span>
-        <span class="n">get_events</span><span class="p">(</span><span class="n">submission_id</span><span class="p">)</span>
+        <span class="n">_events</span>
     <span class="p">)</span>
     <span class="k">return</span> <span class="n">interpolator</span><span class="o">.</span><span class="n">get_submission_state</span><span class="p">()</span></div>
 
@@ -340,7 +376,7 @@
 
         <span class="c1"># After the original submission is announced, a new Document row is</span>
         <span class="c1"># created. This Document is shared by all subsequent Submission rows.</span>
-        <span class="k">if</span> <span class="n">before</span><span class="o">.</span><span class="n">announced</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">before</span><span class="o">.</span><span class="n">is_announced</span><span class="p">:</span>
             <span class="n">doc_id</span> <span class="o">=</span> <span class="n">_load_document_id</span><span class="p">(</span><span class="n">before</span><span class="o">.</span><span class="n">arxiv_id</span><span class="p">,</span> <span class="n">before</span><span class="o">.</span><span class="n">version</span><span class="p">)</span>
 
         <span class="n">JREFEvents</span> <span class="o">=</span> <span class="p">[</span><span class="n">SetDOI</span><span class="p">,</span> <span class="n">SetJournalReference</span><span class="p">,</span> <span class="n">SetReportNumber</span><span class="p">]</span>
@@ -368,7 +404,7 @@
 
         <span class="c1"># Adding DOIs and citation information (so-called &quot;journal reference&quot;)</span>
         <span class="c1"># also requires a new row. The version number is not incremented.</span>
-        <span class="k">elif</span> <span class="n">before</span><span class="o">.</span><span class="n">announced</span> <span class="ow">and</span> <span class="nb">type</span><span class="p">(</span><span class="n">event</span><span class="p">)</span> <span class="ow">in</span> <span class="n">JREFEvents</span><span class="p">:</span>
+        <span class="k">elif</span> <span class="n">before</span><span class="o">.</span><span class="n">is_announced</span> <span class="ow">and</span> <span class="nb">type</span><span class="p">(</span><span class="n">event</span><span class="p">)</span> <span class="ow">in</span> <span class="n">JREFEvents</span><span class="p">:</span>
             <span class="n">dbs</span> <span class="o">=</span> <span class="n">_create_jref</span><span class="p">(</span><span class="n">doc_id</span><span class="p">,</span> <span class="n">before</span><span class="o">.</span><span class="n">arxiv_id</span><span class="p">,</span> <span class="n">after</span><span class="o">.</span><span class="n">version</span><span class="p">,</span> <span class="n">after</span><span class="p">,</span>
                                <span class="n">event</span><span class="o">.</span><span class="n">created</span><span class="p">)</span>
 
@@ -655,9 +691,14 @@
     <span class="n">db</span><span class="o">.</span><span class="n">init_app</span><span class="p">(</span><span class="n">app</span><span class="p">)</span>
 
     <span class="nd">@app</span><span class="o">.</span><span class="n">teardown_request</span>
-    <span class="k">def</span> <span class="nf">teardown_request</span><span class="p">(</span><span class="n">exception</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">teardown_request</span><span class="p">(</span><span class="n">exception</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">exception</span><span class="p">:</span>
             <span class="n">db</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">rollback</span><span class="p">()</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">remove</span><span class="p">()</span>
+
+    <span class="nd">@app</span><span class="o">.</span><span class="n">teardown_appcontext</span>
+    <span class="k">def</span> <span class="nf">teardown_appcontext</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">db</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">rollback</span><span class="p">()</span>
         <span class="n">db</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">remove</span><span class="p">()</span></div>
 
 

@@ -41,11 +41,11 @@
 <em class="property">class </em><code class="descclassname">arxiv.submission.domain.event.base.</code><code class="descname">Event</code><span class="sig-paren">(</span><em>creator</em>, <em>created=None</em>, <em>proxy=None</em>, <em>client=None</em>, <em>submission_id=None</em>, <em>committed=False</em>, <em>before=None</em>, <em>after=None</em>, <em>event_type=&lt;factory&gt;</em>, <em>event_version=&lt;factory&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/domain/event/base.html#Event"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.domain.event.base.Event" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference external" href="https://docs.python.org/3.6/library/functions.html#object" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
 <p>Base class for submission-related events/commands.</p>
-<p>An event represents a change to a <a class="reference internal" href="arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.Submission" title="arxiv.submission.domain.submission.Submission"><code class="xref py py-class docutils literal notranslate"><span class="pre">domain.submission.Submission</span></code></a>. Rather than
-changing submissions directly, an application should create (and store)
-events. Each event class must inherit from this base class, extend it with
-whatever data is needed for the event, and define methods for validation
-and projection (changing a submission):</p>
+<p>An event represents a change to a <a class="reference internal" href="arxiv.submission.domain.submission.html#arxiv.submission.domain.submission.Submission" title="arxiv.submission.domain.submission.Submission"><code class="xref py py-class docutils literal notranslate"><span class="pre">domain.submission.Submission</span></code></a>.
+Rather than changing submissions directly, an application should create
+(and store) events. Each event class must inherit from this base class,
+extend it with whatever data is needed for the event, and define methods
+for validation and projection (changing a submission):</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">validate(self,</span> <span class="pre">submission:</span> <span class="pre">Submission)</span> <span class="pre">-&gt;</span> <span class="pre">None</span></code> should raise
 <a class="reference internal" href="arxiv.submission.exceptions.html#arxiv.submission.exceptions.InvalidEvent" title="arxiv.submission.exceptions.InvalidEvent"><code class="xref py py-class docutils literal notranslate"><span class="pre">InvalidEvent</span></code></a> if the event instance has invalid data.</p></li>

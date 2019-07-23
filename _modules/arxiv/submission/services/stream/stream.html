@@ -35,12 +35,17 @@
 <span></span><span class="kn">from</span> <span class="nn">typing</span> <span class="k">import</span> <span class="n">Optional</span>
 
 <span class="kn">import</span> <span class="nn">boto3</span>
+<span class="kn">from</span> <span class="nn">botocore.exceptions</span> <span class="k">import</span> <span class="n">ClientError</span>
+<span class="kn">from</span> <span class="nn">retry</span> <span class="k">import</span> <span class="n">retry</span>
 
 <span class="kn">from</span> <span class="nn">arxiv.integration.meta</span> <span class="k">import</span> <span class="n">MetaIntegration</span>
+<span class="kn">from</span> <span class="nn">arxiv.base</span> <span class="k">import</span> <span class="n">logging</span>
 <span class="kn">from</span> <span class="nn">arxiv.base.globals</span> <span class="k">import</span> <span class="n">get_application_config</span><span class="p">,</span> <span class="n">get_application_global</span>
 
 <span class="kn">from</span> <span class="nn">...domain</span> <span class="k">import</span> <span class="n">Submission</span><span class="p">,</span> <span class="n">Event</span>
 <span class="kn">from</span> <span class="nn">...serializer</span> <span class="k">import</span> <span class="n">dumps</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="StreamPublisher"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.services.stream.stream.html#arxiv.submission.services.stream.stream.StreamPublisher">[docs]</a><span class="k">class</span> <span class="nc">StreamPublisher</span><span class="p">(</span><span class="n">metaclass</span><span class="o">=</span><span class="n">MetaIntegration</span><span class="p">):</span>
@@ -93,6 +98,59 @@
         <span class="k">elif</span> <span class="s1">&#39;stream&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">g</span><span class="p">:</span>
             <span class="n">g</span><span class="o">.</span><span class="n">stream</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">get_session</span><span class="p">()</span>   <span class="c1"># type: ignore</span>
         <span class="k">return</span> <span class="n">g</span><span class="o">.</span><span class="n">stream</span>    <span class="c1"># type: ignore</span></div>
+
+<div class="viewcode-block" id="StreamPublisher.is_available"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.services.stream.stream.html#arxiv.submission.services.stream.stream.StreamPublisher.is_available">[docs]</a>    <span class="k">def</span> <span class="nf">is_available</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Test our ability to put records.&quot;&quot;&quot;</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="nb">bytes</span><span class="p">(</span><span class="n">dumps</span><span class="p">({}),</span> <span class="n">encoding</span><span class="o">=</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">put_record</span><span class="p">(</span><span class="n">StreamName</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="p">,</span> <span class="n">Data</span><span class="o">=</span><span class="n">data</span><span class="p">,</span>
+                                   <span class="n">PartitionKey</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">partition_key</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;Encountered error while putting to stream: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">return</span> <span class="kc">True</span></div>
+
+    <span class="k">def</span> <span class="nf">_create_stream</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">create_stream</span><span class="p">(</span><span class="n">StreamName</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="p">,</span> <span class="n">ShardCount</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">except</span> <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">exceptions</span><span class="o">.</span><span class="n">ResourceInUseException</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Stream </span><span class="si">%s</span><span class="s1"> already exists&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="p">)</span>
+            <span class="k">return</span>
+
+    <span class="k">def</span> <span class="nf">_wait_for_stream</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">retries</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">delay</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">waiter</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">get_waiter</span><span class="p">(</span><span class="s1">&#39;stream_exists&#39;</span><span class="p">)</span>
+        <span class="n">waiter</span><span class="o">.</span><span class="n">wait</span><span class="p">(</span>
+            <span class="n">StreamName</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="p">,</span>
+            <span class="n">WaiterConfig</span><span class="o">=</span><span class="p">{</span>
+                <span class="s1">&#39;Delay&#39;</span><span class="p">:</span> <span class="n">delay</span><span class="p">,</span>
+                <span class="s1">&#39;MaxAttempts&#39;</span><span class="p">:</span> <span class="n">retries</span>
+            <span class="p">}</span>
+        <span class="p">)</span>
+
+<div class="viewcode-block" id="StreamPublisher.initialize"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.services.stream.stream.html#arxiv.submission.services.stream.stream.StreamPublisher.initialize">[docs]</a>    <span class="nd">@retry</span><span class="p">(</span><span class="ne">RuntimeError</span><span class="p">,</span> <span class="n">tries</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">delay</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">backoff</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">initialize</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Perform initial checks, e.g. at application start-up.&quot;&quot;&quot;</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;initialize Kinesis stream&#39;</span><span class="p">)</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="nb">bytes</span><span class="p">(</span><span class="n">dumps</span><span class="p">({}),</span> <span class="n">encoding</span><span class="o">=</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">put_record</span><span class="p">(</span><span class="n">StreamName</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">stream</span><span class="p">,</span> <span class="n">Data</span><span class="o">=</span><span class="n">data</span><span class="p">,</span>
+                                   <span class="n">PartitionKey</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">partition_key</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;storage service is already available&#39;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">ClientError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">exc</span><span class="o">.</span><span class="n">response</span><span class="p">[</span><span class="s1">&#39;Error&#39;</span><span class="p">][</span><span class="s1">&#39;Code&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;ResourceNotFoundException&#39;</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;stream does not exist; creating&#39;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_create_stream</span><span class="p">()</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;wait for stream to be available&#39;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_wait_for_stream</span><span class="p">(</span><span class="n">retries</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">delay</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;Failed to initialize stream&#39;</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">exc</span>
+        <span class="k">except</span> <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">exceptions</span><span class="o">.</span><span class="n">ResourceNotFoundException</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;stream does not exist; creating&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_create_stream</span><span class="p">()</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;wait for stream to be available&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_wait_for_stream</span><span class="p">(</span><span class="n">retries</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">delay</span><span class="o">=</span><span class="mi">5</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;Failed to initialize stream&#39;</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">exc</span>
+        <span class="k">return</span></div>
 
 <div class="viewcode-block" id="StreamPublisher.put"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.services.stream.stream.html#arxiv.submission.services.stream.stream.StreamPublisher.put">[docs]</a>    <span class="k">def</span> <span class="nf">put</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">:</span> <span class="n">Event</span><span class="p">,</span> <span class="n">before</span><span class="p">:</span> <span class="n">Submission</span><span class="p">,</span> <span class="n">after</span><span class="p">:</span> <span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Put an :class:`.Event` on the stream.&quot;&quot;&quot;</span>

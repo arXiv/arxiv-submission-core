@@ -109,7 +109,12 @@ service itself.</p>
 <dl class="method">
 <dt id="arxiv.submission.services.plaintext.plaintext.PlainTextService.endpoint">
 <code class="descname">endpoint</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/services/plaintext/plaintext.html#PlainTextService.endpoint"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.services.plaintext.plaintext.PlainTextService.endpoint" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get the URL of the classifier endpoint.</p>
+<dd><p>Get the URL of the extraction endpoint.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="method">
@@ -129,6 +134,17 @@ service itself.</p>
 <dt class="field-even">Raises</dt>
 <dd class="field-even"><p><a class="reference internal" href="#arxiv.submission.services.plaintext.plaintext.ExtractionFailed" title="arxiv.submission.services.plaintext.plaintext.ExtractionFailed"><strong>ExtractionFailed</strong></a> – Raised if the task is in a failed state, or an unexpected condition
     is encountered.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.services.plaintext.plaintext.PlainTextService.is_available">
+<code class="descname">is_available</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/services/plaintext/plaintext.html#PlainTextService.is_available"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.services.plaintext.plaintext.PlainTextService.is_available" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check our connection to the plain text service.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/functions.html#bool" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -173,7 +189,12 @@ service itself.</p>
 <dl class="method">
 <dt id="arxiv.submission.services.plaintext.plaintext.PlainTextService.status_endpoint">
 <code class="descname">status_endpoint</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/services/plaintext/plaintext.html#PlainTextService.status_endpoint"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.services.plaintext.plaintext.PlainTextService.status_endpoint" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get the URL of the classifier endpoint.</p>
+<dd><p>Get the URL of the extraction status endpoint.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/stdtypes.html#str" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p>
+</dd>
+</dl>
 </dd></dl>
 
 </dd></dl>

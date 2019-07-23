@@ -227,6 +227,9 @@
 <span class="k">class</span> <span class="nc">UserRequest</span><span class="p">:</span>
     <span class="sd">&quot;&quot;&quot;Represents a user request related to a submission.&quot;&quot;&quot;</span>
 
+    <span class="n">WORKING</span> <span class="o">=</span> <span class="s1">&#39;working&#39;</span>
+    <span class="sd">&quot;&quot;&quot;Request is not yet submitted.&quot;&quot;&quot;</span>
+
     <span class="n">PENDING</span> <span class="o">=</span> <span class="s1">&#39;pending&#39;</span>
     <span class="sd">&quot;&quot;&quot;Request is pending approval.&quot;&quot;&quot;</span>
 
@@ -290,7 +293,7 @@
 
 <div class="viewcode-block" id="WithdrawalRequest"><a class="viewcode-back" href="../../../../arxiv.submission/arxiv.submission.domain.submission.html#arxiv.submission.domain.event.WithdrawalRequest">[docs]</a><span class="nd">@dataclass</span>
 <span class="k">class</span> <span class="nc">WithdrawalRequest</span><span class="p">(</span><span class="n">UserRequest</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Represents a request ot withdraw a submission.&quot;&quot;&quot;</span>
+    <span class="sd">&quot;&quot;&quot;Represents a request to withdraw a submission.&quot;&quot;&quot;</span>
 
     <span class="n">NAME</span> <span class="o">=</span> <span class="s2">&quot;Withdrawal&quot;</span>
 
@@ -421,22 +424,22 @@
                 <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="n">Feature</span><span class="p">)}</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">active</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">is_active</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Actively moving through the submission workflow.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">DELETED</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ANNOUNCED</span><span class="p">]</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">announced</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">is_announced</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;The submission has been announced.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">ANNOUNCED</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">finalized</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">is_finalized</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Submitter has indicated submission is ready for publication.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">WORKING</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">DELETED</span><span class="p">]</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">deleted</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">is_deleted</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Submission is removed.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">DELETED</span>
 

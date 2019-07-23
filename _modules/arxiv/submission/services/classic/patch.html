@@ -101,13 +101,15 @@
 <span class="k">def</span> <span class="nf">_patch_request</span><span class="p">(</span><span class="n">req_type</span><span class="p">:</span> <span class="nb">type</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
                    <span class="n">submission</span><span class="p">:</span> <span class="n">domain</span><span class="o">.</span><span class="n">Submission</span><span class="p">,</span> <span class="n">row</span><span class="p">:</span> <span class="n">models</span><span class="o">.</span><span class="n">Submission</span><span class="p">,</span>
                    <span class="n">request_number</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">domain</span><span class="o">.</span><span class="n">Submission</span><span class="p">:</span>
-    <span class="n">status</span> <span class="o">=</span> <span class="n">req_type</span><span class="o">.</span><span class="n">PENDING</span>   <span class="c1"># Will be pending if on hold, too.</span>
+    <span class="n">status</span> <span class="o">=</span> <span class="n">req_type</span><span class="o">.</span><span class="n">WORKING</span>
     <span class="k">if</span> <span class="n">row</span><span class="o">.</span><span class="n">is_announced</span><span class="p">():</span>
         <span class="n">status</span> <span class="o">=</span> <span class="n">req_type</span><span class="o">.</span><span class="n">APPLIED</span>
     <span class="k">elif</span> <span class="n">row</span><span class="o">.</span><span class="n">is_deleted</span><span class="p">():</span>
         <span class="n">status</span> <span class="o">=</span> <span class="n">req_type</span><span class="o">.</span><span class="n">CANCELLED</span>
     <span class="k">elif</span> <span class="n">row</span><span class="o">.</span><span class="n">is_rejected</span><span class="p">():</span>
         <span class="n">status</span> <span class="o">=</span> <span class="n">req_type</span><span class="o">.</span><span class="n">REJECTED</span>
+    <span class="k">elif</span> <span class="ow">not</span> <span class="n">row</span><span class="o">.</span><span class="n">is_working</span><span class="p">():</span>
+        <span class="n">status</span> <span class="o">=</span> <span class="n">req_type</span><span class="o">.</span><span class="n">PENDING</span>    <span class="c1"># Includes hold state.</span>
     <span class="n">data</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s1">&#39;status&#39;</span><span class="p">:</span> <span class="n">status</span><span class="p">})</span>
     <span class="n">request_id</span> <span class="o">=</span> <span class="n">req_type</span><span class="o">.</span><span class="n">generate_request_id</span><span class="p">(</span><span class="n">submission</span><span class="p">,</span> <span class="n">request_number</span><span class="p">)</span>
 

@@ -37,9 +37,9 @@
 <span id="agent-rules-conditions-module"></span><h1>agent.rules.conditions module<a class="headerlink" href="#module-agent.rules.conditions" title="Permalink to this headline">¶</a></h1>
 <p>Rule condition helpers.</p>
 <dl class="function">
-<dt id="agent.rules.conditions.always">
-<code class="descclassname">agent.rules.conditions.</code><code class="descname">always</code><span class="sig-paren">(</span><em>event</em>, <em>before</em>, <em>after</em><span class="sig-paren">)</span><a class="headerlink" href="#agent.rules.conditions.always" title="Permalink to this definition">¶</a></dt>
-<dd><p>Always means always.</p>
+<dt id="agent.rules.conditions.is_always">
+<code class="descclassname">agent.rules.conditions.</code><code class="descname">is_always</code><span class="sig-paren">(</span><em>event</em>, <em>before</em>, <em>after</em><span class="sig-paren">)</span><a class="headerlink" href="#agent.rules.conditions.is_always" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return <code class="docutils literal notranslate"><span class="pre">True</span></code>. Always means always.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/functions.html#bool" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></p>
@@ -48,8 +48,8 @@
 </dd></dl>
 
 <dl class="function">
-<dt id="agent.rules.conditions.feature_type_is">
-<code class="descclassname">agent.rules.conditions.</code><code class="descname">feature_type_is</code><span class="sig-paren">(</span><em>feature_type</em><span class="sig-paren">)</span><a class="headerlink" href="#agent.rules.conditions.feature_type_is" title="Permalink to this definition">¶</a></dt>
+<dt id="agent.rules.conditions.is_feature_type">
+<code class="descclassname">agent.rules.conditions.</code><code class="descname">is_feature_type</code><span class="sig-paren">(</span><em>feature_type</em><span class="sig-paren">)</span><a class="headerlink" href="#agent.rules.conditions.is_feature_type" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generate a condition based on feature type.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type</dt>
@@ -59,8 +59,8 @@
 </dd></dl>
 
 <dl class="function">
-<dt id="agent.rules.conditions.system_event">
-<code class="descclassname">agent.rules.conditions.</code><code class="descname">system_event</code><span class="sig-paren">(</span><em>event</em>, <em>before</em>, <em>after</em><span class="sig-paren">)</span><a class="headerlink" href="#agent.rules.conditions.system_event" title="Permalink to this definition">¶</a></dt>
+<dt id="agent.rules.conditions.is_system_event">
+<code class="descclassname">agent.rules.conditions.</code><code class="descname">is_system_event</code><span class="sig-paren">(</span><em>event</em>, <em>before</em>, <em>after</em><span class="sig-paren">)</span><a class="headerlink" href="#agent.rules.conditions.is_system_event" title="Permalink to this definition">¶</a></dt>
 <dd><p>Only for system-created events.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type</dt>
@@ -70,8 +70,8 @@
 </dd></dl>
 
 <dl class="function">
-<dt id="agent.rules.conditions.user_event">
-<code class="descclassname">agent.rules.conditions.</code><code class="descname">user_event</code><span class="sig-paren">(</span><em>event</em>, <em>before</em>, <em>after</em><span class="sig-paren">)</span><a class="headerlink" href="#agent.rules.conditions.user_event" title="Permalink to this definition">¶</a></dt>
+<dt id="agent.rules.conditions.is_user_event">
+<code class="descclassname">agent.rules.conditions.</code><code class="descname">is_user_event</code><span class="sig-paren">(</span><em>event</em>, <em>before</em>, <em>after</em><span class="sig-paren">)</span><a class="headerlink" href="#agent.rules.conditions.is_user_event" title="Permalink to this definition">¶</a></dt>
 <dd><p>Only for user-created events.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Return type</dt>

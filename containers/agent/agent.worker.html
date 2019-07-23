@@ -33,17 +33,8 @@
 
           <div class="body" role="main">
             
-  <div class="section" id="module-agent.worker">
-<span id="agent-worker-module"></span><h1>agent.worker module<a class="headerlink" href="#module-agent.worker" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="submission-agent-worker">
-<h2>Submission Agent Worker<a class="headerlink" href="#submission-agent-worker" title="Permalink to this headline">¶</a></h2>
-<p>The worker is a <a class="reference external" href="https://celeryproject.org">Celery</a> application that scales
-horizontally to run <a class="reference internal" href="agent.process.base.html#agent.process.base.Process" title="agent.process.base.Process"><code class="xref py py-class docutils literal notranslate"><span class="pre">Process</span></code></a> instances dispatched by the consumer.
-Processes are divided into smaller steps that are run in series. Keeping steps
-small makes the overall process more fault-tolerant; if a step fails for some
-reason (e.g. worker crashes, meteor strike), it can be retried without
-discarding expensive results from previous steps.</p>
-</div>
+  <div class="section" id="agent-worker-module">
+<h1>agent.worker module<a class="headerlink" href="#agent-worker-module" title="Permalink to this headline">¶</a></h1>
 </div>
 
 

@@ -37,25 +37,352 @@
 <span id="arxiv-submission-config-module"></span><h1>arxiv.submission.config module<a class="headerlink" href="#module-arxiv.submission.config" title="Permalink to this headline">¶</a></h1>
 <p>Submission core configuration parameters.</p>
 <dl class="data">
-<dt id="arxiv.submission.config.ENABLE_ASYNC">
-<code class="descclassname">arxiv.submission.config.</code><code class="descname">ENABLE_ASYNC</code><em class="property"> = '0'</em><a class="headerlink" href="#arxiv.submission.config.ENABLE_ASYNC" title="Permalink to this definition">¶</a></dt>
-<dd><p>If <code class="docutils literal notranslate"><span class="pre">1</span></code>, asynchronous callbacks will be dispatched to the worker.</p>
-<p>Otherwise they will be executed in the thread in which they are called.</p>
+<dt id="arxiv.submission.config.AWS_ACCESS_KEY_ID">
+<code class="descclassname">arxiv.submission.config.</code><code class="descname">AWS_ACCESS_KEY_ID</code><em class="property"> = 'nope'</em><a class="headerlink" href="#arxiv.submission.config.AWS_ACCESS_KEY_ID" title="Permalink to this definition">¶</a></dt>
+<dd><p>Access key for requests to AWS services.</p>
+<p>If <code class="xref py py-const docutils literal notranslate"><span class="pre">VAULT_ENABLED</span></code> is <code class="docutils literal notranslate"><span class="pre">True</span></code>, this will be overwritten.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="arxiv.submission.config.AWS_REGION">
+<code class="descclassname">arxiv.submission.config.</code><code class="descname">AWS_REGION</code><em class="property"> = 'us-east-1'</em><a class="headerlink" href="#arxiv.submission.config.AWS_REGION" title="Permalink to this definition">¶</a></dt>
+<dd><p>Default region for calling AWS services.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="arxiv.submission.config.AWS_SECRET_ACCESS_KEY">
+<code class="descclassname">arxiv.submission.config.</code><code class="descname">AWS_SECRET_ACCESS_KEY</code><em class="property"> = 'nope'</em><a class="headerlink" href="#arxiv.submission.config.AWS_SECRET_ACCESS_KEY" title="Permalink to this definition">¶</a></dt>
+<dd><p>Secret auth key for requests to AWS services.</p>
+<p>If <code class="xref py py-const docutils literal notranslate"><span class="pre">VAULT_ENABLED</span></code> is <code class="docutils literal notranslate"><span class="pre">True</span></code>, this will be overwritten.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="arxiv.submission.config.BASE_SERVER">
+<code class="descclassname">arxiv.submission.config.</code><code class="descname">BASE_SERVER</code><em class="property"> = 'arxiv.org'</em><a class="headerlink" href="#arxiv.submission.config.BASE_SERVER" title="Permalink to this definition">¶</a></dt>
+<dd><p>Base arXiv server.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="arxiv.submission.config.CLASSIC_DATABASE_URI">
+<code class="descclassname">arxiv.submission.config.</code><code class="descname">CLASSIC_DATABASE_URI</code><em class="property"> = 'sqlite:///'</em><a class="headerlink" href="#arxiv.submission.config.CLASSIC_DATABASE_URI" title="Permalink to this definition">¶</a></dt>
+<dd><p>Full database URI for the classic system.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="arxiv.submission.config.CLASSIFIER_ENDPOINT">
+<code class="descclassname">arxiv.submission.config.</code><code class="descname">CLASSIFIER_ENDPOINT</code><em class="property"> = 'http://localhost:8000/'</em><a class="headerlink" href="#arxiv.submission.config.CLASSIFIER_ENDPOINT" title="Permalink to this definition">¶</a></dt>
+<dd><p>Full URL to the root classifier service API endpoint.</p>
+<p>If not explicitly provided, this is composed from <a class="reference internal" href="#arxiv.submission.config.CLASSIFIER_HOST" title="arxiv.submission.config.CLASSIFIER_HOST"><code class="xref py py-const docutils literal notranslate"><span class="pre">CLASSIFIER_HOST</span></code></a>,
+<a class="reference internal" href="#arxiv.submission.config.CLASSIFIER_PORT" title="arxiv.submission.config.CLASSIFIER_PORT"><code class="xref py py-const docutils literal notranslate"><span class="pre">CLASSIFIER_PORT</span></code></a>, <a class="reference internal" href="#arxiv.submission.config.CLASSIFIER_PROTO" title="arxiv.submission.config.CLASSIFIER_PROTO"><code class="xref py py-const docutils literal notranslate"><span class="pre">CLASSIFIER_PROTO</span></code></a>, and
+<a class="reference internal" href="#arxiv.submission.config.CLASSIFIER_PATH" title="arxiv.submission.config.CLASSIFIER_PATH"><code class="xref py py-const docutils literal notranslate"><span class="pre">CLASSIFIER_PATH</span></code></a>.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="arxiv.submission.config.CLASSIFIER_HOST">
+<code class="descclassname">arxiv.submission.config.</code><code class="descname">CLASSIFIER_HOST</code><em class="property"> = 'localhost'</em><a class="headerlink" href="#arxiv.submission.config.CLASSIFIER_HOST" title="Permalink to this definition">¶</a></dt>
+<dd><p>Hostname or addreess of the classifier service.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="arxiv.submission.config.CLASSIFIER_PATH">
+<code class="descclassname">arxiv.submission.config.</code><code class="descname">CLASSIFIER_PATH</code><em class="property"> = ''</em><a class="headerlink" href="#arxiv.submission.config.CLASSIFIER_PATH" title="Permalink to this definition">¶</a></dt>
+<dd><p>Path at which the classifier service is deployed.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="arxiv.submission.config.CLASSIFIER_PORT">
+<code class="descclassname">arxiv.submission.config.</code><code class="descname">CLASSIFIER_PORT</code><em class="property"> = '8000'</em><a class="headerlink" href="#arxiv.submission.config.CLASSIFIER_PORT" title="Permalink to this definition">¶</a></dt>
+<dd><p>Port for the classifier service.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="arxiv.submission.config.CLASSIFIER_PROTO">
+<code class="descclassname">arxiv.submission.config.</code><code class="descname">CLASSIFIER_PROTO</code><em class="property"> = 'http'</em><a class="headerlink" href="#arxiv.submission.config.CLASSIFIER_PROTO" title="Permalink to this definition">¶</a></dt>
+<dd><p>Protocol for the classifier service.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="arxiv.submission.config.CLASSIFIER_VERIFY">
+<code class="descclassname">arxiv.submission.config.</code><code class="descname">CLASSIFIER_VERIFY</code><em class="property"> = False</em><a class="headerlink" href="#arxiv.submission.config.CLASSIFIER_VERIFY" title="Permalink to this definition">¶</a></dt>
+<dd><p>Enable/disable SSL certificate verification for classifier service.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="arxiv.submission.config.COMPILER_ENDPOINT">
+<code class="descclassname">arxiv.submission.config.</code><code class="descname">COMPILER_ENDPOINT</code><em class="property"> = 'https://arxiv.org:443/'</em><a class="headerlink" href="#arxiv.submission.config.COMPILER_ENDPOINT" title="Permalink to this definition">¶</a></dt>
+<dd><p>Full URL to the root compiler service API endpoint.</p>
+<p>If not explicitly provided, this is composed from <a class="reference internal" href="#arxiv.submission.config.COMPILER_HOST" title="arxiv.submission.config.COMPILER_HOST"><code class="xref py py-const docutils literal notranslate"><span class="pre">COMPILER_HOST</span></code></a>,
+<a class="reference internal" href="#arxiv.submission.config.COMPILER_PORT" title="arxiv.submission.config.COMPILER_PORT"><code class="xref py py-const docutils literal notranslate"><span class="pre">COMPILER_PORT</span></code></a>, <a class="reference internal" href="#arxiv.submission.config.COMPILER_PROTO" title="arxiv.submission.config.COMPILER_PROTO"><code class="xref py py-const docutils literal notranslate"><span class="pre">COMPILER_PROTO</span></code></a>, and <a class="reference internal" href="#arxiv.submission.config.COMPILER_PATH" title="arxiv.submission.config.COMPILER_PATH"><code class="xref py py-const docutils literal notranslate"><span class="pre">COMPILER_PATH</span></code></a>.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="arxiv.submission.config.COMPILER_HOST">
+<code class="descclassname">arxiv.submission.config.</code><code class="descname">COMPILER_HOST</code><em class="property"> = 'arxiv.org'</em><a class="headerlink" href="#arxiv.submission.config.COMPILER_HOST" title="Permalink to this definition">¶</a></dt>
+<dd><p>Hostname or addreess of the compiler service.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="arxiv.submission.config.COMPILER_PATH">
+<code class="descclassname">arxiv.submission.config.</code><code class="descname">COMPILER_PATH</code><em class="property"> = ''</em><a class="headerlink" href="#arxiv.submission.config.COMPILER_PATH" title="Permalink to this definition">¶</a></dt>
+<dd><p>Path at which the compiler service is deployed.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="arxiv.submission.config.COMPILER_PORT">
+<code class="descclassname">arxiv.submission.config.</code><code class="descname">COMPILER_PORT</code><em class="property"> = '443'</em><a class="headerlink" href="#arxiv.submission.config.COMPILER_PORT" title="Permalink to this definition">¶</a></dt>
+<dd><p>Port for the compiler service.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="arxiv.submission.config.COMPILER_PROTO">
+<code class="descclassname">arxiv.submission.config.</code><code class="descname">COMPILER_PROTO</code><em class="property"> = 'https'</em><a class="headerlink" href="#arxiv.submission.config.COMPILER_PROTO" title="Permalink to this definition">¶</a></dt>
+<dd><p>Protocol for the compiler service.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="arxiv.submission.config.COMPILER_VERIFY">
+<code class="descclassname">arxiv.submission.config.</code><code class="descname">COMPILER_VERIFY</code><em class="property"> = True</em><a class="headerlink" href="#arxiv.submission.config.COMPILER_VERIFY" title="Permalink to this definition">¶</a></dt>
+<dd><p>Enable/disable SSL certificate verification for compiler service.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="arxiv.submission.config.DEFAULT_SAVE_RETRY_DELAY">
+<code class="descclassname">arxiv.submission.config.</code><code class="descname">DEFAULT_SAVE_RETRY_DELAY</code><em class="property"> = 30</em><a class="headerlink" href="#arxiv.submission.config.DEFAULT_SAVE_RETRY_DELAY" title="Permalink to this definition">¶</a></dt>
+<dd><p>Delay between retry attempts when storing/emiting a submission event.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="arxiv.submission.config.DEFAULT_SENDER">
+<code class="descclassname">arxiv.submission.config.</code><code class="descname">DEFAULT_SENDER</code><em class="property"> = 'noreply&#64;arxiv.org'</em><a class="headerlink" href="#arxiv.submission.config.DEFAULT_SENDER" title="Permalink to this definition">¶</a></dt>
+<dd><p>Default sender address for e-mail.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="arxiv.submission.config.EMAIL_ENABLED">
+<code class="descclassname">arxiv.submission.config.</code><code class="descname">EMAIL_ENABLED</code><em class="property"> = True</em><a class="headerlink" href="#arxiv.submission.config.EMAIL_ENABLED" title="Permalink to this definition">¶</a></dt>
+<dd><p>Enable/disable sending e-mail. Default is enabled (True).</p>
 </dd></dl>
 
 <dl class="data">
 <dt id="arxiv.submission.config.ENABLE_CALLBACKS">
-<code class="descclassname">arxiv.submission.config.</code><code class="descname">ENABLE_CALLBACKS</code><em class="property"> = '0'</em><a class="headerlink" href="#arxiv.submission.config.ENABLE_CALLBACKS" title="Permalink to this definition">¶</a></dt>
-<dd><p>If <code class="docutils literal notranslate"><span class="pre">0</span></code>, callbacks bound to events will not be executed.</p>
+<code class="descclassname">arxiv.submission.config.</code><code class="descname">ENABLE_CALLBACKS</code><em class="property"> = True</em><a class="headerlink" href="#arxiv.submission.config.ENABLE_CALLBACKS" title="Permalink to this definition">¶</a></dt>
+<dd><p>Enable/disable the <code class="xref py py-func docutils literal notranslate"><span class="pre">Event.bind()</span></code> feature.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="arxiv.submission.config.EXTERNAL_URL_SCHEME">
+<code class="descclassname">arxiv.submission.config.</code><code class="descname">EXTERNAL_URL_SCHEME</code><em class="property"> = 'https'</em><a class="headerlink" href="#arxiv.submission.config.EXTERNAL_URL_SCHEME" title="Permalink to this definition">¶</a></dt>
+<dd><p>Scheme to use for external URLs.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="arxiv.submission.config.FILEMANAGER_ENDPOINT">
+<code class="descclassname">arxiv.submission.config.</code><code class="descname">FILEMANAGER_ENDPOINT</code><em class="property"> = 'https://arxiv.org:443/'</em><a class="headerlink" href="#arxiv.submission.config.FILEMANAGER_ENDPOINT" title="Permalink to this definition">¶</a></dt>
+<dd><p>Full URL to the root filemanager service API endpoint.</p>
+<p>If not explicitly provided, this is composed from <a class="reference internal" href="#arxiv.submission.config.FILEMANAGER_HOST" title="arxiv.submission.config.FILEMANAGER_HOST"><code class="xref py py-const docutils literal notranslate"><span class="pre">FILEMANAGER_HOST</span></code></a>,
+<a class="reference internal" href="#arxiv.submission.config.FILEMANAGER_PORT" title="arxiv.submission.config.FILEMANAGER_PORT"><code class="xref py py-const docutils literal notranslate"><span class="pre">FILEMANAGER_PORT</span></code></a>, <a class="reference internal" href="#arxiv.submission.config.FILEMANAGER_PROTO" title="arxiv.submission.config.FILEMANAGER_PROTO"><code class="xref py py-const docutils literal notranslate"><span class="pre">FILEMANAGER_PROTO</span></code></a>, and
+<a class="reference internal" href="#arxiv.submission.config.FILEMANAGER_PATH" title="arxiv.submission.config.FILEMANAGER_PATH"><code class="xref py py-const docutils literal notranslate"><span class="pre">FILEMANAGER_PATH</span></code></a>.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="arxiv.submission.config.FILEMANAGER_HOST">
+<code class="descclassname">arxiv.submission.config.</code><code class="descname">FILEMANAGER_HOST</code><em class="property"> = 'arxiv.org'</em><a class="headerlink" href="#arxiv.submission.config.FILEMANAGER_HOST" title="Permalink to this definition">¶</a></dt>
+<dd><p>Hostname or addreess of the filemanager service.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="arxiv.submission.config.FILEMANAGER_PATH">
+<code class="descclassname">arxiv.submission.config.</code><code class="descname">FILEMANAGER_PATH</code><em class="property"> = ''</em><a class="headerlink" href="#arxiv.submission.config.FILEMANAGER_PATH" title="Permalink to this definition">¶</a></dt>
+<dd><p>Path at which the filemanager service is deployed.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="arxiv.submission.config.FILEMANAGER_PORT">
+<code class="descclassname">arxiv.submission.config.</code><code class="descname">FILEMANAGER_PORT</code><em class="property"> = '443'</em><a class="headerlink" href="#arxiv.submission.config.FILEMANAGER_PORT" title="Permalink to this definition">¶</a></dt>
+<dd><p>Port for the filemanager service.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="arxiv.submission.config.FILEMANAGER_PROTO">
+<code class="descclassname">arxiv.submission.config.</code><code class="descname">FILEMANAGER_PROTO</code><em class="property"> = 'https'</em><a class="headerlink" href="#arxiv.submission.config.FILEMANAGER_PROTO" title="Permalink to this definition">¶</a></dt>
+<dd><p>Protocol for the filemanager service.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="arxiv.submission.config.FILEMANAGER_VERIFY">
+<code class="descclassname">arxiv.submission.config.</code><code class="descname">FILEMANAGER_VERIFY</code><em class="property"> = True</em><a class="headerlink" href="#arxiv.submission.config.FILEMANAGER_VERIFY" title="Permalink to this definition">¶</a></dt>
+<dd><p>Enable/disable SSL certificate verification for filemanager service.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="arxiv.submission.config.JWT_SECRET">
+<code class="descclassname">arxiv.submission.config.</code><code class="descname">JWT_SECRET</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.submission.config.JWT_SECRET" title="Permalink to this definition">¶</a></dt>
+<dd><p>Secret key for signing + verifying authentication JWTs.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="arxiv.submission.config.KINESIS_ENDPOINT">
+<code class="descclassname">arxiv.submission.config.</code><code class="descname">KINESIS_ENDPOINT</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.submission.config.KINESIS_ENDPOINT" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alternate endpoint for connecting to Kinesis.</p>
+<p>If <code class="docutils literal notranslate"><span class="pre">None</span></code>, uses the boto3 defaults for the <a class="reference internal" href="#arxiv.submission.config.AWS_REGION" title="arxiv.submission.config.AWS_REGION"><code class="xref py py-const docutils literal notranslate"><span class="pre">AWS_REGION</span></code></a>. This is here
+mainly to support development with localstack or other mocking frameworks.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="arxiv.submission.config.KINESIS_SHARD_ID">
+<code class="descclassname">arxiv.submission.config.</code><code class="descname">KINESIS_SHARD_ID</code><em class="property"> = '0'</em><a class="headerlink" href="#arxiv.submission.config.KINESIS_SHARD_ID" title="Permalink to this definition">¶</a></dt>
+<dd><p>Shard ID for stream producer.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="arxiv.submission.config.KINESIS_STREAM">
+<code class="descclassname">arxiv.submission.config.</code><code class="descname">KINESIS_STREAM</code><em class="property"> = 'SubmissionEvents'</em><a class="headerlink" href="#arxiv.submission.config.KINESIS_STREAM" title="Permalink to this definition">¶</a></dt>
+<dd><p>Name of the stream on which to produce and consume events.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="arxiv.submission.config.KINESIS_VERIFY">
+<code class="descclassname">arxiv.submission.config.</code><code class="descname">KINESIS_VERIFY</code><em class="property"> = True</em><a class="headerlink" href="#arxiv.submission.config.KINESIS_VERIFY" title="Permalink to this definition">¶</a></dt>
+<dd><p>Enable/disable TLS certificate verification when connecting to Kinesis.</p>
+<p>This is here support development with localstack or other mocking frameworks.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="arxiv.submission.config.LOGLEVEL">
+<code class="descclassname">arxiv.submission.config.</code><code class="descname">LOGLEVEL</code><em class="property"> = 20</em><a class="headerlink" href="#arxiv.submission.config.LOGLEVEL" title="Permalink to this definition">¶</a></dt>
+<dd><p>Logging verbosity.</p>
+<p>See <a href="#id1"><span class="problematic" id="id2">`https://docs.python.org/3/library/logging.html#levels`_</span></a>.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="arxiv.submission.config.MAX_SAVE_RETRIES">
+<code class="descclassname">arxiv.submission.config.</code><code class="descname">MAX_SAVE_RETRIES</code><em class="property"> = 25</em><a class="headerlink" href="#arxiv.submission.config.MAX_SAVE_RETRIES" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of times to retry storing/emiting a submission event.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="arxiv.submission.config.NAMESPACE">
+<code class="descclassname">arxiv.submission.config.</code><code class="descname">NAMESPACE</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.submission.config.NAMESPACE" title="Permalink to this definition">¶</a></dt>
+<dd><p>Namespace in which this service is deployed; to qualify keys for secrets.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="arxiv.submission.config.PLAINTEXT_ENDPOINT">
+<code class="descclassname">arxiv.submission.config.</code><code class="descname">PLAINTEXT_ENDPOINT</code><em class="property"> = 'https://arxiv.org:443/'</em><a class="headerlink" href="#arxiv.submission.config.PLAINTEXT_ENDPOINT" title="Permalink to this definition">¶</a></dt>
+<dd><p>Full URL to the root plaintext extraction service API endpoint.</p>
+<p>If not explicitly provided, this is composed from <a class="reference internal" href="#arxiv.submission.config.PLAINTEXT_HOST" title="arxiv.submission.config.PLAINTEXT_HOST"><code class="xref py py-const docutils literal notranslate"><span class="pre">PLAINTEXT_HOST</span></code></a>,
+<a class="reference internal" href="#arxiv.submission.config.PLAINTEXT_PORT" title="arxiv.submission.config.PLAINTEXT_PORT"><code class="xref py py-const docutils literal notranslate"><span class="pre">PLAINTEXT_PORT</span></code></a>, <a class="reference internal" href="#arxiv.submission.config.PLAINTEXT_PROTO" title="arxiv.submission.config.PLAINTEXT_PROTO"><code class="xref py py-const docutils literal notranslate"><span class="pre">PLAINTEXT_PROTO</span></code></a>, and <a class="reference internal" href="#arxiv.submission.config.PLAINTEXT_PATH" title="arxiv.submission.config.PLAINTEXT_PATH"><code class="xref py py-const docutils literal notranslate"><span class="pre">PLAINTEXT_PATH</span></code></a>.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="arxiv.submission.config.PLAINTEXT_HOST">
+<code class="descclassname">arxiv.submission.config.</code><code class="descname">PLAINTEXT_HOST</code><em class="property"> = 'arxiv.org'</em><a class="headerlink" href="#arxiv.submission.config.PLAINTEXT_HOST" title="Permalink to this definition">¶</a></dt>
+<dd><p>Hostname or addreess of the plaintext extraction service.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="arxiv.submission.config.PLAINTEXT_PATH">
+<code class="descclassname">arxiv.submission.config.</code><code class="descname">PLAINTEXT_PATH</code><em class="property"> = ''</em><a class="headerlink" href="#arxiv.submission.config.PLAINTEXT_PATH" title="Permalink to this definition">¶</a></dt>
+<dd><p>Path at which the plaintext extraction service is deployed.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="arxiv.submission.config.PLAINTEXT_PORT">
+<code class="descclassname">arxiv.submission.config.</code><code class="descname">PLAINTEXT_PORT</code><em class="property"> = '443'</em><a class="headerlink" href="#arxiv.submission.config.PLAINTEXT_PORT" title="Permalink to this definition">¶</a></dt>
+<dd><p>Port for the plaintext extraction service.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="arxiv.submission.config.PLAINTEXT_PROTO">
+<code class="descclassname">arxiv.submission.config.</code><code class="descname">PLAINTEXT_PROTO</code><em class="property"> = 'https'</em><a class="headerlink" href="#arxiv.submission.config.PLAINTEXT_PROTO" title="Permalink to this definition">¶</a></dt>
+<dd><p>Protocol for the plaintext extraction service.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="arxiv.submission.config.PLAINTEXT_VERIFY">
+<code class="descclassname">arxiv.submission.config.</code><code class="descname">PLAINTEXT_VERIFY</code><em class="property"> = True</em><a class="headerlink" href="#arxiv.submission.config.PLAINTEXT_VERIFY" title="Permalink to this definition">¶</a></dt>
+<dd><p>Enable/disable certificate verification for plaintext extraction service.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="arxiv.submission.config.SERVER_NAME">
+<code class="descclassname">arxiv.submission.config.</code><code class="descname">SERVER_NAME</code><em class="property"> = 'submit.arxiv.org'</em><a class="headerlink" href="#arxiv.submission.config.SERVER_NAME" title="Permalink to this definition">¶</a></dt>
+<dd><p>The name of this server.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="arxiv.submission.config.SMTP_HOSTNAME">
+<code class="descclassname">arxiv.submission.config.</code><code class="descname">SMTP_HOSTNAME</code><em class="property"> = 'localhost'</em><a class="headerlink" href="#arxiv.submission.config.SMTP_HOSTNAME" title="Permalink to this definition">¶</a></dt>
+<dd><p>Hostname for the SMTP server.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="arxiv.submission.config.SMTP_LOCAL_HOSTNAME">
+<code class="descclassname">arxiv.submission.config.</code><code class="descname">SMTP_LOCAL_HOSTNAME</code><em class="property"> = None</em><a class="headerlink" href="#arxiv.submission.config.SMTP_LOCAL_HOSTNAME" title="Permalink to this definition">¶</a></dt>
+<dd><p>Local host name to include in SMTP request.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="arxiv.submission.config.SMTP_PASSWORD">
+<code class="descclassname">arxiv.submission.config.</code><code class="descname">SMTP_PASSWORD</code><em class="property"> = 'foopass'</em><a class="headerlink" href="#arxiv.submission.config.SMTP_PASSWORD" title="Permalink to this definition">¶</a></dt>
+<dd><p>Password for the SMTP server.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="arxiv.submission.config.SMTP_PORT">
+<code class="descclassname">arxiv.submission.config.</code><code class="descname">SMTP_PORT</code><em class="property"> = 0</em><a class="headerlink" href="#arxiv.submission.config.SMTP_PORT" title="Permalink to this definition">¶</a></dt>
+<dd><p>SMTP service port.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="arxiv.submission.config.SMTP_SSL">
+<code class="descclassname">arxiv.submission.config.</code><code class="descname">SMTP_SSL</code><em class="property"> = False</em><a class="headerlink" href="#arxiv.submission.config.SMTP_SSL" title="Permalink to this definition">¶</a></dt>
+<dd><p>Enable/disable SSL for SMTP. Default is disabled.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="arxiv.submission.config.SMTP_USERNAME">
+<code class="descclassname">arxiv.submission.config.</code><code class="descname">SMTP_USERNAME</code><em class="property"> = 'foouser'</em><a class="headerlink" href="#arxiv.submission.config.SMTP_USERNAME" title="Permalink to this definition">¶</a></dt>
+<dd><p>Username for the SMTP server.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="arxiv.submission.config.SQLALCHEMY_DATABASE_URI">
+<code class="descclassname">arxiv.submission.config.</code><code class="descname">SQLALCHEMY_DATABASE_URI</code><em class="property"> = 'sqlite:///'</em><a class="headerlink" href="#arxiv.submission.config.SQLALCHEMY_DATABASE_URI" title="Permalink to this definition">¶</a></dt>
+<dd><p>Full database URI for the classic system.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="arxiv.submission.config.SQLALCHEMY_TRACK_MODIFICATIONS">
+<code class="descclassname">arxiv.submission.config.</code><code class="descname">SQLALCHEMY_TRACK_MODIFICATIONS</code><em class="property"> = False</em><a class="headerlink" href="#arxiv.submission.config.SQLALCHEMY_TRACK_MODIFICATIONS" title="Permalink to this definition">¶</a></dt>
+<dd><p>Track modifications feature should always be disabled.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="arxiv.submission.config.SUPPORT_EMAIL">
+<code class="descclassname">arxiv.submission.config.</code><code class="descname">SUPPORT_EMAIL</code><em class="property"> = 'help&#64;arxiv.org'</em><a class="headerlink" href="#arxiv.submission.config.SUPPORT_EMAIL" title="Permalink to this definition">¶</a></dt>
+<dd><p>E-mail address for user support.</p>
 </dd></dl>
 
 <dl class="data">
 <dt id="arxiv.submission.config.URLS">
 <code class="descclassname">arxiv.submission.config.</code><code class="descname">URLS</code><em class="property"> = [('submission', '/&lt;int:submission_id&gt;', 'submit.arxiv.org'), ('confirmation', '/&lt;int:submission_id&gt;/confirmation', 'submit.arxiv.org')]</em><a class="headerlink" href="#arxiv.submission.config.URLS" title="Permalink to this definition">¶</a></dt>
-<dd><p>URLs for external services, for use with <a class="reference external" href="http://flask.pocoo.org/docs/1.0/api/#flask.url_for" title="(in Flask v1.0)"><code class="xref py py-func docutils literal notranslate"><span class="pre">flask.url_for()</span></code></a>.
-This subset of URLs is common only within submit, for now - maybe move to base
+<dd><p>URLs for external services, for use with <a class="reference external" href="https://flask.palletsprojects.com/en/1.0.x/api/#flask.url_for" title="(in Flask v1.0.x)"><code class="xref py py-func docutils literal notranslate"><span class="pre">flask.url_for()</span></code></a>.</p>
+<p>This subset of URLs is common only within submit, for now - maybe move to base
 if these pages seem relevant to other services.</p>
 <p>For details, see <a class="reference external" href="https://arxiv.github.io/arxiv-base/arxiv/arxiv.base.urls.html#module-arxiv.base.urls" title="(in arXiv base v0.2)"><code class="xref py py-mod docutils literal notranslate"><span class="pre">arxiv.base.urls</span></code></a>.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="arxiv.submission.config.WAIT_FOR_SERVICES">
+<code class="descclassname">arxiv.submission.config.</code><code class="descname">WAIT_FOR_SERVICES</code><em class="property"> = False</em><a class="headerlink" href="#arxiv.submission.config.WAIT_FOR_SERVICES" title="Permalink to this definition">¶</a></dt>
+<dd><p>Disable/enable waiting for upstream services to be available on startup.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="arxiv.submission.config.WAIT_ON_STARTUP">
+<code class="descclassname">arxiv.submission.config.</code><code class="descname">WAIT_ON_STARTUP</code><em class="property"> = 0</em><a class="headerlink" href="#arxiv.submission.config.WAIT_ON_STARTUP" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of seconds to wait before checking upstream services on startup.</p>
 </dd></dl>
 
 </div>

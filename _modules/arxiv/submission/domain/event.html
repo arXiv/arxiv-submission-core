@@ -211,7 +211,7 @@
 
 <div class="viewcode-block" id="CreateSubmissionVersion.validate"><a class="viewcode-back" href="../../../../arxiv.submission/arxiv.submission.domain.event.html#arxiv.submission.domain.event.CreateSubmissionVersion.validate">[docs]</a>    <span class="k">def</span> <span class="nf">validate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Only applies to announced submissions.&quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">submission</span><span class="o">.</span><span class="n">announced</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">submission</span><span class="o">.</span><span class="n">is_announced</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">InvalidEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;Must already be announced&quot;</span><span class="p">)</span>
         <span class="n">validators</span><span class="o">.</span><span class="n">no_active_requests</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">)</span></div>
 
@@ -242,7 +242,7 @@
 
 <div class="viewcode-block" id="Rollback.validate"><a class="viewcode-back" href="../../../../arxiv.submission/arxiv.submission.domain.event.html#arxiv.submission.domain.event.Rollback.validate">[docs]</a>    <span class="k">def</span> <span class="nf">validate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Only applies to submissions in an unannounced state.&quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="n">submission</span><span class="o">.</span><span class="n">announced</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">submission</span><span class="o">.</span><span class="n">is_announced</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">InvalidEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;Cannot already be announced&quot;</span><span class="p">)</span>
         <span class="k">elif</span> <span class="n">submission</span><span class="o">.</span><span class="n">version</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">submission</span><span class="o">.</span><span class="n">versions</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">InvalidEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;No announced version to which to revert&quot;</span><span class="p">)</span></div>
@@ -349,8 +349,8 @@
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">creator</span><span class="p">,</span> <span class="n">System</span><span class="p">):</span>
             <span class="k">return</span>
         <span class="k">try</span><span class="p">:</span>
-            <span class="n">archive</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">category</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
-        <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+            <span class="n">archive</span> <span class="o">=</span> <span class="n">taxonomy</span><span class="o">.</span><span class="n">CATEGORIES</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">category</span><span class="p">][</span><span class="s1">&#39;in_archive&#39;</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
             <span class="n">archive</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">category</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">category</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">creator</span><span class="o">.</span><span class="n">endorsements</span> \
                 <span class="ow">and</span> <span class="n">f</span><span class="s1">&#39;</span><span class="si">{archive}</span><span class="s1">.*&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">creator</span><span class="o">.</span><span class="n">endorsements</span> \
@@ -362,7 +362,13 @@
         <span class="sd">&quot;&quot;&quot;Set :attr:`.domain.Submission.primary_classification`.&quot;&quot;&quot;</span>
         <span class="n">clsn</span> <span class="o">=</span> <span class="n">Classification</span><span class="p">(</span><span class="n">category</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">category</span><span class="p">)</span>
         <span class="n">submission</span><span class="o">.</span><span class="n">primary_classification</span> <span class="o">=</span> <span class="n">clsn</span>
-        <span class="k">return</span> <span class="n">submission</span></div></div>
+        <span class="k">return</span> <span class="n">submission</span></div>
+
+    <span class="k">def</span> <span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Ensure that we have an :class:`arxiv.taxonomy.Category`.&quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">SetPrimaryClassification</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__post_init__</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">category</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">category</span><span class="p">,</span> <span class="n">taxonomy</span><span class="o">.</span><span class="n">Category</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">category</span> <span class="o">=</span> <span class="n">taxonomy</span><span class="o">.</span><span class="n">Category</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">category</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="AddSecondaryClassification"><a class="viewcode-back" href="../../../../arxiv.submission/arxiv.submission.domain.event.html#arxiv.submission.domain.event.AddSecondaryClassification">[docs]</a><span class="nd">@dataclass</span><span class="p">()</span>
@@ -384,7 +390,13 @@
         <span class="sd">&quot;&quot;&quot;Add a :class:`.Classification` as a secondary classification.&quot;&quot;&quot;</span>
         <span class="n">classification</span> <span class="o">=</span> <span class="n">Classification</span><span class="p">(</span><span class="n">category</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">category</span><span class="p">)</span>
         <span class="n">submission</span><span class="o">.</span><span class="n">secondary_classification</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">classification</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">submission</span></div></div>
+        <span class="k">return</span> <span class="n">submission</span></div>
+
+    <span class="k">def</span> <span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Ensure that we have an :class:`arxiv.taxonomy.Category`.&quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">AddSecondaryClassification</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__post_init__</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">category</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">category</span><span class="p">,</span> <span class="n">taxonomy</span><span class="o">.</span><span class="n">Category</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">category</span> <span class="o">=</span> <span class="n">taxonomy</span><span class="o">.</span><span class="n">Category</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">category</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="RemoveSecondaryClassification"><a class="viewcode-back" href="../../../../arxiv.submission/arxiv.submission.domain.event.html#arxiv.submission.domain.event.RemoveSecondaryClassification">[docs]</a><span class="nd">@dataclass</span><span class="p">()</span>
@@ -537,7 +549,6 @@
 <div class="viewcode-block" id="SetAbstract.cleanup"><a class="viewcode-back" href="../../../../arxiv.submission/arxiv.submission.domain.event.html#arxiv.submission.domain.event.SetAbstract.cleanup">[docs]</a>    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">cleanup</span><span class="p">(</span><span class="n">value</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Perform some light tidying on the abstract.&quot;&quot;&quot;</span>
-        <span class="n">value</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;\s+&quot;</span><span class="p">,</span> <span class="s2">&quot; &quot;</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>          <span class="c1"># Single spaces only.</span>
         <span class="n">value</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>   <span class="c1"># Remove leading or trailing spaces</span>
         <span class="c1"># Tidy paragraphs which should be indicated with &quot;\n  &quot;.</span>
         <span class="n">value</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;[ ]+\n&quot;</span><span class="p">,</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
@@ -573,7 +584,7 @@
 <div class="viewcode-block" id="SetDOI.validate"><a class="viewcode-back" href="../../../../arxiv.submission/arxiv.submission.domain.event.html#arxiv.submission.domain.event.SetDOI.validate">[docs]</a>    <span class="k">def</span> <span class="nf">validate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Validate the DOI value.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">submission</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="n">Submission</span><span class="o">.</span><span class="n">SUBMITTED</span> \
-                <span class="ow">and</span> <span class="ow">not</span> <span class="n">submission</span><span class="o">.</span><span class="n">announced</span><span class="p">:</span>
+                <span class="ow">and</span> <span class="ow">not</span> <span class="n">submission</span><span class="o">.</span><span class="n">is_announced</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">InvalidEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;Cannot edit a finalized submission&#39;</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">doi</span><span class="p">:</span>    <span class="c1"># Can be blank.</span>
             <span class="k">return</span>
@@ -1023,14 +1034,14 @@
 
 <div class="viewcode-block" id="FinalizeSubmission.validate"><a class="viewcode-back" href="../../../../arxiv.submission/arxiv.submission.domain.event.html#arxiv.submission.domain.event.FinalizeSubmission.validate">[docs]</a>    <span class="k">def</span> <span class="nf">validate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Ensure that all required data/steps are complete.&quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="n">submission</span><span class="o">.</span><span class="n">finalized</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">submission</span><span class="o">.</span><span class="n">is_finalized</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">InvalidEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;Submission already finalized&quot;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">submission</span><span class="o">.</span><span class="n">active</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">submission</span><span class="o">.</span><span class="n">is_active</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">InvalidEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;Submission must be active&quot;</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_required_fields_are_complete</span><span class="p">(</span><span class="n">submission</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="FinalizeSubmission.project"><a class="viewcode-back" href="../../../../arxiv.submission/arxiv.submission.domain.event.html#arxiv.submission.domain.event.FinalizeSubmission.project">[docs]</a>    <span class="k">def</span> <span class="nf">project</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Submission</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Set :attr:`Submission.finalized`.&quot;&quot;&quot;</span>
+        <span class="sd">&quot;&quot;&quot;Set :attr:`Submission.is_finalized`.&quot;&quot;&quot;</span>
         <span class="n">submission</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="n">Submission</span><span class="o">.</span><span class="n">SUBMITTED</span>
         <span class="n">submission</span><span class="o">.</span><span class="n">submitted</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(</span><span class="n">UTC</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">submission</span></div>
@@ -1055,16 +1066,16 @@
 <div class="viewcode-block" id="UnFinalizeSubmission.validate"><a class="viewcode-back" href="../../../../arxiv.submission/arxiv.submission.domain.event.html#arxiv.submission.domain.event.UnFinalizeSubmission.validate">[docs]</a>    <span class="k">def</span> <span class="nf">validate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Validate the unfinalize action.&quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_must_be_finalized</span><span class="p">(</span><span class="n">submission</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">submission</span><span class="o">.</span><span class="n">announced</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">submission</span><span class="o">.</span><span class="n">is_announced</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">InvalidEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;Cannot unfinalize an announced paper&quot;</span><span class="p">)</span></div>
 
     <span class="k">def</span> <span class="nf">_must_be_finalized</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;May only unfinalize a finalized submission.&quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="n">submission</span><span class="o">.</span><span class="n">finalized</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">submission</span><span class="o">.</span><span class="n">is_finalized</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">InvalidEvent</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;Submission is not finalized&quot;</span><span class="p">)</span>
 
 <div class="viewcode-block" id="UnFinalizeSubmission.project"><a class="viewcode-back" href="../../../../arxiv.submission/arxiv.submission.domain.event.html#arxiv.submission.domain.event.UnFinalizeSubmission.project">[docs]</a>    <span class="k">def</span> <span class="nf">project</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">submission</span><span class="p">:</span> <span class="n">Submission</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Submission</span><span class="p">:</span>
-        <span class="sd">&quot;&quot;&quot;Set :attr:`Submission.finalized`.&quot;&quot;&quot;</span>
+        <span class="sd">&quot;&quot;&quot;Set :attr:`Submission.is_finalized`.&quot;&quot;&quot;</span>
         <span class="n">submission</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="n">Submission</span><span class="o">.</span><span class="n">WORKING</span>
         <span class="n">submission</span><span class="o">.</span><span class="n">submitted</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">return</span> <span class="n">submission</span></div></div>

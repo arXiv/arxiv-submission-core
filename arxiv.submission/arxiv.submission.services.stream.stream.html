@@ -73,6 +73,28 @@
 </dd></dl>
 
 <dl class="method">
+<dt id="arxiv.submission.services.stream.stream.StreamPublisher.initialize">
+<code class="descname">initialize</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/services/stream/stream.html#StreamPublisher.initialize"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.services.stream.stream.StreamPublisher.initialize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Perform initial checks, e.g. at application start-up.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="arxiv.submission.services.stream.stream.StreamPublisher.is_available">
+<code class="descname">is_available</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/services/stream/stream.html#StreamPublisher.is_available"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.services.stream.stream.StreamPublisher.is_available" title="Permalink to this definition">¶</a></dt>
+<dd><p>Test our ability to put records.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/functions.html#bool" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
 <dt id="arxiv.submission.services.stream.stream.StreamPublisher.put">
 <code class="descname">put</code><span class="sig-paren">(</span><em>before</em>, <em>after</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/services/stream/stream.html#StreamPublisher.put"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.services.stream.stream.StreamPublisher.put" title="Permalink to this definition">¶</a></dt>
 <dd><p>Put an <a class="reference internal" href="arxiv.submission.domain.event.base.html#arxiv.submission.domain.event.base.Event" title="arxiv.submission.domain.event.base.Event"><code class="xref py py-class docutils literal notranslate"><span class="pre">Event</span></code></a> on the stream.</p>

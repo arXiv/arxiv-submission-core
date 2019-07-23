@@ -38,8 +38,11 @@
 <span class="kn">from</span> <span class="nn">math</span> <span class="k">import</span> <span class="n">exp</span><span class="p">,</span> <span class="n">log</span>
 <span class="kn">from</span> <span class="nn">functools</span> <span class="k">import</span> <span class="n">wraps</span>
 
+<span class="kn">from</span> <span class="nn">arxiv.base</span> <span class="k">import</span> <span class="n">logging</span>
 <span class="kn">from</span> <span class="nn">arxiv.taxonomy</span> <span class="k">import</span> <span class="n">Category</span>
 <span class="kn">from</span> <span class="nn">arxiv.integration.api</span> <span class="k">import</span> <span class="n">status</span><span class="p">,</span> <span class="n">service</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="Flag"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.services.classifier.classifier.html#arxiv.submission.services.classifier.classifier.Flag">[docs]</a><span class="k">class</span> <span class="nc">Flag</span><span class="p">(</span><span class="n">NamedTuple</span><span class="p">):</span>
@@ -78,10 +81,15 @@
 
         <span class="n">service_name</span> <span class="o">=</span> <span class="s2">&quot;classifier&quot;</span></div>
 
-    <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">endpoint</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Get the URL of the classifier endpoint.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">f</span><span class="s1">&#39;http://</span><span class="si">{self._host}</span><span class="s1">:</span><span class="si">{self._port}</span><span class="s1">/ctxt&#39;</span>
+<div class="viewcode-block" id="Classifier.is_available"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.services.classifier.classifier.html#arxiv.submission.services.classifier.classifier.Classifier.is_available">[docs]</a>    <span class="k">def</span> <span class="nf">is_available</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Check our connection to the classifier service.&quot;&quot;&quot;</span>
+        <span class="n">timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;timeout&#39;</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">classify</span><span class="p">(</span><span class="sa">b</span><span class="s1">&#39;ruok?&#39;</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;Encountered error calling classifier: </span><span class="si">%s</span><span class="s1">&#39;</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">return</span> <span class="kc">True</span></div>
 
 <div class="viewcode-block" id="Classifier.probability"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.services.classifier.classifier.html#arxiv.submission.services.classifier.classifier.Classifier.probability">[docs]</a>    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">probability</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">logodds</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
@@ -107,7 +115,8 @@
                            <span class="n">probability</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">probability</span><span class="p">(</span><span class="n">datum</span><span class="p">[</span><span class="s1">&#39;logodds&#39;</span><span class="p">]))</span>
                 <span class="k">for</span> <span class="n">datum</span> <span class="ow">in</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;classifier&#39;</span><span class="p">]]</span>
 
-<div class="viewcode-block" id="Classifier.classify"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.services.classifier.classifier.html#arxiv.submission.services.classifier.classifier.Classifier.classify">[docs]</a>    <span class="k">def</span> <span class="nf">classify</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">content</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ClassifierResponse</span><span class="p">:</span>
+<div class="viewcode-block" id="Classifier.classify"><a class="viewcode-back" href="../../../../../arxiv.submission/arxiv.submission.services.classifier.classifier.html#arxiv.submission.services.classifier.classifier.Classifier.classify">[docs]</a>    <span class="k">def</span> <span class="nf">classify</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">content</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">,</span> <span class="n">timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.</span><span class="p">)</span> \
+            <span class="o">-&gt;</span> <span class="n">ClassifierResponse</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Make a classification request to the classifier service.</span>
 
@@ -126,7 +135,8 @@
 <span class="sd">            Feature counts, if provided.</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">data</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">json</span><span class="p">(</span><span class="s1">&#39;post&#39;</span><span class="p">,</span> <span class="s1">&#39;ctxt&#39;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">content</span><span class="p">)</span>
+        <span class="n">_path</span> <span class="o">=</span> <span class="s1">&#39;/classifier/&#39;</span>    <span class="c1"># TODO: this MUST be configurable.</span>
+        <span class="n">data</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">json</span><span class="p">(</span><span class="s1">&#39;post&#39;</span><span class="p">,</span> <span class="n">_path</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">content</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_suggestions</span><span class="p">(</span><span class="n">data</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">_flags</span><span class="p">(</span><span class="n">data</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">_counts</span><span class="p">(</span><span class="n">data</span><span class="p">)</span></div></div>
 </pre></div>
 

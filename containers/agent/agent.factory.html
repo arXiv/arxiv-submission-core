@@ -35,6 +35,25 @@
             
   <div class="section" id="module-agent.factory">
 <span id="agent-factory-module"></span><h1>agent.factory module<a class="headerlink" href="#module-agent.factory" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="agent.factory.ConfigWithHooks">
+<em class="property">class </em><code class="descclassname">agent.factory.</code><code class="descname">ConfigWithHooks</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#agent.factory.ConfigWithHooks" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">flask.config.Config</span></code></p>
+<p>Config object that has __setitem__ hooks.</p>
+<dl class="method">
+<dt id="agent.factory.ConfigWithHooks.add_hook">
+<code class="descname">add_hook</code><span class="sig-paren">(</span><em>key</em>, <em>hook</em><span class="sig-paren">)</span><a class="headerlink" href="#agent.factory.ConfigWithHooks.add_hook" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add a callback/hook for a config key.</p>
+<p>The hook will be called when the <code class="docutils literal notranslate"><span class="pre">key</span></code> is set.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
 <dl class="function">
 <dt id="agent.factory.create_app">
 <code class="descclassname">agent.factory.</code><code class="descname">create_app</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#agent.factory.create_app" title="Permalink to this definition">¶</a></dt>
@@ -42,6 +61,17 @@
 <dl class="field-list simple">
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">Flask</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="agent.factory.update_binds">
+<code class="descclassname">agent.factory.</code><code class="descname">update_binds</code><span class="sig-paren">(</span><em>config</em>, <em>key</em>, <em>value</em><span class="sig-paren">)</span><a class="headerlink" href="#agent.factory.update_binds" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update <code class="xref py py-const docutils literal notranslate"><span class="pre">config.SQLALCHEMY_BINDS.</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
 </dd>
 </dl>
 </dd></dl>

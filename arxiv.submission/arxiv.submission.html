@@ -124,7 +124,7 @@ submission. Events and the resulting state of the submission are stored
 atomically.</p></li>
 <li><p>If the notification service is configured, a message about the event is
 propagated as a Kinesis event on the configured stream. See
-<a class="reference internal" href="arxiv.submission.services.notification.html#module-arxiv.submission.services.notification" title="arxiv.submission.services.notification"><code class="xref py py-mod docutils literal notranslate"><span class="pre">arxiv.submission.services.notification</span></code></a> for details.</p></li>
+<code class="xref py py-mod docutils literal notranslate"><span class="pre">arxiv.submission.services.notification</span></code> for details.</p></li>
 </ul>
 <div class="section" id="special-case-creation">
 <h3>Special case: creation<a class="headerlink" href="#special-case-creation" title="Permalink to this headline">¶</a></h3>
@@ -177,10 +177,42 @@ that are specific to a service/application. For example, the moderation UI/API
 need not maintain or have access to the complete representation of the
 submission; instead, it may track the subset of events relevant to its
 operation (e.g. pertaining to metadata, classification, proposals, holds, etc).</p>
+<dl class="class">
+<dt id="arxiv.submission.IAwaitable">
+<em class="property">class </em><code class="descclassname">arxiv.submission.</code><code class="descname">IAwaitable</code><span class="sig-paren">(</span><em>*args</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission.html#IAwaitable"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.IAwaitable" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">typing_extensions.Protocol</span></code></p>
+<p>An object that provides an <code class="docutils literal notranslate"><span class="pre">is_available</span></code> predicate.</p>
+<dl class="method">
+<dt id="arxiv.submission.IAwaitable.is_available">
+<code class="descname">is_available</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission.html#IAwaitable.is_available"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.IAwaitable.is_available" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check whether an object (e.g. a service) is available.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/functions.html#bool" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
 <dl class="function">
 <dt id="arxiv.submission.init_app">
 <code class="descclassname">arxiv.submission.</code><code class="descname">init_app</code><span class="sig-paren">(</span><em>app</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission.html#init_app"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.init_app" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="field-list simple">
+<dd><p>Configure a Flask app to use this package.</p>
+<p>Initializes and waits for <a class="reference internal" href="arxiv.submission.services.stream.stream.html#arxiv.submission.services.stream.stream.StreamPublisher" title="arxiv.submission.services.stream.stream.StreamPublisher"><code class="xref py py-class docutils literal notranslate"><span class="pre">StreamPublisher</span></code></a> and <a class="reference internal" href="arxiv.submission.services.classic.html#module-arxiv.submission.services.classic" title="arxiv.submission.services.classic"><code class="xref py py-mod docutils literal notranslate"><span class="pre">classic</span></code></a>
+to be available.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="arxiv.submission.wait_for">
+<code class="descclassname">arxiv.submission.</code><code class="descname">wait_for</code><span class="sig-paren">(</span><em>service</em>, <em>delay=2</em>, <em>**extra</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission.html#wait_for"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.wait_for" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wait for a service to become available.</p>
+<dl class="field-list simple">
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
 </dd>

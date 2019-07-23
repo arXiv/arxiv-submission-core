@@ -39,7 +39,7 @@
 <p>The primary concerns of the agent are:</p>
 <ul class="simple">
 <li><p>Orchestrating automated processes in support of submission and moderation.</p></li>
-<li><p>KEeping track of what processes have been carried out on a submission, and
+<li><p>Keeping track of what processes have been carried out on a submission, and
 the outcomes of those processes.</p></li>
 <li><p>Providing a framework for defining conditions under which processes should be
 carried out.</p></li>
@@ -48,7 +48,7 @@ carried out.</p></li>
 <ul class="simple">
 <li><p>Interfaces for administrators to monitor submission-related processes, and
 to start processes manually.</p></li>
-<li><p>A metrics endpoint for Prometheus, to expose process performance/rates.</p></li>
+<li><p>A metrics endpoint for [Prometheus](<a class="reference external" href="https://prometheus.io/">https://prometheus.io/</a>), to expose process performance/rates.</p></li>
 <li><p>Interfaces for administrators to define processing rules.</p></li>
 </ul>
 <div class="section" id="conceptual-overview">
@@ -99,19 +99,24 @@ scaled more or less independently.</p>
 <span id="figure-submission-agent-containers"></span><a class="reference internal image-reference" href="../../_images/submission-agent-containers.png"><img alt="../../_images/submission-agent-containers.png" src="../../_images/submission-agent-containers.png" style="width: 600px;" /></a>
 <p class="caption"><span class="caption-number">Fig. 7 </span><span class="caption-text">Containers within the arXiv submission agent.</span><a class="headerlink" href="#id2" title="Permalink to this image">¶</a></p>
 </div>
-<p>The <a class="reference internal" href="agent.consumer.html#module-agent.consumer" title="agent.consumer"><code class="xref py py-mod docutils literal notranslate"><span class="pre">agent.consumer</span></code></a> is a single-threaded process that consumes
-notifications about events on the <code class="docutils literal notranslate"><span class="pre">SubmissionEvents</span></code> Kinesis stream. It is
-implemented on top of <code class="xref py py-mod docutils literal notranslate"><span class="pre">arxiv.integration.kinesis</span></code>. The agent relies
-on a database for checkpointing its progress in the stream, and for
-commemorating process-relevant submission events. The agent dispatches
-steps in triggered processes to be carried out by the <a class="reference internal" href="agent.worker.html#module-agent.worker" title="agent.worker"><code class="xref py py-mod docutils literal notranslate"><span class="pre">agent.worker</span></code></a>.</p>
+<p>The <code class="xref py py-mod docutils literal notranslate"><span class="pre">agent.consumer`consumes</span> <span class="pre">notifications</span> <span class="pre">about</span> <span class="pre">events</span> <span class="pre">on</span> <span class="pre">the</span>
+<span class="pre">``SubmissionEvents`</span></code> Kinesis stream.  It is implemented on top of
+<code class="xref py py-mod docutils literal notranslate"><span class="pre">arxiv.integration.kinesis</span></code>.  The agent consumes events on the  stream one
+at a time, in order, and keeps track of its progress by  marking checkpoints in
+a database. The agent also uses the database to commemorate process-relevant
+submission events.  In the event that an agent process goes away, this allows
+us to resume processing the stream while minimizing the amount of duplicated
+work. The agent dispatches steps in triggered processes to be carried out by
+the <code class="xref py py-mod docutils literal notranslate"><span class="pre">agent.worker</span></code>. Only one agent process should run per shard to avoid
+processing the same events more than once.</p>
 <p>The agent database is a MariaDB SQL database used by the consumer. It stores
 checkpoints, process-relevant submission events, and (future) configurations
 for user-defined rules.</p>
-<p>The <a class="reference internal" href="agent.worker.html#module-agent.worker" title="agent.worker"><code class="xref py py-mod docutils literal notranslate"><span class="pre">agent.worker</span></code></a> is an horizontally-scalable <a class="reference external" href="http://www.celeryproject.org/">Celery</a> worker that carries out the steps of
+<p>The <code class="xref py py-mod docutils literal notranslate"><span class="pre">agent.worker</span></code> is an horizontally-scalable <a class="reference external" href="http://www.celeryproject.org/">Celery</a> worker that carries out the steps of
 processes. These tasks are dispatched by the <a class="reference internal" href="agent.consumer.html#module-agent.consumer" title="agent.consumer"><code class="xref py py-mod docutils literal notranslate"><span class="pre">agent.consumer</span></code></a> via a
 Redis in-memory key-value store. The worker is responsible for calling backend
-services as it carries out its work.</p>
+services as it carries out its work. Worker processes can be scaled
+horizontally independently of agent processes.</p>
 </div>
 </div>
 <div class="section" id="subpackages">
@@ -173,20 +178,14 @@ services as it carries out its work.</p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="agent.config.html">agent.config module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="agent.consumer.html">agent.consumer module</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="agent.consumer.html#submission-event-consumer">Submission Event Consumer</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="agent.consumer.html#components">Components</a></li>
-</ul>
-</li>
+<li class="toctree-l2"><a class="reference internal" href="agent.consumer.html#components">Components</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="agent.domain.html">agent.domain module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="agent.factory.html">agent.factory module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="agent.serializer.html">agent.serializer module</a></li>
 <li class="toctree-l1"><a class="reference internal" href="agent.tasks.html">agent.tasks module</a></li>
-<li class="toctree-l1"><a class="reference internal" href="agent.worker.html">agent.worker module</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="agent.worker.html#submission-agent-worker">Submission Agent Worker</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="agent.worker.html">agent.worker module</a></li>
 </ul>
 </div>
 </div>

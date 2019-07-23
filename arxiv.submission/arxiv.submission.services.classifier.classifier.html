@@ -71,7 +71,7 @@
 
 <dl class="method">
 <dt id="arxiv.submission.services.classifier.classifier.Classifier.classify">
-<code class="descname">classify</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/services/classifier/classifier.html#Classifier.classify"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.services.classifier.classifier.Classifier.classify" title="Permalink to this definition">¶</a></dt>
+<code class="descname">classify</code><span class="sig-paren">(</span><em>timeout=1.0</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/services/classifier/classifier.html#Classifier.classify"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.services.classifier.classifier.Classifier.classify" title="Permalink to this definition">¶</a></dt>
 <dd><p>Make a classification request to the classifier service.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -91,10 +91,15 @@
 </dl>
 </dd></dl>
 
-<dl class="attribute">
-<dt id="arxiv.submission.services.classifier.classifier.Classifier.endpoint">
-<code class="descname">endpoint</code><a class="headerlink" href="#arxiv.submission.services.classifier.classifier.Classifier.endpoint" title="Permalink to this definition">¶</a></dt>
-<dd><p>Get the URL of the classifier endpoint.</p>
+<dl class="method">
+<dt id="arxiv.submission.services.classifier.classifier.Classifier.is_available">
+<code class="descname">is_available</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/arxiv/submission/services/classifier/classifier.html#Classifier.is_available"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#arxiv.submission.services.classifier.classifier.Classifier.is_available" title="Permalink to this definition">¶</a></dt>
+<dd><p>Check our connection to the classifier service.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3.6/library/functions.html#bool" title="(in Python v3.6)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="classmethod">
