@@ -113,3 +113,10 @@ Rule(UpdateUploadPackage, is_always, size_params,
 Rule(ConfirmPreview, is_always, make_params('PDF_LIMIT_BYTES'),
      process.CheckPDFSize,
      "Check the size of the PDF when the submitter confirms the preview.")
+
+Rule(SetUploadPackage, is_always, empty_params, process.CopySourceToLegacy,
+     "Copy the source package to the legacy system when it is uploaded.")
+Rule(UpdateUploadPackage, is_always, empty_params, process.CopySourceToLegacy,
+     "Copy the source package to the legacy system when it is updated.")
+Rule(ConfirmPreview, is_always, empty_params, process.CopyPDFPreviewToLegacy,
+     "Copy the PDF preview to the legacy system when it is confirmed.")
