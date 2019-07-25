@@ -3,6 +3,7 @@
 from typing import Optional, Callable
 
 from arxiv.users import auth, domain
+from arxiv.integration.api import exceptions
 from arxiv.submission.auth import get_system_token
 
 from .base import Process, step, Retry, Recoverable
@@ -55,9 +56,41 @@ class CopySourceToLegacy(_SourceProcess):
 
         scopes = [auth.scopes.READ_UPLOAD.for_resource(upload_id)]
         token = get_system_token(__name__, self.agent, scopes)
+        try:
+            reader, checksum = fm.get_source_package(upload_id, token)
+        except (exceptions.RequestForbidden, exceptions.RequestUnauthorized,
+                exceptions.BadRequest) as e:
+            msg = 'Unrecoverable error while calling file manager service'
+            self.fail(e, msg)
+            return None
+        except exceptions.RequestFailed as e:
+            raise Recoverable('An (hopefully temporary) error occurred while'
+                              ' calling the file manager service.') from e
 
-        reader, checksum = fm.get_source_package(upload_id, token)
-        fs.deposit_source(trigger.after.submission_id, reader, checksum)
+        # If the checksum does not match, it likely means that the source
+        # content has changed since the event was produced. It is better to
+        # fail here, and let the source get updated in legacy in response to
+        # a subsequent source-related event, rather than propagate an
+        # inconsistent state.
+        if checksum != trigger.after.source_content.checksum:
+            msg = ('Checksums do not match; submission has'
+                   f' {trigger.after.source_content.checksum}, file manager'
+                   f' service returns {checksum}')
+            self.fail(RuntimeError(msg), msg)
+            return None
+
+        try:
+            fs.deposit_source(trigger.after.submission_id, reader, checksum)
+        except (exceptions.RequestForbidden, exceptions.RequestUnauthorized,
+                exceptions.BadRequest) as e:
+            msg = 'Unrecoverable error while calling filesystem service'
+            self.fail(e, msg)
+            return None
+        except filesystem.ValidationFailed as e:
+            raise Recoverable('Integrity could not be verified') from e
+        except exceptions.RequestFailed as e:
+            raise Recoverable('An (hopefully temporary) error occurred while'
+                              ' calling the filesystem service.') from e
         return None
 
 
@@ -87,7 +120,28 @@ class CopyPDFPreviewToLegacy(_SourceProcess):
         scopes = [auth.scopes.READ_UPLOAD.for_resource(upload_id)]
         token = get_system_token(__name__, self.agent, scopes)
 
-        reader, checksum = pv.get_preview(upload_id, checksum, token)
-        fs.deposit_preview(trigger.after.submission_id, reader, checksum)
+        try:
+            reader, checksum = pv.get_preview(upload_id, checksum, token)
+        except (exceptions.RequestForbidden, exceptions.RequestUnauthorized,
+                exceptions.BadRequest) as e:
+            msg = 'Unrecoverable error while calling preview service'
+            self.fail(e, msg)
+            return None
+        except exceptions.RequestFailed as e:
+            raise Recoverable('An (hopefully temporary) error occurred while'
+                              ' calling the preview service.') from e
+
+        try:
+            fs.deposit_preview(trigger.after.submission_id, reader, checksum)
+        except (exceptions.RequestForbidden, exceptions.RequestUnauthorized,
+                exceptions.BadRequest) as e:
+            msg = 'Unrecoverable error while calling filesystem service'
+            self.fail(e, msg)
+            return None
+        except filesystem.ValidationFailed as e:
+            raise Recoverable('Integrity could not be verified') from e
+        except exceptions.RequestFailed as e:
+            raise Recoverable('An (hopefully temporary) error occurred while'
+                              ' calling the filesystem service.') from e
 
 
