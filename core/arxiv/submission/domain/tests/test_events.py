@@ -1,14 +1,242 @@
-"""Tests for :class:`.Event`s in :mod:`arxiv.submission.domain.event`."""
+"""Tests for :class:`.Event` instances in :mod:`arxiv.submission.domain.event`."""
 
 from unittest import TestCase, mock
 from datetime import datetime
-
+from pytz import UTC
 from mimesis import Text
 
 from arxiv import taxonomy
 from ... import save
 from .. import event, agent, submission, meta
 from ...exceptions import InvalidEvent
+
+
+class TestWithdrawalSubmission(TestCase):
+    """Test :class:`event.RequestWithdrawal`."""
+
+    def setUp(self):
+        """Initialize auxiliary data for test cases."""
+        self.user = agent.User(
+            12345,
+            'uuser@cornell.edu',
+            endorsements=[meta.Classification('astro-ph.GA'),
+                          meta.Classification('astro-ph.CO')]
+        )
+        self.submission = submission.Submission(
+            submission_id=1,
+            status=submission.Submission.ANNOUNCED,
+            creator=self.user,
+            owner=self.user,
+            created=datetime.now(UTC),
+            source_content=submission.SubmissionContent(
+                identifier='6543',
+                source_format=submission.SubmissionContent.Format('pdf'),
+                checksum='asdf2345',
+                uncompressed_size=594930,
+                compressed_size=594930
+            ),
+            primary_classification=meta.Classification('astro-ph.GA'),
+            secondary_classification=[meta.Classification('astro-ph.CO')],
+            license=meta.License(uri='http://free', name='free'),
+            arxiv_id='1901.001234',
+            version=1,
+            submitter_contact_verified=True,
+            submitter_is_author=True,
+            submitter_accepts_policy=True,
+            submitter_confirmed_preview=True,
+            metadata=submission.SubmissionMetadata(
+                title='the best title',
+                abstract='very abstract',
+                authors_display='J K Jones, F W Englund',
+                doi='10.1000/182',
+                comments='These are the comments'
+            )
+        )
+
+    def test_request_withdrawal(self):
+        """Request that a paper be withdrawn."""
+        e = event.RequestWithdrawal(creator=self.user, reason="no good")
+        e.validate(self.submission)
+        replacement = e.apply(self.submission)
+        self.assertEqual(replacement.arxiv_id, self.submission.arxiv_id)
+        self.assertEqual(replacement.version, self.submission.version)
+        self.assertEqual(replacement.status,
+                         submission.Submission.ANNOUNCED)
+        self.assertTrue(replacement.has_active_requests)
+        self.assertTrue(self.submission.is_announced)
+        self.assertTrue(replacement.is_announced)
+
+    def test_request_without_a_reason(self):
+        """A reason is required."""
+        e = event.RequestWithdrawal(creator=self.user)
+        with self.assertRaises(event.InvalidEvent):
+            e.validate(self.submission)
+
+    def test_request_without_announced_submission(self):
+        """The submission must already be announced."""
+        e = event.RequestWithdrawal(creator=self.user, reason="no good")
+        with self.assertRaises(event.InvalidEvent):
+            e.validate(mock.MagicMock(announced=False))
+
+
+class TestReplacementSubmission(TestCase):
+    """Test :class:`event.CreateSubmission` with a replacement."""
+
+    def setUp(self):
+        """Initialize auxiliary data for test cases."""
+        self.user = agent.User(
+            12345,
+            'uuser@cornell.edu',
+            endorsements=[meta.Classification('astro-ph.GA'),
+                          meta.Classification('astro-ph.CO')]
+        )
+        self.submission = submission.Submission(
+            submission_id=1,
+            status=submission.Submission.ANNOUNCED,
+            creator=self.user,
+            owner=self.user,
+            created=datetime.now(UTC),
+            source_content=submission.SubmissionContent(
+                identifier='6543',
+                source_format=submission.SubmissionContent.Format('pdf'),
+                checksum='asdf2345',
+                uncompressed_size=594930,
+                compressed_size=594930
+            ),
+            primary_classification=meta.Classification('astro-ph.GA'),
+            secondary_classification=[meta.Classification('astro-ph.CO')],
+            license=meta.License(uri='http://free', name='free'),
+            arxiv_id='1901.001234',
+            version=1,
+            submitter_contact_verified=True,
+            submitter_is_author=True,
+            submitter_accepts_policy=True,
+            submitter_confirmed_preview=True,
+            metadata=submission.SubmissionMetadata(
+                title='the best title',
+                abstract='very abstract',
+                authors_display='J K Jones, F W Englund',
+                doi='10.1000/182',
+                comments='These are the comments'
+            )
+        )
+
+    def test_create_submission_replacement(self):
+        """A replacement is a new submission based on an old submission."""
+        e = event.CreateSubmissionVersion(creator=self.user)
+        replacement = e.apply(self.submission)
+        self.assertEqual(replacement.arxiv_id, self.submission.arxiv_id)
+        self.assertEqual(replacement.version, self.submission.version + 1)
+        self.assertEqual(replacement.status, submission.Submission.WORKING)
+        self.assertTrue(self.submission.is_announced)
+        self.assertFalse(replacement.is_announced)
+
+        self.assertIsNone(replacement.source_content)
+
+        # The user is asked to reaffirm these points.
+        self.assertFalse(replacement.submitter_contact_verified)
+        self.assertFalse(replacement.submitter_accepts_policy)
+        self.assertFalse(replacement.submitter_confirmed_preview)
+        self.assertFalse(replacement.submitter_contact_verified)
+
+        # These should all stay the same.
+        self.assertEqual(replacement.metadata.title,
+                         self.submission.metadata.title)
+        self.assertEqual(replacement.metadata.abstract,
+                         self.submission.metadata.abstract)
+        self.assertEqual(replacement.metadata.authors,
+                         self.submission.metadata.authors)
+        self.assertEqual(replacement.metadata.authors_display,
+                         self.submission.metadata.authors_display)
+        self.assertEqual(replacement.metadata.msc_class,
+                         self.submission.metadata.msc_class)
+        self.assertEqual(replacement.metadata.acm_class,
+                         self.submission.metadata.acm_class)
+        self.assertEqual(replacement.metadata.doi,
+                         self.submission.metadata.doi)
+        self.assertEqual(replacement.metadata.journal_ref,
+                         self.submission.metadata.journal_ref)
+
+
+class TestDOIorJREFAfterAnnounce(TestCase):
+    """Test :class:`event.SetDOI` or :class:`event.SetJournalReference`."""
+
+    def setUp(self):
+        """Initialize auxiliary data for test cases."""
+        self.user = agent.User(
+            12345,
+            'uuser@cornell.edu',
+            endorsements=[meta.Classification('astro-ph.GA'),
+                          meta.Classification('astro-ph.CO')]
+        )
+        self.submission = submission.Submission(
+            submission_id=1,
+            status=submission.Submission.ANNOUNCED,
+            creator=self.user,
+            owner=self.user,
+            created=datetime.now(UTC),
+            source_content=submission.SubmissionContent(
+                identifier='6543',
+                source_format=submission.SubmissionContent.Format('pdf'),
+                checksum='asdf2345',
+                uncompressed_size=594930,
+                compressed_size=594930
+            ),
+            primary_classification=meta.Classification('astro-ph.GA'),
+            secondary_classification=[meta.Classification('astro-ph.CO')],
+            license=meta.License(uri='http://free', name='free'),
+            arxiv_id='1901.001234',
+            version=1,
+            submitter_contact_verified=True,
+            submitter_is_author=True,
+            submitter_accepts_policy=True,
+            submitter_confirmed_preview=True,
+            metadata=submission.SubmissionMetadata(
+                title='the best title',
+                abstract='very abstract',
+                authors_display='J K Jones, F W Englund',
+                doi='10.1000/182',
+                comments='These are the comments'
+            )
+        )
+
+    def test_create_submission_jref(self):
+        """A JREF is just like a replacement, but different."""
+        e = event.SetDOI(creator=self.user, doi='10.1000/182')
+        after = e.apply(self.submission)
+        self.assertEqual(after.arxiv_id, self.submission.arxiv_id)
+        self.assertEqual(after.version, self.submission.version)
+        self.assertEqual(after.status, submission.Submission.ANNOUNCED)
+        self.assertTrue(self.submission.is_announced)
+        self.assertTrue(after.is_announced)
+
+        self.assertIsNotNone(after.submission_id)
+        self.assertEqual(self.submission.submission_id, after.submission_id)
+
+        # The user is NOT asked to reaffirm these points.
+        self.assertTrue(after.submitter_contact_verified)
+        self.assertTrue(after.submitter_accepts_policy)
+        self.assertTrue(after.submitter_confirmed_preview)
+        self.assertTrue(after.submitter_contact_verified)
+
+        # These should all stay the same.
+        self.assertEqual(after.metadata.title,
+                         self.submission.metadata.title)
+        self.assertEqual(after.metadata.abstract,
+                         self.submission.metadata.abstract)
+        self.assertEqual(after.metadata.authors,
+                         self.submission.metadata.authors)
+        self.assertEqual(after.metadata.authors_display,
+                         self.submission.metadata.authors_display)
+        self.assertEqual(after.metadata.msc_class,
+                         self.submission.metadata.msc_class)
+        self.assertEqual(after.metadata.acm_class,
+                         self.submission.metadata.acm_class)
+        self.assertEqual(after.metadata.doi,
+                         self.submission.metadata.doi)
+        self.assertEqual(after.metadata.journal_ref,
+                         self.submission.metadata.journal_ref)
+
 
 
 class TestSetPrimaryClassification(TestCase):
@@ -26,7 +254,7 @@ class TestSetPrimaryClassification(TestCase):
             submission_id=1,
             creator=self.user,
             owner=self.user,
-            created=datetime.now()
+            created=datetime.now(UTC)
         )
 
     def test_set_primary_with_nonsense(self):
@@ -79,7 +307,7 @@ class TestAddSecondaryClassification(TestCase):
             submission_id=1,
             creator=self.user,
             owner=self.user,
-            created=datetime.now(),
+            created=datetime.now(UTC),
             secondary_classification=[]
         )
 
@@ -95,7 +323,7 @@ class TestAddSecondaryClassification(TestCase):
 
     def test_add_secondary_with_valid_category(self):
         """Category is from the arXiv taxonomy."""
-        for category in taxonomy.CATEGORIES.keys():
+        for category in taxonomy.CATEGORIES_ACTIVE.keys():
             e = event.AddSecondaryClassification(
                 creator=self.user,
                 submission_id=1,
@@ -143,7 +371,7 @@ class TestRemoveSecondaryClassification(TestCase):
             submission_id=1,
             creator=self.user,
             owner=self.user,
-            created=datetime.now(),
+            created=datetime.now(UTC),
             secondary_classification=[]
         )
 
@@ -192,7 +420,7 @@ class TestSetAuthors(TestCase):
             submission_id=1,
             creator=self.user,
             owner=self.user,
-            created=datetime.now()
+            created=datetime.now(UTC)
         )
 
     def test_canonical_authors_provided(self):
@@ -252,7 +480,7 @@ class TestSetTitle(TestCase):
             submission_id=1,
             creator=self.user,
             owner=self.user,
-            created=datetime.now()
+            created=datetime.now(UTC)
         )
 
     def test_empty_value(self):
@@ -324,7 +552,7 @@ class TestSetAbstract(TestCase):
             submission_id=1,
             creator=self.user,
             owner=self.user,
-            created=datetime.now()
+            created=datetime.now(UTC)
         )
 
     def test_empty_value(self):
@@ -361,7 +589,7 @@ class TestSetDOI(TestCase):
             submission_id=1,
             creator=self.user,
             owner=self.user,
-            created=datetime.now()
+            created=datetime.now(UTC)
         )
 
     def test_empty_doi(self):
@@ -409,7 +637,7 @@ class TestSetReportNumber(TestCase):
             submission_id=1,
             creator=self.user,
             owner=self.user,
-            created=datetime.now()
+            created=datetime.now(UTC)
         )
 
     def test_valid_report_number(self):
@@ -465,7 +693,7 @@ class TestSetJournalReference(TestCase):
             submission_id=1,
             creator=self.user,
             owner=self.user,
-            created=datetime.now()
+            created=datetime.now(UTC)
         )
 
     def test_valid_journal_ref(self):
@@ -482,7 +710,7 @@ class TestSetJournalReference(TestCase):
             "Czech J Math, 60(135)(2010), 59-76.",
             "PHYSICAL REVIEW B 81, 024520 (2010)",
             "PHYSICAL REVIEW B 69, 094524 (2004)",
-            "Published on Ap&SS, Oct. 2009",
+            "Announced on Ap&SS, Oct. 2009",
             "Phys. Rev. Lett. 104, 095701 (2010)",
             "Phys. Rev. B 76, 205407 (2007).",
             "Extending Database Technology (EDBT) 2010",
@@ -525,7 +753,7 @@ class TestSetACMClassification(TestCase):
             submission_id=1,
             creator=self.user,
             owner=self.user,
-            created=datetime.now()
+            created=datetime.now(UTC)
         )
 
     def test_valid_acm_class(self):
@@ -572,7 +800,7 @@ class TestSetMSCClassification(TestCase):
             submission_id=1,
             creator=self.user,
             owner=self.user,
-            created=datetime.now()
+            created=datetime.now(UTC)
         )
 
     def test_valid_msc_class(self):
@@ -618,7 +846,7 @@ class TestSetComments(TestCase):
             submission_id=1,
             creator=self.user,
             owner=self.user,
-            created=datetime.now()
+            created=datetime.now(UTC)
         )
 
     def test_empty_value(self):

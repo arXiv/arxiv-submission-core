@@ -1,18 +1,15 @@
-"""Metadata objects in support of :class:`.Submission`s."""
+"""Metadata objects in support of submissions."""
 
 from typing import Optional, List
-from dataclasses import dataclass, asdict
+from arxiv.taxonomy import Category
+from dataclasses import dataclass, asdict, field
 
 
 @dataclass
 class Classification:
-    """An archive/category classification for a :class:`.Submission`."""
+    """A classification for a :class:`.domain.submission.Submission`."""
 
-    category: str
-
-    def to_dict(self) -> dict:
-        """Generate a dict representation of this :class:`.Classification`."""
-        return asdict(self)
+    category: Category
 
 
 @dataclass
@@ -21,7 +18,3 @@ class License:
 
     uri: str
     name: Optional[str] = None
-
-    def to_dict(self) -> dict:
-        """Generate a dict representation of this :class:`.License`."""
-        return asdict(self)

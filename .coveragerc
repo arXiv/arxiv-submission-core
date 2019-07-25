@@ -4,5 +4,6 @@ omit =
     setup.py
     docs/*
     test*
+    */test*
     */app.py
     */wsgi.py

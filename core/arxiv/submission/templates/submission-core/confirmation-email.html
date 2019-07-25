@@ -1,0 +1,28 @@
+{% extends "mail/base.html" %}
+
+{% block email_title %}arXiv submission submit/{{ submission_id }}{% endblock email_title %}
+
+{% block message_title %}We have received your submission to arXiv, titled "{{ submission.metadata.title }}"{% endblock message_title %}
+
+{% block message_body %}
+<p style="margin: 0; margin-bottom: 15px;">
+  Your temporary submission identifier is: <code>submit/{{ submission_id }}</code>.
+  To preview your submission, check the
+  <a href="{{ url_for('submission', submission_id=submission_id) }}">submission status page</a>.
+</p>
+
+<p style="margin: 0; margin-bottom: 15px;">
+  Your article is scheduled to be announced at {{ announce_time.strftime("%a, %-d %b %Y %H:%M:%S ET") }}. The abstract
+  will appear in the subsequent mailing as displayed below, except that the
+  submission identifier will be replaced by the official arXiv identifier.
+  Updates before {{ freeze_time.strftime("%a, %-d %b %Y %H:%M:%S ET") }} will not delay announcement.
+</p>
+
+<p style="margin: 0; margin-bottom: 15px;">
+  A paper password will be emailed to you when the article is announced. You
+  should share this with co-authors to allow them to claim ownership. If you
+  have a problem that you are not able to resolve through the web interface,
+  contact <a href="mailto:{{ config.SUPPORT_EMAIL }}">{{ config.SUPPORT_EMAIL }}</a> with a
+  description of the issue and reference the submission identifier.
+</p>
+{% endblock message_body %}

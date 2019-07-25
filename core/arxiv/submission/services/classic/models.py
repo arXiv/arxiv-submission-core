@@ -1,17 +1,24 @@
 """SQLAlchemy ORM classes for the classic database."""
 
 import json
-from typing import Optional
+from typing import Optional, List, Any
 from datetime import datetime
+from pytz import UTC
 from sqlalchemy import Column, Date, DateTime, Enum, ForeignKey, Text, text, \
     ForeignKeyConstraint, Index, Integer, SmallInteger, String, Table
 from sqlalchemy.orm import relationship, joinedload, backref
-
 from sqlalchemy.ext.declarative import declarative_base
 
+from arxiv.base import logging
+from arxiv.license import LICENSES
+from arxiv import taxonomy
+
 from ... import domain
+from .util import transaction
 
 Base = declarative_base()
+
+logger = logging.getLogger(__name__)
 
 
 class Submission(Base):    # type: ignore
@@ -39,14 +46,14 @@ class Submission(Base):    # type: ignore
     PROCESSING = 5
     """Scheduled for today."""
     NEEDS_EMAIL = 6
-    """Published, not yet announced."""
+    """Announced, not yet announced."""
 
-    PUBLISHED = 7
-    DELETED_PUBLISHED = 27
-    """Published and files expired."""
+    ANNOUNCED = 7
+    DELETED_ANNOUNCED = 27
+    """Announced and files expired."""
 
     PROCESSING_SUBMISSION = 8
-    REMOVED = 9
+    REMOVED = 9     # This is "rejected".
 
     USER_DELETED = 10
     ERROR_STATE = 19
@@ -58,40 +65,20 @@ class Submission(Base):    # type: ignore
     DELETED_PROCESSING = 25
 
     DELETED_REMOVED = 29
-    DELETED_USER = 30
+    DELETED_USER_EXPIRED = 30
     """User deleted and files expired."""
 
-    DELETED = [
+    DELETED = (
         USER_DELETED, DELETED_ON_HOLD, DELETED_PROCESSING,
-        DELETED_REMOVED, DELETED_USER
-    ]
+        DELETED_REMOVED, DELETED_USER_EXPIRED, DELETED_EXPIRED
+    )
 
-    NEW_SUBMSSION = 'new'
+    NEW_SUBMISSION = 'new'
     REPLACEMENT = 'rep'
     JOURNAL_REFERENCE = 'jref'
-    WITHDRAWAL = 'dr'
-
+    WITHDRAWAL = 'wdr'
+    CROSS_LIST = 'cross'
     WITHDRAWN_FORMAT = 'withdrawn'
-
-    # Map classic status to Submission domain status.
-    STATUS_MAP = {
-        NOT_SUBMITTED: domain.Submission.WORKING,
-        SUBMITTED: domain.Submission.SUBMITTED,
-        ON_HOLD: domain.Submission.ON_HOLD,
-        NEXT_PUBLISH_DAY: domain.Submission.SCHEDULED,
-        PROCESSING: domain.Submission.SCHEDULED,
-        PROCESSING_SUBMISSION: domain.Submission.SCHEDULED,
-        NEEDS_EMAIL: domain.Submission.SCHEDULED,
-        PUBLISHED: domain.Submission.PUBLISHED,
-        DELETED_PUBLISHED: domain.Submission.PUBLISHED,
-        USER_DELETED:  domain.Submission.DELETED,
-        DELETED_EXPIRED: domain.Submission.DELETED,
-        DELETED_ON_HOLD: domain.Submission.DELETED,
-        DELETED_PROCESSING: domain.Submission.DELETED,
-        DELETED_REMOVED: domain.Submission.DELETED,
-        DELETED_USER:  domain.Submission.DELETED,
-        ERROR_STATE: domain.Submission.ERROR
-    }
 
     submission_id = Column(Integer, primary_key=True)
 
@@ -119,8 +106,8 @@ class Submission(Base):    # type: ignore
     )
     submitter_name = Column(String(64))
     submitter_email = Column(String(64))
-    created = Column(DateTime)
-    updated = Column(DateTime)
+    created = Column(DateTime, default=lambda: datetime.now(UTC))
+    updated = Column(DateTime, onupdate=lambda: datetime.now(UTC))
     status = Column(Integer, nullable=False, index=True,
                     server_default=text("'0'"))
     sticky_status = Column(Integer)
@@ -183,111 +170,56 @@ class Submission(Base):    # type: ignore
                               back_populates='submission', lazy='joined',
                               cascade="all, delete-orphan")
 
-    def patch(self, submission: domain.Submission) -> domain.Submission:
-        """
-        Patch a :class:`.Submission` with data outside the event scope.
+    def get_submitter(self) -> domain.User:
+        """Generate a :class:`.User` representing the submitter."""
+        extra = {}
+        if self.submitter:
+            extra.update(dict(forename=self.submitter.first_name,
+                              surname=self.submitter.last_name,
+                              suffix=self.submitter.suffix_name))
+        return domain.User(native_id=self.submitter_id,
+                           email=self.submitter_email, **extra)
 
-        There are several fields that may change after a submission enters the
-        classic moderation and publication system, that cannot be inferred
-        from the event stack.
 
-        Parameters
-        ----------
-        submission : :class:`.domain.Submission`
-            The submission object to patch.
+    WDR_DELIMETER = '. Withdrawn: '
 
-        Returns
-        -------
-        :class:`.domain.Submission`
-            The same submission that was passed; now patched with data outside
-            the scope of the event model.
+    def get_withdrawal_reason(self) -> Optional[str]:
+        """Extract the withdrawal reason from the comments field."""
+        if Submission.WDR_DELIMETER not in self.comments:
+            return
+        return self.comments.split(Submission.WDR_DELIMETER, 1)[1]
 
-        """
-        # Status changes.
-        submission.status = self._get_status()
-        submission.active = (submission.status not in
-                             [submission.DELETED, submission.PUBLISHED])
-        submission.published = (submission.status == submission.PUBLISHED)
-        submission.arxiv_id = self._get_arxiv_id()
+    def update_withdrawal(self, submission: domain.Submission, reason: str,
+                          paper_id: str, version: int,
+                          created: datetime) -> None:
+        """Update withdrawal request information in the database."""
+        self.update_from_submission(submission)
+        self.created = created
+        self.updated = created
+        self.doc_paper_id = paper_id
+        self.status = Submission.PROCESSING_SUBMISSION
+        reason = f"{Submission.WDR_DELIMETER}{reason}"
+        self.comments = self.comments.rstrip('. ') + reason
 
-        # Possible reclassification.
-        primary = self.primary_classification
-        if primary:
-            submission.primary_classification = domain.Classification(
-                category=primary.category
-            )
-        submission.secondary_classification = [
-            domain.Classification(category=db_cat.category)
-            for db_cat in self.categories
-            if db_cat.is_primary == 0
-        ]
-
-        # Comments (admins may modify).
-        submission.metadata.comments = self.comments
-
-        # Apply sticky status.
-        if submission.finalized and self.sticky_status is self.ON_HOLD:
-            submission.status = submission.ON_HOLD
-        return submission
-
-    def to_submission(self) -> domain.Submission:
-        """
-        Generate a representation of submission state from a DB instance.
-
-        Returns
-        -------
-        :class:`.domain.Submission`
-
-        """
-        status = self._get_status()
-        primary = self.primary_classification
-        submitter = domain.User(
-            native_id=self.submitter.user_id,
-            email=self.submitter.email,
-            forename=self.submitter.first_name,
-            surname=self.submitter.last_name,
-            suffix=self.submitter.suffix_name
-        )
-        return domain.Submission(
-            creator=submitter,
-            owner=submitter,
-            created=self.created,
-            updated=self.updated,
-            submitter_is_author=bool(self.is_author),
-            submitter_accepts_policy=bool(self.agree_policy),
-            submitter_contact_verified=bool(self.userinfo),
-            submitter_confirmed_preview=bool(self.viewed),
-            status=status,
-            finalized=(status != domain.Submission.WORKING),
-            active=(status not in [domain.Submission.DELETED,
-                                   domain.Submission.PUBLISHED]),
-            published=(status == domain.Submission.PUBLISHED),
-            metadata=domain.SubmissionMetadata(
-                title=self.title,
-                abstract=self.abstract,
-                comments=self.comments,
-                report_num=self.report_num,
-                doi=self.doi,
-                msc_class=self.msc_class,
-                acm_class=self.acm_class,
-                journal_ref=self.journal_ref
-            ),
-            license=domain.License(
-                uri=self.arXiv_license.name,
-                name=self.arXiv_license.label
-            ) if self.arXiv_license else None,
-            primary_classification=domain.Classification(
-                category=primary.category
-            ) if primary else None,
-            secondary_classification=[
-                domain.Classification(category=db_cat.category)
-                for db_cat in self.categories
-                if db_cat.is_primary == 0
-            ]
-        )
+    def update_cross(self, submission: domain.Submission,
+                     categories: List[str], paper_id: str, version: int,
+                     created: datetime) -> None:
+        """Update cross-list request information in the database."""
+        self.update_from_submission(submission)
+        self.created = created
+        self.updated = created
+        self.doc_paper_id = paper_id
+        self.status = Submission.PROCESSING_SUBMISSION
+        for category in categories:
+            self.categories.append(
+                SubmissionCategory(submission_id=self.submission_id,
+                                   category=category, is_primary=0))
 
     def update_from_submission(self, submission: domain.Submission) -> None:
-        """Update this database object from a :class:`.domain.Submission`."""
+        """Update this database object from a :class:`.domain.submission.Submission`."""
+        if self.is_announced():     # Avoid doing anything. to be safe.
+            return
+
         self.submitter_id = submission.creator.native_id
         self.submitter_name = submission.creator.name
         self.submitter_email = submission.creator.email
@@ -295,8 +227,7 @@ class Submission(Base):    # type: ignore
         self.agree_policy = 1 if submission.submitter_accepts_policy else 0
         self.userinfo = 1 if submission.submitter_contact_verified else 0
         self.viewed = 1 if submission.submitter_confirmed_preview else 0
-        self.created = submission.created
-        self.updated = datetime.now()
+        self.updated = submission.updated
         self.title = submission.metadata.title
         self.abstract = submission.metadata.abstract
         self.authors = submission.metadata.authors_display
@@ -306,30 +237,58 @@ class Submission(Base):    # type: ignore
         self.msc_class = submission.metadata.msc_class
         self.acm_class = submission.metadata.acm_class
         self.journal_ref = submission.metadata.journal_ref
+
+        self.version = submission.version   # Numeric version.
+        self.doc_paper_id = submission.arxiv_id     # arXiv canonical ID.
+
+        # The document ID is a legacy concept, and not replicated in the NG
+        #  data model. So we need to grab it from the arXiv_documents table
+        #  using the doc_paper_id.
+        if self.doc_paper_id and not self.document_id:
+            doc = _load_document(paper_id=self.doc_paper_id)
+            self.document_id = doc.document_id
+
         if submission.license:
             self.license = submission.license.uri
-        self.type = Submission.NEW   # We're not handling other types here.
 
         if submission.source_content is not None:
+            self.source_size = submission.source_content.uncompressed_size
+            if submission.source_content.source_format is not None:
+                self.source_format = \
+                    submission.source_content.source_format.value
+            else:
+                self.source_format = None
+            self.package = (f'fm://{submission.source_content.identifier}'
+                            f'@{submission.source_content.checksum}')
+
+        if submission.submitter_compiled_preview:
             self.must_process = 0
-            self.source_size = submission.source_content.size
-            self.source_format = submission.source_content.format
+        else:
+            self.must_process = 1
 
         # Not submitted -> Submitted.
-        if submission.finalized \
+        if submission.is_finalized \
                 and self.status in [Submission.NOT_SUBMITTED, None]:
             self.status = Submission.SUBMITTED
             self.submit_time = submission.updated
+        # Delete.
+        elif submission.is_deleted:
+            self.status = Submission.USER_DELETED
+        elif submission.is_on_hold:
+            self.status = Submission.ON_HOLD
         # Unsubmit.
         elif self.status is None or self.status <= Submission.ON_HOLD:
-            if not submission.finalized:
+            if not submission.is_finalized:
                 self.status = Submission.NOT_SUBMITTED
 
         if submission.primary_classification:
             self._update_primary(submission)
         self._update_secondaries(submission)
-
         self._update_submitter(submission)
+
+        # We only want to set the creation datetime on the initial row.
+        if self.version == 1 and self.type == Submission.NEW_SUBMISSION:
+            self.created = submission.created
 
     @property
     def primary_classification(self):
@@ -342,23 +301,66 @@ class Submission(Base):    # type: ignore
         except IndexError:
             return
 
-    def _get_arxiv_id(self) -> Optional[str]:
+    def get_arxiv_id(self) -> Optional[str]:
+        """Get the arXiv identifier for this submission."""
         if not self.document:
             return
         return self.document.paper_id
 
-    def _get_status(self) -> str:
-        """Map classic status codes to :class:`.domain.Submission` status."""
-        if self._get_arxiv_id() is not None:
-            return domain.Submission.PUBLISHED
-        return self.STATUS_MAP.get(self.status)
+    def get_created(self) -> datetime:
+        """Get the UTC-localized creation datetime."""
+        return self.created.replace(tzinfo=UTC)
+
+    def get_updated(self) -> datetime:
+        """Get the UTC-localized updated datetime."""
+        return self.updated.replace(tzinfo=UTC)
+
+    def is_working(self) -> bool:
+        return self.status == self.NOT_SUBMITTED
+
+    def is_announced(self) -> bool:
+        return self.status in [self.ANNOUNCED, self.DELETED_ANNOUNCED]
+
+    def is_active(self) -> bool:
+        return not self.is_announced() and not self.is_deleted()
+
+    def is_rejected(self) -> bool:
+        return self.status == self.REMOVED
+
+    def is_finalized(self) -> bool:
+        return self.status > self.WORKING and not self.is_deleted()
+
+    def is_deleted(self) -> bool:
+        return self.status in self.DELETED
+
+    def is_on_hold(self) -> bool:
+        return self.status == self.ON_HOLD
+
+    def is_new_version(self) -> bool:
+        """Indicate whether this row represents a new version."""
+        return self.type in [self.NEW_SUBMISSION, self.REPLACEMENT]
+
+    def is_withdrawal(self) -> bool:
+        return self.type == self.WITHDRAWAL
+
+    def is_crosslist(self) -> bool:
+        return self.type == self.CROSS_LIST
+
+    def is_jref(self) -> bool:
+        return self.type == self.JOURNAL_REFERENCE
+
+    @property
+    def secondary_categories(self) -> List[str]:
+        """Category names from this submission's secondary classifications."""
+        return [c.category for c in self.categories if c.is_primary == 0]
 
     def _update_submitter(self, submission: domain.Submission) -> None:
-        """Update submitter information."""
+        """Update submitter information on this row."""
         self.submitter_id = submission.creator.native_id
+        self.submitter_email = submission.creator.email
 
     def _update_primary(self, submission: domain.Submission) -> None:
-        """Update primary classification."""
+        """Update primary classification on this row."""
         primary_category = submission.primary_classification.category
         cur_primary = self.primary_classification
 
@@ -378,24 +380,17 @@ class Submission(Base):    # type: ignore
             )
 
     def _update_secondaries(self, submission: domain.Submission) -> None:
-        """Update secondary classifications."""
-        cur_secondaries = [
-            db_cat.category for db_cat
-            in self.categories if db_cat.is_primary == 0
-        ]
-        tgt_secondaries = [
-            cat.category for cat in submission.secondary_classification
-        ]
+        """Update secondary classifications on this row."""
         # Remove any categories that have been removed from the Submission.
         for db_cat in self.categories:
             if db_cat.is_primary == 1:
                 continue
-            if db_cat.category not in tgt_secondaries:
+            if db_cat.category not in submission.secondary_categories:
                 self.categories.remove(db_cat)
 
         # Add any new secondaries
         for cat in submission.secondary_classification:
-            if cat.category not in cur_secondaries:
+            if cat.category not in self.secondary_categories:
                 self.categories.append(
                     SubmissionCategory(
                         submission_id=self.submission_id,
@@ -462,10 +457,10 @@ class SubmissionCategory(Base):    # type: ignore
 
 class Document(Base):    # type: ignore
     """
-    Represents a published arXiv paper.
+    Represents an announced arXiv paper.
 
     This is here so that we can look up the arXiv ID after a submission is
-    published.
+    announced.
     """
 
     __tablename__ = 'arXiv_documents'
@@ -490,9 +485,14 @@ class Document(Base):    # type: ignore
     submitter_id = Column(ForeignKey('tapir_users.user_id'), index=True)
     submitter = relationship('User')
 
+    @property
+    def dated_datetime(self) -> datetime:
+        """Return the created time as a datetime."""
+        return datetime.utcfromtimestamp(self.dated).replace(tzinfo=UTC)
+
 
 class DocumentCategory(Base):    # type: ignore
-    """Relation between published arXiv papers and their classifications."""
+    """Relation between announced arXiv papers and their classifications."""
 
     __tablename__ = 'arXiv_document_category'
 
@@ -576,6 +576,50 @@ class User(Base):    # type: ignore
                                      server_default=text("'0'"))
 
     tapir_policy_class = relationship('PolicyClass')
+
+    def to_user(self) -> domain.agent.User:
+        return domain.agent.User(
+            self.user_id,
+            self.email,
+            username=self.username,
+            forename=self.first_name,
+            surname=self.last_name,
+            suffix=self.suffix_name
+        )
+
+
+class Username(Base):  # type: ignore
+    """
+    Users' usernames (because why not have a separate table).
+
+    +--------------+------------------+------+-----+---------+----------------+
+    | Field        | Type             | Null | Key | Default | Extra          |
+    +--------------+------------------+------+-----+---------+----------------+
+    | nick_id      | int(10) unsigned | NO   | PRI | NULL    | autoincrement  |
+    | nickname     | varchar(20)      | NO   | UNI |         |                |
+    | user_id      | int(4) unsigned  | NO   | MUL | 0       |                |
+    | user_seq     | int(1) unsigned  | NO   |     | 0       |                |
+    | flag_valid   | int(1) unsigned  | NO   | MUL | 0       |                |
+    | role         | int(10) unsigned | NO   | MUL | 0       |                |
+    | policy       | int(10) unsigned | NO   | MUL | 0       |                |
+    | flag_primary | int(1) unsigned  | NO   |     | 0       |                |
+    +--------------+------------------+------+-----+---------+----------------+
+    """
+
+    __tablename__ = 'tapir_nicknames'
+
+    nick_id = Column(Integer, primary_key=True)
+    nickname = Column(String(20), nullable=False, unique=True, index=True)
+    user_id = Column(ForeignKey('tapir_users.user_id'), nullable=False,
+                     server_default=text("'0'"))
+    user = relationship('User')
+    user_seq = Column(Integer, nullable=False, server_default=text("'0'"))
+    flag_valid = Column(Integer, nullable=False, server_default=text("'0'"))
+    role = Column(Integer, nullable=False, server_default=text("'0'"))
+    policy = Column(Integer, nullable=False, server_default=text("'0'"))
+    flag_primary = Column(Integer, nullable=False, server_default=text("'0'"))
+
+    user = relationship('User')
 
 
 # TODO: what is this?
@@ -737,3 +781,122 @@ class Category(Base):    # type: ignore
 
     papers_to_endorse = Column(SmallInteger, nullable=False,
                                server_default=text("'0'"))
+
+
+class AdminLogEntry(Base):    # type: ignore
+    """
+
+    +---------------+-----------------------+------+-----+-------------------+
+    | Field         | Type                  | Null | Key | Default           |
+    +---------------+-----------------------+------+-----+-------------------+
+    | id            | int(11)               | NO   | PRI | NULL              |
+    | logtime       | varchar(24)           | YES  |     | NULL              |
+    | created       | timestamp             | NO   |     | CURRENT_TIMESTAMP |
+    | paper_id      | varchar(20)           | YES  | MUL | NULL              |
+    | username      | varchar(20)           | YES  |     | NULL              |
+    | host          | varchar(64)           | YES  |     | NULL              |
+    | program       | varchar(20)           | YES  |     | NULL              |
+    | command       | varchar(20)           | YES  | MUL | NULL              |
+    | logtext       | text                  | YES  |     | NULL              |
+    | document_id   | mediumint(8) unsigned | YES  |     | NULL              |
+    | submission_id | int(11)               | YES  | MUL | NULL              |
+    | notify        | tinyint(1)            | YES  |     | 0                 |
+    +---------------+-----------------------+------+-----+-------------------+
+    """
+
+    __tablename__ = 'arXiv_admin_log'
+
+    id = Column(Integer, primary_key=True)
+    logtime = Column(String(24), nullable=True)
+    created = Column(DateTime, default=lambda: datetime.now(UTC))
+    paper_id = Column(String(20), nullable=True)
+    username = Column(String(20), nullable=True)
+    host = Column(String(64), nullable=True)
+    program = Column(String(20), nullable=True)
+    command = Column(String(20), nullable=True)
+    logtext = Column(Text, nullable=True)
+    document_id = Column(Integer, nullable=True)
+    submission_id = Column(Integer, nullable=True)
+    notify = Column(Integer, nullable=True, default=0)
+
+
+class CategoryProposal(Base):   # type: ignore
+    """
+    Represents a proposal to change the classification of a submission.
+
+    +---------------------+-----------------+------+-----+---------+
+    | Field               | Type            | Null | Key | Default |
+    +---------------------+-----------------+------+-----+---------+
+    | proposal_id         | int(11)         | NO   | PRI | NULL    |
+    | submission_id       | int(11)         | NO   | PRI | NULL    |
+    | category            | varchar(32)     | NO   | PRI | NULL    |
+    | is_primary          | tinyint(1)      | NO   | PRI | 0       |
+    | proposal_status     | int(11)         | YES  |     | 0       |
+    | user_id             | int(4) unsigned | NO   | MUL | NULL    |
+    | updated             | datetime        | YES  |     | NULL    |
+    | proposal_comment_id | int(11)         | YES  | MUL | NULL    |
+    | response_comment_id | int(11)         | YES  | MUL | NULL    |
+    +---------------------+-----------------+------+-----+---------+
+    """
+
+    __tablename__ = 'arXiv_submission_category_proposal'
+
+    UNRESOLVED = 0
+    ACCEPTED_AS_PRIMARY = 1
+    ACCEPTED_AS_SECONDARY = 2
+    REJECTED = 3
+    DOMAIN_STATUS = {
+        UNRESOLVED: domain.proposal.Proposal.Status.PENDING,
+        ACCEPTED_AS_PRIMARY: domain.proposal.Proposal.Status.ACCEPTED,
+        ACCEPTED_AS_SECONDARY: domain.proposal.Proposal.Status.ACCEPTED,
+        REJECTED: domain.proposal.Proposal.Status.REJECTED
+    }
+
+    proposal_id = Column(Integer, primary_key=True)
+    submission_id = Column(ForeignKey('arXiv_submissions.submission_id'))
+    submission = relationship('Submission')
+    category = Column(String(32))
+    is_primary = Column(Integer, server_default=text("'0'"))
+    proposal_status = Column(Integer, nullable=True, server_default=text("'0'"))
+    user_id = Column(ForeignKey('tapir_users.user_id'))
+    user = relationship("User")
+    updated = Column(DateTime, default=lambda: datetime.now(UTC))
+    proposal_comment_id = Column(ForeignKey('arXiv_admin_log.id'),
+                                 nullable=True)
+    proposal_comment = relationship("AdminLogEntry",
+                                    foreign_keys=[proposal_comment_id])
+    response_comment_id = Column(ForeignKey('arXiv_admin_log.id'),
+                                 nullable=True)
+    response_comment = relationship("AdminLogEntry",
+                                    foreign_keys=[response_comment_id])
+
+    def status_from_domain(self, proposal: domain.proposal.Proposal) -> int:
+        if proposal.status == domain.proposal.Proposal.Status.PENDING:
+            return self.UNRESOLVED
+        elif proposal.status == domain.proposal.Proposal.Status.REJECTED:
+            return self.REJECTED
+        elif proposal.status == domain.proposal.Proposal.Status.ACCEPTED:
+            if proposal.proposed_event_type \
+                    is domain.event.SetPrimaryClassification:
+                return self.ACCEPTED_AS_PRIMARY
+            else:
+                return self.ACCEPTED_AS_SECONDARY
+
+
+
+def _load_document(paper_id: str) -> Document:
+    with transaction() as session:
+        document = session.query(Document) \
+            .filter(Document.paper_id == paper_id) \
+            .one()
+        if document is None:
+            raise RuntimeError('No such document')
+        return document
+
+
+def _get_user_by_username(username: str) -> User:
+    with transaction() as session:
+        return (session.query(Username)
+                .filter(Username.nickname == username)
+                .first()
+                .user)

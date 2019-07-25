@@ -10,7 +10,7 @@
       "type": "integer"
     },
     "arxiv_id": {
-      "description": "If the submission has been published, this is the associated arXiv ID",
+      "description": "If the submission has been announced, this is the associated arXiv ID",
       "readOnly": true,
       "oneOf": [
         {"type": "string"},
@@ -106,12 +106,12 @@
       "readOnly": true
     },
     "active": {
-      "description": "Indicates whether or not the submission is under active processing. Submissions that are deleted, withdrawn, or published are considered inactive.",
+      "description": "Indicates whether or not the submission is under active processing. Submissions that are deleted, withdrawn, or announced are considered inactive.",
       "type": "boolean",
       "readOnly": true
     },
-    "published": {
-      "description": "Indicates whether or not the submission is published.",
+    "announced": {
+      "description": "Indicates whether or not the submission is announced.",
       "type": "boolean",
       "readOnly": true
     },
@@ -123,7 +123,7 @@
         "$ref": "file:./event.json"
       }
     },
-    "compiled_content": {
+    "compilations": {
       "description": "Compiled representations of the submission content, e.g. PDF, DVI, PS, HTML",
       "type": "array",
       "items": {

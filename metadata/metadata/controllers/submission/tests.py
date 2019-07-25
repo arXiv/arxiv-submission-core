@@ -4,13 +4,12 @@ from unittest import TestCase, mock
 import json
 from datetime import datetime
 from werkzeug.exceptions import BadRequest, InternalServerError, NotFound
-
-from arxiv import status
+from pytz import UTC
+from arxiv.integration.api import status
 from arxiv.submission.domain import User, Submission, Author, Client
 from arxiv.submission import CreateSubmission, SaveError, \
     InvalidEvent, NoSuchSubmission, SetPrimaryClassification, \
-    SetUploadPackage, SetAuthors, InvalidStack, \
-    SetTitle, SetAbstract, SetDOI, \
+    SetUploadPackage, SetAuthors, SetTitle, SetAbstract, SetDOI, \
     SetMSCClassification, SetACMClassification, SetJournalReference,  \
     SetComments
 from metadata.controllers import submission
@@ -20,7 +19,6 @@ def preserve_exceptions_and_events(mock_events):
     """Add real exceptions back to the mock."""
     mock_events.SaveError = SaveError
     mock_events.InvalidEvent = InvalidEvent
-    mock_events.InvalidStack = InvalidStack
     mock_events.NoSuchSubmission = NoSuchSubmission
     mock_events.SetTitle = SetTitle
     mock_events.SetAbstract = SetAbstract
@@ -59,7 +57,7 @@ class TestCreateSubmission(TestCase):
         url_for.return_value = '/foo/'
         user = User(1234, 'foo@bar.baz')
         mock_events.save.return_value = (
-            Submission(creator=user, owner=user, created=datetime.now()),
+            Submission(creator=user, owner=user, created=datetime.now(UTC)),
             [CreateSubmission(creator=user)]
         )
         data = {
@@ -76,7 +74,7 @@ class TestCreateSubmission(TestCase):
                               "Should pass a CreateSubmission first")
         self.assertIsInstance(call_args[1], SetPrimaryClassification,
                               "Should pass a SetPrimaryClassification")
-        self.assertEqual(stat, status.HTTP_201_CREATED,
+        self.assertEqual(stat, status.CREATED,
                          "Should return 201 Created when submission is"
                          " successfully created.")
         self.assertIn('Location', head, "Should include a Location header.")
@@ -156,7 +154,7 @@ class TestUpdateSubmission(TestCase):
         url_for.return_value = '/foo/'
         user = User(1234, 'foo@bar.baz')
         mock_events.save.return_value = (
-            Submission(creator=user, owner=user, created=datetime.now()),
+            Submission(creator=user, owner=user, created=datetime.now(UTC)),
             [CreateSubmission(creator=user),
              SetTitle(creator=user, title='foo title')]
         )
@@ -175,7 +173,7 @@ class TestUpdateSubmission(TestCase):
         resp, stat, head = submission.update_submission(data, self.headers,
                                                         self.agents,
                                                         self.token, 1)
-        self.assertEqual(stat, status.HTTP_200_OK,
+        self.assertEqual(stat, status.OK,
                          "Should return 200 OK when submission is"
                          " successfully updated.")
         self.assertIn('Location', head, "Should include a Location header.")
@@ -264,13 +262,13 @@ class TestGetSubmission(TestCase):
         preserve_exceptions_and_events(mock_events)
         user = User(1234, 'foo@bar.baz')
         mock_events.load.return_value = (
-            Submission(creator=user, owner=user, created=datetime.now()),
+            Submission(creator=user, owner=user, created=datetime.now(UTC)),
             [CreateSubmission(creator=user)]
         )
         content, status_code, headers = submission.get_submission(1)
         self.assertEqual(mock_events.load.call_count, 1,
                          "Should call load() in the events core package")
-        self.assertEqual(status_code, status.HTTP_200_OK,
+        self.assertEqual(status_code, status.OK,
                          "Should return 200 OK")
         self.assertIsInstance(content, dict, "Should return a dict")
         try:

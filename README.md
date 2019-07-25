@@ -4,16 +4,43 @@ This repository houses development related to the arXiv-NG
 submission system. See https://cul-it.github.io/arxiv-submission-core/ for the
 latest documentation.
 
+## Documentation
+
+### Freshen/build
+
+Update the API doc source refs with:
+
+```bash
+sphinx-apidoc -o docs/source/arxiv.submission -e -f -M --implicit-namespaces core/arxiv *test*/*
+```
+
+Build HTML docs with:
+
+```bash
+cd docs
+make html SPHINXBUILD=$(pipenv --venv)/bin/sphinx-build
+```
+
 ## Contributions
 
 https://github.com/cul-it/arxiv-submission-core/blob/master/CONTRIBUTING.md
 
 ## What's in the repo
 
-- The [events core package](core/) is provides integrations with the
+- The [events core package](core/) provides integrations with the
   submission database and notification streams, and exposes a Python API for
   event-based operations on submission (meta)data. Any web services that
   modify submission data must do so via this package.
+- The [submission agent](agent/) is a Kinesis consumer that orchestrates
+  backend processes based on rules triggered by submission events.
+
+
+### In progress/stale
+
+These components are considerably behind, or only partially complete. Future
+development milestones will focus on these services, possibly in separate
+repositories.
+
 - The [API service](metadata/) provides the client-facing interface for
   submission-related requests. **Status: In progress**
 - The [Webhooks service](webhooks/) provides an API for creating and managing
@@ -23,9 +50,6 @@ https://github.com/cul-it/arxiv-submission-core/blob/master/CONTRIBUTING.md
   client-facing services, including the API service. This is close (but not
   identical) to what is run in production.
 
-This project is in its early stages, and has been subject to considerable
-churn. As a consequence, test coverage, documentation, and verification are
-incomplete. We will actively address these issues as we go along.
 
 ## Related components/dependencies
 
@@ -220,7 +244,7 @@ Content-Length: 1027
 Location: http://localhost:8000/submission/7/
 Connection: keep-alive
 
-{"active":true,"arxiv_id":null,"client":{"client_id":"2"},"compiled_content":[],"created":"2018-09-24T19:47:33.251494","creator":{"affiliation":"","agent_type":"User","email":"","endorsements":["*.*"],"forename":"","identifier":null,"name":"  ","native_id":null,"suffix":"","surname":"","user_id":null},"delegations":{},"finalized":false,"license":null,"metadata":{"abstract":null,"acm_class":null,"authors":[],"authors_display":"","comments":"","doi":null,"journal_ref":null,"msc_class":null,"report_num":null,"title":null},"owner":{"affiliation":"","agent_type":"User","email":"","endorsements":["*.*"],"forename":"","identifier":null,"name":"  ","native_id":null,"suffix":"","surname":"","user_id":null},"primary_classification":null,"proxy":null,"published":false,"secondary_classification":[],"source_content":null,"status":"working","submission_id":7,"submitter_accepts_policy":null,"submitter_confirmed_preview":false,"submitter_contact_verified":false,"submitter_is_author":null,"updated":"2018-09-24T19:47:33.251494"}
+{"active":true,"arxiv_id":null,"client":{"client_id":"2"},"compilations":[],"created":"2018-09-24T19:47:33.251494","creator":{"affiliation":"","agent_type":"User","email":"","endorsements":["*.*"],"forename":"","identifier":null,"name":"  ","native_id":null,"suffix":"","surname":"","user_id":null},"delegations":{},"finalized":false,"license":null,"metadata":{"abstract":null,"acm_class":null,"authors":[],"authors_display":"","comments":"","doi":null,"journal_ref":null,"msc_class":null,"report_num":null,"title":null},"owner":{"affiliation":"","agent_type":"User","email":"","endorsements":["*.*"],"forename":"","identifier":null,"name":"  ","native_id":null,"suffix":"","surname":"","user_id":null},"primary_classification":null,"proxy":null,"announced":false,"secondary_classification":[],"source_content":null,"status":"working","submission_id":7,"submitter_accepts_policy":null,"submitter_confirmed_preview":false,"submitter_contact_verified":false,"submitter_is_author":null,"updated":"2018-09-24T19:47:33.251494"}
 ```
 
 You can update a submission by POSTing fields that you want to update.
@@ -239,7 +263,7 @@ Content-Length: 1060
 Location: http://localhost:8000/submission/7/
 Connection: keep-alive
 
-{"active":true,"arxiv_id":null,"client":null,"compiled_content":[],"created":"2018-09-24T20:22:33.498688","creator":{"affiliation":"","agent_type":"User","email":"","endorsements":["*.*"],"forename":"","identifier":null,"name":"  ","native_id":null,"suffix":"","surname":"","user_id":null},"delegations":{},"finalized":false,"license":null,"metadata":{"abstract":null,"acm_class":null,"authors":[],"authors_display":"","comments":"","doi":"10.00123/foo45678","journal_ref":null,"msc_class":null,"report_num":null,"title":"The theory of life and everything"},"owner":{"affiliation":"","agent_type":"User","email":"","endorsements":["*.*"],"forename":"","identifier":null,"name":"  ","native_id":null,"suffix":"","surname":"","user_id":null},"primary_classification":null,"proxy":null,"published":false,"secondary_classification":[],"source_content":null,"status":"working","submission_id":7,"submitter_accepts_policy":null,"submitter_confirmed_preview":false,"submitter_contact_verified":false,"submitter_is_author":null,"updated":"2018-09-24T20:23:57.754003"}
+{"active":true,"arxiv_id":null,"client":null,"compilations":[],"created":"2018-09-24T20:22:33.498688","creator":{"affiliation":"","agent_type":"User","email":"","endorsements":["*.*"],"forename":"","identifier":null,"name":"  ","native_id":null,"suffix":"","surname":"","user_id":null},"delegations":{},"finalized":false,"license":null,"metadata":{"abstract":null,"acm_class":null,"authors":[],"authors_display":"","comments":"","doi":"10.00123/foo45678","journal_ref":null,"msc_class":null,"report_num":null,"title":"The theory of life and everything"},"owner":{"affiliation":"","agent_type":"User","email":"","endorsements":["*.*"],"forename":"","identifier":null,"name":"  ","native_id":null,"suffix":"","surname":"","user_id":null},"primary_classification":null,"proxy":null,"announced":false,"secondary_classification":[],"source_content":null,"status":"working","submission_id":7,"submitter_accepts_policy":null,"submitter_confirmed_preview":false,"submitter_contact_verified":false,"submitter_is_author":null,"updated":"2018-09-24T20:23:57.754003"}
 ```
 
 You can finalize the submission by updating the ``finalize`` field to ``true``.

@@ -21,10 +21,21 @@
 #
 # import os
 import sys
+import os
+from flask import Flask
+from arxiv.submission import init_app
 # sys.path.insert(0, os.path.abspath('.'))
-sys.path.append('../core')
-sys.path.append('../metadata')
-sys.path.append('../authorization')
+sys.path.append(os.path.abspath('../../core/arxiv'))
+sys.path.append('../../metadata')
+sys.path.append('../../agent')
+sys.path.append('./')
+# See https://github.com/agronholm/sphinx-autodoc-typehints/issues/73
+import patched_sphinx_autodoc_typehints
+from agent import rules, factory
+
+app = factory.create_app()
+# init_app(app)
+app.app_context().push()
 
 # -- General configuration ------------------------------------------------
 
@@ -44,7 +55,8 @@ extensions = [
     'sphinx.ext.napoleon',
     'sphinx.ext.graphviz',
     'sphinx.ext.githubpages',
-    'sphinx_autodoc_typehints'
+    'patched_sphinx_autodoc_typehints',
+    # 'sphinx_jekyll_builder'
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -83,7 +95,7 @@ language = None
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This patterns also effect to html_static_path and html_extra_path
-exclude_patterns = []
+exclude_patterns = ['_build', '**tests**']
 
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = 'sphinx'
@@ -175,4 +187,13 @@ numfig = True
 # Example configuration for intersphinx: refer to the Python standard library.
 intersphinx_mapping = {
     'python':  ('https://docs.python.org/3.6', None),
+    'arxitecture':  ('https://arxiv.github.io/arxiv-arxitecture/', None),
+    'arxiv.taxonomy': ('https://arxiv.github.io/arxiv-base', None),
+    'arxiv.integration': ('https://arxiv.github.io/arxiv-base', None),
+    'arxiv.base':  ('https://arxiv.github.io/arxiv-base', None),
+    'arxiv.forms':  ('https://arxiv.github.io/arxiv-base', None),
+    'browse':  ('https://arxiv.github.io/arxiv-browse/', None),
+    'search':  ('https://arxiv.github.io/arxiv-search/', None),
+    'zero':  ('https://arxiv.github.io/arxiv-zero/', None),
+    'flask': ('http://flask.pocoo.org/docs/1.0/', None),
 }

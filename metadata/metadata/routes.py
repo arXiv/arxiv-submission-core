@@ -8,7 +8,7 @@ from flask import Blueprint, current_app, redirect, request, g, Response
 
 from arxiv.users.auth.decorators import scoped
 from arxiv.users.auth import scopes
-from arxiv import status
+from arxiv.integration.api import status
 from arxiv.base import logging
 
 from arxiv.submission.domain import User, Client, Classification
@@ -29,7 +29,7 @@ def get_agents() -> None:
         raise Unauthorized('No authenticated client found')
 
     client = Client(session.client.client_id)
-    endorsements = [c.compound for c in session.authorizations.endorsements]
+    endorsements = session.authorizations.endorsements
     if request.session.user:
         creator = User(session.user.user_id, session.user.email,
                        endorsements=endorsements)

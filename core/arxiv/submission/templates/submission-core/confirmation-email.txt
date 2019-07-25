@@ -1,0 +1,38 @@
+{% import "base/macros.html" as macros %}
+
+We have received your submission to arXiv.
+
+Your temporary submission identifier is: submit/{{ submission_id }}. You may
+update your submission at: {{ url_for("submission",
+submission_id=submission_id) }}.
+
+Your article is scheduled to be announced at {{ announce_time.strftime("%a, %-d %b %Y %H:%M:%S ET") }}. The
+abstract will appear in the subsequent mailing as displayed below, except that
+the submission identifier will be replaced by the official arXiv identifier.
+Updates before {{ freeze_time.strftime("%a, %-d %b %Y %H:%M:%S ET") }} will not delay announcement.
+
+A paper password will be emailed to you when the article is announced. You
+should share this with co-authors to allow them to claim ownership. If you have
+a problem that you are not able to resolve through the web interface, contact
+{{ config.SUPPORT_EMAIL }} with a description of the issue and reference the
+submission identifier.
+
+{{ macros.abs_plaintext(
+  arxiv_id,
+  submission.metadata.title,
+  submission.metadata.authors_display,
+  submission.metadata.abstract,
+  submission.created,
+  submission.primary_classification.category,
+  submission.creator.name,
+  submission.creator.email,
+  submission.source_content.uncompressed_size,
+  submission.license.uri,
+  comments = submission.metadata.comments,
+  msc_class = submission.metadata.msc_class,
+  acm_class = submission.metadata.acm_class,
+  journal_ref = submission.metadata.journal_ref,
+  report_num = submission.metadata.report_num,
+  version = submission.version,
+  submission_history = [],
+  secondary_categories = submission.secondary_categories) }}
