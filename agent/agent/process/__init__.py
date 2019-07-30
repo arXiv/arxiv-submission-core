@@ -29,3 +29,6 @@ from .reclassification import \
     ProposeCrossListFromPrimaryCategory, \
     AcceptSystemCrossListProposals
 from .size_limits import CheckPDFSize, CheckSubmissionSourceSize
+from .legacy_filesystem_integration import \
+    CopySourceToLegacy, \
+    CopyPDFPreviewToLegacy
