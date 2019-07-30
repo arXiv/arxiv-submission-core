@@ -110,7 +110,7 @@ class CopyPDFPreviewToLegacy(_SourceProcess):
         if checksum is None:
             return
 
-        pv = preview.Preview.current_session()
+        pv = preview.PreviewService.current_session()
         fs = filesystem.Filesystem.current_session()
 
         upload_id = self.source_id(trigger)
