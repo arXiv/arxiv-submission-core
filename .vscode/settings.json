@@ -1,0 +1,8 @@
+{
+    "restructuredtext.builtDocumentationPath" : "${workspaceRoot}/docs/_build/html",
+    "restructuredtext.confPath"               : "${workspaceFolder}/docs/source",
+    "restructuredtext.updateOnTextChanged"    : "true",
+    "restructuredtext.updateDelay"            : 300,
+    "restructuredtext.sphinxBuildPath": "/Users/brp53/.local/share/virtualenvs/arxiv-submission-core-4bN2CPy8/bin/sphinx-build",
+    "python.pythonPath": "/Users/brp53/.virtualenvs/arxiv-submission-core-4bN2CPy8/bin/python"
+}
