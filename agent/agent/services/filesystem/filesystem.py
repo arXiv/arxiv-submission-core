@@ -62,8 +62,8 @@ class Filesystem(service.HTTPIntegration):
         if etag != checksum:
             raise ValidationFailed(f'Expected {checksum}, got {etag}')
 
-    def source_exists(self, submission_id: int,
-                      checksum: Optional[str] = None) -> bool:
+    def does_source_exist(self, submission_id: int,
+                          checksum: Optional[str] = None) -> bool:
         """
         Verify that the source for a submission exists.
 
@@ -78,8 +78,8 @@ class Filesystem(service.HTTPIntegration):
                 raise ValidationFailed(f'Expected {checksum}, got {etag}')
         return bool(response.status_code == status.OK)
 
-    def preview_exists(self, submission_id: int,
-                       checksum: Optional[str] = None) -> bool:
+    def does_preview_exist(self, submission_id: int,
+                           checksum: Optional[str] = None) -> bool:
         """
         Verify that the preview for a submission exists.
 

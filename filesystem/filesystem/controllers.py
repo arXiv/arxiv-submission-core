@@ -70,7 +70,7 @@ def check_source_exists(submission_id: int) -> Response:
         Headers to add to the response.
 
     """
-    if not store.source_exists(submission_id):
+    if not store.does_source_exist(submission_id):
         raise NotFound(f'No source for submission: {submission_id}')
     headers = {'ETag': store.get_source_checksum(submission_id)}
     return {}, HTTPStatus.OK, headers
@@ -128,7 +128,7 @@ def check_preview_exists(submission_id: int) -> Response:
         Headers to add to the response.
 
     """
-    if not store.preview_exists(submission_id):
+    if not store.does_preview_exist(submission_id):
         raise NotFound(f'No preview for submission: {submission_id}')
     headers = {'ETag': store.get_preview_checksum(submission_id)}
     return {}, HTTPStatus.OK, headers

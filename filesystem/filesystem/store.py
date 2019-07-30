@@ -107,7 +107,7 @@ def get_source_checksum(submission_id: int) -> str:
     return _get_checksum(_source_package_path(submission_id))
 
 
-def source_exists(submission_id: int) -> bool:
+def does_source_exist(submission_id: int) -> bool:
     return os.path.exists(_source_package_path(submission_id))
 
 
@@ -115,7 +115,7 @@ def get_preview_checksum(submission_id: int) -> str:
     return _get_checksum(_preview_path(submission_id))
 
 
-def preview_exists(submission_id: int) -> bool:
+def does_preview_exist(submission_id: int) -> bool:
     return os.path.exists(_preview_path(submission_id))
 
 
