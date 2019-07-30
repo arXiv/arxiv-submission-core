@@ -37,10 +37,10 @@
         },
         "arxiv-base": {
             "hashes": [
-                "sha256:9a0f7e5f213f7debbe13c74afdee39784e8339e10a776d33af8ecab574ea08ab"
+                "sha256:f68e95733a94221378e3f5da96463e6c32dde8c61e3cbae220384eb3f9427607"
             ],
             "index": "pypi",
-            "version": "==0.15.8rc4"
+            "version": "==0.15.9"
         },
         "arxiv-submission-core": {
             "path": "./core"
