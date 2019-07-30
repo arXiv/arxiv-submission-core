@@ -5,10 +5,10 @@ from typing import Optional, Callable
 from arxiv.users import auth, domain
 from arxiv.integration.api import exceptions
 from arxiv.submission.auth import get_system_token
-
+from arxiv.submission.services import preview
 from .base import Process, step, Retry, Recoverable
 from ..domain import Trigger
-from ..services import filemanager, filesystem, preview
+from ..services import filemanager, filesystem
 
 
 class _SourceProcess(Process):

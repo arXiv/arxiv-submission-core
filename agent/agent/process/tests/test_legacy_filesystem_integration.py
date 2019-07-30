@@ -224,7 +224,7 @@ class TestCopyPDFPreviewToLegacy(TestCase):
         self.process = lfsi.CopyPDFPreviewToLegacy(self.submission_id)
 
     @mock.patch(f'{lfsi.__name__}.filesystem.Filesystem')
-    @mock.patch(f'{lfsi.__name__}.preview.Preview')
+    @mock.patch(f'{lfsi.__name__}.preview.PreviewService')
     def test_source_info_missing(self, MockPreview, MockFilesystem):
         """The submission does not have a source package set."""
         submission = Submission(
@@ -250,7 +250,7 @@ class TestCopyPDFPreviewToLegacy(TestCase):
                          'Filesystem is not invoked')
 
     @mock.patch(f'{lfsi.__name__}.filesystem.Filesystem')
-    @mock.patch(f'{lfsi.__name__}.preview.Preview')
+    @mock.patch(f'{lfsi.__name__}.preview.PreviewService')
     def test_preview_not_available(self, MockPreview, MockFilesystem):
         """The preview service is not available."""
         mock_preview = mock.MagicMock()
@@ -270,7 +270,7 @@ class TestCopyPDFPreviewToLegacy(TestCase):
                          'Filesystem integration is not called')
 
     @mock.patch(f'{lfsi.__name__}.filesystem.Filesystem')
-    @mock.patch(f'{lfsi.__name__}.preview.Preview')
+    @mock.patch(f'{lfsi.__name__}.preview.PreviewService')
     def test_fm_not_authorized(self, MockPreview, MockFilesystem):
         """We are not authorized to access this resource."""
         mock_preview = mock.MagicMock()
@@ -289,7 +289,7 @@ class TestCopyPDFPreviewToLegacy(TestCase):
                          'Filesystem integration is not called')
 
     @mock.patch(f'{lfsi.__name__}.filesystem.Filesystem')
-    @mock.patch(f'{lfsi.__name__}.preview.Preview')
+    @mock.patch(f'{lfsi.__name__}.preview.PreviewService')
     def test_filesystem_not_available(self, MockPreview, MockFilesystem):
         """The filesystem shim service is not available."""
         mock_preview = mock.MagicMock()
@@ -310,7 +310,7 @@ class TestCopyPDFPreviewToLegacy(TestCase):
                          'Filesystem integration is called')
 
     @mock.patch(f'{lfsi.__name__}.filesystem.Filesystem')
-    @mock.patch(f'{lfsi.__name__}.preview.Preview')
+    @mock.patch(f'{lfsi.__name__}.preview.PreviewService')
     def test_integrity_check_fails(self, MockPreview, MockFilesystem):
         """The preview is deposited, but received checksum does not match."""
         mock_preview = mock.MagicMock()
@@ -335,7 +335,7 @@ class TestCopyPDFPreviewToLegacy(TestCase):
                                                            self.checksum)
 
     @mock.patch(f'{lfsi.__name__}.filesystem.Filesystem')
-    @mock.patch(f'{lfsi.__name__}.preview.Preview')
+    @mock.patch(f'{lfsi.__name__}.preview.PreviewService')
     def test_deposited(self, MockPreview, MockFilesystem):
         """The preview is deposited."""
         mock_preview = mock.MagicMock()

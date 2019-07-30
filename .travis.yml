@@ -5,6 +5,7 @@ services:
 #cache: pip
 env:
   MIN_PYLINT_SCORE: 8
+  WITH_INTEGRATION: 1
 os:
   - linux
 python:

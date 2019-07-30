@@ -1,3 +1,3 @@
 """Integration with the submission preview service."""
 
-from .preview import Preview
+from .preview import PreviewService
