@@ -50,9 +50,16 @@ FAILED: Status = 'failed'
 IN_PROGRESS: Status = 'in_progress'
 
 Summary = Dict[str, Any]
+"""Summary information suitable for generating a response to users/clients."""
+
 IStarter = Callable[[Submission, User, Optional[Client], str], Status]
+"""Interface for processing starter functions."""
+
 IChecker = Callable[[Submission, User, Optional[Client], str], Status]
+"""Interface for status check functions."""
+
 ISummarizer = Callable[[Submission, User, Optional[Client], str], Summary]
+"""Interface for processing summarizer functions."""
 
 
 class SourceProcess(NamedTuple):
@@ -363,18 +370,95 @@ def _get_process(source_format: SubmissionContent.Format) -> SourceProcess:
 
 def start(submission: Submission, user: User, client: Optional[Client],
           token: str) -> Status:
+    """
+    Start processing the source package for a submission.
+
+    Parameters
+    ----------
+    submission : :class:`.Submission`
+        The submission to process.
+    user : :class:`.User`
+        arXiv user who originated the request.
+    client : :class:`.Client` or None
+        API client that handled the request, if any.
+    token : str
+        Authn/z token for the request.
+
+    Returns
+    -------
+    str
+        Status indicating the disposition of the process. See :const:`.Status`.
+
+    Raises
+    ------
+    :class:`NotImplementedError`
+        Raised if the submission source format is not supported by this module.
+
+    """
     proc = _get_process(submission.source_content.source_format)
     return proc.start(submission, user, client, token)
 
 
 def check(submission: Submission, user: User, client: Optional[Client],
           token: str) -> Status:
+    """
+    Check the status of source processing for a submission.
+
+    Parameters
+    ----------
+    submission : :class:`.Submission`
+        The submission to process.
+    user : :class:`.User`
+        arXiv user who originated the request.
+    client : :class:`.Client` or None
+        API client that handled the request, if any.
+    token : str
+        Authn/z token for the request.
+
+    Returns
+    -------
+    str
+        Status indicating the disposition of the process. See :const:`.Status`.
+
+    Raises
+    ------
+    :class:`NotImplementedError`
+        Raised if the submission source format is not supported by this module.
+
+    """
     proc = _get_process(submission.source_content.source_format)
     return proc.check(submission, user, client, token)
 
 
 def summarize(submission: Submission, user: User, client: Optional[Client],
               token: str) -> Summary:
+    """
+    Summarize the results of source processing for a submission.
+
+    Parameters
+    ----------
+    submission : :class:`.Submission`
+        The submission to process.
+    user : :class:`.User`
+        arXiv user who originated the request.
+    client : :class:`.Client` or None
+        API client that handled the request, if any.
+    token : str
+        Authn/z token for the request.
+
+    Returns
+    -------
+    dict
+        Keys are strings. Summary information suitable for generating feedback
+        to an end user or API consumer. E.g. to be injected in a template
+        rendering context.
+
+    Raises
+    ------
+    :class:`NotImplementedError`
+        Raised if the submission source format is not supported by this module.
+
+    """
     proc = _get_process(submission.source_content.source_format)
     return proc.summarize(submission, user, client, token)
 
@@ -385,6 +469,7 @@ TeXProcess = _make_process(
     _CompilationChecker(),
     _CompilationSummarizer()
 )
+"""Support for processing TeX submissions."""
 
 
 PostscriptProcess = _make_process(
@@ -393,6 +478,7 @@ PostscriptProcess = _make_process(
     _CompilationChecker(),
     _CompilationSummarizer()
 )
+"""Support for processing Postscript submissions."""
 
 
 PDFProcess = _make_process(
@@ -401,4 +487,5 @@ PDFProcess = _make_process(
     _PDFChecker(),
     _PDFSummarizer()
 )
+"""Support for processing PDF submissions."""
 
