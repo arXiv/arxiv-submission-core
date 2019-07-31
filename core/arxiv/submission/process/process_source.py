@@ -1,7 +1,40 @@
-"""Core procedures for processing source content."""
+"""
+Core procedures for processing source content.
+
+In order for a submission to be finalized, it must have a valid source package,
+and the source must be processed. Source processing involves the transformation
+(and possibly validation) of sanitized source content (generally housed in the
+file manager service) into a usable preview (generally a PDF) that is housed in
+the submission preview service.
+
+The specific steps involved in source processing vary among supported source
+formats. The primary objective of this module is to encapsulate in one location
+the orchestration involved in processing submission source packages.
+
+The end result of source processing is the generation of a
+:class:`.ConfirmSourceProcessed` event. This event signifies that the source
+has been processed succesfully, and that a corresponding preview may be found
+in the preview service.
+
+Implementing support for a new format
+=====================================
+Processing support for a new format can be implemented by registering a new
+:class:`SourceProcess`, using :func:`._make_process`. Each source process
+supports a specific :class:`SubmissionContent.Format`, and should provide a
+starter, a checker, and a summarizer. The preferred approach is to extend the
+base classes, :class:`.BaseStarter`, :class:`.BaseChecker`, and
+:class:`.BaseSummarizer`.
+
+Using a process
+===============
+The primary API of this module is comprised of the functions :func:`start`,
+:func:`check`, and :func:`summarize`. These functions dispatch to the
+processes defined/registered in this module.
+
+"""
 
 import io
-from typing import IO, Dict, Tuple, NamedTuple, Optional, Any, Type
+from typing import IO, Dict, Tuple, NamedTuple, Optional, Any, Callable
 
 from arxiv.integration.api.exceptions import NotFound
 from arxiv.submission import InvalidEvent, User, Client, Event, Submission, \
@@ -16,14 +49,26 @@ SUCCEEDED: Status = 'succeeded'
 FAILED: Status = 'failed'
 IN_PROGRESS: Status = 'in_progress'
 
+Summary = Dict[str, Any]
+IStarter = Callable[[Submission, User, Optional[Client], str], Status]
+IChecker = Callable[[Submission, User, Optional[Client], str], Status]
+ISummarizer = Callable[[Submission, User, Optional[Client], str], Summary]
+
 
 class SourceProcess(NamedTuple):
-    """."""
+    """Container for source processing routines for a specific format."""
 
     supports: SubmissionContent.Format
-    start: 'BaseStarter'
-    check: 'BaseChecker'
-    summarize: 'BaseSummarizer'
+    """The source format supported by this process."""
+
+    start: IStarter
+    """A function for starting processing."""
+
+    check: IChecker
+    """A function for checking the status of processing."""
+
+    summarize: ISummarizer
+    """A function for summarizing the result of processing."""
 
 
 _PROCESSES: Dict[SubmissionContent.Format, SourceProcess] = {}
@@ -49,13 +94,62 @@ class FailedToGetResult(SourceProcessingException):
     """Could not get the result of processing."""
 
 
+class BaseStarter:
+    """
+    Base class for starting processing.
+
+    To extend this class, override :func:`BaseStarter.start`. That function
+    should perform whatever steps are necessary to start processing, and
+    return a :const:`.Status` that indicates the disposition of
+    processing for that submission.
+    """
+
+    def start(self, submission: Submission, token: str) -> Status:
+        """Start processing the source. Must be implemented by child class."""
+        raise NotImplementedError('Must be implemented by a child class')
+
+    def on_success(self, submission: Submission, token: str) -> None:
+        """Callback for successful start. May be overridden by child class."""
+        pass
+
+    def on_failure(self, submission: Submission, exc: Exception) -> None:
+        """Callback for failed start. May be overridden by child class."""
+        pass
+
+    def fail(self, submission: Submission, exc: Exception) -> None:
+        """Handle failure to start processing."""
+        self.on_failure(submission, exc)
+        message = f'Could not start processing {submission.submission_id}'
+        raise FailedToStart(message) from exc
+
+    def __call__(self, submission: Submission, user: User,
+                 client: Optional[Client], token: str) -> Status:
+        """Start processing a submission source package."""
+        try:
+            status = self.start(submission, token)
+            self.on_success(submission, token)
+        except SourceProcessingException:   # Propagate.
+            raise
+        except Exception as e:
+            self.fail(submission, e)
+        return status
+
+
 class BaseChecker:
-    """Checks the status of processing."""
+    """
+    Base class for checking the status of processing.
+
+    To extend this class, override :func:`BaseStarter.check`. That function
+    should return a :const:`.Status` that indicates the disposition of
+    processing for a given submission.
+    """
 
     def check(self, submission: Submission, token: str) -> Status:
+        """Perform the status check."""
         raise NotImplementedError('Must be implemented by a subclass')
 
     def on_failure(self, submission: Submission, exc: Exception) -> None:
+        """Failure callback. May be overridden by child class."""
         pass
 
     def fail(self, submission: Submission, exc: Exception) -> None:
@@ -65,6 +159,7 @@ class BaseChecker:
 
     def finish(self, submission: Submission, user: User,
                client: Optional[Client], token: str) -> None:
+        """Emit :class:`.ConfirmSourceProcessed` on successful processing."""
         try:
             save(ConfirmSourceProcessed(creator=user, client=client),  # type: ignore
                  submission_id=submission.submission_id)
@@ -73,6 +168,7 @@ class BaseChecker:
 
     def __call__(self, submission: Submission, user: User,
                  client: Optional[Client], token: str) -> Status:
+        """Check the status of source processing for a submission."""
         if submission.is_source_processed:      # Already succeeded.
             return SUCCEEDED
         try:
@@ -86,53 +182,37 @@ class BaseChecker:
         return status
 
 
-
-class BaseStarter:
-    """Starts processing."""
-
-    def start(self, submission: Submission, token: str) -> Status:
-        raise NotImplementedError('Must be implemented by a child class')
-
-    def on_success(self, submission: Submission, token: str) -> None:
-        pass
-
-    def on_failure(self, submission: Submission, exc: Exception) -> None:
-        pass
-
-    def fail(self, submission: Submission, exc: Exception) -> None:
-        self.on_failure(submission, exc)
-        message = f'Could not start processing {submission.submission_id}'
-        raise FailedToStart(message) from exc
-
-    def __call__(self, submission: Submission, user: User,
-                 client: Optional[Client], token: str) -> Status:
-        try:
-            status = self.start(submission, token)
-            self.on_success(submission, token)
-        except SourceProcessingException:   # Propagate.
-            raise
-        except Exception as e:
-            self.fail(submission, e)
-        return status
-
-
 class BaseSummarizer:
-    """Displays the result of processing."""
+    """
+    Base class for summarizing the result of processing.
+
+    To extend this class, override :func:`BaseStarter.summarize`. That function
+    should return a :const:`.Summary` that can be used to provide feedback to
+    a user or API consumer.
+    """
 
     def on_failure(self, submission: Submission, exc: Exception) -> None:
+        """Callback for failed summary. May be overridden by child class."""
         pass
 
     def fail(self, submission: Submission, exc: Exception) -> None:
+        """Handle failure to get summary."""
         self.on_failure(submission, exc)
         message = f'Could not summarize processing {submission.submission_id}'
         raise FailedToGetResult(message) from exc
 
     def summarize(self, submission: Submission, token: str) -> Dict[str, Any]:
+        """
+        Generate summary information about the processing.
+
+        Must be overridden by a child class.
+        """
         raise NotImplementedError('Must be implemented by a child class')
         return {}
 
     def __call__(self, submission: Submission, user: User,
                  client: Optional[Client], token: str) -> Dict[str, Any]:
+        """Summarize source processing."""
         p = PreviewService.current_session()
         try:
             summary = self.summarize(submission, token)
@@ -148,7 +228,10 @@ class BaseSummarizer:
 
 
 class _PDFStarter(BaseStarter):
+    """Start processing a PDF source package."""
+
     def start(self, submission: Submission, token: str) -> Status:
+        """Ship the PDF to the preview service."""
         m = Filemanager.current_session()
         stream, fmt, source_checksum, stream_checksum = \
             m.get_single_file(submission.source_content.identifier, token)
@@ -159,7 +242,10 @@ class _PDFStarter(BaseStarter):
 
 
 class _PDFChecker(BaseChecker):
+    """Check the status of a PDF source package."""
+
     def check(self, submission: Submission, token: str) -> Status:
+        """Verify that the preview is present."""
         p = PreviewService.current_session()
         if p.has_preview(submission.source_content.identifier,
                          submission.source_content.checksum,
@@ -169,7 +255,10 @@ class _PDFChecker(BaseChecker):
 
 
 class _PDFSummarizer(BaseSummarizer):
-    def summarize(self, submission: Submission, token: str) -> Dict[str, Any]:
+    """Summarize PDF processing."""
+
+    def summarize(self, submission: Submission, token: str) -> Summary:
+        """Currently does nothing."""
         return {}
 
 
@@ -239,7 +328,7 @@ class _CompilationChecker(BaseChecker):
 
 
 class _CompilationSummarizer(BaseSummarizer):
-    def summarize(self, submission: Submission, token: str) -> Dict[str, Any]:
+    def summarize(self, submission: Submission, token: str) -> Summary:
         c = Compiler.current_session()
         log = c.get_log(submission.source_content.identifier,
                         submission.source_content.checksum,
@@ -285,7 +374,7 @@ def check(submission: Submission, user: User, client: Optional[Client],
 
 
 def summarize(submission: Submission, user: User, client: Optional[Client],
-              token: str) -> Dict[str, Any]:
+              token: str) -> Summary:
     proc = _get_process(submission.source_content.source_format)
     return proc.summarize(submission, user, client, token)
 
