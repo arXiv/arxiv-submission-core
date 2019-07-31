@@ -77,14 +77,91 @@ class PreviewService(service.HTTPIntegration):
 
     def get(self, source_id: int, checksum: str, token: str) \
             -> Tuple[IO[bytes], str]:
-        """Retrieve the content of the PDF preview for a submission."""
+        """
+        Retrieve the content of the PDF preview for a submission.
+
+        Parameters
+        ----------
+        source_id : int
+            Unique identifier of the source package from which the preview was
+            generated.
+        checksum : str
+            URL-safe base64-encoded MD5 hash of the source package content.
+        token : str
+            Authnz token for the request.
+
+        Returns
+        -------
+        :class:`io.BytesIO`
+            Streaming content of the preview.
+        str
+            URL-safe base64-encoded MD5 hash of the preview content.
+
+        """
         response = self.request('get', f'/{source_id}/{checksum}/content',
                                 token)
         preview_checksum = str(response.headers['ETag'])
         return ReadWrapper(response.iter_content), preview_checksum
 
+    def get_metadata(self, source_id: int, checksum: str, token: str) \
+            -> Preview:
+        """
+        Retrieve metadata about a preview.
+
+        Parameters
+        ----------
+        source_id : int
+            Unique identifier of the source package from which the preview was
+            generated.
+        checksum : str
+            URL-safe base64-encoded MD5 hash of the source package content.
+        token : str
+            Authnz token for the request.
+
+        Returns
+        -------
+        :class:`.Preview`
+
+        """
+        response = self.request('get', f'/{source_id}/{checksum}', token)
+        response_data: PreviewMeta = response.json()
+        added: datetime = datetime.fromisoformat(response_data['added'])
+        return Preview(source_id=source_id,
+                       source_checksum=checksum,
+                       preview_checksum=response_data['checksum'],
+                       added=added,
+                       size_bytes=response_data['size_bytes'])
+
     def deposit(self, source_id: int, checksum: str, stream: IO[bytes],
                 token: str, overwrite: bool = False) -> Preview:
+        """
+        Deposit a preview.
+
+        Parameters
+        ----------
+        source_id : int
+            Unique identifier of the source package from which the preview was
+            generated.
+        checksum : str
+            URL-safe base64-encoded MD5 hash of the source package content.
+        stream : :class:`.io.BytesIO`
+            Streaming content of the preview.
+        token : str
+            Authnz token for the request.
+        overwrite : bool
+            If ``True``, any existing preview will be overwritten.
+
+        Returns
+        -------
+        :class:`.Preview`
+
+        Raises
+        ------
+        :class:`AlreadyExists`
+            Raised when ``overwrite`` is ``False`` and a preview already exists
+            for the provided ``source_id`` and ``checksum``.
+
+        """
         headers = {'Content-type': 'application/pdf',
                    'Overwrite': 'true' if overwrite else 'false'}
         try:
@@ -104,3 +181,6 @@ class PreviewService(service.HTTPIntegration):
                        preview_checksum=response_data['checksum'],
                        added=added,
                        size_bytes=response_data['size_bytes'])
+
+    def has_preview(self, source_id: int, checksum: str, token: str) -> bool:
+        ...

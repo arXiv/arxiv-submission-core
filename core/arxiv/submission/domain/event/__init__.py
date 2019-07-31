@@ -937,40 +937,39 @@ class UnsetUploadPackage(Event):
 
 
 @dataclass()
-class ConfirmCompiledPreview(Event):
-    """Confirm that the submitter successfully compiled a preview."""
+class ConfirmSourceProcessed(Event):
+    """
+    Confirm that the submission source was successfully processed.
 
-    NAME = "confirm submission preview is compiled"
-    NAMED = "confirmed that submission preview was compiled"
+    For TeX and PS submissions, this will involve compilation using the AutoTeX
+    tree. For PDF-only submissions, this may simply involve checking that a
+    PDF exists.
 
-    def validate(self, submission: Submission) -> None:
-        return
+    If this event has occurred, it indicates that a preview of the submission
+    content is available.
+    """
 
-    def project(self, submission: Submission) -> Submission:
-        """Set :attr:`Submission.submitter_compiled_preview`."""
-        submission.submitter_compiled_preview = True
-        return submission
-
-
-@dataclass()
-class UnConfirmCompiledPreview(Event):
-    """Unconfirm that the submitter successfully compiled a preview."""
-
-    NAME = "unconfirm submission preview is compiled"
-    NAMED = "unconfirmed that submission preview was compiled"
+    NAME = "confirm source has been processed"
+    NAMED = "confirmed that source has been processed"
 
     def validate(self, submission: Submission) -> None:
         return
 
     def project(self, submission: Submission) -> Submission:
-        """Set :attr:`Submission.submitter_compiled_preview`."""
-        submission.submitter_compiled_preview = False
+        """Set :attr:`Submission.is_source_processed`."""
+        submission.is_source_processed = True
         return submission
 
 
 @dataclass()
 class ConfirmPreview(Event):
-    """Confirm that the paper and abstract previews are acceptable."""
+    """
+    Confirm that the paper and abstract previews are acceptable.
+
+    This event indicates that the submitter has viewed the content preview as
+    well as the metadata that will be displayed on the abstract page, and
+    affirms the acceptability of all content.
+    """
 
     NAME = "approve submission preview"
     NAMED = "submission preview approved"

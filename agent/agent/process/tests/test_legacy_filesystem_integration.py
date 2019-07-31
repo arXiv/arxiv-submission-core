@@ -9,7 +9,7 @@ from http import HTTPStatus as status
 
 from arxiv.integration.api import status, exceptions
 from arxiv.submission.domain.event import SetUploadPackage, \
-    UpdateUploadPackage, ConfirmCompiledPreview
+    UpdateUploadPackage, ConfirmSourceProcessed
 from arxiv.submission.domain.agent import Agent, User
 from arxiv.submission.domain.flag import Flag, MetadataFlag
 from arxiv.submission.domain.submission import Submission, SubmissionContent, \
@@ -220,7 +220,7 @@ class TestCopyPDFPreviewToLegacy(TestCase):
                 compressed_size=2_000
             )
         )
-        self.event = ConfirmCompiledPreview(creator=self.creator)
+        self.event = ConfirmSourceProcessed(creator=self.creator)
         self.process = lfsi.CopyPDFPreviewToLegacy(self.submission_id)
 
     @mock.patch(f'{lfsi.__name__}.filesystem.Filesystem')

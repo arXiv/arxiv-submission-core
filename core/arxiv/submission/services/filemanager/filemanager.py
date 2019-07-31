@@ -6,22 +6,8 @@ from http import HTTPStatus as status
 from arxiv.base import logging
 from arxiv.integration.api import service
 
-
-class ReadWrapper:
-    """Wraps a response body streaming iterator to provide ``read()``."""
-    def __init__(self, iter_content: Callable[[int], Iterator[bytes]],
-                 size: int = 4096) -> None:
-        """Initialize the streaming iterator."""
-        self._iter_content = iter_content(size)
-
-    def read(self, *args: Any, **kwargs: Any) -> bytes:
-        """
-        Read the next chunk of the content stream.
-
-        Arguments are ignored, since the chunk size must be set at the start.
-        """
-        return next(self._iter_content, b'')
-
+from ...domain import SubmissionContent
+from ..util import ReadWrapper
 
 
 class Filemanager(service.HTTPIntegration):
@@ -46,7 +32,7 @@ class Filemanager(service.HTTPIntegration):
         return True
 
     def get_source_package(self, upload_id: str, token: str) \
-            -> Tuple[ReadWrapper, str]:
+            -> Tuple[IO[bytes], str]:
         """
         Retrieve the sanitized/processed upload package.
 
@@ -69,3 +55,52 @@ class Filemanager(service.HTTPIntegration):
         path = f'/{upload_id}/content'
         response = self.request('get', path, token, stream=True)
         return ReadWrapper(response.iter_content), response.headers.get('ETag')
+
+    def is_single_file(self, upload_id: str, token: str) \
+            -> Tuple[bool, SubmissionContent.Format, str]:
+        """
+        Determine whether or not the source is comprised of a single file.
+
+        Parameters
+        ----------
+        upload_id : str
+            Unique long-lived identifier for the upload.
+        token : str
+            Auth token to include in the request.
+
+        Returns
+        -------
+        bool
+            ``True`` if the source package consists of a single file. ``False``
+            otherwise.
+        :class:`SubmissionContent.Format`
+            The submission source format.
+        str
+            The checksum of the source package.
+
+        """
+
+    def get_single_file(self, upload_id: str, token: str) \
+            -> Tuple[IO[bytes], SubmissionContent.Format, str, str]:
+        """
+        Get a single file.
+
+        Parameters
+        ----------
+        upload_id : str
+            Unique long-lived identifier for the upload.
+        token : str
+            Auth token to include in the request.
+
+        Returns
+        -------
+        :class:`io.BytesIO`
+            The content of the preview.
+        :class:`SubmissionContent.Format`
+            The submission source format.
+        str
+            The checksum of the source package.
+        str
+            The checksum of the preview content.
+
+        """

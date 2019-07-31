@@ -93,6 +93,26 @@ class Compilation:
         """Get the MIME type for the compilation product."""
         return self.output_format.content_type
 
+    @property
+    def is_succeeded(self) -> bool:
+        """Indicate whether or not the compilation ended successfully."""
+        return bool(self.status == self.Status.SUCCEEDED)
+
+    @property
+    def is_failed(self) -> bool:
+        """Indicate whether or not the compilation ended in failure."""
+        return bool(self.status == self.Status.FAILED)
+
+    @property
+    def is_finished(self) -> bool:
+        """Indicate whether or not the compilation ended."""
+        return bool(self.is_succeeded or self.is_failed)
+
+    @property
+    def is_in_progress(self) -> bool:
+        """Indicate whether or not the compilation is in progress."""
+        return bool(not self.is_finished)
+
 
 @dataclass
 class CompilationProduct:
