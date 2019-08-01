@@ -240,7 +240,7 @@ class _PDFStarter(BaseStarter):
     def start(self, submission: Submission, token: str) -> Status:
         """Ship the PDF to the preview service."""
         m = Filemanager.current_session()
-        stream, fmt, source_checksum, stream_checksum = \
+        stream, source_checksum, stream_checksum = \
             m.get_single_file(submission.source_content.identifier, token)
         if submission.source_content.checksum != source_checksum:
             raise FailedToStart('Source has changed')

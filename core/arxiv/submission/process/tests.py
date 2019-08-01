@@ -52,7 +52,7 @@ class TestStartProcessingPDF(PDFFormatTest):
         mock_filemanager = mock.MagicMock()
         stream = io.BytesIO(b'fakecontent')
         mock_filemanager.get_single_file.return_value = \
-            stream, PDF, 'foochex==', 'barchex=='
+            stream, 'foochex==', 'barchex=='
         mock_Filemanager.current_session.return_value = mock_filemanager
 
         self.assertEqual(
@@ -82,7 +82,7 @@ class TestStartProcessingPDF(PDFFormatTest):
         mock_filemanager = mock.MagicMock()
         stream = io.BytesIO(b'fakecontent')
         mock_filemanager.get_single_file.return_value = \
-            stream, PDF, 'foochex==', 'barchex=='
+            stream, 'foochex==', 'barchex=='
         mock_Filemanager.current_session.return_value = mock_filemanager
 
         with self.assertRaises(process_source.FailedToStart):

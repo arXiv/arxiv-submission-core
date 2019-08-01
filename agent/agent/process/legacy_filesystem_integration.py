@@ -57,7 +57,8 @@ class CopySourceToLegacy(_SourceProcess):
         scopes = [auth.scopes.READ_UPLOAD.for_resource(upload_id)]
         token = get_system_token(__name__, self.agent, scopes)
         try:
-            reader, checksum = fm.get_source_package(upload_id, token)
+            reader, headers = fm.get_upload_content(upload_id, token)
+            checksum = headers['ETag']
         except (exceptions.RequestForbidden, exceptions.RequestUnauthorized,
                 exceptions.BadRequest) as e:
             msg = 'Unrecoverable error while calling file manager service'
