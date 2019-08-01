@@ -122,7 +122,8 @@ class CopyPDFPreviewToLegacy(_SourceProcess):
         token = get_system_token(__name__, self.agent, scopes)
 
         try:
-            reader, checksum = pv.get_preview(upload_id, checksum, token)
+            reader, headers = pv.get_preview(upload_id, checksum, token)
+            checksum = headers['ETag']
         except (exceptions.RequestForbidden, exceptions.RequestUnauthorized,
                 exceptions.BadRequest) as e:
             msg = 'Unrecoverable error while calling preview service'

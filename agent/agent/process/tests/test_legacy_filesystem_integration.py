@@ -62,7 +62,7 @@ class TestCopySourceToLegacy(TestCase):
 
         mock_filemanager = mock.MagicMock()
         mock_filemanager.get_upload_content.return_value \
-            = = (mock.MagicMock, {'ETag': self.checksum})
+            = (mock.MagicMock, {'ETag': self.checksum})
         mock_filesystem = mock.MagicMock()
         MockFilemanager.current_session.return_value = mock_filemanager
         MockFilesystem.current_session.return_value = mock_filesystem
@@ -79,7 +79,7 @@ class TestCopySourceToLegacy(TestCase):
         """The submission source checksum does not match the FM checksum."""
         mock_filemanager = mock.MagicMock()
         mock_filemanager.get_upload_content.return_value \
-            = (mock.MagicMock, 'foo==')
+            = (mock.MagicMock, {'ETag': 'foo=='})
         mock_filesystem = mock.MagicMock()
         MockFilemanager.current_session.return_value = mock_filemanager
         MockFilesystem.current_session.return_value = mock_filesystem
@@ -137,7 +137,7 @@ class TestCopySourceToLegacy(TestCase):
         """The filesystem shim service is not available."""
         mock_filemanager = mock.MagicMock()
         mock_filemanager.get_upload_content.return_value = \
-            = (mock.MagicMock, {'ETag': self.checksum})
+            (mock.MagicMock, {'ETag': self.checksum})
         mock_filesystem = mock.MagicMock()
         mock_filesystem.deposit_source.side_effect = \
             raise_http_exception(exceptions.RequestFailed,
@@ -293,7 +293,8 @@ class TestCopyPDFPreviewToLegacy(TestCase):
     def test_filesystem_not_available(self, MockPreview, MockFilesystem):
         """The filesystem shim service is not available."""
         mock_preview = mock.MagicMock()
-        mock_preview.get_preview.return_value = = (mock.MagicMock, {'ETag': self.checksum})
+        mock_preview.get_preview.return_value = \
+            (mock.MagicMock, {'ETag': self.checksum})
         mock_filesystem = mock.MagicMock()
         mock_filesystem.deposit_preview.side_effect = \
             raise_http_exception(exceptions.RequestFailed,
