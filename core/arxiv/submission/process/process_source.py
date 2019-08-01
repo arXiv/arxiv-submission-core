@@ -488,4 +488,3 @@ PDFProcess = _make_process(
     _PDFSummarizer()
 )
 """Support for processing PDF submissions."""
-

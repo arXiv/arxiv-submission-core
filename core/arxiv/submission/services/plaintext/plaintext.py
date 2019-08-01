@@ -15,11 +15,13 @@ service itself.
 """
 
 from enum import Enum
-from typing import Any
+from typing import Any, IO
 
 from arxiv.base import logging
 from arxiv.integration.api import status, exceptions, service
 from arxiv.taxonomy import Category
+
+from ..util import ReadWrapper
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +37,8 @@ class ExtractionInProgress(exceptions.RequestFailed):
 class PlainTextService(service.HTTPIntegration):
     """Represents an interface to the plain text extraction service."""
 
-    VERSION = 0.3
+    SERVICE = 'plaintext'
+    VERSION = '0.4.1rc1'
     """Version of the service for which this module is implemented."""
 
     class Meta:
@@ -56,7 +59,7 @@ class PlainTextService(service.HTTPIntegration):
 
     def is_available(self, **kwargs: Any) -> bool:
         """Check our connection to the plain text service."""
-        timeout: float = kwargs.get('timeout', 0.2)
+        timeout: float = kwargs.get('timeout', 0.5)
         try:
             response = self.request('head', '/status', timeout=timeout)
         except Exception as e:
@@ -67,17 +70,18 @@ class PlainTextService(service.HTTPIntegration):
             return False
         return True
 
-    def endpoint(self, source_id: str) -> str:
+    def endpoint(self, source_id: str, checksum: str) -> str:
         """Get the URL of the extraction endpoint."""
-        return f'/submission/{source_id}'
+        return f'/submission/{source_id}/{checksum}'
 
-    def status_endpoint(self, source_id: str) -> str:
+    def status_endpoint(self, source_id: str, checksum: str) -> str:
         """Get the URL of the extraction status endpoint."""
-        return f'/submission/{source_id}/status'
+        return f'/submission/{source_id}/{checksum}/status'
 
-    def request_extraction(self, source_id: str) -> None:
+    def request_extraction(self, source_id: str, checksum: str,
+                           token: str) -> None:
         """
-        Make a request for plaintext extraction using the submission upload ID.
+        Make a request for plaintext extraction using the source ID.
 
         Parameters
         ----------
@@ -87,15 +91,16 @@ class PlainTextService(service.HTTPIntegration):
         """
         expected_code = [status.OK, status.ACCEPTED,
                          status.SEE_OTHER]
-        response = self.request('post', self.endpoint(source_id),
-                                expected_code=expected_code)
+        response = self.request('post', self.endpoint(source_id, checksum),
+                                token, expected_code=expected_code)
         if response.status_code == status.SEE_OTHER:
             raise ExtractionInProgress('Extraction already exists', response)
         elif response.status_code not in expected_code:
             raise exceptions.RequestFailed('Unexpected status', response)
         return
 
-    def extraction_is_complete(self, source_id: str) -> bool:
+    def extraction_is_complete(self, source_id: str, checksum: str,
+                               token: str) -> bool:
         """
         Check the status of an extraction task by submission upload ID.
 
@@ -115,9 +120,9 @@ class PlainTextService(service.HTTPIntegration):
             is encountered.
 
         """
-        endpoint = self.status_endpoint(source_id)
+        endpoint = self.status_endpoint(source_id, checksum)
         expected_code = [status.OK, status.SEE_OTHER]
-        response = self.request('get', endpoint, allow_redirects=False,
+        response = self.request('get', endpoint, token, allow_redirects=False,
                                 expected_code=expected_code)
         data = response.json()
         if response.status_code == status.SEE_OTHER:
@@ -128,7 +133,8 @@ class PlainTextService(service.HTTPIntegration):
             raise ExtractionFailed('Extraction failed', response)
         raise ExtractionFailed('Unexpected state', response)
 
-    def retrieve_content(self, source_id: str) -> bytes:
+    def retrieve_content(self, source_id: str, checksum: str,
+                         token: str) -> IO[bytes]:
         """
         Retrieve plain text content by submission upload ID.
 
@@ -139,8 +145,8 @@ class PlainTextService(service.HTTPIntegration):
 
         Returns
         -------
-        bytes
-            Raw text content.
+        :class:`io.BytesIO`
+            Raw content stream.
 
         Raises
         ------
@@ -151,8 +157,9 @@ class PlainTextService(service.HTTPIntegration):
 
         """
         expected_code = [status.OK, status.SEE_OTHER]
-        response = self.request('get', self.endpoint(source_id),
-                                expected_code=expected_code)
+        response = self.request('get', self.endpoint(source_id, checksum),
+                                token, expected_code=expected_code,
+                                headers={'Accept': 'text/plain'})
         if response.status_code == status.SEE_OTHER:
             raise ExtractionInProgress('Extraction is in progress', response)
-        return response.content
+        return ReadWrapper(response.iter_content)
