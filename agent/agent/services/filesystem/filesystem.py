@@ -5,6 +5,7 @@ from http import HTTPStatus as status
 
 from arxiv.base import logging
 from arxiv.integration.api import service
+from arxiv.integration.api.exceptions import NotFound
 
 logger = logging.getLogger(__name__)
 
@@ -16,8 +17,8 @@ class ValidationFailed(Exception):
 class Filesystem(service.HTTPIntegration):
     """Represents an interface to the legacy filesystem."""
 
-    VERSION = '0.0'
-    SERVICE = 'filesystem'
+    SERVICE = 'legacy-filesystem'
+    VERSION = 'b2996fcb034080b8a2adb5c769a44ad366b3f9b1'
 
     class Meta:
         """Configuration for :class:`Filesystem` integration."""
@@ -43,7 +44,7 @@ class Filesystem(service.HTTPIntegration):
         of the ``ETag`` response  header to ``checksum``.
         """
         response = self.request('post', f'/{submission_id}/source',
-                                data=pointer)
+                                data=pointer, expected_code=[status.CREATED])
         etag = response.headers.get('ETag')
         if etag != checksum:
             raise ValidationFailed(f'Expected {checksum}, got {etag}')
@@ -57,7 +58,7 @@ class Filesystem(service.HTTPIntegration):
         of the ``ETag`` response  header to ``checksum``.
         """
         response = self.request('post', f'/{submission_id}/preview',
-                                data=pointer)
+                                data=pointer, expected_code=[status.CREATED])
         etag = response.headers.get('ETag')
         if etag != checksum:
             raise ValidationFailed(f'Expected {checksum}, got {etag}')
@@ -71,7 +72,10 @@ class Filesystem(service.HTTPIntegration):
         file by comparing the content of the ``ETag`` response  header to
         ``checksum``.
         """
-        response = self.request('head', f'/{submission_id}/source')
+        try:
+            response = self.request('head', f'/{submission_id}/source')
+        except NotFound:
+            return False
         if checksum is not None:
             etag = response.headers.get('ETag')
             if etag != checksum:
@@ -87,7 +91,10 @@ class Filesystem(service.HTTPIntegration):
         file by comparing the content of the ``ETag`` response  header to
         ``checksum``.
         """
-        response = self.request('head', f'/{submission_id}/preview')
+        try:
+            response = self.request('head', f'/{submission_id}/preview')
+        except NotFound:
+            return False
         if checksum is not None:
             etag = response.headers.get('ETag')
             if etag != checksum:
