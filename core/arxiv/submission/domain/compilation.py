@@ -76,6 +76,10 @@ class Compilation:
         """Check enums."""
         self.output_format = self.Format(self.output_format)
         self.reason = self.Reason(self.reason)
+        if self.is_failed and self.is_succeeded:
+            raise ValueError('Cannot be failed, succeeded simultaneously')
+        if self.is_in_progress and self.is_finished:
+            raise ValueError('Cannot be finished, in progress simultaneously')
 
     @property
     def identifier(self):
