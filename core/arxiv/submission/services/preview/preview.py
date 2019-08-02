@@ -1,14 +1,14 @@
 """Integration with the submission preview service."""
 
 import io
-from typing import Tuple, List, Any, Union, Optional, IO, Callable, Iterator, \
-    IO
-from http import HTTPStatus as status
 from datetime import datetime
+from http import HTTPStatus as status
+from typing import Tuple, Any, IO, Callable, Iterator
+from urllib3.util.retry import Retry
 
-from typing_extensions import Literal
-from mypy_extensions import TypedDict
 from backports.datetime_fromisoformat import MonkeyPatch
+from mypy_extensions import TypedDict
+from typing_extensions import Literal
 
 from arxiv.base import logging
 from arxiv.integration.api import service, exceptions
@@ -64,6 +64,21 @@ class PreviewService(service.HTTPIntegration):
         """Configuration for :class:`PreviewService` integration."""
 
         service_name = 'preview'
+
+    def get_retry_config(self) -> Retry:
+        """
+        Configure to only retry on connection errors.
+
+        We are likely to be sending non-seakable streams, so retry should be
+        handled at the application level.
+        """
+        return Retry(
+            total=10,
+            read=0,
+            connect=10,
+            status=0,
+            backoff_factor=0.5
+        )
 
     def is_available(self, **kwargs: Any) -> bool:
         """Check our connection to the filesystem service."""
