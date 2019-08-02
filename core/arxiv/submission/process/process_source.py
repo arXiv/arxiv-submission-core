@@ -220,13 +220,8 @@ class BaseSummarizer:
     def __call__(self, submission: Submission, user: User,
                  client: Optional[Client], token: str) -> Dict[str, Any]:
         """Summarize source processing."""
-        p = PreviewService.current_session()
         try:
             summary = self.summarize(submission, token)
-            preview = p.get_metadata(submission.source_content.identifier,
-                                     submission.source_content.checksum,
-                                     token)
-            summary.update({'preview': preview})
         except SourceProcessingException:   # Propagate.
             raise
         except Exception as e:
@@ -266,7 +261,11 @@ class _PDFSummarizer(BaseSummarizer):
 
     def summarize(self, submission: Submission, token: str) -> Summary:
         """Currently does nothing."""
-        return {}
+        p = PreviewService.current_session()
+        preview = p.get_metadata(submission.source_content.identifier,
+                                     submission.source_content.checksum,
+                                     token)
+        return {'preview': preview}
 
 
 class _CompilationStarter(BaseStarter):
@@ -309,14 +308,6 @@ class _CompilationStarter(BaseStarter):
 
 
 class _CompilationChecker(BaseChecker):
-    def _get_preview(self, submission: Submission, token: str) \
-            -> Tuple[IO[bytes], str]:
-        c = Compiler.current_session()
-        product = c.get_product(submission.source_content.identifier,
-                                submission.source_content.checksum,
-                                token)
-        return product.stream, product.checksum
-
     def check(self, submission: Submission, token: str) -> Status:
         c = Compiler.current_session()
         try:
@@ -326,8 +317,9 @@ class _CompilationChecker(BaseChecker):
         except NotFound as e:     # Nothing to do.
             raise NoProcessToCheck('No compilation process found') from e
         if compilation.is_succeeded:
-            stream, stream_checksum = self._get_preview(submission, token)
-            _ship_to_preview(submission, stream, stream_checksum, token)
+            prod = c.get_product(submission.source_content.identifier,
+                                 submission.source_content.checksum, token)
+            _ship_to_preview(submission, prod.stream, prod.checksum, token)
             return SUCCEEDED
         elif compilation.is_failed:
             return FAILED
@@ -336,6 +328,7 @@ class _CompilationChecker(BaseChecker):
 
 class _CompilationSummarizer(BaseSummarizer):
     def summarize(self, submission: Submission, token: str) -> Summary:
+        p = PreviewService.current_session()
         c = Compiler.current_session()
         log = c.get_log(submission.source_content.identifier,
                         submission.source_content.checksum,
