@@ -1,10 +1,13 @@
 """Integration with the legacy filesystem shim."""
 
-from typing import Tuple, List, Any, Union, Optional, IO
 from http import HTTPStatus as status
+from typing import Tuple, List, Any, Union, Optional, IO
+
+from urllib3.util.retry import Retry
 
 from arxiv.base import logging
 from arxiv.integration.api import service
+from arxiv.integration.api.exceptions import NotFound
 
 logger = logging.getLogger(__name__)
 
@@ -16,13 +19,28 @@ class ValidationFailed(Exception):
 class Filesystem(service.HTTPIntegration):
     """Represents an interface to the legacy filesystem."""
 
-    VERSION = '0.0'
-    SERVICE = 'filesystem'
+    SERVICE = 'legacy-filesystem'
+    VERSION = 'b2996fcb034080b8a2adb5c769a44ad366b3f9b1'
 
     class Meta:
         """Configuration for :class:`Filesystem` integration."""
 
         service_name = "filesystem"
+
+    def get_retry_config(self) -> Retry:
+        """
+        Configure to only retry on connection errors.
+
+        We are likely to be sending non-seakable streams, so retry should be
+        handled at the application level.
+        """
+        return Retry(
+            total=10,
+            read=0,
+            connect=10,
+            status=0,
+            backoff_factor=0.5
+        )
 
     def is_available(self, **kwargs: Any) -> bool:
         """Check our connection to the filesystem service."""
@@ -43,7 +61,7 @@ class Filesystem(service.HTTPIntegration):
         of the ``ETag`` response  header to ``checksum``.
         """
         response = self.request('post', f'/{submission_id}/source',
-                                data=pointer)
+                                data=pointer, expected_code=[status.CREATED])
         etag = response.headers.get('ETag')
         if etag != checksum:
             raise ValidationFailed(f'Expected {checksum}, got {etag}')
@@ -57,7 +75,7 @@ class Filesystem(service.HTTPIntegration):
         of the ``ETag`` response  header to ``checksum``.
         """
         response = self.request('post', f'/{submission_id}/preview',
-                                data=pointer)
+                                data=pointer, expected_code=[status.CREATED])
         etag = response.headers.get('ETag')
         if etag != checksum:
             raise ValidationFailed(f'Expected {checksum}, got {etag}')
@@ -71,7 +89,10 @@ class Filesystem(service.HTTPIntegration):
         file by comparing the content of the ``ETag`` response  header to
         ``checksum``.
         """
-        response = self.request('head', f'/{submission_id}/source')
+        try:
+            response = self.request('head', f'/{submission_id}/source')
+        except NotFound:
+            return False
         if checksum is not None:
             etag = response.headers.get('ETag')
             if etag != checksum:
@@ -87,7 +108,10 @@ class Filesystem(service.HTTPIntegration):
         file by comparing the content of the ``ETag`` response  header to
         ``checksum``.
         """
-        response = self.request('head', f'/{submission_id}/preview')
+        try:
+            response = self.request('head', f'/{submission_id}/preview')
+        except NotFound:
+            return False
         if checksum is not None:
             etag = response.headers.get('ETag')
             if etag != checksum:

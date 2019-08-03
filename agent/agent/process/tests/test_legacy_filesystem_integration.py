@@ -9,7 +9,7 @@ from http import HTTPStatus as status
 
 from arxiv.integration.api import status, exceptions
 from arxiv.submission.domain.event import SetUploadPackage, \
-    UpdateUploadPackage, ConfirmCompiledPreview
+    UpdateUploadPackage, ConfirmSourceProcessed
 from arxiv.submission.domain.agent import Agent, User
 from arxiv.submission.domain.flag import Flag, MetadataFlag
 from arxiv.submission.domain.submission import Submission, SubmissionContent, \
@@ -61,8 +61,8 @@ class TestCopySourceToLegacy(TestCase):
         )
 
         mock_filemanager = mock.MagicMock()
-        mock_filemanager.get_source_package.return_value \
-            = (mock.MagicMock, self.checksum)
+        mock_filemanager.get_upload_content.return_value \
+            = (mock.MagicMock, {'ETag': self.checksum})
         mock_filesystem = mock.MagicMock()
         MockFilemanager.current_session.return_value = mock_filemanager
         MockFilesystem.current_session.return_value = mock_filesystem
@@ -78,8 +78,8 @@ class TestCopySourceToLegacy(TestCase):
     def test_source_checksum_not_match(self, MockFilemanager, MockFilesystem):
         """The submission source checksum does not match the FM checksum."""
         mock_filemanager = mock.MagicMock()
-        mock_filemanager.get_source_package.return_value \
-            = (mock.MagicMock, 'foo==')
+        mock_filemanager.get_upload_content.return_value \
+            = (mock.MagicMock, {'ETag': 'foo=='})
         mock_filesystem = mock.MagicMock()
         MockFilemanager.current_session.return_value = mock_filemanager
         MockFilesystem.current_session.return_value = mock_filesystem
@@ -97,7 +97,7 @@ class TestCopySourceToLegacy(TestCase):
     def test_fm_not_available(self, MockFilemanager, MockFilesystem):
         """The filemanager service is not available."""
         mock_filemanager = mock.MagicMock()
-        mock_filemanager.get_source_package.side_effect = \
+        mock_filemanager.get_upload_content.side_effect = \
             raise_http_exception(exceptions.RequestFailed,
                                  status.INTERNAL_SERVER_ERROR)
         mock_filesystem = mock.MagicMock()
@@ -117,7 +117,7 @@ class TestCopySourceToLegacy(TestCase):
     def test_fm_not_authorized(self, MockFilemanager, MockFilesystem):
         """We are not authorized to access this resource."""
         mock_filemanager = mock.MagicMock()
-        mock_filemanager.get_source_package.side_effect = \
+        mock_filemanager.get_upload_content.side_effect = \
             raise_http_exception(exceptions.RequestForbidden, status.FORBIDDEN)
         mock_filesystem = mock.MagicMock()
         MockFilemanager.current_session.return_value = mock_filemanager
@@ -136,8 +136,8 @@ class TestCopySourceToLegacy(TestCase):
     def test_filesystem_not_available(self, MockFilemanager, MockFilesystem):
         """The filesystem shim service is not available."""
         mock_filemanager = mock.MagicMock()
-        mock_filemanager.get_source_package.return_value = \
-            (mock.MagicMock, self.checksum)
+        mock_filemanager.get_upload_content.return_value = \
+            (mock.MagicMock, {'ETag': self.checksum})
         mock_filesystem = mock.MagicMock()
         mock_filesystem.deposit_source.side_effect = \
             raise_http_exception(exceptions.RequestFailed,
@@ -159,8 +159,8 @@ class TestCopySourceToLegacy(TestCase):
         """The source is deposited, but received checksum does not match."""
         mock_filemanager = mock.MagicMock()
         mock_reader = mock.MagicMock()
-        mock_filemanager.get_source_package.return_value = \
-            (mock_reader, self.checksum)
+        mock_filemanager.get_upload_content.return_value = \
+            (mock_reader, {'ETag': self.checksum})
         mock_filesystem = mock.MagicMock()
         mock_filesystem.deposit_source.side_effect \
             = filesystem.ValidationFailed
@@ -183,8 +183,8 @@ class TestCopySourceToLegacy(TestCase):
         """The source is deposited successfully."""
         mock_filemanager = mock.MagicMock()
         mock_reader = mock.MagicMock()
-        mock_filemanager.get_source_package.return_value = \
-            (mock_reader, self.checksum)
+        mock_filemanager.get_upload_content.return_value = \
+            (mock_reader, {'ETag': self.checksum})
         mock_filesystem = mock.MagicMock()
         MockFilemanager.current_session.return_value = mock_filemanager
         MockFilesystem.current_session.return_value = mock_filesystem
@@ -220,11 +220,11 @@ class TestCopyPDFPreviewToLegacy(TestCase):
                 compressed_size=2_000
             )
         )
-        self.event = ConfirmCompiledPreview(creator=self.creator)
+        self.event = ConfirmSourceProcessed(creator=self.creator)
         self.process = lfsi.CopyPDFPreviewToLegacy(self.submission_id)
 
     @mock.patch(f'{lfsi.__name__}.filesystem.Filesystem')
-    @mock.patch(f'{lfsi.__name__}.preview.Preview')
+    @mock.patch(f'{lfsi.__name__}.preview.PreviewService')
     def test_source_info_missing(self, MockPreview, MockFilesystem):
         """The submission does not have a source package set."""
         submission = Submission(
@@ -250,7 +250,7 @@ class TestCopyPDFPreviewToLegacy(TestCase):
                          'Filesystem is not invoked')
 
     @mock.patch(f'{lfsi.__name__}.filesystem.Filesystem')
-    @mock.patch(f'{lfsi.__name__}.preview.Preview')
+    @mock.patch(f'{lfsi.__name__}.preview.PreviewService')
     def test_preview_not_available(self, MockPreview, MockFilesystem):
         """The preview service is not available."""
         mock_preview = mock.MagicMock()
@@ -270,7 +270,7 @@ class TestCopyPDFPreviewToLegacy(TestCase):
                          'Filesystem integration is not called')
 
     @mock.patch(f'{lfsi.__name__}.filesystem.Filesystem')
-    @mock.patch(f'{lfsi.__name__}.preview.Preview')
+    @mock.patch(f'{lfsi.__name__}.preview.PreviewService')
     def test_fm_not_authorized(self, MockPreview, MockFilesystem):
         """We are not authorized to access this resource."""
         mock_preview = mock.MagicMock()
@@ -289,11 +289,12 @@ class TestCopyPDFPreviewToLegacy(TestCase):
                          'Filesystem integration is not called')
 
     @mock.patch(f'{lfsi.__name__}.filesystem.Filesystem')
-    @mock.patch(f'{lfsi.__name__}.preview.Preview')
+    @mock.patch(f'{lfsi.__name__}.preview.PreviewService')
     def test_filesystem_not_available(self, MockPreview, MockFilesystem):
         """The filesystem shim service is not available."""
         mock_preview = mock.MagicMock()
-        mock_preview.get_preview.return_value = (mock.MagicMock, self.checksum)
+        mock_preview.get_preview.return_value = \
+            (mock.MagicMock, {'ETag': self.checksum})
         mock_filesystem = mock.MagicMock()
         mock_filesystem.deposit_preview.side_effect = \
             raise_http_exception(exceptions.RequestFailed,
@@ -310,13 +311,13 @@ class TestCopyPDFPreviewToLegacy(TestCase):
                          'Filesystem integration is called')
 
     @mock.patch(f'{lfsi.__name__}.filesystem.Filesystem')
-    @mock.patch(f'{lfsi.__name__}.preview.Preview')
+    @mock.patch(f'{lfsi.__name__}.preview.PreviewService')
     def test_integrity_check_fails(self, MockPreview, MockFilesystem):
         """The preview is deposited, but received checksum does not match."""
         mock_preview = mock.MagicMock()
         mock_reader = mock.MagicMock()
         mock_preview.get_preview.return_value = \
-            (mock_reader, self.checksum)
+            (mock_reader, {'ETag': self.checksum})
         mock_filesystem = mock.MagicMock()
         mock_filesystem.deposit_preview.side_effect \
             = filesystem.ValidationFailed
@@ -335,13 +336,13 @@ class TestCopyPDFPreviewToLegacy(TestCase):
                                                            self.checksum)
 
     @mock.patch(f'{lfsi.__name__}.filesystem.Filesystem')
-    @mock.patch(f'{lfsi.__name__}.preview.Preview')
+    @mock.patch(f'{lfsi.__name__}.preview.PreviewService')
     def test_deposited(self, MockPreview, MockFilesystem):
         """The preview is deposited."""
         mock_preview = mock.MagicMock()
         mock_reader = mock.MagicMock()
         mock_preview.get_preview.return_value = \
-            (mock_reader, self.checksum)
+            (mock_reader, {'ETag': self.checksum})
         mock_filesystem = mock.MagicMock()
         MockPreview.current_session.return_value = mock_preview
         MockFilesystem.current_session.return_value = mock_filesystem

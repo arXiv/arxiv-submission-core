@@ -24,13 +24,14 @@ semver = "*"
 flask-sqlalchemy = "*"
 retry = "*"
 backports-datetime-fromisoformat = "*"
-arxiv-base = "==0.15.8rc4"
+arxiv-base = "==0.15.10rc1"
 alembic = "*"
 urllib3 = ">=1.24.2"
 Jinja2 = ">=2.10.1"
 pyyaml = ">=4.2b1"
 arxiv-vault = "==0.1.1rc15"
 redis = "==2.10.6"
+arxiv-submission-core = {path = "./core"}
 
 [dev-packages]
 "nose2" = "*"
@@ -45,6 +46,7 @@ sphinx-autodoc-typehints = "*"
 pydocstyle = "==3.0.0"
 pytest = "*"
 pytest-cov = "*"
+docker = "*"
 
 [pipenv]
 allow_prereleases = true

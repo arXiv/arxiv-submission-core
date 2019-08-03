@@ -26,7 +26,7 @@ from ...domain.event import Event, SetDOI, SetJournalReference, \
     SetReportNumber, ApplyRequest, RejectRequest, Announce, AddHold, \
     CancelRequest, SetPrimaryClassification, AddSecondaryClassification, \
     SetTitle, SetAbstract, SetComments, SetMSCClassification, \
-    SetACMClassification, SetAuthors, Reclassify, ConfirmCompiledPreview
+    SetACMClassification, SetAuthors, Reclassify, ConfirmSourceProcessed
 
 from ...domain.agent import System, User
 from .load import status_from_classic
@@ -141,7 +141,7 @@ class ClassicEventInterpolator:
             self._inject_jref_if_changed()
 
             if self.current_row.must_process == 0:
-                self._inject(ConfirmCompiledPreview)
+                self._inject(ConfirmSourceProcessed)
 
             if self.current_row.is_announced():
                 self._inject(Announce, arxiv_id=self.arxiv_id)

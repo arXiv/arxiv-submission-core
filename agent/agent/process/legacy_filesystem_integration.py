@@ -5,10 +5,10 @@ from typing import Optional, Callable
 from arxiv.users import auth, domain
 from arxiv.integration.api import exceptions
 from arxiv.submission.auth import get_system_token
-
+from arxiv.submission.services import preview, filemanager
 from .base import Process, step, Retry, Recoverable
 from ..domain import Trigger
-from ..services import filemanager, filesystem, preview
+from ..services import filesystem
 
 
 class _SourceProcess(Process):
@@ -57,7 +57,8 @@ class CopySourceToLegacy(_SourceProcess):
         scopes = [auth.scopes.READ_UPLOAD.for_resource(upload_id)]
         token = get_system_token(__name__, self.agent, scopes)
         try:
-            reader, checksum = fm.get_source_package(upload_id, token)
+            reader, headers = fm.get_upload_content(upload_id, token)
+            checksum = headers['ETag']
         except (exceptions.RequestForbidden, exceptions.RequestUnauthorized,
                 exceptions.BadRequest) as e:
             msg = 'Unrecoverable error while calling file manager service'
@@ -110,7 +111,7 @@ class CopyPDFPreviewToLegacy(_SourceProcess):
         if checksum is None:
             return
 
-        pv = preview.Preview.current_session()
+        pv = preview.PreviewService.current_session()
         fs = filesystem.Filesystem.current_session()
 
         upload_id = self.source_id(trigger)
@@ -121,7 +122,8 @@ class CopyPDFPreviewToLegacy(_SourceProcess):
         token = get_system_token(__name__, self.agent, scopes)
 
         try:
-            reader, checksum = pv.get_preview(upload_id, checksum, token)
+            reader, headers = pv.get_preview(upload_id, checksum, token)
+            checksum = headers['ETag']
         except (exceptions.RequestForbidden, exceptions.RequestUnauthorized,
                 exceptions.BadRequest) as e:
             msg = 'Unrecoverable error while calling preview service'

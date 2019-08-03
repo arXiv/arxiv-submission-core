@@ -261,7 +261,7 @@ class Submission(Base):    # type: ignore
             self.package = (f'fm://{submission.source_content.identifier}'
                             f'@{submission.source_content.checksum}')
 
-        if submission.submitter_compiled_preview:
+        if submission.is_source_processed:
             self.must_process = 0
         else:
             self.must_process = 1
