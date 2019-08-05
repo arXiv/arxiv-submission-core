@@ -99,43 +99,46 @@ entirely.
 
 """
 
+import copy
 import hashlib
 import re
-import copy
-from datetime import datetime
 from collections import defaultdict
+from datetime import datetime
 from functools import wraps
-from pytz import UTC
 from typing import Optional, TypeVar, List, Tuple, Any, Dict, Union, Iterable,\
     Callable, ClassVar, Mapping
 from urllib.parse import urlparse
-from dataclasses import field, asdict
-from .util import dataclass
-import bleach
 
-from arxiv.util import schema
+import bleach
+from dataclasses import field, asdict
+from pytz import UTC
+
 from arxiv import taxonomy
 from arxiv import identifier as arxiv_identifier
 from arxiv.base import logging
 from arxiv.base.globals import get_application_config
+from arxiv.util import schema
+
+from ...exceptions import InvalidEvent
 
 from ..agent import Agent, System, agent_factory
+from ..annotation import Comment, Feature, ClassifierResults, \
+    ClassifierResult
+from ..preview import Preview
 from ..submission import Submission, SubmissionMetadata, Author, \
     Classification, License, Delegation,  \
     SubmissionContent, WithdrawalRequest, CrossListClassificationRequest
-from ..annotation import Comment, Feature, ClassifierResults, \
-    ClassifierResult
-
-from ...exceptions import InvalidEvent
 from ..util import get_tzaware_utc_now
-from .base import Event, event_factory, EventType
-from .request import RequestCrossList, RequestWithdrawal, ApplyRequest, \
-    RejectRequest, ApproveRequest, CancelRequest
+
 from . import validators
-from .proposal import AddProposal, RejectProposal, AcceptProposal
+from .base import Event, event_factory, EventType
 from .flag import AddMetadataFlag, AddUserFlag, AddContentFlag, RemoveFlag, \
     AddHold, RemoveHold
 from .process import AddProcessStatus
+from .proposal import AddProposal, RejectProposal, AcceptProposal
+from .request import RequestCrossList, RequestWithdrawal, ApplyRequest, \
+    RejectRequest, ApproveRequest, CancelRequest
+from .util import dataclass
 
 logger = logging.getLogger(__name__)
 
@@ -952,12 +955,43 @@ class ConfirmSourceProcessed(Event):
     NAME = "confirm source has been processed"
     NAMED = "confirmed that source has been processed"
 
+    source_id: int = field(default=-1)
+    """Identifier of the source from which the preview was generated."""
+
+    source_checksum: str = field(default='')
+    """Checksum of the source from which the preview was generated."""
+
+    preview_checksum: str = field(default='')
+    """Checksum of the preview content itself."""
+
+    size_bytes: int = field(default=-1)
+    """Size (in bytes) of the preview content."""
+
+    added: Optional[datetime] = field(default=None)
+
     def validate(self, submission: Submission) -> None:
-        return
+        """Make sure that a preview is actually provided."""
+        # if self.source_id < 0:
+        #     raise InvalidEvent(self, "Preview not provided")
+        # if not self.source_checksum:
+        #     raise InvalidEvent(self, 'Missing source checksum')
+        # if not self.preview_checksum:
+        #     raise InvalidEvent(self, 'Missing preview checksum')
+        # if not self.size_bytes:
+        #     raise InvalidEvent(self, 'Missing preview size')
+        # if self.added is None:
+        #     raise InvalidEvent(self, 'Missing added datetime')
 
     def project(self, submission: Submission) -> Submission:
         """Set :attr:`Submission.is_source_processed`."""
         submission.is_source_processed = True
+        # if self.added is None:
+        #     raise RuntimeError('Invalid value for added datetime')
+        submission.preview = Preview(source_id=self.source_id,
+                                     source_checksum=self.source_checksum,
+                                     preview_checksum=self.preview_checksum,
+                                     size_bytes=self.size_bytes,
+                                     added=self.added)   # type: ignore
         return submission
 
 
@@ -974,9 +1008,20 @@ class ConfirmPreview(Event):
     NAME = "approve submission preview"
     NAMED = "submission preview approved"
 
+    preview_checksum: Optional[str] = field(default=None)
+
     def validate(self, submission: Submission) -> None:
         """Validate data for :class:`.ConfirmPreview`."""
         validators.submission_is_not_finalized(self, submission)
+        if submission.preview is None:
+            raise InvalidEvent(self, "Preview not set on submission")
+        if self.preview_checksum != submission.preview.preview_checksum:
+            raise InvalidEvent(
+                self,
+                f"Checksum {self.preview_checksum} does not match current"
+                f" preview checksum: {submission.preview.preview_checksum}"
+            )
+
 
     def project(self, submission: Submission) -> Submission:
         """Set :attr:`Submission.submitter_confirmed_preview`."""

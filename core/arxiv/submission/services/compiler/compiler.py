@@ -61,7 +61,7 @@ class Compiler(service.HTTPIntegration):
             return False
         return True
 
-    def _parse_status_response(self, data: dict) -> Compilation:
+    def _parse_status_response(self, data: dict, headers: dict) -> Compilation:
         return Compilation(
             source_id=data['source_id'],
             checksum=data['checksum'],
@@ -69,7 +69,8 @@ class Compiler(service.HTTPIntegration):
             status=Compilation.Status(data['status']),
             reason=Compilation.Reason(data.get('reason', None)),
             description=data.get('description', None),
-            size_bytes=data.get('size_bytes', 0)
+            size_bytes=data.get('size_bytes', 0),
+            product_checksum=headers.get('ETag')
         )
 
     def _parse_loc(self, headers: Mapping) -> str:
@@ -135,7 +136,7 @@ class Compiler(service.HTTPIntegration):
                           status.SEE_OTHER, status.FOUND]
         data, _, headers = self.json('post', endpoint, token, json=payload,
                                      expected_code=expected_codes)
-        return self._parse_status_response(data)
+        return self._parse_status_response(data, headers)
 
     def get_status(self, source_id: str, checksum: str, token: str,
                    output_format: Compilation.Format = PDF) -> Compilation:
@@ -159,7 +160,7 @@ class Compiler(service.HTTPIntegration):
         """
         endpoint = f'/{source_id}/{checksum}/{output_format.value}'
         data, _, headers = self.json('get', endpoint, token)
-        return self._parse_status_response(data)
+        return self._parse_status_response(data, headers)
 
     def compilation_is_complete(self, source_id: str, checksum: str,
                                 token: str,

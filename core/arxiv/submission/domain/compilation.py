@@ -69,6 +69,8 @@ class Compilation:
     """Additional detail about the :attr:`.status`."""
     size_bytes: int = field(default=0)
     """The size of the compilation product in bytes."""
+    product_checksum: Optional[str] = field(default=None)
+    """The checksum of the compilation product."""
     start_time: Optional[datetime] = field(default=None)
     end_time: Optional[datetime] = field(default=None)
 

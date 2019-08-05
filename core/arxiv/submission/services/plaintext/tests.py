@@ -14,16 +14,18 @@ from arxiv.integration.api import exceptions, status
 from ...tests.util import generate_token
 from . import plaintext
 
-mock_app = mock.MagicMock(config={
-    'PLAINTEXT_ENDPOINT': 'http://foohost:5432',
-    'PLAINTEXT_VERIFY': False
-})
-
 
 class TestPlainTextService(TestCase):
     """Tests for :class:`.plaintext.PlainTextService`."""
 
-    @mock.patch('arxiv.integration.api.service.current_app', mock_app)
+    def setUp(self):
+        """Create an app for context."""
+        self.app = Flask('test')
+        self.app.config.update({
+            'PLAINTEXT_ENDPOINT': 'http://foohost:5432',
+            'PLAINTEXT_VERIFY': False
+        })
+
     @mock.patch('arxiv.integration.api.service.requests.Session')
     def test_already_in_progress(self, mock_Session):
         """A plaintext extraction is already in progress."""
@@ -36,11 +38,11 @@ class TestPlainTextService(TestCase):
         )
         mock_Session.return_value = mock.MagicMock(post=mock_post)
         source_id = '132456'
-        service = plaintext.PlainTextService('http://foohost:8123')
-        with self.assertRaises(plaintext.ExtractionInProgress):
-            service.request_extraction(source_id, 'foochex==', 'footoken')
+        with self.app.app_context():
+            service = plaintext.PlainTextService.current_session()
+            with self.assertRaises(plaintext.ExtractionInProgress):
+                service.request_extraction(source_id, 'foochex==', 'footoken')
 
-    @mock.patch('arxiv.integration.api.service.current_app', mock_app)
     @mock.patch('arxiv.integration.api.service.requests.Session')
     def test_request_extraction(self, mock_Session):
         """Extraction is successfully requested."""
@@ -66,16 +68,16 @@ class TestPlainTextService(TestCase):
         })
         mock_Session.return_value = mock_session
         source_id = '132456'
-        service = plaintext.PlainTextService('http://foohost:8123')
-        self.assertIsNone(
-            service.request_extraction(source_id, 'foochex==', 'footoken')
-        )
+        with self.app.app_context():
+            service = plaintext.PlainTextService.current_session()
+            self.assertIsNone(
+                service.request_extraction(source_id, 'foochex==', 'footoken')
+            )
         self.assertEqual(
             mock_session.post.call_args[0][0],
-            'http://foohost:8123/submission/132456/foochex=='
+            'http://foohost:5432/submission/132456/foochex=='
         )
 
-    @mock.patch('arxiv.integration.api.service.current_app', mock_app)
     @mock.patch('arxiv.integration.api.service.requests.Session')
     def test_request_extraction_bad_request(self, mock_Session):
         """Service returns 400 Bad Request."""
@@ -90,11 +92,11 @@ class TestPlainTextService(TestCase):
             )
         )
         source_id = '132456'
-        service = plaintext.PlainTextService('foohost', 8000)
-        with self.assertRaises(exceptions.BadRequest):
-            service.request_extraction(source_id, 'foochex==', 'footoken')
+        with self.app.app_context():
+            service = plaintext.PlainTextService.current_session()
+            with self.assertRaises(exceptions.BadRequest):
+                service.request_extraction(source_id, 'foochex==', 'footoken')
 
-    @mock.patch('arxiv.integration.api.service.current_app', mock_app)
     @mock.patch('arxiv.integration.api.service.requests.Session')
     def test_request_extraction_server_error(self, mock_Session):
         """Service returns 500 Internal Server Error."""
@@ -109,11 +111,12 @@ class TestPlainTextService(TestCase):
             )
         )
         source_id = '132456'
-        service = plaintext.PlainTextService('foohost', 8000)
-        with self.assertRaises(exceptions.RequestFailed):
-            service.request_extraction(source_id, 'foochex==', 'footoken')
 
-    @mock.patch('arxiv.integration.api.service.current_app', mock_app)
+        with self.app.app_context():
+            service = plaintext.PlainTextService.current_session()
+            with self.assertRaises(exceptions.RequestFailed):
+                service.request_extraction(source_id, 'foochex==', 'footoken')
+
     @mock.patch('arxiv.integration.api.service.requests.Session')
     def test_request_extraction_unauthorized(self, mock_Session):
         """Service returns 401 Unauthorized."""
@@ -128,11 +131,11 @@ class TestPlainTextService(TestCase):
             )
         )
         source_id = '132456'
-        service = plaintext.PlainTextService('foohost', 8000)
-        with self.assertRaises(exceptions.RequestUnauthorized):
-            service.request_extraction(source_id, 'foochex==', 'footoken')
+        with self.app.app_context():
+            service = plaintext.PlainTextService.current_session()
+            with self.assertRaises(exceptions.RequestUnauthorized):
+                service.request_extraction(source_id, 'foochex==', 'footoken')
 
-    @mock.patch('arxiv.integration.api.service.current_app', mock_app)
     @mock.patch('arxiv.integration.api.service.requests.Session')
     def test_request_extraction_forbidden(self, mock_Session):
         """Service returns 403 Forbidden."""
@@ -147,11 +150,11 @@ class TestPlainTextService(TestCase):
             )
         )
         source_id = '132456'
-        service = plaintext.PlainTextService('foohost', 8000)
-        with self.assertRaises(exceptions.RequestForbidden):
-            service.request_extraction(source_id, 'foochex==', 'footoken')
+        with self.app.app_context():
+            service = plaintext.PlainTextService.current_session()
+            with self.assertRaises(exceptions.RequestForbidden):
+                service.request_extraction(source_id, 'foochex==', 'footoken')
 
-    @mock.patch('arxiv.integration.api.service.current_app', mock_app)
     @mock.patch('arxiv.integration.api.service.requests.Session')
     def test_extraction_is_complete(self, mock_Session):
         """Extraction is indeed complete."""
@@ -164,16 +167,16 @@ class TestPlainTextService(TestCase):
         )
         mock_Session.return_value = mock.MagicMock(get=mock_get)
         source_id = '132456'
-        service = plaintext.PlainTextService('http://foohost:8123')
-        self.assertTrue(
-            service.extraction_is_complete(source_id, 'foochex==', 'footoken')
-        )
+        with self.app.app_context():
+            svc = plaintext.PlainTextService.current_session()
+            self.assertTrue(
+                svc.extraction_is_complete(source_id, 'foochex==', 'footoken')
+            )
         self.assertEqual(
             mock_get.call_args[0][0],
-            'http://foohost:8123/submission/132456/foochex==/status'
+            'http://foohost:5432/submission/132456/foochex==/status'
         )
 
-    @mock.patch('arxiv.integration.api.service.current_app', mock_app)
     @mock.patch('arxiv.integration.api.service.requests.Session')
     def test_extraction_in_progress(self, mock_Session):
         """Extraction is still in progress."""
@@ -185,16 +188,16 @@ class TestPlainTextService(TestCase):
         )
         mock_Session.return_value = mock.MagicMock(get=mock_get)
         source_id = '132456'
-        service = plaintext.PlainTextService('http://foohost:8123')
-        self.assertFalse(
-            service.extraction_is_complete(source_id, 'foochex==', 'footoken')
-        )
+        with self.app.app_context():
+            svc = plaintext.PlainTextService.current_session()
+            self.assertFalse(
+                svc.extraction_is_complete(source_id, 'foochex==', 'footoken')
+            )
         self.assertEqual(
             mock_get.call_args[0][0],
-            'http://foohost:8123/submission/132456/foochex==/status'
+            'http://foohost:5432/submission/132456/foochex==/status'
         )
 
-    @mock.patch('arxiv.integration.api.service.current_app', mock_app)
     @mock.patch('arxiv.integration.api.service.requests.Session')
     def test_extraction_failed(self, mock_Session):
         """Extraction failed."""
@@ -206,11 +209,11 @@ class TestPlainTextService(TestCase):
         )
         mock_Session.return_value = mock.MagicMock(get=mock_get)
         source_id = '132456'
-        service = plaintext.PlainTextService('http://foohost:8123')
-        with self.assertRaises(plaintext.ExtractionFailed):
-            service.extraction_is_complete(source_id, 'foochex==', 'footoken')
+        with self.app.app_context():
+            svc = plaintext.PlainTextService.current_session()
+            with self.assertRaises(plaintext.ExtractionFailed):
+                svc.extraction_is_complete(source_id, 'foochex==', 'footoken')
 
-    @mock.patch('arxiv.integration.api.service.current_app', mock_app)
     @mock.patch('arxiv.integration.api.service.requests.Session')
     def test_complete_unauthorized(self, mock_Session):
         """Service returns 401 Unauthorized."""
@@ -225,11 +228,11 @@ class TestPlainTextService(TestCase):
             )
         )
         source_id = '132456'
-        service = plaintext.PlainTextService('foohost', 8000)
-        with self.assertRaises(exceptions.RequestUnauthorized):
-            service.extraction_is_complete(source_id, 'foochex==', 'footoken')
+        with self.app.app_context():
+            svc = plaintext.PlainTextService.current_session()
+            with self.assertRaises(exceptions.RequestUnauthorized):
+                svc.extraction_is_complete(source_id, 'foochex==', 'footoken')
 
-    @mock.patch('arxiv.integration.api.service.current_app', mock_app)
     @mock.patch('arxiv.integration.api.service.requests.Session')
     def test_complete_forbidden(self, mock_Session):
         """Service returns 403 Forbidden."""
@@ -244,11 +247,11 @@ class TestPlainTextService(TestCase):
             )
         )
         source_id = '132456'
-        service = plaintext.PlainTextService('foohost', 8000)
-        with self.assertRaises(exceptions.RequestForbidden):
-            service.extraction_is_complete(source_id, 'foochex==', 'footoken')
+        with self.app.app_context():
+            svc = plaintext.PlainTextService.current_session()
+            with self.assertRaises(exceptions.RequestForbidden):
+                svc.extraction_is_complete(source_id, 'foochex==', 'footoken')
 
-    @mock.patch('arxiv.integration.api.service.current_app', mock_app)
     @mock.patch('arxiv.integration.api.service.requests.Session')
     def test_retrieve_unauthorized(self, mock_Session):
         """Service returns 401 Unauthorized."""
@@ -263,11 +266,11 @@ class TestPlainTextService(TestCase):
             )
         )
         source_id = '132456'
-        service = plaintext.PlainTextService('foohost', 8000)
-        with self.assertRaises(exceptions.RequestUnauthorized):
-            service.retrieve_content(source_id, 'foochex==', 'footoken')
+        with self.app.app_context():
+            svc = plaintext.PlainTextService.current_session()
+            with self.assertRaises(exceptions.RequestUnauthorized):
+                svc.retrieve_content(source_id, 'foochex==', 'footoken')
 
-    @mock.patch('arxiv.integration.api.service.current_app', mock_app)
     @mock.patch('arxiv.integration.api.service.requests.Session')
     def test_retrieve_forbidden(self, mock_Session):
         """Service returns 403 Forbidden."""
@@ -282,11 +285,11 @@ class TestPlainTextService(TestCase):
             )
         )
         source_id = '132456'
-        service = plaintext.PlainTextService('foohost', 8000)
-        with self.assertRaises(exceptions.RequestForbidden):
-            service.retrieve_content(source_id, 'foochex==', 'footoken')
+        with self.app.app_context():
+            service = plaintext.PlainTextService.current_session()
+            with self.assertRaises(exceptions.RequestForbidden):
+                service.retrieve_content(source_id, 'foochex==', 'footoken')
 
-    @mock.patch('arxiv.integration.api.service.current_app', mock_app)
     @mock.patch('arxiv.integration.api.service.requests.Session')
     def test_retrieve(self, mock_Session):
         """Retrieval is successful."""
@@ -299,14 +302,14 @@ class TestPlainTextService(TestCase):
         )
         mock_Session.return_value = mock.MagicMock(get=mock_get)
         source_id = '132456'
-        service = plaintext.PlainTextService('http://foohost:8123')
-        rcontent = service.retrieve_content(source_id, 'foochex==', 'footoken')
+        with self.app.app_context():
+            svc = plaintext.PlainTextService.current_session()
+            rcontent = svc.retrieve_content(source_id, 'foochex==', 'footoken')
         self.assertEqual(rcontent.read(), content,
                          "Returns binary content as received")
         self.assertEqual(mock_get.call_args[0][0],
-                         'http://foohost:8123/submission/132456/foochex==')
+                         'http://foohost:5432/submission/132456/foochex==')
 
-    @mock.patch('arxiv.integration.api.service.current_app', mock_app)
     @mock.patch('arxiv.integration.api.service.requests.Session')
     def test_retrieve_nonexistant(self, mock_Session):
         """There is no such plaintext resource."""
@@ -318,11 +321,11 @@ class TestPlainTextService(TestCase):
         )
         mock_Session.return_value = mock.MagicMock(get=mock_get)
         source_id = '132456'
-        service = plaintext.PlainTextService('http://foohost:8123')
-        with self.assertRaises(exceptions.NotFound):
-            service.retrieve_content(source_id, 'foochex==', 'footoken')
+        with self.app.app_context():
+            service = plaintext.PlainTextService.current_session()
+            with self.assertRaises(exceptions.NotFound):
+                service.retrieve_content(source_id, 'foochex==', 'footoken')
 
-    @mock.patch('arxiv.integration.api.service.current_app', mock_app)
     @mock.patch('arxiv.integration.api.service.requests.Session')
     def test_retrieve_in_progress(self, mock_Session):
         """There is no such plaintext resource."""
@@ -335,13 +338,22 @@ class TestPlainTextService(TestCase):
         )
         mock_Session.return_value = mock.MagicMock(get=mock_get)
         source_id = '132456'
-        service = plaintext.PlainTextService('http://foohost:8123')
-        with self.assertRaises(plaintext.ExtractionInProgress):
-            service.retrieve_content(source_id, 'foochex==', 'footoken')
+        with self.app.app_context():
+            service = plaintext.PlainTextService.current_session()
+            with self.assertRaises(plaintext.ExtractionInProgress):
+                service.retrieve_content(source_id, 'foochex==', 'footoken')
 
 
 class TestPlainTextServiceModule(TestCase):
     """Tests for :mod:`.services.plaintext`."""
+
+    def setUp(self):
+        """Create an app for context."""
+        self.app = Flask('test')
+        self.app.config.update({
+            'PLAINTEXT_ENDPOINT': 'http://foohost:5432',
+            'PLAINTEXT_VERIFY': False
+        })
 
     def session(self, status_code=status.OK, method="get", json={},
                 content="", headers={}):
@@ -359,7 +371,6 @@ class TestPlainTextServiceModule(TestCase):
             )
         })
 
-    @mock.patch('arxiv.integration.api.service.current_app', mock_app)
     @mock.patch('arxiv.integration.api.service.requests.Session')
     def test_already_in_progress(self, mock_Session):
         """A plaintext extraction is already in progress."""
@@ -370,11 +381,11 @@ class TestPlainTextServiceModule(TestCase):
         )
 
         source_id = '132456'
-        pt = plaintext.PlainTextService.current_session()
-        with self.assertRaises(plaintext.ExtractionInProgress):
-            pt.request_extraction(source_id, 'foochex==', 'footoken')
+        with self.app.app_context():
+            pt = plaintext.PlainTextService.current_session()
+            with self.assertRaises(plaintext.ExtractionInProgress):
+                pt.request_extraction(source_id, 'foochex==', 'footoken')
 
-    @mock.patch('arxiv.integration.api.service.current_app', mock_app)
     @mock.patch('arxiv.integration.api.service.requests.Session')
     def test_request_extraction(self, mock_Session):
         """Extraction is successfully requested."""
@@ -400,14 +411,14 @@ class TestPlainTextServiceModule(TestCase):
         })
         mock_Session.return_value = mock_session
         source_id = '132456'
-        pt = plaintext.PlainTextService.current_session()
-        self.assertIsNone(
-            pt.request_extraction(source_id, 'foochex==', 'footoken')
-        )
+        with self.app.app_context():
+            pt = plaintext.PlainTextService.current_session()
+            self.assertIsNone(
+                pt.request_extraction(source_id, 'foochex==', 'footoken')
+            )
         self.assertEqual(mock_session.post.call_args[0][0],
                          'http://foohost:5432/submission/132456/foochex==')
 
-    @mock.patch('arxiv.integration.api.service.current_app', mock_app)
     @mock.patch('arxiv.integration.api.service.requests.Session')
     def test_extraction_bad_request(self, mock_Session):
         """Service returns 400 Bad Request."""
@@ -417,11 +428,11 @@ class TestPlainTextServiceModule(TestCase):
             json={'reason': 'something is not quite right'}
         )
         source_id = '132456'
-        pt = plaintext.PlainTextService.current_session()
-        with self.assertRaises(exceptions.BadRequest):
-            pt.request_extraction(source_id, 'foochex==', 'footoken')
+        with self.app.app_context():
+            pt = plaintext.PlainTextService.current_session()
+            with self.assertRaises(exceptions.BadRequest):
+                pt.request_extraction(source_id, 'foochex==', 'footoken')
 
-    @mock.patch('arxiv.integration.api.service.current_app', mock_app)
     @mock.patch('arxiv.integration.api.service.requests.Session')
     def test_extraction_server_error(self, mock_Session):
         """Service returns 500 Internal Server Error."""
@@ -431,11 +442,11 @@ class TestPlainTextServiceModule(TestCase):
             json={'reason': 'something is not quite right'}
         )
         source_id = '132456'
-        pt = plaintext.PlainTextService.current_session()
-        with self.assertRaises(exceptions.RequestFailed):
-            pt.request_extraction(source_id, 'foochex==', 'footoken')
+        with self.app.app_context():
+            pt = plaintext.PlainTextService.current_session()
+            with self.assertRaises(exceptions.RequestFailed):
+                pt.request_extraction(source_id, 'foochex==', 'footoken')
 
-    @mock.patch('arxiv.integration.api.service.current_app', mock_app)
     @mock.patch('arxiv.integration.api.service.requests.Session')
     def test_extraction_unauthorized(self, mock_Session):
         """Service returns 401 Unauthorized."""
@@ -445,11 +456,11 @@ class TestPlainTextServiceModule(TestCase):
             json={'reason': 'who are you'}
         )
         source_id = '132456'
-        pt = plaintext.PlainTextService.current_session()
-        with self.assertRaises(exceptions.RequestUnauthorized):
-            pt.request_extraction(source_id, 'foochex==', 'footoken')
+        with self.app.app_context():
+            pt = plaintext.PlainTextService.current_session()
+            with self.assertRaises(exceptions.RequestUnauthorized):
+                pt.request_extraction(source_id, 'foochex==', 'footoken')
 
-    @mock.patch('arxiv.integration.api.service.current_app', mock_app)
     @mock.patch('arxiv.integration.api.service.requests.Session')
     def test_request_extraction_forbidden(self, mock_Session):
         """Service returns 403 Forbidden."""
@@ -459,11 +470,11 @@ class TestPlainTextServiceModule(TestCase):
             json={'reason': 'you do not have sufficient authz'}
         )
         source_id = '132456'
-        pt = plaintext.PlainTextService.current_session()
-        with self.assertRaises(exceptions.RequestForbidden):
-            pt.request_extraction(source_id, 'foochex==', 'footoken')
+        with self.app.app_context():
+            pt = plaintext.PlainTextService.current_session()
+            with self.assertRaises(exceptions.RequestForbidden):
+                pt.request_extraction(source_id, 'foochex==', 'footoken')
 
-    @mock.patch('arxiv.integration.api.service.current_app', mock_app)
     @mock.patch('arxiv.integration.api.service.requests.Session')
     def test_extraction_is_complete(self, mock_Session):
         """Extraction is indeed complete."""
@@ -473,12 +484,14 @@ class TestPlainTextServiceModule(TestCase):
         )
         mock_Session.return_value = mock_session
         source_id = '132456'
-        pt = plaintext.PlainTextService.current_session()
-        self.assertTrue(pt.extraction_is_complete(source_id, 'foochex==', 'footoken'))
+        with self.app.app_context():
+            pt = plaintext.PlainTextService.current_session()
+            self.assertTrue(
+                pt.extraction_is_complete(source_id, 'foochex==', 'footoken')
+            )
         self.assertEqual(mock_session.get.call_args[0][0],
                          'http://foohost:5432/submission/132456/foochex==/status')
 
-    @mock.patch('arxiv.integration.api.service.current_app', mock_app)
     @mock.patch('arxiv.integration.api.service.requests.Session')
     def test_extraction_in_progress(self, mock_Session):
         """Extraction is still in progress."""
@@ -487,22 +500,24 @@ class TestPlainTextServiceModule(TestCase):
         )
         mock_Session.return_value = mock_session
         source_id = '132456'
-        pt = plaintext.PlainTextService.current_session()
-        self.assertFalse(pt.extraction_is_complete(source_id, 'foochex==', 'footoken'))
+        with self.app.app_context():
+            pt = plaintext.PlainTextService.current_session()
+            self.assertFalse(
+                pt.extraction_is_complete(source_id, 'foochex==', 'footoken')
+            )
         self.assertEqual(mock_session.get.call_args[0][0],
                          'http://foohost:5432/submission/132456/foochex==/status')
 
-    @mock.patch('arxiv.integration.api.service.current_app', mock_app)
     @mock.patch('arxiv.integration.api.service.requests.Session')
     def test_extraction_failed(self, mock_Session):
         """Extraction failed."""
         mock_Session.return_value = self.session(json={'status': 'failed'})
         source_id = '132456'
-        pt = plaintext.PlainTextService.current_session()
-        with self.assertRaises(plaintext.ExtractionFailed):
-            pt.extraction_is_complete(source_id, 'foochex==', 'footoken')
+        with self.app.app_context():
+            pt = plaintext.PlainTextService.current_session()
+            with self.assertRaises(plaintext.ExtractionFailed):
+                pt.extraction_is_complete(source_id, 'foochex==', 'footoken')
 
-    @mock.patch('arxiv.integration.api.service.current_app', mock_app)
     @mock.patch('arxiv.integration.api.service.requests.Session')
     def test_complete_unauthorized(self, mock_Session):
         """Service returns 401 Unauthorized."""
@@ -511,11 +526,11 @@ class TestPlainTextServiceModule(TestCase):
             json={'reason': 'who are you'}
         )
         source_id = '132456'
-        pt = plaintext.PlainTextService.current_session()
-        with self.assertRaises(exceptions.RequestUnauthorized):
-            pt.extraction_is_complete(source_id, 'foochex==', 'footoken')
+        with self.app.app_context():
+            pt = plaintext.PlainTextService.current_session()
+            with self.assertRaises(exceptions.RequestUnauthorized):
+                pt.extraction_is_complete(source_id, 'foochex==', 'footoken')
 
-    @mock.patch('arxiv.integration.api.service.current_app', mock_app)
     @mock.patch('arxiv.integration.api.service.requests.Session')
     def test_complete_forbidden(self, mock_Session):
         """Service returns 403 Forbidden."""
@@ -524,11 +539,12 @@ class TestPlainTextServiceModule(TestCase):
             json={'reason': 'you do not have sufficient authz'}
         )
         source_id = '132456'
-        pt = plaintext.PlainTextService.current_session()
-        with self.assertRaises(exceptions.RequestForbidden):
-            pt.extraction_is_complete(source_id, 'foochex==', 'footoken')
 
-    @mock.patch('arxiv.integration.api.service.current_app', mock_app)
+        with self.app.app_context():
+            pt = plaintext.PlainTextService.current_session()
+            with self.assertRaises(exceptions.RequestForbidden):
+                pt.extraction_is_complete(source_id, 'foochex==', 'footoken')
+
     @mock.patch('arxiv.integration.api.service.requests.Session')
     def test_retrieve_unauthorized(self, mock_Session):
         """Service returns 401 Unauthorized."""
@@ -537,11 +553,11 @@ class TestPlainTextServiceModule(TestCase):
             json={'reason': 'who are you'}
         )
         source_id = '132456'
-        pt = plaintext.PlainTextService.current_session()
-        with self.assertRaises(exceptions.RequestUnauthorized):
-            pt.retrieve_content(source_id, 'foochex==', 'footoken')
+        with self.app.app_context():
+            pt = plaintext.PlainTextService.current_session()
+            with self.assertRaises(exceptions.RequestUnauthorized):
+                pt.retrieve_content(source_id, 'foochex==', 'footoken')
 
-    @mock.patch('arxiv.integration.api.service.current_app', mock_app)
     @mock.patch('arxiv.integration.api.service.requests.Session')
     def test_retrieve_forbidden(self, mock_Session):
         """Service returns 403 Forbidden."""
@@ -550,11 +566,11 @@ class TestPlainTextServiceModule(TestCase):
             json={'reason': 'you do not have sufficient authz'}
         )
         source_id = '132456'
-        pt = plaintext.PlainTextService.current_session()
-        with self.assertRaises(exceptions.RequestForbidden):
-            pt.retrieve_content(source_id, 'foochex==', 'footoken')
+        with self.app.app_context():
+            pt = plaintext.PlainTextService.current_session()
+            with self.assertRaises(exceptions.RequestForbidden):
+                pt.retrieve_content(source_id, 'foochex==', 'footoken')
 
-    @mock.patch('arxiv.integration.api.service.current_app', mock_app)
     @mock.patch('arxiv.integration.api.service.requests.Session')
     def test_retrieve(self, mock_Session):
         """Retrieval is successful."""
@@ -567,16 +583,16 @@ class TestPlainTextServiceModule(TestCase):
         )
         mock_Session.return_value = mock.MagicMock(get=mock_get)
         source_id = '132456'
-        pt = plaintext.PlainTextService.current_session()
-        self.assertEqual(
-            pt.retrieve_content(source_id, 'foochex==', 'footoken').read(),
-            content,
-            "Returns binary content as received"
-        )
+        with self.app.app_context():
+            pt = plaintext.PlainTextService.current_session()
+            self.assertEqual(
+                pt.retrieve_content(source_id, 'foochex==', 'footoken').read(),
+                content,
+                "Returns binary content as received"
+            )
         self.assertEqual(mock_get.call_args[0][0],
                          'http://foohost:5432/submission/132456/foochex==')
 
-    @mock.patch('arxiv.integration.api.service.current_app', mock_app)
     @mock.patch('arxiv.integration.api.service.requests.Session')
     def test_retrieve_nonexistant(self, mock_Session):
         """There is no such plaintext resource."""
@@ -585,11 +601,11 @@ class TestPlainTextServiceModule(TestCase):
             json={'reason': 'no such thing'}
         )
         source_id = '132456'
-        pt = plaintext.PlainTextService.current_session()
-        with self.assertRaises(exceptions.NotFound):
-            pt.retrieve_content(source_id, 'foochex==', 'footoken')
+        with self.app.app_context():
+            pt = plaintext.PlainTextService.current_session()
+            with self.assertRaises(exceptions.NotFound):
+                pt.retrieve_content(source_id, 'foochex==', 'footoken')
 
-    @mock.patch('arxiv.integration.api.service.current_app', mock_app)
     @mock.patch('arxiv.integration.api.service.requests.Session')
     def test_retrieve_in_progress(self, mock_Session):
         """There is no such plaintext resource."""
@@ -598,9 +614,10 @@ class TestPlainTextServiceModule(TestCase):
             headers={'Location': '...'}
         )
         source_id = '132456'
-        pt = plaintext.PlainTextService.current_session()
-        with self.assertRaises(plaintext.ExtractionInProgress):
-            pt.retrieve_content(source_id, 'foochex==', 'footoken')
+        with self.app.app_context():
+            pt = plaintext.PlainTextService.current_session()
+            with self.assertRaises(plaintext.ExtractionInProgress):
+                pt.retrieve_content(source_id, 'foochex==', 'footoken')
 
 
 class TestPlainTextServiceIntegration(TestCase):

@@ -2,22 +2,25 @@
 
 from unittest import TestCase, mock
 
-from . import compiler
-from ... import domain
+from flask import Flask
 
 from arxiv.integration.api import status, exceptions
 
-
-mock_app = mock.MagicMock(config={
-    'COMPILER_ENDPOINT': 'http://foohost:1234',
-    'COMPILER_VERIFY': False
-})
+from . import compiler
+from ... import domain
 
 
 class TestRequestCompilation(TestCase):
     """Tests for :mod:`compiler.compile` with mocked responses."""
 
-    @mock.patch('arxiv.integration.api.service.current_app', mock_app)
+    def setUp(self):
+        """Create an app for context."""
+        self.app = Flask('test')
+        self.app.config.update({
+            'COMPILER_ENDPOINT': 'http://foohost:1234',
+            'COMPILER_VERIFY': False
+        })
+
     @mock.patch('arxiv.integration.api.service.requests.Session')
     def test_compile(self, mock_Session):
         """Request compilation of an upload workspace."""
@@ -25,6 +28,7 @@ class TestRequestCompilation(TestCase):
         checksum = 'asdf1234='
         output_format = domain.compilation.Compilation.Format.PDF
         location = f'http://asdf/{source_id}/{checksum}/{output_format.value}'
+        in_progress = domain.compilation.Compilation.Status.IN_PROGRESS.value
         mock_session = mock.MagicMock(
             post=mock.MagicMock(
                 return_value=mock.MagicMock(
@@ -33,7 +37,7 @@ class TestRequestCompilation(TestCase):
                         'source_id': source_id,
                         'checksum': checksum,
                         'output_format': output_format.value,
-                        'status': domain.compilation.Compilation.Status.IN_PROGRESS.value
+                        'status': in_progress
                     }),
                     headers={'Location': location}
                 )
@@ -53,23 +57,24 @@ class TestRequestCompilation(TestCase):
         )
         mock_Session.return_value = mock_session
 
-        comp_status = compiler.Compiler.compile(source_id, checksum, 'footok',
-                                                'theLabel', 'http://the.link')
-        self.assertEqual(comp_status.source_id, source_id)
-        self.assertEqual(comp_status.identifier,
+        with self.app.app_context():
+            cp = compiler.Compiler.current_session()
+            stat = cp.compile(source_id, checksum, 'footok', 'theLabel',
+                              'http://the.link')
+        self.assertEqual(stat.source_id, source_id)
+        self.assertEqual(stat.identifier,
                          f"{source_id}/{checksum}/{output_format.value}")
-        self.assertEqual(comp_status.status,
+        self.assertEqual(stat.status,
                          domain.compilation.Compilation.Status.IN_PROGRESS)
         self.assertEqual(mock_session.post.call_count, 1)
 
-    @mock.patch('arxiv.integration.api.service.current_app', mock_app)
     @mock.patch('arxiv.integration.api.service.requests.Session')
     def test_compile_redirects(self, mock_Session):
         """Request compilation of an upload workspace already processing."""
         source_id = 42
         checksum = 'asdf1234='
         output_format = domain.compilation.Compilation.Format.PDF
-
+        in_progress = domain.compilation.Compilation.Status.IN_PROGRESS.value
         location = f'http://asdf/{source_id}/{checksum}/{output_format.value}'
         mock_session = mock.MagicMock(
             post=mock.MagicMock(    # Redirected
@@ -80,19 +85,21 @@ class TestRequestCompilation(TestCase):
                             'source_id': source_id,
                             'checksum': checksum,
                             'output_format': output_format.value,
-                            'status': domain.compilation.Compilation.Status.IN_PROGRESS.value
+                            'status': in_progress
                         }
                     )
                 )
             )
         )
         mock_Session.return_value = mock_session
-        comp_status = compiler.Compiler.compile(source_id, checksum, 'footok',
-                                                'theLabel', 'http://the.link')
-        self.assertEqual(comp_status.source_id, source_id)
-        self.assertEqual(comp_status.identifier,
+        with self.app.app_context():
+            cp = compiler.Compiler.current_session()
+            stat = cp.compile(source_id, checksum, 'footok', 'theLabel',
+                              'http://the.link')
+        self.assertEqual(stat.source_id, source_id)
+        self.assertEqual(stat.identifier,
                          f"{source_id}/{checksum}/{output_format.value}")
-        self.assertEqual(comp_status.status,
+        self.assertEqual(stat.status,
                          domain.compilation.Compilation.Status.IN_PROGRESS)
         self.assertEqual(mock_session.post.call_count, 1)
 
@@ -100,14 +107,21 @@ class TestRequestCompilation(TestCase):
 class TestGetTaskStatus(TestCase):
     """Tests for :mod:`compiler.get_status` with mocked responses."""
 
-    @mock.patch('arxiv.integration.api.service.current_app', mock_app)
+    def setUp(self):
+        """Create an app for context."""
+        self.app = Flask('test')
+        self.app.config.update({
+            'COMPILER_ENDPOINT': 'http://foohost:1234',
+            'COMPILER_VERIFY': False
+        })
+
     @mock.patch('arxiv.integration.api.service.requests.Session')
     def test_get_status_failed(self, mock_Session):
         """Get the status of a failed task."""
         source_id = 42
         checksum = 'asdf1234='
         output_format = domain.compilation.Compilation.Format.PDF
-
+        failed = domain.compilation.Compilation.Status.FAILED.value
         mock_session = mock.MagicMock(
             get=mock.MagicMock(
                 return_value=mock.MagicMock(
@@ -117,28 +131,30 @@ class TestGetTaskStatus(TestCase):
                             'source_id': source_id,
                             'checksum': checksum,
                             'output_format': output_format.value,
-                            'status': domain.compilation.Compilation.Status.FAILED.value
+                            'status': failed
                         }
                     )
                 )
             )
         )
         mock_Session.return_value = mock_session
-        comp_status = compiler.Compiler.get_status(source_id, checksum,
-                                                          'tok', output_format)
-        self.assertEqual(comp_status.source_id, source_id)
-        self.assertEqual(comp_status.identifier,
+        with self.app.app_context():
+            cp = compiler.Compiler.current_session()
+            stat = cp.get_status(source_id, checksum, 'tok', output_format)
+        self.assertEqual(stat.source_id, source_id)
+        self.assertEqual(stat.identifier,
                          f"{source_id}/{checksum}/{output_format.value}")
-        self.assertEqual(comp_status.status, domain.compilation.Compilation.Status.FAILED)
+        self.assertEqual(stat.status,
+                         domain.compilation.Compilation.Status.FAILED)
         self.assertEqual(mock_session.get.call_count, 1)
 
-    @mock.patch('arxiv.integration.api.service.current_app', mock_app)
     @mock.patch('arxiv.integration.api.service.requests.Session')
     def test_get_status_in_progress(self, mock_Session):
         """Get the status of an in-progress task."""
         source_id = 42
         checksum = 'asdf1234='
         output_format = domain.compilation.Compilation.Format.PDF
+        in_progress = domain.compilation.Compilation.Status.IN_PROGRESS.value
         mock_session = mock.MagicMock(
             get=mock.MagicMock(
                 return_value=mock.MagicMock(
@@ -148,29 +164,30 @@ class TestGetTaskStatus(TestCase):
                             'source_id': source_id,
                             'checksum': checksum,
                             'output_format': output_format.value,
-                            'status': domain.compilation.Compilation.Status.IN_PROGRESS.value
+                            'status': in_progress
                         }
                     )
                 )
             )
         )
         mock_Session.return_value = mock_session
-        comp_status = compiler.Compiler.get_status(source_id, checksum,
-                                                          'tok', output_format)
-        self.assertEqual(comp_status.source_id, source_id)
-        self.assertEqual(comp_status.identifier,
+        with self.app.app_context():
+            cp = compiler.Compiler.current_session()
+            stat = cp.get_status(source_id, checksum, 'tok', output_format)
+        self.assertEqual(stat.source_id, source_id)
+        self.assertEqual(stat.identifier,
                          f"{source_id}/{checksum}/{output_format.value}")
-        self.assertEqual(comp_status.status, domain.compilation.Compilation.Status.IN_PROGRESS)
+        self.assertEqual(stat.status,
+                         domain.compilation.Compilation.Status.IN_PROGRESS)
         self.assertEqual(mock_session.get.call_count, 1)
 
-    @mock.patch('arxiv.integration.api.service.current_app', mock_app)
     @mock.patch('arxiv.integration.api.service.requests.Session')
     def test_get_status_completed(self, mock_Session):
         """Get the status of a completed task."""
         source_id = 42
         checksum = 'asdf1234='
         output_format = domain.compilation.Compilation.Format.PDF
-
+        succeeded = domain.compilation.Compilation.Status.SUCCEEDED.value
         mock_session = mock.MagicMock(
             get=mock.MagicMock(
                 return_value=mock.MagicMock(
@@ -180,22 +197,23 @@ class TestGetTaskStatus(TestCase):
                             'source_id': source_id,
                             'checksum': checksum,
                             'output_format': output_format.value,
-                            'status': domain.compilation.Compilation.Status.SUCCEEDED.value
+                            'status': succeeded
                         }
                     )
                 )
             )
         )
         mock_Session.return_value = mock_session
-        comp_status = compiler.Compiler.get_status(source_id, checksum,
-                                                          'tok', output_format)
-        self.assertEqual(comp_status.source_id, source_id)
-        self.assertEqual(comp_status.identifier,
+        with self.app.app_context():
+            cp = compiler.Compiler.current_session()
+            stat = cp.get_status(source_id, checksum, 'tok', output_format)
+        self.assertEqual(stat.source_id, source_id)
+        self.assertEqual(stat.identifier,
                          f"{source_id}/{checksum}/{output_format.value}")
-        self.assertEqual(comp_status.status, domain.compilation.Compilation.Status.SUCCEEDED)
+        self.assertEqual(stat.status,
+                         domain.compilation.Compilation.Status.SUCCEEDED)
         self.assertEqual(mock_session.get.call_count, 1)
 
-    @mock.patch('arxiv.integration.api.service.current_app', mock_app)
     @mock.patch('arxiv.integration.api.service.requests.Session')
     def test_get_status_doesnt_exist(self, mock_Session):
         """Get the status of a task that does not exist."""
@@ -213,6 +231,7 @@ class TestGetTaskStatus(TestCase):
             )
         )
         mock_Session.return_value = mock_session
-        with self.assertRaises(exceptions.NotFound):
-            compiler.Compiler.get_status(source_id, checksum, 'footok',
-                                                output_format)
+        with self.app.app_context():
+            cp = compiler.Compiler.current_session()
+            with self.assertRaises(exceptions.NotFound):
+                cp.get_status(source_id, checksum, 'footok', output_format)

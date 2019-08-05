@@ -1,14 +1,17 @@
 import io
+from datetime import datetime
 from unittest import TestCase, mock
+
+from pytz import UTC
 
 from arxiv.integration.api.exceptions import RequestFailed, NotFound
 
 from ..domain import Submission, SubmissionContent, User, Client
 from ..domain.event import ConfirmSourceProcessed
+from ..domain.preview import Preview
 from . import process_source
 from .. import SaveError
-from .process_source import start, check, summarize, \
-    SUCCEEDED, FAILED, IN_PROGRESS
+from .process_source import start, check, SUCCEEDED, FAILED, IN_PROGRESS
 
 PDF = SubmissionContent.Format.PDF
 TEX = SubmissionContent.Format.TEX
@@ -34,7 +37,8 @@ class PDFFormatTest(TestCase):
         self.submission = mock.MagicMock(spec=Submission,
                                          submission_id=42,
                                          source_content=self.content,
-                                         is_source_processed=False)
+                                         is_source_processed=False,
+                                         preview=None)
         self.user = mock.MagicMock(spec=User)
         self.client = mock.MagicMock(spec=Client)
         self.token = 'footoken'
@@ -46,7 +50,12 @@ class TestStartProcessingPDF(PDFFormatTest):
     @mock.patch(f'{process_source.__name__}.PreviewService')
     @mock.patch(f'{process_source.__name__}.Filemanager')
     def test_start(self, mock_Filemanager, mock_PreviewService):
-        """Start processing the PDF source."""
+        """
+        Start processing the PDF source.
+
+        This just involves verifying that there is a single PDF file in the
+        source package that can be used.
+        """
         mock_preview_service = mock.MagicMock()
         mock_PreviewService.current_session.return_value = mock_preview_service
         mock_filemanager = mock.MagicMock()
@@ -55,152 +64,78 @@ class TestStartProcessingPDF(PDFFormatTest):
             stream, 'foochex==', 'barchex=='
         mock_Filemanager.current_session.return_value = mock_filemanager
 
-        self.assertEqual(
-            start(self.submission, self.user, self.client, self.token),
-            IN_PROGRESS,
-            "Processing is in progress"
-        )
-        mock_filemanager.get_single_file.assert_called_once_with(
+        data = start(self.submission, self.user, self.client, self.token)
+        self.assertEqual(data.status, IN_PROGRESS, "Processing is in progress")
+        mock_filemanager.has_single_file.assert_called_once_with(
             self.content.identifier,
-            self.token
-        )
-        mock_preview_service.deposit.assert_called_once_with(
-            self.content.identifier,
-            self.content.checksum,
-            stream,
             self.token,
-            overwrite=True
+            file_type='PDF'
         )
 
-    @mock.patch(f'{process_source.__name__}.PreviewService')
     @mock.patch(f'{process_source.__name__}.Filemanager')
-    def test_start_preview_fails(self, mock_Filemanager, mock_PreviewService):
-        """Depositing the preview fails"""
-        mock_preview_service = mock.MagicMock()
-        mock_preview_service.deposit.side_effect = raise_RequestFailed
-        mock_PreviewService.current_session.return_value = mock_preview_service
+    def test_start_preview_fails(self, mock_Filemanager):
+        """No single PDF file available to use."""
         mock_filemanager = mock.MagicMock()
         stream = io.BytesIO(b'fakecontent')
-        mock_filemanager.get_single_file.return_value = \
-            stream, 'foochex==', 'barchex=='
+        mock_filemanager.has_single_file.return_value = False
         mock_Filemanager.current_session.return_value = mock_filemanager
 
-        with self.assertRaises(process_source.FailedToStart):
-            start(self.submission, self.user, self.client, self.token)
+        data = start(self.submission, self.user, self.client, self.token)
+        self.assertEqual(data.status, FAILED, 'Failed to start')
 
-        mock_filemanager.get_single_file.assert_called_once_with(
+        mock_filemanager.has_single_file.assert_called_once_with(
             self.content.identifier,
-            self.token
-        )
-        mock_preview_service.deposit.assert_called_once_with(
-            self.content.identifier,
-            self.content.checksum,
-            stream,
             self.token,
-            overwrite=True
+            file_type='PDF'
         )
-
-    @mock.patch(f'{process_source.__name__}.PreviewService')
-    @mock.patch(f'{process_source.__name__}.Filemanager')
-    def test_start_filemanager_fails(self, mock_Filemanager,
-                                     mock_PreviewService):
-        """Retrieiving the PDF fails"""
-        mock_preview_service = mock.MagicMock()
-        mock_PreviewService.current_session.return_value = mock_preview_service
-        mock_filemanager = mock.MagicMock()
-        mock_filemanager.get_single_file.side_effect = raise_RequestFailed
-        mock_Filemanager.current_session.return_value = mock_filemanager
-
-        with self.assertRaises(process_source.FailedToStart):
-            start(self.submission, self.user, self.client, self.token)
-
-        mock_filemanager.get_single_file.assert_called_once_with(
-            self.content.identifier,
-            self.token
-        )
-        mock_preview_service.deposit.assert_not_called()
 
 
 class TestCheckPDF(PDFFormatTest):
     """Test :const:`.PDFProcess`."""
 
     @mock.patch(f'{process_source.__name__}.save')
+    @mock.patch(f'{process_source.__name__}.Filemanager')
     @mock.patch(f'{process_source.__name__}.PreviewService')
-    def test_check_successful(self, mock_PreviewService, mock_save):
+    def test_check_successful(self, mock_PreviewService, mock_Filemanager,
+                              mock_save):
         """Check status of processing the PDF source after successful start."""
         mock_preview_service = mock.MagicMock()
-        mock_preview_service.has_preview.return_value = True
-        mock_PreviewService.current_session.return_value = mock_preview_service
-        self.assertEqual(
-            check(self.submission, self.user, self.client, self.token),
-            SUCCEEDED,
+        mock_preview_service.has_preview.return_value = False
+        mock_preview_service.deposit.return_value = mock.MagicMock(
+            spec=Preview,
+            source_id=1234,
+            source_checksum='foochex==',
+            preview_checksum='foochex==',
+            size_bytes=1234578,
+            added=datetime.now(UTC)
         )
+        mock_PreviewService.current_session.return_value = mock_preview_service
 
-        mock_preview_service.has_preview.assert_called_once_with(
+        mock_filemanager = mock.MagicMock()
+        stream = io.BytesIO(b'fakecontent')
+        mock_filemanager.get_single_file.return_value = (
+            stream,
+            'foochex==',
+            'contentchex=='
+        )
+        mock_Filemanager.current_session.return_value = mock_filemanager
+
+        data = check(self.submission, self.user, self.client, self.token)
+        self.assertEqual(data.status, SUCCEEDED)
+
+        mock_preview_service.deposit.assert_called_once_with(
             self.content.identifier,
             self.content.checksum,
-            self.token
+            stream,
+            self.token,
+            content_checksum='contentchex==',
+            overwrite=True
         )
         mock_save.assert_called_once()
         args, kwargs = mock_save.call_args
         self.assertIsInstance(args[0], ConfirmSourceProcessed)
         self.assertEqual(kwargs['submission_id'],
                          self.submission.submission_id)
-
-    @mock.patch(f'{process_source.__name__}.save')
-    @mock.patch(f'{process_source.__name__}.PreviewService')
-    def test_check_failed(self, mock_PreviewService, mock_save):
-        """Check status of processing the PDF source after failed transfer."""
-        mock_preview_service = mock.MagicMock()
-        mock_preview_service.has_preview.return_value = False
-        mock_PreviewService.current_session.return_value = mock_preview_service
-        self.assertEqual(
-            check(self.submission, self.user, self.client, self.token),
-            FAILED,
-        )
-        mock_preview_service.has_preview.assert_called_once_with(
-            self.content.identifier,
-            self.content.checksum,
-            self.token
-        )
-        mock_save.assert_not_called()
-
-
-class TestSummarizePDF(PDFFormatTest):
-    """Test :const:`.PDFProcess`."""
-
-    @mock.patch(f'{process_source.__name__}.PreviewService')
-    def test_summarize_successful(self, mock_PreviewService):
-        """Get summarization of processing the PDF."""
-        mock_preview_service = mock.MagicMock()
-        mock_preview = mock.MagicMock()
-        mock_preview_service.get_metadata.return_value = mock_preview
-        mock_PreviewService.current_session.return_value = mock_preview_service
-
-        data = summarize(self.submission, self.user, self.client, self.token)
-
-        self.assertEqual(data['preview'], mock_preview)
-        mock_preview_service.get_metadata.assert_called_once_with(
-            self.content.identifier,
-            self.content.checksum,
-            self.token
-        )
-
-    @mock.patch(f'{process_source.__name__}.PreviewService')
-    def test_summarize_preview_unavailable(self, mock_PreviewService):
-        """Preview service returns an error PDF."""
-        mock_preview_service = mock.MagicMock()
-        mock_preview_service.get_metadata.side_effect = raise_RequestFailed
-        mock_PreviewService.current_session.return_value = mock_preview_service
-
-        with self.assertRaises(process_source.FailedToGetResult):
-            summarize(self.submission, self.user, self.client, self.token)
-
-        mock_preview_service.get_metadata.assert_called_once_with(
-            self.content.identifier,
-            self.content.checksum,
-            self.token
-        )
 
 
 class TeXFormatTestCase(TestCase):
@@ -215,7 +150,8 @@ class TeXFormatTestCase(TestCase):
         self.submission = mock.MagicMock(spec=Submission,
                                          submission_id=42,
                                          source_content=self.content,
-                                         is_source_processed=False)
+                                         is_source_processed=False,
+                                         preview=None)
         self.submission.primary_classification.category = 'cs.DL'
         self.user = mock.MagicMock(spec=User)
         self.client = mock.MagicMock(spec=Client)
@@ -232,11 +168,9 @@ class TestStartTeX(TeXFormatTestCase):
         mock_compiler.compile.return_value = mock.MagicMock(is_failed=False,
                                                             is_succeeded=False)
         mock_Compiler.current_session.return_value = mock_compiler
-        self.assertEqual(
-            start(self.submission, self.user, self.client, self.token),
-            IN_PROGRESS,
-            "Processing is in progress"
-        )
+        data = start(self.submission, self.user, self.client, self.token)
+        self.assertEqual(data.status, IN_PROGRESS, "Processing is in progress")
+
         mock_compiler.compile.assert_called_once_with(
             self.content.identifier,
             self.content.checksum,
@@ -277,11 +211,9 @@ class TestCheckTeX(TeXFormatTestCase):
                                           is_failed=False)
         mock_compiler.get_status.return_value = mock_compilation
         mock_Compiler.current_session.return_value = mock_compiler
-        self.assertEqual(
-            check(self.submission, self.user, self.client, self.token),
-            IN_PROGRESS,
-            "Processing is in progress"
-        )
+
+        data = check(self.submission, self.user, self.client, self.token)
+        self.assertEqual(data.status, IN_PROGRESS, "Processing is in progress")
         mock_compiler.get_status.assert_called_once_with(
             self.content.identifier,
             self.content.checksum,
@@ -324,11 +256,9 @@ class TestCheckTeX(TeXFormatTestCase):
                                           is_failed=True)
         mock_compiler.get_status.return_value = mock_compilation
         mock_Compiler.current_session.return_value = mock_compiler
-        self.assertEqual(
-            check(self.submission, self.user, self.client, self.token),
-            FAILED,
-            "Processing failed"
-        )
+
+        data = check(self.submission, self.user, self.client, self.token)
+        self.assertEqual(data.status, FAILED, "Processing failed")
         mock_compiler.get_status.assert_called_once_with(
             self.content.identifier,
             self.content.checksum,
@@ -342,20 +272,22 @@ class TestCheckTeX(TeXFormatTestCase):
                              mock_save):
         """Check processing, compilation succeeded."""
         mock_preview_service = mock.MagicMock()
+        mock_preview_service.has_preview.return_value = False
         mock_PreviewService.current_session.return_value = mock_preview_service
         mock_compiler = mock.MagicMock()
         mock_compilation = mock.MagicMock(is_succeeded=True,
                                           is_failed=False)
         mock_compiler.get_status.return_value = mock_compilation
         stream = io.BytesIO(b'foobytes')
-        mock_compiler.get_product.return_value = mock.MagicMock(stream=stream,
-                                                                checksum='chx')
-        mock_Compiler.current_session.return_value = mock_compiler
-        self.assertEqual(
-            check(self.submission, self.user, self.client, self.token),
-            SUCCEEDED,
-            "Processing succeeded"
+        mock_compiler.get_product.return_value = mock.MagicMock(
+            stream=stream,
+            checksum='chx'
         )
+        mock_Compiler.current_session.return_value = mock_compiler
+
+        data = check(self.submission, self.user, self.client, self.token)
+
+        self.assertEqual(data.status, SUCCEEDED, "Processing succeeded")
         mock_compiler.get_status.assert_called_once_with(
             self.content.identifier,
             self.content.checksum,
@@ -371,6 +303,7 @@ class TestCheckTeX(TeXFormatTestCase):
             self.content.checksum,
             stream,
             self.token,
+            content_checksum='chx',
             overwrite=True
         )
         mock_save.assert_called_once()
@@ -378,6 +311,91 @@ class TestCheckTeX(TeXFormatTestCase):
         self.assertIsInstance(args[0], ConfirmSourceProcessed)
         self.assertEqual(kwargs['submission_id'],
                          self.submission.submission_id)
+
+    @mock.patch(f'{process_source.__name__}.save')
+    @mock.patch(f'{process_source.__name__}.PreviewService')
+    @mock.patch(f'{process_source.__name__}.Compiler')
+    def test_succeeded_preview_shipped_not_marked(self, mock_Compiler,
+                                                  mock_PreviewService,
+                                                  mock_save):
+        """Preview already shipped, but submission not updated."""
+        mock_preview_service = mock.MagicMock()
+        mock_preview_service.has_preview.return_value = True
+        mock_PreviewService.current_session.return_value = mock_preview_service
+        mock_compiler = mock.MagicMock()
+        mock_compilation = mock.MagicMock(is_succeeded=True,
+                                          is_failed=False)
+        mock_compiler.get_status.return_value = mock_compilation
+        stream = io.BytesIO(b'foobytes')
+        mock_compiler.get_product.return_value = mock.MagicMock(stream=stream,
+                                                                checksum='chx')
+        mock_Compiler.current_session.return_value = mock_compiler
+
+        data = check(self.submission, self.user, self.client, self.token)
+
+        self.assertEqual(data.status, SUCCEEDED, "Processing succeeded")
+
+        mock_compiler.get_status.assert_called_once_with(
+            self.content.identifier,
+            self.content.checksum,
+            self.token
+        )
+
+        mock_compiler.get_product.assert_called_once_with(
+            self.content.identifier,
+            self.content.checksum,
+            self.token
+        )
+        mock_preview_service.deposit.assert_called_once_with(
+            self.content.identifier,
+            self.content.checksum,
+            stream,
+            self.token,
+            content_checksum='chx',
+            overwrite=True
+        )
+
+        mock_save.assert_called_once()
+        args, kwargs = mock_save.call_args
+        self.assertIsInstance(args[0], ConfirmSourceProcessed)
+        self.assertEqual(kwargs['submission_id'],
+                         self.submission.submission_id)
+
+    @mock.patch(f'{process_source.__name__}.save')
+    @mock.patch(f'{process_source.__name__}.PreviewService')
+    @mock.patch(f'{process_source.__name__}.Compiler')
+    def test_succeeded_preview_shipped_and_marked(self, mock_Compiler,
+                                                  mock_PreviewService,
+                                                  mock_save):
+        """Preview already shipped and submission is up to date."""
+        self.submission.preview = mock.MagicMock(
+            source_id=self.content.identifier,
+            checksum=self.content.checksum,
+            preview_checksum='chx'
+        )
+        self.submission.is_source_processed = True
+
+        mock_preview_service = mock.MagicMock()
+        mock_preview_service.has_preview.return_value = True
+        mock_PreviewService.current_session.return_value = mock_preview_service
+        mock_compiler = mock.MagicMock()
+        mock_compilation = mock.MagicMock(is_succeeded=True,
+                                          is_failed=False)
+        mock_compiler.get_status.return_value = mock_compilation
+        stream = io.BytesIO(b'foobytes')
+        mock_compiler.get_product.return_value = mock.MagicMock(stream=stream,
+                                                                checksum='chx')
+        mock_Compiler.current_session.return_value = mock_compiler
+
+        data = check(self.submission, self.user, self.client, self.token)
+
+        self.assertEqual(data.status, SUCCEEDED, "Processing succeeded")
+
+        mock_compiler.get_status.assert_not_called()
+        mock_compiler.get_product.assert_not_called()
+        mock_preview_service.deposit.assert_not_called()
+        mock_save.assert_not_called()
+
 
     @mock.patch(f'{process_source.__name__}.save')
     @mock.patch(f'{process_source.__name__}.PreviewService')
@@ -417,6 +435,7 @@ class TestCheckTeX(TeXFormatTestCase):
             self.content.checksum,
             stream,
             self.token,
+            content_checksum='chx',
             overwrite=True
         )
         mock_save.assert_called_once()
@@ -424,71 +443,3 @@ class TestCheckTeX(TeXFormatTestCase):
         self.assertIsInstance(args[0], ConfirmSourceProcessed)
         self.assertEqual(kwargs['submission_id'],
                          self.submission.submission_id)
-
-
-
-class TestSummarizeTeX(TeXFormatTestCase):
-    """Test :const:`.TeXProcess`."""
-
-    @mock.patch(f'{process_source.__name__}.Compiler')
-    @mock.patch(f'{process_source.__name__}.PreviewService')
-    def test_summarize_successful(self, mock_PreviewService, mock_Compiler):
-        """Get summarization of processing the TeX."""
-        mock_preview_service = mock.MagicMock()
-        mock_preview = mock.MagicMock()
-        mock_preview_service.get_metadata.return_value = mock_preview
-        mock_PreviewService.current_session.return_value = mock_preview_service
-
-        mock_compiler = mock.MagicMock()
-        stream = io.BytesIO(b'foologoutput')
-        mock_compiler.get_log.return_value = mock.MagicMock(stream=stream)
-        mock_Compiler.current_session.return_value = mock_compiler
-
-        data = summarize(self.submission, self.user, self.client, self.token)
-
-        self.assertEqual(data['preview'], mock_preview)
-        self.assertEqual(data['log_output'], 'foologoutput')
-        mock_preview_service.get_metadata.assert_called_once_with(
-            self.content.identifier,
-            self.content.checksum,
-            self.token
-        )
-
-    @mock.patch(f'{process_source.__name__}.Compiler')
-    @mock.patch(f'{process_source.__name__}.PreviewService')
-    def test_summarize_preview_unavailable(self, mock_PreviewService,
-                                           mock_Compiler):
-        """Preview service returns an error."""
-        mock_preview_service = mock.MagicMock()
-        mock_preview_service.get_metadata.side_effect = raise_RequestFailed
-        mock_PreviewService.current_session.return_value = mock_preview_service
-
-        mock_compiler = mock.MagicMock()
-        stream = io.BytesIO(b'foologoutput')
-        mock_compiler.get_log.return_value = mock.MagicMock(stream=stream)
-        mock_Compiler.current_session.return_value = mock_compiler
-
-        with self.assertRaises(process_source.FailedToGetResult):
-            summarize(self.submission, self.user, self.client, self.token)
-
-        mock_preview_service.get_metadata.assert_called_once_with(
-            self.content.identifier,
-            self.content.checksum,
-            self.token
-        )
-
-    @mock.patch(f'{process_source.__name__}.Compiler')
-    @mock.patch(f'{process_source.__name__}.PreviewService')
-    def test_summarize_log_unavailable(self, mock_PreviewService,
-                                       mock_Compiler):
-        """Preview service returns an error."""
-        mock_preview_service = mock.MagicMock()
-        mock_PreviewService.current_session.return_value = mock_preview_service
-
-        mock_compiler = mock.MagicMock()
-        stream = io.BytesIO(b'foologoutput')
-        mock_compiler.get_log.side_effect = raise_RequestFailed
-        mock_Compiler.current_session.return_value = mock_compiler
-
-        with self.assertRaises(process_source.FailedToGetResult):
-            summarize(self.submission, self.user, self.client, self.token)

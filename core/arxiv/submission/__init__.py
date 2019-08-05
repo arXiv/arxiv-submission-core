@@ -194,7 +194,7 @@ from .core import *
 from .domain.submission import Submission, SubmissionMetadata, Author
 from .domain.agent import Agent, User, System, Client
 from .services import classic, StreamPublisher, Compiler, PlainTextService,\
-    Classifier
+    Classifier, PreviewService
 
 logger = logging.getLogger(__name__)
 
@@ -208,6 +208,7 @@ def init_app(app: Flask) -> None:
     """
     # Initialize services.
     StreamPublisher.init_app(app)
+    PreviewService.init_app(app)
     classic.init_app(app)
 
     template_folder = os.path.join(os.path.dirname(os.path.realpath(__file__)),

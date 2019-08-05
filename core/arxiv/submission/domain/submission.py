@@ -9,13 +9,14 @@ import hashlib
 from dataclasses import dataclass, field, asdict
 
 from .agent import Agent, agent_factory
-from .meta import License, Classification
 from .annotation import Comment, Feature, Annotation, annotation_factory
-from .proposal import Proposal
-from .process import ProcessStatus
-from .flag import Flag, flag_factory
-from .util import get_tzaware_utc_now, dict_coerce, list_coerce
 from .compilation import Compilation
+from .flag import Flag, flag_factory
+from .meta import License, Classification
+from .preview import Preview
+from .process import ProcessStatus
+from .proposal import Proposal
+from .util import get_tzaware_utc_now, dict_coerce, list_coerce
 
 
 @dataclass
@@ -335,6 +336,8 @@ class Submission:
     submission_id: Optional[int] = field(default=None)
 
     source_content: Optional[SubmissionContent] = field(default=None)
+    preview: Optional[Preview] = field(default=None)
+
     metadata: SubmissionMetadata = field(default_factory=SubmissionMetadata)
     primary_classification: Optional[Classification] = field(default=None)
     secondary_classification: List[Classification] = \
@@ -486,6 +489,8 @@ class Submission:
             self.submitted = parse_date(self.submitted)
         if type(self.source_content) is dict:
             self.source_content = SubmissionContent(**self.source_content)
+        if type(self.preview) is dict:
+            self.preview = Preview(**self.preview)
         if type(self.primary_classification) is dict:
             self.primary_classification = \
                 Classification(**self.primary_classification)

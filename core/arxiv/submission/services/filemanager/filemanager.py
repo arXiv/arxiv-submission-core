@@ -29,8 +29,19 @@ class Filemanager(service.HTTPIntegration):
 
         service_name = "filemanager"
 
-    def get_single_file(self, upload_id: str, token: str) \
-            -> Tuple[IO[bytes], str, str]:
+    def has_single_file(self, upload_id: str, token: str,
+                        file_type: str = 'PDF') -> bool:
+        """Checj whether an upload workspace one or more file of a type."""
+        stat = self.get_upload_status(upload_id, token)
+        try:
+            next((f.name for f in stat.files if f.file_type == file_type))
+        except StopIteration:  # Empty iterator => no such file.
+            return False
+        return True
+
+
+    def get_single_file(self, upload_id: str, token: str,
+                        file_type: str = 'PDF') -> Tuple[IO[bytes], str, str]:
         """
         Get a single PDF file from the submission package.
 
@@ -51,10 +62,15 @@ class Filemanager(service.HTTPIntegration):
         str
             The checksum of the single file.
         """
-        upload_status = self.get_upload_status(upload_id, token)
-        pdf_name = next((u_file.name for u_file in upload_status.files
-                         if u_file.file_type == 'PDF'))
+        stat = self.get_upload_status(upload_id, token)
+        try:
+            pdf_name = next((f.name for f in stat.files
+                             if f.file_type == file_type))
+        except StopIteration as e:
+            raise RuntimeError(f'No single `{file_type}` file found.') from e
         content, headers = self.get_file_content(upload_id, pdf_name, token)
+        if upload_status.checksum is None:
+            raise RuntimeError(f'Upload workspace checksum not set')
         return content, upload_status.checksum, headers['ETag']
 
     def is_available(self, **kwargs) -> bool:

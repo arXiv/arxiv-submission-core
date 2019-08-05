@@ -520,7 +520,16 @@ class TestJREFIntegration(TestCase):
                         affiliation='Fight Club'
                     )]
                 ),
-                ConfirmPreview(creator=self.submitter),
+                ConfirmSourceProcessed(
+                    creator=self.submitter,
+                    source_id=123,
+                    source_checksum="a9s9k342900skks03330029k",
+                    preview_checksum="foopreviewchex==",
+                    size_bytes=1234,
+                    added=datetime.now(UTC)
+                ),
+                ConfirmPreview(creator=self.submitter,
+                               preview_checksum="foopreviewchex=="),
                 FinalizeSubmission(creator=self.submitter)
             )
 

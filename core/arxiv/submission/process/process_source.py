@@ -36,6 +36,8 @@ processes defined/registered in this module.
 import io
 from typing import IO, Dict, Tuple, NamedTuple, Optional, Any, Callable
 
+from mypy_extensions import TypedDict
+
 from arxiv.integration.api.exceptions import NotFound
 from arxiv.submission import InvalidEvent, User, Client, Event, Submission, \
     SaveError
@@ -74,13 +76,27 @@ class SourceProcess(NamedTuple):
     check: IChecker
     """A function for checking the status of processing."""
 
-    summarize: ISummarizer
-    """A function for summarizing the result of processing."""
+
+class CheckResult(NamedTuple):
+    """Information about the result of a check."""
+
+    status: Status
+    """The status of source processing."""
+
+    extra: Dict[str, Any]
+    """
+    Additional data, which may vary by source type and status.
+
+    Summary information suitable for generating feedback to an end user or API
+    consumer. E.g. to be injected in a template rendering context.
+    """
 
 
 _PROCESSES: Dict[SubmissionContent.Format, SourceProcess] = {}
 
 
+# These exceptions refer to errors encountered during checking, and not to the
+# status of source processing itself.
 class SourceProcessingException(RuntimeError):
     """Base exception for this module."""
 
@@ -111,35 +127,23 @@ class BaseStarter:
     processing for that submission.
     """
 
-    def start(self, submission: Submission, token: str) -> Status:
+    def start(self, submission: Submission, user: User,
+              client: Optional[Client],
+              token: str) -> Tuple[Status, Dict[str, Any]]:
         """Start processing the source. Must be implemented by child class."""
         raise NotImplementedError('Must be implemented by a child class')
 
-    def on_success(self, submission: Submission, token: str) -> None:
-        """Callback for successful start. May be overridden by child class."""
-        pass
-
-    def on_failure(self, submission: Submission, exc: Exception) -> None:
-        """Callback for failed start. May be overridden by child class."""
-        pass
-
-    def fail(self, submission: Submission, exc: Exception) -> None:
-        """Handle failure to start processing."""
-        self.on_failure(submission, exc)
-        message = f'Could not start processing {submission.submission_id}'
-        raise FailedToStart(message) from exc
-
     def __call__(self, submission: Submission, user: User,
-                 client: Optional[Client], token: str) -> Status:
+                 client: Optional[Client], token: str) -> CheckResult:
         """Start processing a submission source package."""
         try:
-            status = self.start(submission, token)
-            self.on_success(submission, token)
+            status, extra = self.start(submission, user, client, token)
         except SourceProcessingException:   # Propagate.
             raise
         except Exception as e:
-            self.fail(submission, e)
-        return status
+            message = f'Could not start processing {submission.submission_id}'
+            raise FailedToStart(message) from e
+        return CheckResult(status=status, extra=extra)
 
 
 class BaseChecker:
@@ -151,127 +155,110 @@ class BaseChecker:
     processing for a given submission.
     """
 
-    def check(self, submission: Submission, token: str) -> Status:
+    def check(self, submission: Submission, user: User,
+              client: Optional[Client],
+              token: str) -> Tuple[Status, Dict[str, Any]]:
         """Perform the status check."""
         raise NotImplementedError('Must be implemented by a subclass')
 
-    def on_failure(self, submission: Submission, exc: Exception) -> None:
-        """Failure callback. May be overridden by child class."""
-        pass
+    # Some of these args are unused; keeping them for the sake of a consistent
+    # API.
+    def _pre_check(self, submission: Submission, user: User,
+                   client: Optional[Client],
+                   token: str) -> Optional[Dict[str, Any]]:
+        # If the preview service is already consistent with the submission,
+        # then there is nothing left to do.
+        if submission.is_source_processed and submission.preview is not None:
+            p = PreviewService.current_session()
+            is_ok = p.has_preview(submission.source_content.identifier,
+                                  submission.source_content.checksum, token,
+                                  submission.preview.preview_checksum)
+            if is_ok:
+                return {'preview': submission.preview}
+        return None
 
-    def fail(self, submission: Submission, exc: Exception) -> None:
-        """Generate a failure exception."""
-        self.on_failure(submission, exc)
-        raise FailedToCheckStatus(f'Status check failed: {exc}') from exc
+    def _deposit(self, submission: Submission, user: User,
+                 client: Optional[Client], token: str, stream: IO[bytes],
+                 content_checksum: str) -> Preview:
+        # It is possible that the content is already there, we just failed to
+        # update the submission last time. In the future we might do a more
+        # efficient check, but this is fine for now.
+        p = PreviewService.current_session()
+        preview = p.deposit(submission.source_content.identifier,
+                            submission.source_content.checksum,
+                            stream, token, overwrite=True,
+                            content_checksum=content_checksum)
 
-    def finish(self, submission: Submission, user: User,
-               client: Optional[Client], token: str) -> None:
-        """Emit :class:`.ConfirmSourceProcessed` on successful processing."""
-        try:
-            save(ConfirmSourceProcessed(creator=user, client=client),  # type: ignore
-                 submission_id=submission.submission_id)
-        except SaveError as e:
-            self.fail(submission, e)
+        save(ConfirmSourceProcessed(creator=user,   # type: ignore
+                                    client=client,
+                                    source_id=preview.source_id,
+                                    source_checksum=preview.source_checksum,
+                                    preview_checksum=preview.preview_checksum,
+                                    size_bytes=preview.size_bytes,
+                                    added=preview.added),
+             submission_id=submission.submission_id)
+        return preview
 
     def __call__(self, submission: Submission, user: User,
-                 client: Optional[Client], token: str) -> Status:
+                 client: Optional[Client], token: str) -> CheckResult:
         """Check the status of source processing for a submission."""
-        if submission.is_source_processed:      # Already succeeded.
-            return SUCCEEDED
+        result = self._pre_check(submission, user, client, token)
+        if result is not None:  # Don't repeat any uncessary work.
+            return CheckResult(status=SUCCEEDED, extra=result)
+
         try:
-            status = self.check(submission, token)
-            if status == SUCCEEDED:
-                self.finish(submission, user, client, token)
+            status, extra = self.check(submission, user, client, token)
         except SourceProcessingException:   # Propagate.
             raise
         except Exception as e:
-            self.fail(submission, e)
-        return status
-
-
-class BaseSummarizer:
-    """
-    Base class for summarizing the result of processing.
-
-    To extend this class, override :func:`BaseStarter.summarize`. That function
-    should return a :const:`.Summary` that can be used to provide feedback to
-    a user or API consumer.
-    """
-
-    def on_failure(self, submission: Submission, exc: Exception) -> None:
-        """Callback for failed summary. May be overridden by child class."""
-        pass
-
-    def fail(self, submission: Submission, exc: Exception) -> None:
-        """Handle failure to get summary."""
-        self.on_failure(submission, exc)
-        message = f'Could not summarize processing {submission.submission_id}'
-        raise FailedToGetResult(message) from exc
-
-    def summarize(self, submission: Submission, token: str) -> Dict[str, Any]:
-        """
-        Generate summary information about the processing.
-
-        Must be overridden by a child class.
-        """
-        raise NotImplementedError('Must be implemented by a child class')
-        return {}
-
-    def __call__(self, submission: Submission, user: User,
-                 client: Optional[Client], token: str) -> Dict[str, Any]:
-        """Summarize source processing."""
-        try:
-            summary = self.summarize(submission, token)
-        except SourceProcessingException:   # Propagate.
-            raise
-        except Exception as e:
-            self.fail(submission, e)
-        return summary
+            raise FailedToCheckStatus(f'Status check failed: {e}') from e
+        return CheckResult(status=status, extra=extra)
 
 
 class _PDFStarter(BaseStarter):
     """Start processing a PDF source package."""
 
-    def start(self, submission: Submission, token: str) -> Status:
+    def start(self, submission: Submission, user: User,
+              client: Optional[Client],
+              token: str) -> Tuple[Status, Dict[str, Any]]:
         """Ship the PDF to the preview service."""
         m = Filemanager.current_session()
-        stream, source_checksum, stream_checksum = \
-            m.get_single_file(submission.source_content.identifier, token)
-        if submission.source_content.checksum != source_checksum:
-            raise FailedToStart('Source has changed')
-        _ship_to_preview(submission, stream, stream_checksum, token)
-        return IN_PROGRESS
+        if m.has_single_file(submission.source_content.identifier, token,
+                             file_type='PDF'):
+            return IN_PROGRESS, {}
+        return FAILED, {'reason': 'Not a single-file PDF submission.'}
 
 
 class _PDFChecker(BaseChecker):
     """Check the status of a PDF source package."""
 
-    def check(self, submission: Submission, token: str) -> Status:
+    def check(self, submission: Submission, user: User,
+              client: Optional[Client],
+              token: str) -> Tuple[Status, Dict[str, Any]]:
         """Verify that the preview is present."""
-        p = PreviewService.current_session()
-        if p.has_preview(submission.source_content.identifier,
-                         submission.source_content.checksum,
-                         token):
-            return SUCCEEDED
-        return FAILED
+        m = Filemanager.current_session()
 
+        # Ship the single PDF file from the file manager service to the
+        # preview service.
+        try:
+            stream, checksum, content_checksum = \
+                m.get_single_file(submission.source_content.identifier, token)
+        except NotFound:
+            return FAILED, {'reason': 'Does not have a single PDF file.'}
+        if submission.source_content.checksum != checksum:
+            return FAILED, {'reason': 'Source has changed.'}
 
-class _PDFSummarizer(BaseSummarizer):
-    """Summarize PDF processing."""
-
-    def summarize(self, submission: Submission, token: str) -> Summary:
-        """Currently does nothing."""
-        p = PreviewService.current_session()
-        preview = p.get_metadata(submission.source_content.identifier,
-                                     submission.source_content.checksum,
-                                     token)
-        return {'preview': preview}
+        preview = self._deposit(submission, user, client, token, stream,
+                                content_checksum)
+        return SUCCEEDED, {'preview': preview}
 
 
 class _CompilationStarter(BaseStarter):
     """Starts compilation via the compiler service."""
 
-    def start(self, submission: Submission, token: str) -> Status:
+    def start(self, submission: Submission, user: User,
+              client: Optional[Client],
+              token: str) -> Tuple[Status, Dict[str, Any]]:
         """Start compilation."""
         c = Compiler.current_session()
         stamp_label, stamp_link = self._make_stamp(submission)
@@ -281,11 +268,16 @@ class _CompilationStarter(BaseStarter):
                          stamp_label,
                          stamp_link,
                          force=True)
+        # There is no good reason for this to come back as failed right off
+        # the bat, so we will treat it as a bona fide exception rather than
+        # just FAILED state.
         if stat.is_failed:
             raise FailedToStart(f'Failed to start: {stat.Reason.value}')
-        return IN_PROGRESS
 
-    def _make_stamp(self, submission: Submission) -> Tuple[str, str]:   # label, URL
+        # If we got this far, we're off to the races.
+        return IN_PROGRESS, {}
+
+    def _make_stamp(self, submission: Submission) -> Tuple[str, str]:
         # Create label and link for PS/PDF stamp/watermark.
         #
         # Stamp format for submission is of form [identifier category date]
@@ -308,7 +300,9 @@ class _CompilationStarter(BaseStarter):
 
 
 class _CompilationChecker(BaseChecker):
-    def check(self, submission: Submission, token: str) -> Status:
+    def check(self, submission: Submission, user: User,
+              client: Optional[Client],
+              token: str) -> Tuple[Status, Dict[str, Any]]:
         c = Compiler.current_session()
         try:
             compilation = c.get_status(submission.source_content.identifier,
@@ -316,40 +310,30 @@ class _CompilationChecker(BaseChecker):
                                        token)
         except NotFound as e:     # Nothing to do.
             raise NoProcessToCheck('No compilation process found') from e
+
         if compilation.is_succeeded:
+            # Ship the compiled PDF off to the preview service.
             prod = c.get_product(submission.source_content.identifier,
                                  submission.source_content.checksum, token)
-            _ship_to_preview(submission, prod.stream, prod.checksum, token)
-            return SUCCEEDED
+            preview = self._deposit(submission, user, client, token,
+                                    prod.stream, prod.checksum)
+            log_output: Optional[str]
+            try:
+                log = c.get_log(submission.source_content.identifier,
+                                submission.source_content.checksum, token)
+                log_output = log.read().decode('utf-8')
+            except NotFound:
+                log_output = None
+            return SUCCEEDED, {'preview': preview, 'log_output': log_output}
         elif compilation.is_failed:
-            return FAILED
-        return IN_PROGRESS
+            return FAILED, {'compilation': compilation}
+        return IN_PROGRESS, {'compilation': compilation}
 
 
-class _CompilationSummarizer(BaseSummarizer):
-    def summarize(self, submission: Submission, token: str) -> Summary:
-        p = PreviewService.current_session()
-        c = Compiler.current_session()
-        log = c.get_log(submission.source_content.identifier,
-                        submission.source_content.checksum,
-                        token)
-        return {'log_output': log.stream.read().decode('utf-8')}
+def _make_process(supports: SubmissionContent.Format, starter: BaseStarter,
+                  checker: BaseChecker) -> SourceProcess:
 
-
-def _ship_to_preview(submission: Submission, stream: IO[bytes],
-                     preview_checksum: str, token: str) -> None:
-    p = PreviewService.current_session()
-    p.deposit(submission.source_content.identifier,
-              submission.source_content.checksum,
-              stream, token, overwrite=True)
-
-
-def _make_process(supports: SubmissionContent.Format,
-                  starter: BaseStarter,
-                  checker: BaseChecker,
-                  summarizer: BaseSummarizer) -> SourceProcess:
-
-    proc = SourceProcess(supports, starter, checker, summarizer)
+    proc = SourceProcess(supports, starter, checker)
     _PROCESSES[supports] = proc
     return proc
 
@@ -362,7 +346,7 @@ def _get_process(source_format: SubmissionContent.Format) -> SourceProcess:
 
 
 def start(submission: Submission, user: User, client: Optional[Client],
-          token: str) -> Status:
+          token: str) -> CheckResult:
     """
     Start processing the source package for a submission.
 
@@ -379,8 +363,8 @@ def start(submission: Submission, user: User, client: Optional[Client],
 
     Returns
     -------
-    str
-        Status indicating the disposition of the process. See :const:`.Status`.
+    :class:`.CheckResult`
+        Status indicates the disposition of the process.
 
     Raises
     ------
@@ -393,7 +377,7 @@ def start(submission: Submission, user: User, client: Optional[Client],
 
 
 def check(submission: Submission, user: User, client: Optional[Client],
-          token: str) -> Status:
+          token: str) -> CheckResult:
     """
     Check the status of source processing for a submission.
 
@@ -410,8 +394,8 @@ def check(submission: Submission, user: User, client: Optional[Client],
 
     Returns
     -------
-    str
-        Status indicating the disposition of the process. See :const:`.Status`.
+    :class:`.CheckResult`
+        Status indicates the disposition of the process.
 
     Raises
     ------
@@ -423,44 +407,10 @@ def check(submission: Submission, user: User, client: Optional[Client],
     return proc.check(submission, user, client, token)
 
 
-def summarize(submission: Submission, user: User, client: Optional[Client],
-              token: str) -> Summary:
-    """
-    Summarize the results of source processing for a submission.
-
-    Parameters
-    ----------
-    submission : :class:`.Submission`
-        The submission to process.
-    user : :class:`.User`
-        arXiv user who originated the request.
-    client : :class:`.Client` or None
-        API client that handled the request, if any.
-    token : str
-        Authn/z token for the request.
-
-    Returns
-    -------
-    dict
-        Keys are strings. Summary information suitable for generating feedback
-        to an end user or API consumer. E.g. to be injected in a template
-        rendering context.
-
-    Raises
-    ------
-    :class:`NotImplementedError`
-        Raised if the submission source format is not supported by this module.
-
-    """
-    proc = _get_process(submission.source_content.source_format)
-    return proc.summarize(submission, user, client, token)
-
-
 TeXProcess = _make_process(
     SubmissionContent.Format.TEX,
     _CompilationStarter(),
-    _CompilationChecker(),
-    _CompilationSummarizer()
+    _CompilationChecker()
 )
 """Support for processing TeX submissions."""
 
@@ -468,8 +418,7 @@ TeXProcess = _make_process(
 PostscriptProcess = _make_process(
     SubmissionContent.Format.POSTSCRIPT,
     _CompilationStarter(),
-    _CompilationChecker(),
-    _CompilationSummarizer()
+    _CompilationChecker()
 )
 """Support for processing Postscript submissions."""
 
@@ -477,7 +426,6 @@ PostscriptProcess = _make_process(
 PDFProcess = _make_process(
     SubmissionContent.Format.PDF,
     _PDFStarter(),
-    _PDFChecker(),
-    _PDFSummarizer()
+    _PDFChecker()
 )
 """Support for processing PDF submissions."""

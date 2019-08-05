@@ -3,7 +3,7 @@
 import io
 from datetime import datetime
 from http import HTTPStatus as status
-from typing import Tuple, Any, IO, Callable, Iterator
+from typing import Tuple, Any, IO, Callable, Iterator, Optional
 from urllib3.util.retry import Retry
 
 from backports.datetime_fromisoformat import MonkeyPatch
@@ -57,7 +57,7 @@ class ReadWrapper(io.BytesIO):
 class PreviewService(service.HTTPIntegration):
     """Represents an interface to the submission preview."""
 
-    VERSION = '0.0'
+    VERSION = '54f23542255cfd5f91472765eb59a674a9c634a4'
     SERVICE = 'preview'
 
     class Meta:
@@ -148,7 +148,8 @@ class PreviewService(service.HTTPIntegration):
                        size_bytes=response_data['size_bytes'])
 
     def deposit(self, source_id: int, checksum: str, stream: IO[bytes],
-                token: str, overwrite: bool = False) -> Preview:
+                token: str, overwrite: bool = False,
+                content_checksum: Optional[str] = None) -> Preview:
         """
         Deposit a preview.
 
@@ -179,6 +180,9 @@ class PreviewService(service.HTTPIntegration):
         """
         headers = {'Content-type': 'application/pdf',
                    'Overwrite': 'true' if overwrite else 'false'}
+        if content_checksum is not None:
+            headers['ETag'] = content_checksum
+
         try:
             response = self.request('put', f'/{source_id}/{checksum}/content',
                                     token, data=stream,
@@ -197,5 +201,35 @@ class PreviewService(service.HTTPIntegration):
                        added=added,
                        size_bytes=response_data['size_bytes'])
 
-    def has_preview(self, source_id: int, checksum: str, token: str) -> bool:
-        ...
+    def has_preview(self, source_id: int, checksum: str, token: str,
+                    content_checksum: Optional[str] = None) -> bool:
+        """
+        Check whether a preview exists for a specific source package.
+
+        Parameters
+        ----------
+        source_id : int
+            Unique identifier of the source package from which the preview was
+            generated.
+        checksum : str
+            URL-safe base64-encoded MD5 hash of the source package content.
+        token : str
+            Authnz token for the request.
+        content_checksum : str or None
+            URL-safe base64-encoded MD5 hash of the preview content. If
+            provided, will return ``True`` only if this value matches the
+            value of the ``ETag`` header returned by the preview service.
+
+        Returns
+        -------
+        bool
+
+        """
+        try:
+            response = self.request('head', f'/{source_id}/{checksum}', token)
+        except exceptions.NotFound:
+            return False
+        if content_checksum is not None:
+            if response.headers.get('ETag') != content_checksum:
+                return False
+        return True
