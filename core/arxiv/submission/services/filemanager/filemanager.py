@@ -39,7 +39,6 @@ class Filemanager(service.HTTPIntegration):
             return False
         return True
 
-
     def get_single_file(self, upload_id: str, token: str,
                         file_type: str = 'PDF') -> Tuple[IO[bytes], str, str]:
         """
@@ -69,9 +68,9 @@ class Filemanager(service.HTTPIntegration):
         except StopIteration as e:
             raise RuntimeError(f'No single `{file_type}` file found.') from e
         content, headers = self.get_file_content(upload_id, pdf_name, token)
-        if upload_status.checksum is None:
+        if stat.checksum is None:
             raise RuntimeError(f'Upload workspace checksum not set')
-        return content, upload_status.checksum, headers['ETag']
+        return content, stat.checksum, headers['ETag']
 
     def is_available(self, **kwargs) -> bool:
         """Check our connection to the filemanager service."""

@@ -47,8 +47,9 @@ class TestFilemanagerIntegration(TestCase):
             command='/bin/bash -c "python bootstrap.py && uwsgi --ini /opt/arxiv/uwsgi.ini"'
         )
 
+        time.sleep(5)
+
         os.environ['JWT_SECRET'] = 'foosecret'
-        time.sleep(2)
         cls.token = generate_token('1', 'u@ser.com', 'theuser',
                                    scope=[scopes.WRITE_UPLOAD,
                                           scopes.READ_UPLOAD])

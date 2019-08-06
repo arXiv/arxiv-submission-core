@@ -85,7 +85,7 @@ class TestPreviewIntegration(TestCase):
             self.assertEqual(preview.source_id, 1234)
             self.assertEqual(preview.source_checksum, 'foochex==')
             self.assertEqual(preview.preview_checksum,
-                             '7b0ae08001dd093e79335b947f028b10')
+                             'ewrggAHdCT55M1uUfwKLEA==')
             self.assertEqual(preview.size_bytes, 10)
 
             stream, preview_checksum = pv.get(source_id, checksum, token)
@@ -104,7 +104,7 @@ class TestPreviewIntegration(TestCase):
             self.assertEqual(preview.source_id, 1235)
             self.assertEqual(preview.source_checksum, 'foochex==')
             self.assertEqual(preview.preview_checksum,
-                             '7b0ae08001dd093e79335b947f028b10')
+                             'ewrggAHdCT55M1uUfwKLEA==')
             self.assertEqual(preview.size_bytes, 10)
 
             with self.assertRaises(AlreadyExists):
@@ -122,7 +122,7 @@ class TestPreviewIntegration(TestCase):
             self.assertEqual(preview.source_id, 1236)
             self.assertEqual(preview.source_checksum, 'foochex==')
             self.assertEqual(preview.preview_checksum,
-                             '7b0ae08001dd093e79335b947f028b10')
+                             'ewrggAHdCT55M1uUfwKLEA==')
             self.assertEqual(preview.size_bytes, 10)
 
             content = io.BytesIO(b'barcontent')
@@ -131,7 +131,7 @@ class TestPreviewIntegration(TestCase):
             self.assertEqual(preview.source_id, 1236)
             self.assertEqual(preview.source_checksum, 'foochex==')
             self.assertEqual(preview.preview_checksum,
-                             'b96f78bbfbb8c5f0c0de5715777e789e')
+                             'uW94u_u4xfDA3lcVd354ng==')
             self.assertEqual(preview.size_bytes, 10)
 
     def get_nonexistant_preview(self):
