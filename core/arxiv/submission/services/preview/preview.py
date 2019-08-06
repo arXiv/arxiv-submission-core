@@ -57,7 +57,7 @@ class ReadWrapper(io.BytesIO):
 class PreviewService(service.HTTPIntegration):
     """Represents an interface to the submission preview."""
 
-    VERSION = '54f23542255cfd5f91472765eb59a674a9c634a4'
+    VERSION = '17057e6'
     SERVICE = 'preview'
 
     class Meta:
