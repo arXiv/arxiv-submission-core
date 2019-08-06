@@ -1,6 +1,6 @@
 # arxiv/submission-agent
 
-ARG BASE_VERSION=ARXIVNG-2462
+ARG BASE_VERSION=0.16.1
 
 FROM arxiv/base:${BASE_VERSION}
 
@@ -13,7 +13,7 @@ ENV KINESIS_STREAM="SubmissionEvents" \
     LOGLEVEL=10 \
     JWT_SECRET="foo"
 
-COPY Pipfile Pipfile.lock /opt/arxiv/
+COPY Pipfile Pipfile.`lock /opt/arxiv/
 COPY core/ /opt/arxiv/core/
 RUN pipenv install /opt/arxiv/core/ && rm -rf ~/.cache/pip
 COPY agent/agent/ /opt/arxiv/agent/

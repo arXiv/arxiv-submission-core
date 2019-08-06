@@ -22,14 +22,13 @@ Processing support for a new format can be implemented by registering a new
 :class:`SourceProcess`, using :func:`._make_process`. Each source process
 supports a specific :class:`SubmissionContent.Format`, and should provide a
 starter, a checker, and a summarizer. The preferred approach is to extend the
-base classes, :class:`.BaseStarter`, :class:`.BaseChecker`, and
-:class:`.BaseSummarizer`.
+base classes, :class:`.BaseStarter` and :class:`.BaseChecker`.
 
 Using a process
 ===============
-The primary API of this module is comprised of the functions :func:`start`,
-:func:`check`, and :func:`summarize`. These functions dispatch to the
-processes defined/registered in this module.
+The primary API of this module is comprised of the functions :func:`start` and
+:func:`check`. These functions dispatch to the processes defined/registered in
+this module.
 
 """
 
@@ -54,14 +53,11 @@ IN_PROGRESS: Status = 'in_progress'
 Summary = Dict[str, Any]
 """Summary information suitable for generating a response to users/clients."""
 
-IStarter = Callable[[Submission, User, Optional[Client], str], Status]
+IStarter = Callable[[Submission, User, Optional[Client], str], 'CheckResult']
 """Interface for processing starter functions."""
 
-IChecker = Callable[[Submission, User, Optional[Client], str], Status]
+IChecker = Callable[[Submission, User, Optional[Client], str], 'CheckResult']
 """Interface for status check functions."""
-
-ISummarizer = Callable[[Submission, User, Optional[Client], str], Summary]
-"""Interface for processing summarizer functions."""
 
 
 class SourceProcess(NamedTuple):

@@ -40,7 +40,9 @@ class CompilationFailed(RuntimeError):
 class Compiler(service.HTTPIntegration):
     """Encapsulates a connection with the compiler service."""
 
-    VERSION = "0.1"
+    SERVICE = 'compiler'
+
+    VERSION = "30c84dd5b5381e2f2f69ed58298bd87c10bad5c8"
     """Verison of the compiler service with which we are integrating."""
 
     NAME = "arxiv-compiler"
