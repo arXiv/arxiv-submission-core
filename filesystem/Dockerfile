@@ -1,13 +1,13 @@
 # Filesystem app
 
-ARG BASE_VERSION=latest
+ARG BASE_VERSION="0.16.1"
 
 FROM arxiv/base:${BASE_VERSION}
 
 WORKDIR /opt/arxiv/
 
 # COPY Pipfile Pipfile.lock /opt/arxiv/
-RUN pipenv install arxiv-base && rm -rf ~/.cache/pip
+RUN pipenv install arxiv-base==0.16.1 && rm -rf ~/.cache/pip
 
 ENV PATH "/opt/arxiv:${PATH}"
 

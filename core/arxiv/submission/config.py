@@ -297,3 +297,5 @@ if these pages seem relevant to other services.
 
 For details, see :mod:`arxiv.base.urls`.
 """
+
+AUTH_UPDATED_SESSION_REF = True

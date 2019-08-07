@@ -1,24 +1,23 @@
 """Lightweight database integration for checkpointing."""
 
-from typing import Optional, Any
-from datetime import datetime
-from pytz import UTC
 import time
+from datetime import datetime
+from typing import Optional, Any
 
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
-
+from pytz import UTC
+from retry import retry
 from sqlalchemy import BigInteger, Column, DateTime, Enum, ForeignKey, \
     ForeignKeyConstraint, Index, \
     Integer, SmallInteger, String, Table, text, Text
 from sqlalchemy.dialects.mysql import DATETIME
-from sqlalchemy.exc import OperationalError
-from retry import retry
+from sqlalchemy.exc import OperationalError, NoSuchTableError
 
 from arxiv.base import logging
 from arxiv.submission.domain.event import AddProcessStatus
-from ..rules import Rule
 from ..process import Process
+from ..rules import Rule
 
 db: SQLAlchemy = SQLAlchemy()
 logger = logging.getLogger(__name__)
@@ -74,20 +73,26 @@ def init_app(app: Flask) -> None:
         db.session.remove()
 
 
+@retry(Unavailable, tries=3, backoff=2)
 def create_all() -> None:
     """Create all tables in the agent database."""
-    db.create_all(bind='agent')
+    try:
+        db.create_all(bind='agent')
+    except OperationalError as e:
+        raise Unavailable('Caught op error') from e
 
 
+@retry(Unavailable, tries=10, backoff=2)
 def tables_exist() -> bool:
     """Determine whether or not these database tables exist."""
     try:
         db.session.query("1").from_statement(text("SELECT 1 FROM checkpoint limit 1")).all()
         db.session.query("1").from_statement(text("SELECT 1 FROM process_status_events limit 1")).all()
-    except Exception as e:
+    except NoSuchTableError as e:
         return False
+    except OperationalError as e:
+        raise Unavailable('Caught op error') from e
     return True
-    # return db.engine.dialect.has_table(db.engine, 'checkpoint')
 
 
 class Unavailable(IOError):

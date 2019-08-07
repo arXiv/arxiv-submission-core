@@ -22,7 +22,7 @@ blueprint = Blueprint('submission', __name__, url_prefix='')
 @blueprint.before_request
 def get_agents() -> None:
     """Determine submission roles from the active authenticated session."""
-    session = request.session
+    session = request.auth
     logger.debug(f'Got session {session}')
     proxy: Optional[User] = None
     if not session.client:
@@ -30,7 +30,7 @@ def get_agents() -> None:
 
     client = Client(session.client.client_id)
     endorsements = session.authorizations.endorsements
-    if request.session.user:
+    if request.auth.user:
         creator = User(session.user.user_id, session.user.email,
                        endorsements=endorsements)
 
