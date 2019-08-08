@@ -1,3 +1,5 @@
+"""Tests for :mod:`.process.process_source`."""
+
 import io
 from datetime import datetime
 from unittest import TestCase, mock
@@ -7,11 +9,12 @@ from pytz import UTC
 from arxiv.integration.api.exceptions import RequestFailed, NotFound
 
 from ..domain import Submission, SubmissionContent, User, Client
-from ..domain.event import ConfirmSourceProcessed
+from ..domain.event import ConfirmSourceProcessed, UnConfirmSourceProcessed
 from ..domain.preview import Preview
 from . import process_source
 from .. import SaveError
-from .process_source import start, check, SUCCEEDED, FAILED, IN_PROGRESS
+from .process_source import start, check, SUCCEEDED, FAILED, IN_PROGRESS, \
+    NOT_STARTED
 
 PDF = SubmissionContent.Format.PDF
 TEX = SubmissionContent.Format.TEX
@@ -47,58 +50,11 @@ class PDFFormatTest(TestCase):
 class TestStartProcessingPDF(PDFFormatTest):
     """Test :const:`.PDFProcess`."""
 
-    @mock.patch(f'{process_source.__name__}.PreviewService')
-    @mock.patch(f'{process_source.__name__}.Filemanager')
-    def test_start(self, mock_Filemanager, mock_PreviewService):
-        """
-        Start processing the PDF source.
-
-        This just involves verifying that there is a single PDF file in the
-        source package that can be used.
-        """
-        mock_preview_service = mock.MagicMock()
-        mock_PreviewService.current_session.return_value = mock_preview_service
-        mock_filemanager = mock.MagicMock()
-        stream = io.BytesIO(b'fakecontent')
-        mock_filemanager.get_single_file.return_value = \
-            stream, 'foochex==', 'barchex=='
-        mock_Filemanager.current_session.return_value = mock_filemanager
-
-        data = start(self.submission, self.user, self.client, self.token)
-        self.assertEqual(data.status, IN_PROGRESS, "Processing is in progress")
-        mock_filemanager.has_single_file.assert_called_once_with(
-            self.content.identifier,
-            self.token,
-            file_type='PDF'
-        )
-
-    @mock.patch(f'{process_source.__name__}.Filemanager')
-    def test_start_preview_fails(self, mock_Filemanager):
-        """No single PDF file available to use."""
-        mock_filemanager = mock.MagicMock()
-        stream = io.BytesIO(b'fakecontent')
-        mock_filemanager.has_single_file.return_value = False
-        mock_Filemanager.current_session.return_value = mock_filemanager
-
-        data = start(self.submission, self.user, self.client, self.token)
-        self.assertEqual(data.status, FAILED, 'Failed to start')
-
-        mock_filemanager.has_single_file.assert_called_once_with(
-            self.content.identifier,
-            self.token,
-            file_type='PDF'
-        )
-
-
-class TestCheckPDF(PDFFormatTest):
-    """Test :const:`.PDFProcess`."""
-
     @mock.patch(f'{process_source.__name__}.save')
-    @mock.patch(f'{process_source.__name__}.Filemanager')
     @mock.patch(f'{process_source.__name__}.PreviewService')
-    def test_check_successful(self, mock_PreviewService, mock_Filemanager,
-                              mock_save):
-        """Check status of processing the PDF source after successful start."""
+    @mock.patch(f'{process_source.__name__}.Filemanager')
+    def test_start(self, mock_Filemanager, mock_PreviewService, mock_save):
+        """Start processing the PDF source."""
         mock_preview_service = mock.MagicMock()
         mock_preview_service.has_preview.return_value = False
         mock_preview_service.deposit.return_value = mock.MagicMock(
@@ -120,8 +76,10 @@ class TestCheckPDF(PDFFormatTest):
         )
         mock_Filemanager.current_session.return_value = mock_filemanager
 
-        data = check(self.submission, self.user, self.client, self.token)
-        self.assertEqual(data.status, SUCCEEDED)
+        mock_save.return_value = (self.submission, [])
+
+        data = start(self.submission, self.user, self.client, self.token)
+        self.assertEqual(data.status, SUCCEEDED, "Processing succeeded")
 
         mock_preview_service.deposit.assert_called_once_with(
             self.content.identifier,
@@ -131,11 +89,140 @@ class TestCheckPDF(PDFFormatTest):
             content_checksum='contentchex==',
             overwrite=True
         )
+
         mock_save.assert_called_once()
         args, kwargs = mock_save.call_args
         self.assertIsInstance(args[0], ConfirmSourceProcessed)
         self.assertEqual(kwargs['submission_id'],
                          self.submission.submission_id)
+
+    @mock.patch(f'{process_source.__name__}.save')
+    @mock.patch(f'{process_source.__name__}.PreviewService')
+    @mock.patch(f'{process_source.__name__}.Filemanager')
+    def test_already_done(self, mock_Filemanager, mock_PreviewService,
+                          mock_save):
+        """Attempt to start processing a source that is already processed."""
+        self.submission.is_source_processed = True
+        self.submission.preview = mock.MagicMock()
+        self.submission.source_content.checksum = 'foochex=='
+
+        mock_preview_service = mock.MagicMock()
+        mock_preview_service.has_preview.return_value = False
+        mock_preview_service.deposit.return_value = mock.MagicMock(
+            spec=Preview,
+            source_id=1234,
+            source_checksum='foochex==',
+            preview_checksum='pvwchex==',
+            size_bytes=1234578,
+            added=datetime.now(UTC)
+        )
+        mock_PreviewService.current_session.return_value = mock_preview_service
+
+        mock_filemanager = mock.MagicMock()
+        stream = io.BytesIO(b'fakecontent')
+        mock_filemanager.get_single_file.return_value = (
+            stream,
+            'foochex==',
+            'pvwchex=='
+        )
+        mock_Filemanager.current_session.return_value = mock_filemanager
+
+        mock_save.return_value = (self.submission, [])
+
+        data = start(self.submission, self.user, self.client, self.token)
+
+        self.assertEqual(data.status, SUCCEEDED, "Processing succeeded")
+
+        # Evaluate deposit to preview service.
+        mock_preview_service.deposit.assert_called_once_with(
+            self.content.identifier,
+            self.content.checksum,
+            stream,
+            self.token,
+            content_checksum='pvwchex==',
+            overwrite=True
+        )
+
+        # Evaluate calls to save()
+        self.assertEqual(mock_save.call_count, 2, 'Save called twice')
+        calls = mock_save.call_args_list
+        # First call is to unconfirm processing.
+        args, kwargs = calls[0]
+        self.assertIsInstance(args[0], UnConfirmSourceProcessed)
+        self.assertEqual(kwargs['submission_id'],
+                         self.submission.submission_id)
+
+        # Second call is to confirm processing.
+        args, kwargs = calls[1]
+        self.assertIsInstance(args[0], ConfirmSourceProcessed)
+        self.assertEqual(kwargs['submission_id'],
+                         self.submission.submission_id)
+
+    @mock.patch(f'{process_source.__name__}.Filemanager')
+    def test_start_preview_fails(self, mock_Filemanager):
+        """No single PDF file available to use."""
+        mock_filemanager = mock.MagicMock()
+        stream = io.BytesIO(b'fakecontent')
+        mock_filemanager.get_single_file.side_effect = raise_NotFound
+        mock_Filemanager.current_session.return_value = mock_filemanager
+
+        data = start(self.submission, self.user, self.client, self.token)
+        self.assertEqual(data.status, FAILED, 'Failed to start')
+
+        mock_filemanager.get_single_file.assert_called_once_with(
+            self.content.identifier,
+            self.token
+        )
+
+
+class TestCheckPDF(PDFFormatTest):
+    """Test :const:`.PDFProcess`."""
+
+    @mock.patch(f'{process_source.__name__}.PreviewService')
+    def test_check_successful(self, mock_PreviewService):
+        """Source is processed and a preview is present."""
+        self.submission.is_source_processed = True
+        self.submission.preview = mock.MagicMock(
+            spec=Preview,
+            source_id=1234,
+            source_checksum='foochex==',
+            preview_checksum='foochex==',
+            size_bytes=1234578,
+            added=datetime.now(UTC)
+        )
+
+        mock_preview_service = mock.MagicMock()
+        mock_preview_service.has_preview.return_value = True
+        mock_PreviewService.current_session.return_value = mock_preview_service
+
+        data = check(self.submission, self.user, self.client, self.token)
+        self.assertEqual(data.status, SUCCEEDED)
+        self.assertIn('preview', data.extra)
+
+        mock_preview_service.has_preview.assert_called_once_with(
+            self.submission.source_content.identifier,
+            self.submission.source_content.checksum,
+            self.token,
+            self.submission.preview.preview_checksum
+        )
+
+    @mock.patch(f'{process_source.__name__}.PreviewService')
+    def test_check_preview_not_found(self, mock_PreviewService):
+        """Source is not processed, and there is no preview."""
+        mock_preview_service = mock.MagicMock()
+        mock_preview_service.has_preview.return_value = False
+        mock_preview_service.get_metadata.side_effect = raise_NotFound
+        mock_PreviewService.current_session.return_value = mock_preview_service
+
+        data = check(self.submission, self.user, self.client, self.token)
+        self.assertEqual(data.status, NOT_STARTED)
+        self.assertNotIn('preview', data.extra)
+
+        mock_preview_service.get_metadata.assert_called_once_with(
+            self.submission.source_content.identifier,
+            self.submission.source_content.checksum,
+            self.token
+        )
 
 
 class TeXFormatTestCase(TestCase):
@@ -226,8 +313,8 @@ class TestCheckTeX(TeXFormatTestCase):
         mock_compiler = mock.MagicMock()
         mock_compiler.get_status.side_effect = raise_NotFound
         mock_Compiler.current_session.return_value = mock_compiler
-        with self.assertRaises(process_source.NoProcessToCheck):
-            check(self.submission, self.user, self.client, self.token)
+        data = check(self.submission, self.user, self.client, self.token)
+        self.assertEqual(data.status, NOT_STARTED, 'Process not started')
         mock_compiler.get_status.assert_called_once_with(
             self.content.identifier,
             self.content.checksum,
@@ -285,6 +372,8 @@ class TestCheckTeX(TeXFormatTestCase):
         )
         mock_Compiler.current_session.return_value = mock_compiler
 
+        mock_save.return_value = (self.submission, [])
+
         data = check(self.submission, self.user, self.client, self.token)
 
         self.assertEqual(data.status, SUCCEEDED, "Processing succeeded")
@@ -330,6 +419,8 @@ class TestCheckTeX(TeXFormatTestCase):
         mock_compiler.get_product.return_value = mock.MagicMock(stream=stream,
                                                                 checksum='chx')
         mock_Compiler.current_session.return_value = mock_compiler
+
+        mock_save.return_value = (self.submission, [])
 
         data = check(self.submission, self.user, self.client, self.token)
 
@@ -387,6 +478,8 @@ class TestCheckTeX(TeXFormatTestCase):
                                                                 checksum='chx')
         mock_Compiler.current_session.return_value = mock_compiler
 
+        mock_save.return_value = (self.submission, [])
+
         data = check(self.submission, self.user, self.client, self.token)
 
         self.assertEqual(data.status, SUCCEEDED, "Processing succeeded")
@@ -395,7 +488,6 @@ class TestCheckTeX(TeXFormatTestCase):
         mock_compiler.get_product.assert_not_called()
         mock_preview_service.deposit.assert_not_called()
         mock_save.assert_not_called()
-
 
     @mock.patch(f'{process_source.__name__}.save')
     @mock.patch(f'{process_source.__name__}.PreviewService')

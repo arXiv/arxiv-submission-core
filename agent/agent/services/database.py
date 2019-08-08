@@ -23,6 +23,9 @@ db: SQLAlchemy = SQLAlchemy()
 logger = logging.getLogger(__name__)
 logger.propagate = False
 
+class Unavailable(IOError):
+    """The database is not available."""
+
 
 class Checkpoint(db.Model):
     """Stores checkpoint information for the Kinesis consumer."""
@@ -88,15 +91,11 @@ def tables_exist() -> bool:
     try:
         db.session.query("1").from_statement(text("SELECT 1 FROM checkpoint limit 1")).all()
         db.session.query("1").from_statement(text("SELECT 1 FROM process_status_events limit 1")).all()
-    except NoSuchTableError as e:
+    except (NoSuchTableError, OperationalError) as e:
         return False
-    except OperationalError as e:
+    except Exception as e:
         raise Unavailable('Caught op error') from e
     return True
-
-
-class Unavailable(IOError):
-    """The database is not available."""
 
 
 @retry(Unavailable, tries=3, backoff=2)

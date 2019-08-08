@@ -996,6 +996,29 @@ class ConfirmSourceProcessed(Event):
 
 
 @dataclass()
+class UnConfirmSourceProcessed(Event):
+    """
+    Unconfirm that the submission source was successfully processed.
+
+    This can be used to mark a submission as unprocessed even though the
+    source content has not changed. For example, when reprocessing a
+    submission.
+    """
+
+    NAME = "unconfirm source has been processed"
+    NAMED = "unconfirmed that source has been processed"
+
+    def validate(self, submission: Submission) -> None:
+        """Nothing to do."""
+
+    def project(self, submission: Submission) -> Submission:
+        """Set :attr:`Submission.is_source_processed`."""
+        submission.is_source_processed = False
+        submission.preview = None
+        return submission
+
+
+@dataclass()
 class ConfirmPreview(Event):
     """
     Confirm that the paper and abstract previews are acceptable.

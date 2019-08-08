@@ -60,6 +60,7 @@ class Filemanager(service.HTTPIntegration):
             The checksum of the source package.
         str
             The checksum of the single file.
+
         """
         stat = self.get_upload_status(upload_id, token)
         try:
@@ -125,7 +126,9 @@ class Filemanager(service.HTTPIntegration):
     def request_file(self, path: str, token: str) -> Tuple[IO[bytes], dict]:
         """Perform a GET request for a file, and handle any exceptions."""
         response = self.request('get', path, token, stream=True)
-        return ReadWrapper(response.iter_content), response.headers
+        stream = ReadWrapper(response.iter_content,
+                             int(response.headers['Content-Length']))
+        return stream, response.headers
 
     def upload_package(self, pointer: FileStorage, token: str) -> Upload:
         """

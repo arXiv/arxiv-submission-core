@@ -77,7 +77,11 @@ def handle_operational_errors(func):
         except OperationalError as e:
             logger.error('Encountered an OperationalError calling %s',
                          func.__name__)
-            logger.error(traceback.print_exc())
+            # This will put the traceback in the log, and it may look like an
+            # unhandled exception (even though it is not).
+            logger.error('==== OperationalError: handled traceback start ====')
+            logger.error(traceback.format_exc())
+            logger.error('==== OperationalError: handled traceback end ====')
             raise Unavailable('Classic database unavailable') from e
     return inner
 

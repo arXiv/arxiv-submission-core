@@ -14,6 +14,8 @@ from arxiv.base import logging
 from arxiv.integration.api import service, exceptions
 
 from ...domain.preview import Preview
+from ..util import ReadWrapper
+
 
 MonkeyPatch.patch_fromisoformat()
 logger = logging.getLogger(__name__)
@@ -27,31 +29,6 @@ class PreviewMeta(TypedDict):
     added: str
     size_bytes: int
     checksum: str
-
-
-class ReadWrapper(io.BytesIO):
-    """Wraps a response body streaming iterator to provide ``read()``."""
-
-    def __init__(self, iter_content: Callable[[int], Iterator[bytes]],
-                 size: int = 4096) -> None:
-        """Initialize the streaming iterator."""
-        self._iter_content = iter_content(size)
-
-    def seekable(self) -> Literal[False]:
-        """Indicate that this is a non-seekable stream."""
-        return False
-
-    def readable(self) -> Literal[True]:
-        """Indicate that it *is* a readable stream."""
-        return True
-
-    def read(self, *args: Any, **kwargs: Any) -> bytes:
-        """
-        Read the next chunk of the content stream.
-
-        Arguments are ignored, since the chunk size must be set at the start.
-        """
-        return next(self._iter_content, b'')
 
 
 class PreviewService(service.HTTPIntegration):
@@ -116,7 +93,9 @@ class PreviewService(service.HTTPIntegration):
         response = self.request('get', f'/{source_id}/{checksum}/content',
                                 token)
         preview_checksum = str(response.headers['ETag'])
-        return ReadWrapper(response.iter_content), preview_checksum
+        stream = ReadWrapper(response.iter_content,
+                             int(response.headers['Content-Length']))
+        return stream, preview_checksum
 
     def get_metadata(self, source_id: int, checksum: str, token: str) \
             -> Preview:
@@ -178,14 +157,17 @@ class PreviewService(service.HTTPIntegration):
             for the provided ``source_id`` and ``checksum``.
 
         """
-        headers = {'Content-type': 'application/pdf',
-                   'Overwrite': 'true' if overwrite else 'false'}
+        headers = {'Overwrite': 'true' if overwrite else 'false'}
         if content_checksum is not None:
             headers['ETag'] = content_checksum
 
+        # print('here is what we are about to put to the preview service')
+        # raw_content = stream.read()
+        # print('data length:: ', len(raw_content))
+
         try:
             response = self.request('put', f'/{source_id}/{checksum}/content',
-                                    token, data=stream,
+                                    token, data=stream, #io.BytesIO(raw_content),       #stream
                                     headers=headers,
                                     expected_code=[status.CREATED],
                                     allow_2xx_redirects=False)

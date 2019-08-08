@@ -11,7 +11,6 @@ from arxiv.base.middleware import wrap, request_logs
 from arxiv.submission import init_app, wait_for
 from arxiv.submission.services import Classifier, PlainTextService, Compiler, \
     classic
-from . import config
 from .services import database
 
 logger = logging.getLogger(__name__)
@@ -54,6 +53,7 @@ def update_binds(config: ConfigWithHooks, key: str, value: Any) -> None:
 
 def create_app() -> Flask:
     """Create a new agent application."""
+    from . import config
     app = Flask(__name__)
     app.config.from_object(config)
     app.config.add_hook('SUBMISSION_AGENT_DATABASE_URI', update_binds)
@@ -91,7 +91,4 @@ def create_app() -> Flask:
             # FILEMANAGER_STATUS_TIMEOUT
         logger.info('All upstream services are available; ready to start')
 
-    with app.app_context():
-        if not database.tables_exist():
-            database.create_all()
     return app

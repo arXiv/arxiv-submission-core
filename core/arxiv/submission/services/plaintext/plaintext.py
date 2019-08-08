@@ -162,4 +162,6 @@ class PlainTextService(service.HTTPIntegration):
                                 headers={'Accept': 'text/plain'})
         if response.status_code == status.SEE_OTHER:
             raise ExtractionInProgress('Extraction is in progress', response)
-        return ReadWrapper(response.iter_content)
+        stream = ReadWrapper(response.iter_content,
+                             int(response.headers['Content-Length']))
+        return stream
