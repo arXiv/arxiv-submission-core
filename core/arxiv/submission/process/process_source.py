@@ -134,6 +134,7 @@ class _ProcessBase:
 
     def __init__(self, submission: Submission, user: User,
                  client: Optional[Client], token: str) -> None:
+        """Initialize with a submission."""
         self.submission = submission
         self.user = user
         self.client = client
