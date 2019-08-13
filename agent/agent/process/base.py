@@ -8,7 +8,8 @@ from contextlib import contextmanager
 from collections import OrderedDict
 from uuid import uuid4
 
-from arxiv.submission import Event, AddProcessStatus, Agent, Submission, System
+from arxiv.submission import Event, Agent, Submission, System
+from arxiv.submission.domain.event import AddProcessStatus
 from arxiv.submission.domain.process import ProcessStatus
 from ..domain import Trigger
 
