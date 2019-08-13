@@ -10,7 +10,8 @@ from contextlib import contextmanager
 from arxiv.taxonomy import CATEGORIES, Category
 from arxiv.integration.api import exceptions
 
-from arxiv.submission import AddClassifierResults, AddContentFlag, AddFeature
+from arxiv.submission.domain.event import AddClassifierResults, \
+    AddContentFlag, AddFeature
 from arxiv.submission.domain.flag import Flag, ContentFlag
 from arxiv.submission.domain.annotation import Feature
 from arxiv.submission.domain.agent import Agent, User

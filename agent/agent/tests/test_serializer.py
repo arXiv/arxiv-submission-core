@@ -1,10 +1,14 @@
-from unittest import TestCase
-from datetime import datetime
-from pytz import UTC
-from arxiv.submission import Submission, SetTitle, User, \
-    SubmissionMetadata
-from ..domain import ProcessData, Trigger
+"""Tests for :mod:`.serializer`."""
 
+from datetime import datetime
+from unittest import TestCase
+
+from pytz import UTC
+
+from arxiv.submission import Submission, User
+from arxiv.submission.domain.event import SetTitle, SubmissionMetadata
+
+from ..domain import ProcessData, Trigger
 from ..serializer import dumps, loads
 
 
