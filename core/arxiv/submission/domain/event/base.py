@@ -1,34 +1,37 @@
 """Provides the base event class."""
 
-from typing import Optional, Callable, Tuple, Iterable, List, ClassVar, Mapping
+import copy
+import hashlib
 from collections import defaultdict
 from datetime import datetime
-import hashlib
-import copy
-from pytz import UTC
 from functools import wraps
-from flask import current_app
+from typing import Optional, Callable, Tuple, Iterable, List, ClassVar, \
+    Mapping, Type, Any, overload
+
 from dataclasses import field, asdict
-from .util import dataclass
+from flask import current_app
+from pytz import UTC
 
 from arxiv.base import logging
 from arxiv.base.globals import get_application_config
 
-from ..agent import Agent, System, agent_factory
 from ...exceptions import InvalidEvent
-from ..util import get_tzaware_utc_now
+from ..agent import Agent, System, agent_factory
 from ..submission import Submission
+from ..util import get_tzaware_utc_now
+from .util import dataclass
 from .versioning import EventData, map_to_current_version
 
 logger = logging.getLogger(__name__)
 logger.propagate = False
 
 Events = Iterable['Event']
-Condition = Callable[['Event', Submission, Submission], bool]
-Callback = Callable[['Event', Submission, Submission, Agent], Events]
+Condition = Callable[['Event', Optional[Submission], Submission], bool]
+Callback = Callable[['Event', Optional[Submission], Submission], Events]
 Decorator = Callable[[Callable], Callable]
 Rule = Tuple[Condition, Callback]
-Store = Callable[['Event', Submission, Submission], Tuple['Event', Submission]]
+Store = Callable[['Event', Optional[Submission], Submission],
+                 Tuple['Event', Submission]]
 
 
 class EventType(type):
@@ -55,6 +58,9 @@ class Event(metaclass=EventType):
     submission changes. To register a function that gets called when an event
     is committed, use the :func:`bind` method.
     """
+
+    NAME = 'base event'
+    NAMED = 'base event'
 
     creator: Agent
     """
@@ -108,24 +114,24 @@ class Event(metaclass=EventType):
 
     _hooks: ClassVar[Mapping[type, List[Rule]]] = defaultdict(list)
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """Make sure data look right."""
         self.event_type = self.get_event_type()
         self.event_version = self.get_event_version()
-        if self.client and type(self.client) is dict:
+        if self.client and isinstance(self.client, dict):
             self.client = agent_factory(**self.client)
-        if self.creator and type(self.creator) is dict:
+        if self.creator and isinstance(self.creator, dict):
             self.creator = agent_factory(**self.creator)
-        if self.proxy and type(self.proxy) is dict:
+        if self.proxy and isinstance(self.proxy, dict):
             self.proxy = agent_factory(**self.proxy)
-        if self.before and type(self.before) is dict:
+        if self.before and isinstance(self.before, dict):
             self.before = Submission(**self.before)
-        if self.after and type(self.after) is dict:
+        if self.after and isinstance(self.after, dict):
             self.after = Submission(**self.after)
 
     @staticmethod
     def get_event_version() -> str:
-        return get_application_config().get('CORE_VERSION', '0.0.0')
+        return str(get_application_config().get('CORE_VERSION', '0.0.0'))
 
     @classmethod
     def get_event_type(cls) -> str:
@@ -150,12 +156,13 @@ class Event(metaclass=EventType):
     def apply(self, submission: Optional[Submission] = None) -> Submission:
         """Apply the projection for this :class:`.Event` instance."""
         self.before = copy.deepcopy(submission)
-        self.validate(submission)
+        # See comment on CreateSubmission, below.
+        self.validate(submission)    # type: ignore
         if submission is not None:
             self.after = self.project(copy.deepcopy(submission))
-        else:
-            logger.debug('Submission is None; project without submission.')
-            self.after = self.project()
+        else:   # See comment on CreateSubmission, below.
+            self.after = self.project(None)    # type: ignore
+        assert self.after is not None
         self.after.updated = self.created
 
         # Make sure that the submission has its own ID, if we know what it is.
@@ -177,7 +184,7 @@ class Event(metaclass=EventType):
 
            @MyEvent.bind()
            def say_hello(event: MyEvent, before: Submission,
-                         after: Submission, creator: Agent) -> Iterable[Event]:
+                         after: Submission) -> Iterable[Event]:
                yield SomeOtherEvent(...)
 
         The callback function will be passed the event that triggered it, the
@@ -201,7 +208,7 @@ class Event(metaclass=EventType):
 
            @MyEvent.bind(jill_created_an_event)
            def say_hi(event: MyEvent, before: Submission,
-                      after: Submission, creator: Agent) -> Iterable[Event]:
+                      after: Submission) -> Iterable[Event]:
                yield SomeOtherEvent(...)
 
         Note that the condition signature is ``(event: MyEvent, before:
@@ -225,7 +232,7 @@ class Event(metaclass=EventType):
 
         """
         if condition is None:
-            def _creator_is_not_system(e: Event, *args, **kwargs) -> bool:
+            def _creator_is_not_system(e: Event, *ar: Any, **kw: Any) -> bool:
                 return type(e.creator) is not System
             condition = _creator_is_not_system
 
@@ -237,26 +244,35 @@ class Event(metaclass=EventType):
 
             @wraps(func)
             def do(event: Event, before: Submission, after: Submission,
-                   creator: Agent = sys, **kwargs) -> Iterable['Event']:
+                   creator: Agent = sys, **kwargs: Any) -> Iterable['Event']:
                 """Perform the callback. Here in case we need to hook in."""
-                return func(event, before, after, creator, **kwargs)
+                return func(event, before, after)
 
+            assert condition is not None
             cls._add_callback(condition, do)
             return do
         return decorator
 
     @classmethod
-    def _add_callback(cls: type, condition: Condition,
+    def _add_callback(cls: Type['Event'], condition: Condition,
                       callback: Callback) -> None:
         cls._hooks[cls].append((condition, callback))
 
-    def _get_callbacks(self) -> List[Tuple[Condition, Callback]]:
+    def _get_callbacks(self) -> Iterable[Tuple[Condition, Callback]]:
         return ((condition, callback) for cls in type(self).__mro__[::-1]
                 for condition, callback in self._hooks[cls])
 
     def _should_apply_callbacks(self) -> bool:
         config = get_application_config()
         return bool(int(config.get('ENABLE_CALLBACKS', '0')))
+
+    def validate(self, submission: Submission) -> None:
+        """Validate this event and its data against a submission."""
+        raise NotImplementedError('Must be implemented by subclass')
+
+    def project(self, submission: Submission) -> Submission:
+        """Apply this event and its data to a submission."""
+        raise NotImplementedError('Must be implemented by subclass')
 
     def commit(self, store: Store) -> Tuple[Submission, Events]:
         """
@@ -277,12 +293,14 @@ class Event(metaclass=EventType):
             Items are :class:`Event` instances.
 
         """
+        assert self.after is not None
         _, after = store(self, self.before, self.after)
         self.committed = True
         if not self._should_apply_callbacks():
             return self.after, []
         consequences: List[Event] = []
         for condition, callback in self._get_callbacks():
+            assert self.after is not None
             if condition(self, self.before, self.after):
                 for consequence in callback(self, self.before, self.after):
                     consequence.created = datetime.now(UTC)
@@ -291,10 +309,11 @@ class Event(metaclass=EventType):
                     self.after, addl_consequences = consequence.commit(store)
                     for addl in addl_consequences:
                         consequences.append(addl)
+        assert self.after is not None
         return self.after, consequences
 
 
-def _get_subclasses(klass: type) -> List[type]:
+def _get_subclasses(klass: Type[Event]) -> List[Type[Event]]:
     _subclasses = klass.__subclasses__()
     if _subclasses:
         return _subclasses + [sub for klass in _subclasses
@@ -302,7 +321,7 @@ def _get_subclasses(klass: type) -> List[type]:
     return _subclasses
 
 
-def event_factory(**data: EventData) -> Event:
+def event_factory(event_type: str, created: datetime, **data: Any) -> Event:
     """
     Generate an :class:`Event` instance from raw :const:`EventData`.
 
@@ -320,12 +339,15 @@ def event_factory(**data: EventData) -> Event:
 
     """
     etypes = {klas.get_event_type(): klas for klas in _get_subclasses(Event)}
-    data = map_to_current_version(data)
-    event_type = data.pop("event_type")
-    event_version = data.pop("event_version")
-    logger.debug('Create %s with data version %s', event_type, event_version)
-    if 'created' not in data:
-        data['created'] = datetime.now(UTC)
+    # TODO: typing on version_data is not very good right now. This is not an
+    # error, but we have two competing ways of using the data that gets passed
+    # in that need to be reconciled.
+    version_data: EventData = data   # type: ignore
+    version_data.update({'event_type': event_type})
+    data = map_to_current_version(version_data)    # type: ignore
+    event_version = data.pop("event_version", None)
+    data['created'] = created
     if event_type in etypes:
-        return etypes[event_type](**data)
+        # Mypy gives a spurious 'Too many arguments for "Event"'.
+        return etypes[event_type](**data)    # type: ignore
     raise RuntimeError('Unknown event type: %s' % event_type)

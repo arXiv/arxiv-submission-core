@@ -2,7 +2,7 @@
 
 from collections import defaultdict
 from http import HTTPStatus as status
-from typing import Tuple, List, Any, Union, Optional, IO, Callable, Iterator
+from typing import Tuple, List, IO, Mapping, Any
 
 import dateutil.parser
 from werkzeug.datastructures import FileStorage
@@ -12,7 +12,8 @@ from arxiv.base.globals import get_application_config
 from arxiv.integration.api import service
 
 from ...domain import SubmissionContent
-from ...domain.uploads import Upload, FileStatus, FileError
+from ...domain.uploads import Upload, FileStatus, FileError, UploadStatus, \
+    UploadLifecycleStates
 from ..util import ReadWrapper
 
 logger = logging.getLogger(__name__)
@@ -73,7 +74,7 @@ class Filemanager(service.HTTPIntegration):
             raise RuntimeError(f'Upload workspace checksum not set')
         return content, stat.checksum, headers['ETag']
 
-    def is_available(self, **kwargs) -> bool:
+    def is_available(self, **kwargs: Any) -> bool:
         """Check our connection to the filemanager service."""
         config = get_application_config()
         status_endpoint = config.get('FILEMANAGER_STATUS_ENDPOINT', 'status')
@@ -87,7 +88,7 @@ class Filemanager(service.HTTPIntegration):
         return True
 
     def _parse_upload_status(self, data: dict) -> Upload:
-        file_errors = defaultdict(list)
+        file_errors: Mapping[str, List[FileError]] = defaultdict(list)
         non_file_errors = []
         filepaths = [fdata['public_filepath'] for fdata in data['files']]
         for etype, filepath, message in data['errors']:
@@ -102,8 +103,8 @@ class Filemanager(service.HTTPIntegration):
             completed=dateutil.parser.parse(data['completion_datetime']),
             created=dateutil.parser.parse(data['created_datetime']),
             modified=dateutil.parser.parse(data['modified_datetime']),
-            status=Upload.Status(data['readiness']),
-            lifecycle=Upload.LifecycleStates(data['upload_status']),
+            status=UploadStatus(data['readiness']),
+            lifecycle=UploadLifecycleStates(data['upload_status']),
             locked=bool(data['lock_state'] == 'LOCKED'),
             identifier=data['upload_id'],
             files=[
@@ -220,7 +221,7 @@ class Filemanager(service.HTTPIntegration):
                                timeout=30, allow_2xx_redirects=False)
         return self._parse_upload_status(data)
 
-    def delete_all(self, upload_id: str, token: str) -> None:
+    def delete_all(self, upload_id: str, token: str) -> Upload:
         """
         Delete all files in the workspace.
 
@@ -263,7 +264,7 @@ class Filemanager(service.HTTPIntegration):
         return self.request_file(f'/{upload_id}/{file_path}/content', token)
 
     def delete_file(self, upload_id: str, file_path: str, token: str) \
-            -> Tuple[dict, dict]:
+            -> Upload:
         """
         Delete a single file from the upload workspace.
 

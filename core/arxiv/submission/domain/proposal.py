@@ -44,13 +44,14 @@ class Proposal:
     @property
     def proposal_type(self) -> str:
         """Name (str) of the type of annotation."""
+        assert self.proposed_event_type is not None
         return self.proposed_event_type.__name__
 
     def __post_init__(self) -> None:
         """Check our enums and agents."""
-        if self.creator and type(self.creator) is dict:
+        if self.creator and isinstance(self.creator, dict):
             self.creator = agent_factory(**self.creator)
-        if self.proxy and type(self.proxy) is dict:
+        if self.proxy and isinstance(self.proxy, dict):
             self.proxy = agent_factory(**self.proxy)
         self.status = self.Status(self.status)
 

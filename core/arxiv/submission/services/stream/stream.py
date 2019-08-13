@@ -1,12 +1,14 @@
-from typing import Optional
+"""Provides the stream publishing integration."""
+
+from typing import Optional, Any
 
 import boto3
 from botocore.exceptions import ClientError
 from retry import retry
 
-from arxiv.integration.meta import MetaIntegration
 from arxiv.base import logging
 from arxiv.base.globals import get_application_config, get_application_global
+from arxiv.integration.meta import MetaIntegration
 
 from ...domain import Submission, Event
 from ...serializer import dumps
@@ -65,7 +67,7 @@ class StreamPublisher(metaclass=MetaIntegration):
             g.stream = cls.get_session()   # type: ignore
         return g.stream    # type: ignore
 
-    def is_available(self, **kwargs) -> bool:
+    def is_available(self, **kwargs: Any) -> bool:
         """Test our ability to put records."""
         data = bytes(dumps({}), encoding='utf-8')
         try:

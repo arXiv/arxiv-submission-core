@@ -2,18 +2,18 @@
 Provides quality-assurance annotations for the submission & moderation system.
 """
 
-from typing import Optional, Union, List
-from datetime import datetime
 import hashlib
+from datetime import datetime
 from enum import Enum
-from mypy_extensions import TypedDict
+from typing import Optional, Union, List, Dict, Type, Any
 
 from dataclasses import dataclass, asdict, field
+from mypy_extensions import TypedDict
 
 from arxiv.taxonomy import Category
 
-from .util import get_tzaware_utc_now
 from .agent import Agent, agent_factory
+from .util import get_tzaware_utc_now
 
 
 @dataclass
@@ -26,11 +26,11 @@ class Comment:
     proxy: Optional[Agent] = field(default=None)
     body: str = field(default_factory=str)
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """Check our agents."""
-        if self.creator and type(self.creator) is dict:
+        if self.creator and isinstance(self.creator, dict):
             self.creator = agent_factory(**self.creator)
-        if self.proxy and type(self.proxy) is dict:
+        if self.proxy and isinstance(self.proxy, dict):
             self.proxy = agent_factory(**self.proxy)
 
 
@@ -40,12 +40,14 @@ ClassifierResult = TypedDict('ClassifierResult',
 
 @dataclass
 class Annotation:
-    def __post_init__(self):
+    event_id: str
+    creator: Agent
+    created: datetime
+
+    def __post_init__(self) -> None:
         """Check our agents."""
-        if self.creator and type(self.creator) is dict:
+        if self.creator and isinstance(self.creator, dict):
             self.creator = agent_factory(**self.creator)
-        if self.proxy and type(self.proxy) is dict:
-            self.proxy = agent_factory(**self.proxy)
 
 
 @dataclass
@@ -57,17 +59,19 @@ class ClassifierResults(Annotation):
 
         CLASSIC = "classic"
 
-    event_id: str
-    creator: Agent
-    created: datetime
+    # event_id: str
+    # creator: Agent
+    # created: datetime
     proxy: Optional[Agent] = field(default=None)
     classifier: Classifiers = field(default=Classifiers.CLASSIC)
     results: List[ClassifierResult] = field(default_factory=list)
     annotation_type: str = field(default='ClassifierResults')
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """Check our enums."""
         super(ClassifierResults, self).__post_init__()
+        if self.proxy and isinstance(self.proxy, dict):
+            self.proxy = agent_factory(**self.proxy)
         self.classifier = self.Classifiers(self.classifier)
 
 
@@ -84,25 +88,28 @@ class Feature(Annotation):
         STOPWORD_PERCENT = "%stop"
         WORD_COUNT = "words"
 
-    event_id: str
-    created: datetime
-    creator: Agent
+    # event_id: str
+    # created: datetime
+    # creator: Agent
     feature_type: Type
     proxy: Optional[Agent] = field(default=None)
     feature_value: Union[int, float] = field(default=0)
     annotation_type: str = field(default='Feature')
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """Check our enums."""
         super(Feature, self).__post_init__()
+        if self.proxy and isinstance(self.proxy, dict):
+            self.proxy = agent_factory(**self.proxy)
         self.feature_type = self.Type(self.feature_type)
 
 
-annotation_types = {
+annotation_types: Dict[str, Type[Annotation]] = {
     'Feature': Feature,
     'ClassifierResults': ClassifierResults
 }
 
 
-def annotation_factory(**data) -> Annotation:
-    return annotation_types[data.pop('annotation_type')](**data)
+def annotation_factory(**data: Any) -> Annotation:
+    an: Annotation = annotation_types[data.pop('annotation_type')](**data)
+    return an

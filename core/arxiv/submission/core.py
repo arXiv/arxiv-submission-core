@@ -97,7 +97,7 @@ def load_fast(submission_id: int) -> Submission:
         raise NoSuchSubmission(f'No submission with id {submission_id}') from e
 
 
-def save(*events: Event, submission_id: Optional[str] = None) \
+def save(*events: Event, submission_id: Optional[int] = None) \
         -> Tuple[Submission, List[Event]]:
     """
     Commit a set of new :class:`.Event` instances for a submission.
@@ -141,7 +141,7 @@ def save(*events: Event, submission_id: Optional[str] = None) \
     """
     if len(events) == 0:
         raise NothingToDo('Must pass at least one event')
-    events = list(events)   # Coerce to list so that we can index.
+    events_list = list(events)   # Coerce to list so that we can index.
     prior: List[Event] = []
     before: Optional[Submission] = None
 
@@ -160,12 +160,12 @@ def save(*events: Event, submission_id: Optional[str] = None) \
 
         # Either we need a submission ID, or the first event must be a
         # creation.
-        elif events[0].submission_id is None \
-                and not isinstance(events[0], CreateSubmission):
+        elif events_list[0].submission_id is None \
+                and not isinstance(events_list[0], CreateSubmission):
             raise NoSuchSubmission('Unable to determine submission')
 
         committed: List[Event] = []
-        for event in events:
+        for event in events_list:
             # Fill in submission IDs, if they are missing.
             if event.submission_id is None and submission_id is not None:
                 event.submission_id = submission_id
@@ -189,7 +189,8 @@ def save(*events: Event, submission_id: Optional[str] = None) \
         return after, list(all_)
 
 
-def _store_event(event, before, after) -> Tuple[Event, Submission]:
+def _store_event(event: Event, before: Optional[Submission],
+                 after: Submission) -> Tuple[Event, Submission]:
     return classic.store_event(event, before, after, StreamPublisher.put)
 
 

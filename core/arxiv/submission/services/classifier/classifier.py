@@ -22,7 +22,7 @@ class Suggestion(NamedTuple):
     """A category suggested by the classifier."""
 
     category: Category
-    probability: int
+    probability: float
 
 
 class Counts(NamedTuple):

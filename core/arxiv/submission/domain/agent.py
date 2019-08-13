@@ -1,7 +1,7 @@
 """Data structures for agents."""
 
 import hashlib
-from typing import Any, Optional, List, Union
+from typing import Any, Optional, List, Union, Type, Dict
 
 from dataclasses import dataclass, field
 from dataclasses import asdict
@@ -22,7 +22,15 @@ class Agent:
     native_id: str
     """Type-specific identifier for the agent. This might be an URI."""
 
-    def __post_init__(self):
+    hostname: Optional[str] = field(default=None)
+    """Hostname or IP address from which user requests are originating."""
+
+    name: str = field(default_factory=str)
+    username: str = field(default_factory=str)
+    email: str = field(default_factory=str)
+    endorsements: List[str] = field(default_factory=list)
+
+    def __post_init__(self) -> None:
         """Set derivative fields."""
         self.agent_type = self.__class__.get_agent_type()
         self.agent_identifier = self.get_agent_identifier()
@@ -54,27 +62,21 @@ class Agent:
 class User(Agent):
     """An (human) end user."""
 
-    email: str = field(default_factory=str)
-    username: str = field(default_factory=str)
     forename: str = field(default_factory=str)
     surname: str = field(default_factory=str)
     suffix: str = field(default_factory=str)
-    name: str = field(default_factory=str)
     identifier: Optional[str] = field(default=None)
     affiliation: str = field(default_factory=str)
-    hostname: Optional[str] = field(default=None)
-    """Hostname or IP address from which user requests are originating."""
 
-    endorsements: List[str] = field(default_factory=list)
     agent_type: str = field(default_factory=str)
     agent_identifier: str = field(default_factory=str)
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """Set derivative fields."""
         self.name = self.get_name()
         self.agent_type = self.get_agent_type()
 
-    def get_name(self):
+    def get_name(self) -> str:
         """Full name of the user."""
         return f"{self.forename} {self.surname} {self.suffix}"
 
@@ -86,13 +88,12 @@ class System(Agent):
 
     agent_type: str = field(default_factory=str)
     agent_identifier: str = field(default_factory=str)
-    username: str = field(default_factory=str)
-    hostname: str = field(default_factory=str)
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """Set derivative fields."""
         super(System, self).__post_init__()
         self.username = self.native_id
+        self.name = self.native_id
         self.hostname = self.native_id
         self.agent_type = self.get_agent_type()
 
@@ -101,18 +102,20 @@ class System(Agent):
 class Client(Agent):
     """A non-human third party, usually an API client."""
 
-    hostname: Optional[str] = field(default=None)
-    """Hostname or IP address from which client requests are originating."""
+    # hostname: Optional[str] = field(default=None)
+    # """Hostname or IP address from which client requests are originating."""
 
     agent_type: str = field(default_factory=str)
     agent_identifier: str = field(default_factory=str)
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """Set derivative fields."""
         self.agent_type = self.get_agent_type()
+        self.username = self.native_id
+        self.name = self.native_id
 
 
-_agent_types = {
+_agent_types: Dict[str, Type[Agent]] = {
     User.get_agent_type(): User,
     System.get_agent_type(): System,
     Client.get_agent_type(): Client,
@@ -123,12 +126,17 @@ def agent_factory(**data: Union[Agent, dict]) -> Agent:
     """Instantiate a subclass of :class:`.Agent`."""
     if isinstance(data, Agent):
         return data
-    agent_type = data.pop('agent_type')
+    agent_type = str(data.pop('agent_type'))
     native_id = data.pop('native_id')
     if not agent_type or not native_id:
         raise ValueError('No such agent: %s, %s' % (agent_type, native_id))
     if agent_type not in _agent_types:
         raise ValueError(f'No such agent type: {agent_type}')
+
+    # Mypy chokes on meta-stuff like this. One of the goals of this factory
+    # function is to not have to write code for each agent subclass. We can
+    # revisit this in the future. For now, this code is correct, it just isn't
+    # easy to type-check.
     klass = _agent_types[agent_type]
-    data = {k: v for k, v in data.items() if k in klass.__dataclass_fields__}
-    return klass(native_id, **data)
+    data = {k: v for k, v in data.items() if k in klass.__dataclass_fields__}  # type: ignore
+    return klass(native_id, **data)  # type: ignore

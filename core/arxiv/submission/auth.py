@@ -34,7 +34,8 @@ def get_system_token(name: str, agent: Agent, scopes: List[str]) -> str:
         ),
         authorizations=domain.Authorizations(scopes=scopes)
     )
-    return auth.tokens.encode(session, get_application_config()['JWT_SECRET'])
+    secret = get_application_config()['JWT_SECRET']
+    return str(auth.tokens.encode(session, secret))
 
 
 def get_compiler_scopes(resource: str) -> List[str]:

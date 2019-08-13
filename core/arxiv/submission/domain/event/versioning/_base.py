@@ -6,10 +6,10 @@ from mypy_extensions import TypedDict
 import semver
 
 
-class EventData(TypedDict):
+class EventData(TypedDict, total=False):
     """Raw event data from the event store."""
 
-    _version: str
+    event_version: str
     created: datetime
     event_type: str
 
@@ -22,25 +22,35 @@ class Version(str):
         """Create a :class:`.Version` from :class:`.EventData`."""
         return cls(data['event_version'])
 
-    def __eq__(self, other: 'Version') -> bool:
+    def __eq__(self, other: object) -> bool:
         """Equality comparison using semantic versioning."""
-        return semver.compare(self, other) == 0
+        if not isinstance(other, str):
+            return NotImplemented
+        return bool(semver.compare(self, other) == 0)
 
-    def __lt__(self, other: 'Version') -> bool:
+    def __lt__(self, other: object) -> bool:
         """Less-than comparison using semantic versioning."""
-        return semver.compare(self, other) < 0
+        if not isinstance(other, str):
+            return NotImplemented
+        return bool(semver.compare(self, other) < 0)
 
-    def __le__(self, other: 'Version') -> bool:
+    def __le__(self, other: object) -> bool:
         """Less-than-equals comparison using semantic versioning."""
-        return semver.compare(self, other) <= 0
+        if not isinstance(other, str):
+            return NotImplemented
+        return bool(semver.compare(self, other) <= 0)
 
-    def __gt__(self, other: 'Version') -> bool:
+    def __gt__(self, other: object) -> bool:
         """Greater-than comparison using semantic versioning."""
-        return semver.compare(self, other) > 0
+        if not isinstance(other, str):
+            return NotImplemented
+        return bool(semver.compare(self, other) > 0)
 
-    def __ge__(self, other: 'Version') -> bool:
+    def __ge__(self, other: object) -> bool:
         """Greater-than-equals comparison using semantic versioning."""
-        return semver.compare(self, other) >= 0
+        if not isinstance(other, str):
+            return NotImplemented
+        return bool(semver.compare(self, other) >= 0)
 
 
 FieldTransformer = Callable[[EventData, str, Any], Tuple[str, Any]]
@@ -51,13 +61,17 @@ class BaseVersionMapping:
 
     _protected = ['event_type', 'event_version', 'created']
 
+    class Meta:
+        event_version = None
+        event_type = None
+
     def __init__(self) -> None:
         """Verify that the instance has required metadata."""
         if not hasattr(self, 'Meta'):
             raise NotImplementedError('Missing `Meta` on child class')
-        if not hasattr(self.Meta, 'event_version'):
+        if getattr(self.Meta, 'event_version', None) is None:
             raise NotImplementedError('Missing version on child class')
-        if not hasattr(self.Meta, 'event_type'):
+        if getattr(self.Meta, 'event_type', None) is None:
             raise NotImplementedError('Missing event_type on child class')
 
     def __call__(self, original: EventData) -> EventData:
@@ -80,18 +94,28 @@ class BaseVersionMapping:
 
     def _get_field_transformer(self, field: str) -> Optional[FieldTransformer]:
         """Get a transformation for a field, if it is defined."""
-        return getattr(self, f'transform_{field}', None)
+        tx: Optional[FieldTransformer] \
+            = getattr(self, f'transform_{field}', None)
+        return tx
+
+    def transform(self, orig: EventData, xf: EventData) -> EventData:
+        """Transform the event data as a whole."""
+        return xf  # Nothing to do; subclasses can reimplement for fun/profit.
 
     def _transform(self, original: EventData) -> EventData:
         """Perform transformation of event data."""
-        transformed = {}
+        transformed = EventData()
         for key, value in original.items():
             if key not in self._protected:
                 field_transformer = self._get_field_transformer(key)
                 if field_transformer is not None:
                     key, value = field_transformer(original, key, value)
-            transformed[key] = value
-        if hasattr(self, 'transform'):
-            transformed = self.transform(original, transformed)
+            # Mypy wants they key to be a string literal here, which runs
+            # against the pattern implemented here. We could consider not
+            # using a TypedDict. This code is correct for now, just not ideal
+            # for type-checking.
+            transformed[key] = value    # type: ignore
+        transformed = self.transform(original, transformed)
+        assert self.Meta.event_version is not None
         transformed['event_version'] = self.Meta.event_version
         return transformed

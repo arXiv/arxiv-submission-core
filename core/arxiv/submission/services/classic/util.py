@@ -2,21 +2,21 @@
 
 import json
 from contextlib import contextmanager
-from typing import Optional, Generator
+from typing import Optional, Generator, Union, Any
 
-from flask import Flask
-from sqlalchemy import create_engine
 import sqlalchemy.types as types
+from flask import Flask
+from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import create_engine
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm.session import Session
 from sqlalchemy.orm import sessionmaker
-from flask_sqlalchemy import SQLAlchemy
 
-from arxiv.base.globals import get_application_config, get_application_global
 from arxiv.base import logging
+from arxiv.base.globals import get_application_config, get_application_global
 from .exceptions import ClassicBaseException, TransactionFailed
-from ...exceptions import InvalidEvent
 from ... import serializer
+from ...exceptions import InvalidEvent
 
 
 class ClassicSQLAlchemy(SQLAlchemy):
@@ -31,7 +31,7 @@ class ClassicSQLAlchemy(SQLAlchemy):
         app.config.setdefault('SQLALCHEMY_TRACK_MODIFICATIONS', False)
         super(ClassicSQLAlchemy, self).init_app(app)
 
-    def apply_pool_defaults(self, app, options):
+    def apply_pool_defaults(self, app: Flask, options: Any) -> None:
         """Set options for create_engine()."""
         super(ClassicSQLAlchemy, self).apply_pool_defaults(app, options)
         if app.config['SQLALCHEMY_DATABASE_URI'].startswith('mysql'):
@@ -50,13 +50,17 @@ class SQLiteJSON(types.TypeDecorator):
 
     impl = types.TEXT
 
-    def process_bind_param(self, value: Optional[dict], dialect: str) -> str:
+    def process_bind_param(self, value: Optional[dict], dialect: str) \
+            -> Optional[str]:
         """Serialize a dict to JSON."""
         if value is not None:
-            value = serializer.dumps(value)
-        return value
+            obj: Optional[str] = serializer.dumps(value)
+        else:
+            obj = value
+        return obj
 
-    def process_result_value(self, value: str, dialect: str) -> Optional[dict]:
+    def process_result_value(self, value: str, dialect: str) \
+            -> Optional[Union[str, dict]]:
         """Deserialize JSON content to a dict."""
         if value is not None:
             value = serializer.loads(value)

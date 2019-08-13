@@ -155,11 +155,18 @@ class CreateSubmission(Event):
     NAME = "create submission"
     NAMED = "submission created"
 
-    def validate(self, *args, **kwargs) -> None:
+    # This is the one event that deviates from the base Event class in not
+    # requiring/accepting a submission on which to operate. Python/mypy still
+    # has a little way to go in terms of supporting this kind of inheritance
+    # scenario. For reference, see:
+    # - https://github.com/python/typing/issues/269
+    # - https://github.com/python/mypy/issues/5146
+    # - https://github.com/python/typing/issues/241
+    def validate(self, submission: None = None) -> None:   # type: ignore
         """Validate creation of a submission."""
         return
 
-    def project(self, submission: None = None) -> Submission:
+    def project(self, submission: None = None) -> Submission:   # type: ignore
         """Create a new :class:`.domain.submission.Submission`."""
         return Submission(creator=self.creator, created=self.created,
                           owner=self.creator, proxy=self.proxy,
@@ -301,6 +308,7 @@ class SetPrimaryClassification(Event):
 
     def validate(self, submission: Submission) -> None:
         """Validate the primary classification category."""
+        assert self.category is not None
         validators.must_be_a_valid_category(self, self.category, submission)
         self._creator_must_be_endorsed(submission)
         self._must_be_unannounced(submission)
@@ -329,11 +337,12 @@ class SetPrimaryClassification(Event):
 
     def project(self, submission: Submission) -> Submission:
         """Set :attr:`.domain.Submission.primary_classification`."""
+        assert self.category is not None
         clsn = Classification(category=self.category)
         submission.primary_classification = clsn
         return submission
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """Ensure that we have an :class:`arxiv.taxonomy.Category`."""
         super(SetPrimaryClassification, self).__post_init__()
         if self.category and not isinstance(self.category, taxonomy.Category):
@@ -351,17 +360,19 @@ class AddSecondaryClassification(Event):
 
     def validate(self, submission: Submission) -> None:
         """Validate the secondary classification category to add."""
+        assert self.category is not None
         validators.must_be_a_valid_category(self, self.category, submission)
         validators.cannot_be_primary(self, self.category, submission)
         validators.cannot_be_secondary(self, self.category, submission)
 
     def project(self, submission: Submission) -> Submission:
         """Add a :class:`.Classification` as a secondary classification."""
+        assert self.category is not None
         classification = Classification(category=self.category)
         submission.secondary_classification.append(classification)
         return submission
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """Ensure that we have an :class:`arxiv.taxonomy.Category`."""
         super(AddSecondaryClassification, self).__post_init__()
         if self.category and not isinstance(self.category, taxonomy.Category):
@@ -379,12 +390,14 @@ class RemoveSecondaryClassification(Event):
 
     def validate(self, submission: Submission) -> None:
         """Validate the secondary classification category to remove."""
+        assert self.category is not None
         validators.must_be_a_valid_category(self, self.category, submission)
         self._must_already_be_present(submission)
         validators.submission_is_not_finalized(self, submission)
 
     def project(self, submission: Submission) -> Submission:
         """Remove from :attr:`.Submission.secondary_classification`."""
+        assert self.category is not None
         submission.secondary_classification = [
             classn for classn in submission.secondary_classification
             if not classn.category == self.category
@@ -413,10 +426,9 @@ class SetLicense(Event):
 
     def project(self, submission: Submission) -> Submission:
         """Set :attr:`.domain.Submission.license`."""
-        submission.license = License(
-            name=self.license_name,
-            uri=self.license_uri
-        )
+        assert self.license_uri is not None
+        submission.license = License(name=self.license_name,
+                                     uri=self.license_uri)
         return submission
 
 
@@ -433,7 +445,7 @@ class SetTitle(Event):
     MAX_LENGTH = 240
     ALLOWED_HTML = ["br", "sup", "sub", "hr", "em", "strong", "h"]
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """Perform some light cleanup on the provided value."""
         super(SetTitle, self).__post_init__()
         self.title = self.cleanup(self.title)
@@ -493,7 +505,7 @@ class SetAbstract(Event):
     MIN_LENGTH = 20
     MAX_LENGTH = 1920
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """Perform some light cleanup on the provided value."""
         super(SetAbstract, self).__post_init__()
         self.abstract = self.cleanup(self.abstract)
@@ -545,7 +557,7 @@ class SetDOI(Event):
 
     doi: str = field(default='')
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """Perform some light cleanup on the provided value."""
         super(SetDOI, self).__post_init__()
         self.doi = self.cleanup(self.doi)
@@ -589,7 +601,7 @@ class SetMSCClassification(Event):
 
     MAX_LENGTH = 160
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """Perform some light cleanup on the provided value."""
         super(SetMSCClassification, self).__post_init__()
         self.msc_class = self.cleanup(self.msc_class)
@@ -630,7 +642,7 @@ class SetACMClassification(Event):
 
     MAX_LENGTH = 160
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """Perform some light cleanup on the provided value."""
         super(SetACMClassification, self).__post_init__()
         self.acm_class = self.cleanup(self.acm_class)
@@ -680,7 +692,7 @@ class SetJournalReference(Event):
 
     journal_ref: str = field(default='')
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """Perform some light cleanup on the provided value."""
         super(SetJournalReference, self).__post_init__()
         self.journal_ref = self.cleanup(self.journal_ref)
@@ -729,7 +741,7 @@ class SetReportNumber(Event):
 
     report_num: str = field(default='')
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """Perform some light cleanup on the provided value."""
         super(SetReportNumber, self).__post_init__()
         self.report_num = self.cleanup(self.report_num)
@@ -766,7 +778,7 @@ class SetComments(Event):
 
     MAX_LENGTH = 400
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """Perform some light cleanup on the provided value."""
         super(SetComments, self).__post_init__()
         self.comments = self.cleanup(self.comments)
@@ -804,11 +816,13 @@ class SetAuthors(Event):
     authors_display: Optional[str] = field(default=None)
     """The authors string may be provided."""
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """Autogenerate and/or clean display names."""
         super(SetAuthors, self).__post_init__()
-        self.authors = [Author(**a) if type(a) is dict else a
-                        for a in self.authors]
+        self.authors = [
+            Author(**a) if isinstance(a, dict) else a   # type: ignore
+            for a in self.authors
+        ]
         if not self.authors_display:
             self.authors_display = self._canonical_author_string()
         self.authors_display = self.cleanup(self.authors_display)
@@ -820,7 +834,8 @@ class SetAuthors(Event):
 
     def _canonical_author_string(self) -> str:
         """Canonical representation of authors, using display names."""
-        return ", ".join([au.display for au in self.authors])
+        return ", ".join([au.display for au in self.authors
+                          if au.display is not None])
 
     @staticmethod
     def cleanup(s: str) -> str:
@@ -843,6 +858,7 @@ class SetAuthors(Event):
 
     def project(self, submission: Submission) -> Submission:
         """Replace :attr:`.Submission.metadata.authors`."""
+        assert self.authors_display is not None
         submission.metadata.authors = self.authors
         submission.metadata.authors_display = self.authors_display
         return submission
@@ -913,6 +929,11 @@ class UpdateUploadPackage(Event):
 
     def project(self, submission: Submission) -> Submission:
         """Replace :class:`.SubmissionContent` metadata on the submission."""
+        assert submission.source_content is not None
+        assert self.source_format is not None
+        assert self.checksum is not None
+        assert self.uncompressed_size is not None
+        assert self.compressed_size is not None
         submission.source_content.source_format = self.source_format
         submission.source_content.checksum = self.checksum
         submission.source_content.uncompressed_size = self.uncompressed_size
@@ -985,13 +1006,11 @@ class ConfirmSourceProcessed(Event):
     def project(self, submission: Submission) -> Submission:
         """Set :attr:`Submission.is_source_processed`."""
         submission.is_source_processed = True
-        # if self.added is None:
-        #     raise RuntimeError('Invalid value for added datetime')
-        submission.preview = Preview(source_id=self.source_id,
+        submission.preview = Preview(source_id=self.source_id,  # type: ignore
                                      source_checksum=self.source_checksum,
                                      preview_checksum=self.preview_checksum,
                                      size_bytes=self.size_bytes,
-                                     added=self.added)   # type: ignore
+                                     added=self.added)
         return submission
 
 
@@ -1260,6 +1279,7 @@ class AddFeature(Event):
 
     def project(self, submission: Submission) -> Submission:
         """Add the annotation to the submission."""
+        assert self.created is not None
         submission.annotations[self.event_id] = Feature(
             event_id=self.event_id,
             creator=self.creator,
@@ -1290,6 +1310,7 @@ class AddClassifierResults(Event):
 
     def project(self, submission: Submission) -> Submission:
         """Add the annotation to the submission."""
+        assert self.created is not None
         submission.annotations[self.event_id] = ClassifierResults(
             event_id=self.event_id,
             creator=self.creator,
@@ -1312,6 +1333,7 @@ class Reclassify(Event):
 
     def validate(self, submission: Submission) -> None:
         """Validate the primary classification category."""
+        assert isinstance(self.category, str)
         validators.must_be_a_valid_category(self, self.category, submission)
         self._must_be_unannounced(submission)
         validators.cannot_be_secondary(self, self.category, submission)

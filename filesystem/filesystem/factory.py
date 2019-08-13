@@ -1,3 +1,5 @@
+"""Application factory for the :mod:`filesystem` shim."""
+
 from flask import Flask, jsonify, Response
 from werkzeug.exceptions import HTTPException, Forbidden, Unauthorized, \
     BadRequest, MethodNotAllowed, InternalServerError, NotFound

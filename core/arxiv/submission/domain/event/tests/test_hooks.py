@@ -28,6 +28,7 @@ class TestCommitEvent(TestCase):
             return_value=(mock.MagicMock(), mock.MagicMock())
         )
         event = ChildEvent(creator=System('system'))
+        event.after = mock.MagicMock()
         OtherChildEvent(creator=System('system'))
         event.commit(save)
         self.assertEqual(callback.call_count, 1,
@@ -53,6 +54,7 @@ class TestCommitEvent(TestCase):
             return_value=(mock.MagicMock(), mock.MagicMock())
         )
         event = ChildEvent(creator=System('system'))
+        event.after = mock.MagicMock()
         event.commit(save)
         self.assertEqual(callback.call_count, 1,
                          "Callback bound to parent class is called when child"

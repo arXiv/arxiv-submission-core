@@ -1,19 +1,21 @@
 """Interface to the classic admin log."""
 
-from typing import Optional, Iterable, Dict, Callable
+from typing import Optional, Iterable, Dict, Callable, List
 
 from . import models, util
 from ...domain.event import Event, UnFinalizeSubmission, AcceptProposal, \
-    AddSecondaryClassification, AddMetadataFlag, AddContentFlag
+    AddSecondaryClassification, AddMetadataFlag, AddContentFlag, \
+    AddClassifierResults
 from ...domain.annotation import ClassifierResults
 from ...domain.submission import Submission
 from ...domain.agent import Agent, System
 from ...domain.flag import MetadataFlag, ContentFlag
 
 
-def log_unfinalize(event: UnFinalizeSubmission, before: Submission,
+def log_unfinalize(event: Event, before: Optional[Submission],
                    after: Submission) -> None:
     """Create a log entry when a user pulls their submission for changes."""
+    assert isinstance(event, UnFinalizeSubmission)
     admin_log(event.creator.username, "unfinalize",
               "user has pulled submission for editing",
               username=event.creator.username,
@@ -22,9 +24,10 @@ def log_unfinalize(event: UnFinalizeSubmission, before: Submission,
               paper_id=after.arxiv_id)
 
 
-def log_accept_system_cross(event: AcceptProposal, before: Submission,
+def log_accept_system_cross(event: Event, before: Optional[Submission],
                             after: Submission) -> None:
     """Create a log entry when a system cross is accepted."""
+    assert isinstance(event, AcceptProposal) and event.proposal_id is not None
     proposal = after.proposals[event.proposal_id]
     if type(event.creator) is System:
         if proposal.proposed_event_type is AddSecondaryClassification:
@@ -36,23 +39,24 @@ def log_accept_system_cross(event: AcceptProposal, before: Submission,
                       paper_id=after.arxiv_id)
 
 
-def log_stopwords(event: AddContentFlag, before: Submission,
+def log_stopwords(event: Event, before: Optional[Submission],
                   after: Submission) -> None:
     """Create a log entry when there is a problem with stopword content."""
-    if event.flag_type is ContentFlag.Type.LOW_STOP:
-        admin_log(event.creator.username, "admin comment",
-                  event.comment,
+    assert isinstance(event, AddContentFlag)
+    if event.flag_type is ContentFlag.FlagType.LOW_STOP:
+        admin_log(event.creator.username,
+                  "admin comment",
+                  event.comment if event.comment is not None else "",
                   username="system",
                   submission_id=after.submission_id,
                   paper_id=after.arxiv_id)
 
 
-def log_classifier_failed(event: AddMetadataFlag, before: Submission,
+def log_classifier_failed(event: Event, before: Optional[Submission],
                           after: Submission) -> None:
     """Create a log entry when the classifier returns no suggestions."""
-    if type(event.annotation) is not ClassifierResults:
-        return
-    if not event.annotation.results:
+    assert isinstance(event, AddClassifierResults)
+    if not event.results:
         admin_log(event.creator.username, "admin comment",
                   "Classifier failed to return results for submission",
                   username="system",
@@ -60,16 +64,18 @@ def log_classifier_failed(event: AddMetadataFlag, before: Submission,
                   paper_id=after.arxiv_id)
 
 
-ON_EVENT: Dict[type, Callable[[Event, Submission, Submission], None]] = {
+Callback = Callable[[Event, Optional[Submission], Submission], None]
+
+ON_EVENT: Dict[type, List[Callback]] = {
     UnFinalizeSubmission: [log_unfinalize],
     AcceptProposal: [log_accept_system_cross],
     AddContentFlag: [log_stopwords]
-
 }
 """Logging functions to call when an event is comitted."""
 
 
-def handle(event: Event, before: Submission, after: Submission) -> None:
+def handle(event: Event, before: Optional[Submission],
+           after: Submission) -> None:
     """
     Generate an admin log entry for an event that is being committed.
 

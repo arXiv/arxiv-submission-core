@@ -60,9 +60,9 @@ class DBEvent(Base):  # type: ignore
         }
         data['committed'] = True     # Since we're loading from the DB.
         return event_factory(
-            event_version=self.event_version,
             event_type=self.event_type,
             creator=agent_factory(**self.creator),
+            event_version=self.event_version,
             proxy=agent_factory(**self.proxy) if self.proxy else None,
             client=agent_factory(**self.client) if self.client else None,
             submission_id=self.submission_id,
@@ -72,4 +72,5 @@ class DBEvent(Base):  # type: ignore
 
     def get_created(self) -> datetime:
         """Get the UTC-localized creation time for this event."""
-        return self.created.replace(tzinfo=UTC)
+        dt: datetime = self.created.replace(tzinfo=UTC)
+        return dt

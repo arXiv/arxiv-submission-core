@@ -186,8 +186,8 @@ class Submission(Base):    # type: ignore
     def get_withdrawal_reason(self) -> Optional[str]:
         """Extract the withdrawal reason from the comments field."""
         if Submission.WDR_DELIMETER not in self.comments:
-            return
-        return self.comments.split(Submission.WDR_DELIMETER, 1)[1]
+            return None
+        return str(self.comments.split(Submission.WDR_DELIMETER, 1)[1])
 
     def update_withdrawal(self, submission: domain.Submission, reason: str,
                           paper_id: str, version: int,
@@ -291,63 +291,67 @@ class Submission(Base):    # type: ignore
             self.created = submission.created
 
     @property
-    def primary_classification(self):
+    def primary_classification(self) -> Optional['Category']:
         """Get the primary classification for this submission."""
         categories = [
             db_cat for db_cat in self.categories if db_cat.is_primary == 1
         ]
         try:
-            return categories[0]
+            cat: Category = categories[0]
         except IndexError:
-            return
+            return None
+        return cat
 
     def get_arxiv_id(self) -> Optional[str]:
         """Get the arXiv identifier for this submission."""
         if not self.document:
-            return
-        return self.document.paper_id
+            return None
+        paper_id: Optional[str] = self.document.paper_id
+        return paper_id
 
     def get_created(self) -> datetime:
         """Get the UTC-localized creation datetime."""
-        return self.created.replace(tzinfo=UTC)
+        dt: datetime = self.created.replace(tzinfo=UTC)
+        return dt
 
     def get_updated(self) -> datetime:
         """Get the UTC-localized updated datetime."""
-        return self.updated.replace(tzinfo=UTC)
+        dt: datetime = self.updated.replace(tzinfo=UTC)
+        return dt
 
     def is_working(self) -> bool:
-        return self.status == self.NOT_SUBMITTED
+        return bool(self.status == self.NOT_SUBMITTED)
 
     def is_announced(self) -> bool:
-        return self.status in [self.ANNOUNCED, self.DELETED_ANNOUNCED]
+        return bool(self.status in [self.ANNOUNCED, self.DELETED_ANNOUNCED])
 
     def is_active(self) -> bool:
-        return not self.is_announced() and not self.is_deleted()
+        return bool(not self.is_announced() and not self.is_deleted())
 
     def is_rejected(self) -> bool:
-        return self.status == self.REMOVED
+        return bool(self.status == self.REMOVED)
 
     def is_finalized(self) -> bool:
-        return self.status > self.WORKING and not self.is_deleted()
+        return bool(self.status > self.WORKING and not self.is_deleted())
 
     def is_deleted(self) -> bool:
-        return self.status in self.DELETED
+        return bool(self.status in self.DELETED)
 
     def is_on_hold(self) -> bool:
-        return self.status == self.ON_HOLD
+        return bool(self.status == self.ON_HOLD)
 
     def is_new_version(self) -> bool:
         """Indicate whether this row represents a new version."""
-        return self.type in [self.NEW_SUBMISSION, self.REPLACEMENT]
+        return bool(self.type in [self.NEW_SUBMISSION, self.REPLACEMENT])
 
     def is_withdrawal(self) -> bool:
-        return self.type == self.WITHDRAWAL
+        return bool(self.type == self.WITHDRAWAL)
 
     def is_crosslist(self) -> bool:
-        return self.type == self.CROSS_LIST
+        return bool(self.type == self.CROSS_LIST)
 
     def is_jref(self) -> bool:
-        return self.type == self.JOURNAL_REFERENCE
+        return bool(self.type == self.JOURNAL_REFERENCE)
 
     @property
     def secondary_categories(self) -> List[str]:
@@ -361,6 +365,7 @@ class Submission(Base):    # type: ignore
 
     def _update_primary(self, submission: domain.Submission) -> None:
         """Update primary classification on this row."""
+        assert submission.primary_classification is not None
         primary_category = submission.primary_classification.category
         cur_primary = self.primary_classification
 
@@ -881,12 +886,13 @@ class CategoryProposal(Base):   # type: ignore
                 return self.ACCEPTED_AS_PRIMARY
             else:
                 return self.ACCEPTED_AS_SECONDARY
+        raise RuntimeError(f'Could not determine status: {proposal.status}')
 
 
 
 def _load_document(paper_id: str) -> Document:
     with transaction() as session:
-        document = session.query(Document) \
+        document: Document = session.query(Document) \
             .filter(Document.paper_id == paper_id) \
             .one()
         if document is None:
@@ -896,7 +902,8 @@ def _load_document(paper_id: str) -> Document:
 
 def _get_user_by_username(username: str) -> User:
     with transaction() as session:
-        return (session.query(Username)
-                .filter(Username.nickname == username)
-                .first()
-                .user)
+        u: User = session.query(Username) \
+            .filter(Username.nickname == username) \
+            .first() \
+            .user
+        return u

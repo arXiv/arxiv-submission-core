@@ -1,11 +1,12 @@
 """Supports loading :class:`.Submission` directly from classic data."""
 
-from typing import List, Optional
 import copy
 from itertools import groupby
+from operator import attrgetter
+from typing import List, Optional, Iterable, Dict
 
-from arxiv.license import LICENSES
 from arxiv.base import logging
+from arxiv.license import LICENSES
 
 from ... import domain
 from . import models
@@ -15,7 +16,7 @@ logger = logging.getLogger(__name__)
 logger.propagate = False
 
 
-def load(rows: List[models.Submission]) -> Optional[domain.Submission]:
+def load(rows: Iterable[models.Submission]) -> Optional[domain.Submission]:
     """
     Load a submission entirely from its classic database rows.
 
@@ -33,22 +34,22 @@ def load(rows: List[models.Submission]) -> Optional[domain.Submission]:
 
     """
     versions: List[domain.Submission] = []
-    submission_id: Optional[str] = None
+    submission_id: Optional[int] = None
 
     # We want to work within versions, and (secondarily) in order of creation
     # time.
     rows = sorted(rows, key=lambda o: o.version)
     logger.debug('Load from rows %s', [r.submission_id for r in rows])
-    for version, version_rows in groupby(rows, key=lambda o: o.version):
+    for version, version_rows in groupby(rows, key=attrgetter('version')):
         # Creation time isn't all that precise in the classic database, so
         # we'll use submission ID instead.
-        version_rows = sorted([v for v in version_rows],
-                              key=lambda o: o.submission_id)
+        these_version_rows = sorted([v for v in version_rows],
+                                     key=lambda o: o.submission_id)
         logger.debug('Version %s: %s', version, version_rows)
         # We use the original ID to track the entire lifecycle of the
         # submission in NG.
         if version == 1:
-            submission_id = version_rows[0].submission_id
+            submission_id = these_version_rows[0].submission_id
             logger.debug('Submission ID: %s', submission_id)
 
         # Find the creation row. There may be some false starts that have been
@@ -57,7 +58,7 @@ def load(rows: List[models.Submission]) -> Optional[domain.Submission]:
         version_submission: Optional[domain.Submission] = None
         while version_submission is None:
             try:
-                row = version_rows.pop(0)
+                row = these_version_rows.pop(0)
             except IndexError:
                 break
             if row.is_new_version() and \
@@ -75,24 +76,20 @@ def load(rows: List[models.Submission]) -> Optional[domain.Submission]:
             logger.debug('Bring user_requests forward from last version')
             version_submission.user_requests.update(versions[-1].user_requests)
 
-        for row in version_rows:  # Remaining rows, since we popped the others.
-            logger.debug('Handle subsequent row: %s', row)
+        for row in these_version_rows:  # Remaining rows, since we popped the others.
             # We are treating JREF submissions as though there is no approval
             # process; so we can just ignore deleted JREF rows.
             if row.is_jref() and not row.is_deleted():
-                logger.debug('JREF row')
                 # This should update doi, journal_ref, report_num.
                 version_submission = patch_jref(version_submission, row)
             # For withdrawals and cross-lists, we want to get data from
             # deleted rows since we keep track of all requests in the NG
             # submission.
             elif row.is_withdrawal():
-                logger.debug('Withdrawal row')
                 # This should update the reason_for_withdrawal (if applied),
                 # and add a WithdrawalRequest to user_requests.
                 version_submission = patch_withdrawal(version_submission, row)
             elif row.is_crosslist():
-                logger.debug('Crosslist row')
                 # This should update the secondary classifications (if applied)
                 # and add a CrossListClassificationRequest to user_requests.
                 version_submission = patch_cross(version_submission, row)
@@ -104,7 +101,7 @@ def load(rows: List[models.Submission]) -> Optional[domain.Submission]:
         versions.append(version_submission)
 
     if not versions:
-        return
+        return None
     submission = copy.deepcopy(versions[-1])
     submission.versions = [ver for ver in versions if ver and ver.is_announced]
     return submission
@@ -166,6 +163,7 @@ def to_submission(row: models.Submission,
                                            checksum=checksum,
                                            source_format=source_format)
 
+    assert status is not None
     submission = domain.Submission(
         submission_id=submission_id,
         creator=submitter,
@@ -202,13 +200,13 @@ def to_submission(row: models.Submission,
     return submission
 
 
-def status_from_classic(classic_status: str) -> str:
+def status_from_classic(classic_status: int) -> Optional[str]:
     """Map classic status codes to domain submission status."""
     return STATUS_MAP.get(classic_status)
 
 
 # Map classic status to Submission domain status.
-STATUS_MAP = {
+STATUS_MAP: Dict[int, str] = {
     models.Submission.NOT_SUBMITTED: domain.Submission.WORKING,
     models.Submission.SUBMITTED: domain.Submission.SUBMITTED,
     models.Submission.ON_HOLD: domain.Submission.SUBMITTED,

@@ -1,6 +1,6 @@
 """Helpers for event classes."""
 
-from typing import Any
+from typing import Any, Callable
 
 from dataclasses import dataclass as base_dataclass
 
@@ -15,8 +15,8 @@ def event_eq(instance: Any, other: Any) -> bool:
     return hash(instance) == hash(other)
 
 
-def dataclass(**kwargs) -> type:
-    def inner(cls):
+def dataclass(**kwargs: Any) -> Callable[[Any], Any]:
+    def inner(cls: type) -> Any:
         if kwargs:
             new_cls = base_dataclass(**kwargs)(cls)
         else:

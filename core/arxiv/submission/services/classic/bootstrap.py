@@ -1,7 +1,9 @@
 """Generate synthetic data for testing and development purposes."""
-from typing import List
+
 import random
 from datetime import datetime
+from typing import List, Dict, Any
+
 from mimesis import Person, Internet, Datetime
 from mimesis import config as mimesis_config
 
@@ -10,15 +12,17 @@ from . import models
 
 LOCALES = list(mimesis_config.SUPPORTED_LOCALES.keys())
 
+
 def _get_locale() -> str:
-    return LOCALES[random.randint(0, len(LOCALES) - 1)]
+    loc: str = LOCALES[random.randint(0, len(LOCALES) - 1)]
+    return loc
 
 
 def _epoch(t: datetime) -> int:
     return int((t - datetime.utcfromtimestamp(0)).total_seconds())
 
 
-LICENSES = [
+LICENSES: List[Dict[str, Any]] = [
     {
         "name": "",
         "note": None,

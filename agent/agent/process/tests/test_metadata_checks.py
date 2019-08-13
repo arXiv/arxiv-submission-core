@@ -87,7 +87,7 @@ class TestCheckForSimilarTitles(TestCase):
                                   "Generates AddMetadataFlag events")
             self.assertEqual(
                 event.flag_type,
-                MetadataFlag.Type.POSSIBLE_DUPLICATE_TITLE,
+                MetadataFlag.FlagType.POSSIBLE_DUPLICATE_TITLE,
                 "Flag has type POSSIBLE_DUPLICATE_TITLE"
             )
 
@@ -99,7 +99,7 @@ class TestCheckForSimilarTitles(TestCase):
             event_id='asdf1234',
             creator=self.creator,
             created=datetime.now(UTC),
-            flag_type=MetadataFlag.Type.POSSIBLE_DUPLICATE_TITLE,
+            flag_type=MetadataFlag.FlagType.POSSIBLE_DUPLICATE_TITLE,
             flag_data={'id': 5, 'title': title, 'owner': self.creator},
             field='title',
             comment='possible duplicate title'
@@ -173,7 +173,7 @@ class TestCheckTitleForUnicodeAbuse(TestCase):
         events = []
         self.process.check_title(None, trigger, events.append)
         self.assertIsInstance(events[0], AddMetadataFlag, 'Adds metadata flag')
-        self.assertEqual(events[0].flag_type, MetadataFlag.Type.CHARACTER_SET)
+        self.assertEqual(events[0].flag_type, MetadataFlag.FlagType.CHARACTER_SET)
         self.assertEqual(events[0].field, 'title')
         self.assertEqual(events[0].flag_data['ascii'], 3/9)
 
@@ -217,7 +217,7 @@ class TestCheckTitleForUnicodeAbuse(TestCase):
             event_id='asdf1234',
             creator=self.creator,
             created=datetime.now(UTC),
-            flag_type=MetadataFlag.Type.CHARACTER_SET,
+            flag_type=MetadataFlag.FlagType.CHARACTER_SET,
             flag_data={'ascii': 0},
             field='title',
             comment='something fishy'
@@ -273,7 +273,7 @@ class TestCheckAbstractForUnicodeAbuse(TestCase):
         events = []
         self.process.check_abstract(None, trigger, events.append)
         self.assertIsInstance(events[0], AddMetadataFlag, 'Adds metadata flag')
-        self.assertEqual(events[0].flag_type, MetadataFlag.Type.CHARACTER_SET)
+        self.assertEqual(events[0].flag_type, MetadataFlag.FlagType.CHARACTER_SET)
         self.assertEqual(events[0].field, 'abstract')
         self.assertEqual(events[0].flag_data['ascii'], 1/13)
 
@@ -317,7 +317,7 @@ class TestCheckAbstractForUnicodeAbuse(TestCase):
             event_id='asdf1234',
             creator=self.creator,
             created=datetime.now(UTC),
-            flag_type=MetadataFlag.Type.CHARACTER_SET,
+            flag_type=MetadataFlag.FlagType.CHARACTER_SET,
             flag_data={'ascii': 0},
             field='abstract',
             comment='something fishy'

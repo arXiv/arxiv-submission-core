@@ -27,8 +27,10 @@ class ApproveRequest(Event):
         """Use event ID as object hash."""
         return hash(self.event_id)
 
-    def __eq__(self, other: Event) -> bool:
+    def __eq__(self, other: object) -> bool:
         """Compare this event to another event."""
+        if not isinstance(other, Event):
+            return NotImplemented
         return hash(self) == hash(other)
 
     def validate(self, submission: Submission) -> None:
@@ -36,6 +38,7 @@ class ApproveRequest(Event):
             raise InvalidEvent(self, "No such request")
 
     def project(self, submission: Submission) -> Submission:
+        assert self.request_id is not None
         submission.user_requests[self.request_id].status = UserRequest.APPROVED
         return submission
 
@@ -51,8 +54,10 @@ class RejectRequest(Event):
         """Use event ID as object hash."""
         return hash(self.event_id)
 
-    def __eq__(self, other: Event) -> bool:
+    def __eq__(self, other: object) -> bool:
         """Compare this event to another event."""
+        if not isinstance(other, Event):
+            return NotImplemented
         return hash(self) == hash(other)
 
     def validate(self, submission: Submission) -> None:
@@ -60,6 +65,7 @@ class RejectRequest(Event):
             raise InvalidEvent(self, "No such request")
 
     def project(self, submission: Submission) -> Submission:
+        assert self.request_id is not None
         submission.user_requests[self.request_id].status = UserRequest.REJECTED
         return submission
 
@@ -75,8 +81,10 @@ class CancelRequest(Event):
         """Use event ID as object hash."""
         return hash(self.event_id)
 
-    def __eq__(self, other: Event) -> bool:
+    def __eq__(self, other: object) -> bool:
         """Compare this event to another event."""
+        if not isinstance(other, Event):
+            return NotImplemented
         return hash(self) == hash(other)
 
     def validate(self, submission: Submission) -> None:
@@ -84,6 +92,7 @@ class CancelRequest(Event):
             raise InvalidEvent(self, "No such request")
 
     def project(self, submission: Submission) -> Submission:
+        assert self.request_id is not None
         submission.user_requests[self.request_id].status = \
             UserRequest.CANCELLED
         return submission
@@ -100,8 +109,10 @@ class ApplyRequest(Event):
         """Use event ID as object hash."""
         return hash(self.event_id)
 
-    def __eq__(self, other: Event) -> bool:
+    def __eq__(self, other: object) -> bool:
         """Compare this event to another event."""
+        if not isinstance(other, Event):
+            return NotImplemented
         return hash(self) == hash(other)
 
     def validate(self, submission: Submission) -> None:
@@ -109,6 +120,7 @@ class ApplyRequest(Event):
             raise InvalidEvent(self, "No such request")
 
     def project(self, submission: Submission) -> Submission:
+        assert self.request_id is not None
         user_request = submission.user_requests[self.request_id]
         if hasattr(user_request, 'apply'):
             submission = user_request.apply(submission)
@@ -130,8 +142,10 @@ class RequestCrossList(Event):
         """Use event ID as object hash."""
         return hash(self.event_id)
 
-    def __eq__(self, other: Event) -> bool:
+    def __eq__(self, other: object) -> bool:
         """Compare this event to another event."""
+        if not isinstance(other, Event):
+            return NotImplemented
         return hash(self) == hash(other)
 
     def validate(self, submission: Submission) -> None:
@@ -151,6 +165,7 @@ class RequestCrossList(Event):
         ]
 
         req_id = CrossListClassificationRequest.generate_request_id(submission)
+        assert self.created is not None
         user_request = CrossListClassificationRequest(
             request_id=req_id,
             creator=self.creator,
@@ -177,8 +192,10 @@ class RequestWithdrawal(Event):
         """Use event ID as object hash."""
         return hash(self.event_id)
 
-    def __eq__(self, other: Event) -> bool:
+    def __eq__(self, other: object) -> bool:
         """Compare this event to another event."""
+        if not isinstance(other, Event):
+            return NotImplemented
         return hash(self) == hash(other)
 
     def validate(self, submission: Submission) -> None:
@@ -193,6 +210,7 @@ class RequestWithdrawal(Event):
 
     def project(self, submission: Submission) -> Submission:
         """Update the submission status and withdrawal reason."""
+        assert self.created is not None
         req_id = WithdrawalRequest.generate_request_id(submission)
         user_request = WithdrawalRequest(
             request_id=req_id,

@@ -1,10 +1,10 @@
 """Data structures for submissions."""
 
-from typing import Optional, Dict, TypeVar, List, Iterable, Set, Union
+import hashlib
+from enum import Enum
 from datetime import datetime
 from dateutil.parser import parse as parse_date
-from enum import Enum
-import hashlib
+from typing import Optional, Dict, TypeVar, List, Iterable, Set, Union, Any
 
 from dataclasses import dataclass, field, asdict
 
@@ -44,7 +44,7 @@ class Author:
         if not self.display:
             self.display = self.canonical
 
-    def _generate_identifier(self):
+    def _generate_identifier(self) -> str:
         h = hashlib.new('sha1')
         h.update(bytes(':'.join([self.forename, self.surname, self.initials,
                                  self.affiliation, self.email]),
@@ -52,7 +52,7 @@ class Author:
         return h.hexdigest()
 
     @property
-    def canonical(self):
+    def canonical(self) -> str:
         """Canonical representation of the author name."""
         name = "%s %s %s" % (self.forename, self.initials, self.surname)
         name = name.replace('  ', ' ')
@@ -89,7 +89,7 @@ class SubmissionContent:
     compressed_size: int
     source_format: Format = Format.UNKNOWN
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """Make sure that :attr:`.source_format` is a :class:`.Format`."""
         if self.source_format and type(self.source_format) is str:
             self.source_format = self.Format(self.source_format)
@@ -124,16 +124,16 @@ class Delegation:
     created: datetime = field(default_factory=get_tzaware_utc_now)
     delegation_id: str = field(default_factory=str)
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """Set derivative fields."""
         self.delegation_id = self.get_delegation_id()
 
-    def get_delegation_id(self):
+    def get_delegation_id(self) -> str:
         """Generate unique identifier for the delegation instance."""
         h = hashlib.new('sha1')
         h.update(b'%s:%s:%s' % (self.delegate.agent_identifier,
                                 self.creator.agent_identifier,
-                                self.created.isodate()))
+                                self.created.isoformat()))
         return h.hexdigest()
 
 
@@ -161,9 +161,9 @@ class Hold:
     hold_type: Type = field(default=Type.PATCH)
     hold_reason: Optional[str] = field(default_factory=str)
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """Check enums and agents."""
-        if self.creator and type(self.creator) is dict:
+        if self.creator and isinstance(self.creator, dict):
             self.creator = agent_factory(**self.creator)
         self.hold_type = self.Type(self.hold_type)
         # if not isinstance(created, datetime):
@@ -181,9 +181,9 @@ class Waiver:
     created: datetime
     creator: Agent
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """Check enums and agents."""
-        if self.creator and type(self.creator) is dict:
+        if self.creator and isinstance(self.creator, dict):
             self.creator = agent_factory(**self.creator)
         self.waiver_type = Hold.Type(self.waiver_type)
 
@@ -193,6 +193,8 @@ class Waiver:
 @dataclass
 class UserRequest:
     """Represents a user request related to a submission."""
+
+    NAME = "User request base"
 
     WORKING = 'working'
     """Request is not yet submitted."""
@@ -218,9 +220,9 @@ class UserRequest:
     status: str = field(default=PENDING)
     request_type: str = field(default_factory=str)
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """Check agents."""
-        if self.creator and type(self.creator) is dict:
+        if self.creator and isinstance(self.creator, dict):
             self.creator = agent_factory(**self.creator)
         self.request_type = self.get_request_type()
 
@@ -256,6 +258,10 @@ class UserRequest:
             N = len([rq for rq in submission.iter_requests if type(rq) is cls])
         h.update(f'{submission.submission_id}:{cls.NAME}:{N}'.encode('utf-8'))
         return h.hexdigest()
+
+    def apply(self, submission: 'Submission') -> 'Submission':
+        """Stub for applying the proposal."""
+        raise NotImplementedError('Must be implemented by child class')
 
 
 @dataclass
@@ -400,7 +406,10 @@ class Submission:
     @property
     def is_announced(self) -> bool:
         """The submission has been announced."""
-        return self.status == self.ANNOUNCED
+        if self.status == self.ANNOUNCED:
+            assert self.arxiv_id is not None
+            return True
+        return False
 
     @property
     def is_finalized(self) -> bool:
@@ -414,7 +423,9 @@ class Submission:
 
     @property
     def primary_category(self) -> str:
-        return self.primary_classification.category
+        """The primary classification category (as a string)."""
+        assert self.primary_classification is not None
+        return str(self.primary_classification.category)
 
     @property
     def secondary_categories(self) -> List[str]:
@@ -437,7 +448,7 @@ class Submission:
 
     @property
     def waiver_types(self) -> Set[Hold.Type]:
-        return set([waiver.hold_type for waiver in self.waivers.values()])
+        return set([waiver.waiver_type for waiver in self.waivers.values()])
 
     @property
     def has_active_requests(self) -> bool:
@@ -472,34 +483,34 @@ class Submission:
         return sorted(filter(lambda r: r.is_applied(), self.iter_requests),
                       key=lambda r: r.created)
 
-    def __post_init__(self):
-        if type(self.creator) is dict:
+    def __post_init__(self) -> None:
+        if isinstance(self.creator, dict):
             self.creator = agent_factory(**self.creator)
-        if type(self.owner) is dict:
+        if isinstance(self.owner, dict):
             self.owner = agent_factory(**self.owner)
-        if self.proxy and type(self.proxy) is dict:
+        if self.proxy and isinstance(self.proxy, dict):
             self.proxy = agent_factory(**self.proxy)
-        if self.client and type(self.client) is dict:
+        if self.client and isinstance(self.client, dict):
             self.client = agent_factory(**self.client)
-        if type(self.created) is str:
+        if isinstance(self.created, str):
             self.created = parse_date(self.created)
-        if type(self.updated) is str:
+        if isinstance(self.updated, str):
             self.updated = parse_date(self.updated)
-        if type(self.submitted) is str:
+        if isinstance(self.submitted, str):
             self.submitted = parse_date(self.submitted)
-        if type(self.source_content) is dict:
+        if isinstance(self.source_content, dict):
             self.source_content = SubmissionContent(**self.source_content)
-        if type(self.preview) is dict:
+        if isinstance(self.preview, dict):
             self.preview = Preview(**self.preview)
-        if type(self.primary_classification) is dict:
+        if isinstance(self.primary_classification, dict):
             self.primary_classification = \
                 Classification(**self.primary_classification)
-        if type(self.metadata) is dict:
+        if isinstance(self.metadata, dict):
             self.metadata = SubmissionMetadata(**self.metadata)
         # self.delegations = dict_coerce(Delegation, self.delegations)
         self.secondary_classification = \
             list_coerce(Classification, self.secondary_classification)
-        if type(self.license) is dict:
+        if isinstance(self.license, dict):
             self.license = License(**self.license)
         self.versions = list_coerce(Submission, self.versions)
         self.user_requests = dict_coerce(request_factory, self.user_requests)
@@ -512,9 +523,12 @@ class Submission:
         self.waivers = dict_coerce(Waiver, self.waivers)
 
 
-def request_factory(**data: dict) -> UserRequest:
+def request_factory(**data: Any) -> UserRequest:
     """Generate a :class:`.UserRequest` from raw data."""
     for cls in UserRequest.__subclasses__():
         if data['request_type'] == cls.__name__:
-            return cls(**data)
+            # Kind of defeats the purpose of this pattern if we have to type
+            # the params here. We can revisit the way this is implemented if
+            # it becomes an issue.
+            return cls(**data)    # type: ignore
     raise ValueError('Invalid request type')

@@ -7,19 +7,18 @@ that the user can preview their submission. Additionally, we want to show the
 submitter the TeX log so that they can identify any potential problems with
 their sources.
 """
-from typing import Tuple, Optional, List, Union, NamedTuple, Mapping, Any
-import json
 import io
+import json
 import re
+from collections import defaultdict
 from enum import Enum
 from functools import wraps
-from collections import defaultdict
+from typing import Tuple, Optional, List, Union, NamedTuple, Mapping, Any
 from urllib.parse import urlparse, urlunparse, urlencode
 
 import dateutil.parser
-
-from werkzeug.datastructures import FileStorage
 import requests
+from werkzeug.datastructures import FileStorage
 
 from arxiv.base import logging
 from arxiv.integration.api import status, service
@@ -76,11 +75,12 @@ class Compiler(service.HTTPIntegration):
         )
 
     def _parse_loc(self, headers: Mapping) -> str:
-        return urlparse(headers['Location']).path
+        return str(urlparse(headers['Location']).path)
 
     def get_service_status(self, timeout: float = 0.2) -> dict:
         """Get the status of the compiler service."""
-        return self.json('get', 'status', timeout=timeout)[0]
+        data: dict = self.json('get', 'status', timeout=timeout)[0]
+        return data
 
     def compile(self, source_id: str, checksum: str, token: str,
                 stamp_label: str, stamp_link: str,
@@ -244,6 +244,6 @@ class Download(object):
         """Initialize with a :class:`requests.Response` object."""
         self._response = response
 
-    def read(self, *args, **kwargs) -> bytes:
+    def read(self, *args: Any, **kwargs: Any) -> bytes:
         """Read response content."""
         return self._response.content

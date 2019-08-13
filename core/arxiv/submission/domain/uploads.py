@@ -10,16 +10,17 @@ import io
 from .submission import Submission, SubmissionContent
 
 
+class FileErrorLevels(Enum):
+    """Error severities."""
+
+    ERROR = 'ERROR'
+    WARNING = 'WARN'
+
+
 class FileError(NamedTuple):
     """Represents an error returned by the file management service."""
 
-    class Levels(Enum):   # type: ignore
-        """Error severities."""
-
-        ERROR = 'ERROR'
-        WARNING = 'WARN'
-
-    error_type: 'FileError.Levels'
+    error_type: FileErrorLevels
     message: str
     more_info: Optional[str] = None
 
@@ -77,29 +78,30 @@ class FileStatus(NamedTuple):
         return instance
 
 
+class UploadStatus(Enum):  # type: ignore
+    """The status of the upload workspace with respect to submission."""
+
+    READY = 'READY'
+    READY_WITH_WARNINGS = 'READY_WITH_WARNINGS'
+    ERRORS = 'ERRORS'
+
+class UploadLifecycleStates(Enum):  # type: ignore
+    """The status of the workspace with respect to its lifecycle."""
+
+    ACTIVE = 'ACTIVE'
+    RELEASED = 'RELEASED'
+    DELETED = 'DELETED'
+
+
 class Upload(NamedTuple):
     """Represents the state of an upload workspace."""
-
-    class Status(Enum):   # type: ignore
-        """The status of the upload workspace with respect to submission."""
-
-        READY = 'READY'
-        READY_WITH_WARNINGS = 'READY_WITH_WARNINGS'
-        ERRORS = 'ERRORS'
-
-    class LifecycleStates(Enum):   # type: ignore
-        """The status of the workspace with respect to its lifecycle."""
-
-        ACTIVE = 'ACTIVE'
-        RELEASED = 'RELEASED'
-        DELETED = 'DELETED'
 
     started: datetime
     completed: datetime
     created: datetime
     modified: datetime
-    status: 'Upload.Status'
-    lifecycle: 'Upload.LifecycleStates'
+    status: UploadStatus
+    lifecycle: UploadLifecycleStates
     locked: bool
     identifier: int
     source_format: SubmissionContent.Format = SubmissionContent.Format.UNKNOWN

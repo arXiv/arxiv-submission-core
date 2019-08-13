@@ -65,6 +65,6 @@ class Rule:
     name: str
     """The name of the process."""
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """Register this instance."""
         REGISTRY[self.event_type].append(self)

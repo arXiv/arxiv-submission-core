@@ -18,6 +18,7 @@ from flask import Flask
 from arxiv.base import Base
 from arxiv import mail
 from ..util import in_memory_db
+from ...domain.event import *
 from ... import *
 from ...services import classic
 

@@ -1,10 +1,12 @@
 """Data structs related to compilation."""
 
-from enum import Enum
-from datetime import datetime
-from typing import Optional, NamedTuple
-from dataclasses import dataclass, field
 import io
+from datetime import datetime
+from enum import Enum
+from typing import Optional, NamedTuple, Dict
+
+from dataclasses import dataclass, field
+
 
 
 @dataclass
@@ -26,12 +28,12 @@ class Compilation:
         PS = "ps"
 
         @property
-        def content_type(self):
+        def content_type(self) -> str:
             """Get the MIME type for the compilation product."""
             _ctypes = {
-                self.PDF: 'application/pdf',
-                self.DVI: 'application/x-dvi',
-                self.PS: 'application/postscript'
+                type(self).PDF: 'application/pdf',
+                type(self).DVI: 'application/x-dvi',
+                type(self).PS: 'application/postscript'
             }
             return _ctypes[self]
 
@@ -74,7 +76,7 @@ class Compilation:
     start_time: Optional[datetime] = field(default=None)
     end_time: Optional[datetime] = field(default=None)
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """Check enums."""
         self.output_format = self.Format(self.output_format)
         self.reason = self.Reason(self.reason)
@@ -84,7 +86,7 @@ class Compilation:
             raise ValueError('Cannot be finished, in progress simultaneously')
 
     @property
-    def identifier(self):
+    def identifier(self) -> str:
         """Get the task identifier."""
         return self.get_identifier(self.source_id, self.checksum,
                                    self.output_format)
@@ -95,9 +97,9 @@ class Compilation:
         return f"{source_id}/{checksum}/{output_format.value}"
 
     @property
-    def content_type(self):
+    def content_type(self) -> str:
         """Get the MIME type for the compilation product."""
-        return self.output_format.content_type
+        return str(self.output_format.content_type)
 
     @property
     def is_succeeded(self) -> bool:
@@ -136,9 +138,9 @@ class CompilationProduct:
     checksum: Optional[str] = field(default=None)
     """The B64-encoded MD5 hash of the compilation product."""
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """Check status."""
-        if self.status and type(self.status) is dict:
+        if self.status and isinstance(self.status, dict):
             self.status = Compilation(**self.status)
 
 
@@ -158,7 +160,7 @@ class CompilationLog:
     content_type: str = field(default='text/plain')
     """MIME-type of the stream."""
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """Check status."""
-        if self.status and type(self.status) is dict:
+        if self.status and isinstance(self.status, dict):
             self.status = Compilation(**self.status)

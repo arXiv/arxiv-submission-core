@@ -58,6 +58,7 @@ def get_source(submission_id: int) -> None:
 
 
 def is_available() -> bool:
+    """Determine whether or not the filesystem is available."""
     try:
         base_dir = current_app.config['LEGACY_FILESYSTEM_ROOT']
     except KeyError as e:
@@ -67,6 +68,7 @@ def is_available() -> bool:
 
 def store_source(submission_id: int, content: IO[bytes],
                  chunk_size: int = 4096) -> str:
+    """Store a source package for a submission."""
     # Make sure that we have a place to put the source files.
     package_path = _source_package_path(submission_id)
     source_path = _source_path(submission_id)
@@ -90,6 +92,7 @@ def store_source(submission_id: int, content: IO[bytes],
 
 def store_preview(submission_id: int, content: IO[bytes],
                   chunk_size: int = 4096) -> str:
+    """Store a preview PDF for a submission."""
     preview_path = _preview_path(submission_id)
     if not os.path.exists(preview_path):
         os.makedirs(os.path.split(preview_path)[0])
@@ -104,18 +107,22 @@ def store_preview(submission_id: int, content: IO[bytes],
 
 
 def get_source_checksum(submission_id: int) -> str:
+    """Get the checksum of the source package for a submission."""
     return _get_checksum(_source_package_path(submission_id))
 
 
 def does_source_exist(submission_id: int) -> bool:
+    """Determine whether source has been deposited for a submission."""
     return os.path.exists(_source_package_path(submission_id))
 
 
 def get_preview_checksum(submission_id: int) -> str:
+    """Get the checksum of the preview PDF for a submission."""
     return _get_checksum(_preview_path(submission_id))
 
 
 def does_preview_exist(submission_id: int) -> bool:
+    """Determine whether a preview has been deposited for a submission."""
     return os.path.exists(_preview_path(submission_id))
 
 

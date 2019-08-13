@@ -2,7 +2,9 @@
 
 import re
 
-from arxiv import taxonomy, identifier
+# from arxiv import taxonomy, identifier
+import arxiv.taxonomy as taxonomy
+import arxiv.identifier as identifier
 
 from .base import Event
 from ..submission import Submission

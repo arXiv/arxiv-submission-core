@@ -189,10 +189,10 @@ from flask import Flask, Blueprint
 
 from arxiv.base import logging
 
-from .domain.event import *
-from .core import *
-from .domain.submission import Submission, SubmissionMetadata, Author
+from .core import save, load, load_fast, SaveError
 from .domain.agent import Agent, User, System, Client
+from .domain.event import Event, InvalidEvent
+from .domain.submission import Submission, SubmissionMetadata, Author
 from .services import classic, StreamPublisher, Compiler, PlainTextService,\
     Classifier, PreviewService
 
@@ -223,7 +223,9 @@ def init_app(app: Flask) -> None:
             stream_publisher = StreamPublisher.current_session()
             stream_publisher.initialize()
             wait_for(stream_publisher)
-            wait_for(classic)
+            # Protocol doesn't work for modules. Either need a union type for
+            # wait_for, or use something other than a protocl for IAwaitable...
+            wait_for(classic)    # type: ignore
         logger.info('All upstream services are available; ready to start')
 
 

@@ -34,7 +34,8 @@ class Trigger:
     def __post_init__(self) -> None:
         """Make sure that all refs are domain objects."""
         if self.event and not isinstance(self.event, Event):
-            self.event = event_factory(**self.event)
+            self.event = event_factory(self.event.pop('event_type'),
+                                       self.event.pop('created'), **self.event)
         if self.before and not isinstance(self.before, Submission):
             self.before = Submission(**self.before)
         if self.after and not isinstance(self.after, Submission):
@@ -64,7 +65,7 @@ class ProcessData:
     results: List[Any]
     """The results of each step in the process, in order."""
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """Make sure that all refs are domain objects."""
         if not isinstance(self.trigger, Trigger):
             self.trigger = Trigger(**self.trigger)

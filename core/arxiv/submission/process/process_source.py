@@ -37,8 +37,10 @@ from typing import IO, Dict, Tuple, NamedTuple, Optional, Any, Callable, Type
 from mypy_extensions import TypedDict
 from typing_extensions import Protocol
 
-from arxiv.base import logging
-from arxiv.integration.api.exceptions import NotFound
+# Mypy has a hard time with namespace packages. See
+# https://github.com/python/mypy/issues/5759
+from arxiv.base import logging                         # type: ignore
+from arxiv.integration.api.exceptions import NotFound  # type: ignore
 from arxiv.submission import InvalidEvent, User, Client, Event, Submission, \
     SaveError
 from .. import save
@@ -62,9 +64,11 @@ class IProcess(Protocol):
 
     def __init__(self, submission: Submission, user: User,
                  client: Optional[Client], token: str) -> None:
+        """Initialize the process with a submission and agent context."""
         ...
 
     def __call__(self) -> 'CheckResult':
+        """Perform the process step."""
         ...
 
 
@@ -145,6 +149,7 @@ class _ProcessBase:
 
     def _deposit(self, stream: IO[bytes], content_checksum: str) -> None:
         """Deposit the preview, and set :attr:`.preview`."""
+        assert self.submission.source_content is not None
         # It is possible that the content is already there, we just failed to
         # update the submission last time. In the future we might do a more
         # efficient check, but this is fine for now.
@@ -170,6 +175,7 @@ class _ProcessBase:
                                   submission_id=self.submission.submission_id)
 
     def _unconfirm_processed(self) -> None:
+        assert self.submission.submission_id is not None
         if not self.submission.is_source_processed:
             return
         event = UnConfirmSourceProcessed(creator=self.user, client=self.client)  # type: ignore
@@ -230,6 +236,7 @@ class BaseChecker(_ProcessBase):
         raise NotImplementedError('Must be implemented by a subclass')
 
     def _pre_check(self) -> None:
+        assert self.submission.source_content is not None
         if self.submission.is_source_processed \
                 and self.submission.preview is not None:
             p = PreviewService.current_session()
@@ -259,6 +266,8 @@ class _PDFStarter(BaseStarter):
 
     def start(self) -> Tuple[Status, Dict[str, Any]]:
         """Retrieve the PDF from the file manager service and finish."""
+        if self.submission.source_content is None:
+            return FAILED, {'reason': 'Submission has no source package'}
         m = Filemanager.current_session()
         try:
             stream, checksum, content_checksum = \
@@ -281,6 +290,8 @@ class _PDFChecker(BaseChecker):
 
     def check(self) -> Tuple[Status, Dict[str, Any]]:
         """Verify that the preview is present."""
+        if self.submission.source_content is None:
+            return FAILED, {'reason': 'Submission has no source package'}
         if self.status is not None:
             return self.status, {}
         p = PreviewService.current_session()
@@ -303,6 +314,8 @@ class _CompilationStarter(BaseStarter):
 
     def start(self) -> Tuple[Status, Dict[str, Any]]:
         """Start compilation."""
+        if self.submission.source_content is None:
+            return FAILED, {'reason': 'Submission has no source package'}
         c = Compiler.current_session()
         stat = c.compile(self.submission.source_content.identifier,
                          self.submission.source_content.checksum, self.token,
@@ -343,6 +356,8 @@ class _CompilationStarter(BaseStarter):
 class _CompilationChecker(BaseChecker):
     def check(self) -> Tuple[Status, Dict[str, Any]]:
         """Check the status of compilation, and finish if succeeded."""
+        if self.submission.source_content is None:
+            return FAILED, {'reason': 'Submission has no source package'}
         status: Status = self.status or IN_PROGRESS
         extra: Dict[str, Any] = {}
         comp: Optional[Compilation] = None
@@ -402,12 +417,14 @@ def _get_process(source_format: SubmissionContent.Format) -> SourceProcess:
 
 def _get_and_call_starter(submission: Submission, user: User,
                           client: Optional[Client], token: str) -> CheckResult:
+    assert submission.source_content is not None
     proc = _get_process(submission.source_content.source_format)
     return proc.start(submission, user, client, token)()
 
 
 def _get_and_call_checker(submission: Submission, user: User,
                           client: Optional[Client], token: str) -> CheckResult:
+    assert submission.source_content is not None
     proc = _get_process(submission.source_content.source_format)
     return proc.check(submission, user, client, token)()
 

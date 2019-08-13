@@ -20,3 +20,4 @@ after_success:
   - coveralls
 #  - tests/lint.sh
   - tests/docstyle.sh
+  - touch core/arxiv/__init__.py; ./tests/static.sh arxiv

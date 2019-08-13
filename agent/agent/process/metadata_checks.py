@@ -83,7 +83,7 @@ class CheckForSimilarTitles(Process):
         title = self._get_title(trigger)
         if not title:   # Nothing to do.
             return []
-        flag_type = MetadataFlag.Type.POSSIBLE_DUPLICATE_TITLE
+        flag_type = MetadataFlag.FlagType.POSSIBLE_DUPLICATE_TITLE
 
         for flag_id, flag in trigger.after.flags.items():
             if isinstance(flag, MetadataFlag) and flag.flag_type is flag_type:
@@ -125,7 +125,7 @@ class CheckTitleForUnicodeAbuse(Process):
     def _clear_previous_flags(self, trigger: Trigger, emit: Callable) -> None:
         for flag_id, flag in trigger.after.flags.items():
             if isinstance(flag, MetadataFlag) and \
-                    flag.flag_type is MetadataFlag.Type.CHARACTER_SET and \
+                    flag.flag_type is MetadataFlag.FlagType.CHARACTER_SET and \
                     flag.field == 'title':
                 emit(RemoveFlag(creator=self.agent, flag_id=flag_id))
 
@@ -138,7 +138,7 @@ class CheckTitleForUnicodeAbuse(Process):
         if level < trigger.params['METADATA_ASCII_THRESHOLD']:
             comment = 'Possible excessive use of non-ASCII characters.'
             emit(AddMetadataFlag(creator=self.agent,
-                                 flag_type=MetadataFlag.Type.CHARACTER_SET,
+                                 flag_type=MetadataFlag.FlagType.CHARACTER_SET,
                                  flag_data={'ascii': level},
                                  field='title',
                                  comment=comment))
@@ -165,7 +165,7 @@ class CheckAbstractForUnicodeAbuse(Process):
     def _clear_previous_flags(self, trigger: Trigger, emit: Callable) -> None:
         for flag_id, flag in trigger.after.flags.items():
             if isinstance(flag, MetadataFlag) and \
-                    flag.flag_type is MetadataFlag.Type.CHARACTER_SET and \
+                    flag.flag_type is MetadataFlag.FlagType.CHARACTER_SET and \
                     flag.field == 'abstract':
                 emit(RemoveFlag(creator=self.agent, flag_id=flag_id))
 
@@ -178,7 +178,7 @@ class CheckAbstractForUnicodeAbuse(Process):
         if level < trigger.params['METADATA_ASCII_THRESHOLD']:
             comment = 'Possible excessive use of non-ASCII characters.'
             emit(AddMetadataFlag(creator=self.agent,
-                                 flag_type=MetadataFlag.Type.CHARACTER_SET,
+                                 flag_type=MetadataFlag.FlagType.CHARACTER_SET,
                                  flag_data={'ascii': level},
                                  field='abstract',
                                  comment=comment))

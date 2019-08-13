@@ -119,7 +119,8 @@ class PreviewService(service.HTTPIntegration):
         """
         response = self.request('get', f'/{source_id}/{checksum}', token)
         response_data: PreviewMeta = response.json()
-        added: datetime = datetime.fromisoformat(response_data['added'])
+        # fromisoformat() is backported from 3.7.
+        added: datetime = datetime.fromisoformat(response_data['added'])  # type: ignore
         return Preview(source_id=source_id,
                        source_checksum=checksum,
                        preview_checksum=response_data['checksum'],
@@ -176,7 +177,8 @@ class PreviewService(service.HTTPIntegration):
                 raise AlreadyExists('Preview already exists', e.response) from e
             raise
         response_data: PreviewMeta = response.json()
-        added: datetime = datetime.fromisoformat(response_data['added'])
+        # fromisoformat() is backported from 3.7.
+        added: datetime = datetime.fromisoformat(response_data['added'])  # type: ignore
         return Preview(source_id=source_id,
                        source_checksum=checksum,
                        preview_checksum=response_data['checksum'],

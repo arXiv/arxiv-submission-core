@@ -1,11 +1,11 @@
 """Data structures related to QA."""
 
 from datetime import datetime
-from typing import Optional, Union
 from enum import Enum
+from typing import Optional, Union, Type, Dict, Any
 
-from mypy_extensions import TypedDict
 from dataclasses import field, dataclass, asdict
+from mypy_extensions import TypedDict
 
 from .agent import Agent, agent_factory
 
@@ -18,21 +18,23 @@ PossibleDuplicate = TypedDict('PossibleDuplicate',
 class Flag:
     """Base class for flags."""
 
+    class FlagType(Enum):
+        pass
+
     event_id: str
     creator: Agent
     created: datetime
-    flag_type: str
     flag_data: Optional[Union[int, str, float, dict, list]]
     comment: str
     proxy: Optional[Agent] = field(default=None)
     flag_datatype: str = field(default_factory=str)
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         """Set derivative fields."""
         self.flag_datatype = self.__class__.__name__
-        if self.creator and type(self.creator) is dict:
+        if self.creator and isinstance(self.creator, dict):
             self.creator = agent_factory(**self.creator)
-        if self.proxy and type(self.proxy) is dict:
+        if self.proxy and isinstance(self.proxy, dict):
             self.proxy = agent_factory(**self.proxy)
 
 
@@ -40,7 +42,9 @@ class Flag:
 class ContentFlag(Flag):
     """A flag related to the content of the submission."""
 
-    class Type(Enum):
+    flag_type: Optional['FlagType'] = field(default=None)
+
+    class FlagType(Enum):
         """Supported content flags."""
 
         LOW_STOP = 'low stopwords'
@@ -59,9 +63,10 @@ class ContentFlag(Flag):
 class MetadataFlag(Flag):
     """A flag related to the submission metadata."""
 
+    flag_type: Optional['FlagType'] = field(default=None)
     field: Optional[str] = field(default=None)
 
-    class Type(Enum):
+    class FlagType(Enum):
         """Supported metadata flags."""
 
         POSSIBLE_DUPLICATE_TITLE = 'possible duplicate title'
@@ -73,21 +78,23 @@ class MetadataFlag(Flag):
 class UserFlag(Flag):
     """A flag related to the submitter."""
 
-    class Type(Enum):
+    flag_type: Optional['FlagType'] = field(default=None)
+
+    class FlagType(Enum):
         """Supported user flags."""
 
         RATE = 'rate'
 
 
-flag_datatypes = {
+flag_datatypes: Dict[str, Type[Flag]] = {
     'ContentFlag': ContentFlag,
     'MetadataFlag': MetadataFlag,
     'UserFlag': UserFlag
 }
 
 
-def flag_factory(**data) -> Flag:
+def flag_factory(**data: Any) -> Flag:
     cls = flag_datatypes[data.pop('flag_datatype')]
-    if not isinstance(data['flag_type'], cls.Type):
-        data['flag_type'] = cls.Type(data['flag_type'])
+    if not isinstance(data['flag_type'], cls.FlagType):
+        data['flag_type'] = cls.FlagType(data['flag_type'])
     return cls(**data)

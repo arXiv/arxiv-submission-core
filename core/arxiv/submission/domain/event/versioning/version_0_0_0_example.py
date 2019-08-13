@@ -38,4 +38,9 @@ class SetTitleExample(BaseVersionMapping):
 
     def transform(self, orig: EventData, xf: EventData) -> EventData:
         """Add some emphasis."""
-        return {k: f"{v}!!" for k, v in xf.items() if type(v) is str}
+        ed = EventData()
+        for k, v in xf.items():
+            if isinstance(v, str):
+                v = f"{v}!!"
+            ed[k] = v    # type: ignore
+        return ed

@@ -48,6 +48,7 @@ class RemoveFlag(Event):
 
     def project(self, submission: Submission) -> Submission:
         """Remove the flag from the submission."""
+        assert self.flag_id is not None
         submission.flags.pop(self.flag_id)
         return submission
 
@@ -59,15 +60,16 @@ class AddContentFlag(AddFlag):
     NAME = "add content flag"
     NAMED = "content flag added"
 
-    flag_type: Optional[ContentFlag.Type] = None
+    flag_type: Optional[ContentFlag.FlagType] = None
 
     def validate(self, submission: Submission) -> None:
         """Verify that we have a known flag."""
-        if self.flag_type not in ContentFlag.Type:
+        if self.flag_type not in ContentFlag.FlagType:
             raise InvalidEvent(self, f"Unknown content flag: {self.flag_type}")
 
     def project(self, submission: Submission) -> Submission:
         """Add the flag to the submission."""
+        assert self.created is not None
         submission.flags[self.event_id] = ContentFlag(
             event_id=self.event_id,
             created=self.created,
@@ -75,14 +77,14 @@ class AddContentFlag(AddFlag):
             proxy=self.proxy,
             flag_type=self.flag_type,
             flag_data=self.flag_data,
-            comment=self.comment
+            comment=self.comment or ''
         )
         return submission
 
     def __post_init__(self) -> None:
         """Make sure that `flag_type` is an enum instance."""
         if type(self.flag_type) is str:
-            self.flag_type = ContentFlag.Type(self.flag_type)
+            self.flag_type = ContentFlag.FlagType(self.flag_type)
         super(AddContentFlag, self).__post_init__()
 
 
@@ -93,19 +95,20 @@ class AddMetadataFlag(AddFlag):
     NAME = "add metadata flag"
     NAMED = "metadata flag added"
 
-    flag_type: Optional[MetadataFlag.Type] = field(default=None)
+    flag_type: Optional[MetadataFlag.FlagType] = field(default=None)
     field: Optional[str] = field(default=None)
     """Name of the metadata field to which the flag applies."""
 
     def validate(self, submission: Submission) -> None:
         """Verify that we have a known flag and metadata field."""
-        if self.flag_type not in MetadataFlag.Type:
+        if self.flag_type not in MetadataFlag.FlagType:
             raise InvalidEvent(self, f"Unknown meta flag: {self.flag_type}")
-        if not hasattr(SubmissionMetadata, self.field):
+        if self.field and not hasattr(SubmissionMetadata, self.field):
             raise InvalidEvent(self, "Not a valid metadata field")
 
     def project(self, submission: Submission) -> Submission:
         """Add the flag to the submission."""
+        assert self.created is not None
         submission.flags[self.event_id] = MetadataFlag(
             event_id=self.event_id,
             created=self.created,
@@ -113,7 +116,7 @@ class AddMetadataFlag(AddFlag):
             proxy=self.proxy,
             flag_type=self.flag_type,
             flag_data=self.flag_data,
-            comment=self.comment,
+            comment=self.comment or '',
             field=self.field
         )
         return submission
@@ -121,7 +124,7 @@ class AddMetadataFlag(AddFlag):
     def __post_init__(self) -> None:
         """Make sure that `flag_type` is an enum instance."""
         if type(self.flag_type) is str:
-            self.flag_type = MetadataFlag.Type(self.flag_type)
+            self.flag_type = MetadataFlag.FlagType(self.flag_type)
         super(AddMetadataFlag, self).__post_init__()
 
 
@@ -132,29 +135,31 @@ class AddUserFlag(AddFlag):
     NAME = "add user flag"
     NAMED = "user flag added"
 
-    flag_type: Optional[UserFlag.Type] = field(default=None)
+    flag_type: Optional[UserFlag.FlagType] = field(default=None)
 
     def validate(self, submission: Submission) -> None:
         """Verify that we have a known flag."""
-        if self.flag_type not in MetadataFlag.Type:
+        if self.flag_type not in MetadataFlag.FlagType:
             raise InvalidEvent(self, f"Unknown user flag: {self.flag_type}")
 
     def project(self, submission: Submission) -> Submission:
         """Add the flag to the submission."""
+        assert self.flag_type is not None
+        assert self.created is not None
         submission.flags[self.event_id] = UserFlag(
             event_id=self.event_id,
             created=self.created,
             creator=self.creator,
             flag_type=self.flag_type,
             flag_data=self.flag_data,
-            comment=self.comment
+            comment=self.comment or ''
         )
         return submission
 
     def __post_init__(self) -> None:
         """Make sure that `flag_type` is an enum instance."""
         if type(self.flag_type) is str:
-            self.flag_type = UserFlag.Type(self.flag_type)
+            self.flag_type = UserFlag.FlagType(self.flag_type)
         super(AddUserFlag, self).__post_init__()
 
 
@@ -173,6 +178,7 @@ class AddHold(Event):
 
     def project(self, submission: Submission) -> Submission:
         """Add the hold to the submission."""
+        assert self.created is not None
         submission.holds[self.event_id] = Hold(
             event_id=self.event_id,
             created=self.created,
@@ -233,6 +239,7 @@ class AddWaiver(Event):
 
     def project(self, submission: Submission) -> Submission:
         """Add the :class:`.Waiver` to the :class:`.Submission`."""
+        assert self.created is not None
         submission.waivers[self.event_id] = Waiver(
             event_id=self.event_id,
             created=self.created,

@@ -18,15 +18,28 @@ no announcements Friday or Saturday.
 
 from typing import Optional
 from datetime import datetime, timedelta
-from enum import IntEnum
+from enum import IntEnum, Enum
 from pytz import timezone, UTC
 
 ET = timezone('US/Eastern')
 
-Weekdays = IntEnum('Weekdays', 'Mon Tue Wed Thu Fri Sat Sun', start=1)
 
-ANNOUNCE_TIME = 20
-FREEZE_TIME = 14
+# I preferred the callable construction of IntEnum to the class-based
+# construction, but this is more typing-friendly.
+class Weekdays(IntEnum):
+    """Numeric representation of the days of the week."""
+
+    Mon = 1
+    Tue = 2
+    Wed = 3
+    Thu = 4
+    Fri = 5
+    Sat = 6
+    Sun = 7
+
+
+ANNOUNCE_TIME = 20   # Hours (8pm ET)
+FREEZE_TIME = 14     # Hours (2pm ET)
 
 WINDOWS = [
     ((Weekdays.Fri - 7, 14), (Weekdays.Mon, 14), (Weekdays.Mon, 20)),
@@ -40,8 +53,9 @@ WINDOWS = [
 
 def _datetime(ref: datetime, isoweekday: int, hour: int) -> datetime:
     days_hence = isoweekday - ref.isoweekday()
-    repl = dict(hour=hour, minute=0, second=0, microsecond=0)
-    return (ref + timedelta(days=days_hence)).replace(**repl)
+    # repl = dict(hour=hour, minute=0, second=0, microsecond=0)
+    dt = (ref + timedelta(days=days_hence))
+    return dt.replace(hour=hour, minute=0, second=0, microsecond=0)
 
 
 def next_announcement_time(ref: Optional[datetime] = None) -> datetime:
@@ -53,6 +67,7 @@ def next_announcement_time(ref: Optional[datetime] = None) -> datetime:
     for start, end, announce in WINDOWS:
         if _datetime(ref, *start) <= ref < _datetime(ref, *end):
             return _datetime(ref, *announce)
+    raise RuntimeError('Could not arrive at next announcement time')
 
 
 def next_freeze_time(ref: Optional[datetime] = None) -> datetime:
@@ -64,3 +79,4 @@ def next_freeze_time(ref: Optional[datetime] = None) -> datetime:
     for start, end, announce in WINDOWS:
         if _datetime(ref, *start) <= ref < _datetime(ref, *end):
             return _datetime(ref, *end)
+    raise RuntimeError('Could not arrive at next freeze time')

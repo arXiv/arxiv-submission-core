@@ -93,7 +93,7 @@ class TestDumpLoad(TestCase):
                     event_id='fooflag1',
                     creator=system,
                     created=datetime.now(UTC),
-                    flag_type=ContentFlag.Type.LOW_STOP,
+                    flag_type=ContentFlag.FlagType.LOW_STOP,
                     flag_data=25,
                     comment='no comment'
                 )

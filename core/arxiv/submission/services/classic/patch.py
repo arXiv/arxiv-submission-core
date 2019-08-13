@@ -1,7 +1,9 @@
 """Methods for updating :class:`.Submission` with state outside event scope."""
 
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Type
+
 from ... import domain
+from ...domain.submission import UserRequest
 from . import models
 
 
@@ -64,7 +66,7 @@ def patch_cross(submission: domain.Submission, row: models.Submission,
     return _patch_request(req_type, data, submission, row, request_number)
 
 
-def _patch_request(req_type: type, data: Dict[str, Any],
+def _patch_request(req_type: Type[UserRequest], data: Dict[str, Any],
                    submission: domain.Submission, row: models.Submission,
                    request_number: int = -1) -> domain.Submission:
     status = req_type.WORKING

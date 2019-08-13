@@ -2,7 +2,7 @@
 
 from typing import TypeVar, List
 
-EventType = TypeVar('EventType', bound='core.events.domain.event.Event')
+EventType = TypeVar('EventType')
 
 
 class InvalidEvent(ValueError):
@@ -10,9 +10,9 @@ class InvalidEvent(ValueError):
 
     def __init__(self, event: EventType, message: str = '') -> None:
         """Use the :class:`.Event` to build an error message."""
-        self.event: EventType = event
+        self.event = event
         self.message = message
-        r = f"Invalid {event.event_type}: {message}"
+        r = f"Invalid {event.event_type}: {message}"  # type: ignore
         super(InvalidEvent, self).__init__(r)
 
 

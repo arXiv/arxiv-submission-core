@@ -54,6 +54,7 @@ class AddProposal(Event):
 
     def project(self, submission: Submission) -> Submission:
         """Add the proposal to the submission."""
+        assert self.created is not None
         submission.proposals[self.event_id] = Proposal(
             event_id=self.event_id,
             creator=self.creator,
@@ -63,7 +64,7 @@ class AddProposal(Event):
             proposed_event_data=self.proposed_event_data,
             comments=[Comment(event_id=self.event_id, creator=self.creator,
                               created=self.created, proxy=self.proxy,
-                              body=self.comment)],
+                              body=self.comment or '')],
             status=Proposal.Status.PENDING
         )
         return submission
@@ -90,7 +91,9 @@ class RejectProposal(Event):
 
     def project(self, submission: Submission) -> Submission:
         """Set the status of the proposal to rejected."""
-        submission.proposals[self.proposal_id].status = Proposal.REJECTED
+        assert self.proposal_id is not None
+        assert self.created is not None
+        submission.proposals[self.proposal_id].status = Proposal.Status.REJECTED
         if self.comment:
             submission.proposals[self.proposal_id].comments.append(
                 Comment(event_id=self.event_id, creator=self.creator,
@@ -120,7 +123,10 @@ class AcceptProposal(Event):
 
     def project(self, submission: Submission) -> Submission:
         """Mark the proposal as accepted."""
-        submission.proposals[self.proposal_id].status = Proposal.ACCEPTED
+        assert self.created is not None
+        assert self.proposal_id is not None
+        submission.proposals[self.proposal_id].status \
+            = Proposal.Status.ACCEPTED
         if self.comment:
             submission.proposals[self.proposal_id].comments.append(
                 Comment(event_id=self.event_id, creator=self.creator,
@@ -133,8 +139,11 @@ class AcceptProposal(Event):
 def apply_proposal(event: AcceptProposal, before: Submission,
                    after: Submission, creator: Agent) -> Iterable[Event]:
     """Apply an accepted proposal."""
+    assert event.proposal_id is not None
     proposal = after.proposals[event.proposal_id]
     proposed_event_data = copy.deepcopy(proposal.proposed_event_data)
     proposed_event_data.update({'creator': creator})
+
+    assert proposal.proposed_event_type is not None
     event = proposal.proposed_event_type(**proposed_event_data)
     yield event

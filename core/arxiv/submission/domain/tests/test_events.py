@@ -55,7 +55,9 @@ class TestWithdrawalSubmission(TestCase):
 
     def test_request_withdrawal(self):
         """Request that a paper be withdrawn."""
-        e = event.RequestWithdrawal(creator=self.user, reason="no good")
+        e = event.RequestWithdrawal(creator=self.user,
+                                    created=datetime.now(UTC),
+                                    reason="no good")
         e.validate(self.submission)
         replacement = e.apply(self.submission)
         self.assertEqual(replacement.arxiv_id, self.submission.arxiv_id)

@@ -18,18 +18,18 @@ class AddProcessStatus(Event):
     NAME = "add status of a process"
     NAMED = "added status of a process"
 
-    Status = ProcessStatus.Status
+    # Status = ProcessStatus.Status
 
     process_id: Optional[str] = field(default=None)
     process: Optional[str] = field(default=None)
     step: Optional[str] = field(default=None)
-    status: Status = field(default=Status.PENDING)
+    status: ProcessStatus.Status = field(default=ProcessStatus.Status.PENDING)
     reason: Optional[str] = field(default=None)
 
     def __post_init__(self) -> None:
         """Make sure our enums are in order."""
         super(AddProcessStatus, self).__post_init__()
-        self.status = self.Status(self.status)
+        self.status = ProcessStatus.Status(self.status)
 
     def validate(self, submission: Submission) -> None:
         """Verify that we have a :class:`.ProcessStatus`."""
@@ -38,6 +38,8 @@ class AddProcessStatus(Event):
 
     def project(self, submission: Submission) -> Submission:
         """Add the process status to the submission."""
+        assert self.created is not None
+        assert self.process is not None
         submission.processes.append(ProcessStatus(
             creator=self.creator,
             created=self.created,

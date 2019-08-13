@@ -91,9 +91,9 @@ class RunAutoclassifier(PlainTextExtraction):
     CLASSIFIER_FLAGS = {
         '%stop': None,  # We will handle this ourselves.
         'stops': None,  # We will handle this ourselves.
-        'language': ContentFlag.Type.LANGUAGE,
-        'charset': ContentFlag.Type.CHARACTER_SET,
-        'linenos': ContentFlag.Type.LINE_NUMBERS
+        'language': ContentFlag.FlagType.LANGUAGE,
+        'charset': ContentFlag.FlagType.CHARACTER_SET,
+        'linenos': ContentFlag.FlagType.LINE_NUMBERS
     }
 
     def handle_classifier_exception(self, exc: Exception) -> None:
@@ -171,7 +171,7 @@ class CheckStopwordPercent(Process):
         if feats[0].feature_value < trigger.params['LOW_STOP_PERCENT']:
             comment = "Classifier reports low stops or %stops"
             emit(AddContentFlag(creator=self.agent,
-                                flag_type=ContentFlag.Type.LOW_STOP_PERCENT,
+                                flag_type=ContentFlag.FlagType.LOW_STOP_PERCENT,
                                 flag_data=trigger.event.feature_value,
                                 comment=comment))
 
@@ -192,7 +192,7 @@ class CheckStopwordCount(Process):
         if feats[0].feature_value < trigger.params['LOW_STOP']:
             emit(AddContentFlag(
                 creator=self.agent,
-                flag_type=ContentFlag.Type.LOW_STOP,
+                flag_type=ContentFlag.FlagType.LOW_STOP,
                 flag_data=trigger.event.feature_value,
                 comment="Classifier reports low stops or %stops"
             ))

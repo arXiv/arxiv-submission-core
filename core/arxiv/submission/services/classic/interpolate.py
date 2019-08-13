@@ -14,7 +14,7 @@ current purview. The logic in this module will need to change as the scope
 of the NG submission data architecture expands.
 """
 
-from typing import List, Optional, Dict, Tuple, Any
+from typing import List, Optional, Dict, Tuple, Any, Type
 from datetime import datetime
 
 from arxiv.base import logging
@@ -45,7 +45,7 @@ class ClassicEventInterpolator:
                  events: List[Event]) -> None:
         """Interleave events with classic data to get the current state."""
         self.applied_events: List[Event] = []
-        self.current_row = current_row
+        self.current_row: Optional[models.Submission] = current_row
         self.db_rows = subsequent_rows
         logger.debug("start with current row: %s", self.current_row)
         logger.debug("start with subsequent rows: %s",
@@ -66,34 +66,42 @@ class ClassicEventInterpolator:
         """Access the next classic database row for this submission."""
         return self.db_rows[0]
 
-    def _insert_request_event(self, rq_class: type, event_class: type) -> None:
+    def _insert_request_event(self, rq_class: Type[UserRequest],
+                              event_class: Type[Event]) -> None:
         """Create and apply a request-related event."""
+        assert self.submission is not None and self.current_row is not None
         logger.debug('insert request event, %s, %s',
                      rq_class.__name__, event_class.__name__)
-        self._inject(event_class(
+        # Mypy still chokes on these dataclass params.
+        event = event_class(   # type: ignore
             creator=SYSTEM,
             created=self.current_row.get_updated(),
             committed=True,
-            request_id=rq_class.generate_request_id(
-                self.current_row.get_created(),
-                rq_class.__name__,
-                self.current_row.get_submitter()
-            )
-        ))
+            request_id=rq_class.generate_request_id(self.submission)
+        )
+        self._apply(event)
+        # self.current_row.get_created(),
+        #         rq_class.__name__,
+        #         self.current_row.get_submitter()
+        #     )
 
     def _current_row_preceeds_event(self, event: Event) -> bool:
+        assert self.current_row is not None and event.created is not None
         delta = self.current_row.get_updated() - event.created
         # Classic lacks millisecond precision.
         return (delta).total_seconds() < -1
 
     def _should_advance_to_next_row(self, event: Event) -> bool:
-        return self._there_are_rows_remaining() \
-            and self.next_row.get_created() <= event.created
+        if self._there_are_rows_remaining():
+            assert self.next_row is not None and event.created is not None
+            return bool(self.next_row.get_created() <= event.created)
+        return False
 
     def _there_are_rows_remaining(self) -> bool:
         return len(self.db_rows) > 0
 
     def _advance_to_next_row(self) -> None:
+        assert self.submission is not None and self.current_row is not None
         if self.current_row.is_withdrawal():
             self.requests[WithdrawalRequest] += 1
         if self.current_row.is_crosslist():
@@ -104,36 +112,45 @@ class ClassicEventInterpolator:
             self.current_row = None
 
     def _can_inject_from_current_row(self) -> bool:
-        return (self.current_row.version == 1
-                or (self.current_row.is_jref()
-                    and not self.current_row.is_deleted())
-                or self.current_row.is_withdrawal()
-                or self.current_row.is_crosslist()
-                or (self.current_row.is_new_version()
-                    and not self.current_row.is_deleted()))
+        assert self.current_row is not None
+        return bool(
+            self.current_row.version == 1
+            or (self.current_row.is_jref()
+                and not self.current_row.is_deleted())
+            or self.current_row.is_withdrawal()
+            or self.current_row.is_crosslist()
+            or (self.current_row.is_new_version()
+                and not self.current_row.is_deleted())
+        )
 
     def _should_backport(self, event: Event) -> bool:
         """Evaluate if this event be applied to the last announced version."""
-        return type(event) in [SetDOI, SetJournalReference, SetReportNumber] \
-            and self.submission.versions \
-            and self.submission.version == self.submission.versions[-1].version
+        assert self.submission is not None and self.current_row is not None
+        return bool(
+            type(event) in [SetDOI, SetJournalReference, SetReportNumber]
+            and self.submission.versions
+            and self.submission.version
+                == self.submission.versions[-1].version
+        )
 
     def _inject_from_current_row(self) -> None:
+        assert self.current_row is not None
         if self.current_row.is_new_version():
             # Apply any holds created in the admin or moderation system.
             if self.current_row.status == models.Submission.ON_HOLD:
                 self._inject(AddHold, hold_type=Hold.Type.PATCH)
 
             # TODO: these need some explicit event/command representations.
-            elif status_from_classic(self.current_row.status) \
-                    == Submission.SCHEDULED:
-                self.submission.status = Submission.SCHEDULED
-            elif status_from_classic(self.current_row.status) \
-                    == Submission.DELETED:
-                self.submission.status = Submission.DELETED
-            elif status_from_classic(self.current_row.status) \
-                    == Submission.ERROR:
-                self.submission.status = Submission.ERROR
+            elif self.submission is not None:
+                if status_from_classic(self.current_row.status) \
+                        == Submission.SCHEDULED:
+                    self.submission.status = Submission.SCHEDULED
+                elif status_from_classic(self.current_row.status) \
+                        == Submission.DELETED:
+                    self.submission.status = Submission.DELETED
+                elif status_from_classic(self.current_row.status) \
+                        == Submission.ERROR:
+                    self.submission.status = Submission.ERROR
 
             self._inject_primary_if_changed()
             self._inject_secondaries_if_changed()
@@ -154,20 +171,26 @@ class ClassicEventInterpolator:
 
     def _inject_primary_if_changed(self) -> None:
         """Inject primary classification event if a change has occurred."""
+        assert self.current_row is not None
         primary = self.current_row.primary_classification
-        if primary and primary.category != self.submission.primary_category:
-            self._inject(Reclassify, category=primary.category)
+        if primary and self.submission is not None:
+            if primary.category != self.submission.primary_category:
+                self._inject(Reclassify, category=primary.category)
 
     def _inject_secondaries_if_changed(self) -> None:
         """Inject secondary classification events if a change has occurred."""
+        assert self.current_row is not None
         # Add any missing secondaries.
         for dbc in self.current_row.categories:
-            if dbc.category not in self.submission.secondary_categories \
-                    and not dbc.is_primary:
+            if (self.submission is not None
+                and dbc.category not in self.submission.secondary_categories
+                and not dbc.is_primary):
+
                 self._inject(AddSecondaryClassification,
                              category=taxonomy.Category(dbc.category))
 
     def _inject_metadata_if_changed(self) -> None:
+        assert self.submission is not None and self.current_row is not None
         row = self.current_row  # For readability, below.
         if self.submission.metadata.title != row.title:
             self._inject(SetTitle, title=row.title)
@@ -183,6 +206,7 @@ class ClassicEventInterpolator:
             self._inject(SetAuthors, authors_display=row.authors)
 
     def _inject_jref_if_changed(self) -> None:
+        assert self.submission is not None and self.current_row is not None
         row = self.current_row  # For readability, below.
         if self.submission.metadata.doi != self.current_row.doi:
             self._inject(SetDOI, doi=row.doi)
@@ -191,13 +215,14 @@ class ClassicEventInterpolator:
         if self.submission.metadata.report_num != row.report_num:
             self._inject(SetReportNumber, report_num=row.report_num)
 
-    def _inject_request_if_changed(self, req_type: type) -> None:
+    def _inject_request_if_changed(self, req_type: Type[UserRequest]) -> None:
         """
         Update a request on the submission, if status changed.
 
         We will assume that the request itself originated in the NG system,
         so we will NOT create a new request.
         """
+        assert self.submission is not None and self.current_row is not None
         request_id = req_type.generate_request_id(self.submission,
                                                   self.requests[req_type])
         if self.current_row.is_announced():
@@ -207,18 +232,23 @@ class ClassicEventInterpolator:
         elif self.current_row.is_rejected():
             self._inject(RejectRequest, request_id=request_id)
 
-    def _inject(self, event_type: type, **data: Dict[str, Any]) -> None:
+    def _inject(self, event_type: Type[Event], **data: Any) -> None:
+        assert self.submission is not None and self.current_row is not None
         created = self.current_row.get_updated()
         logger.debug('inject %s', event_type.NAME)
-        self._apply(event_type(creator=SYSTEM, created=created, committed=True,
-                               submission_id=self.submission_id, **data))
+        event = event_type(creator=SYSTEM,   # type: ignore
+                           created=created,  # Mypy has a hard time with these
+                           committed=True,   # dataclass params.
+                           submission_id=self.submission_id,
+                           **data)
+        self._apply(event)
 
     def _apply(self, event: Event) -> None:
         self.submission = event.apply(self.submission)
         self.applied_events.append(event)
 
     def _backport_event(self, event: Event) -> None:
-        logger.debug('backport event %s', event.NAME)
+        assert self.submission is not None
         self.submission.versions[-1] = \
             event.apply(self.submission.versions[-1])
 
@@ -267,6 +297,8 @@ class ClassicEventInterpolator:
             if self._can_inject_from_current_row():
                 self._inject_from_current_row()
             self._advance_to_next_row()
+
+        assert self.submission is not None
         logger.debug('done; submission in state %s with %i events',
                      self.submission.status, len(self.applied_events))
         return self.submission, self.applied_events
