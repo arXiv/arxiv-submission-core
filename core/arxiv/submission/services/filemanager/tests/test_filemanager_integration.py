@@ -14,7 +14,8 @@ from arxiv.users.auth import scopes
 from arxiv.users.helpers import generate_token
 
 from ..filemanager import Filemanager
-from ....domain.uploads import Upload, FileStatus, FileError
+from ....domain.uploads import Upload, FileStatus, FileError, UploadStatus, \
+    UploadLifecycleStates
 
 mock_app = Flask('test')
 mock_app.config.update({
@@ -77,8 +78,8 @@ class TestFilemanagerIntegration(TestCase):
                               content_type='application/tar+gz')
         data = fm.upload_package(pointer, self.token)
         self.assertIsInstance(data, Upload)
-        self.assertEqual(data.status, Upload.Status.ERRORS)
-        self.assertEqual(data.lifecycle, Upload.LifecycleStates.ACTIVE)
+        self.assertEqual(data.status, UploadStatus.ERRORS)
+        self.assertEqual(data.lifecycle, UploadLifecycleStates.ACTIVE)
         self.assertFalse(data.locked)
 
     @mock.patch('arxiv.integration.api.service.current_app', mock_app)
@@ -117,8 +118,8 @@ class TestFilemanagerIntegration(TestCase):
 
         status = fm.get_upload_status(data.identifier, self.token)
         self.assertIsInstance(status, Upload)
-        self.assertEqual(status.status, Upload.Status.ERRORS)
-        self.assertEqual(status.lifecycle, Upload.LifecycleStates.ACTIVE)
+        self.assertEqual(status.status, UploadStatus.ERRORS)
+        self.assertEqual(status.lifecycle, UploadLifecycleStates.ACTIVE)
         self.assertFalse(status.locked)
 
     @mock.patch('arxiv.integration.api.service.current_app', mock_app)
