@@ -37,13 +37,17 @@ class TestFilemanagerIntegration(TestCase):
         image = f'arxiv/{Filemanager.SERVICE}'
         # client.images.pull(image, tag=Filemanager.VERSION)
 
+        cls.data = client.volumes.create(name='data', driver='local')
         cls.filemanager = client.containers.run(
             f'{image}:{Filemanager.VERSION}',
             detach=True,
             ports={'8000/tcp': 8003},
+            volumes={'data': {'bind': '/data', 'mode': 'rw'}},
             environment={
                 'NAMESPACE': 'test',
-                'JWT_SECRET': 'foosecret'
+                'JWT_SECRET': 'foosecret',
+                'SQLALCHEMY_DATABASE_URI': 'sqlite:////opt/arxiv/foo.db',
+                'STORAGE_BASE_PATH': '/data'
             },
             command='/bin/bash -c "python bootstrap.py && uwsgi --ini /opt/arxiv/uwsgi.ini"'
         )
@@ -60,6 +64,7 @@ class TestFilemanagerIntegration(TestCase):
         """Tear down file management service once all tests have run."""
         cls.filemanager.kill()
         cls.filemanager.remove()
+        cls.data.remove()
 
     def setUp(self):
         """Create a new app for config and context."""

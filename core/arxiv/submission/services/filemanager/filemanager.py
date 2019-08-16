@@ -23,7 +23,7 @@ class Filemanager(service.HTTPIntegration):
     """Encapsulates a connection with the file management service."""
 
     SERVICE = 'filemanager'
-    VERSION = 'ea8c33f403e92821487604dde4d76ef6899b0de5'
+    VERSION = '37bf8d3'
 
     class Meta:
         """Configuration for :class:`FileManager`."""
