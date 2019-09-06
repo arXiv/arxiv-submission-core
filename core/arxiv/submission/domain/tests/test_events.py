@@ -269,6 +269,16 @@ class TestSetPrimaryClassification(TestCase):
         with self.assertRaises(InvalidEvent):
             e.validate(self.submission)    # "Event should not be valid".
 
+    def test_set_primary_inactive(self):
+        """Category is not from the arXiv taxonomy."""
+        e = event.SetPrimaryClassification(
+            creator=self.user,
+            submission_id=1,
+            category="chao-dyn"
+        )
+        with self.assertRaises(InvalidEvent):
+            e.validate(self.submission)    # "Event should not be valid".
+
     def test_set_primary_with_valid_category(self):
         """Category is from the arXiv taxonomy."""
         for category in taxonomy.CATEGORIES.keys():
@@ -323,6 +333,16 @@ class TestAddSecondaryClassification(TestCase):
         with self.assertRaises(InvalidEvent):
             e.validate(self.submission)    # "Event should not be valid".
 
+    def test_add_secondary_inactive(self):
+        """Category is inactive."""
+        e = event.AddSecondaryClassification(
+            creator=self.user,
+            submission_id=1,
+            category="bayes-an"
+        )
+        with self.assertRaises(InvalidEvent):
+            e.validate(self.submission)
+
     def test_add_secondary_with_valid_category(self):
         """Category is from the arXiv taxonomy."""
         for category in taxonomy.CATEGORIES_ACTIVE.keys():
@@ -333,8 +353,9 @@ class TestAddSecondaryClassification(TestCase):
             )
             try:
                 e.validate(self.submission)
-            except InvalidEvent as e:
-                self.fail("Event should be valid")
+            except InvalidEvent:
+                if category != 'physics.gen-ph':
+                    self.fail("Event should be valid")
 
     def test_add_secondary_already_present(self):
         """Category is already present on the submission."""
@@ -361,6 +382,86 @@ class TestAddSecondaryClassification(TestCase):
         )
         with self.assertRaises(InvalidEvent):
             e.validate(self.submission)    # "Event should not be valid".
+
+    def test_add_general_secondary(self):
+        """Category is more general the existing categoies."""
+        classification = submission.Classification('physics.optics')
+        self.submission.primary_classification = classification
+
+        e = event.AddSecondaryClassification(
+            creator=self.user,
+            submission_id=1,
+            category='physics.gen-ph'
+        )
+        with self.assertRaises(InvalidEvent):
+            e.validate(self.submission)    # "Event should not be valid".
+
+        classification = submission.Classification('cond-mat.quant-gas')
+        self.submission.primary_classification = classification
+            
+        self.submission.secondary_classification.append(
+            submission.Classification('physics.optics'))
+        e = event.AddSecondaryClassification(
+            creator=self.user,
+            submission_id=1,
+            category='physics.gen-ph'
+        )
+        with self.assertRaises(InvalidEvent):
+            e.validate(self.submission)    # "Event should not be valid".
+
+    def test_add_specific_secondary(self):
+        """Category is more specific than existing general category."""
+        classification = submission.Classification('physics.gen-ph')
+        self.submission.primary_classification = classification
+
+        e = event.AddSecondaryClassification(
+            creator=self.user,
+            submission_id=1,
+            category='physics.optics'
+        )
+        with self.assertRaises(InvalidEvent):
+            e.validate(self.submission)    # "Event should not be valid".
+
+        classification = submission.Classification('astro-ph.SR')
+        self.submission.primary_classification = classification
+
+        self.submission.secondary_classification.append(
+            submission.Classification('physics.gen-ph'))
+        e = event.AddSecondaryClassification(
+            creator=self.user,
+            submission_id=1,
+            category='physics.optics'
+        )
+        with self.assertRaises(InvalidEvent):
+            e.validate(self.submission)    # "Event should not be valid".
+
+    def test_add_max_secondaries(self):
+        """Test max secondaries."""
+        self.submission.secondary_classification.append(
+            submission.Classification('cond-mat.dis-nn'))
+        self.submission.secondary_classification.append(
+            submission.Classification('cond-mat.mes-hall'))
+        self.submission.secondary_classification.append(
+            submission.Classification('cond-mat.mtrl-sci'))
+
+        e1 = event.AddSecondaryClassification(
+            creator=self.user,
+            submission_id=1,
+            category='cond-mat.quant-gas'
+        )
+        e1.validate(self.submission)
+        self.submission.secondary_classification.append(
+            submission.Classification('cond-mat.quant-gas'))
+
+        e2 = event.AddSecondaryClassification(
+            creator=self.user,
+            submission_id=1,
+            category='cond-mat.str-el'
+        )
+
+        self.assertEqual(len(self.submission.secondary_classification), 4)
+        with self.assertRaises(InvalidEvent):
+            e2.validate(self.submission)    # "Event should not be valid".
 
 
 class TestRemoveSecondaryClassification(TestCase):
