@@ -73,7 +73,7 @@ def cannot_be_genph(event: Event, submission: Submission) -> None:
         raise InvalidEvent(event, "Cannot be physics.gen-ph.")
 
 
-def no_redundent_general_category(event: Event,
+def no_redundant_general_category(event: Event,
                                   submission: Submission) -> None:
     """Prevents adding a general category when another category in
     that archive is already represented."""
