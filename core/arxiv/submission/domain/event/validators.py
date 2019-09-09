@@ -38,7 +38,7 @@ def no_trailing_period(event: Event, submission: Submission,
                                   " ellipses.")
 
 
-def must_be_a_active_category(event: Event, category: str,
+def must_be_an_active_category(event: Event, category: str,
                               submission: Submission) -> None:
     """Valid arXiv categories are defined in :mod:`arxiv.taxonomy`."""
     if not category or category not in CATEGORIES_ACTIVE:
