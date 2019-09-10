@@ -91,7 +91,7 @@ def no_redundant_general_category(event: Event,
                                f" {CATEGORIES[event.category]['in_archive']}.")
 
 
-def no_redundent_non_general_category(event: Event,
+def no_redundant_non_general_category(event: Event,
                                       submission: Submission) -> None:
     """Prevents adding a category when a general category in that archive
     is already represented."""
