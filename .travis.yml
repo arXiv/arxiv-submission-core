@@ -12,6 +12,7 @@ python:
   - "3.6"
 script:
   - pip install pipenv
+  - pip uninstall arxiv-base
   - pipenv install --dev
   - pipenv install ./core
   - pipenv run pip show arxiv-base
