@@ -154,7 +154,7 @@ class RequestCrossList(Event):
         if not submission.is_announced:
             raise InvalidEvent(self, "Submission must already be announced")
         for category in self.categories:
-            validators.must_be_a_valid_category(self, category, submission)
+            validators.must_be_an_active_category(self, category, submission)
             validators.cannot_be_primary(self, category, submission)
             validators.cannot_be_secondary(self, category, submission)
 
