@@ -114,7 +114,7 @@ from dataclasses import field, asdict
 from pytz import UTC
 
 from arxiv import taxonomy
-from arxiv import identifier as arxiv_identifier
+#from arxiv import identifier as arxiv_identifier
 from arxiv.base import logging
 from arxiv.base.globals import get_application_config
 from arxiv.util import schema
@@ -365,9 +365,9 @@ class AddSecondaryClassification(Event):
         validators.cannot_be_primary(self, self.category, submission)
         validators.cannot_be_secondary(self, self.category, submission)
         validators.max_secondaries(self, submission)
-        validators.no_redundant_general_category(self, submission)
-        validators.no_redundant_non_general_category(self, submission)
-        validators.cannot_be_genph(self, submission)
+        validators.no_redundant_general_category(self, self.category, submission)
+        validators.no_redundant_non_general_category(self, self.category, submission)
+        validators.cannot_be_genph(self, self.category, submission)
 
     def project(self, submission: Submission) -> Submission:
         """Add a :class:`.Classification` as a secondary classification."""

@@ -12,7 +12,7 @@ from .util import dataclass
 import bleach
 
 from arxiv.util import schema
-from arxiv import taxonomy, identifier
+from arxiv import taxonomy
 from arxiv.base import logging
 
 from ..agent import Agent
