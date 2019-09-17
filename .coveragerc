@@ -1,5 +1,6 @@
 [run]
 omit =
+    nstest.py
     app.py
     setup.py
     docs/*
