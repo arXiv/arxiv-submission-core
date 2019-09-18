@@ -6,7 +6,7 @@ import os
 file = "core/arxiv/__init__.py"
 print(f"The existence of {file} will cause modules "
       "from other packages to not be found.\n"
-      "It only exits due to deficiences with mypy.\n"
+      "It only exists due to current deficiencies in mypy.\n"
       "See https://packaging.python.org/guides/packaging-namespace-packages\n")
 try:
     os.remove(file)
