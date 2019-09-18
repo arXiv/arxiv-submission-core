@@ -384,7 +384,7 @@ class TestAddSecondaryClassification(TestCase):
             e.validate(self.submission)    # "Event should not be valid".
 
     def test_add_general_secondary(self):
-        """Category is more general the existing categoies."""
+        """Category is more general than the existing categories."""
         classification = submission.Classification('physics.optics')
         self.submission.primary_classification = classification
 
