@@ -4,7 +4,7 @@ that will mess up the namespaces"""
 import os
 
 file = "core/arxiv/__init__.py"
-print(f"The existance of {file} will cuase modules "
+print(f"The existence of {file} will cause modules "
       "from other packages to not be found.\n"
       "It only exits due to deficiences with mypy.\n"
       "See https://packaging.python.org/guides/packaging-namespace-packages\n")
