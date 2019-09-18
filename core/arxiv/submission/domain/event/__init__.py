@@ -114,7 +114,7 @@ from dataclasses import field, asdict
 from pytz import UTC
 
 from arxiv import taxonomy
-from arxiv import identifier as arxiv_identifier
+#from arxiv import identifier as arxiv_identifier
 from arxiv.base import logging
 from arxiv.base.globals import get_application_config
 from arxiv.util import schema
@@ -309,7 +309,7 @@ class SetPrimaryClassification(Event):
     def validate(self, submission: Submission) -> None:
         """Validate the primary classification category."""
         assert self.category is not None
-        validators.must_be_a_valid_category(self, self.category, submission)
+        validators.must_be_an_active_category(self, self.category, submission)
         self._creator_must_be_endorsed(submission)
         self._must_be_unannounced(submission)
         validators.submission_is_not_finalized(self, submission)
@@ -361,9 +361,13 @@ class AddSecondaryClassification(Event):
     def validate(self, submission: Submission) -> None:
         """Validate the secondary classification category to add."""
         assert self.category is not None
-        validators.must_be_a_valid_category(self, self.category, submission)
+        validators.must_be_an_active_category(self, self.category, submission)
         validators.cannot_be_primary(self, self.category, submission)
         validators.cannot_be_secondary(self, self.category, submission)
+        validators.max_secondaries(self, submission)
+        validators.no_redundant_general_category(self, self.category, submission)
+        validators.no_redundant_non_general_category(self, self.category, submission)
+        validators.cannot_be_genph(self, self.category, submission)
 
     def project(self, submission: Submission) -> Submission:
         """Add a :class:`.Classification` as a secondary classification."""
@@ -391,7 +395,7 @@ class RemoveSecondaryClassification(Event):
     def validate(self, submission: Submission) -> None:
         """Validate the secondary classification category to remove."""
         assert self.category is not None
-        validators.must_be_a_valid_category(self, self.category, submission)
+        validators.must_be_an_active_category(self, self.category, submission)
         self._must_already_be_present(submission)
         validators.submission_is_not_finalized(self, submission)
 
@@ -1334,7 +1338,7 @@ class Reclassify(Event):
     def validate(self, submission: Submission) -> None:
         """Validate the primary classification category."""
         assert isinstance(self.category, str)
-        validators.must_be_a_valid_category(self, self.category, submission)
+        validators.must_be_an_active_category(self, self.category, submission)
         self._must_be_unannounced(submission)
         validators.cannot_be_secondary(self, self.category, submission)
 
