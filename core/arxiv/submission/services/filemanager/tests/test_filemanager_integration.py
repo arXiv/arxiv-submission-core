@@ -192,6 +192,24 @@ class TestFilemanagerIntegration(TestCase):
                          'Size of the original content is preserved')
         self.assertEqual(file_chex, 'Copxu8SRHajXOfeK8_1h7w==')
 
+    @mock.patch('arxiv.integration.api.service.current_app', mock_app)
+    def test_delete_all(self):
+        """Delete all files."""
+
+        fm = Filemanager.current_session()
+        
+        fpath = os.path.join(os.path.split(os.path.abspath(__file__))[0],
+                             'data', 'test.pdf')
+        pointer = FileStorage(io.BytesIO(MINIMAL_PDF.encode('utf-8')),
+                              filename='test.pdf',
+                              content_type='application/pdf')
+        data = fm.upload_package(pointer, self.token)
+        upload_id = data.identifier
+        
+        stat = fm.delete_all(upload_id, self.token)
+        self.assertIsNotNone(stat)
+        self.assertEqual(stat.size, 0)
+
 
 # From https://brendanzagaeski.appspot.com/0004.html
 MINIMAL_PDF = """
