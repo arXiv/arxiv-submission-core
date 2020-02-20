@@ -1,16 +1,18 @@
 """Install arXiv submission core package."""
 
 from setuptools import setup, find_packages
+from arxiv.release.dist_version import get_version
 
 setup(
     name='arxiv-submission-core',
-    version='0.7.2rc12',
+    version=get_version('arxiv-submission-core'),
     packages=[f'arxiv.{package}' for package
               in find_packages('arxiv')],
     zip_safe=False,
+    setup_requires=['arxiv-base>=0.16.6rc8'],
     install_requires=[
-        'arxiv-base>=0.16.2',
-        'arxiv-auth>=0.4.1',
+        'arxiv-base>=0.16.6rc8',
+        'arxiv-auth>=0.4.2rc1',
         'flask',
         'mysqlclient',
         'bleach',
