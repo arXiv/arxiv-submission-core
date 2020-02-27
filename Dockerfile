@@ -1,6 +1,6 @@
 # arxiv/submission-agent
 
-ARG BASE_VERSION=0.16.1
+ARG BASE_VERSION=0.16.6
 
 FROM arxiv/base:${BASE_VERSION}
 
