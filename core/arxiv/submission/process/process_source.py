@@ -48,7 +48,7 @@ from ..domain import Preview, SubmissionContent, Submission, Compilation
 from ..domain.event import ConfirmSourceProcessed, UnConfirmSourceProcessed
 from ..services import PreviewService, Compiler, Filemanager
 
-from .checks.TeXProduced import check_tex_produced_pdf_from_stream
+from .checks.tex_produced import check_tex_produced_pdf_from_stream
 
 logger = logging.getLogger(__name__)
 
@@ -286,36 +286,32 @@ class _PDFStarter(BaseStarter):
         # Add Tex Produced check here
         try:
 
+            # We need an object that is seekable. The ReadWrapper only
+            # encapsulats a live stream from the File Manager service so
+            # we read it into an in-memory object.
             filestream = io.BytesIO()
 
-            filestream.write(stream.read())
-            stream.close()
+            try:
+                line = stream.read()
+                while len(line) > 0:
+                    filestream.write(line)
+                    line = stream.read()
+            except Exception as ex:
+                logger.error(f'There was a problem reading the content stream: {ex}\n')
 
-            filestream.seek(0)
+            filestream.seek(0,0)
 
-            logger.error(f'Print FileStream: {filestream.readline()}\n')
-            logger.error(f'Print Stream: {stream.readline()}\n')
+            logger.info(f'In Memory Size: {filestream.__sizeof__()}')
+            logger.error(f'3) Check PDF for TeX Produced:')
 
-                #otherStream.CopyTo(ms);
-                #ms.Position = 0;
-                #// now work with ms
-            logger.error(f'Memory Stream: {filestream}')
-            logger.error(f'\nMemory Size: {filestream.__sizeof__()}')
-            #logger.error(f'\nStream Content: {stream.read()}')
-
-            #if check_tex_produced_pdf_from_stream(stream.read()):
-            #    logger.error(f'!!!!TeX Produced!!!')
-
-            logger.error(f'Check PDF for TeX Produced: {stream}')
-
+            # Finally run the TeX Produced check
             if check_tex_produced_pdf_from_stream(filestream):
-                #raise Exception("TeX Produced")
-                logger.error('PDF IS TeX Produced')
+                logger.error('Detected a TeX Produced PDF')
                 return FAILED, {'reason': 'PDF appears to have been produced from TeX source.'}
             else:
                 return SUCCEEDED, {}
         except Exception as ex:
-            logger.error(f'FAILED: Check PDF for TeX Produced:{ex}')
+            logger.error(f'TeX Produced check failed:{ex}')
             return FAILED, {'reason': 'TeX Produced check failed.'}
 
         self.finish(stream, content_checksum)
