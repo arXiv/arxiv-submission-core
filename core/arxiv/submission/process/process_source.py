@@ -48,6 +48,8 @@ from ..domain import Preview, SubmissionContent, Submission, Compilation
 from ..domain.event import ConfirmSourceProcessed, UnConfirmSourceProcessed
 from ..services import PreviewService, Compiler, Filemanager
 
+from .checks.TeXProduced import check_tex_produced_pdf_from_stream
+
 logger = logging.getLogger(__name__)
 
 Status = str
@@ -280,6 +282,41 @@ class _PDFStarter(BaseStarter):
                          f' expected {self.submission.source_content.checksum}'
                          f' but got {checksum}')
             return FAILED, {'reason': 'Source has changed.'}
+
+        # Add Tex Produced check here
+        try:
+
+            filestream = io.BytesIO()
+
+            filestream.write(stream.read())
+            stream.close()
+
+            filestream.seek(0)
+
+            logger.error(f'Print FileStream: {filestream.readline()}\n')
+            logger.error(f'Print Stream: {stream.readline()}\n')
+
+                #otherStream.CopyTo(ms);
+                #ms.Position = 0;
+                #// now work with ms
+            logger.error(f'Memory Stream: {filestream}')
+            logger.error(f'\nMemory Size: {filestream.__sizeof__()}')
+            #logger.error(f'\nStream Content: {stream.read()}')
+
+            #if check_tex_produced_pdf_from_stream(stream.read()):
+            #    logger.error(f'!!!!TeX Produced!!!')
+
+            logger.error(f'Check PDF for TeX Produced: {stream}')
+
+            if check_tex_produced_pdf_from_stream(filestream):
+                #raise Exception("TeX Produced")
+                logger.error('PDF IS TeX Produced')
+                return FAILED, {'reason': 'PDF appears to have been produced from TeX source.'}
+            else:
+                return SUCCEEDED, {}
+        except Exception as ex:
+            logger.error(f'FAILED: Check PDF for TeX Produced:{ex}')
+            return FAILED, {'reason': 'TeX Produced check failed.'}
 
         self.finish(stream, content_checksum)
         return SUCCEEDED, {}
