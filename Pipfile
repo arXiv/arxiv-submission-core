@@ -31,9 +31,9 @@ Jinja2 = ">=2.10.1"
 pyyaml = ">=4.2b1"
 arxiv-vault = "~=0.1.1rc15"
 redis = "==2.10.6"
-arxiv-submission-core = {path = "./core"}
 mypy = "==0.720"
-pypdf = "==1.26.0"
+pypdf2 = "==1.26.0"
+
 
 [dev-packages]
 "nose2" = "*"
