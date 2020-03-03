@@ -10,12 +10,12 @@ import shutil
 import tempfile
 import filecmp
 
-# from core.arxiv.submission.process.checks.tex_produced import check_tex_produced_pdf, check_tex_produced_ps
-from tex_produced import get_filtered_pdf_info_from_file, get_filtered_pdf_info_from_stream, \
+from .tex_produced import get_filtered_pdf_info_from_file, get_filtered_pdf_info_from_stream, \
     get_pdf_fonts_from_file, get_pdf_fonts_from_stream, \
     check_tex_produced_pdf_from_stream, check_tex_produced_ps
 
-TEST_FILES_DIRECTORY = os.path.join(os.getcwd(), 'test_files_tex_produced')
+parent, _ = os.path.split(os.path.abspath(__file__))
+TEST_FILES_DIRECTORY = os.path.join(parent, 'test_files_tex_produced')
 
 pdf_tests = []
 
