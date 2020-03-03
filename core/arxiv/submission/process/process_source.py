@@ -297,6 +297,9 @@ class _PDFStarter(BaseStarter):
                 while len(line) > 0:
                     filestream.write(line)
                     line = stream.read()
+            except StopIteration as ex:
+                # This is OK
+                pass
             except Exception as ex:
                 logger.error(f'There was a problem reading the content stream: {ex}\n')
                 return FAILED, {'reason': 'There was a problem reading the '
@@ -424,7 +427,9 @@ class _CompilationChecker(BaseChecker):
                     # Finally run the TeX-Produced check
                     if check_tex_produced_pdf_from_stream(prod.stream):
                         logger.error('Detected a TeX-produced Postscript submission.')
-                        return FAILED, {'reason': 'Postscript appears to have been produced from TeX source.'}
+                        return FAILED, {'reason':
+                                            'Postscript submission appears to'
+                                            ' have been produced from TeX source.'}
                     else:
                         return SUCCEEDED, {}
                 except Exception as ex:
