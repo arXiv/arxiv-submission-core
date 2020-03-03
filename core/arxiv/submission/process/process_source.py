@@ -283,10 +283,11 @@ class _PDFStarter(BaseStarter):
                          f' but got {checksum}')
             return FAILED, {'reason': 'Source has changed.'}
 
-        # Add Tex Produced check here
+        # This is a PDF-Only submission so we run TeX-produced check as soon as we have
+        # the single-file PDF
         try:
 
-            # We need an object that is seekable. The ReadWrapper only
+            # We need a file-like object that is seekable. The ReadWrapper only
             # encapsulats a live stream from the File Manager service so
             # we read it into an in-memory object.
             filestream = io.BytesIO()
@@ -298,21 +299,19 @@ class _PDFStarter(BaseStarter):
                     line = stream.read()
             except Exception as ex:
                 logger.error(f'There was a problem reading the content stream: {ex}\n')
-
+                return FAILED, {'reason': 'There was a problem reading the '
+                                          'content stream: {ex}.'}
             filestream.seek(0,0)
-
-            logger.info(f'In Memory Size: {filestream.__sizeof__()}')
-            logger.error(f'3) Check PDF for TeX Produced:')
 
             # Finally run the TeX Produced check
             if check_tex_produced_pdf_from_stream(filestream):
-                logger.error('Detected a TeX Produced PDF')
+                logger.error('Detected a TeX-produced PDF')
                 return FAILED, {'reason': 'PDF appears to have been produced from TeX source.'}
             else:
                 return SUCCEEDED, {}
         except Exception as ex:
-            logger.error(f'TeX Produced check failed:{ex}')
-            return FAILED, {'reason': 'TeX Produced check failed.'}
+            logger.error(f'TeX-produced check failed:{ex}')
+            return FAILED, {'reason': 'TeX-produced check failed.'}
 
         self.finish(stream, content_checksum)
         return SUCCEEDED, {}
@@ -412,8 +411,29 @@ class _CompilationChecker(BaseChecker):
             prod = c.get_product(self.submission.source_content.identifier,
                                  self.submission.source_content.checksum,
                                  self.token)
-            self.finish(prod.stream, prod.checksum)
-            status = SUCCEEDED
+
+            # For Postscript source format ONLY: AutoTeX will convert
+            # Postscript files to PDF (instead of compiling it). We run
+            # TeX-produced check on final generated PDF since it is easier
+            # than getting all of the content files (Postscript + images)
+            # and checking each one. TeX-produced charactersistics appears
+            # to carry through to generated PDF.
+            if self.submission.source_content.source_format == \
+                    SubmissionContent.Format.POSTSCRIPT:
+                try:
+                    # Finally run the TeX-Produced check
+                    if check_tex_produced_pdf_from_stream(prod.stream):
+                        logger.error('Detected a TeX-produced Postscript submission.')
+                        return FAILED, {'reason': 'Postscript appears to have been produced from TeX source.'}
+                    else:
+                        return SUCCEEDED, {}
+                except Exception as ex:
+                    logger.error(f'TeX-produced check failed:{ex}')
+                    return FAILED, {'reason': 'TeX-produced check failed.'}
+
+            else:
+                self.finish(prod.stream, prod.checksum)
+                status = SUCCEEDED
         elif comp is not None and comp.is_failed:
             status = FAILED
             extra.update({'reason': comp.reason.value,
