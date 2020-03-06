@@ -348,11 +348,11 @@ if CLASSIFIER_PROTO == 'https' and not CLASSIFIER_VERIFY:
 SUBMISSION_PREVIEW_HOST = environ.get('SUBMISSION_PREVIEW_SERVICE_HOST', 'localhost')
 """Hostname or address of the preview service."""
 
-PREVIEW_PORT = environ.get('PREVIEW_SERVICE_PORT', '8000')
+SUBMISSION_PREVIEW_PORT = environ.get('PREVIEW_SERVICE_PORT', '8000')
 """Port for the preview service."""
 
 SUBMISSION_PREVIEW_PROTO = environ.get(
-    f'PREVIEW_PORT_{PREVIEW_PORT}_PROTO',
+    f'SUBMISSION_PREVIEW_PORT_{SUBMISSION_PREVIEW_PORT}_PROTO',
     environ.get('SUBMISSION_PREVIEW_PROTO', 'http')
 )
 """Protocol for the preview service."""
@@ -360,15 +360,15 @@ SUBMISSION_PREVIEW_PROTO = environ.get(
 SUBMISSION_PREVIEW_PATH = environ.get('SUBMISSION_PREVIEW_PATH', '')
 """Path at which the preview service is deployed."""
 
-PREVIEW_ENDPOINT = environ.get(
-    'PREVIEW_ENDPOINT',
-    '%s://%s:%s/%s' % (SUBMISSION_PREVIEW_PROTO, PREVIEW_HOST, PREVIEW_PORT, SUBMISSION_PREVIEW_PATH)
+SUBMISSION_PREVIEW_ENDPOINT = environ.get(
+    'SUBMISSION_PREVIEW_ENDPOINT',
+    '%s://%s:%s/%s' % (SUBMISSION_PREVIEW_PROTO, PREVIEW_HOST, SUBMISSION_PREVIEW_PORT, SUBMISSION_PREVIEW_PATH)
 )
 """
 Full URL to the root preview service API endpoint.
 
 If not explicitly provided, this is composed from :const:`PREVIEW_HOST`,
-:const:`PREVIEW_PORT`, :const:`SUBMISSION_PREVIEW_PROTO`, and :const:`SUBMISSION_PREVIEW_PATH`.
+:const:`SUBMISSION_PREVIEW_PORT`, :const:`SUBMISSION_PREVIEW_PROTO`, and :const:`SUBMISSION_PREVIEW_PATH`.
 """
 
 SUBMISSION_PREVIEW_VERIFY = bool(int(environ.get('SUBMISSION_PREVIEW_VERIFY', '0')))
