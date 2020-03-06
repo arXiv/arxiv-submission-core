@@ -676,7 +676,7 @@ class TestPlainTextServiceIntegration(TestCase):
             environment={
                 'NAMESPACE': 'test',
                 'REDIS_ENDPOINT': 'test-plaintext-redis:6379',
-                'PREVIEW_ENDPOINT': 'http://host.docker.internal:5009',
+                'SUBMISSION_PREVIEW_ENDPOINT': 'http://host.docker.internal:5009',
                 'JWT_SECRET': 'foosecret',
                 'MOUNTDIR': cls.pdfs
             },
@@ -699,7 +699,7 @@ class TestPlainTextServiceIntegration(TestCase):
                 'NAMESPACE': 'test',
                 'REDIS_ENDPOINT': 'test-plaintext-redis:6379',
                 'DOCKER_HOST': 'unix://var/run/docker.sock',
-                'PREVIEW_ENDPOINT': 'http://host.docker.internal:5009',
+                'SUBMISSION_PREVIEW_ENDPOINT': 'http://host.docker.internal:5009',
                 'JWT_SECRET': 'foosecret',
                 'MOUNTDIR': cls.pdfs
             },

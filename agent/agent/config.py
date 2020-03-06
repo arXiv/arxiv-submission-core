@@ -345,38 +345,38 @@ if CLASSIFIER_PROTO == 'https' and not CLASSIFIER_VERIFY:
                   ' should not be disabled in production.')
 
 # Integration with the preview service.
-PREVIEW_HOST = environ.get('PREVIEW_SERVICE_HOST', 'localhost')
+SUBMISSION_PREVIEW_HOST = environ.get('SUBMISSION_PREVIEW_SERVICE_HOST', 'localhost')
 """Hostname or address of the preview service."""
 
 PREVIEW_PORT = environ.get('PREVIEW_SERVICE_PORT', '8000')
 """Port for the preview service."""
 
-PREVIEW_PROTO = environ.get(
+SUBMISSION_PREVIEW_PROTO = environ.get(
     f'PREVIEW_PORT_{PREVIEW_PORT}_PROTO',
-    environ.get('PREVIEW_PROTO', 'http')
+    environ.get('SUBMISSION_PREVIEW_PROTO', 'http')
 )
 """Protocol for the preview service."""
 
-PREVIEW_PATH = environ.get('PREVIEW_PATH', '')
+SUBMISSION_PREVIEW_PATH = environ.get('SUBMISSION_PREVIEW_PATH', '')
 """Path at which the preview service is deployed."""
 
 PREVIEW_ENDPOINT = environ.get(
     'PREVIEW_ENDPOINT',
-    '%s://%s:%s/%s' % (PREVIEW_PROTO, PREVIEW_HOST, PREVIEW_PORT, PREVIEW_PATH)
+    '%s://%s:%s/%s' % (SUBMISSION_PREVIEW_PROTO, PREVIEW_HOST, PREVIEW_PORT, SUBMISSION_PREVIEW_PATH)
 )
 """
 Full URL to the root preview service API endpoint.
 
 If not explicitly provided, this is composed from :const:`PREVIEW_HOST`,
-:const:`PREVIEW_PORT`, :const:`PREVIEW_PROTO`, and :const:`PREVIEW_PATH`.
+:const:`PREVIEW_PORT`, :const:`SUBMISSION_PREVIEW_PROTO`, and :const:`SUBMISSION_PREVIEW_PATH`.
 """
 
-PREVIEW_VERIFY = bool(int(environ.get('PREVIEW_VERIFY', '0')))
+SUBMISSION_PREVIEW_VERIFY = bool(int(environ.get('SUBMISSION_PREVIEW_VERIFY', '0')))
 """Enable/disable SSL certificate verification for preview service."""
 
-PREVIEW_STATUS_TIMEOUT = float(environ.get('PREVIEW_STATUS_TIMEOUT', 1.0))
+SUBMISSION_PREVIEW_STATUS_TIMEOUT = float(environ.get('SUBMISSION_PREVIEW_STATUS_TIMEOUT', 1.0))
 
-if PREVIEW_PROTO == 'https' and not PREVIEW_VERIFY:
+if SUBMISSION_PREVIEW_PROTO == 'https' and not SUBMISSION_PREVIEW_VERIFY:
     warnings.warn('Certificate verification for preview service is disabled;'
                   ' this should not be disabled in production.')
 

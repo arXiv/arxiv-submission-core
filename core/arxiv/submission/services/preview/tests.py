@@ -1,4 +1,4 @@
-"""Integration tests for the preview service."""
+f"""Integration tests for the preview service."""
 
 import io
 import os
@@ -43,11 +43,11 @@ class TestPreviewIntegration(TestCase):
 
         cls.app = Flask('test')
         cls.app.config.update({
-            'PREVIEW_SERVICE_HOST': 'localhost',
-            'PREVIEW_SERVICE_PORT': '8889',
-            'PREVIEW_PORT_8889_PROTO': 'http',
-            'PREVIEW_VERIFY': False,
-            'PREVIEW_ENDPOINT': 'http://localhost:8889'
+            'SUBMISSION_PREVIEW_SERVICE_HOST': 'localhost',
+            'SUBMISSION_PREVIEW_SERVICE_PORT': '8889',
+            'SUBMISSION_PREVIEW_PORT_8889_PROTO': 'http',
+            'SUBMISSION_PREVIEW_VERIFY': False,
+            'SUBMISSION_PREVIEW_ENDPOINT': 'http://localhost:8889'
 
         })
         PreviewService.init_app(cls.app)
