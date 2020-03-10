@@ -70,35 +70,6 @@ def get_filtered_pdf_info_from_stream(stream: IO[bytes]) -> List[str]:
     return info_list
 
 
-def get_filtered_pdf_info_from_file(filepath: str) -> List[str]:
-    """
-    Returns select set of values from pdfinfo output for specified file.
-
-    Parameters
-    ----------
-    filepath : str
-        The file to run pdfinfo on.
-
-    Returns
-    -------
-    List containing one entry for each selected line from pdfinfo output.
-
-    """
-    info_list = []
-
-    info = subprocess.run(["pdfinfo", f"{filepath}"], stderr=subprocess.PIPE,
-                          stdout=subprocess.PIPE)
-
-    lines = info.stdout.splitlines()
-
-    # Filter for only those elements we are checking
-    for line in lines:
-        if re.search(rb'^(Creator:|Producer:|Title)', line):
-            info_list.append(line)
-
-    return info_list
-
-
 # This find-font code [walk() and parts of get_pdf_fonts_from_stream()] is
 # taken from the web and originally written by Tim Arnold.
 # I have modified it for our needs. DLF2
@@ -246,7 +217,7 @@ def check_tex_produced_pdf_from_stream(stream: IO[bytes]) -> bytes:
         logger.error(f'Error getting pdfinfo: {ex}')
 
     if verbose:
-        print(f"\nInfo: '{info}' from PDF")
+        logger.debug(f"\nInfo: '{info}' from PDF")
 
     for regex in regexes:
         ret = [m.group(0) for i in info for m in [regex.search(i)] if m]
@@ -264,46 +235,6 @@ def check_tex_produced_pdf_from_stream(stream: IO[bytes]) -> bytes:
         fonts = get_pdf_fonts_from_stream(stream)
     except Exception as ex:
         logger.error(f'Error getting pdffonts: {ex}')
-
-    match = [m.group(0) for i in fonts for m in [fontsrgex.search(i)] if m]
-
-    if match:
-        return match[0]
-
-    return b''
-
-
-def check_tex_produced_pdf_from_file(file_path: str) -> bytes:
-    """
-    Check whether specified PDF file was produced by TeX.
-    Parameters
-    ----------
-    file_path : str
-        The file path for PDF to be checked for TeX produced.
-    Returns
-    -------
-        String (regex match) if PDF is TeX-produced, otherwise return ''.
-    """
-    if not os.path.exists(file_path):
-        return b''
-
-    info = get_filtered_pdf_info_from_file(file_path)
-
-    if verbose:
-        print(f"\nInfo: '{info}' from PDF")
-
-    for regex in regexes:
-        ret = [m.group(0) for i in info for m in [regex.search(i)] if m]
-        if ret:
-            return ret[0]
-
-    # Skip fonts check when TeXmacs (uses TeX as its backend)
-    ret = [m.group(0) for i in info for m in [regexTeXmacs.search(i)] if m]
-    if ret:
-        return b''
-
-    # Check for TeX fonts
-    fonts = get_pdf_fonts_from_file(file_path)
 
     match = [m.group(0) for i in fonts for m in [fontsrgex.search(i)] if m]
 
