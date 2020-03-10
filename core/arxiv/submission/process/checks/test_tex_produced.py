@@ -111,8 +111,8 @@ class TestTeXProduced(TestCase):
             # Try as file first
             print(f"\n***Testing pdfinfo on file '{filename}'")
 
-            resultF = get_filtered_pdf_info_from_file(test_file_path)
-            resultF.sort()
+            #resultF = get_filtered_pdf_info_from_file(test_file_path)
+            #resultF.sort()
             # print(f"ResultF:{resultF}\n")
 
             stream = io.open(test_file_path, "rb")
@@ -134,7 +134,7 @@ class TestTeXProduced(TestCase):
             # Try as file first
             print(f"\n***Testing pdffonts on file '{filename}'")
 
-            fontsF = get_pdf_fonts_from_file(test_file_path)
+            #fontsF = get_pdf_fonts_from_file(test_file_path)
 
             stream = io.open(test_file_path, "rb")
             fontsS = get_pdf_fonts_from_stream(stream)
