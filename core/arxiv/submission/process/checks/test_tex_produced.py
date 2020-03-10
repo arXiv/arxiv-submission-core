@@ -10,7 +10,7 @@ import shutil
 import tempfile
 import filecmp
 
-from .tex_produced import get_filtered_pdf_info_from_file, get_filtered_pdf_info_from_stream, \
+from .tex_produced import get_filtered_pdf_info_from_stream, \
     get_pdf_fonts_from_file, get_pdf_fonts_from_stream, \
     check_tex_produced_pdf_from_stream, check_tex_produced_ps
 
