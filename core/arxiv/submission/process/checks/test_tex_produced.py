@@ -92,6 +92,171 @@ ps_tests.append(['simple_tex_produced.ps', True,
                  'Expected "%%Creator: dvips(k) 5.96.1 Copyright 2007 Radical '
                  'Eye Software"'])
 
+pdfinfo_results = {}
+pdfinfo_results["astro-ph-0610480.ethanneil.20289.pdf"] = \
+    [b'Creator:        dvips(k) 5.94b Copyright 2004 Radical Eye Software',
+     b'Producer:       AFPL Ghostscript 8.0', b'Title:          ms-012907.dvi']
+pdfinfo_results["astro-ph-0703077.jf_sauvage.10062.pdf"] = \
+    [b'Creator:        dvips(k) 5.92b Copyright 2002 Radical Eye Software',
+     b'Producer:       GPL Ghostscript 8.01', b'Title:          article2.dvi']
+pdfinfo_results["astro-ph.arimoto.4168.pdf"] = \
+    [b'Creator:         TeX output 2007.03.01:2335', b'Producer:       dvipdfmx (20040411)']
+pdfinfo_results["astro-ph.ewhelan.18488.pdf"] = \
+    [b'Creator:        TeX', b'Producer:       pdfeTeX-1.21a']
+pdfinfo_results["notex_compositionality.pdf"] = \
+    [b'Creator:        PDFCreator Version 0.7.1',
+     b'Producer:       AFPL Ghostscript 8.0',
+     b'Title:          compositionality']
+pdfinfo_results["0706.4412.pdf"] = [b'Producer:       GNU Ghostscript 7.07']
+pdfinfo_results["0706.4328.pdf"] = \
+    [b'Creator:        Neevia PDF ToolBox v5.6s - http://neevia.com']
+pdfinfo_results["0706.3971.pdf"] = \
+    [b'Producer:       Acrobat Distiller 6.0 (Windows)',
+     b'Title:          untitled']
+pdfinfo_results["0706.3927.pdf"] = [b'Producer:       GNU Ghostscript 7.07']
+pdfinfo_results["0706.3906.pdf"] = [b'Producer:       GNU Ghostscript 7.07']
+pdfinfo_results["0706.3810.pdf"] = \
+    [b'Creator:        PScript5.dll Version 5.2',
+     b'Producer:       AFPL Ghostscript 8.14',
+     b'Title:          Microsoft Word - Magnetospectroscopy of symmetric and anti.doc']
+pdfinfo_results["0611002.pdf"] = [b'Producer:       ESP Ghostscript 815.02']
+pdfinfo_results["GalluzziBalkancom2018.pdf"] = \
+    [b'Creator:        TeX', b'Producer:       pdfTeX-1.40.16']
+pdfinfo_results["2738685LaTeX.pdf"] = \
+    [b'Creator:        LaTeX with hyperref package',
+     b'Producer:       University of Cambridge', b'Title:          ']
+pdfinfo_results["2745765withCairoFonts.pdf"] = \
+    [b'Creator:        Win2PDF', b'Producer:       Win2PDF x64 10.0.06 - '
+                                 b'2.6.7.1487.3 http://www.win2pdf.com',
+     b'Title:          proceedings_aew11.pdf']
+pdfinfo_results["2748220withCairoCreator.pdf"] = \
+    [b'Creator:        cairo 1.15.10 (http://cairographics.org)',
+     b'Producer:       GPL Ghostscript GIT PRERELEASE 9.22']
+pdfinfo_results["sparsemult6.pdf"] = \
+    [b'Creator:        TeXmacs-1.0.7.2',
+     b'Producer:       GPL Ghostscript 8.61',
+     b'Title:          /Users/vdhoeven/sparsemult6.ps']
+pdfinfo_results["math0607661.tudateru.25992.tsuda_takenawa.pdf"] = \
+    [b'Producer:       dvipdfmx (20061211)']
+pdfinfo_results["0706.3906.pdf"] = [b'Producer:       GNU Ghostscript 7.07']
+
+
+fonts_result = {}
+fonts_result["astro-ph.arimoto.4168.pdf"] = \
+    [b'BQKDFC+CMMI10', b'FJDHHB+CMTI8', b'GFPVMA+CMCSC10', b'IUYVZE+CMMI8',
+     b'JBSLPS+CMSY10', b'KEOZZB+CMTI10', b'LLVPZL+CMBX8', b'MGFVNG+CMMI7',
+     b'MHETFU+CMEX10', b'OINLAO+CMBX12', b'PJBPQE+CMR6', b'QNJFYJ+CMR9',
+     b'RNEMGD+CMR8', b'RRHFTI+CMSY8', b'VQCMXZ+CMTI9', b'VVCYYH+CMBX10',
+     b'VZXGAG+CMSY7', b'WRDBFJ+CMR10', b'XIHSVW+CMMI6', b'YEPHKU+CMR7',
+     b'YYRHVC+CMBXTI10']
+fonts_result["astro-ph.ewhelan.18488.pdf"] = \
+    [b'CBTHOB+CMTI7', b'EQTVAK+CMTI8', b'FQQPIG+CMSY10', b'IJBSRW+CMBX12',
+     b'NIFFGN+CMR10', b'SMAWOI+CMR7', b'TVIDAU+CMMI12', b'UNHPYC+CMMI8',
+     b'XMEFCN+CMSY8', b'YAUXGX+CMR12', b'YLCKCI+CMTI12', b'ZPCDVD+CMR8']
+fonts_result["notex_compositionality.pdf"] = \
+    [b'CWAAAA+F1', b'EWAAAA+F2', b'GWAAAA+F3', b'MWAAAA+F4', b'OWAAAA+F5',
+     b'QWAAAA+F6', b'VWAAAA+F7', b'ZVAAAA+F0', b'ZWAAAA+F8']
+fonts_result["0706.4412.pdf"] = \
+    [b'BHLPIP+CMBX10', b'BUQRYG+MSBM10', b'DXTPTB+CMBX9', b'EQRCEM+MSAM10',
+     b'FJANZJ+CMSY10', b'GAYPGU+CMEX10', b'GLAQTF+CMMI9', b'GOFKVE+CMR10',
+     b'HMISIE+CMSY8', b'IFEJKL+CMMI6', b'IGVNSF+CMR8', b'IMZDWU+EUFM10',
+     b'MNFOES+CMMI8', b'MUHWZY+CMSY6', b'NSFRYN+EUFM7', b'PQYBSV+CMTI9',
+     b'PZASQV+CMTT9', b'QDWHPH+CMMI10', b'RDCPQE+CMSY9', b'SBCPXR+CMR9',
+     b'TMWTQF+CMTI10', b'VABLXE+CMCSC10', b'VJDOJY+CMSY7',
+     b'WBGKJK+CMCSC10~1b', b'WTJXVK+CMR6']
+fonts_result["0706.4328.pdf"] = \
+    [b'AELGFH+CMR10', b'CPQAJF+CMBX10', b'CRRKFF+CMR5', b'EKIZTK+CMMI7',
+     b'GCTWWA+CMTI10', b'GQIJHC+CMTI9', b'GXDHJM+CMBX7', b'HEXBNV+Helvetica',
+     b'IIEKLO+CMSY6', b'IIEKLO+CMSY8', b'IOZXTC+CMMI5', b'JTDYKM+CMR9',
+     b'KZXCGM+CMMIB10', b'LEXOAJ+Helvetica', b'LFAUZY+Helvetica',
+     b'LLQPNE+Helvetica', b'MNSIZB+Helvetica', b'PODGJB+CMSY10',
+     b'QEOWAT+CMMI8', b'QEWIFQ+MSBM10', b'REEIPG+CMEX10', b'RKSKKN+Helvetica',
+     b'ROGAMB+Helvetica-Bold', b'RSTMGR+CMSSBX10', b'SDQGZD+CMSY7',
+     b'SVZFMT+CMR7', b'THRLCS+CMSS8', b'TJHYLV+CMSS10', b'VJIEOD+CMMI10',
+     b'WTBOIB+CMR6', b'WTBOIB+CMR8', b'WXLRKO+CMSS12', b'XXALZA+Helvetica',
+     b'ZRLAKB+CMBX9']
+fonts_result["0706.3971.pdf"] = [
+    b'HKECOK+TT1BE3o00', b'HKECOL+TT1BE4o00', b'HKECOM+TT1BE5o00',
+    b'HKEEGA+TT20D4o00', b'HKEEGB+TT20D5o00', b'HKEEGC+TT20D6o00',
+    b'HKEEGD+TT20D7o00', b'HKEEGE+TT20D8o00', b'HKEEGF+TT20DDo00',
+    b'HKEEGG+TT20DEo00', b'HKEEHB+TT20DFo00', b'HKEEHC+TT20E0o00',
+    b'HKEEHD+TT20E1o00', b'HKEEHE+TT20E2o00', b'HKEEHF+TT20E3o00',
+    b'HKEEIA+TT20E4o00', b'HKEEIB+TT20E5o00', b'HKEEIC+TT20E6o00',
+    b'HKEEID+TT20E7o00', b'HKEEIO+TT20E9o00', b'HKEEIP+TT20EAo00',
+    b'HKEEJA+TT20EBo00', b'HKEEJL+TT20ECo00', b'HKEELA+TT22E5o00',
+    b'HKEELB+TT22E6o00', b'HKEELM+TT22E7o00', b'HKEEMH+TT2376o00',
+    b'HKEEMI+TT2377o00', b'HKEEMJ+TT2378o00', b'HKEFII+TT2304o00',
+    b'HKEFJD+TT2305o00', b'HKEFJE+TT2306o00', b'HKEFJP+TT2330o00',
+    b'HKEFKA+TT2331o00', b'HKEFKL+TT2332o00', b'HKEFLG+TT235Bo00',
+    b'HKEFLH+TT235Co00', b'HKEFMC+TT235Do00', b'HKEFMN+TT26FFo00',
+    b'HKEFNI+TT2700o00', b'HKEFNJ+TT2701o00', b'HKEHBB+TTE06o00']
+fonts_result["0706.3927.pdf"] = \
+    [b'AIXQTJ+CMMI7', b'ATZQGV+CMMI10', b'AWELIU+CMSY8', b'BEUFAJ+CMR6',
+     b'BUHTVT+CMSY7', b'CNDKXA+MSBM10', b'COUOFV+CMR10~30', b'CSEQFF+CMMI9',
+     b'CUYEJK+CMR8', b'GCHXMO+CMMI6', b'GVEPRH+CMR7', b'HAFSLD+CMBX10~4d',
+     b'JHATDL+CMTI10~44', b'JYXCFL+CMMI8', b'KLVICX+CMR10', b'LLBQDU+CMSY10',
+     b'MJBQKH+CMR12', b'NUVUDV+CMBX12~3b', b'PIAMKU+CMTI10', b'PRCPWN+CMEX10',
+     b'QBJYIA+CMSY6', b'QJFLWZ+CMBX10', b'RSCMAG+CMSY9', b'VBQSLW+CMBX12',
+     b'VOKQVE+CMR17', b'XETQGR+CMSY10~41', b'YXQDRB+CMMI10~3e', b'ZQZNMZ+CMR9']
+fonts_result["0706.3906.pdf"] = [
+    b'AGKNIF+CMR10~21', b'BAXISG+CMBX10~2d', b'BGBZVV+CMR6', b'BZFEKM+MSBM10',
+    b'FHHJET+CMTI10', b'FOJRZZ+CMMI12', b'GMHMYO+LASY10', b'IKAXRW+CMBX12~4c',
+    b'ITCNQW+CMR8', b'JXXCPI+CMBX10', b'KXDKQF+CMSY10', b'LVDKXS+CMR17',
+    b'MGYOQG+CMMI8', b'ODFJJZ+TeX-cmex8', b'OUCGXF+CMMI10', b'PNLSVL+CMR9',
+    b'PVHFJL+CMSY8', b'UANKIQ+CMR10', b'UNSMYH+CMMI6', b'WQVKTC+CMEX10',
+    b'XJTXDN+CMSY6', b'YCCIZK+CMSY10~2a', b'ZECLTG+CMBX12', b'ZHHFVF+CMR12',
+    b'ZTZKGV+CMMI10~27']
+fonts_result["GalluzziBalkancom2018.pdf"] = \
+    [b'AFKSFV+NimbusRomNo9L-Regu', b'ASNXLS+NimbusRomNo9L-ReguItal',
+     b'AXHPOX+CMMI7', b'GVCTNE+TimesNewRomanPSMT', b'JNWMEN+CMMI8',
+     b'MAXHKX+CMR7', b'PATEXI+CMEX10', b'PJZRLC+CMR6',
+     b'QVCFWU+NimbusRomNo9L-MediItal', b'RHUHOI+CMR5',
+     b'RSUQKG+NimbusRomNo9L-Medi', b'UKJLMI+CMR10',
+     b'WKVCBY+TimesNewRomanPSMT', b'WVOWAU+CMSY10', b'XQXIVV+CMMI5',
+     b'ZCBGZU+CMMI10']
+fonts_result["2738685LaTeX.pdf"] = \
+    [b'AAAKFF+NotoSans', b'ACPOMI+RVTimes-Italic', b'APUZFZ+MSAM10',
+     b'CWZBOY+NimbusRomNo9-Med', b'DAGIBB+MTSYB', b'FUSKHB+NimbusRomNo9-Reg',
+     b'GHVLXH+RMTMIB', b'JTROHQ+NimbusRomNo9L-MediItal', b'KHNLFJ+MTGU',
+     b'LDQQHC+NimbusRomNo9L-Medi', b'LJYNLO+CMEX10', b'LOTEAO+rtxmi',
+     b'OLCVWE+NimbusRomNo9L-Regu', b'OSLSPI+RMTMUB', b'QWFIII+CMSY7',
+     b'RDSOKY+MTSYN', b'REZREU+NimbusRomNo9-RegIta',
+     b'YNKFWD+NimbusRomNo9L-ReguItal', b'ZDFZMX+RMTMI', b'ZDYKXU+CMSY10']
+fonts_result["2748220withCairoCreator.pdf"] = \
+    [b'AAKAFZ+f-3-0', b'AENQWI+f-1-0', b'AMBDDL+f-4-0', b'ATUUJT+f-8-0',
+     b'BIKFGF+f-5-0', b'EYOJXM+f-4-1', b'FRZMCR+f-9-1', b'GUWDMP+f-6-0',
+     b'HNZXSC+f-10-0', b'JGKCTV+f-0-0', b'LQFXHH+f-7-0', b'OVCPDH+f-2-0',
+     b'YFZCCG+f-2-1']
+fonts_result["sparsemult6.pdf"] = \
+    [b'AVCQFN+EuropeanComputerModern-ItalicRegular12pt', b'DFJZEJ+CMMI10',
+     b'EGPNFG+EuropeanComputerModern-ItalicRegular10pt',
+     b'GGRPCR+EuropeanComputerModern-BoldExtended12pt', b'GJORCW+CMMI6',
+     b'IUCCDG+EuropeanComputerModern-RegularExtended12pt', b'KDIXXB+CMR6',
+     b'MHVJHG+EuropeanComputerModern-RomanRegular10pt', b'MPCPMM+MSAM10',
+     b'MUJJIR+CMSY8', b'OSJZLY+EuropeanComputerModern-SmallcapsRegular10pt',
+     b'RIMIEQ+EuropeanComputerModern-RomanRegular7pt',
+     b'SIAPGV+EuropeanComputerModern-RegularExtended17pt', b'SJDPJA+CMSY6',
+     b'SKTPBK+bbm7', b'SLITRV+CMR10',
+     b'TSORXV+EuropeanComputerModernTypewriter-Regular10pt', b'USHLYJ+CMMI8',
+     b'UVXYPJ+CMR8', b'VFZTIC+CMSY10',
+     b'VWKCMP+EuropeanComputerModern-BoldExtended10pt', b'WINEXZ+bbm10',
+     b'WLVTKM+CMSS10', b'WTTUHT+CMEX10']
+fonts_result["math0607661.tudateru.25992.tsuda_takenawa.pdf"] = \
+    [b'DZPXEZ+LCIRCLEW10', b'HMWAQK+NimbusRomNo9L-MediItal', b'HRBBOX+txex',
+     b'KYPUDU+rtxi', b'LHHMFB+NimbusRomNo9L-Regu', b'MHCSWN+rtxbmi',
+     b'NFKNTS+rtxmi', b'PJTNYU+NimbusRomNo9L-Medi', b'QCOLVQ+txsyb',
+     b'QZZDRD+txexa', b'SUGGDR+txtt', b'UATWDR+txsyc', b'UDGSOU+rtxr',
+     b'WSJSJP+txsya', b'WWSJDJ+rtxb', b'YNKSAD+txsy',
+     b'ZRSIEN+NimbusRomNo9L-ReguItal']
+fonts_result["0706.3906.pdf"] = \
+    [b'AGKNIF+CMR10~21', b'BAXISG+CMBX10~2d', b'BGBZVV+CMR6', b'BZFEKM+MSBM10',
+     b'FHHJET+CMTI10', b'FOJRZZ+CMMI12', b'GMHMYO+LASY10', b'IKAXRW+CMBX12~4c',
+     b'ITCNQW+CMR8', b'JXXCPI+CMBX10', b'KXDKQF+CMSY10', b'LVDKXS+CMR17',
+     b'MGYOQG+CMMI8', b'ODFJJZ+TeX-cmex8', b'OUCGXF+CMMI10', b'PNLSVL+CMR9',
+     b'PVHFJL+CMSY8', b'UANKIQ+CMR10', b'UNSMYH+CMMI6', b'WQVKTC+CMEX10',
+     b'XJTXDN+CMSY6', b'YCCIZK+CMSY10~2a', b'ZECLTG+CMBX12', b'ZHHFVF+CMR12',
+     b'ZTZKGV+CMMI10~27']
+
 
 # False negative
 # ps_tests.append(['submit_0169105.ps', True, '',
@@ -111,17 +276,12 @@ class TestTeXProduced(TestCase):
             # Try as file first
             print(f"\n***Testing pdfinfo on file '{filename}'")
 
-            #resultF = get_filtered_pdf_info_from_file(test_file_path)
-            #resultF.sort()
-            # print(f"ResultF:{resultF}\n")
-
             stream = io.open(test_file_path, "rb")
             resultS = get_filtered_pdf_info_from_stream(stream)
             resultS.sort()
-            # print(f"ResultS:{resultS}\n")
 
-            self.assertEqual(resultF, resultS, "PDFINFO should return the same"
-                                               " results for all PDFs.")
+            self.assertEqual(resultS, pdfinfo_results[filename], "PDFINFO return a different"
+                                               " result than expected.")
 
     def test_get_pdffonts(self) -> None:
         """Test lower level pdfinfo functions."""
@@ -134,7 +294,7 @@ class TestTeXProduced(TestCase):
             # Try as file first
             print(f"\n***Testing pdffonts on file '{filename}'")
 
-            #fontsF = get_pdf_fonts_from_file(test_file_path)
+            fontsF = get_pdf_fonts_from_file(test_file_path)
 
             stream = io.open(test_file_path, "rb")
             fontsS = get_pdf_fonts_from_stream(stream)
@@ -145,7 +305,7 @@ class TestTeXProduced(TestCase):
                             '0706.3810.pdf', '0611002.pdf', '2745765withCairoFonts.pdf']:
                 continue
 
-            self.assertEqual(fontsF, fontsS, "Fonts routines should return the same results for all PDFs.")
+            self.assertEqual(fontsS, fonts_result[filename], "PDFFonts returned different fonts than expected.")
 
     def test_tex_produced_pdf(self) -> None:
         """Test for TeX Produced PDF"""
@@ -158,20 +318,15 @@ class TestTeXProduced(TestCase):
 
             testfilename = os.path.join(TEST_FILES_DIRECTORY, filename)
 
-            resultF = check_tex_produced_pdf_from_stream(testfilename)
-
             file = io.open(testfilename, "rb")
 
             resultS = check_tex_produced_pdf_from_stream(file)
 
             if expected and match:
-                self.assertEqual(resultF, match, description)
                 self.assertEqual(resultS, match, description)
             elif expected:
-                self.assertTrue(resultF, description)
                 self.assertTrue(resultS, description)
             else:
-                self.assertFalse(resultF, description)
                 self.assertFalse(resultS, description)
 
     def test_tex_produced_ps(self) -> None:
