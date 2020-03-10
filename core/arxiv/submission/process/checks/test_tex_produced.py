@@ -294,8 +294,6 @@ class TestTeXProduced(TestCase):
             # Try as file first
             print(f"\n***Testing pdffonts on file '{filename}'")
 
-            fontsF = get_pdf_fonts_from_file(test_file_path)
-
             stream = io.open(test_file_path, "rb")
             fontsS = get_pdf_fonts_from_stream(stream)
 
