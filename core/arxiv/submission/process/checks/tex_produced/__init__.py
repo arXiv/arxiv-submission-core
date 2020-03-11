@@ -266,6 +266,8 @@ def check_tex_produced_ps(file_path: str) -> bytes:
 
     TEX_GREP = fr'TeXdict|dvit?ps|ArborText|OzTeX|PCTEX|^%.VTeX|' \
                fr'^%%Creator:.*Textures|^%%Title: .*\.dvi\b'
+
+    # TODO: Rewrite this in Python. See PR #77 ARXIVNG-2885.
     out = subprocess.run(f"head -500 {file_path} | egrep -i '{TEX_GREP}' | head -1",
                          stderr=subprocess.PIPE,
                          stdout=subprocess.PIPE,
