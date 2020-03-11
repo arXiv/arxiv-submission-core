@@ -37,6 +37,8 @@ from typing import IO, Dict, Tuple, NamedTuple, Optional, Any, Callable, Type
 from mypy_extensions import TypedDict
 from typing_extensions import Protocol
 
+import time
+
 # Mypy has a hard time with namespace packages. See
 # https://github.com/python/mypy/issues/5759
 from arxiv.base import logging                         # type: ignore
@@ -57,6 +59,10 @@ SUCCEEDED: Status = 'succeeded'
 FAILED: Status = 'failed'
 IN_PROGRESS: Status = 'in_progress'
 NOT_STARTED: Status = 'not_started'
+
+# Limits for reading stream of content
+SIZE_LIMIT = 15000000
+TIME_LIMIT = 300 # 5 minutes should be more than enough time to read stream
 
 Summary = Dict[str, Any]
 """Summary information suitable for generating a response to users/clients."""
@@ -291,19 +297,36 @@ class _PDFStarter(BaseStarter):
             # encapsulats a live stream from the File Manager service so
             # we read it into an in-memory object.
             filestream = io.BytesIO()
+            size = 0
 
             try:
+                start = time.time()
                 line = stream.read()
                 while len(line) > 0:
+                    # Check for excessive time
+                    if time.time() - start > TIME_LIMIT:
+                        raise ValueError(f'Reading preview content taking too'
+                                         f' long. (> {TIME_LIMIT})')
+                    # Check for excessive size
+                    size += len(line)
+                    if size > SIZE_LIMIT:
+                        raise ValueError(f'Preview content size too large. '
+                                         f'(>{SIZE_LIMIT})')
+
                     filestream.write(line)
                     line = stream.read()
+
             except StopIteration as ex:
                 # This is OK
                 pass
+            except ValueError as ex:
+                logger.error(f'There was a problem reading the content stream: {ex}\n')
+                return FAILED, {'reason': 'There was a problem reading the '
+                                          f'content stream: {ex}.'}
             except Exception as ex:
                 logger.error(f'There was a problem reading the content stream: {ex}\n')
                 return FAILED, {'reason': 'There was a problem reading the '
-                                          'content stream: {ex}.'}
+                                          f'content stream: {ex}.'}
             filestream.seek(0,0)
 
             # Finally run the TeX Produced check
