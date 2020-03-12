@@ -17,7 +17,7 @@ ENV KINESIS_STREAM="SubmissionEvents" \
 COPY Pipfile Pipfile.lock /opt/arxiv/
 RUN pipenv sync && rm -rf ~/.cache/pip
 
-COPY core/arxiv   /opt/arxiv/
+COPY core/arxiv   /opt/arxiv/arxiv
 COPY agent/agent/ /opt/arxiv/agent/
 
 ENTRYPOINT ["pipenv", "run"]

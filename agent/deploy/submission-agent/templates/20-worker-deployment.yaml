@@ -28,8 +28,8 @@ spec:
 
       containers:
       - name: "{{ default "submission-agent" .Values.name }}-worker"
-        image: "arxiv/submission-agent:{{ default "latest" .Values.image.tag }}"
-        command: ["celery", "worker", "-A", "agent.worker.worker_app", "--loglevel=INFO", "-E", "--concurrency=2"]
+        image: "{{ .Values.image.name }}:{{ .Values.image.tag }}"
+        command: ["pipenv", "run", "celery", "worker", "-A", "agent.worker.worker_app", "--loglevel=INFO", "-E", "--concurrency=2"]
         imagePullPolicy: "{{ default "Always" .Values.imagePullPolicy }}"
         env:
         - name: LOGLEVEL

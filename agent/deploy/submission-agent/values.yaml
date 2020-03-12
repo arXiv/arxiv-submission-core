@@ -3,7 +3,7 @@ namespace: development
 loglevel: 20
 image:
   name: "arxiv/submission-agent"
-  tag: "0.0"
+  tag: "changeme"
 
 labels:
   subsystem: submission-moderation

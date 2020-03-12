@@ -1,29 +1,7 @@
 # arXiv Submission
 
 This repository houses development related to the arXiv-NG
-submission system. See https://cul-it.github.io/arxiv-submission-core/ for the
-latest documentation.
-
-## Documentation
-
-### Freshen/build
-
-Update the API doc source refs with:
-
-```bash
-sphinx-apidoc -o docs/source/arxiv.submission -e -f -M --implicit-namespaces core/arxiv *test*/*
-```
-
-Build HTML docs with:
-
-```bash
-cd docs
-make html SPHINXBUILD=$(pipenv --venv)/bin/sphinx-build
-```
-
-## Contributions
-
-https://github.com/cul-it/arxiv-submission-core/blob/master/CONTRIBUTING.md
+submission system. 
 
 ## What's in the repo
 
@@ -34,12 +12,14 @@ https://github.com/cul-it/arxiv-submission-core/blob/master/CONTRIBUTING.md
 - The [submission agent](agent/) is a Kinesis consumer that orchestrates
   backend processes based on rules triggered by submission events.
 
-
 ### In progress/stale
 
-These components are considerably behind, or only partially complete. Future
-development milestones will focus on these services, possibly in separate
-repositories.
+These components are considerably behind, or only partially
+complete. After the 2019-10 transition the status of all of these
+unknown.
+
+Future development milestones will focus on these services, possibly
+in separate repositories.
 
 - The [API service](metadata/) provides the client-facing interface for
   submission-related requests. **Status: In progress**
@@ -48,17 +28,20 @@ repositories.
 - A toy [Gateway service](gateway/) provides a minimal NGINX server configured
   to utilize the authentication service (below). It provides (proxy) access to
   client-facing services, including the API service. This is close (but not
-  identical) to what is run in production.
+  identical) to what is run in production. **Status: Unknown after 2019-10 transition**
+- [admin](admin/) contains fragments related to admin
+  quality assurance checks. **Status: Unknown after 2019-10 transition**
+- The [filesystem](filesystem/) is an app to make sure that the NG
+  submission system can put files in the right place on the legacy
+  filesystem when (and only when) a submission is finalized. **Status: Unknown after 2019-10 transition**
 
 
 ## Related components/dependencies
 
-- The [authentication
-  service](https://github.com/cul-it/arxiv-auth/tree/develop/authenticator)
+- The [authentication service](https://github.com/cul-it/arxiv-auth/tree/develop/authenticator)
   handles sub-requests from the gateway to authorize client requests, and mints
   encrypted JWTs for use by other services.
-- The [client
-  registry](https://github.com/cul-it/arxiv-auth/tree/develop/registry)
+- The [client registry](https://github.com/cul-it/arxiv-auth/tree/develop/registry)
   provides OAuth2 workflows. Currently supports the `client_credentials` and
   `authorization_code` grant types.
 - The [file management service](https://github.com/cul-it/arxiv-filemanager) is
@@ -284,3 +267,27 @@ Connection: keep-alive
 
 {"reason":"Invalid Stack:\n\tMissing primary_classification"}
 ```
+
+## Documentation
+
+See https://cul-it.github.io/arxiv-submission-core/ for the
+latest documentation. ** TODO Fix this broken link.**
+
+### Freshen/build
+
+Update the API doc source refs with:
+
+```bash
+sphinx-apidoc -o docs/source/arxiv.submission -e -f -M --implicit-namespaces core/arxiv *test*/*
+```
+
+Build HTML docs with:
+
+```bash
+cd docs
+make html SPHINXBUILD=$(pipenv --venv)/bin/sphinx-build
+```
+
+## Contributions
+
+https://github.com/cul-it/arxiv-submission-core/blob/master/CONTRIBUTING.md

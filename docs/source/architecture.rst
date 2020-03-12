@@ -6,29 +6,32 @@ Submission subsystem architecture
 Overview
 ========
 
-The submission and moderation subsystem encompasses the applications, data, and
-processes by which e-prints enter arXiv and are prepared for announcement. The
-scope of this subsystem begins at the multiple interfaces by which e-prints are
-submitted to arXiv, encompasses a wide range of quality assurance and
-moderation activities, and ends at the "scheduling" of an e-print for
-incorporation into the canonical record and announcement to public
-stakeholders.
+The submission and moderation subsystem encompasses the applications,
+data, and processes by which e-prints enter arXiv and are prepared for
+announcement. The scope of this subsystem begins at the multiple
+interfaces by which e-prints are submitted to arXiv, includes a
+wide range of quality assurance and moderation activities, and ends at
+the scheduling of an e-print for incorporation into
+the canonical record and announcement to the public.
 
-In related contexts (such as journal publication) the procession
-through a submission process to ultimate publication involves the active
-participation of multiple actors. For example, editors, reviewers, and others
-must take explicit action for a submission to make its way to publication.
+In the absence of moderator or administrator intervention, an e-print
+will proceed automatically to scheduling and eventual announcement
+provided that programmatic filters are passed. The arXiv submission
+operates passively, like a series of filters. Some of those filters
+are programmatic, and the submitter may be required to take several
+actions to satisfy their parameters (e.g.  well-formed metadata,
+usable TeX source). An additional layer of filtering occurs within the
+context of moderation, where human moderators and administrators may
+intervene on an e-print to block or delay its announcement (possibly
+requiring further action by the submitter).
 
-In contrast, the arXiv submission subsystem operates passively, much like a
-series of filters. Some of those filters are programmatic, and the submitter
-may be required to take several actions to satisfy their parameters (e.g.
-well-formed metadata, usable TeX source). An additional layer of filtering
-occurs within the context of moderation, in which individual human moderators
-and administrators may intervene on an e-print to block or delay its
-announcement (possibly requiring further action by the submitter). But in the
-absence of moderator or administrator intervention, an e-print will proceed
-automatically to scheduling and eventual announcement provided that
-programmatic filters are passed.
+This is an intentional design decision so that the dissemination of
+research continues in the absence of human intervention.
+
+This is in contrast to journal publication where the procession of
+work from submission to publication involves editors, reviewers and
+others taking explicit action for a submission to make its way to
+publication.
 
 
 .. _figure-model:
@@ -80,8 +83,10 @@ for arXiv NG:
    alternative interfaces for submission and moderation, including interfaces
    developed and operated by trusted third-parties.
 5. The subsystem must be able to support a high volume of activity. We
-   currently process around 11,000 submissions per month (early 2018), and
-   expect that to grow at least 10% per year.
+   currently process around 11,000 submissions per month (early 2018),
+   and expect that to grow at least 10% per year.  If each submission
+   requires 1000 HTTP requests that is 11000*100/30*24*60*60 = 4.2
+   HTTP requests per second. 
 6. The subsystem must make it easier to support future operational and policy
    changes around submission content, quality assurance, metadata, and other
    areas of concern.
