@@ -271,7 +271,7 @@ class TestTeXProduced(TestCase):
         for test in pdf_tests:
             filename, expected, match, description = test
 
-            test_file_path = os.path.join(TEST_FILES_DIRECTORY, filename)
+            test_file_path = os.path.join(TEST_FILES_DIRECTORY, str(filename))
 
             # Try as file first
             print(f"\n***Testing pdfinfo on file '{filename}'")
@@ -280,8 +280,9 @@ class TestTeXProduced(TestCase):
             resultS = get_filtered_pdf_info_from_stream(stream)
             resultS.sort()
 
-            self.assertEqual(resultS, pdfinfo_results[filename], "PDFINFO return a different"
-                                               " result than expected.")
+            self.assertEqual(resultS, pdfinfo_results[str(filename)],
+                             "PDFINFO return a different"
+                             " result than expected.")
 
     def test_get_pdffonts(self) -> None:
         """Test lower level pdfinfo functions."""
@@ -289,7 +290,7 @@ class TestTeXProduced(TestCase):
         for test in pdf_tests:
             filename, expected, match, description = test
 
-            test_file_path = os.path.join(TEST_FILES_DIRECTORY, filename)
+            test_file_path = os.path.join(TEST_FILES_DIRECTORY, str(filename))
 
             # Try as file first
             print(f"\n***Testing pdffonts on file '{filename}'")
@@ -303,7 +304,7 @@ class TestTeXProduced(TestCase):
                             '0706.3810.pdf', '0611002.pdf', '2745765withCairoFonts.pdf']:
                 continue
 
-            self.assertEqual(fontsS, fonts_result[filename], "PDFFonts returned different fonts than expected.")
+            self.assertEqual(fontsS, fonts_result[str(filename)], "PDFFonts returned different fonts than expected.")
 
     def test_tex_produced_pdf(self) -> None:
         """Test for TeX Produced PDF"""
@@ -314,7 +315,7 @@ class TestTeXProduced(TestCase):
             # Eventually comment this out for quieter tests
             print(f"\n***Testing file '{filename}' for '{description}'")
 
-            testfilename = os.path.join(TEST_FILES_DIRECTORY, filename)
+            testfilename = os.path.join(TEST_FILES_DIRECTORY, str(filename))
 
             file = io.open(testfilename, "rb")
 
@@ -336,7 +337,7 @@ class TestTeXProduced(TestCase):
             # Eventually comment this out for quieter tests
             print(f"\n***Testing file '{filename}' for '{description}'")
 
-            testfilename = os.path.join(TEST_FILES_DIRECTORY, filename)
+            testfilename = os.path.join(TEST_FILES_DIRECTORY, str(filename))
 
             result = check_tex_produced_ps(testfilename)
 
