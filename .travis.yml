@@ -32,3 +32,7 @@ deploy:
   distributions: sdist
   on:
     tags: true
+- provider: script
+  script: python -m arxiv.release.docker_build_push ./ agent "$TRAVIS_TAG"
+  on:
+    tags: true
