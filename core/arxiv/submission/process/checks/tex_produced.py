@@ -21,7 +21,7 @@ import subprocess
 import os
 import tempfile
 
-from typing import IO, List
+from typing import IO, List, Set, Tuple, Any, Optional, Union
 from arxiv.base import logging  # type: ignore
 
 from PyPDF2 import PdfFileReader, utils
@@ -31,7 +31,7 @@ logger = logging.getLogger(__name__)
 verbose = 0
 
 
-def get_filtered_pdf_info_from_stream(stream: IO[bytes]) -> List[str]:
+def get_filtered_pdf_info_from_stream(stream: IO[bytes]) -> List[bytes]:
     """
     Returns select set of values from pdfinfo output for specified file.
 
@@ -74,7 +74,9 @@ def get_filtered_pdf_info_from_stream(stream: IO[bytes]) -> List[str]:
 # taken from the web and originally written by Tim Arnold.
 # I have modified it for our needs. DLF2
 
-def walk(obj, fnt, emb):
+def walk(obj: PyPDF2.generic.DictionaryObject, fnt: set, emb: set) \
+        -> Tuple[Set[Any], Set[Any]]:
+ #       -> Union[Tuple[Set[Any], Set[Any]], Tuple[None, None]]:
     '''
     If there is a key called 'BaseFont', that is a font that is used in the document.
     If there is a key called 'FontName' and another key in the same dictionary object
@@ -84,7 +86,8 @@ def walk(obj, fnt, emb):
     We create and add to two sets, fnt = fonts used and emb = fonts embedded.
     '''
     if not hasattr(obj, 'keys'):
-        return None, None
+        # return None, None
+        set(), set() # This makes mypy happy
     fontkeys = set(['/FontFile', '/FontFile2', '/FontFile3'])
     if '/BaseFont' in obj:
         fnt.add(bytes(obj['/BaseFont'], 'utf-8').strip(b"/"))
@@ -98,7 +101,7 @@ def walk(obj, fnt, emb):
     return fnt, emb  # return the sets for each page
 
 
-def get_pdf_fonts_from_stream(stream: IO[bytes]) -> List[str]:
+def get_pdf_fonts_from_stream(stream: IO[bytes]) -> List[bytes]:
     """
     Return the list of fonts for specified file.
 
@@ -112,16 +115,15 @@ def get_pdf_fonts_from_stream(stream: IO[bytes]) -> List[str]:
     List containing one entry for each line of output from pdffonts command.
 
     """
-    fonts_list = []
-
-    fonts = set()
-    embedded = set()
+    fonts: Set[bytes] = set()
+    embedded: Set[bytes] = set()
 
     try:
         pdf = PdfFileReader(stream)
 
         for page in pdf.pages:
             obj = page.getObject()
+
             f, e = walk(obj['/Resources'], fonts, embedded)
             fonts = fonts.union(f)
             embedded = embedded.union(e)
@@ -146,7 +148,7 @@ regex_header = re.compile(br"^\-\-\-\-", re.IGNORECASE)
 regex_fnt = re.compile(br"^.*\+[^\ ]*|^.*\-[^\ ]*", re.IGNORECASE)
 
 
-def get_pdf_fonts_from_file(filepath: str) -> List[str]:
+def get_pdf_fonts_from_file(filepath: str) -> List[bytes]:
     """
     Return the list of fonts for specified file.
 
@@ -160,7 +162,7 @@ def get_pdf_fonts_from_file(filepath: str) -> List[str]:
     List containing one entry for each line of output from pdffonts command.
 
     """
-    fonts_list = []
+    fonts_list: List[bytes] = []
 
     info = subprocess.run(["pdffonts", f"{filepath}"], stderr=subprocess.PIPE,
                           stdout=subprocess.PIPE)
@@ -210,7 +212,7 @@ def check_tex_produced_pdf_from_stream(stream: IO[bytes]) -> bytes:
         String (regex match) if PDF is TeX-produced, otherwise return ''.
 
     """
-    info = []
+    info: List[bytes] = []
     try:
         info = get_filtered_pdf_info_from_stream(stream)
     except Exception as ex:
@@ -230,7 +232,7 @@ def check_tex_produced_pdf_from_stream(stream: IO[bytes]) -> bytes:
         return b''
 
     # Check for TeX fonts
-    fonts = []
+    fonts: List[bytes] = []
     try:
         fonts = get_pdf_fonts_from_stream(stream)
     except Exception as ex:
