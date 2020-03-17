@@ -17,6 +17,8 @@ script:
   - pipenv install ./core
   - pipenv run pip show arxiv-base
   - pipenv run pytest --cov=agent/agent --cov=core/arxiv --cov-report=term-missing agent/agent core/arxiv
+  # building sdist since travis-ci provider cannot do it in non-root directory
+  - pip install setuptools ; cd agent ; python setup.py sdist ; cd .. ; cp -a agent/dist ./
 after_success:
   - coveralls
 #  - tests/lint.sh
