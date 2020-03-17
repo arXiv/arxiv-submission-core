@@ -74,7 +74,7 @@ def get_filtered_pdf_info_from_stream(stream: IO[bytes]) -> List[bytes]:
 # taken from the web and originally written by Tim Arnold.
 # I have modified it for our needs. DLF2
 
-def walk(obj: PyPDF2.generic.DictionaryObject, fnt: set, emb: set) \
+def walk(obj: Any, fnt: set, emb: set) \
         -> Tuple[Set[Any], Set[Any]]:
  #       -> Union[Tuple[Set[Any], Set[Any]], Tuple[None, None]]:
     '''
@@ -85,18 +85,23 @@ def walk(obj: PyPDF2.generic.DictionaryObject, fnt: set, emb: set) \
 
     We create and add to two sets, fnt = fonts used and emb = fonts embedded.
     '''
-    if not hasattr(obj, 'keys'):
-        # return None, None
-        set(), set() # This makes mypy happy
-    fontkeys = set(['/FontFile', '/FontFile2', '/FontFile3'])
-    if '/BaseFont' in obj:
-        fnt.add(bytes(obj['/BaseFont'], 'utf-8').strip(b"/"))
-    if '/FontName' in obj:
-        if [x for x in fontkeys if x in obj]:  # test to see if there is FontFile
-            emb.add(obj['/FontName'])
+    try:
+        if not hasattr(obj, 'keys'):
+            # return None, None
+            return set(), set() # This makes mypy happy
+        fontkeys = set(['/FontFile', '/FontFile2', '/FontFile3'])
+        if '/BaseFont' in obj:
+            fnt.add(bytes(obj['/BaseFont'], 'utf-8').strip(b"/"))
+        if '/FontName' in obj:
+            if [x for x in fontkeys if x in obj]:  # test to see if there is FontFile
+                emb.add(obj['/FontName'])
 
-    for k in obj.keys():
-        walk(obj[k], fnt, emb)
+        for k in obj.keys():
+            walk(obj[k], fnt, emb)
+
+    except Exception as ex:
+        logger.error(f"Error during walk: {ex}")
+        raise ex
 
     return fnt, emb  # return the sets for each page
 
@@ -123,7 +128,6 @@ def get_pdf_fonts_from_stream(stream: IO[bytes]) -> List[bytes]:
 
         for page in pdf.pages:
             obj = page.getObject()
-
             f, e = walk(obj['/Resources'], fonts, embedded)
             fonts = fonts.union(f)
             embedded = embedded.union(e)
