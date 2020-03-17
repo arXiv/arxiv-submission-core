@@ -22,12 +22,9 @@ after_success:
 #  - tests/lint.sh
   - tests/docstyle.sh
   - touch core/arxiv/__init__.py; ./tests/static.sh arxiv
-  # builds sdist since travis-ci provider cannot do it in non-root directory
-  - cd core
+  # Build sdist since travis-ci provider cannot do it in non-root directory
+  - cp -a core/* ./
   - pipenv run python -m arxiv.release.tag_check arxiv-submission-core
-  - python setup.py sdist
-  - cd ../
-  - cp -a core/dist ./
 deploy:
 - provider: pypi
   user: arxiv
