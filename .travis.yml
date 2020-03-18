@@ -14,11 +14,9 @@ install:
   - pip install pipenv
   - pipenv sync --dev
   # Build sdist since travis-ci provider cannot do it in non-root directory
-  - cd core
   - pipenv run python -m arxiv.release.tag_check arxiv-submission-core
   - python setup.py sdist bdist_wheel
-  - pipenv install dist/arxiv*.whl  
-  - cd ..
+  - pipenv install dist/*.whl
 script:
   - python nstest.py  
   - pipenv run pytest --cov=agent/agent --cov=core/arxiv --cov-report=term-missing agent/agent core/arxiv
@@ -27,10 +25,7 @@ after_success:
 #  - tests/lint.sh
   - tests/docstyle.sh
   - touch core/arxiv/__init__.py; ./tests/static.sh arxiv
-before_deploy:
-  - cp ./core/dist ./
 deploy:
-  skip_cleanup: true
 - provider: pypi
   user: arxiv
   skip_cleanup: true
