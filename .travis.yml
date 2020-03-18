@@ -15,7 +15,7 @@ install:
   - pipenv sync --dev
   - pipenv run python -m arxiv.release.tag_check arxiv-submission-core
   - python setup.py sdist bdist_wheel
-  - pipenv run pip install dist/*.whl  
+  - pipenv install dist/arxiv-submission-core-*.whl  
 script:
   - python nstest.py  
   - pipenv run pytest --cov=agent/agent --cov=core/arxiv --cov-report=term-missing agent/agent core/arxiv
