@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "c72a7fd93660df4fa43a30a79fa060719ad324a2a83ed5ba6067bab3bd8e1410"
+            "sha256": "bad16e802ca6fa3ea68f457deba1fd7e96dca66986ac04bc9c07887bd4579989"
         },
         "pipfile-spec": 6,
         "requires": {},
@@ -42,6 +42,9 @@
             "index": "pypi",
             "version": "==0.16.7rc2"
         },
+        "arxiv-submission-core": {
+            "path": "./dist/arxiv-submission-core-0.7.2rc12-4-g9222d6f-dirty.tar.gz"
+        },
         "arxiv-vault": {
             "hashes": [
                 "sha256:a8f636a1adabea00054d8625766c450da71ec6d79623115019367977148f9f11"
@@ -72,17 +75,17 @@
         },
         "boto3": {
             "hashes": [
-                "sha256:172f07391ad6bd261336cddaf988944b2d8e528a7c036d82c7841676cbc935ec",
-                "sha256:e3cf4a0e1a6d79d2761b6ab050cb897a4e753f625524d15c01540f9522a11874"
+                "sha256:0080ea1cce4c87d9f1e4e47fed4b994451b0022fcf6e120d1fb653eb3874506d",
+                "sha256:a3a89a254b068dbcc23298dea11d15b9e6e19f825290ebe43fcf4ccbbe423994"
             ],
-            "version": "==1.12.22"
+            "version": "==1.12.23"
         },
         "botocore": {
             "hashes": [
-                "sha256:ac6b6ae659b797f7bb106a7bee5ff1c7de9ece85e542a334a1cd618f9f2782cc",
-                "sha256:b8b399828d6dfe8ee879c22aa313591c183b78a8733df437ba84d9f39cd1b219"
+                "sha256:5b6bf68bd484fbf83e27f56a0a92e38cee223b689121c1184a0292311b88f888",
+                "sha256:e4fc86574043b20267f863b9168bd1c9ed50a53f0f7222ce8c99f64355174515"
             ],
-            "version": "==1.15.22"
+            "version": "==1.15.23"
         },
         "celery": {
             "hashes": [
