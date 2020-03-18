@@ -24,13 +24,11 @@ script:
   - pipenv run pytest --cov=agent/agent --cov=core/arxiv --cov-report=term-missing agent/agent core/arxiv
 after_success:
   - coveralls
-#  - tests/lint.sh
   - tests/docstyle.sh
   - touch core/arxiv/__init__.py; ./tests/static.sh arxiv
 before_deploy:
   - cp ./core/dist ./
 deploy:
-  skip_cleanup: true
 - provider: pypi
   user: arxiv
   skip_cleanup: true
