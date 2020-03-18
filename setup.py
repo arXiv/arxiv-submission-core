@@ -6,7 +6,8 @@ from arxiv.release.dist_version import get_version
 setup(
     name='arxiv-submission-core',
     version=get_version('arxiv-submission-core'),
-    packages=find_packages(where='core'),
+    packages=find_packages(where='./core'),
+    package_dir = {'': 'core'},
     zip_safe=False,
     setup_requires=['arxiv-base>=0.16.6'],
     install_requires=[
