@@ -10,24 +10,27 @@ os:
   - linux
 python:
   - "3.6"
-script:
+install:
   - pip install pipenv
   - pipenv sync --dev
-  - python nstest.py
-  - pipenv install ./core
-  - pipenv run pip show arxiv-base
+  # Build sdist since travis-ci provider cannot do it in non-root directory
+  - cd core
+  - pipenv run python -m arxiv.release.tag_check arxiv-submission-core
+  - python setup.py sdist bdist_wheel
+  - pip install dist/*.whl  
+  - cd ..
+script:
+  - python nstest.py  
   - pipenv run pytest --cov=agent/agent --cov=core/arxiv --cov-report=term-missing agent/agent core/arxiv
 after_success:
   - coveralls
 #  - tests/lint.sh
   - tests/docstyle.sh
   - touch core/arxiv/__init__.py; ./tests/static.sh arxiv
-  # Build sdist since travis-ci provider cannot do it in non-root directory
-  - cp -a core/* ./
-  - pipenv run python -m arxiv.release.tag_check arxiv-submission-core
-  - pipenv run pip show arxiv-base
-  - pip show arxiv-base
+before_deploy:
+  - cp ./core/dist ./
 deploy:
+  skip_cleanup: true
 - provider: pypi
   user: arxiv
   skip_cleanup: true
@@ -37,6 +40,7 @@ deploy:
   on:
     tags: true
 - provider: script
+  skip_cleanup: true
   script: python -m arxiv.release.docker_build_push ./ agent "$TRAVIS_TAG"
   on:
     tags: true
