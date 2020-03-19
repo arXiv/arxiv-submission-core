@@ -1,12 +1,12 @@
 """Install arXiv submission core package."""
 
-from setuptools import setup, find_packages
+from setuptools import setup, find_packages, find_namespace_packages
 from arxiv.release.dist_version import get_version
 
 setup(
     name='arxiv-submission-core',
     version=get_version('arxiv-submission-core'),
-    packages=find_packages(where='./core'),
+    packages=find_namespace_packages(where='./core', include=['arxiv.*']),
     package_dir = {'': 'core'},
     zip_safe=False,
     setup_requires=['arxiv-base>=0.16.6'],
