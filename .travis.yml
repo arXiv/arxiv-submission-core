@@ -26,15 +26,15 @@ after_success:
   - tests/docstyle.sh
   - touch core/arxiv/__init__.py; ./tests/static.sh arxiv
 deploy:
-- provider: script
-  skip_cleanup: true
-  script: python -m arxiv.release.docker_build_push ./ agent "$TRAVIS_TAG"
-  on:
-    tags: true
 - provider: pypi
   skip_cleanup: true
   user: $PYPI_USERNAME
   password: $PYPI_TOKEN
   distributions: sdist
+  on:
+    tags: true
+- provider: script
+  skip_cleanup: true
+  script: python -m arxiv.release.docker_build_push ./ agent "$TRAVIS_TAG"
   on:
     tags: true
