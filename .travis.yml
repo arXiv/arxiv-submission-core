@@ -17,6 +17,7 @@ install:
   - pipenv run python -m arxiv.release.tag_check arxiv-submission-core
   - python setup.py sdist bdist_wheel
   - pipenv install dist/*.whl
+  - git checkout -- Pipfile Pipfile.lock
 script:
   - python nstest.py  
   - pipenv run pytest --cov=agent/agent --cov=core/arxiv --cov-report=term-missing agent/agent core/arxiv
@@ -24,7 +25,8 @@ after_success:
   - coveralls
 #  - tests/lint.sh
   - tests/docstyle.sh
-  - touch core/arxiv/__init__.py; ./tests/static.sh arxiv
+# python namespace package messes up mypy tests
+  - touch core/arxiv/__init__.py; ./tests/static.sh arxiv; rm core/arxiv/__init__.py
 deploy:
 - provider: pypi
   skip_cleanup: true
@@ -35,6 +37,7 @@ deploy:
     tags: true
 - provider: script
   skip_cleanup: true
+  #docker build should pick up release tag from arxiv.release.tag_check
   script: python -m arxiv.release.docker_build_push ./ agent "$TRAVIS_TAG"
   on:
     tags: true
