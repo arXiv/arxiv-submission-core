@@ -32,9 +32,9 @@ kinesis:
 
 classifier:
   host: localhost
-  port: 8000
+  port: 80
   proto: http
-  path:
+  path: 'classifier/'
 
 compiler:
   proto: http
