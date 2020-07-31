@@ -1,7 +1,7 @@
 # arXiv Submission
 
 This repository houses development related to the arXiv-NG
-submission system. See https://cul-it.github.io/arxiv-submission-core/ for the
+submission system. See https://arxiv.github.io/arxiv-submission-core/ for the
 latest documentation.
 
 ## Documentation
