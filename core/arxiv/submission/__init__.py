@@ -207,9 +207,13 @@ def init_app(app: Flask) -> None:
     to be available.
     """
     # Initialize services.
+    logger.debug('Initialize StreamPublisher: %s', app.config['KINESIS_ENDPOINT'])
     StreamPublisher.init_app(app)
-    PreviewService.init_app(app)
+    logger.debug('Initialize Preview Service: %s', app.config['PREVIEW_ENDPOINT'])
+   # PreviewService.init_app(app)
+    logger.debug('Initialize Classic Database: %s', app.config['CLASSIC_DATABASE_URI'])
     classic.init_app(app)
+    logger.debug('Done initializing classic DB')
 
     template_folder = os.path.join(os.path.dirname(os.path.realpath(__file__)),
                                    'templates')
@@ -217,6 +221,7 @@ def init_app(app: Flask) -> None:
         Blueprint('submission-core', __name__, template_folder=template_folder)
     )
 
+    logger.debug('Core: Wait for initializing services to spin up')
     if app.config['WAIT_FOR_SERVICES']:
         time.sleep(app.config['WAIT_ON_STARTUP'])
         with app.app_context():
@@ -224,7 +229,7 @@ def init_app(app: Flask) -> None:
             stream_publisher.initialize()
             wait_for(stream_publisher)
             # Protocol doesn't work for modules. Either need a union type for
-            # wait_for, or use something other than a protocl for IAwaitable...
+            # wait_for, or use something other than a protocol for IAwaitable...
             wait_for(classic)    # type: ignore
         logger.info('All upstream services are available; ready to start')
 
