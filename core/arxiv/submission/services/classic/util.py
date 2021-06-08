@@ -18,17 +18,25 @@ from .exceptions import ClassicBaseException, TransactionFailed
 from ... import serializer
 from ...exceptions import InvalidEvent
 
+logger = logging.getLogger(__name__)
 
 class ClassicSQLAlchemy(SQLAlchemy):
     """SQLAlchemy integration for the classic database."""
 
     def init_app(self, app: Flask) -> None:
         """Set default configuration."""
+        logger.debug('SQLALCHEMY_DATABASE_URI %s',
+                     app.config.get('SQLALCHEMY_DATABASE_URI', 'Not Set'))
+        logger.debug('CLASSIC_DATABASE_URI %s',
+                     app.config.get('CLASSIC_DATABASE_URI', 'Not Set'))
         app.config.setdefault(
             'SQLALCHEMY_DATABASE_URI',
             app.config.get('CLASSIC_DATABASE_URI', 'sqlite://')
         )
         app.config.setdefault('SQLALCHEMY_TRACK_MODIFICATIONS', False)
+        # Debugging
+        app.config.setdefault('SQLALCHEMY_POOL_SIZE', 1)
+
         super(ClassicSQLAlchemy, self).init_app(app)
 
     def apply_pool_defaults(self, app: Flask, options: Any) -> None:
@@ -42,7 +50,7 @@ class ClassicSQLAlchemy(SQLAlchemy):
 db: SQLAlchemy = ClassicSQLAlchemy()
 
 
-logger = logging.getLogger(__name__)
+#logger = logging.getLogger(__name__)
 
 
 class SQLiteJSON(types.TypeDecorator):
