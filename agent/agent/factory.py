@@ -5,7 +5,8 @@ import time
 from flask import Flask, Config
 from collections import defaultdict
 
-from arxiv import mail, vault
+#from arxiv import mail, vault
+from arxiv import mail
 from arxiv.base import Base, logging
 from arxiv.base.middleware import wrap, request_logs
 from arxiv.submission import init_app, wait_for
@@ -55,29 +56,36 @@ def create_app() -> Flask:
     """Create a new agent application."""
     from . import config
     app = Flask(__name__)
+    logger.debug('Initialize and configure Submission Agent.')
     app.config.from_object(config)
+    logger.debug('Add hooks.')
     app.config.add_hook('SUBMISSION_AGENT_DATABASE_URI', update_binds)
 
+    logger.debug('Apply Base.')
     Base(app)
 
     # Register logging and secrets middleware.
     middleware = [request_logs.ClassicLogsMiddleware]
-    if app.config['VAULT_ENABLED']:
-        middleware.insert(0, vault.middleware.VaultMiddleware)
+    #if app.config['VAULT_ENABLED']:
+    #    middleware.insert(0, vault.middleware.VaultMiddleware)
     wrap(app, middleware)
 
     # Make sure that we have all of the secrets that we need to run.
-    if app.config['VAULT_ENABLED']:
-        app.middlewares['VaultMiddleware'].update_secrets({})
+    #if app.config['VAULT_ENABLED']:
+    #    app.middlewares['VaultMiddleware'].update_secrets({})
 
     # Initialize services.
+    logger.info('Initialize all upstream services.')
     database.init_app(app)
     mail.init_app(app)
     Classifier.init_app(app)
     Compiler.init_app(app)
     PlainTextService.init_app(app)
+    logger.debug('Start - Initializing app - Agent.')
     init_app(app)
+    logger.debug('Finished - Initializing app - Agent.')
 
+    logger.debug('Agent: Wait for initializing services to spin up')
     if app.config['WAIT_FOR_SERVICES']:
         time.sleep(app.config['WAIT_ON_STARTUP'])
         with app.app_context():
