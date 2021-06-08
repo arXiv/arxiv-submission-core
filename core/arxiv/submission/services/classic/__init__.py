@@ -100,6 +100,7 @@ def handle_operational_errors(func: F) -> F:
 def is_available(**kwargs: Any) -> bool:
     """Check our connection to the database."""
     try:
+        logger.info('Checking Classic is available')
         _check_available()
     except Unavailable as e:
         logger.info('Database not available: %s', e)
@@ -110,8 +111,9 @@ def is_available(**kwargs: Any) -> bool:
 @handle_operational_errors
 def _check_available() -> None:
     """Execute ``SELECT 1`` against the database."""
-    current_session().query("1").from_statement(text("SELECT 1")).all()
-
+    #current_session().query("1").from_statement(text("SELECT 1")).all()
+    with current_session() as session:
+        session.execute('SELECT 1')
 
 @retry(ClassicBaseException, tries=3, delay=1)
 @handle_operational_errors
