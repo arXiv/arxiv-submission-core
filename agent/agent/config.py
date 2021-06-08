@@ -115,6 +115,9 @@ SQLALCHEMY_DATABASE_URI = CLASSIC_DATABASE_URI
 SQLALCHEMY_TRACK_MODIFICATIONS = False
 """Track modifications feature should always be disabled."""
 
+SQLALCHEMY_POOL_SIZE = 1
+"""The size of the database pool."""
+
 SUBMISSION_AGENT_DATABASE_URI = environ.get('SUBMISSION_AGENT_DATABASE_URI',
                                             'sqlite:///')
 """Full database URI for the agent checkpoint database."""
