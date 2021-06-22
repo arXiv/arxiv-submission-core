@@ -109,18 +109,21 @@ VAULT_REQUESTS = [
 CLASSIC_DATABASE_URI = environ.get('CLASSIC_DATABASE_URI', 'sqlite:///')
 """Full database URI for the classic system."""
 
+if CLASSIC_DATABASE_URI == 'sqlite:///':
+    warnings.warn("CLASSIC_DATABASE_URI is not set, defaulting to 'sqlite:///'")
+
 SQLALCHEMY_DATABASE_URI = CLASSIC_DATABASE_URI
 """Full database URI for the classic system."""
 
 SQLALCHEMY_TRACK_MODIFICATIONS = False
 """Track modifications feature should always be disabled."""
 
-SQLALCHEMY_POOL_SIZE = 1
-"""The size of the database pool."""
-
 SUBMISSION_AGENT_DATABASE_URI = environ.get('SUBMISSION_AGENT_DATABASE_URI',
                                             'sqlite:///')
 """Full database URI for the agent checkpoint database."""
+
+if SUBMISSION_AGENT_DATABASE_URI == 'sqlite:///':
+    warnings.warn("SUBMISSION_AGENT_DATABASE_URI is not set, defaulting to 'sqlite:///'")
 
 SQLALCHEMY_BINDS = {'agent': SUBMISSION_AGENT_DATABASE_URI}
 """
