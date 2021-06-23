@@ -58,10 +58,8 @@ def create_app() -> Flask:
     app = Flask(__name__)
     logger.debug('Initialize and configure Submission Agent.')
     app.config.from_object(config)
-    logger.debug('Add hooks.')
     app.config.add_hook('SUBMISSION_AGENT_DATABASE_URI', update_binds)
 
-    logger.debug('Apply Base.')
     Base(app)
 
     # Register logging and secrets middleware.
@@ -74,29 +72,43 @@ def create_app() -> Flask:
     #if app.config['VAULT_ENABLED']:
     #    app.middlewares['VaultMiddleware'].update_secrets({})
 
+    classifier_enabled = False
+    # Check if service is configured
+    if app.config['CLASSIFIER_HOST'] != 'localhost':
+        logger.debug('Agent: Classifier ENDPOINT IS configured as %s',
+                     app.config['CLASSIFIER_ENDPOINT'])
+        classifier_enabled = True
+    else:
+        logger.debug('Agent: Classifier not configured. Skipping.')
+
     # Initialize services.
     logger.info('Initialize all upstream services.')
     database.init_app(app)
     mail.init_app(app)
-    Classifier.init_app(app)
+    if classifier_enabled:
+        Classifier.init_app(app)
     Compiler.init_app(app)
     PlainTextService.init_app(app)
-    logger.debug('Start - Initializing app - Agent.')
-    init_app(app)
-    logger.debug('Finished - Initializing app - Agent.')
 
-    logger.debug('Agent: Wait for initializing services to spin up')
+    init_app(app)
+
     if app.config['WAIT_FOR_SERVICES']:
+        logger.debug('Agent: Wait for initializing services to spin up')
         time.sleep(app.config['WAIT_ON_STARTUP'])
         with app.app_context():
             wait_for(database)
-            wait_for(Classifier.current_session(),
-                     timeout=app.config['CLASSIFIER_STATUS_TIMEOUT'])
+            if classifier_enabled:
+                wait_for(Classifier.current_session(),
+                         timeout=app.config['CLASSIFIER_STATUS_TIMEOUT'])
+            else:
+                logger.debug('Agent: Classifier not configured. Skipping wait.')
             wait_for(Compiler.current_session(),
                      timeout=app.config['COMPILER_STATUS_TIMEOUT'])
             wait_for(PlainTextService.current_session(),
                      timeout=app.config['PLAINTEXT_STATUS_TIMEOUT'])
             # FILEMANAGER_STATUS_TIMEOUT
         logger.info('All upstream services are available; ready to start')
+    else:
+        logger.debug('Agent: NOT Waiting for initializing services to spin up. Continuing')
 
     return app
