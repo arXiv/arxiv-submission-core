@@ -39,7 +39,8 @@ class ClassicSQLAlchemy(SQLAlchemy):
 
     def apply_pool_defaults(self, app: Flask, options: Any) -> None:
         """Set options for create_engine()."""
-        super(ClassicSQLAlchemy, self).apply_pool_defaults(app, options)
+        if not app.config['SQLALCHEMY_DATABASE_URI'].startswith('sqlite://'):
+            super(ClassicSQLAlchemy, self).apply_pool_defaults(app, options)
         if app.config['SQLALCHEMY_DATABASE_URI'].startswith('mysql'):
             options['json_serializer'] = serializer.dumps
             options['json_deserializer'] = serializer.loads
