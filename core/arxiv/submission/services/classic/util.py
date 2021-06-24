@@ -34,8 +34,6 @@ class ClassicSQLAlchemy(SQLAlchemy):
             app.config.get('CLASSIC_DATABASE_URI', 'sqlite://')
         )
         app.config.setdefault('SQLALCHEMY_TRACK_MODIFICATIONS', False)
-        # Debugging
-        app.config.setdefault('SQLALCHEMY_POOL_SIZE', 1)
 
         super(ClassicSQLAlchemy, self).init_app(app)
 
