@@ -13,11 +13,13 @@ ENV KINESIS_STREAM="SubmissionEvents" \
     LOGLEVEL=10 \
     JWT_SECRET="foo"
 
+ENV PIPENV_VENV_IN_PROJECT 1
 
 COPY Pipfile Pipfile.lock /opt/arxiv/
 RUN pipenv sync && rm -rf ~/.cache/pip
 
-COPY core/arxiv   /opt/arxiv/
+COPY core/ /opt/arxiv/core/
+RUN pipenv install /opt/arxiv/core/ && rm -rf ~/.cache/pip
 COPY agent/agent/ /opt/arxiv/agent/
 
 ENTRYPOINT ["pipenv", "run"]

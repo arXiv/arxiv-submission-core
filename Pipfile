@@ -36,7 +36,7 @@ mypy = "==0.720"
 [dev-packages]
 "nose2" = "*"
 openapi-spec-validator = "*"
-coverage = "==4.5"
+coverage = "*"
 coveralls = "*"
 pylint = "<2"
 mimesis = "*"

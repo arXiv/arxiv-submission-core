@@ -22,7 +22,10 @@ if __name__ == '__main__':
                 logger.info(f'...waiting {wait} seconds...')
                 time.sleep(wait)
                 wait *= 2
-        logger.info('Initializing database')
+        logger.info('Bootstrap: Initializing database')
         if not database.tables_exist():
+            logger.info('Bootstrap: Create database + tables.')
             database.create_all()
+        else:
+            logger.debug('Bootstrap: Database tables exist!')
         exit(0)

@@ -197,7 +197,7 @@ from .services import classic, StreamPublisher, Compiler, PlainTextService,\
     Classifier, PreviewService
 
 logger = logging.getLogger(__name__)
-
+logger.propagate = False
 
 def init_app(app: Flask) -> None:
     """
@@ -206,10 +206,22 @@ def init_app(app: Flask) -> None:
     Initializes and waits for :class:`.StreamPublisher` and :mod:`.classic`
     to be available.
     """
+    logger.debug('Start initializing core.arxiv.submission app.')
     # Initialize services.
+    logger.debug('Initialize StreamPublisher: %s', app.config['KINESIS_ENDPOINT'])
     StreamPublisher.init_app(app)
+    logger.debug('Initialize Preview Service: %s', app.config['PREVIEW_ENDPOINT'])
     PreviewService.init_app(app)
-    classic.init_app(app)
+
+    classic_db_enabled = False
+
+    if app.config['CLASSIC_DATABASE_URI'] != 'sqlite:///':
+        logger.debug('Initialize Classic Database: %s', app.config['CLASSIC_DATABASE_URI'])
+        classic.init_app(app)
+        logger.debug('Done initializing classic DB')
+        classic_db_enabled = True
+    else:
+        logger.debug('Classic Database: using sqlite, skipping init_app()')
 
     template_folder = os.path.join(os.path.dirname(os.path.realpath(__file__)),
                                    'templates')
@@ -218,16 +230,25 @@ def init_app(app: Flask) -> None:
     )
 
     if app.config['WAIT_FOR_SERVICES']:
+        logger.debug('Core: Wait for initializing services to spin up')
         time.sleep(app.config['WAIT_ON_STARTUP'])
         with app.app_context():
             stream_publisher = StreamPublisher.current_session()
             stream_publisher.initialize()
             wait_for(stream_publisher)
             # Protocol doesn't work for modules. Either need a union type for
-            # wait_for, or use something other than a protocl for IAwaitable...
-            wait_for(classic)    # type: ignore
-        logger.info('All upstream services are available; ready to start')
+            # wait_for, or use something other than a protocol for IAwaitable...
+            if classic_db_enabled:
+                logger.debug('Waiting for Classic Database: %s', app.config['CLASSIC_DATABASE_URI'])
+                wait_for(classic)    # type: ignore
+            else:
+                logger.debug('Classic Database: using sqlite, skipping wait_for()')
 
+        logger.info('All upstream services are available; ready to start')
+    else:
+        logger.debug('Core: NOT waiting for initializing services to spin up')
+
+    logger.debug('Finished initializing core.arxiv.submission app - Agent.')
 
 class IAwaitable(Protocol):
     """An object that provides an ``is_available`` predicate."""

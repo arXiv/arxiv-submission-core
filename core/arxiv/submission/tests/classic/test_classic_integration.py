@@ -31,6 +31,9 @@ class TestClassicUIWorkflow(TestCase):
         self.app = Flask(__name__)
         self.app.config['EMAIL_ENABLED'] = False
         self.app.config['WAIT_FOR_SERVICES'] = False
+        self.app.config['KINESIS_ENDPOINT'] = None
+        self.app.config['PREVIEW_ENDPOINT'] = None
+        self.app.config['CLASSIC_DATABASE_URI'] = 'sqlite:///'
         Base(self.app)
         init_app(self.app)
         mail.init_app(self.app)
