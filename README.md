@@ -1,3 +1,6 @@
+# This repo is not in production, and should be considered archival.
+No further updates are expected. 
+
 # arXiv Submission
 
 This repository houses development related to the arXiv-NG
