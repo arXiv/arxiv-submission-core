@@ -21,7 +21,7 @@ setup(
         'sqlalchemy',
         'flask-sqlalchemy',
         'dataclasses',
-        'celery==4.1.0',
+        'celery==5.2.2',
         'kombu==4.1.0',
         'redis==2.10.6',
         'mypy_extensions==0.4.1',
