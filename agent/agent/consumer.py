@@ -29,7 +29,7 @@ The event lifecycle from the perspective of the consumer looks like this:
 3. The agent evaluates the event against registered :class:`.Rule` instances,
    using :func:`.rules.evaluate`. A :class:`.Rule` maps a condition (the event
    type and event/submission properties) to a :class:`.Process`.
-4. The agent dispatches any triggered :class:`.Proccess` instances to the
+4. The agent dispatches any triggered :class:`.Process` instances to the
    :mod:`agent.worker` using the :class:`.AsyncProcessRunner`.
 
 
@@ -88,7 +88,7 @@ from botocore.exceptions import WaiterError, NoCredentialsError, \
 
 from arxiv.base import logging
 from arxiv.integration.kinesis import consumer
-from arxiv.vault.manager import ConfigManager
+#from arxiv.vault.manager import ConfigManager
 from arxiv.submission.serializer import loads
 from arxiv.submission.domain.submission import Submission
 from arxiv.submission.domain.event import Event, AddProcessStatus
@@ -119,27 +119,28 @@ class SubmissionEventConsumer(consumer.BaseConsumer):
     def __init__(self, *args: Any, config: Dict[str, Any] = {},
                  **kwargs: Any) -> None:
         """Initialize a secrets manager before starting."""
+        logger.debug('Initialize the Submission Event Consumer.')
         self._config = config
         self._app: Optional[Flask] = kwargs.pop('app', None)
         super(SubmissionEventConsumer, self).__init__(*args, **kwargs)
-        if self._config.get('VAULT_ENABLED'):
-            logger.info('Vault enabled; getting secrets')
-            self._secrets = self._init_secrets()
-            self.update_secrets()
+#        if self._config.get('VAULT_ENABLED'):
+#            logger.info('Vault enabled; getting secrets')
+#            self._secrets = self._init_secrets()
+#            self.update_secrets()
         self._access_key = self._config.get('AWS_ACCESS_KEY_ID')
         self._secret_key = self._config.get('AWS_SECRET_ACCESS_KEY')
 
-    def _init_secrets(self) -> ConfigManager:
-        """
-        Get a :class:`.ConfigManager` for secrets.
-
-        If we have a Flask app, try to re-use an existing ConfigManager if
-        there is one available in the middlewares.
-        """
-        if self._app is not None:
-            if 'VaultMiddleware' in self._app.middlewares:
-                return self._app.middlewares['VaultMiddleware'].secrets
-        return ConfigManager(self._config)
+#    def _init_secrets(self) -> ConfigManager:
+#        """
+#        Get a :class:`.ConfigManager` for secrets.
+#
+#        If we have a Flask app, try to re-use an existing ConfigManager if
+#        there is one available in the middlewares.
+#        """
+#        if self._app is not None:
+#            if 'VaultMiddleware' in self._app.middlewares:
+#                return self._app.middlewares['VaultMiddleware'].secrets
+#        return ConfigManager(self._config)
 
     def update_secrets(self) -> bool:
         """Update any secrets that are out of date."""
@@ -325,6 +326,7 @@ def process_stream(app: Flask, duration: Optional[int] = None) -> None:
 
 def start_agent() -> None:
     """Start the record processor."""
+    logger.debug('Start the Submission Agent record processor.')
     app = create_app()
     with app.app_context():
         database.await_connection()

@@ -89,8 +89,8 @@ def create_all() -> None:
 def tables_exist() -> bool:
     """Determine whether or not these database tables exist."""
     try:
-        db.session.query("1").from_statement(text("SELECT 1 FROM checkpoint limit 1")).all()
-        db.session.query("1").from_statement(text("SELECT 1 FROM process_status_events limit 1")).all()
+        db.session.query(text("1")).from_statement(text("SELECT 1 FROM checkpoint limit 1")).all()
+        db.session.query(text("1")).from_statement(text("SELECT 1 FROM process_status_events limit 1")).all()
     except (NoSuchTableError, OperationalError) as e:
         return False
     except Exception as e:
@@ -164,8 +164,8 @@ def await_connection(max_wait: int = -1) -> None:
 def is_available(**kwargs: Any) -> bool:
     """Check our connection to the database."""
     try:
-        db.session.query("1").from_statement(text("SELECT 1")).all()
+        db.session.query(text("1")).from_statement(text("SELECT 1")).all()
     except Exception as e:
-        logger.error('Encountered an error talking to database: %s', e)
+        logger.error('Agent: Encountered an error talking to database: %s', e)
         return False
     return True

@@ -5,7 +5,8 @@ import time
 from flask import Flask, Config
 from collections import defaultdict
 
-from arxiv import mail, vault
+#from arxiv import mail, vault
+from arxiv import mail
 from arxiv.base import Base, logging
 from arxiv.base.middleware import wrap, request_logs
 from arxiv.submission import init_app, wait_for
@@ -55,6 +56,7 @@ def create_app() -> Flask:
     """Create a new agent application."""
     from . import config
     app = Flask(__name__)
+    logger.debug('Initialize and configure Submission Agent.')
     app.config.from_object(config)
     app.config.add_hook('SUBMISSION_AGENT_DATABASE_URI', update_binds)
 
@@ -62,33 +64,51 @@ def create_app() -> Flask:
 
     # Register logging and secrets middleware.
     middleware = [request_logs.ClassicLogsMiddleware]
-    if app.config['VAULT_ENABLED']:
-        middleware.insert(0, vault.middleware.VaultMiddleware)
+    #if app.config['VAULT_ENABLED']:
+    #    middleware.insert(0, vault.middleware.VaultMiddleware)
     wrap(app, middleware)
 
     # Make sure that we have all of the secrets that we need to run.
-    if app.config['VAULT_ENABLED']:
-        app.middlewares['VaultMiddleware'].update_secrets({})
+    #if app.config['VAULT_ENABLED']:
+    #    app.middlewares['VaultMiddleware'].update_secrets({})
+
+    classifier_enabled = False
+    # Check if service is configured
+    if app.config['CLASSIFIER_HOST'] != 'localhost':
+        logger.debug('Agent: Classifier ENDPOINT IS configured as %s',
+                     app.config['CLASSIFIER_ENDPOINT'])
+        classifier_enabled = True
+    else:
+        logger.debug('Agent: Classifier not configured. Skipping.')
 
     # Initialize services.
+    logger.info('Initialize all upstream services.')
     database.init_app(app)
     mail.init_app(app)
-    Classifier.init_app(app)
+    if classifier_enabled:
+        Classifier.init_app(app)
     Compiler.init_app(app)
     PlainTextService.init_app(app)
+
     init_app(app)
 
     if app.config['WAIT_FOR_SERVICES']:
+        logger.debug('Agent: Wait for initializing services to spin up')
         time.sleep(app.config['WAIT_ON_STARTUP'])
         with app.app_context():
             wait_for(database)
-            wait_for(Classifier.current_session(),
-                     timeout=app.config['CLASSIFIER_STATUS_TIMEOUT'])
+            if classifier_enabled:
+                wait_for(Classifier.current_session(),
+                         timeout=app.config['CLASSIFIER_STATUS_TIMEOUT'])
+            else:
+                logger.debug('Agent: Classifier not configured. Skipping wait.')
             wait_for(Compiler.current_session(),
                      timeout=app.config['COMPILER_STATUS_TIMEOUT'])
             wait_for(PlainTextService.current_session(),
                      timeout=app.config['PLAINTEXT_STATUS_TIMEOUT'])
             # FILEMANAGER_STATUS_TIMEOUT
         logger.info('All upstream services are available; ready to start')
+    else:
+        logger.debug('Agent: NOT Waiting for initializing services to spin up. Continuing')
 
     return app
