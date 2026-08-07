@@ -29,7 +29,7 @@ The event lifecycle from the perspective of the consumer looks like this:
 3. The agent evaluates the event against registered :class:`.Rule` instances,
    using :func:`.rules.evaluate`. A :class:`.Rule` maps a condition (the event
    type and event/submission properties) to a :class:`.Process`.
-4. The agent dispatches any triggered :class:`.Proccess` instances to the
+4. The agent dispatches any triggered :class:`.Process` instances to the
    :mod:`agent.worker` using the :class:`.AsyncProcessRunner`.
 
 

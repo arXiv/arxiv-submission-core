@@ -32,6 +32,8 @@ pyyaml = ">=4.2b1"
 arxiv-vault = "~=0.1.1rc15"
 redis = "==2.10.6"
 mypy = "==0.720"
+pypdf2 = "==1.26.0"
+
 
 [dev-packages]
 "nose2" = "*"

@@ -1,0 +1,2 @@
+"""Core submission process checks."""
+
